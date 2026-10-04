@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}</style>
+</head>
+<body>
+<title>Yokai Fighters Crew</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a crew map (swimlane flow diagram) beside a talisman-style detail panel, roster by team below. */
+:root {
+  --paper: #ecebe3;      /* rice paper, cooled toward indigo */
+  --surface: #f7f6f1;
+  --ink: #1d2540;        /* indigo ink */
+  --ink-soft: #545b72;
+  --line: #b4b2a6;
+  --persimmon: #c94f22;  /* highlight accent */
+  --seal: #b02f27;       /* lead */
+  --pine: #2e6150;       /* assets */
+  --indigo: #34488a;     /* content */
+  --ochre: #946812;      /* engineering */
+  --system: #6b6f7d;
+  --on-seal: #fbf8f0;
+  --dim: 0.22;
+  --font-display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12162a; --surface: #1b2139; --ink: #e9e5d8; --ink-soft: #a7abbd; --line: #3b4364;
+    --persimmon: #f07b48; --seal: #e0645a; --pine: #6fb39a; --indigo: #93a6e6; --ochre: #d9ad52;
+    --system: #9a9fb2; --on-seal: #12162a; --dim: 0.2; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12162a; --surface: #1b2139; --ink: #e9e5d8; --ink-soft: #a7abbd; --line: #3b4364;
+  --persimmon: #f07b48; --seal: #e0645a; --pine: #6fb39a; --indigo: #93a6e6; --ochre: #d9ad52;
+  --system: #9a9fb2; --on-seal: #12162a; --dim: 0.2; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-inline: clamp(16px, 4vw, 48px); padding-block: 32px 64px;
+}
+.wrap { max-width: 1280px; margin-inline: auto; display: grid; gap: 28px; }
+
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 5vw, 52px); line-height: 1.08; margin: 0; text-wrap: balance; }
+h1 .seal-inline { display: inline-grid; place-items: center; width: 0.9em; height: 0.9em; margin-left: 0.15em; vertical-align: 0.08em;
+  background: var(--seal); color: var(--on-seal); font-size: 0.55em; border-radius: 3px; transform: rotate(-6deg); }
+header p { margin: 0; color: var(--ink-soft); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls .label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-right: 4px; }
+.chip {
+  font: 500 14px var(--font-body); color: var(--ink); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; cursor: pointer;
+}
+.chip:hover { border-color: var(--ink-soft); }
+.chip[aria-pressed="true"] { background: var(--persimmon); border-color: var(--persimmon); color: var(--on-seal); }
+.chip:focus-visible, .node:focus-visible, .roster button:focus-visible, .handoff:focus-visible { outline: 2px solid var(--persimmon); outline-offset: 2px; }
+
+.workflow-note { min-height: 3.2em; font-size: 14px; color: var(--ink-soft); max-width: 90ch; }
+.workflow-note strong { color: var(--ink); }
+.workflow-note ol { display: flex; flex-wrap: wrap; gap: 4px 0; list-style: none; padding: 0; margin: 4px 0 0; }
+.workflow-note li { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink); }
+.workflow-note li + li::before { content: "→"; color: var(--persimmon); margin-inline: 8px; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 980px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.map { min-width: 0; }
+.map-scroll { overflow-x: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: 8px; }
+.map svg { display: block; width: 100%; min-width: 720px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.legend .dash { width: 18px; height: 0; border-top: 1.5px dashed var(--ink-soft); border-radius: 0; }
+
+/* SVG */
+.edge { fill: none; stroke: var(--line); stroke-width: 1.6; transition: opacity .2s, stroke .2s; }
+.edge.return { stroke-dasharray: 5 4; }
+.edge.bus { stroke-width: 2.2; }
+.edge-label { font: 500 11px var(--font-mono); fill: var(--ink-soft); transition: opacity .2s; }
+.arrow path { fill: var(--line); }
+.arrow-hot path { fill: var(--persimmon); }
+.edge.hot { stroke: var(--persimmon); stroke-width: 2.2; }
+.edge-label.hot { fill: var(--persimmon); }
+.node { cursor: pointer; transition: opacity .2s; }
+.node .box { fill: var(--surface); stroke: var(--team); stroke-width: 1.5; }
+.node.system .box { stroke-dasharray: 4 3; }
+.node.human .box { rx: 27; }
+.node .name { font: 700 12.5px var(--font-body); fill: var(--ink); }
+.node .sub { font: 400 10.5px var(--font-mono); fill: var(--ink-soft); }
+.node .stamp { fill: var(--team); }
+.node .kanji { font: 800 11px var(--font-display); fill: var(--on-seal); }
+.node:hover .box { stroke-width: 2.5; }
+.node.selected .box { stroke: var(--persimmon); stroke-width: 3; }
+.dimmed { opacity: var(--dim); }
+.lane-label { font: 500 10.5px var(--font-mono); letter-spacing: 0.12em; fill: var(--ink-soft); }
+
+/* Detail panel: a paper talisman */
+.panel {
+  min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  padding: 24px 24px 20px; display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+@media (max-width: 980px) { .panel { position: static; } }
+.panel-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+.panel .team-tag { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--team); }
+.panel h2 { font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.15; margin: 2px 0 0; text-wrap: balance; }
+.panel code.id { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); }
+.seal-big { width: 52px; height: 52px; display: grid; place-items: center; background: var(--team); color: var(--on-seal);
+  font: 800 26px var(--font-display); border-radius: 4px; transform: rotate(-5deg); }
+.sees { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 17px; line-height: 1.45;
+  border-left: 2px solid var(--team); padding-left: 12px; }
+.sees small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+.panel p.summary { margin: 0; }
+.panel h3 { font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+.panel ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.panel ul.never li::marker { content: "✕  "; color: var(--seal); }
+.io { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 460px) { .io { grid-template-columns: 1fr; } }
+.paths { display: flex; flex-wrap: wrap; gap: 6px; }
+.paths code { font-family: var(--font-mono); font-size: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 1px 6px; overflow-wrap: anywhere; }
+.handoffs { display: flex; flex-wrap: wrap; gap: 6px; }
+.handoff { font: 500 13px var(--font-body); background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 3px; padding: 3px 10px; cursor: pointer; }
+.handoff:hover { border-color: var(--persimmon); color: var(--persimmon); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 12px; font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); font-weight: 500; }
+
+/* Roster */
+.roster-section h2 { font-family: var(--font-display); font-weight: 800; font-size: 24px; margin: 0 0 4px; }
+.roster-section > p { margin: 0 0 16px; color: var(--ink-soft); }
+.roster { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 980px) { .roster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .roster { grid-template-columns: minmax(0, 1fr); } }
+.team-col { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.team-col h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-family: var(--font-mono); font-weight: 500; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--team); }
+.team-col h3 .k { display: inline-grid; place-items: center; width: 20px; height: 20px; background: var(--team); color: var(--on-seal); font: 800 12px var(--font-display); border-radius: 2px; }
+.roster button {
+  text-align: left; font: inherit; color: var(--ink); background: transparent; cursor: pointer;
+  border: 0; border-top: 1px solid var(--line); padding: 10px 0 6px; display: grid; gap: 2px;
+}
+.roster button strong { font-weight: 700; }
+.roster button span { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
+.roster button:hover strong, .roster button[aria-current="true"] strong { color: var(--persimmon); }
+
+footer { font-size: 13px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 14px; }
+footer code { font-family: var(--font-mono); font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Yokai Fighters · development crew</div>
+    <h1>The Agent Crew<span class="seal-inline" aria-hidden="true">組</span></h1>
+    <p>Nine Claude Code agents build the game. The Producer tickets the work, and the main session carries each ticket along one of four workflows. You, the designer, buy the assets, settle open questions and approve every merge. Select an agent or a workflow to trace how work moves.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Highlight a workflow">
+    <span class="label">Workflow</span>
+    <button class="chip" id="wf-all" data-wf="" aria-pressed="true">All</button>
+    <button class="chip" id="wf-content" data-wf="content" aria-pressed="false">Content</button>
+    <button class="chip" id="wf-asset" data-wf="asset" aria-pressed="false">Asset</button>
+    <button class="chip" id="wf-code" data-wf="code" aria-pressed="false">Code</button>
+    <button class="chip" id="wf-balance" data-wf="balance" aria-pressed="false">Balance</button>
+  </div>
+  <div class="workflow-note" id="workflow-note" aria-live="polite"></div>
+
+  <div class="main">
+    <div class="map">
+      <div class="map-scroll">
+        <svg id="crew-map" viewBox="0 0 1000 560" role="img" aria-label="Crew map: how tickets flow between agents"></svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--seal)"></i>Lead</span>
+        <span><i style="background:var(--pine)"></i>Assets</span>
+        <span><i style="background:var(--indigo)"></i>Content</span>
+        <span><i style="background:var(--ochre)"></i>Engineering</span>
+        <span><i style="background:var(--system)"></i>You and the systems</span>
+        <span><i class="dash"></i>Rejection loop</span>
+      </div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="roster-section">
+    <h2>Roster</h2>
+    <p>Every agent reads <code>docs/design/rules.md</code> and cites its rule IDs. Tickets and branches use the Linear key: <code>YOK-&lt;number&gt;-&lt;brief-name&gt;</code>.</p>
+    <div class="roster" id="roster"></div>
+  </section>
+
+  <footer>Agent definitions: <code>.claude/agents/</code> · run a production pass with <code>/produce</code> · token budgets from GDD §10.3.</footer>
+</div>
+
+<script>
+const TEAMS = {
+  lead:   { label: "Lead",        kanji: "長", color: "var(--seal)" },
+  assets: { label: "Assets",      kanji: "材", color: "var(--pine)" },
+  content:{ label: "Content",     kanji: "技", color: "var(--indigo)" },
+  eng:    { label: "Engineering", kanji: "工", color: "var(--ochre)" },
+  outside:{ label: "Outside the crew", kanji: "外", color: "var(--system)" },
+};
+
+const NODES = {
+  producer: { name: "Producer", team: "lead", x: 90, y: 280, w: 140, sub: "tickets · sonnet", kanji: "長",
+    model: "sonnet", budget: "~35 tickets a run, 3 runs a day · 10k in / 2k out",
+    sees: "Balance fixes, like a Piercing Foxfire nerf, actually reach the game.",
+    summary: "Turns outstanding work into Linear tickets and an ordered dispatch plan. Leads the three teams and keeps the 5-week build on schedule.",
+    does: [
+      "Reads the Linear board, git log, open PRs, harness reports and playtest notes",
+      "Creates YOK tickets under Epics A–F with goal, acceptance criteria, agent, workflow and rule IDs",
+      "Names the branch for every ticket: YOK-<number>-<brief-name>",
+      "Protects the never-cut list and proposes cuts to you in the fixed order",
+      "Batches code tickets into one daily review queue",
+    ],
+    reads: ["Linear · YOK", "docs/design/rules.md", "GDD PDF", "harness/reports/", "production/playtests/"],
+    writes: ["Linear tickets", "dispatch plan"],
+    handoff: ["asset-scout", "clip-matcher", "movesmith", "habit-writer", "gameplay-programmer", "ui-designer"],
+    never: ["Writes game content, data or code", "Answers open design questions", "Cuts scope on its own"] },
+
+  "asset-scout": { name: "Asset Scout", team: "assets", x: 280, y: 130, sub: "shortlists · sonnet", kanji: "材",
+    model: "sonnet", budget: "~45 searches · 15k in / 1.5k out each",
+    sees: "Ryo and the yokai look and sound like one world.",
+    summary: "Searches stores for packs that fit the ukiyo-e toon look and retarget onto Ryo and the yokai. Shortlists; never buys.",
+    does: [
+      "Covers character models, fighting animation, stages, sound effects and music",
+      "Checks licence, price, Godot 4 format and rig type on the store page",
+      "Flags retarget risk for tails, shell and club ahead of the week-1 gate",
+      "Maps every planned move to a clip and flags gaps early",
+    ],
+    reads: ["docs/design/rules.md", "the web"],
+    writes: ["assets/shortlists/"],
+    handoff: ["designer", "clip-matcher"],
+    never: ["Buys anything", "Decides the asset spend"] },
+
+  "clip-matcher": { name: "Clip Matcher", team: "assets", x: 520, y: 130, sub: "clips · sonnet", kanji: "材",
+    model: "sonnet", budget: "6k in / 2k out per clip batch · 5k / 2k per cue batch",
+    sees: "Hits land, look and sound right on the frame.",
+    summary: "Runs first in the content pipeline: picks the clip for each move, so frame data can be written from its real timing.",
+    does: [
+      "Chooses each move's clip and records total frames plus the frames where the hit lands",
+      "Uses the generic grab and standard knockdown for every throw",
+      "Writes per-level visual presets and hit-spark colours by source",
+      "Times the impact thud and yokai sting to the impact frame",
+    ],
+    reads: ["assets/shortlists/", "purchased packs"],
+    writes: ["data/clips/", "data/presets/", "data/sound/"],
+    handoff: ["movesmith"],
+    never: ["Requests bespoke animation", "Uses a paired throw animation"] },
+
+  movesmith: { name: "Movesmith", team: "content", x: 520, y: 250, sub: "moves · sonnet", kanji: "技",
+    model: "sonnet", budget: "3k in / 800 out per ability · up to 3 revisions",
+    sees: "Rewards that change how a move plays.",
+    summary: "Writes the move list and all ability data: frame data from the matched clip, hitboxes, upgrades, card text and dojo trials.",
+    does: [
+      "Derives startup, active and recovery frames from the clip's real timing",
+      "Writes 2D hitbox rectangles per active frame range",
+      "Proposes Lv 2 tuning steps and Lv 3 evolutions for you to decide",
+      "Writes plain-language reward cards with frame data behind a toggle",
+      "Authors Kihon-completable dojo trials",
+    ],
+    reads: ["data/clips/", "docs/design/rules.md"],
+    writes: ["data/moves/", "data/modifiers/", "data/cancels/", "data/trials/", "data/cards/"],
+    handoff: ["rules-lawyer"],
+    never: ["Writes frame data without a matched clip", "Adds abilities beyond the 33 in the GDD"] },
+
+  "habit-writer": { name: "Habit Writer", team: "content", x: 520, y: 340, sub: "habits · sonnet", kanji: "技",
+    model: "sonnet", budget: "4k in / 1.5k out per call",
+    sees: "Learnable yokai, and a story that names your own moves.",
+    summary: "Writes the behaviour profiles the yokai state machine reads, and every story card in the game's voice.",
+    does: [
+      "Writes 7 profiles: Kitsune, Oni and Kappa in two temperaments each, plus the Tanuki",
+      "Gives each yokai exactly one punishable habit and each elder one twist",
+      "Profiles react only to on-screen state, at their tier's reaction time",
+      "Writes story cards in one or two sentences: folklore with a melancholy edge, never horror",
+    ],
+    reads: ["docs/design/rules.md", "data/moves/"],
+    writes: ["data/profiles/", "data/story/"],
+    handoff: ["rules-lawyer"],
+    never: ["Lets a yokai react to button presses", "Adds story beats beyond the card schedule"] },
+
+  "rules-lawyer": { name: "Rules Lawyer", team: "content", x: 730, y: 295, sub: "gate · sonnet", kanji: "技",
+    model: "sonnet", budget: "4k in / 300 out per file",
+    sees: "A Kappa never offers a projectile.",
+    summary: "The gate in the content pipeline. Read-only: judges every content file against the written rules and returns a verdict.",
+    does: [
+      "Validates each file against the schema and docs/design/rules.md",
+      "Returns PASS, or FAIL with the rule ID and what would fix it",
+      "Checks source fidelity, ability counts, cancel loops, copy safety and tone",
+      "Lists concerns no rule covers for you, without blocking",
+    ],
+    reads: ["docs/design/rules.md", "data/"],
+    writes: ["verdicts only"],
+    handoff: ["movesmith", "habit-writer", "harness"],
+    never: ["Edits content", "Invents rules or judges taste"] },
+
+  "sparring-partner": { name: "Sparring Partner", team: "content", x: 910, y: 130, sub: "balance · opus", kanji: "技",
+    model: "opus", budget: "20k in / 2k out per report · budget protected",
+    sees: "Difficulty that was measured, not assumed.",
+    summary: "Reads whole-run bot results and playtest notes, compares them with the design targets and recommends the smallest fixes.",
+    does: [
+      "Computes reach and win rates from 200 simulated newcomer runs (target 50–70% reach, 40–60% win)",
+      "Checks arrival health, damage per duel, coins and run length against targets",
+      "Spots single-move dominance and builds that win on autopilot",
+      "Recommends one minimal change per finding, with an owner and rule ID",
+    ],
+    reads: ["harness/results/", "production/playtests/", "data/"],
+    writes: ["harness/reports/"],
+    handoff: ["producer"],
+    never: ["Changes game data", "Proposes cutting a never-cut item"] },
+
+  "gameplay-programmer": { name: "Gameplay Programmer", team: "eng", x: 280, y: 440, w: 164, sub: "C# · opus", kanji: "工",
+    model: "opus", budget: "18k in / 3k out per turn · ~4 revisions × 3 turns per ticket",
+    sees: "Every yokai fights; every number is tested.",
+    summary: "Writes the game's C# systems through the Godot MCP, on its own branch, in a closed build-and-test loop.",
+    does: [
+      "Builds the deterministic 60-tick fight loop, combat, inputs and the AI state machine",
+      "Implements the Tanuki copy rule, map, merchant, dojo, unlocks and save",
+      "Builds the headless test bot and whole-run harness",
+      "Keeps docs/codebase-map.md current so agent context stays small",
+    ],
+    reads: ["docs/codebase-map.md", "docs/design/rules.md", "data/"],
+    writes: ["game/", "data/schema/", "harness/results/"],
+    handoff: ["designer", "harness"],
+    never: ["Merges or pushes to main", "Hard-codes rules that belong in data"] },
+
+  "ui-designer": { name: "UI Designer", team: "eng", x: 280, y: 520, sub: "screens · sonnet", kanji: "工",
+    model: "sonnet", budget: "10k in / 4k out per turn · ~5 revisions × 3 turns per screen",
+    sees: "Cards and meters stay readable mid-combo.",
+    summary: "Builds every screen and the fight HUD in the paper-talisman style, through the Godot MCP on its own branch.",
+    does: [
+      "Builds 8 screens: title, control select, map, fight HUD, reward, rest stop, results, story card",
+      "Shows the glowing copy-target talisman and the Tanuki forecast",
+      "Keeps the HUD legible through hitstop and screen shake",
+      "Reads game state through gameplay APIs and never duplicates rules",
+    ],
+    reads: ["docs/design/rules.md", "docs/codebase-map.md"],
+    writes: ["game/ UI scenes", "review screenshots"],
+    handoff: ["designer"],
+    never: ["Merges or pushes to main", "Puts game rules in UI code"] },
+
+  designer: { name: "Designer (you)", team: "outside", kind: "human", x: 730, y: 480, sub: "review · decide", kanji: "人",
+    model: "human", budget: "210 hours: ~60 review, 60 playtesting, 35 rules",
+    sees: "The person every gate ends with.",
+    summary: "Owns the decisions the crew must never make: purchases, open design questions, the scope and balance gates, and every code merge.",
+    does: [
+      "Reviews code PRs in one daily queue and merges what passes",
+      "Buys asset packs from the Asset Scout's shortlists",
+      "Settles open questions such as each special's Lv 2 tuning step",
+      "Calls the scope gate (end of week 1) and the balance gate (mid week 3)",
+    ],
+    reads: ["PRs", "shortlists", "balance reports"],
+    writes: ["approvals", "decisions"],
+    handoff: ["main", "clip-matcher"],
+    never: [] },
+
+  harness: { name: "Harness", team: "outside", kind: "system", x: 910, y: 295, sub: "headless bot", kanji: "試",
+    model: "system", budget: "built by the Gameplay Programmer",
+    sees: "A system the crew builds, never cut.",
+    summary: "The headless whole-run test bot. It checks content at runtime and produces the results the Sparring Partner reads.",
+    does: [
+      "Plays whole runs headless with a newcomer-profile Kihon bot",
+      "Checks trials are completable, cancels never loop and copied moves work",
+      "Writes per-run results: seed, route, health per node, damage per duel, outcome, duration",
+    ],
+    reads: ["game/", "data/"],
+    writes: ["harness/results/"],
+    handoff: ["sparring-partner", "main"],
+    never: [] },
+
+  main: { name: "main", team: "outside", kind: "system", x: 910, y: 480, sub: "branch", kanji: "本",
+    model: "git", budget: "protected branch",
+    sees: "Where finished work lands.",
+    summary: "Data merges after schema, Rules Lawyer and harness checks. Code merges only after your approval.",
+    does: ["Receives content that passed every gate", "Receives code PRs you approved"],
+    reads: [], writes: [], handoff: [], never: [] },
+};
+
+// Edges: [id, from, to, path, workflows, label, labelX, labelY, anchor, kind]
+const EDGES = [
+  ["bus", "producer", null, "M160,280 H190 M190,70 V520", ["content","asset","code","balance"], null, 0,0,"", "bus"],
+  ["d-asset", "producer", "asset-scout", "M190,130 H205", ["asset"]],
+  ["d-clip", "producer", "clip-matcher", "M190,70 H520 V103", ["content"], "content ticket", 360, 63, "middle"],
+  ["d-move", "producer", "movesmith", "M190,250 H445", ["content"]],
+  ["d-habit", "producer", "habit-writer", "M190,340 H445", ["content"]],
+  ["d-gp", "producer", "gameplay-programmer", "M190,440 H205", ["code"]],
+  ["d-ui", "producer", "ui-designer", "M190,520 H205", ["code"]],
+  ["scout-clip", "asset-scout", "clip-matcher", "M355,130 H445", ["asset"], "bought packs", 400, 122, "middle"],
+  ["clip-move", "clip-matcher", "movesmith", "M520,157 V223", ["content"], "clip timing", 528, 194, "start"],
+  ["move-rl", "movesmith", "rules-lawyer", "M595,250 C628,250 625,288 655,288", ["content"]],
+  ["habit-rl", "habit-writer", "rules-lawyer", "M595,340 C628,340 625,302 655,302", ["content"]],
+  ["rl-fail", "rules-lawyer", "movesmith", "M730,268 C730,212 600,200 578,223", ["content"], "FAIL + rule ID", 700, 206, "middle", "return"],
+  ["rl-harness", "rules-lawyer", "harness", "M805,295 H835", ["content"], "PASS", 820, 310, "middle"],
+  ["harness-main", "harness", "main", "M950,322 V453", ["content"], "data merges", 944, 372, "end"],
+  ["gp-harness", "gameplay-programmer", "harness", "M280,413 V395 H870 V322", ["code","balance"], "builds bot + harness", 560, 388, "middle"],
+  ["gp-dr", "gameplay-programmer", "designer", "M355,440 C500,440 560,470 655,470", ["code"], "PR · YOK-n branch", 470, 432, "middle"],
+  ["ui-dr", "ui-designer", "designer", "M355,520 C500,520 560,490 655,490", ["code"]],
+  ["dr-main", "designer", "main", "M805,480 H835", ["code"]],
+  ["harness-sp", "harness", "sparring-partner", "M910,268 V157", ["balance"], "bot results", 918, 215, "start"],
+  ["sp-producer", "sparring-partner", "producer", "M910,103 V45 H90 V253", ["balance"], "tuning recommendations → new tickets", 500, 38, "middle"],
+].map(([id, from, to, d, wf, label, lx, ly, anchor, kind]) => ({ id, from, to, d, wf, label, lx, ly, anchor, kind }));
+
+const WORKFLOWS = {
+  content: { title: "Content", text: "Moves, modifiers, trials, cards, profiles and story. Three failed gate rounds block the ticket for you.",
+    steps: ["Producer ticket", "Clip Matcher (if a clip is needed)", "Movesmith or Habit Writer", "Rules Lawyer", "Harness checks", "data merges"] },
+  asset: { title: "Asset", text: "Pack research. Purchases are always your call.",
+    steps: ["Producer ticket", "Asset Scout shortlist", "you buy", "Clip Matcher"] },
+  code: { title: "Code", text: "C# and screens, each on its own YOK branch with a closed build-and-test loop through the Godot MCP.",
+    steps: ["Producer ticket", "Gameplay Programmer or UI Designer", "PR", "your review", "merge"] },
+  balance: { title: "Balance", text: "Measured difficulty. Tuning tickets re-enter the content workflow.",
+    steps: ["Harness bot runs", "Sparring Partner report", "Producer tickets the tuning", "content workflow"] },
+};
+
+const svg = document.getElementById("crew-map");
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
+
+function drawMap() {
+  const defs = el("defs", {}, svg);
+  for (const [id, cls] of [["arr", "arrow"], ["arr-hot", "arrow-hot"]]) {
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse", class: cls }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z" }, m);
+  }
+  const lanes = [["ASSETS", 205, 96], ["CONTENT", 445, 215], ["ENGINEERING", 205, 382]];
+  const gLanes = el("g", {}, svg);
+  for (const [t, x, y] of lanes) { const tx = el("text", { x, y, class: "lane-label" }, gLanes); tx.textContent = t; }
+
+  const gEdges = el("g", {}, svg), gLabels = el("g", {}, svg), gNodes = el("g", {}, svg);
+  for (const e of EDGES) {
+    e.el = el("path", { d: e.d, class: "edge" + (e.kind ? " " + e.kind : "") }, gEdges);
+    if (e.to) e.el.setAttribute("marker-end", "url(#arr)");
+    if (e.label) {
+      e.labelEl = el("text", { x: e.lx, y: e.ly, "text-anchor": e.anchor, class: "edge-label" }, gLabels);
+      e.labelEl.textContent = e.label;
+    }
+  }
+  for (const [id, n] of Object.entries(NODES)) {
+    const w = n.w || 150, h = 54;
+    const g = el("g", { class: "node" + (n.kind ? " " + n.kind : ""), tabindex: "0", role: "button", "aria-label": n.name, "data-id": id }, gNodes);
+    g.style.setProperty("--team", TEAMS[n.team].color);
+    el("rect", { class: "box", x: n.x - w / 2, y: n.y - h / 2, width: w, height: h, rx: n.kind === "human" ? 27 : 3 }, g);
+    const name = el("text", { class: "name", x: n.x, y: n.y - 2, "text-anchor": "middle" }, g); name.textContent = n.name;
+    const sub = el("text", { class: "sub", x: n.x, y: n.y + 15, "text-anchor": "middle" }, g); sub.textContent = n.sub;
+    const sx = n.x + w / 2 - 12, sy = n.y - h / 2 - 7;
+    el("rect", { class: "stamp", x: sx, y: sy, width: 18, height: 18, rx: 2, transform: `rotate(-8 ${sx + 9} ${sy + 9})` }, g);
+    const k = el("text", { class: "kanji", x: sx + 9, y: sy + 13.5, "text-anchor": "middle" }, g); k.textContent = n.kanji;
+    n.el = g;
+    g.addEventListener("click", () => select(id, true));
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(id, true); } });
+  }
+}
+
+let state = { selected: "producer", wf: "" };
+
+function applyHighlight() {
+  const { selected, wf } = state;
+  let hotEdges, hotNodes;
+  if (wf) {
+    hotEdges = new Set(EDGES.filter(e => e.wf.includes(wf)).map(e => e.id));
+    hotNodes = new Set();
+    EDGES.forEach(e => { if (hotEdges.has(e.id)) { hotNodes.add(e.from); if (e.to) hotNodes.add(e.to); } });
+    if (wf === "asset") hotNodes.add("designer");
+  } else {
+    hotEdges = new Set(EDGES.filter(e => e.from === selected || e.to === selected).map(e => e.id));
+    if (selected === "producer") hotEdges = new Set(EDGES.filter(e => e.from === "producer" || e.to === "producer").map(e => e.id));
+    hotNodes = new Set([selected]);
+    EDGES.forEach(e => { if (hotEdges.has(e.id)) { hotNodes.add(e.from); if (e.to) hotNodes.add(e.to); } });
+    if (hotEdges.has("d-asset") || hotEdges.has("d-clip") || hotEdges.has("d-move") || hotEdges.has("d-habit") || hotEdges.has("d-gp") || hotEdges.has("d-ui")) hotEdges.add("bus");
+  }
+  for (const e of EDGES) {
+    const hot = hotEdges.has(e.id);
+    e.el.classList.toggle("hot", hot);
+    e.el.classList.toggle("dimmed", !hot && !!wf);
+    if (e.to) e.el.setAttribute("marker-end", hot ? "url(#arr-hot)" : "url(#arr)");
+    if (e.labelEl) { e.labelEl.classList.toggle("hot", hot); e.labelEl.classList.toggle("dimmed", !hot && !!wf); }
+  }
+  for (const [id, n] of Object.entries(NODES)) {
+    n.el.classList.toggle("selected", id === selected);
+    n.el.classList.toggle("dimmed", !hotNodes.has(id));
+  }
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function renderPanel(id) {
+  const n = NODES[id], t = TEAMS[n.team];
+  const panel = document.getElementById("panel");
+  panel.style.setProperty("--team", t.color);
+  const list = (items, cls = "") => items.length ? `<ul class="${cls}">${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
+  const paths = items => `<div class="paths">${items.map(p => `<code>${esc(p)}</code>`).join("")}</div>`;
+  panel.innerHTML = `
+    <div class="panel-head">
+      <div>
+        <div class="team-tag">${esc(t.label)}</div>
+        <h2>${esc(n.name)}</h2>
+        ${NODES[id].kind ? "" : `<code class="id">.claude/agents/${esc(id)}.md</code>`}
+      </div>
+      <div class="seal-big" aria-hidden="true">${esc(n.kanji)}</div>
+    </div>
+    <p class="sees"><small>What the player sees</small>${esc(n.sees)}</p>
+    <p class="summary">${esc(n.summary)}</p>
+    <div><h3>Responsibilities</h3>${list(n.does)}</div>
+    ${n.reads.length || n.writes.length ? `<div class="io">
+      <div><h3>Reads</h3>${paths(n.reads)}</div>
+      <div><h3>Writes</h3>${paths(n.writes)}</div>
+    </div>` : ""}
+    ${n.handoff.length ? `<div><h3>Hands off to</h3><div class="handoffs">${n.handoff.map(h => `<button class="handoff" data-go="${h}">${esc(NODES[h].name)}</button>`).join("")}</div></div>` : ""}
+    ${n.never.length ? `<div><h3>Never</h3>${list(n.never, "never")}</div>` : ""}
+    <div class="meta"><span>model <b>${esc(n.model)}</b></span><span>budget <b>${esc(n.budget)}</b></span></div>`;
+  panel.querySelectorAll(".handoff").forEach(b => b.addEventListener("click", () => select(b.dataset.go, true)));
+}
+
+function renderRoster() {
+  const roster = document.getElementById("roster");
+  const order = ["lead", "assets", "content", "eng"];
+  roster.innerHTML = order.map(team => {
+    const t = TEAMS[team];
+    const members = Object.entries(NODES).filter(([, n]) => n.team === team);
+    return `<div class="team-col" style="--team:${t.color}">
+      <h3><span class="k">${t.kanji}</span>${t.label}</h3>
+      ${members.map(([id, n]) => `<button data-id="${id}" id="roster-${id}"><strong>${esc(n.name)}</strong><span>${esc(n.summary.split(". ")[0].replace(/\.$/, ""))}.</span></button>`).join("")}
+    </div>`;
+  }).join("");
+  roster.querySelectorAll("button").forEach(b => b.addEventListener("click", () => select(b.dataset.id, true, true)));
+}
+
+function renderWorkflowNote() {
+  const note = document.getElementById("workflow-note");
+  if (!state.wf) { note.innerHTML = `<strong>All workflows.</strong> Select an agent to trace its connections, or pick a workflow above.`; return; }
+  const w = WORKFLOWS[state.wf];
+  note.innerHTML = `<strong>${w.title} workflow.</strong> ${esc(w.text)}<ol>${w.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>`;
+}
+
+function select(id, fromUser, scroll) {
+  if (!NODES[id]) return;
+  state.selected = id;
+  if (fromUser) setWorkflow("", false);
+  renderPanel(id);
+  document.querySelectorAll(".roster button").forEach(b => b.setAttribute("aria-current", b.dataset.id === id ? "true" : "false"));
+  applyHighlight();
+  try { history.replaceState(null, "", "#" + id); } catch (e) {}
+  if (scroll && window.matchMedia("(max-width: 980px)").matches) document.getElementById("panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  else if (scroll) document.querySelector(".main").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setWorkflow(wf, redraw = true) {
+  state.wf = wf;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.wf === wf ? "true" : "false"));
+  renderWorkflowNote();
+  if (redraw) applyHighlight();
+}
+
+drawMap();
+renderRoster();
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => setWorkflow(c.dataset.wf)));
+const initial = (location.hash || "").slice(1);
+select(NODES[initial] ? initial : "producer", false);
+renderWorkflowNote();
+</script>
+</body>
+</html>
