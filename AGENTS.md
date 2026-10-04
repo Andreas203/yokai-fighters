@@ -13,17 +13,21 @@ The crew exists in two places, from the same role definitions in `.claude/agents
 
 ## Roster
 
-| Team | Agent | Role definition | Paperclip role | Model |
+| Team | Agent | Role definition | Paperclip role | Paperclip model |
 |---|---|---|---|---|
-| Lead | Producer | [`producer`](.claude/agents/producer.md) | `ceo` | Opus |
-| Assets | Asset Scout | [`asset-scout`](.claude/agents/asset-scout.md) | `researcher` | Sonnet |
-| Assets | Clip Matcher | [`clip-matcher`](.claude/agents/clip-matcher.md) | `designer` | Sonnet |
-| Content | Movesmith | [`movesmith`](.claude/agents/movesmith.md) | `designer` | Sonnet |
-| Content | Habit Writer | [`habit-writer`](.claude/agents/habit-writer.md) | `designer` | Sonnet |
-| Content | Rules Lawyer | [`rules-lawyer`](.claude/agents/rules-lawyer.md) | `qa` | Sonnet |
-| Content | Sparring Partner | [`sparring-partner`](.claude/agents/sparring-partner.md) | `researcher` | Opus |
-| Engineering | Gameplay Programmer | [`gameplay-programmer`](.claude/agents/gameplay-programmer.md) | `engineer` | Opus |
-| Engineering | UI Designer | [`ui-designer`](.claude/agents/ui-designer.md) | `designer` | Sonnet |
+| Lead | Producer | [`producer`](.claude/agents/producer.md) | `ceo` | `claude-sonnet-5-5` |
+| Assets | Asset Scout | [`asset-scout`](.claude/agents/asset-scout.md) | `researcher` | unset → Opus 5 |
+| Assets | Clip Matcher | [`clip-matcher`](.claude/agents/clip-matcher.md) | `designer` | unset → Opus 5 |
+| Content | Movesmith | [`movesmith`](.claude/agents/movesmith.md) | `designer` | unset → Opus 5 |
+| Content | Habit Writer | [`habit-writer`](.claude/agents/habit-writer.md) | `designer` | unset → Opus 5 |
+| Content | Rules Lawyer | [`rules-lawyer`](.claude/agents/rules-lawyer.md) | `qa` | unset → Opus 5 |
+| Content | Sparring Partner | [`sparring-partner`](.claude/agents/sparring-partner.md) | `researcher` | unset → Opus 5 |
+| Engineering | Gameplay Programmer | [`gameplay-programmer`](.claude/agents/gameplay-programmer.md) | `engineer` | unset → Opus 5 |
+| Engineering | UI Designer | [`ui-designer`](.claude/agents/ui-designer.md) | `designer` | unset → Opus 5 |
+
+The **Paperclip model** column is the hired agent's `adapterConfig.model`. Where it is unset the `claude_local` adapter falls back to `claude-opus-5`, so those seven all run on Opus 5 today regardless of what their role file asks for. Setting one needs the `agents:configure` permission, which only the board holds.
+
+This is separate from the `model:` frontmatter in `.claude/agents/<slug>.md` (`sonnet` for everyone except `gameplay-programmer` and `sparring-partner`, which ask for `opus`). That frontmatter governs the **Claude Code subagent** only — it does not reach the hired Paperclip agent.
 
 Everyone reports to the Producer. Paperclip's `role` field is a fixed enum (`ceo`, `cto`, `cmo`, `cfo`, `security`, `engineer`, `designer`, `pm`, `qa`, `devops`, `researcher`, `general`), so each crew role maps to its nearest option; the real role is the job title and the instruction bundle.
 
