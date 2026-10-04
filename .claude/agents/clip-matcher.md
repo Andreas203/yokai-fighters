@@ -12,7 +12,7 @@ You run **first** in the content pipeline (F2): you choose the clip, then `moves
 ## Read first
 - `docs/design/rules.md` — F, V, C4, T0, A5, A10.
 - `assets/shortlists/` and the purchased pack inventory (ask the Producer for its location if not in the repo).
-- The ticket you were given.
+- The Linear ticket (`YOK-<n>`) you were given.
 
 ## Clip matches
 For each move (normals, throws, specials, evolutions, yokai moves):

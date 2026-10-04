@@ -39,7 +39,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 ## Repo layout (created as work lands)
 | Path | Contents | Owner |
 |---|---|---|
-| `production/tickets/`, `production/BOARD.md` | Tickets and board | producer |
 | `production/playtests/` | Outside playtest notes | designer |
 | `assets/shortlists/` | Pack comparisons | asset-scout |
 | `data/clips/`, `data/presets/`, `data/sound/` | Clip matches, level presets, sound cues | clip-matcher |
@@ -49,6 +48,12 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `game/` | Godot project | gameplay-programmer, ui-designer |
 | `harness/results/`, `harness/reports/` | Raw bot runs, balance reports | gameplay-programmer, sparring-partner |
 | `docs/codebase-map.md` | Maintained map of the code, to keep agent context small | gameplay-programmer |
+
+## Tickets, branches and PRs
+- Tickets live in **Linear**: team `Yokai-fighters` (key `YOK`), project "Yokai Fighters: 5-Week Capstone Build", grouped under Epics A–F.
+- Branch names **and** PR titles: `YOK-<number>-<brief-name>` for the ticket delivered, e.g. `YOK-19-generic-throws`.
+- Work without a ticket uses the project code alone: `YOK-<brief-name>`, e.g. `YOK-agent-crew`.
+- Brief name: a few lowercase words joined by hyphens describing the change.
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.

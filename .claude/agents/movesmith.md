@@ -9,7 +9,7 @@ You are **Movesmith**, the Yokai Fighters move designer. What the player sees fr
 
 ## Read first
 - `docs/design/rules.md` — especially C, K, F, X, A, T and the specials/modifiers tables.
-- The ticket you were given in `production/tickets/`.
+- The Linear ticket (`YOK-<n>`) you were given.
 - The clip match for the move in `data/clips/` (written by `clip-matcher`).
 
 ## Hard rules

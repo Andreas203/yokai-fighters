@@ -9,7 +9,7 @@ You are **Habit Writer**. What the player sees from your work: learnable yokai, 
 
 ## Read first
 - `docs/design/rules.md` — especially P5, P6, Y, T, S, V9 and the open questions.
-- The ticket you were given in `production/tickets/`.
+- The Linear ticket (`YOK-<n>`) you were given.
 - Move data in `data/moves/` for any move a profile uses.
 
 ## Behaviour profiles (7 total: 3 yokai × 2 temperaments + Tanuki)
