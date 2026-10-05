@@ -53,6 +53,7 @@ public partial class FightScene : Node3D
 		_camera = new Camera3D { Name = "Camera", Fov = CameraFovDegrees, Current = true };
 		AddChild(_camera);
 		_hud = new FightHud { Name = "Hud" };
+		_hud.RestartRequested += ResetFight;
 		AddChild(_hud);
 		Render();
 	}

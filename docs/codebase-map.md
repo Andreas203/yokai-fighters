@@ -38,10 +38,11 @@ Pure C#, deterministic, shared by Kata and Kihon (K3): only the `ICommandParser`
 |---|---|
 | `FightScene.cs` (`scenes/fight.tscn`) | Owns `Match` + `FixedStepClock`; each `_Process` runs the due ticks then `Render()`s. Builds the placeholder stage (floor, backdrop, corner posts), capsule fighters (mirrored by `Scale.X = Facing`, "Nose" marks facing; KO'd fighter tips over across the 30 slow frames), Camera3D at FOV 25° (F4), 200 units per metre, fixed Z = 0. `ExternalDrive` + `Step()` let tests/harness drive it without the clock or keyboard. Moves: `FightScene.LoadMoves()` reads `data/moves/` at fight start, falling back to the test fixtures while it is empty. Debug keys (stand-in for the YOK-17 parser, press = request): P1 A/D walk, S crouch, F/C/V move slots 1–3, G cross-up; P2 ←/→, ↓, L/J/H, K; R resets after KO. |
 | `InputDevices.cs` | Minimal device → `FighterInput` mapping (K2 keyboard and pad; rebinding/scheme select is YOK-25). P1 keys WASD + U/I/O punches, J/K/L kicks, Space Special; P2 arrows + numpad 4/5/6, 1/2/3, 0. Pad: d-pad/left stick (0.5 deadzone), X/Y/RB punches, A/B/RT kicks, LB Special. `Read(player)` ORs keyboard and pad `player`. Not yet wired into `FightScene` (still on debug keys). |
-| `FightHud.cs` | Placeholder `CanvasLayer`: `P1Health`/`P2Health` bars and the `Banner` label (K.O., winner). ui-designer replaces it; reads `Match` only. |
+| `FightHud.cs` | Paper-talisman HUD (Godot-drawn, YOK-51): health bars with "RYO · 720 / 1000" text, Ryo's 3-bar meter and burst seal, K.O./win `Banner`, and a `LoseScreen` (Restart button raises `RestartRequested`, wired to `FightScene.ResetFight`). Reads `Match` + `IHudView` only. |
+| `IHudView.cs` | Read-only `Meter`/`MeterMax`/`BurstAvailable` view; `StubHudView` supplies fixed values until YOK-20, which assigns its own to `FightHud.View`. |
 
 ### Tests (`game/tests/`)
-Headless runner: `tests/test_runner.tscn` (`TestRunner.cs`) runs every `[Test]` public static method in the assembly (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. Add tests as new static classes; no NuGet needed.
+Screenshot tool: `tests/hud_capture.tscn` (windowed; see `HudCapture.cs`). Headless runner: `tests/test_runner.tscn` (`TestRunner.cs`) runs every `[Test]` public static method in the assembly (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. Add tests as new static classes; no NuGet needed.
 ```
 cd game
 dotnet build

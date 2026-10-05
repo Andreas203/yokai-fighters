@@ -221,10 +221,10 @@ public static class FightLoopTests
 		scene.ExternalDrive = true;
 		runner.AddChild(scene);
 		var hud = scene.GetNode<FightHud>("Hud");
-		var bar = hud.GetNode<ColorRect>("P2Health");
-		float full = bar.Size.X;
+		int full = scene.Match.P2.Health;
 		scene.Step(In(InputBits.DebugStrike), Idle);
-		Assert.True(bar.Size.X < full, "P2 health bar drops on hit");
+		Assert.True(scene.Match.P2.Health < full, "P2 health drops on hit");
+		Assert.True(FightHud.HealthText("KITSUNE", scene.Match.P2).StartsWith("KITSUNE · "), "HUD health text");
 		scene.Step(In(InputBits.DebugCrossUp), Idle);
 		var ryo = scene.GetNode<Node3D>("Ryo");
 		Assert.True(ryo.Scale.X < 0, "Ryo's model mirrors to face left after switching sides");
@@ -233,8 +233,28 @@ public static class FightLoopTests
 		Assert.Equal(MatchPhase.Over, scene.Match.Phase, "KO reached in scene");
 		Assert.True(hud.GetNode<Label>("Banner").Text.StartsWith("Ryo wins"), "banner shows the winner");
 		scene.ResetFight();
-		Assert.Equal(full, bar.Size.X, "health bar refilled after reset");
+		Assert.Equal(full, scene.Match.P2.Health, "health refilled after reset");
 		Assert.Equal("", hud.GetNode<Label>("Banner").Text, "banner cleared");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Scene_LoseScreenRestartResetsFight(Node runner)
+	{
+		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		scene.ExternalDrive = true;
+		runner.AddChild(scene);
+		var hud = scene.GetNode<FightHud>("Hud");
+		var lose = hud.GetNode<Control>("LoseScreen");
+		Assert.True(!lose.Visible, "lose screen hidden during the fight");
+		for (int t = 0; t < 400 && scene.Match.Phase != MatchPhase.Over; t++)
+			scene.Step(Idle, In(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+		Assert.Equal(MatchPhase.Over, scene.Match.Phase, "KO reached");
+		Assert.Equal(1, scene.Match.Winner, "Kitsune won");
+		Assert.True(lose.Visible, "lose screen shown when Ryo loses");
+		hud.GetNode<Button>("LoseScreen/Restart").EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.Equal(MatchPhase.Fighting, scene.Match.Phase, "Restart resets the fight");
+		Assert.True(!lose.Visible, "lose screen hidden after restart");
 		scene.QueueFree();
 	}
 }
