@@ -1,6 +1,6 @@
 # Bamboo grove at dusk (V9) - stage generation spec
 
-Ticket: YOK-29. Status: SPEC, awaiting designer approval. Nothing run.
+Ticket: YOK-29. Status: APPROVED first pass (YOK-30); retakes need new approval.
 Gameplay is a flat plane (F4): only the band behind the fighters needs detail. Layers back to front: backdrop image, midground bamboo props, lantern props, ground strip.
 
 ## Prompts (after the style block)

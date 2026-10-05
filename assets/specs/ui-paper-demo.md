@@ -1,6 +1,6 @@
 # Minimal UI textures for the demo - OPTIONAL spec
 
-Ticket: YOK-29. Status: SPEC, OPTIONAL. Needed only if ui-designer will not use flat Godot-drawn placeholders for the YOK-39 HUD (health bars, timer, round-win seals). Designer decides.
+Ticket: YOK-29. Status: APPROVED (YOK-30, U1-U3, 9 credits). Was optional: needed only if ui-designer will not use flat Godot-drawn placeholders for the YOK-39 HUD (health bars, timer, round-win seals). Designer decides.
 
 All `meshy_text_to_image`, `nano-banana`, 1:1, 3 credits each, then cleaned into tileable or alpha textures.
 

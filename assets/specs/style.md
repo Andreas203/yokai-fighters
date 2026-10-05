@@ -26,12 +26,12 @@ Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film gra
 
 ## Fighter turnaround rules
 
-- White or flat light-grey background, full body, A-pose (arms ~16-18 deg out), feet apart, no effects, no held items. Kitsune's mask stays on.
+- White or flat light-grey background, full body, T-pose (arms straight out; designer decision), feet apart, no effects, no held items. Kitsune's mask stays on.
 - Front, side and back views at the same scale and height. Only the chosen front view goes to Image-to-3D.
 
 ## Shared 3D settings
 
-- Image-to-3D: `ai_model: meshy-7.1`, `model_type: standard`, `should_texture: true`, `enable_pbr: false`, `texture_resolution: 2k`, `should_remesh: true`, `topology: triangle`, `target_polycount` per spec, `pose_mode: a-pose` (references are A-pose), `image_enhancement: false` (preserve flat reference styling), `target_formats: ["glb"]`.
+- Image-to-3D: `ai_model: meshy-7.1`, `model_type: standard`, `should_texture: true`, `enable_pbr: false`, `texture_resolution: 2k`, `should_remesh: true`, `topology: triangle`, `target_polycount` per spec, `pose_mode: t-pose` (designer decision for YOK-30; references are A-pose), `image_enhancement: false` (preserve flat reference styling), `target_formats: ["glb"]`.
 - Colour only in the base texture. Godot applies the shared toon shader and outline pass; any baked lighting or shadow in the texture is a RETAKE reason.
 
 ## Acceptance checklist (used by every spec)
