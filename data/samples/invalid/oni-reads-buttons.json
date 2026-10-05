@@ -1,0 +1,20 @@
+{
+  "kind": "profile",
+  "id": "oni-reads-buttons",
+  "yokai": "oni",
+  "temperament": "boss",
+  "reaction": { "tier": "yokai", "frames": 12 },
+  "aggression_bias": 80,
+  "preferred_range": "close",
+  "habit": {
+    "id": "dash-after-blocked-projectile",
+    "description": "Dashes in after blocking a projectile.",
+    "when": "blocked_projectile",
+    "do": "dash_forward",
+    "chance_pct": 70
+  },
+  "behaviours": [
+    { "when": "opponent_pressed_punch", "do": "special:iron-club-charge", "weight": 50 }
+  ],
+  "rules": ["Y1", "Y2"]
+}

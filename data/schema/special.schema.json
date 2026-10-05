@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/special.schema.json",
+  "title": "Special",
+  "description": "A special move with its three levels (A3-A5) in data/moves/<id>.json. Lv 1 is the full frame data; Lv 2 is one tuning step; Lv 3 is the evolution with its visual preset.",
+  "type": "object",
+  "required": ["kind", "id", "name", "source", "starter", "rarity", "locked", "clip", "rules", "input", "card", "levels"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "special" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "source": { "$ref": "common.schema.json#/$defs/yokai" },
+    "starter": { "type": "boolean", "description": "Ryo's starters fill two slots at run start (A1)." },
+    "rarity": { "$ref": "common.schema.json#/$defs/rarity" },
+    "locked": { "type": "boolean", "description": "Starts locked behind meta-unlocks (A11, the ◆ marks)." },
+    "clip": { "$ref": "common.schema.json#/$defs/id", "description": "Clip match id: data/clips/<clip>.json (F2)." },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "input": {
+      "description": "Both schemes (K1, K2). The slot letter is shared: A = ↓↘→ / neutral, B = →↓↘ / forward, C = ↓↙← / back, D = ↓↓ / down.",
+      "type": "object",
+      "required": ["kata", "kihon"],
+      "additionalProperties": false,
+      "properties": {
+        "kata": {
+          "enum": [
+            { "slot": "A", "motion": "236" },
+            { "slot": "B", "motion": "623" },
+            { "slot": "C", "motion": "214" },
+            { "slot": "D", "motion": "22" }
+          ]
+        },
+        "kihon": {
+          "enum": [
+            { "slot": "A", "direction": "neutral" },
+            { "slot": "B", "direction": "forward" },
+            { "slot": "C", "direction": "back" },
+            { "slot": "D", "direction": "down" }
+          ]
+        }
+      }
+    },
+    "card": { "$ref": "common.schema.json#/$defs/card" },
+    "ex": {
+      "description": "EX version (C5): costs meter, changes listed as effects on Lv-current frame data.",
+      "type": "object",
+      "required": ["meter_cost", "changes"],
+      "additionalProperties": false,
+      "properties": {
+        "meter_cost": { "type": "integer", "minimum": 1, "maximum": 300 },
+        "changes": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/effect" } }
+      }
+    },
+    "levels": {
+      "type": "object",
+      "required": ["1", "2", "3"],
+      "additionalProperties": false,
+      "properties": {
+        "1": {
+          "type": "object",
+          "required": ["frame_data"],
+          "additionalProperties": false,
+          "properties": {
+            "frame_data": { "$ref": "frame-data.schema.json" },
+            "preset": { "$ref": "common.schema.json#/$defs/id", "description": "Level preset: data/presets/<id>.json (V8)." }
+          }
+        },
+        "2": {
+          "description": "One tuning step (A4). The exact step per special is an open question, so status is usually 'proposed'.",
+          "type": "object",
+          "required": ["status", "tuning"],
+          "additionalProperties": false,
+          "properties": {
+            "status": { "$ref": "common.schema.json#/$defs/status" },
+            "tuning": { "$ref": "common.schema.json#/$defs/effect" },
+            "preset": { "$ref": "common.schema.json#/$defs/id" },
+            "card": { "$ref": "common.schema.json#/$defs/card" },
+            "notes": { "$ref": "common.schema.json#/$defs/notes" }
+          }
+        },
+        "3": {
+          "description": "Evolution (A5): data-only, comes with its special, never locked, always has a visual preset.",
+          "type": "object",
+          "required": ["evolution"],
+          "additionalProperties": false,
+          "properties": {
+            "evolution": {
+              "type": "object",
+              "required": ["id", "name", "preset", "changes", "card"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "$ref": "common.schema.json#/$defs/id" },
+                "name": { "type": "string", "minLength": 1 },
+                "status": { "$ref": "common.schema.json#/$defs/status" },
+                "preset": { "$ref": "common.schema.json#/$defs/id", "description": "Visual preset: data/presets/<id>.json." },
+                "changes": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "$ref": "common.schema.json#/$defs/effect" }
+                },
+                "card": { "$ref": "common.schema.json#/$defs/card" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/cancel-rule.schema.json",
+  "title": "Cancel rule",
+  "description": "A cancel path (X1-X4) in data/cancels/<id>.json. Always rare, offered only by elders, once per move per combo.",
+  "type": "object",
+  "required": ["kind", "id", "name", "source", "offered_by", "rarity", "locked", "rules", "path", "once_per_combo", "card"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "cancel_rule" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "source": { "enum": ["kitsune", "oni", "kappa"] },
+    "offered_by": { "enum": ["nine-tailed-kitsune", "elder-oni", "elder-kappa"], "description": "X1: elders only." },
+    "rarity": { "const": "rare" },
+    "locked": { "type": "boolean" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "path": {
+      "type": "object",
+      "required": ["from", "into", "on"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "enum": ["specials", "heavy_normals", "normals", "successful_throws"] },
+        "into": { "enum": ["dash", "specials", "one_special"] },
+        "on": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["hit", "block", "whiff"] }
+        }
+      }
+    },
+    "once_per_combo": { "const": true, "description": "X3: each move can be cancelled into once per combo." },
+    "card": { "$ref": "common.schema.json#/$defs/card" },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

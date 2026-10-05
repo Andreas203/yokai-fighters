@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/common.schema.json",
+  "title": "Shared definitions",
+  "description": "Building blocks shared by every content schema. All gameplay numbers are integers (frames, units, percent) so the 60-tick loop stays deterministic (C1, F3).",
+  "$defs": {
+    "id": {
+      "description": "Lowercase kebab-case id; also the file name without .json.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "yokai": {
+      "description": "Source of an ability (A8). 'ryo' = Ryo's starters.",
+      "enum": ["ryo", "kitsune", "oni", "kappa"]
+    },
+    "rarity": { "enum": ["common", "rare"] },
+    "status": {
+      "description": "'proposed' marks values awaiting a designer decision (open questions, untuned first passes).",
+      "enum": ["final", "proposed"]
+    },
+    "ruleIds": {
+      "description": "Rule IDs from docs/design/rules.md this content implements or depends on.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[PCKFXAYTRMSVG][0-9]+$" },
+      "uniqueItems": true
+    },
+    "notes": { "type": "string" },
+    "card": {
+      "description": "Reward card text (A12): plain language first, frame data behind a toggle.",
+      "type": "object",
+      "required": ["plain", "frames"],
+      "additionalProperties": false,
+      "properties": {
+        "plain": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "frames": { "type": "string", "minLength": 1, "maxLength": 140, "description": "Text shown when the frame-data toggle is on." }
+      }
+    },
+    "frameRange": {
+      "description": "Inclusive [first, last] frame, 1-based, counted from the move's first frame.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 1 },
+        { "type": "integer", "minimum": 1 }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "rect": {
+      "description": "2D rectangle in gameplay units (1 unit = 1 px at 1920x1080), relative to the character origin at the feet, x toward the opponent, y up (F3, F4).",
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "timedRect": {
+      "type": "object",
+      "required": ["frames", "rect"],
+      "additionalProperties": false,
+      "properties": {
+        "frames": { "$ref": "#/$defs/frameRange" },
+        "rect": { "$ref": "#/$defs/rect" }
+      }
+    },
+    "condition": {
+      "description": "When an effect applies. Every condition is game state the fight can see, never a button press (P6).",
+      "enum": ["always", "on_hit", "on_block", "on_whiff", "on_counterhit", "first_use_each_round", "ryo_health_below_30pct", "holding_up", "holding_charge"]
+    },
+    "effect": {
+      "description": "One data-only change to a move (A4, A5, A10). Integer values: frames, units, or percent for mul_pct (130 = x1.3).",
+      "type": "object",
+      "required": ["target", "op", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "description": "Dotted path into frame data, e.g. 'recovery', 'damage', 'projectile.speed', 'meter_gain.on_block', 'properties.armour'.",
+          "type": "string",
+          "pattern": "^[a-z_]+(\\.[a-z_]+)*$"
+        },
+        "op": { "enum": ["add", "mul_pct", "set"] },
+        "value": { "type": ["integer", "boolean", "object", "string"] },
+        "when": { "$ref": "#/$defs/condition" }
+      }
+    }
+  }
+}

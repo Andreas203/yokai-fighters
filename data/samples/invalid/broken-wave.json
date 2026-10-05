@@ -1,0 +1,47 @@
+{
+  "kind": "special",
+  "id": "broken-wave",
+  "name": "Broken Wave",
+  "source": "ryo",
+  "starter": false,
+  "rarity": "common",
+  "locked": false,
+  "clip": "ryo-spirit-wave",
+  "rules": ["A4", "Z9"],
+  "input": {
+    "kata": { "slot": "A", "motion": "236" }
+  },
+  "card": {
+    "plain": "Deliberately malformed sample: no Kihon slot, damage as text, hitbox outside active frames.",
+    "frames": "13 / 2 / 30"
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 13,
+        "active": 2,
+        "recovery": 30,
+        "damage": "sixty",
+        "hitboxes": [
+          { "frames": [20, 22], "rect": { "x": 40, "y": 80, "w": 60, "h": 40 } }
+        ],
+        "hurtboxes": [
+          { "frames": [1, 45], "rect": { "x": -40, "y": 0, "w": 90, "h": 180 } }
+        ]
+      }
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": { "target": "recovery", "op": "add", "value": -4 }
+    },
+    "3": {
+      "evolution": {
+        "id": "broken-evolution",
+        "name": "Broken Evolution",
+        "preset": "broken-evolution",
+        "changes": [ { "target": "damage", "op": "mul_pct", "value": 110 } ],
+        "card": { "plain": "Nothing works.", "frames": "—" }
+      }
+    }
+  }
+}

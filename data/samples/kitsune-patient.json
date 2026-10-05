@@ -1,0 +1,25 @@
+{
+  "kind": "profile",
+  "id": "kitsune-patient",
+  "status": "proposed",
+  "yokai": "kitsune",
+  "temperament": "patient",
+  "reaction": { "tier": "yokai", "frames": 22 },
+  "aggression_bias": 25,
+  "preferred_range": "full_screen",
+  "habit": {
+    "id": "jumps-after-knockdown",
+    "description": "Often jumps after being knocked down.",
+    "when": "self_got_up",
+    "do": "jump",
+    "chance_pct": 60
+  },
+  "behaviours": [
+    { "when": "at_full_screen", "do": "special:foxfire", "weight": 40 },
+    { "when": "opponent_jumping", "do": "normal:heavy-punch", "weight": 70 },
+    { "when": "at_close_range", "do": "dash_back", "weight": 50 },
+    { "when": "projectile_on_screen", "do": "block", "weight": 60 },
+    { "when": "neutral", "do": "walk_back", "weight": 20 }
+  ],
+  "rules": ["Y1", "Y2", "Y4", "P6"]
+}
