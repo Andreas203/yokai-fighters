@@ -1,6 +1,6 @@
 # YOK-31 Retarget gate: walk, heavy, throw on Ryo and Kitsune
 
-Ticket: YOK-31 (G4, F2, F5, F6, AM1). Status: **SPEC, AWAITING DESIGNER APPROVAL. No credits spent.**
+Ticket: YOK-31 (G4, F2, F5, F6, AM1). Status: **TAKE 1 RUN AND MEASURED (12 credits). See `docs/assets/retarget_gate.md`.**
 Stacked on YOK-30 (rigs). Demo ships silent: no sound cues. Balance at spec time: 1137 credits.
 
 ## Question
@@ -51,8 +51,18 @@ Judged per character. A move passes for a character when all hold: root motion s
 
 Minor clipping fixable Godot-side without touching animation (a few millimetres of sleeve push-in, tail fan angle in data) is a WARN, not a fail. Results are per character: Ryo can be GO while Kitsune is NO-GO.
 
-## Takes (log, filled when run)
-None run. Approval pending.
+## Takes (log)
+Take 1, 2026-10-06, designer-approved (heavy + grab on both rebuilt rigs, 12 credits, no retakes). Balance 959 -> 947. Rigs: Ryo `01a10e47-857e-73a0-9f7a-cd74795198fb`, Kitsune `01a10e47-91f6-709b-bd34-8884f8cbabbb` (the rig ids in the table above are superseded by the YOK-30 rebuild).
+
+| Take | Fighter | Task id | Action id (preset) | Credits | Verdict |
+|---|---|---|---|---|---|
+| H1 | Ryo | `01a10e5b-45a5-7037-98b1-83de6aa9f9e9` | 194 `Right_Uppercut_from_Guard` | 3 | PASS (head-trim 28 ticks) |
+| H2 | Kitsune | `01a10e5b-4763-7086-95f6-9b05c342b132` | 194 | 3 | WARN (sleeves) |
+| T1 | Ryo | `01a10e5b-490c-719f-885b-079e3172a818` | 389 `Grip_and_Throw_Down` | 3 | FAIL (not a forward grab, 283 ticks) |
+| T2 | Kitsune | `01a10e5b-4a7d-77c0-902a-36f5aa60a3b2` | 389 | 3 | FAIL |
+| W1/W2 | both | free rig walks | `walking_man` | 0 | PASS / WARN |
+
+Full measurements, stills and the GO / NO-GO recommendation: `docs/assets/retarget_gate.md`. Take count for T01 is now 1 of 3.
 
 ## Output when run
 Per take: task id, credits spent, GLB path, a measurements table for items 1-7, PASS/FAIL per rig, and GO/NO-GO per character. `data/clips/<move-id>.json` is written only for passing takes.
