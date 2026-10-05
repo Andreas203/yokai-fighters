@@ -67,7 +67,7 @@ Every evolution is a property change plus a visual preset on the base clip. None
 
 The GDD and rules.md define normals for Ryo only (C8). They give no per-yokai normal list. Kitsune, Oni and Kappa are fought by the AI (Y1) and need attack animations, so this list proposes the following, which adds no new moves:
 
-- Each yokai has the same six normal slots as Ryo (N01-N06 slots), played from the same retargeted humanoid clips. One purchase, four retargets.
+- Each yokai has the same six normal slots as Ryo (N01-N06 slots), played from the same retargeted humanoid clips. One generated clip, four rigs.
 - Frame data for yokai normals is a Movesmith ticket after clip picks; this list does not set numbers.
 - The AI may use only a subset per temperament (a Habit Writer concern).
 - Yokai hit sparks use their source colour [V5].

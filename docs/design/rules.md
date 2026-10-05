@@ -1,9 +1,10 @@
 # Yokai Fighters — Written Rules
 
-The canonical, citable rules distilled from `Yokai_Fighters_GDD_Extended.pdf`.
+The canonical, citable rules distilled from `Yokai_Fighters_GDD_Extended.pdf` and
+the approved changes in `docs/design/gdd-amendments.md` (amendments win over the PDF).
 Every agent reads this file; **Rules Lawyer** rejects content by citing a rule ID
-(e.g. "violates A7"). If this file and the PDF disagree, the PDF wins and this file
-gets a fix ticket. All numbers are first-pass targets that the harness tunes; a
+(e.g. "violates A7"). If this file and the PDF + amendments disagree, they win
+and this file gets a fix ticket. All numbers are first-pass targets that the harness tunes; a
 tuned value changes here first, with the harness evidence linked in the commit.
 
 Items marked **Full game** are stretch goals and must not be built in the 5-week build.
@@ -49,10 +50,11 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## F — Frame data and engine constraints
 
 - **F1** Every move has startup, active and recovery frames.
-- **F2** Clip first: Clip Matcher picks the animation clip, then Movesmith writes frame data from that clip's real timing. Frame data that doesn't match its clip is invalid.
+- **F2** Clip first: Clip Matcher specs the move's clip, the designer generates it, Clip Matcher measures the approved take, then Movesmith writes frame data from that clip's real timing. Frame data that doesn't match its clip is invalid.
 - **F3** Animations step by exact frames via `AnimationPlayer.Seek()`. Hitboxes are 2D rectangles stored in move data, not physics shapes.
 - **F4** Gameplay lives on a flat 2D plane (fixed Z); 3D is presentation only. Perspective camera, ~25° FOV.
-- **F5** No bespoke animation. A move whose clip is missing becomes a mechanically equivalent move on an approved clip.
+- **F5** No hand-keyed animation: every clip comes from the Meshy animation pipeline (F6). A move gets at most 3 generation takes; if none is usable, it becomes a mechanically equivalent move on an approved clip.
+- **F6** Visual assets are generated, sound is sourced [AM1]. Models: image-model turnaround → Meshy Image-to-3D → Meshy auto-rig (shared humanoid skeleton) → glTF into Godot. Clips: Meshy animation library or prompt generation, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures: image model. Sound and music: bought packs. The designer runs every generation job and owns the credit spend; agents write specs and check results.
 
 ## X — Cancels
 
@@ -176,7 +178,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 
 ## V — Presentation and feel
 
-- **V1** Toon-shaded 3D, ink outlines, muted ukiyo-e palette (persimmon, indigo, rice paper, pine). UI = paper talismans, brush strokes, red seals.
+- **V1** Toon-shaded 3D, ink outlines, muted ukiyo-e palette (persimmon, indigo, rice paper, pine). UI = paper talismans, brush strokes, red seals. Generated assets are made to this look by prompt and unified by one toon shader and outline pass; no baked PBR detail or painterly texture.
 - **V2** Hitstop: light 6, medium 9, heavy 12 frames; counterhit +4.
 - **V3** Screen shake: heavy hits and EX only, 2–4 px for 6 frames. Never on lights.
 - **V4** Round-ending blow: 30 frames at half speed, then the ink-stroke binding.
@@ -191,11 +193,13 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 - **G1** Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - **G2** Scope gate (end of week 1): cut Kata, then the meta-unlock layer (carry-over and story stay).
 - **G3** Balance gate (mid week 3): modifiers 14 → 8 (six unlocked stay, locked drop to 2), then dojo trials, then colour-only presets.
-- **G4** Week-1 retarget go/no-go: walk, heavy and throw clips must retarget onto each yokai without clipping tails/shell/club; failing yokai use their folklore human guise.
-- **G5** Schedule: W1 move list, retarget gate, packs, combat core, both schemes, AI framework, test bot. W2 33 abilities, 7 profiles, Tanuki + copy rule, map/merchant/dojo/unlocks with placeholder screens, whole-run harness, first playtest. W3 final screens/HUD, story cards, integration, balance gate, feature freeze. W4–5 polish only.
+- **G4** Week-1 retarget go/no-go: generated walk, heavy and throw clips must play on each yokai's auto-rig without clipping tails/shell/club; failing yokai use their folklore human guise.
+- **G5** Schedule: W1 move list, fighters generated and auto-rigged, retarget gate, sound packs, combat core, both schemes, AI framework, test bot. W2 33 abilities, 7 profiles, Tanuki + copy rule, map/merchant/dojo/unlocks with placeholder screens, whole-run harness, first playtest. W3 final screens/HUD, story cards, integration, balance gate, feature freeze. W4–5 polish only.
 
 ## Open questions (designer decides; do not invent answers)
 
 - Exact Lv 2 tuning step for each special.
-- Asset spend.
+- Generation credit spend and sound/music spend.
+- Generator plan tier (commercial licence for generated output).
+- Designer hours for running generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.

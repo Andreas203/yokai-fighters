@@ -18,6 +18,7 @@ You **never edit** files. You judge them against `docs/design/rules.md` and retu
    - **A7/A9 offers**: commons vs rares, rares only from elders, cancel rules only from elders (X1).
    - **A11 counts**: 33 abilities; exactly 12 locked (3 specials, 8 modifiers, 1 cancel); evolutions never locked.
    - **F2/F3**: frame data cites a clip in `data/clips/` and matches its timing; hitboxes are 2D rects.
+   - **F5/F6**: every clip comes from the Meshy pipeline (`source` is a Meshy library preset or generated take), is in place, and no move relies on hand-keyed animation.
    - **X3**: no cancel path can loop; each move cancelled into at most once per combo.
    - **C4/T**: no paired throw animation; every special copyable with Ryo's clips; copy never includes modifiers or evolutions.
    - **A5/A10**: evolutions and modifiers need no new animation.

@@ -16,7 +16,8 @@ The crew exists in two places, from the same role definitions in `.claude/agents
 | Team | Agent | Role definition | Paperclip role | Paperclip model |
 |---|---|---|---|---|
 | Lead | Producer | [`producer`](.claude/agents/producer.md) | `ceo` | `claude-sonnet-5-5` |
-| Assets | Asset Scout | [`asset-scout`](.claude/agents/asset-scout.md) | `researcher` | unset → Opus 5 |
+| Assets | Asset Smith | [`asset-smith`](.claude/agents/asset-smith.md) | `designer` | not hired yet |
+| Assets | Sound Scout | [`sound-scout`](.claude/agents/sound-scout.md) | `researcher` | unset → Opus 5 (hired as Asset Scout; instructions need re-applying) |
 | Assets | Clip Matcher | [`clip-matcher`](.claude/agents/clip-matcher.md) | `designer` | unset → Opus 5 |
 | Content | Movesmith | [`movesmith`](.claude/agents/movesmith.md) | `designer` | unset → Opus 5 |
 | Content | Habit Writer | [`habit-writer`](.claude/agents/habit-writer.md) | `designer` | unset → Opus 5 |
@@ -43,7 +44,7 @@ Each hired agent's `AGENTS.md` is its role definition plus a fixed operating con
 
 ## Standing rules for every agent
 
-- The **designer** (the human) owns open questions, purchases, cut gates and every code merge. No agent decides those.
+- The **designer** (the human) owns open questions, purchases, generation jobs, cut gates and every code merge. No agent decides those.
 - Agents never push to `main` and never merge. Branches and PR titles are `YOK-<number>-<brief-name>`.
 - Content merges only after schema, the Rules Lawyer gate and harness checks. Code merges only after designer approval.
 - Timer heartbeats are off for the whole crew; agents wake on demand when the Producer assigns them an issue.

@@ -1,10 +1,10 @@
 # Yokai Fighters: Clip Needs (YOK-14)
 
-For Asset Scout (YOK-29) and Clip Matcher. Lengths are rough clip lengths at 60 fps, derived from the rules.md first-pass targets (startup + active + recovery) where they exist. Per F2, a matched clip's real timing overrides these numbers; Movesmith keeps the clip's truth and flags the delta.
+For Clip Matcher's Meshy clip specs (F6, AM1). Lengths are rough clip lengths at 60 fps, derived from the rules.md first-pass targets (startup + active + recovery) where they exist. Per F2, a matched clip's real timing overrides these numbers; Movesmith keeps the clip's truth and flags the delta.
 
-Rig: all clips are humanoid and retargeted onto Ryo and onto each yokai model. Pack requirement: humanoid skeleton (Mixamo-style or Unity/Godot humanoid), in-place (no root motion) unless noted, toon-shader friendly.
+Rig: all clips are generated on the Meshy humanoid skeleton and applied to Ryo and to each yokai's auto-rig. Requirement: in place (no root motion) unless noted, clean on the hit frames, toon-shader friendly.
 
-Demo column: `D` = needed by the YOK-39 Ryo-vs-Kitsune demo (priority 1 for the shortlist). Fighters: R = Ryo (and the Tanuki when shapeshifted, T0), K = Kitsune, O = Oni, B = Kappa.
+Demo column: `D` = needed by the YOK-39 Ryo-vs-Kitsune demo (priority 1 for generation). Fighters: R = Ryo (and the Tanuki when shapeshifted, T0), K = Kitsune, O = Oni, B = Kappa.
 
 ## 1. Shared reactions (listed once, used by R, K, O, B)
 
@@ -24,7 +24,7 @@ Demo column: `D` = needed by the YOK-39 Ryo-vs-Kitsune demo (priority 1 for the 
 | R12 | Wake-up | Rise from the ground to stance | ~25 | D | Kitsune habit is jumping after knockdown [Y2], so rise must read clearly |
 | R13 | KO | Defeat collapse, ends on held pose | ~60 | D | Plays under the round-ending blow |
 | R14 | Win pose | Victory pose / brief taunt, hold | ~90 | D | Ryo and yokai each need one (can be shared) |
-| R15 | Binding (round-ending blow) | **Not a new clip.** Last hit plays at half speed for 30 frames [V4], defender plays R13, then an ink-stroke VFX seals them into a talisman | 30 (half speed) | D | Reuses the finishing move's own clip + R13 + VFX. No bespoke animation |
+| R15 | Binding (round-ending blow) | **Not a new clip.** Last hit plays at half speed for 30 frames [V4], defender plays R13, then an ink-stroke VFX seals them into a talisman | 30 (half speed) | D | Reuses the finishing move's own clip + R13 + VFX. No extra clip |
 | R16 | Burst | Defensive flare/shove: breaks combo, 20 invulnerable frames [C6] | ~20 | D | Rules require a burst but the ticket list omitted it; fallback below |
 
 Fallbacks: R16 burst: use R07 (block high) pose with a shockwave VFX. R14: reuse R01 idle with a victory VFX if no clip. Throw break (T02) is separate below.
@@ -38,7 +38,7 @@ Fallbacks: R16 burst: use R07 (block high) pose with a shockwave VFX. R14: reuse
 
 ## 3. Normals (Ryo, and the same six slots for each yokai)
 
-Yokai normals are an assumption (see `move_list.md` section 5). One purchase per row, retargeted to all four fighters.
+Yokai normals are an assumption (see `move_list.md` section 5). One clip per row, applied to all four fighters.
 
 | ID | Normal | Must show | Frames (S+A+R) | Fighters | Demo | Rig risk |
 |---|---|---|---|---|---|---|
@@ -89,11 +89,11 @@ Fights as Ryo with Ryo's model and clips [T0]; the copied special reuses its exi
 | B02 | Disguise-drop reveal | ~60-90 | Slow camera push-in [V7]. Fallback: pose snap from B01 to Tanuki model with smoke VFX, no clip |
 | B03 | Shapeshift into Ryo | ~30 | Fallback: model swap behind a VFX burst, no clip. A Tanuki true-form model is needed for the reveal and win-3 binding story card (stills acceptable) |
 
-## 7. Hard-to-find flags (F5 fallbacks, no bespoke animation)
+## 7. Hard-to-generate flags (F5 fallbacks after 3 takes, no hand-keyed animation)
 
-1. **Fox Mirage (S04), teleport.** Packs rarely have a vanish/re-appear clip. Fallback: any short crouch-to-stand or backstep clip played with a smoke/fade VFX, with the teleport itself in move data. Mechanics (18 startup, 10 recovery, behind opponent) unchanged. Evolution decoy is a model copy, not a clip.
+1. **Fox Mirage (S04), teleport.** Library presets rarely have a vanish/re-appear clip. Fallback: any short crouch-to-stand or backstep clip played with a smoke/fade VFX, with the teleport itself in move data. Mechanics (18 startup, 10 recovery, behind opponent) unchanged. Evolution decoy is a model copy, not a clip.
 2. **Iron-Club Charge (S05), forward charge with 1-hit armour.** A true shoulder-charge is uncommon. Fallback: a forward lunge or running tackle; else R04 dash start + heavy-punch strike pose (N03 held). Armour is data.
-3. **Oni Quake (S06), ground pound.** Overhead slam is findable in melee packs but rarely with a hits-low read. Fallback: any two-hand overhead smash; "low" is a data hitbox property [C3].
+3. **Oni Quake (S06), ground pound.** Overhead slams are common presets but rarely with a hits-low read. Fallback: any two-hand overhead smash; "low" is a data hitbox property [C3].
 4. **Shell Spin (S07), 18-frame active spin.** Needs a sustained in-place spin and it is the highest retarget-clipping risk (shell). Fallback: whirlwind / tornado-kick loop, trimmed to length. If the shell clips badly, Kappa uses its folklore human guise [G4].
 5. **River Grab and generic grab (T01), fast reach.** Needs a 5-6 frame reach to the grab; many grab clips have a slow wind-up. Fallback: a short lunging arm grab; if the clip's startup is slower, Movesmith keeps the clip's truth and flags the delta to the designer (the rules.md C4 startup 5 may change).
 6. **Burst (R16), Throw break (T02).** Not in the original scope list; they have no specific clips. Fallbacks as given above, VFX only.
@@ -114,7 +114,7 @@ Failure fallback: the yokai uses its folklore human guise [G4].
 ## 9. Counts
 
 - Entries in this document: 16 shared reactions + 2 throws + 6 normal slots + 7 special clips (River Grab reuses T01) + 8 evolutions (no new clips) + 3 boss needs = 42 rows, covering 61 must-ship move instances once yokai normals (18) and special-slot reuses are expanded.
-- Unique clips to source (the shopping list): 14 reaction clips (R01-R14; R15 is composed, R16 and T02 are fallback-driven) + T01 + 6 normals + 7 specials = about 28, plus up to 2 optional boss clips (B01, B02).
+- Unique clips to generate: 14 reaction clips (R01-R14; R15 is composed, R16 and T02 are fallback-driven) + T01 + 6 normals + 7 specials = about 28, plus up to 2 optional boss clips (B01, B02).
 - YOK-39 demo set: R01-R16, T01, T02, N01-N06, S01-S03 = 27 rows (about 25 unique clips).
 
 ## 10. Rules relied on

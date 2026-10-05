@@ -4,8 +4,9 @@ Single-player 2.5D roguelite fighting game for PC, built in **Godot 4 (.NET) wit
 
 ## Sources of truth
 - `Yokai_Fighters_GDD_Extended.pdf` — the full design (read with `pdftotext -layout`). `Yokai_Fighters_GDD_Short.pdf` is the 5-page summary.
-- `docs/design/rules.md` — the written rules distilled from the GDD, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF, the PDF wins and rules.md gets fixed.
-- The **designer** (the human) owns open questions, purchases, cut gates and every code merge. Never decide those on their behalf.
+- `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated, sound is sourced). An amendment wins over the PDF section it names.
+- `docs/design/rules.md` — the written rules distilled from the GDD and its amendments, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF + amendments, they win and rules.md gets fixed.
+- The **designer** (the human) owns open questions, purchases, generation jobs and their credit spend, cut gates and every code merge. Never decide those on their behalf.
 
 ## The agent crew
 Development tools only — none of them ship in the game. Defined in `.claude/agents/`.
@@ -13,8 +14,9 @@ Development tools only — none of them ship in the game. Defined in `.claude/ag
 | Team | Agent | Role |
 |---|---|---|
 | Lead | `producer` | Tickets outstanding work and plans which workflow runs it |
-| Assets | `asset-scout` | Shortlists model, animation, sound and music packs |
-| Assets | `clip-matcher` | Picks each move's clip first, then level presets and frame-timed sound |
+| Assets | `asset-smith` | Generation specs and acceptance checks for models, rigs, stages, UI and VFX textures |
+| Assets | `clip-matcher` | Specs each move's clip and measures the generated take, then level presets and frame-timed sound |
+| Assets | `sound-scout` | Shortlists sound-effect and music packs |
 | Content | `movesmith` | Move list, frame data from matched clips, hitboxes, card text, trials |
 | Content | `habit-writer` | Yokai temperament profiles and all story-card text |
 | Content | `rules-lawyer` | Gate: rejects content that breaks the written rules, with a reason |
@@ -26,10 +28,15 @@ Run a production pass with `/produce` (see `.claude/skills/produce/SKILL.md`): t
 
 ## Pipeline
 ```
-Asset Scout → Clip Matcher → Movesmith / Habit Writer → Rules Lawyer ──fail: back with reason──┐
-                                                            │ pass                             │
-                                                            ▼                                  │
-                                                      Harness checks → data merges        ◄────┘
+Asset Smith spec → designer generates → Asset Smith accepts (fighters rigged)
+                                                   │
+Clip Matcher spec → designer generates take → Clip Matcher measures
+                                                   │
+                           Movesmith / Habit Writer → Rules Lawyer ──fail: back with reason──┐
+                                                          │ pass                             │
+                                                          ▼                                  │
+                                                    Harness checks → data merges        ◄────┘
+Sound Scout shortlist → designer buys → Clip Matcher sound cues
 Gameplay Programmer / UI Designer → own branch, build-and-test loop → designer review → merge
 Harness results → Sparring Partner → Producer tickets the tuning
 ```
@@ -40,7 +47,9 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | Path | Contents | Owner |
 |---|---|---|
 | `production/playtests/` | Outside playtest notes | designer |
-| `assets/shortlists/` | Pack comparisons | asset-scout |
+| `assets/specs/` | Generation specs and acceptance results for models, stages, textures | asset-smith |
+| `assets/specs/clips/` | Per-move clip specs (Meshy preset or prompt) and take verdicts | clip-matcher |
+| `assets/shortlists/` | Sound and music pack comparisons | sound-scout |
 | `data/clips/`, `data/presets/`, `data/sound/` | Clip matches, level presets, sound cues | clip-matcher |
 | `data/moves/`, `data/modifiers/`, `data/cancels/`, `data/trials/`, `data/cards/` | Ability content | movesmith |
 | `data/profiles/`, `data/story/` | Behaviour profiles, story cards | habit-writer |
@@ -57,6 +66,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.
-- Clip first, then frame data. No bespoke animation, no paired throws.
+- Visuals are generated (Meshy + image model), sound is sourced; the designer runs every generator. Clip first, then frame data. No hand-keyed animation, no paired throws.
 - Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - Cut order if behind: scope gate (end of week 1) → Kata, then meta-unlocks; balance gate (mid week 3) → modifiers 14→8, then dojo trials, then colour-only presets. The designer makes the call.
