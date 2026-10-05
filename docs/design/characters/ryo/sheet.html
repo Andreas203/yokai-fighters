@@ -1,0 +1,450 @@
+<title>Ryo Character Sketch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&family=Yuji+Syuku&display=swap">
+<style>
+/* Layout: a model sheet on rice paper. Big figure with handwritten callouts, notes column beside it, study strip below. Single paper look by choice. */
+:root {
+  color-scheme: light;
+  --paper: #F1E8D4;
+  --paper-deep: #E4D7BB;
+  --desk: #D9CBAE;
+  --ink: #1D1B21;
+  --ink-soft: #4A4650;
+  --indigo: #2D3A5E;
+  --indigo-lite: #4B5C88;
+  --persimmon: #D8632C;
+  --seal: #B5332B;
+  --pine: #34483B;
+  --pencil: #6E8DB6;
+  --skin: #F0D2B2;
+  --brass: #B08A48;
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-hand: "Zen Kurenaido", "Bradley Hand", "Segoe Print", cursive;
+  --f-brush: "Yuji Syuku", "Hiragino Mincho ProN", serif;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 28px 48px;
+}
+.sheet {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--paper);
+  border: 1px solid var(--paper-deep);
+  box-shadow: 0 1px 0 var(--paper-deep), 0 18px 40px -24px rgba(29,27,33,.45);
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: clamp(20px, 4vw, 44px);
+  display: grid;
+  gap: 32px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 18px;
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(44px, 8vw, 84px);
+  line-height: .95;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+h1 .kana { font-family: var(--f-brush); font-weight: 400; font-size: .5em; color: var(--indigo); margin-left: .3em; vertical-align: .35em; }
+.lede { max-width: 56ch; margin: 12px 0 0; font-size: 16px; color: var(--ink-soft); }
+.hanko {
+  flex: none;
+  width: 76px; height: 76px;
+  border: 3px solid var(--seal);
+  border-radius: 6px;
+  color: var(--seal);
+  font-family: var(--f-brush);
+  font-size: 22px;
+  line-height: 1.05;
+  display: grid; place-items: center;
+  writing-mode: vertical-rl;
+  transform: rotate(4deg);
+  opacity: .9;
+}
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 36px; align-items: start; }
+.figure-wrap { min-width: 0; }
+.figure-wrap svg { width: 100%; height: auto; display: block; }
+aside { display: grid; gap: 26px; min-width: 0; }
+h2 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 22px;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 4px; color: var(--indigo); }
+.source { display: grid; gap: 14px; }
+.source p { margin: 0; }
+.source div { border-left: 3px solid var(--paper-deep); padding-left: 12px; }
+.source div:nth-child(3) { border-left-color: var(--persimmon); }
+.swatches { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.sw { display: grid; gap: 4px; font-size: 11px; line-height: 1.3; }
+.sw i { display: block; aspect-ratio: 1; max-width: 100%; border-radius: 2px; border: 1px solid rgba(29,27,33,.25); }
+.sw b { font-weight: 700; }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; border-top: 1px solid var(--paper-deep); padding-top: 26px; }
+.study { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.study svg { width: 100%; height: auto; display: block; background: var(--paper-deep); border-radius: 3px; }
+.study svg.sil { aspect-ratio: 148 / 200; }
+.study p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.study .data { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--ink); letter-spacing: .02em; }
+.questions { border-top: 1px solid var(--paper-deep); padding-top: 26px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 24px; }
+.questions ol { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; max-width: 75ch; }
+.questions li::marker { font-family: var(--f-display); font-weight: 600; color: var(--seal); }
+.hand { font-family: var(--f-hand); }
+footer { font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 2px solid var(--ink); padding-top: 12px; }
+svg text.note { font-family: var(--f-hand); font-size: 17px; fill: var(--ink); }
+svg text.note .em { fill: var(--seal); }
+svg text.tick { font-family: var(--f-body); font-size: 11px; fill: var(--pencil); }
+svg text.brush { font-family: var(--f-brush); }
+@media (max-width: 900px) {
+  .main { grid-template-columns: minmax(0,1fr); }
+  .strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .questions { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 480px) {
+  .strip { grid-template-columns: minmax(0,1fr); }
+  .swatches { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .hanko { width: 58px; height: 58px; font-size: 17px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .glow { animation: pulse 3.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+}
+</style>
+
+<div class="sheet">
+  <header>
+    <div>
+      <p class="eyebrow">Character sketch · first pass · player character</p>
+      <h1>Ryo<span class="kana">リョウ</span></h1>
+      <p class="lede">Apprentice exorcist under Master Sōen. He binds yokai into ofuda and fights with what they lend him, and he has promised to give every one of them back.</p>
+    </div>
+    <div class="hanko" aria-hidden="true">退魔</div>
+  </header>
+
+  <section class="main">
+    <div class="figure-wrap">
+      <svg viewBox="0 0 800 1000" role="img" aria-labelledby="fig-title">
+        <title id="fig-title">Front sketch of Ryo: high-collar indigo coat, undercut hair, ofuda held up between two fingers, talisman-wrapped forearm, wide pine trousers and shin wraps.</title>
+        <defs>
+          <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="dry" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9 0.04" numOctaves="2" seed="3" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+          <filter id="silhouette">
+            <feColorMatrix type="matrix" values="0 0 0 0 0.114  0 0 0 0 0.106  0 0 0 0 0.129  0 0 0 12 0"/>
+          </filter>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#1D1B21" stroke-width="1.1" opacity=".35"/>
+          </pattern>
+          <g id="spiral">
+            <circle r="5.5" fill="#B08A48" stroke="#1D1B21" stroke-width="1.2"/>
+            <path d="M -2.6 0 a 2.6 2.6 0 1 1 2.6 2.6 a 1.5 1.5 0 1 1 -1.5 -1.5" fill="none" stroke="#1D1B21" stroke-width="1"/>
+          </g>
+
+          <!-- Head, in figure coordinates (centre line x=300) -->
+          <g id="head">
+            <path d="M257 110 C247 104 243 122 249 131 C252 134 256 133 258 130 Z" fill="#F0D2B2" stroke="#1D1B21" stroke-width="2"/>
+            <path d="M256 100 C255 122 258 138 264 148 L336 148 C342 138 345 122 344 100 C340 62 260 62 256 100 Z" fill="#F0D2B2" stroke="#1D1B21" stroke-width="2.4"/>
+            <!-- undercut stubble -->
+            <g stroke="#1D1B21" stroke-width="1" opacity=".45">
+              <line x1="253" y1="98" x2="255" y2="103"/><line x1="257" y1="97" x2="258" y2="103"/><line x1="253" y1="104" x2="255" y2="109"/><line x1="258" y1="104" x2="259" y2="108"/>
+              <line x1="342" y1="98" x2="341" y2="103"/><line x1="346" y1="99" x2="345" y2="104"/><line x1="343" y1="105" x2="342" y2="110"/>
+            </g>
+            <!-- brows: sharp, angled in -->
+            <path d="M260 103 L292 110 L291 114 L261 107 Z" fill="#1D1B21"/>
+            <path d="M308 110 L341 101 L342 105 L309 114 Z" fill="#1D1B21"/>
+            <!-- eyes: heavy tapered upper lids, small irises -->
+            <ellipse cx="278" cy="124" rx="4.6" ry="5.4" fill="#2D3A5E"/>
+            <path d="M262 120 C268 113 283 112 293 118 L292 121.5 C283 116.5 270 117.5 263 123.5 Z" fill="#1D1B21"/>
+            <ellipse cx="323" cy="124" rx="4.6" ry="5.4" fill="#2D3A5E"/>
+            <circle cx="324.6" cy="122" r="1.4" fill="#F1E8D4"/>
+            <path d="M306 118 C316 112 330 112 340 119 L339 122.5 C329 116.5 317 117 307 121.5 Z" fill="#1D1B21"/>
+            <path d="M312 130 L331 129" stroke="#1D1B21" stroke-width="1.2"/>
+            <!-- binding mark under the eye -->
+            <path d="M315 136 L335 133" stroke="#D8632C" stroke-width="3" stroke-linecap="round"/>
+            <!-- nose bridge above the collar -->
+            <path d="M300 126 L296.5 140 L301 141" fill="none" stroke="#1D1B21" stroke-width="1.6" stroke-linecap="round"/>
+            <!-- gakuran collar zipped to the nose -->
+            <path d="M252 134 C274 152 326 152 348 134 L354 208 C330 218 270 218 246 208 Z" fill="#2D3A5E" stroke="#1D1B21" stroke-width="2.6"/>
+            <path d="M252 134 C274 152 326 152 348 134 C326 145 274 145 252 134 Z" fill="#D8632C" stroke="#1D1B21" stroke-width="1.4"/>
+            <path d="M300 150 L300 214" stroke="#1D1B21" stroke-width="1.4"/>
+            <path d="M262 160 C264 180 266 196 268 210 M338 160 C336 180 334 196 332 210" stroke="#1D1B21" stroke-width="1" opacity=".5" fill="none"/>
+            <use href="#spiral" x="300" y="170"/>
+            <use href="#spiral" x="300" y="194"/>
+            <!-- hair: spiked mass, one lock falling over the right eye -->
+            <path d="M262 100 L248 94 L256 84 L240 72 L260 68 L250 50 L274 54 L274 32 L294 44 L308 24 L318 44 L342 32 L336 54 L360 56 L344 70 L356 84 L342 86 L346 102 L336 94 L330 110 L320 96 L310 114 L302 98 L290 126 L284 104 L272 142 L268 110 Z" fill="#1D1B21" stroke="#1D1B21" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M282 52 C296 45 314 44 328 50" stroke="#4B5C88" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+            <path d="M286 58 C298 53 310 53 320 56" stroke="#4B5C88" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".6"/>
+            <!-- ofuda earring -->
+            <path d="M250 132 L249 150" stroke="#1D1B21" stroke-width="1.2"/>
+            <rect x="244" y="150" width="10" height="21" fill="#D8632C" stroke="#1D1B21" stroke-width="1.2"/>
+            <path d="M249 154 L249 167 M246.5 158 L251.5 158" stroke="#1D1B21" stroke-width="1"/>
+          </g>
+        </defs>
+
+        <!-- backdrop: off-centre sun and dry ink -->
+        <circle cx="440" cy="215" r="172" fill="var(--persimmon)" opacity=".88" filter="url(#rough)"/>
+        <path d="M40 962 C220 930 520 934 780 958" stroke="var(--ink)" stroke-width="10" fill="none" stroke-linecap="round" opacity=".75" filter="url(#dry)"/>
+        <g fill="var(--ink)" opacity=".7">
+          <circle cx="612" cy="392" r="3"/><circle cx="628" cy="380" r="1.6"/><circle cx="598" cy="410" r="1.8"/><circle cx="642" cy="402" r="1.2"/>
+        </g>
+
+        <!-- pencil construction -->
+        <g stroke="var(--pencil)" stroke-width="1" fill="none" opacity=".6">
+          <line x1="380" y1="18" x2="380" y2="975" stroke-dasharray="6 5"/>
+          <ellipse cx="380" cy="106" rx="47" ry="62"/>
+          <line x1="270" y1="222" x2="490" y2="222"/>
+          <line x1="300" y1="490" x2="460" y2="490"/>
+          <line x1="22" y1="48" x2="22" y2="968"/>
+        </g>
+        <g stroke="var(--pencil)" stroke-width="1" opacity=".75">
+          <line x1="16" y1="48" x2="28" y2="48"/><line x1="16" y1="163" x2="28" y2="163"/><line x1="16" y1="278" x2="28" y2="278"/><line x1="16" y1="393" x2="28" y2="393"/><line x1="16" y1="508" x2="28" y2="508"/><line x1="16" y1="623" x2="28" y2="623"/><line x1="16" y1="738" x2="28" y2="738"/><line x1="16" y1="853" x2="28" y2="853"/><line x1="16" y1="948" x2="28" y2="948"/>
+        </g>
+        <g class="tick-labels">
+          <text class="tick" x="32" y="110">1</text><text class="tick" x="32" y="225">2</text><text class="tick" x="32" y="340">3</text><text class="tick" x="32" y="455">4</text><text class="tick" x="32" y="570">5</text><text class="tick" x="32" y="685">6</text><text class="tick" x="32" y="800">7</text><text class="tick" x="32" y="944">7¾ heads</text>
+        </g>
+
+        <!-- THE FIGURE -->
+        <g id="ryo-fig" transform="translate(80 0)" filter="url(#rough)">
+          <ellipse cx="300" cy="950" rx="150" ry="10" fill="var(--ink)" opacity=".18"/>
+
+          <!-- trousers: wide, indigo -->
+          <path d="M240 490 C215 580 198 680 206 800 L252 806 C262 720 280 620 298 545 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M300 545 C318 620 338 720 348 806 L394 800 C400 680 385 580 362 490 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M228 600 C222 660 218 720 222 790 M372 590 C380 660 384 720 380 790" stroke="var(--ink)" stroke-width="1.2" fill="none" opacity=".6"/>
+          <path d="M300 545 C318 620 338 720 348 806 L366 804 C356 720 336 620 316 545 Z" fill="url(#hatch)"/>
+          <!-- kyahan shin wraps -->
+          <path d="M208 798 L210 902 L246 902 L252 804 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M350 804 L356 902 L392 902 L394 798 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
+          <g stroke="var(--ink)" stroke-width="1.2" opacity=".75">
+            <line x1="209" y1="820" x2="251" y2="812"/><line x1="209" y1="842" x2="250" y2="834"/><line x1="210" y1="864" x2="249" y2="856"/><line x1="210" y1="886" x2="247" y2="878"/>
+            <line x1="351" y1="812" x2="394" y2="820"/><line x1="352" y1="834" x2="393" y2="842"/><line x1="354" y1="856" x2="393" y2="864"/><line x1="355" y1="878" x2="392" y2="886"/>
+          </g>
+          <!-- jika-tabi -->
+          <path d="M208 900 C196 915 176 930 172 945 L248 948 C250 930 248 912 246 900 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M356 900 C354 915 352 930 352 948 L430 945 C424 930 404 915 392 900 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M186 936 L190 947 M416 934 L412 946" stroke="var(--paper)" stroke-width="1.4"/>
+
+          <!-- coat: long tail on the lead side, cropped on the other -->
+          <path d="M210 222 C200 300 222 380 236 440 L232 470 C222 560 205 640 196 712 L262 690 C275 600 290 540 300 520 L366 500 C364 480 362 460 362 440 C378 380 398 300 392 222 C360 205 330 200 300 202 C270 200 240 205 210 222 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.8" stroke-linejoin="round"/>
+          <path d="M262 690 C275 600 290 540 300 520 L307 524 C296 546 283 606 269 692 Z" fill="var(--persimmon)" stroke="var(--ink)" stroke-width="1.4"/>
+          <path d="M236 470 C226 560 212 640 200 704 L222 698 C232 630 240 560 246 476 Z" fill="url(#hatch)"/>
+          <path d="M214 240 C208 300 222 380 236 432 L250 430 C238 370 228 300 230 236 Z" fill="url(#hatch)"/>
+          <g stroke="var(--ink)" stroke-width="1.3" fill="none" opacity=".7">
+            <path d="M232 300 C236 340 240 370 246 400"/>
+            <path d="M352 300 C350 340 348 370 346 410"/>
+            <path d="M234 520 C226 580 220 630 214 680"/>
+            <path d="M258 520 C252 580 246 620 240 670"/>
+          </g>
+          <!-- kimono-style overlap closing with spiral buttons -->
+          <path d="M318 205 C306 280 286 360 262 432" stroke="var(--ink)" stroke-width="2.2" fill="none"/>
+          <use href="#spiral" x="311" y="244"/>
+          <use href="#spiral" x="300" y="292"/>
+          <use href="#spiral" x="288" y="340"/>
+          <use href="#spiral" x="275" y="388"/>
+
+          <!-- sash with shimenawa rope -->
+          <path d="M234 425 C270 432 330 432 364 425 L366 455 C330 462 270 462 232 455 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M234 440 C270 448 330 448 364 440" stroke="var(--persimmon)" stroke-width="9" fill="none" stroke-linecap="round"/>
+          <g stroke="var(--ink)" stroke-width="1.4">
+            <line x1="241" y1="438" x2="247" y2="446"/><line x1="253" y1="440" x2="259" y2="448"/><line x1="265" y1="441" x2="271" y2="449"/><line x1="277" y1="442" x2="283" y2="450"/><line x1="289" y1="442" x2="295" y2="450"/><line x1="301" y1="442" x2="307" y2="450"/><line x1="313" y1="442" x2="319" y2="450"/><line x1="325" y1="441" x2="331" y2="449"/><line x1="337" y1="440" x2="343" y2="448"/>
+          </g>
+          <path d="M352 442 C356 462 360 482 362 504 M356 442 C364 460 372 476 378 494" stroke="var(--persimmon)" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="354" cy="443" r="8" fill="var(--persimmon)" stroke="var(--ink)" stroke-width="1.6"/>
+          <!-- shide paper -->
+          <polygon points="250,452 262,452 262,470 256,470 270,490 263,490 276,512 264,512 252,492 258,492 246,472 252,472" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/>
+          <!-- ofuda pouch -->
+          <rect x="330" y="458" width="24" height="34" rx="3" fill="var(--paper-deep)" stroke="var(--ink)" stroke-width="1.8"/>
+          <path d="M330 468 L354 468" stroke="var(--ink)" stroke-width="1.4"/>
+          <rect x="339" y="474" width="6" height="12" fill="var(--seal)"/>
+
+          <!-- hanging arm: sleeve, ofuda wraps, bandaged fist -->
+          <path d="M214 224 C186 232 174 270 172 330 L170 382 L220 386 C220 350 224 300 232 245 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round"/>
+          <path d="M214 230 C196 240 186 270 184 320 L182 380 L196 382 C196 330 200 280 214 248 Z" fill="url(#hatch)"/>
+          <path d="M168 376 L222 380 L221 393 L168 389 Z" fill="var(--ink)"/>
+          <path d="M174 390 C174 412 178 436 182 458 L214 458 C216 436 218 412 219 392 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+          <g stroke="var(--ink)" stroke-width="1.3">
+            <line x1="175" y1="405" x2="219" y2="407"/><line x1="177" y1="421" x2="218" y2="423"/><line x1="179" y1="438" x2="217" y2="440"/>
+          </g>
+          <!-- four wraps = four special slots; two filled -->
+          <rect class="glow" x="189" y="392" width="14" height="13" fill="var(--persimmon)" opacity=".75" filter="url(#blur6)"/>
+          <rect class="glow" x="189" y="408" width="14" height="13" fill="var(--persimmon)" opacity=".75" filter="url(#blur6)"/>
+          <rect x="193" y="395" width="7" height="7" fill="var(--seal)"/>
+          <rect x="193" y="411" width="7" height="7" fill="var(--seal)"/>
+          <rect x="194" y="427" width="7" height="7" fill="none" stroke="var(--pencil)" stroke-width="1.2"/>
+          <rect x="195" y="444" width="7" height="7" fill="none" stroke="var(--pencil)" stroke-width="1.2"/>
+          <path d="M212 452 C230 470 226 500 240 524 L247 519 C233 498 237 470 219 450 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.6"/>
+          <path d="M236 500 L238 510" stroke="var(--seal)" stroke-width="2.4"/>
+          <path d="M180 458 C172 470 174 488 186 494 C200 498 214 494 218 482 C220 470 216 462 214 458 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="2.2"/>
+          <path d="M184 470 C194 474 206 474 216 470 M190 484 L194 494 M200 486 L203 496" stroke="var(--ink)" stroke-width="1.2" fill="none"/>
+
+          <!-- raised arm: ofuda between two fingers -->
+          <path d="M380 222 C410 220 435 245 450 290 L472 352 C468 372 448 380 434 370 L398 310 C388 290 378 260 380 222 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round"/>
+          <path d="M434 370 C450 378 470 368 472 352 L432 292 L404 306 Z" fill="var(--indigo-lite)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M398 310 C410 330 422 350 434 370 L446 360 C432 340 420 322 410 300 Z" fill="url(#hatch)"/>
+          <path d="M402 302 L432 290 L437 299 L407 312 Z" fill="var(--ink)"/>
+          <!-- ink energy rising from the talisman -->
+          <path d="M414 172 C398 150 420 130 406 106 C432 124 444 150 428 174 Z" fill="var(--ink)"/>
+          <path d="M428 184 C444 162 462 164 468 138 C478 170 458 190 432 194 Z" fill="var(--ink)"/>
+          <path d="M400 186 C384 176 380 160 388 144 C392 162 400 170 410 176 Z" fill="var(--ink)"/>
+          <g transform="rotate(-6 414 215)">
+            <rect x="402" y="167" width="24" height="96" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/>
+            <line x1="404" y1="174" x2="424" y2="174" stroke="var(--ink)" stroke-width="1.4"/>
+            <text class="brush" x="414" y="200" font-size="19" text-anchor="middle" fill="var(--seal)">縛</text>
+            <text class="brush" x="414" y="226" font-size="19" text-anchor="middle" fill="var(--seal)">封</text>
+          </g>
+          <path d="M400 300 C392 290 394 274 404 270 L424 272 C430 280 430 292 424 300 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M404 272 L402 246 C402 241 408 241 409 246 L412 271" fill="var(--skin)" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M412 271 L414 243 C415 238 421 238 421 243 L421 272" fill="var(--skin)" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M425 287 C414 291 406 289 401 282" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+
+          <use href="#head"/>
+        </g>
+
+        <!-- callouts -->
+        <g stroke="var(--ink)" stroke-width="1" fill="none">
+          <path d="M226 86 C280 86 312 94 336 102"/>
+          <path d="M226 196 L352 194"/>
+          <path d="M226 412 L254 414"/>
+          <path d="M226 660 C250 660 270 650 296 640"/>
+          <path d="M604 132 C570 140 540 160 510 186"/>
+          <path d="M604 462 C520 462 470 452 444 444"/>
+          <path d="M604 836 C540 840 500 846 476 850"/>
+        </g>
+        <g fill="var(--seal)">
+          <circle cx="336" cy="102" r="3"/><circle cx="352" cy="194" r="3"/><circle cx="254" cy="414" r="3"/><circle cx="296" cy="640" r="3"/><circle cx="510" cy="186" r="3"/><circle cx="444" cy="444" r="3"/><circle cx="476" cy="850" r="3"/>
+        </g>
+        <text class="note" x="46" y="66"><tspan x="46">Undercut, one lock</tspan><tspan x="46" dy="20">over the right eye.</tspan></text>
+        <text class="note" x="46" y="186"><tspan x="46">Gakuran collar zipped</tspan><tspan x="46" dy="20">to the nose. The eyes</tspan><tspan x="46" dy="20">do all the acting.</tspan></text>
+        <text class="note" x="46" y="388"><tspan x="46">Four ofuda wraps =</tspan><tspan x="46" dy="20">four special slots.</tspan><tspan x="46" dy="20" class="em">Filled ones carry</tspan><tspan x="46" dy="20" class="em">a red seal.</tspan></text>
+        <text class="note" x="46" y="640"><tspan x="46">Coat tail long on the</tspan><tspan x="46" dy="20">lead side only, so it</tspan><tspan x="46" dy="20">trails on dashes.</tspan><tspan x="46" dy="20">Persimmon lining.</tspan></text>
+        <text class="note" x="612" y="112"><tspan x="612">Ofuda held up between</tspan><tspan x="612" dy="20">two fingers: his</tspan><tspan x="612" dy="20">ready pose.</tspan><tspan x="612" dy="20" class="em">縛封 bind · seal</tspan></text>
+        <text class="note" x="612" y="442"><tspan x="612">Shimenawa rope as</tspan><tspan x="612" dy="20">a sash, shide paper at</tspan><tspan x="612" dy="20">the hip: shrine-trained</tspan><tspan x="612" dy="20">under Master Sōen.</tspan></text>
+        <text class="note" x="612" y="806"><tspan x="612">Wide indigo trousers,</tspan><tspan x="612" dy="20">kyahan shin wraps,</tspan><tspan x="612" dy="20">jika-tabi. Stance reads</tspan><tspan x="612" dy="20">clearly side-on in 2.5D.</tspan></text>
+      </svg>
+    </div>
+
+    <aside>
+      <div>
+        <h2>Description</h2>
+        <div class="source">
+          <div>
+            <h3>Silhouette</h3>
+            <p>Lean and upright, with a wide stance. Black undercut hair with one lock over his right eye. A high collar zipped to the nose, so his eyes carry every expression.</p>
+          </div>
+          <div>
+            <h3>Outfit</h3>
+            <p>Indigo coat with spiral brass buttons, closed left over right like a kimono, its tail cut long on one side. Shimenawa rope sash with shide paper, indigo trousers, kyahan shin wraps and jika-tabi.</p>
+          </div>
+          <div>
+            <h3>Power</h3>
+            <p>Ink-black energy with brush edges, matching his hit sparks (V5). Four ofuda wrap his forearm, one per special slot (A1). Two carry red seals, for Spirit Wave and Rising Talisman. His ready pose holds an ofuda up between two fingers.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2>Palette</h2>
+        <div class="swatches">
+          <div class="sw"><i style="background:var(--indigo)"></i><b>Indigo</b>coat, collar, trousers</div>
+          <div class="sw"><i style="background:var(--ink)"></i><b>Ink</b>hair, energy, tabi</div>
+          <div class="sw"><i style="background:var(--persimmon)"></i><b>Persimmon</b>lining, rope, glow</div>
+          <div class="sw"><i style="background:var(--paper)"></i><b>Rice paper</b>ofuda, wraps</div>
+          <div class="sw"><i style="background:var(--brass)"></i><b>Brass</b>spiral buttons</div>
+        </div>
+      </div>
+      <p class="hand" style="margin:0;font-size:17px;color:var(--seal)">"Forgive me. I'll give it back."</p>
+    </aside>
+  </section>
+
+  <section class="strip" aria-label="Studies">
+    <div class="study">
+      <svg viewBox="226 18 148 200" role="img" aria-label="Head close-up">
+        <use href="#head"/>
+      </svg>
+      <h3>Head</h3>
+      <p>The face is two eyes and a mark. The vermilion stroke under his left eye is the binding mark, one stroke per yokai he holds.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="-60 10 960 960" preserveAspectRatio="xMidYMid meet" class="sil" role="img" aria-label="Silhouette test">
+        <use href="#ryo-fig" filter="url(#silhouette)"/>
+      </svg>
+      <h3>Silhouette test</h3>
+      <p>Still readable as solid black: raised talisman arm, wide stance, one-sided coat tail.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="0 0 240 200" role="img" aria-label="Spirit Wave gesture">
+        <g filter="url(#rough)">
+          <path d="M18 168 C30 96 92 46 160 52 C200 56 222 82 220 108 C204 86 170 82 152 98 C172 96 186 112 176 128 C160 110 132 116 126 140 C120 160 132 172 150 176 L18 176 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M160 52 C190 40 214 52 222 70 L210 66 L214 80 L200 70 L202 86 L188 72" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M40 160 C60 110 100 80 140 76" stroke="var(--paper)" stroke-width="2" fill="none" opacity=".6"/>
+          <rect x="96" y="116" width="18" height="48" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.8" transform="rotate(-20 105 140)"/>
+          <rect x="101" y="128" width="7" height="7" fill="var(--seal)" transform="rotate(-20 105 140)"/>
+        </g>
+      </svg>
+      <h3>Spirit Wave</h3>
+      <p class="data">13f startup · 30f recovery · projectile</p>
+      <p>Thrown ofuda breaks into a Hokusai curl. At Lv 3 it becomes Great Wave and absorbs one projectile.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="0 0 240 200" role="img" aria-label="Rising Talisman gesture">
+        <g filter="url(#rough)">
+          <path d="M120 188 C116 150 124 110 120 60" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 5" fill="none"/>
+          <path d="M70 176 C150 168 170 146 96 132 C40 120 120 96 160 98 C200 100 160 72 104 70 C70 68 110 44 140 36" stroke="var(--paper)" stroke-width="16" fill="none" stroke-linecap="round"/>
+          <path d="M70 176 C150 168 170 146 96 132 C40 120 120 96 160 98 C200 100 160 72 104 70 C70 68 110 44 140 36" stroke="var(--ink)" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
+          <rect x="88" y="128" width="7" height="7" fill="var(--seal)"/>
+          <rect x="150" y="94" width="7" height="7" fill="var(--seal)"/>
+          <rect x="112" y="66" width="7" height="7" fill="var(--seal)"/>
+          <path d="M140 36 L150 14 L156 40 Z" fill="var(--ink)"/>
+          <circle cx="120" cy="60" r="20" fill="var(--persimmon)" opacity=".5" filter="url(#blur6)"/>
+        </g>
+      </svg>
+      <h3>Rising Talisman</h3>
+      <p class="data">5f startup · 8f active · 28f recovery · invulnerable f1–5</p>
+      <p>A talisman strip spirals up around him as an anti-air. At Lv 3 it becomes Heaven Seal and launches.</p>
+    </div>
+  </section>
+
+  <section class="questions">
+    <h2>For the designer to decide</h2>
+    <ol>
+      <li><strong>Collar over the mouth.</strong> Story cards would show only eyes and brows. Keep it closed, or open the collar for card art and the Win 3 ending?</li>
+      <li><strong>Wraps as slot readout.</strong> Lighting the forearm wraps per filled slot puts loadout on the model. In the Tanuki fight, the copied move's wrap could glow to match the HUD talisman (T6). Is that worth the extra material work?</li>
+      <li><strong>Coat tail.</strong> It needs to be bone-driven or baked into the clips so the 60-tick loop stays deterministic. It also needs checking against the base models on the YOK-29 shortlist.</li>
+      <li><strong>Name kanji.</strong> Katakana for now. 涼 (cool) fits his calm. 了 (to finish, to settle) fits "I'll give it back."</li>
+    </ol>
+  </section>
+
+  <footer>
+    <span>Ryo · character sketch v0.1 · 5 Oct 2026</span>
+    <span>Draft, not yet reviewed by the designer</span>
+  </footer>
+</div>
