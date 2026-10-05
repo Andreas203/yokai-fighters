@@ -5,7 +5,7 @@ namespace YokaiFighters.Sim;
 /// Positions are centi-units: 1 unit = 1 px at 1920x1080 (data/schema convention), so 100 = one unit.
 /// Defaults are placeholders until a data loader (YOK-40) feeds stage and fighter data.
 /// </summary>
-public sealed record SimConfig
+public sealed partial record SimConfig
 {
 	public const int TicksPerSecond = 60; // C1
 	public const int Scale = 100;          // centi-units per gameplay unit

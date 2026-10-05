@@ -4,7 +4,7 @@ namespace YokaiFighters.Sim;
 /// One fighter's simulation state. Plain integers so the whole match can be hashed and replayed.
 /// X/Y are centi-units on the 2D gameplay plane (F4): X along the stage, Y up from the floor.
 /// </summary>
-public sealed class Fighter
+public sealed partial class Fighter
 {
 	public int X;
 	public int Y;
@@ -112,6 +112,8 @@ public enum FighterState
 	Dash,
 	/// <summary>C2: in the air (jump arc, or falling after an air hit's stun ended); lands into Idle.</summary>
 	Jump,
+	/// <summary>C6 (YOK-20): bursting out of hitstun; invulnerable, no control, for BurstFrames frames.</summary>
+	Burst,
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>

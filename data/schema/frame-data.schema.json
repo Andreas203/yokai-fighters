@@ -26,8 +26,12 @@
         "on_block": { "type": "integer", "minimum": 0 }
       }
     },
+    "strength": {
+      "description": "V2 hit strength: hitstop light 6, medium 9, heavy 12 frames (+4 on a counterhit); heavy hits also shake the screen (V3). Omitted: a normal takes it from its button (LP/LK light, MP/MK medium, HP/HK heavy), any other move is medium.",
+      "enum": ["light", "medium", "heavy"]
+    },
     "meter_gain": {
-      "description": "Overrides of the C5 defaults (+6 on hit, +3 on block) for this move.",
+      "description": "Overrides of the C5 attacker gains (+6 when it hits, +3 when it is blocked) for this move. The defender's +3 for a hit taken is not overridable.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
