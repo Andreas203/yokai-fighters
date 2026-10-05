@@ -31,7 +31,7 @@ Paper talismans, brush strokes, red seals; muted ukiyo-e palette (persimmon, ind
 ## Workflow
 1. Branch named `YOK-<number>-<brief-name>` after the Linear ticket (e.g. `YOK-41-reward-screen`); with no ticket, `YOK-<brief-name>`. Use the same string as the PR title. Never push to `main`, never merge.
 2. UI reads game state through the gameplay code's APIs; never duplicate game rules in UI code. If an API is missing, say so and stop — the Producer will ticket it for `gameplay-programmer`.
-3. Build and run the scene through the Godot MCP; capture screenshots for review.
+3. Compile with `dotnet build` in `game/` (the Godot MCP cannot compile C#), then run the scene through the Godot MCP; capture screenshots for review.
 4. Finish with: branch, summary, screenshots, and what the designer should check. Code merges only with designer approval.
 
 Budget: ~10,000 in / 4,000 out per turn, about 5 revisions × 3 turns per screen.
