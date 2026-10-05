@@ -22,10 +22,11 @@ Pure C#, **no Godot types**, integers only, so it runs headless for tests and th
 | File | Purpose |
 |---|---|
 | `FightScene.cs` (`scenes/fight.tscn`) | Owns `Match` + `FixedStepClock`; each `_Process` runs the due ticks then `Render()`s. Builds the placeholder stage (floor, backdrop, corner posts), capsule fighters (mirrored by `Scale.X = Facing`, "Nose" marks facing; KO'd fighter tips over across the 30 slow frames), Camera3D at FOV 25° (F4), 200 units per metre, fixed Z = 0. `ExternalDrive` + `Step()` let tests/harness drive it without the clock or keyboard. Debug keys: P1 A/D, F strike, G cross-up; P2 ←/→, L, K; R resets after KO. |
-| `FightHud.cs` | Placeholder `CanvasLayer`: `P1Health`/`P2Health` bars and the `Banner` label (K.O., winner). ui-designer replaces it; reads `Match` only. |
+| `FightHud.cs` | Paper-talisman HUD (Godot-drawn, YOK-51): health bars with "RYO · 720 / 1000" text, Ryo's 3-bar meter and burst seal, K.O./win `Banner`, and a `LoseScreen` (Restart button raises `RestartRequested`, wired to `FightScene.ResetFight`). Reads `Match` + `IHudView` only. |
+| `IHudView.cs` | Read-only `Meter`/`MeterMax`/`BurstAvailable` view; `StubHudView` supplies fixed values until YOK-20, which assigns its own to `FightHud.View`. |
 
 ### Tests (`game/tests/`)
-Headless runner: `tests/test_runner.tscn` (`TestRunner.cs`) runs every `[Test]` public static method in the assembly (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. Add tests as new static classes; no NuGet needed.
+Screenshot tool: `tests/hud_capture.tscn` (windowed; see `HudCapture.cs`). Headless runner: `tests/test_runner.tscn` (`TestRunner.cs`) runs every `[Test]` public static method in the assembly (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. Add tests as new static classes; no NuGet needed.
 ```
 cd game
 dotnet build
