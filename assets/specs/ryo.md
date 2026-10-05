@@ -60,3 +60,25 @@ Verdict: **PASS (provisional; no in-engine render yet)**.
 - G4: the coat panel is short and sits close to the thighs, low clipping risk; clip-matcher to confirm.
 - Texture atlas is fragmented islands (normal UV layout); needs a Godot import check for seams.
 - Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.
+
+## Take 2 (YOK-30 rebuild, 2026-10-05, designer-approved, one take, 44 credits)
+Supersedes take 1 files (first-pass task ids above stay in history). New reference: `docs/design/characters/ryo/references/ryo-ref-e.png` (stylised, bold outline, collar over mouth, jika-tabi, full trousers; from PR #19).
+
+Turnaround prompt (nano-banana-pro, `generate_multi_view: true`):
+> Character turnaround of the same young exorcist: front, side and back views, same height and scale, T-pose (arms straight out), plain white background. Keep this art style: anime, thick consistent black ink outline, hard-edged cel shading, flat colours. Indigo coat, high collar pulled up over mouth and nose, black undercut hair, rope sash with small pouch, full-length indigo trousers, black split-toe jika-tabi boots. No held items, no effects, no text, no logos, no kanji.
+
+| Job | Task id | Credits |
+|---|---|---|
+| R1 turnaround | 01a10e45-13aa-77cd-ab29-79e17fe43bf6 | 9 |
+| R2 mesh (meshy-7.1, t-pose, 15k tri, 2K, no PBR, same settings as take 1) | 01a10e46-1fe9-70d8-a107-c8a14697eb5d | 30 |
+| R3 rig, 1.75 m | 01a10e47-857e-73a0-9f7a-cd74795198fb | 5 |
+
+Total 44. Files replaced in place: `characters/ryo/ryo-{mesh,rigged,walk,run}.glb`, `ryo-mesh_base_color.png`, `ryo-turnaround_{0,1,2}.png` (0=side, 1=front, 2=back; front used).
+
+### Acceptance (take 2)
+Verdict: **PASS (provisional; no in-engine toon render yet)**.
+- Look: front view clean, thick consistent outline, indigo coat/collar over mouth, rope sash and pouch, black split-toe boots, full trousers. Deviations from the sheet: lightning-shaped paper on hip (inherited from ref C/E), plain coat with one button, no calf wraps or forearm ofuda, no long coat tail. Designer to confirm acceptable.
+- Rig (glTF parsed): 15,467 tris, 1 mesh, 1 material, 2K base colour, no PBR maps, 24-joint humanoid, 1.75 m, bbox min Y 0 (feet), Y-up, T-pose span +-0.76 m. File sizes 3.6-4.3 MB each (<50 MB).
+- Texture atlas: fragmented islands (same as take 1), face/eye islands visible; Godot seam check pending.
+- G4: trousers and short coat are tight to the body, low clipping risk; no coat tail to sway. Better than take 1.
+- Licence: plan tier unknown, flagged.

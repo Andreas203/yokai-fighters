@@ -75,3 +75,24 @@ Verdict: body **PASS WITH DEFECT (designer to look; optional RETAKE K1+K2+K3 = 4
 - Tail: 3,161 tris, clean white-to-orange single piece, one 2K texture. Pivot is at the mesh centre (bbox ~+-0.95 m, unscaled), not the root; rescale to ~0.5 m and offset the root in Godot. Nine instances, tick-driven sway, not rigged, per designer.
 - G4: wide sleeves and knee-length hakama are a clipping risk in heavy and throw; hair hangs down the back and may clip the tail attachments. Record for clip-matcher.
 - Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.
+
+## Take 2 (YOK-30 rebuild, 2026-10-05, designer-approved, one take, 44 credits; tail untouched)
+Supersedes take 1 body files (first-pass task ids above stay in history). New reference: `docs/design/characters/kitsune/references/kitsune-ref-d.png` (stylised, dynamic stance, wide hakama, flowing hair; tail-less; from PR #19). Nine tails remain the separate unrigged `tail.glb`.
+
+Turnaround prompt (nano-banana-pro, `generate_multi_view: true`):
+> Character turnaround of the same fox-spirit fighter, no tails: front, side and back views, same height and scale, T-pose (arms straight out), neutral standing pose with legs close together, plain white background. Keep this art style: anime, thick black ink outline, 3-tone cel shading. Full white fox mask hiding face, fox ears, long white hair tipped orange falling behind the shoulders, white haori with wide sleeves, indigo top, red hakama, bell on obi, black socks, wooden geta. No text, no logos, no kanji.
+
+| Job | Task id | Credits |
+|---|---|---|
+| K1 turnaround | 01a10e45-1710-7131-b05d-fd6bcfa89887 | 9 |
+| K2 mesh (meshy-7.1, t-pose, 15k tri, 2K, no PBR) | 01a10e46-2481-75d3-8391-5268b4bbb83a | 30 |
+| K3 rig, 1.65 m | 01a10e47-91f6-709b-bd34-8884f8cbabbb | 5 |
+
+Total 44. Files replaced in place: `characters/kitsune/kitsune-{mesh,rigged,walk,run}.glb`, `kitsune-mesh_base_color.png`, `kitsune-turnaround_{0,1,2}.png` (0=front, 1=side, 2=back; front used). `tail.glb`, `tail_base_color.png`, `tail-ref.png` kept.
+
+### Acceptance (take 2)
+Verdict: **PASS (provisional; no in-engine toon render yet)**. The take-1 grey-smudge defect is not present in the new turnaround front view.
+- Look: mask with orange markings and eye glints, fox ears, white hair tipped orange hanging behind shoulders (consistent in all three views, no ponytail), white haori with red trim and orange crest, indigo top, bell, black socks, geta, red pleated hakama. Neutral stance achieved (legs close). Bold outline kept. Hakama is a wide full-length skirt-trouser hiding the legs down to the socks (longer than the sheet's knee length).
+- Rig (glTF parsed): 15,153 tris, 1 mesh, 1 material, 2K base colour, no PBR, 24 joints, rigged height 1.65 m (unrigged mesh bbox 1.70 m), origin at feet, Y-up, T-pose span +-0.72 m. Sizes 3.9-4.6 MB each.
+- G4 risk (high, record for clip-matcher/YOK-31): (1) hakama is wide and long with legs inside one shared volume; Meshy skinning will likely weight both legs onto the same cloth, so walk may show the skirt stretching or leg poking through, and heavy/throw wide stances will tear or pinch the front pleats; (2) hair is long to hip level behind the back, baked rigid to head/spine, will clip into the hakama back and into the tail mounts in kick/crouch; (3) wide haori sleeves clip in heavy/throw as before. Mitigation if the gate fails: shorten hakama or tie hair up (new spec, 44 credits), or folklore human guise fallback.
+- Licence: plan tier unknown, flagged.
