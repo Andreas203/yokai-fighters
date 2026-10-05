@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/frame-data.schema.json",
+  "title": "Frame data",
+  "description": "How a move resolves, written from its matched clip (F1, F2, F3). Frame numbers are 1-based from the move's first frame. Startup S, active A, recovery R: active frames are S+1..S+A.",
+  "type": "object",
+  "required": ["startup", "active", "recovery", "damage", "hitboxes", "hurtboxes"],
+  "additionalProperties": false,
+  "properties": {
+    "startup": { "type": "integer", "minimum": 1 },
+    "active": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "null = '—' in rules.md: the body never hits; the projectile carries the hit (needs properties.projectile)."
+    },
+    "recovery": { "type": "integer", "minimum": 0 },
+    "damage": { "type": "integer", "minimum": 0 },
+    "hitstun": { "type": "integer", "minimum": 0 },
+    "blockstun": { "type": "integer", "minimum": 0 },
+    "meter_gain": {
+      "description": "Overrides of the C5 defaults (+6 on hit, +3 on block) for this move.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_hit": { "type": "integer", "minimum": 0 },
+        "on_block": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "hitboxes": {
+      "description": "2D rectangles per active-frame range. Each range must sit inside the active window.",
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/timedRect" }
+    },
+    "hurtboxes": {
+      "description": "Where the move can be hit, per frame range; ranges should cover the whole move.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "common.schema.json#/$defs/timedRect" }
+    },
+    "cancel_windows": {
+      "description": "Frames in which a held cancel rule (X4) may fire out of this move.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["frames", "on"],
+        "additionalProperties": false,
+        "properties": {
+          "frames": { "$ref": "common.schema.json#/$defs/frameRange" },
+          "on": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["hit", "block", "whiff"] }
+          }
+        }
+      }
+    },
+    "properties": { "$ref": "#/$defs/properties" }
+  },
+  "$defs": {
+    "properties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "armour": {
+          "type": "object",
+          "required": ["frames", "hits"],
+          "additionalProperties": false,
+          "properties": {
+            "frames": { "$ref": "common.schema.json#/$defs/frameRange" },
+            "hits": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "invuln": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["frames", "against"],
+            "additionalProperties": false,
+            "properties": {
+              "frames": { "$ref": "common.schema.json#/$defs/frameRange" },
+              "against": { "enum": ["all", "air", "strike", "throw", "projectile"] }
+            }
+          }
+        },
+        "projectile": {
+          "type": "object",
+          "required": ["spawn_frame", "speed", "hitbox", "hits"],
+          "additionalProperties": false,
+          "properties": {
+            "spawn_frame": { "type": "integer", "minimum": 1 },
+            "speed": { "type": "integer", "minimum": 0, "description": "Units per tick." },
+            "hitbox": { "$ref": "common.schema.json#/$defs/rect" },
+            "hits": { "type": "integer", "minimum": 1 },
+            "lifetime": { "type": "integer", "minimum": 1, "description": "Ticks before it fades; omit for screen edge." },
+            "passes_projectiles": { "type": "boolean" },
+            "absorbs_projectiles": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "low": { "type": "boolean", "description": "Must be blocked crouching (C3)." },
+        "throw": {
+          "description": "Generic throw (C4): grab clip + standard knockdown, never paired animation.",
+          "type": "object",
+          "required": ["range", "breakable"],
+          "additionalProperties": false,
+          "properties": {
+            "range": { "type": "integer", "minimum": 1 },
+            "breakable": { "type": "boolean" },
+            "break_window": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "anti_air": { "type": "boolean" },
+        "knockdown": { "type": "boolean" },
+        "launch": { "type": "boolean" },
+        "wall_bounce": { "type": "boolean" },
+        "passes_projectiles": { "type": "boolean" },
+        "absorbs_hits": { "type": "integer", "minimum": 0 },
+        "teleport": {
+          "type": "object",
+          "required": ["to", "frame"],
+          "additionalProperties": false,
+          "properties": {
+            "to": { "enum": ["behind_opponent"] },
+            "frame": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move." }
+      }
+    }
+  }
+}

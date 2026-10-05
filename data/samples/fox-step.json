@@ -1,0 +1,16 @@
+{
+  "kind": "cancel_rule",
+  "id": "fox-step",
+  "name": "Fox Step",
+  "source": "kitsune",
+  "offered_by": "nine-tailed-kitsune",
+  "rarity": "rare",
+  "locked": false,
+  "rules": ["X1", "X2", "X3", "X4", "A9"],
+  "path": { "from": "specials", "into": "dash", "on": ["hit", "block", "whiff"] },
+  "once_per_combo": true,
+  "card": {
+    "plain": "Cancel any special into a dash.",
+    "frames": "Special → dash inside the move's cancel window, once per combo"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/modifier.schema.json",
+  "title": "Modifier",
+  "description": "A data-only change attached to one special (A2, A10) in data/modifiers/<id>.json. Modifiers are always common (A9).",
+  "type": "object",
+  "required": ["kind", "id", "name", "source", "rarity", "locked", "rules", "applies_to", "effects", "card"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "modifier" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "source": { "enum": ["kitsune", "oni", "kappa"] },
+    "rarity": { "const": "common" },
+    "locked": { "type": "boolean" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "applies_to": {
+      "description": "Which specials can take it: 'any', or specials whose frame data has every listed property.",
+      "type": "object",
+      "required": ["requires"],
+      "additionalProperties": false,
+      "properties": {
+        "requires": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["projectile", "throw", "armour", "low", "anti_air"] }
+        }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "common.schema.json#/$defs/effect" }
+    },
+    "card": { "$ref": "common.schema.json#/$defs/card" },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

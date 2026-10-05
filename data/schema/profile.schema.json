@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/profile.schema.json",
+  "title": "Behaviour profile",
+  "description": "One yokai temperament read by the deterministic AI state machine (Y1, Y2) in data/profiles/<id>.json. Every 'when' is on-screen state, never a button press (P6).",
+  "type": "object",
+  "required": ["kind", "id", "yokai", "temperament", "reaction", "aggression_bias", "preferred_range", "habit", "behaviours", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "profile" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "yokai": { "enum": ["kitsune", "oni", "kappa", "tanuki"] },
+    "temperament": { "enum": ["aggressive", "patient", "boss"], "description": "'boss' only for the Tanuki." },
+    "reaction": {
+      "description": "Reaction-time tier and its frames (Y4). Y5 shaves 1 frame per Tanuki win at runtime; not stored here.",
+      "enum": [
+        { "tier": "apprentice", "frames": 30 },
+        { "tier": "yokai", "frames": 22 },
+        { "tier": "elder", "frames": 18 },
+        { "tier": "tanuki", "frames": 15 }
+      ]
+    },
+    "aggression_bias": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "0 = fully patient, 100 = fully aggressive; Y5 pushes it up per Tanuki win."
+    },
+    "preferred_range": { "enum": ["close", "mid", "full_screen"] },
+    "habit": {
+      "description": "Exactly one learnable, punishable habit (Y2, P6).",
+      "type": "object",
+      "required": ["id", "description", "when", "do", "chance_pct"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "description": { "type": "string", "minLength": 1 },
+        "when": { "$ref": "#/$defs/observation" },
+        "do": { "$ref": "#/$defs/action" },
+        "chance_pct": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+    "behaviours": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["when", "do", "weight"],
+        "additionalProperties": false,
+        "properties": {
+          "when": { "$ref": "#/$defs/observation" },
+          "do": { "$ref": "#/$defs/action" },
+          "weight": { "type": "integer", "minimum": 1, "maximum": 100 }
+        }
+      }
+    },
+    "elder_twist": {
+      "type": "object",
+      "required": ["id", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  },
+  "$defs": {
+    "observation": {
+      "description": "Something visible on screen (P6).",
+      "enum": [
+        "neutral", "at_close_range", "at_mid_range", "at_full_screen",
+        "opponent_jumping", "opponent_knocked_down", "self_knocked_down", "self_got_up",
+        "projectile_on_screen", "blocked_projectile", "blocked_two_hits_in_row",
+        "opponent_whiffed", "opponent_blocking", "opponent_in_recovery",
+        "opponent_used_same_special_twice"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "description": "A move id (normal or special) or a generic action.",
+      "pattern": "^(walk_forward|walk_back|dash_forward|dash_back|jump|block|crouch_block|throw|special:[a-z0-9-]+|normal:[a-z0-9-]+)$"
+    }
+  }
+}
