@@ -1,0 +1,450 @@
+<title>Kitsune Character Sketch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&family=Yuji+Syuku&display=swap">
+<style>
+/* Layout: same model-sheet system as Ryo's. Rice paper, big figure with handwritten callouts, notes column, study strip. Single paper look by choice. */
+:root {
+  color-scheme: light;
+  --paper: #F1E8D4;
+  --paper-deep: #E4D7BB;
+  --desk: #D9CBAE;
+  --ink: #1D1B21;
+  --ink-soft: #4A4650;
+  --indigo: #2D3A5E;
+  --dusk: #27324F;
+  --persimmon: #D8632C;
+  --foxfire: #F2A23A;
+  --flame: #FFE3A3;
+  --shrine: #B5332B;
+  --pine: #34483B;
+  --pencil: #6E8DB6;
+  --skin: #F3D9BE;
+  --fur: #FBF6EC;
+  --brass: #B08A48;
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-hand: "Zen Kurenaido", "Bradley Hand", "Segoe Print", cursive;
+  --f-brush: "Yuji Syuku", "Hiragino Mincho ProN", serif;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 28px 48px;
+}
+.sheet {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--paper);
+  border: 1px solid var(--paper-deep);
+  box-shadow: 0 1px 0 var(--paper-deep), 0 18px 40px -24px rgba(29,27,33,.45);
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: clamp(20px, 4vw, 44px);
+  display: grid;
+  gap: 32px;
+}
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(44px, 8vw, 84px); line-height: .95; margin: 0; letter-spacing: -.01em; }
+h1 .kana { font-family: var(--f-brush); font-weight: 400; font-size: .5em; color: var(--persimmon); margin-left: .3em; vertical-align: .35em; }
+.lede { max-width: 56ch; margin: 12px 0 0; font-size: 16px; color: var(--ink-soft); }
+.hanko {
+  flex: none; width: 76px; height: 76px;
+  border: 3px solid var(--shrine); border-radius: 50%;
+  color: var(--shrine); font-family: var(--f-brush); font-size: 34px;
+  display: grid; place-items: center; transform: rotate(-6deg); opacity: .9;
+}
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 36px; align-items: start; }
+.figure-wrap { min-width: 0; }
+.figure-wrap svg { width: 100%; height: auto; display: block; }
+aside { display: grid; gap: 26px; min-width: 0; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 22px; margin: 0 0 10px; text-wrap: balance; }
+h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 4px; color: var(--indigo); }
+.source { display: grid; gap: 14px; }
+.source p { margin: 0; }
+.source div { border-left: 3px solid var(--paper-deep); padding-left: 12px; }
+.source div:nth-child(3) { border-left-color: var(--foxfire); }
+.swatches { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.sw { display: grid; gap: 4px; font-size: 11px; line-height: 1.3; align-content: start; }
+.sw i { display: block; aspect-ratio: 1; max-width: 100%; border-radius: 2px; border: 1px solid rgba(29,27,33,.25); }
+.sw b { font-weight: 700; }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; border-top: 1px solid var(--paper-deep); padding-top: 26px; }
+.study { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.study svg { width: 100%; height: auto; display: block; background: var(--paper-deep); border-radius: 3px; aspect-ratio: 148 / 200; }
+.study p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.study .data { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--ink); letter-spacing: .02em; }
+.questions { border-top: 1px solid var(--paper-deep); padding-top: 26px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 24px; }
+.questions ol { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; max-width: 75ch; }
+.questions li::marker { font-family: var(--f-display); font-weight: 600; color: var(--shrine); }
+.hand { font-family: var(--f-hand); }
+footer { font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 2px solid var(--ink); padding-top: 12px; }
+svg text.note { font-family: var(--f-hand); font-size: 17px; fill: var(--ink); }
+svg text.note .em { fill: var(--shrine); }
+svg text.tick { font-family: var(--f-body); font-size: 11px; fill: var(--pencil); }
+@media (max-width: 900px) {
+  .main { grid-template-columns: minmax(0,1fr); }
+  .strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .questions { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 480px) {
+  .strip { grid-template-columns: minmax(0,1fr); }
+  .swatches { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .hanko { width: 58px; height: 58px; font-size: 26px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .flicker { animation: flicker 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes flicker { 50% { opacity: .7; transform: scale(.94); } }
+}
+</style>
+
+<div class="sheet">
+  <header>
+    <div>
+      <p class="eyebrow">Character sketch · first pass · yokai</p>
+      <h1>Kitsune<span class="kana">キツネ</span></h1>
+      <p class="lede">The fox of the bamboo grove at dusk. A zoner who holds the screen with slow foxfire, teases you into jumping, then steps through her own illusion to hit you from behind.</p>
+    </div>
+    <div class="hanko" aria-hidden="true">狐</div>
+  </header>
+
+  <section class="main">
+    <div class="figure-wrap">
+      <svg viewBox="0 0 800 1000" role="img" aria-labelledby="k-title">
+        <title id="k-title">Front sketch of the Kitsune: fox ears, white hair tipped orange, cropped white haori with red trim, red hakama, a full fox mask over her face, three fox tails, a foxfire orb in her open palm and a fox hand sign by her face.</title>
+        <defs>
+          <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="dry" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9 0.04" numOctaves="2" seed="3" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+          <filter id="silhouette">
+            <feColorMatrix type="matrix" values="0 0 0 0 0.114  0 0 0 0 0.106  0 0 0 0 0.129  0 0 0 12 0"/>
+          </filter>
+          <radialGradient id="orb">
+            <stop offset="0" stop-color="#FFF4D6"/>
+            <stop offset=".35" stop-color="#FFD27A"/>
+            <stop offset=".65" stop-color="#F2A23A" stop-opacity=".85"/>
+            <stop offset="1" stop-color="#D8632C" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="tA" x1="1" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#FBF6EC"/><stop offset=".6" stop-color="#FBF6EC"/><stop offset=".86" stop-color="#F2A23A"/><stop offset="1" stop-color="#D8632C"/>
+          </linearGradient>
+          <linearGradient id="tB" x1=".6" y1="1" x2=".5" y2="0">
+            <stop offset="0" stop-color="#FBF6EC"/><stop offset=".6" stop-color="#FBF6EC"/><stop offset=".86" stop-color="#F2A23A"/><stop offset="1" stop-color="#D8632C"/>
+          </linearGradient>
+          <linearGradient id="tC" x1="0" y1=".3" x2="1" y2=".8">
+            <stop offset="0" stop-color="#FBF6EC"/><stop offset=".6" stop-color="#FBF6EC"/><stop offset=".86" stop-color="#F2A23A"/><stop offset="1" stop-color="#D8632C"/>
+          </linearGradient>
+          <linearGradient id="hairTip" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FBF6EC"/><stop offset=".7" stop-color="#FBF6EC"/><stop offset="1" stop-color="#F2A23A"/>
+          </linearGradient>
+          <linearGradient id="ponyTip" x1=".3" y1="0" x2=".8" y2="1">
+            <stop offset="0" stop-color="#FBF6EC"/><stop offset=".65" stop-color="#FBF6EC"/><stop offset=".9" stop-color="#F2A23A"/><stop offset="1" stop-color="#D8632C"/>
+          </linearGradient>
+          <g id="wisp">
+            <circle r="16" fill="url(#orb)"/>
+            <path d="M0 -14 C-7 -6 -7 3 0 8 C7 3 7 -6 0 -14 Z" fill="#FFE3A3"/>
+          </g>
+
+          <!-- hair behind the body: side locks and ponytail (figure coords, centre x=300) -->
+          <g id="khair-back">
+            <path d="M326 44 C376 30 424 62 432 124 C440 186 420 246 446 306 C404 270 392 210 384 156 C376 112 360 86 330 72 Z" fill="url(#ponyTip)" stroke="#1D1B21" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M380 70 C400 100 410 150 408 200 M400 90 C414 130 420 180 420 230" stroke="#6E8DB6" stroke-width="1.2" fill="none" opacity=".6"/>
+            <path d="M254 92 C236 160 230 240 244 290 L262 280 C262 230 262 170 270 120 Z" fill="url(#hairTip)" stroke="#1D1B21" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M346 92 C364 160 370 240 356 290 L338 280 C338 230 338 170 330 120 Z" fill="url(#hairTip)" stroke="#1D1B21" stroke-width="2.2" stroke-linejoin="round"/>
+          </g>
+
+          <!-- head: face, fox eyes, bangs, ears -->
+          <g id="khead">
+            <path d="M258 100 C257 128 266 150 286 166 C294 171 306 171 314 166 C334 150 343 128 342 100 C338 64 262 64 258 100 Z" fill="#F3D9BE" stroke="#1D1B21" stroke-width="2.4"/>
+            <!-- brows: thin, relaxed -->
+            <path d="M266 103 C274 98 284 99 291 103" stroke="#1D1B21" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M334 103 C326 98 316 99 309 103" stroke="#1D1B21" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- eyes: foxfire irises, slit pupils, lifted lids with a flick -->
+            <ellipse cx="279" cy="121" rx="6" ry="7" fill="#F2A23A"/>
+            <ellipse cx="279" cy="121" rx="1.6" ry="5" fill="#1D1B21"/>
+            <circle cx="281.5" cy="118" r="1.5" fill="#FBF6EC"/>
+            <path d="M265 117 C271 110 285 109 293 114 L292 117.5 C284 113 272 114 266 121 L257 112 Z" fill="#1D1B21"/>
+            <ellipse cx="321" cy="121" rx="6" ry="7" fill="#F2A23A"/>
+            <ellipse cx="321" cy="121" rx="1.6" ry="5" fill="#1D1B21"/>
+            <circle cx="323.5" cy="118" r="1.5" fill="#FBF6EC"/>
+            <path d="M335 117 C329 110 315 109 307 114 L308 117.5 C316 113 328 114 334 121 L343 112 Z" fill="#1D1B21"/>
+            <path d="M266 125 L258 120 M334 125 L342 120" stroke="#B5332B" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M270 129 L288 129 M312 129 L330 129" stroke="#1D1B21" stroke-width=".9" opacity=".6"/>
+            <!-- whisker marks -->
+            <g stroke="#1D1B21" stroke-width="1.3" stroke-linecap="round" opacity=".8">
+              <path d="M266 138 L279 140 M266 143 L279 144 M268 148 L279 148"/>
+              <path d="M334 138 L321 140 M334 143 L321 144 M332 148 L321 148"/>
+            </g>
+            <path d="M300 131 L298 139 L301 139.5" fill="none" stroke="#1D1B21" stroke-width="1.4" stroke-linecap="round"/>
+            <!-- smirk with one fang -->
+            <path d="M292 152 C298 156 305 155 310 149" fill="none" stroke="#1D1B21" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M303 154.5 L305 159 L307 153.5 Z" fill="#FBF6EC" stroke="#1D1B21" stroke-width=".8"/>
+            <!-- full fox mask over the face; foxfire eyes glow through the slits -->
+            <g transform="translate(300 121) scale(2.15 1.62) translate(-238 -467)">
+              <path d="M222 448 C222 440 228 436 232 440 L236 446 L242 446 L246 440 C252 436 256 442 254 450 C258 470 250 492 238 498 C226 492 218 470 222 448 Z" fill="#FBF6EC" stroke="#1D1B21" stroke-width="2.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+              <path d="M227 446 L231 442 L234 447 Z M249 446 L245 442 L242 447 Z" fill="#B5332B"/>
+              <path d="M226 472 L232 476 M250 472 L244 476 M228 478 L233 480 M248 478 L243 480" stroke="#B5332B" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              <circle cx="238" cy="455" r="2.2" fill="#B5332B"/>
+              <path d="M236 489 C237 491 239 491 240 489" stroke="#1D1B21" stroke-width="1.6" fill="none" vector-effect="non-scaling-stroke"/>
+              <circle cx="238" cy="487" r="1.6" fill="#1D1B21"/>
+            </g>
+            <path d="M270 117 C276 111 288 111 294 118 C288 121 276 121 270 117 Z" fill="#1D1B21"/>
+            <path d="M330 117 C324 111 312 111 306 118 C312 121 324 121 330 117 Z" fill="#1D1B21"/>
+            <ellipse cx="283" cy="116.5" rx="3" ry="2.4" fill="#F2A23A"/>
+            <ellipse cx="317" cy="116.5" rx="3" ry="2.4" fill="#F2A23A"/>
+            <path d="M268 113 L262 108 M332 113 L338 108" stroke="#B5332B" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- front hair: jagged bangs and face-framing locks -->
+            <path d="M254 98 C250 58 270 36 300 36 C330 36 350 58 346 98 L336 88 L330 106 L318 84 L307 101 L298 80 L289 102 L280 84 L272 106 L264 88 Z" fill="#FBF6EC" stroke="#1D1B21" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M256 96 C249 130 247 172 258 208 L267 202 C262 170 262 130 267 104 Z" fill="url(#hairTip)" stroke="#1D1B21" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M344 96 C351 130 353 172 342 208 L333 202 C338 170 338 130 333 104 Z" fill="url(#hairTip)" stroke="#1D1B21" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M280 50 C290 44 306 43 318 47" stroke="#6E8DB6" stroke-width="1.6" fill="none" opacity=".7"/>
+            <circle cx="330" cy="56" r="4" fill="#B5332B" stroke="#1D1B21" stroke-width="1"/>
+            <!-- fox ears -->
+            <path d="M264 58 L244 2 L292 42 Z" fill="#FBF6EC" stroke="#1D1B21" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M264 50 L252 18 L281 42 Z" fill="#F2A23A" opacity=".75"/>
+            <path d="M244 2 L249 16 L256 12 Z" fill="#1D1B21"/>
+            <path d="M336 58 L356 2 L308 42 Z" fill="#FBF6EC" stroke="#1D1B21" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M336 50 L348 18 L319 42 Z" fill="#F2A23A" opacity=".75"/>
+            <path d="M356 2 L351 16 L344 12 Z" fill="#1D1B21"/>
+          </g>
+        </defs>
+
+        <!-- backdrop: bamboo at dusk -->
+        <g fill="var(--pine)" opacity=".28">
+          <rect x="556" y="0" width="16" height="960"/><rect x="584" y="0" width="11" height="960"/><rect x="234" y="0" width="13" height="960"/>
+        </g>
+        <g stroke="var(--paper)" stroke-width="3" opacity=".7">
+          <line x1="556" y1="140" x2="572" y2="140"/><line x1="556" y1="300" x2="572" y2="300"/><line x1="556" y1="470" x2="572" y2="470"/><line x1="556" y1="650" x2="572" y2="650"/><line x1="556" y1="830" x2="572" y2="830"/>
+          <line x1="584" y1="210" x2="595" y2="210"/><line x1="584" y1="400" x2="595" y2="400"/><line x1="584" y1="590" x2="595" y2="590"/><line x1="584" y1="780" x2="595" y2="780"/>
+          <line x1="234" y1="250" x2="247" y2="250"/><line x1="234" y1="520" x2="247" y2="520"/><line x1="234" y1="790" x2="247" y2="790"/>
+        </g>
+        <circle cx="392" cy="232" r="176" fill="var(--dusk)" opacity=".94" filter="url(#rough)"/>
+        <circle cx="486" cy="118" r="22" fill="var(--paper)" opacity=".85"/>
+        <path d="M40 934 C220 904 520 908 780 930" stroke="var(--ink)" stroke-width="10" fill="none" stroke-linecap="round" opacity=".75" filter="url(#dry)"/>
+
+        <!-- pencil construction -->
+        <g stroke="var(--pencil)" stroke-width="1" fill="none" opacity=".6">
+          <line x1="380" y1="0" x2="380" y2="950" stroke-dasharray="6 5"/>
+          <ellipse cx="380" cy="106" rx="45" ry="64"/>
+          <line x1="300" y1="206" x2="460" y2="206"/>
+          <line x1="22" y1="40" x2="22" y2="925"/>
+        </g>
+        <g stroke="var(--pencil)" stroke-width="1" opacity=".75">
+          <line x1="16" y1="40" x2="28" y2="40"/><line x1="16" y1="158" x2="28" y2="158"/><line x1="16" y1="276" x2="28" y2="276"/><line x1="16" y1="394" x2="28" y2="394"/><line x1="16" y1="512" x2="28" y2="512"/><line x1="16" y1="630" x2="28" y2="630"/><line x1="16" y1="748" x2="28" y2="748"/><line x1="16" y1="866" x2="28" y2="866"/><line x1="16" y1="925" x2="28" y2="925"/>
+        </g>
+        <g>
+          <text class="tick" x="32" y="104">1</text><text class="tick" x="32" y="222">2</text><text class="tick" x="32" y="340">3</text><text class="tick" x="32" y="458">4</text><text class="tick" x="32" y="576">5</text><text class="tick" x="32" y="694">6</text><text class="tick" x="32" y="812">7</text><text class="tick" x="32" y="921">7½ heads</text>
+        </g>
+
+        <!-- THE FIGURE -->
+        <g id="kitsune-fig" transform="translate(80 0)" filter="url(#rough)">
+          <ellipse cx="300" cy="924" rx="140" ry="9" fill="var(--ink)" opacity=".18"/>
+
+          <!-- three tails, fanned behind -->
+          <path d="M290 472 C230 472 160 476 132 414 C116 374 136 322 176 330 C158 362 176 424 296 440 Z" fill="url(#tA)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M290 452 C232 400 196 330 206 252 C212 212 236 190 262 200 C244 236 248 330 308 432 Z" fill="url(#tB)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M312 452 C380 412 456 396 506 428 C540 452 546 496 516 514 C508 470 452 456 322 482 Z" fill="url(#tC)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <g stroke="var(--pencil)" stroke-width="1.2" fill="none" opacity=".7">
+            <path d="M260 452 C220 452 180 440 162 410"/><path d="M276 420 C246 380 230 320 236 262"/><path d="M350 452 C400 432 450 428 486 446"/>
+          </g>
+
+          <use href="#khair-back"/>
+
+          <!-- tabi stockings and geta -->
+          <path d="M252 645 L282 645 L278 878 L256 878 Z" fill="var(--ink)"/>
+          <path d="M320 645 L350 645 L362 878 L340 878 Z" fill="var(--ink)"/>
+          <path d="M254 876 C248 886 240 892 238 898 L282 898 L280 876 Z" fill="var(--ink)"/>
+          <path d="M340 876 L362 876 C368 886 374 892 380 898 L338 898 Z" fill="var(--ink)"/>
+          <path d="M246 897 L261 884 L276 897 M344 897 L358 884 L373 897" stroke="var(--shrine)" stroke-width="2.6" fill="none"/>
+          <rect x="232" y="898" width="54" height="8" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.6"/>
+          <rect x="334" y="898" width="54" height="8" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.6"/>
+          <rect x="238" y="906" width="10" height="15" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.4"/><rect x="270" y="906" width="10" height="15" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.4"/>
+          <rect x="340" y="906" width="10" height="15" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.4"/><rect x="372" y="906" width="10" height="15" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.4"/>
+
+          <!-- shrine-red hakama to the knee -->
+          <path d="M258 420 L342 420 C360 500 380 580 392 640 C330 652 270 652 208 640 C220 580 240 500 258 420 Z" fill="var(--shrine)" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round"/>
+          <g stroke="var(--ink)" stroke-width="1.3" opacity=".6">
+            <line x1="272" y1="428" x2="242" y2="644"/><line x1="286" y1="428" x2="274" y2="648"/><line x1="300" y1="428" x2="300" y2="649"/><line x1="314" y1="428" x2="326" y2="648"/><line x1="328" y1="428" x2="358" y2="644"/>
+          </g>
+
+          <!-- inner top: indigo, high neck -->
+          <path d="M262 198 C280 192 320 192 338 198 L344 300 C340 350 338 380 338 404 L262 404 C262 380 260 350 256 300 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2.2"/>
+          <!-- obi, cord and suzu bell -->
+          <path d="M256 395 C280 401 320 401 344 395 L346 428 C320 434 280 434 254 428 Z" fill="var(--foxfire)" stroke="var(--ink)" stroke-width="2.2"/>
+          <path d="M255 412 C280 418 320 418 345 412" stroke="var(--indigo)" stroke-width="4" fill="none"/>
+          <path d="M300 417 L300 440" stroke="var(--indigo)" stroke-width="2"/>
+          <circle cx="300" cy="447" r="7.5" fill="var(--brass)" stroke="var(--ink)" stroke-width="1.6"/>
+          <path d="M296 449 L304 449 M300 449 L300 454" stroke="var(--ink)" stroke-width="1.2"/>
+
+          <!-- cropped haori, open front, red trim -->
+          <path d="M240 206 C256 198 276 196 286 198 L290 260 C280 320 270 372 262 420 L232 412 C238 350 236 280 240 206 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M360 206 C344 198 324 196 314 198 L310 260 C320 320 330 372 338 420 L368 412 C362 350 364 280 360 206 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M286 199 L290 260 C280 320 270 372 262 419 M314 199 L310 260 C320 320 330 372 338 419" stroke="var(--shrine)" stroke-width="6" fill="none"/>
+          <circle cx="258" cy="252" r="8" fill="none" stroke="var(--persimmon)" stroke-width="1.6"/>
+          <path d="M258 245 C254 250 254 255 258 258 C262 255 262 250 258 245 Z" fill="var(--persimmon)"/>
+          <path d="M246 300 C250 340 252 370 250 400 M354 300 C350 340 348 370 350 400" stroke="var(--pencil)" stroke-width="1.2" fill="none" opacity=".8"/>
+
+
+          <!-- raised arm: wide sleeve falling from the wrist, fox hand sign -->
+          <path d="M240 206 C226 214 216 240 214 270 L236 262 C238 240 242 226 250 214 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="2.2"/>
+          <path d="M214 204 C238 200 244 210 240 222 C236 280 232 330 222 360 C210 378 184 372 180 346 C176 300 190 240 214 204 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M180 346 C184 372 210 378 222 360" stroke="var(--shrine)" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M196 260 C194 300 196 330 204 352" stroke="var(--pencil)" stroke-width="1.2" fill="none" opacity=".8"/>
+          <ellipse cx="227" cy="204" rx="12" ry="4" fill="var(--indigo)" stroke="var(--ink)" stroke-width="1.2"/>
+          <path d="M214 174 C214 166 236 164 240 172 L240 194 C236 202 218 202 214 194 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M234 171 L236 146 C237 141 242 141 242 146 L240 172" fill="var(--skin)" stroke="var(--ink)" stroke-width="1.8"/>
+          <path d="M214 172 L212 152 C212 147 218 147 218 152 L220 170" fill="var(--skin)" stroke="var(--ink)" stroke-width="1.8"/>
+          <path d="M215 178 L200 186 C196 189 198 193 202 193 L215 192" fill="var(--skin)" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/>
+
+          <!-- open arm: wide sleeve, palm up under foxfire -->
+          <path d="M360 208 C400 212 432 258 460 314 L446 336 C434 360 426 398 406 410 C386 418 378 382 386 334 C380 292 368 262 356 240 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M446 336 C434 360 426 398 406 410" stroke="var(--shrine)" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M396 270 C404 300 406 340 402 380" stroke="var(--pencil)" stroke-width="1.2" fill="none" opacity=".8"/>
+          <path d="M444 318 L458 312 L460 332 L448 336 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="1.6"/>
+          <path d="M452 318 C464 313 482 315 492 321 C496 325 492 330 486 330 L458 333 C452 331 450 325 452 318 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M468 322 L486 323" stroke="var(--ink)" stroke-width="1" opacity=".7"/>
+
+          <!-- neck, collar, head -->
+          <rect x="290" y="160" width="20" height="22" fill="var(--skin)" stroke="var(--ink)" stroke-width="1.8"/>
+          <path d="M284 176 L316 176 L322 204 L278 204 Z" fill="var(--indigo)" stroke="var(--ink)" stroke-width="2"/>
+          <use href="#khead"/>
+
+          <!-- foxfire -->
+          <g class="flicker"><use href="#wisp" transform="translate(484 288) scale(2.2)"/></g>
+          <use href="#wisp" transform="translate(150 250)"/>
+          <use href="#wisp" transform="translate(520 196) scale(.8)"/>
+          <use href="#wisp" transform="translate(176 560) scale(.7)"/>
+        </g>
+
+        <!-- callouts -->
+        <g stroke="var(--ink)" stroke-width="1" fill="none">
+          <path d="M226 54 C270 46 300 34 326 24"/>
+          <path d="M226 150 C260 120 300 112 342 116"/>
+          <path d="M226 300 C250 280 270 220 282 196"/>
+          <path d="M226 452 C250 440 268 400 280 372"/>
+          <path d="M226 620 C250 620 270 612 300 604"/>
+          <path d="M604 100 C520 104 440 112 412 120"/>
+          <path d="M604 330 C590 320 578 310 572 300"/>
+          <path d="M604 540 C590 530 590 512 590 506"/>
+          <path d="M604 850 C520 856 480 892 460 902"/>
+        </g>
+        <g fill="var(--shrine)">
+          <circle cx="326" cy="24" r="3"/><circle cx="342" cy="116" r="3"/><circle cx="282" cy="196" r="3"/><circle cx="280" cy="372" r="3"/><circle cx="300" cy="604" r="3"/><circle cx="412" cy="120" r="3"/><circle cx="572" cy="300" r="3"/><circle cx="590" cy="506" r="3"/><circle cx="460" cy="902" r="3"/>
+        </g>
+        <text class="note" x="46" y="44"><tspan x="46">Ears up, white hair</tspan><tspan x="46" dy="20">dipped in foxfire.</tspan></text>
+        <text class="note" x="46" y="140"><tspan x="46">Full fox mask over</tspan><tspan x="46" dy="20">her face. It stays on</tspan><tspan x="46" dy="20">for the whole fight.</tspan></text>
+        <text class="note" x="46" y="290"><tspan x="46">Kitsune hand sign:</tspan><tspan x="46" dy="20">her taunt and her</tspan><tspan x="46" dy="20">cast pose.</tspan></text>
+        <text class="note" x="46" y="440"><tspan x="46">Cropped white haori,</tspan><tspan x="46" dy="20">wide sleeves, red trim.</tspan></text>
+        <text class="note" x="46" y="600"><tspan x="46">Miko-red hakama to</tspan><tspan x="46" dy="20">the knee, black tabi,</tspan><tspan x="46" dy="20">geta. Nothing like</tspan><tspan x="46" dy="20">Ryo's legs.</tspan></text>
+        <text class="note" x="612" y="80"><tspan x="612">Shrine-white mask,</tspan><tspan x="612" dy="20">red marks. Only her</tspan><tspan x="612" dy="20">foxfire eyes show</tspan><tspan x="612" dy="20">through the slits.</tspan></text>
+        <text class="note" x="612" y="340"><tspan x="612">Foxfire held palm-up.</tspan><tspan x="612" dy="20">Slow and orange: the</tspan><tspan x="612" dy="20">same colour as her</tspan><tspan x="612" dy="20">hit spark.</tspan></text>
+        <text class="note" x="612" y="560"><tspan x="612">Three tails for the</tspan><tspan x="612" dy="20">common Kitsune.</tspan><tspan x="612" dy="20" class="em">The Nine-Tailed</tspan><tspan x="612" dy="20" class="em">elder gets nine.</tspan></text>
+        <text class="note" x="612" y="836"><tspan x="612">Geta clack on every</tspan><tspan x="612" dy="20">step. An audio tell</tspan><tspan x="612" dy="20">for her dashes.</tspan></text>
+      </svg>
+    </div>
+
+    <aside>
+      <div>
+        <h2>Description</h2>
+        <div class="source">
+          <div>
+            <h3>Silhouette</h3>
+            <p>Fox ears, white hair tipped orange, and three tails fanned out behind her. Her outline says fox before you look at her face.</p>
+          </div>
+          <div>
+            <h3>Outfit</h3>
+            <p>Cropped white haori with wide sleeves and red trim over an indigo top. Foxfire obi with a suzu bell, shrine-red hakama, black tabi and geta. A full white fox mask hides her face all fight; only her foxfire eyes show.</p>
+          </div>
+          <div>
+            <h3>Power</h3>
+            <p>She is the zoner: Foxfire at mid range while she advances, and she anti-airs your jumps (Y2). She holds foxfire palm-up and casts with a fox hand sign. Her orange matches the foxfire hit spark (V5). Her stage is the bamboo grove at dusk (V9).</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2>Palette</h2>
+        <div class="swatches">
+          <div class="sw"><i style="background:var(--fur)"></i><b>Fur white</b>hair, tails, haori</div>
+          <div class="sw"><i style="background:var(--foxfire)"></i><b>Foxfire</b>fire, tips, obi</div>
+          <div class="sw"><i style="background:var(--shrine)"></i><b>Shrine red</b>hakama, trim</div>
+          <div class="sw"><i style="background:var(--indigo)"></i><b>Indigo</b>inner top, cord</div>
+          <div class="sw"><i style="background:var(--pine)"></i><b>Pine</b>bamboo grove</div>
+        </div>
+      </div>
+      <p class="hand" style="margin:0;font-size:17px;color:var(--shrine)">"Forgive me, Kitsune. I'll give it back."</p>
+    </aside>
+  </section>
+
+  <section class="strip" aria-label="Studies">
+    <div class="study">
+      <svg viewBox="214 -8 172 232" role="img" aria-label="Head close-up">
+        <use href="#khair-back"/>
+        <use href="#khead"/>
+      </svg>
+      <h3>Head</h3>
+      <p>The mask is her face. Two foxfire eyes in the slits are all you see, and they flare on Foxfire startup.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="-40 -10 940 960" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Silhouette test">
+        <use href="#kitsune-fig" filter="url(#silhouette)"/>
+      </svg>
+      <h3>Silhouette test</h3>
+      <p>Solid black, she still reads as a fox: ears, three tails and the wide sleeves. Ryo's shape is upright and narrow, so the two never blur.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="0 0 148 200" role="img" aria-label="Foxfire gesture">
+        <g filter="url(#rough)">
+          <path d="M14 120 C40 112 70 112 96 118" stroke="var(--foxfire)" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" fill="none"/>
+          <use href="#wisp" transform="translate(110 118) scale(2.4)"/>
+          <use href="#wisp" transform="translate(52 112) scale(.9)" opacity=".55"/>
+          <use href="#wisp" transform="translate(24 116) scale(.6)" opacity=".35"/>
+        </g>
+      </svg>
+      <h3>Foxfire</h3>
+      <p class="data">15f startup · 4f active · 30f recovery · slow projectile</p>
+      <p>A drifting flame that leaves fading copies behind it. At Lv 3 it becomes Piercing Foxfire and passes through projectiles.</p>
+    </div>
+    <div class="study">
+      <svg viewBox="0 0 148 200" role="img" aria-label="Fox Mirage gesture">
+        <g filter="url(#rough)">
+          <path d="M40 60 C30 90 30 140 42 170 M108 60 C118 90 118 140 106 170" stroke="var(--pencil)" stroke-width="1.6" stroke-dasharray="5 5" fill="none"/>
+          <path d="M50 44 L44 18 L64 36 Z M98 44 L104 18 L84 36 Z" fill="none" stroke="var(--pencil)" stroke-width="1.6" stroke-dasharray="4 4"/>
+          <g transform="translate(74 100) scale(2.1) translate(-238 -467)">
+            <path d="M222 448 C222 440 228 436 232 440 L236 446 L242 446 L246 440 C252 436 256 442 254 450 C258 470 250 492 238 498 C226 492 218 470 222 448 Z" fill="var(--fur)" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M228 462 L234 467 M249 462 L243 467" stroke="var(--shrine)" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="238" cy="456" r="1.8" fill="var(--shrine)"/>
+            <circle cx="238" cy="489" r="1.8" fill="var(--ink)"/>
+          </g>
+          <path d="M20 180 C40 168 30 150 48 146 M128 180 C108 168 118 150 100 146" stroke="var(--foxfire)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <h3>Fox Mirage</h3>
+      <p class="data">18f startup · 10f recovery · teleport behind</p>
+      <p>She dissolves into her mask and reappears behind you. At Lv 3 it becomes Mirage Feint and leaves a decoy that absorbs one hit.</p>
+    </div>
+  </section>
+
+  <section class="questions">
+    <h2>For the designer to decide</h2>
+    <ol>
+      <li><strong>Tail count.</strong> Three for the common Kitsune and nine for the Nine-Tailed elder? Or one tail count for both, with the elder told apart by colour and VFX only, so the variant stays a level preset?</li>
+      <li><strong>Tails and sleeves in motion.</strong> Neither may need bespoke animation. They need bone sway baked into the purchased clips, or a procedural sway driven from the tick count so it stays deterministic. Check both against the YOK-29 model shortlist.</li>
+      <li><strong>Temperament in the pose.</strong> This is the patient stance: orb out, hand sign up. Should the aggressive profile get its own idle, such as leaning forward with the tails flared, or share this one?</li>
+    </ol>
+  </section>
+
+  <footer>
+    <span>Kitsune · character sketch v0.1 · 5 Oct 2026</span>
+    <span>Draft, not yet reviewed by the designer</span>
+  </footer>
+</div>
