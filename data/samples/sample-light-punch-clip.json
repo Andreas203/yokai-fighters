@@ -1,0 +1,12 @@
+{
+  "kind": "clip",
+  "id": "sample-light-punch-clip",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Punch_Jab_01",
+  "frames_total": 13,
+  "hit_start": 5,
+  "hit_end": 6,
+  "retarget_notes": "Sample only; no take generated yet.",
+  "rules": ["F2"]
+}

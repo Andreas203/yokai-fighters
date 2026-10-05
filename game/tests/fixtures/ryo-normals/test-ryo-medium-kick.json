@@ -1,0 +1,62 @@
+{
+  "kind": "normal",
+  "id": "test-ryo-medium-kick",
+  "name": "TEST FIXTURE: Ryo medium kick (C8 numbers; hitstun, blockstun and boxes made up; not game content)",
+  "status": "proposed",
+  "source": "ryo",
+  "rules": [
+    "C8"
+  ],
+  "input": {
+    "button": "MK"
+  },
+  "frame_data": {
+    "startup": 7,
+    "active": 3,
+    "recovery": 14,
+    "damage": 55,
+    "hitstun": 18,
+    "blockstun": 14,
+    "hitboxes": [
+      {
+        "frames": [
+          8,
+          10
+        ],
+        "rect": {
+          "x": 30,
+          "y": 50,
+          "w": 115,
+          "h": 30
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          24
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      },
+      {
+        "frames": [
+          8,
+          17
+        ],
+        "rect": {
+          "x": 30,
+          "y": 50,
+          "w": 95,
+          "h": 30
+        }
+      }
+    ]
+  },
+  "notes": "TEST FIXTURE. Startup/active/recovery/damage are C8; hitstun, blockstun and boxes are placeholders. No clip yet (F2): movesmith writes the real file in data/moves/ after clip-matcher measures the take. Never copy to data/moves/."
+}

@@ -109,26 +109,29 @@ public sealed class Match
 			Fighter f = Fighters[i], o = Fighters[1 - i];
 			FighterInput input = inputs[i];
 			AdvanceState(f);
+			f.Input.Update(input, f.Facing); // YOK-17 parser; numpad relative to facing, SOCD-clean
 
-			int dir = (input.Has(InputBits.Right) ? 1 : 0) - (input.Has(InputBits.Left) ? 1 : 0);
+			int pad = f.Input.Direction;
+			int rel = pad % 3 == 0 ? 1 : pad % 3 == 1 ? -1 : 0; // 3/6/9 forward, 1/4/7 back
+			int dir = rel * f.Facing;                           // absolute walk direction
+			bool up = pad >= 7, down = pad <= 3;
 			int before = f.X;
-			bool canGuard = f.State is FighterState.Idle or FighterState.Blockstun;
-			f.Crouching = canGuard && input.Has(InputBits.Down);
-			f.Guarding = canGuard && dir == -f.Facing; // C3: hold back
+			bool canGuard = !f.Airborne && f.State is FighterState.Idle or FighterState.Blockstun;
+			f.Crouching = canGuard && down;
+			f.Guarding = canGuard && rel < 0; // C3: hold back, standing or crouching (E6)
 
-			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length)
-			{
-				f.State = FighterState.Attack;
-				f.MoveSlot = input.Move - 1;
-				f.MoveFrame = 1;
-				f.MoveConnected = false;
-				f.Guarding = false;
-				f.Crouching = false;
-			}
-			else if (f.Actionable && !f.Crouching)
-			{
-				f.X += dir * Config.WalkSpeed;
-			}
+			int slot = -1;
+			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
+			else if (f.Actionable && f.Input.TryConsume(out var cmd)) slot = FindNormal(f, cmd);
+
+			if (slot >= 0) StartMove(f, slot);
+			else if (f.Actionable && up) StartJump(f, dir);
+			else if (f.Actionable && f.Input.Dash != 0) StartDash(f, f.Input.Dash * f.Facing);
+			else if (f.Actionable && !f.Crouching) f.X += dir * Config.WalkSpeed;
+
+			if (f.State == FighterState.Dash)
+				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);
+			if (f.Airborne) f.X += f.JumpDir * Config.JumpSpeedX;
 
 			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
@@ -155,20 +158,84 @@ public sealed class Match
 	/// acts again on tick t+TotalFrames. A stun of N frames set on tick h holds ticks h+1..h+N; the
 	/// fighter acts on tick h+N+1. So advantage = stun - (TotalFrames - frame the hit landed on).
 	/// </summary>
-	private static void AdvanceState(Fighter f)
+	private void AdvanceState(Fighter f)
 	{
+		// Jump arc (C2): air frames 1..JumpFrames, then land. The arc keeps going through air hitstun.
+		if (f.Airborne)
+		{
+			if (++f.AirFrame > Config.JumpFrames)
+			{
+				f.AirFrame = 0;
+				f.JumpDir = 0;
+				f.Y = 0;
+				if (f.State == FighterState.Jump) ToIdle(f);
+			}
+			else f.Y = Config.JumpY(f.AirFrame);
+		}
+
 		switch (f.State)
 		{
 			case FighterState.Attack:
 				if (++f.MoveFrame > f.Moves[f.MoveSlot].TotalFrames) ToIdle(f);
 				break;
+			case FighterState.Dash:
+				if (++f.DashFrame > Config.DashFrames) ToIdle(f);
+				break;
 			case FighterState.Hitstun:
 			case FighterState.Blockstun:
 			case FighterState.Knockdown:
-				if (f.StunLeft == 0) ToIdle(f);
-				else f.StunLeft--;
+				if (f.StunLeft > 0) f.StunLeft--;
+				else if (f.Airborne) SetState(f, FighterState.Jump, 0); // stun over mid-air: fall, no control
+				else ToIdle(f);
 				break;
 		}
+	}
+
+	private static void StartMove(Fighter f, int slot)
+	{
+		f.State = FighterState.Attack;
+		f.MoveSlot = slot;
+		f.MoveFrame = 1;
+		f.MoveConnected = false;
+		f.Guarding = false;
+		f.Crouching = false;
+	}
+
+	/// <summary>A jump started on tick t is air frame 1 on tick t; the fighter acts again on t+JumpFrames.</summary>
+	private void StartJump(Fighter f, int dir)
+	{
+		SetState(f, FighterState.Jump, 0);
+		f.AirFrame = 1;
+		f.Y = Config.JumpY(1);
+		f.JumpDir = dir;
+		f.Guarding = false;
+		f.Crouching = false;
+	}
+
+	/// <summary>A dash started on tick t plays dash frame n on tick t+n-1; the fighter acts again on t+DashFrames.</summary>
+	private static void StartDash(Fighter f, int dir)
+	{
+		SetState(f, FighterState.Dash, 0);
+		f.DashFrame = 1;
+		f.DashDir = dir;
+		f.Guarding = false;
+		f.Crouching = false;
+	}
+
+	/// <summary>
+	/// The normal for a parsed command: same button, and a listed direction beats an any-direction
+	/// normal (ties by slot order). Kata and Kihon commands look identical here (K3). -1 = none.
+	/// </summary>
+	public static int FindNormal(Fighter f, in InputCommand cmd)
+	{
+		if (cmd.Kind != CommandKind.Normal) return -1; // specials: mapped to slots A-D by the special system
+		int best = -1, bestScore = 0;
+		for (int i = 0; i < f.Moves.Length; i++)
+		{
+			int score = f.Moves[i].NormalMatch(cmd.Button, cmd.Direction);
+			if (score > bestScore) { best = i; bestScore = score; }
+		}
+		return best;
 	}
 
 	private static void ToIdle(Fighter f) => SetState(f, FighterState.Idle, 0);
@@ -180,6 +247,8 @@ public sealed class Match
 		f.MoveFrame = 0;
 		f.MoveConnected = false;
 		f.StunLeft = stun;
+		f.DashFrame = 0;
+		f.DashDir = 0;
 	}
 
 	/// <summary>
@@ -210,7 +279,7 @@ public sealed class Match
 			var a = WorldBox(att, hb.Box);
 			if (dm is null)
 			{
-				if (Overlaps(a, WorldBox(def, Config.IdleHurtbox))) return true;
+				if (Overlaps(a, WorldBox(def, BodyHurtbox(def)))) return true;
 				continue;
 			}
 			foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
@@ -218,6 +287,10 @@ public sealed class Match
 		}
 		return false;
 	}
+
+	/// <summary>Hurtbox of a fighter not in a move, by stance (SimConfig: proposed sizes).</summary>
+	public Box BodyHurtbox(Fighter f) =>
+		f.Airborne ? Config.AirHurtbox : f.Crouching ? Config.CrouchHurtbox : Config.IdleHurtbox;
 
 	private static bool Overlaps((int x0, int y0, int x1, int y1) a, (int x0, int y0, int x1, int y1) b) =>
 		a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
@@ -254,6 +327,7 @@ public sealed class Match
 		}
 		def.Guarding = false;
 		def.Crouching = false;
+		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
 		int dir = att.Facing, want = push * SimConfig.Scale;
@@ -289,9 +363,10 @@ public sealed class Match
 			b.X -= rest / 2 * awayB;
 		}
 
-		// Push boxes: grounded fighters never overlap; each gives half.
+		// Push boxes: grounded fighters never overlap; each gives half. A jumper passes over (C2).
+		bool grounded = a.Y == 0 && b.Y == 0;
 		int dx = b.X - a.X;
-		if (Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < Config.BodyWidth)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
 			int overlap = Config.BodyWidth - Math.Abs(dx);
@@ -305,7 +380,7 @@ public sealed class Match
 		a.X = Math.Clamp(a.X, lo, hi);
 		b.X = Math.Clamp(b.X, lo, hi);
 		dx = b.X - a.X;
-		if (Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < Config.BodyWidth)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
 			Fighter left = side > 0 ? a : b, right = side > 0 ? b : a;

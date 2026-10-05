@@ -1,0 +1,62 @@
+{
+  "kind": "normal",
+  "id": "test-ryo-heavy-punch",
+  "name": "TEST FIXTURE: Ryo heavy punch (C8 numbers; hitstun, blockstun and boxes made up; not game content)",
+  "status": "proposed",
+  "source": "ryo",
+  "rules": [
+    "C8"
+  ],
+  "input": {
+    "button": "HP"
+  },
+  "frame_data": {
+    "startup": 10,
+    "active": 4,
+    "recovery": 20,
+    "damage": 80,
+    "hitstun": 24,
+    "blockstun": 18,
+    "hitboxes": [
+      {
+        "frames": [
+          11,
+          14
+        ],
+        "rect": {
+          "x": 30,
+          "y": 105,
+          "w": 120,
+          "h": 40
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          34
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      },
+      {
+        "frames": [
+          11,
+          24
+        ],
+        "rect": {
+          "x": 30,
+          "y": 105,
+          "w": 100,
+          "h": 40
+        }
+      }
+    ]
+  },
+  "notes": "TEST FIXTURE. Startup/active/recovery/damage are C8; hitstun, blockstun and boxes are placeholders. No clip yet (F2): movesmith writes the real file in data/moves/ after clip-matcher measures the take. Never copy to data/moves/."
+}

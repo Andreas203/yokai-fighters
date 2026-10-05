@@ -1,0 +1,25 @@
+{
+  "kind": "normal",
+  "id": "sample-light-punch",
+  "name": "Light punch (schema sample, not game content)",
+  "status": "proposed",
+  "source": "ryo",
+  "clip": "sample-light-punch-clip",
+  "rules": ["C8", "F2"],
+  "input": { "button": "LP" },
+  "frame_data": {
+    "startup": 4,
+    "active": 2,
+    "recovery": 7,
+    "damage": 30,
+    "hitstun": 12,
+    "blockstun": 9,
+    "hitboxes": [
+      { "frames": [5, 6], "rect": { "x": 30, "y": 110, "w": 80, "h": 30 } }
+    ],
+    "hurtboxes": [
+      { "frames": [1, 13], "rect": { "x": -45, "y": 0, "w": 90, "h": 180 } }
+    ]
+  },
+  "notes": "Sample of the 'normal' kind only. Real normals are written by movesmith from matched clips (F2)."
+}

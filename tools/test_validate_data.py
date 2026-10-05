@@ -9,6 +9,7 @@ import validate_data  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "data" / "samples"
+FIXTURE_NORMALS = ROOT / "game" / "tests" / "fixtures" / "ryo-normals"
 
 
 def run(*paths):
@@ -26,7 +27,7 @@ class ValidateDataTest(unittest.TestCase):
     def test_each_valid_sample_type_present_and_passes(self):
         code, out = run(SAMPLES)
         self.assertEqual(code, 0, out)
-        self.assertIn("5 valid, 0 invalid", out)
+        self.assertIn("7 valid, 0 invalid", out)
 
     def test_malformed_special_fails_with_clear_messages(self):
         code, out = run(SAMPLES / "ryo-spirit-wave.json", SAMPLES / "invalid" / "broken-wave.json")
@@ -44,10 +45,32 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn("behaviours.0.when: 'opponent_pressed_punch' is not one of", out)
         self.assertIn("temperament: 'boss' temperament is for the Tanuki only", out)
 
+    def test_malformed_normal_fails_with_clear_messages(self):
+        code, out = run(SAMPLES / "sample-light-punch-clip.json", SAMPLES / "invalid" / "broken-normal.json")
+        self.assertEqual(code, 1)
+        prefix = "data/samples/invalid/broken-normal.json: "
+        self.assertIn(prefix + "input.button: 'XP' is not one of", out)
+        self.assertIn(prefix + "input.directions.0: 0 is less than the minimum of 1", out)
+        self.assertIn(prefix + "frame_data.hitboxes.0.frames: hitbox frames 8-9 fall outside 5-6", out)
+        self.assertIn(prefix + "frame_data: startup+active+recovery = 14 but clip 'sample-light-punch-clip' has frames_total 13 (F2)", out)
+
+    def test_normal_kind_allowed_in_moves_folder(self):
+        self.assertIn("normal", validate_data.DIR_KIND["moves"])
+        self.assertIn("special", validate_data.DIR_KIND["moves"])
+
+    def test_ryo_normal_test_fixtures_match_schema_except_clip(self):
+        # YOK-18 TEST FIXTURES: C8 numbers without a clip yet (F2). Everything but the clip must be valid,
+        # so the C# loader reads the same format movesmith will write.
+        code, out = run(FIXTURE_NORMALS)
+        lines = [l for l in out.splitlines() if not l.startswith("validate_data:")]
+        self.assertEqual(len(lines), 6, out)
+        for line in lines:
+            self.assertTrue(line.endswith("(root): 'clip' is a required property"), line)
+
     def test_explicit_invalid_folder_is_checked(self):
         code, out = run(SAMPLES / "invalid")
         self.assertEqual(code, 1)
-        self.assertIn("2 file(s), 0 valid, 2 invalid", out)
+        self.assertIn("3 file(s), 0 valid, 3 invalid", out)
 
 
 if __name__ == "__main__":

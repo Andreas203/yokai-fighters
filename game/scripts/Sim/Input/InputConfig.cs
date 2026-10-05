@@ -20,6 +20,11 @@ public sealed record InputConfig
 
 	/// <summary>Ticks allowed between releasing the charge and pressing the release direction.</summary>
 	public int ChargeGrace { get; init; } = 8;
+	/// <summary>
+	/// Dash (C2) is a double tap: forward (or back), release, forward again, with the first tap at most
+	/// this many ticks before the second. Proposed (YOK-18); the GDD gives no window.
+	/// </summary>
+	public int DashWindow { get; init; } = 12;
 
 	/// <summary>
 	/// Tie-break when several motions in the window complete on the same tick (otherwise the most
