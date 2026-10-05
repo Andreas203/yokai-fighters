@@ -2,7 +2,37 @@
 
 Maintained by `gameplay-programmer` (and `ui-designer` for UI scenes). Agents read this instead of crawling the project, then pull only the files their ticket touches. Update it whenever a system is added or moved.
 
-_No Godot code yet. The Godot project will live in `game/`; its C# loader adopts the schemas below (YOK-40)._
+## Godot project (`game/`)
+
+Godot 4.7 .NET, C# (`YokaiFighters.csproj`, net10.0). Boot: `scenes/main.tscn` (`scripts/Main.cs`) changes to `scenes/fight.tscn`. Its C# loader will adopt the schemas below (YOK-40).
+
+### Simulation core (`game/scripts/Sim/`, namespace `YokaiFighters.Sim`, YOK-15)
+Pure C#, **no Godot types**, integers only, so it runs headless for tests and the harness bot and replays exactly from per-tick inputs.
+
+| File | Purpose |
+|---|---|
+| `SimConfig.cs` | Fight constants (record with defaults; a data loader fills it later). Positions in **centi-units** (`Scale` = 100 per gameplay unit). Stage half-width, view width, body (push-box) width, max separation (screen walls), walk speed (C2), max health (C1), KO slow-down (V4). |
+| `FighterInput.cs` | `InputBits` flags + `FighterInput`: one fighter's intents for one tick, absolute Left/Right. The input parser (YOK-17, Kata/Kihon, K3) and AI (P6) both produce these. `Debug*` bits are placeholders until moves land. |
+| `Fighter.cs` | `Fighter` state (X/Y on the 2D plane, Facing ±1, health, KO, previous input for edge detection, queued damage); `Fnv` state hashing; `SimRng` seeded xorshift32 (the only RNG gameplay may use). |
+| `Match.cs` | One round. `Step(in1, in2)` = exactly one 1/60 s tick. Phases `Fighting → KoSlowMo → Over`. World step order: inputs/movement → `ResolvePositions` (screen walls, push boxes, stage corners) → `UpdateFacing` (always face each other) → `ApplyDamage` (simultaneous; double KO = draw). `QueueDamage()` is the hook for hits (YOK-16). KO: inputs ignored, world advances every 2nd tick for 30 world frames (V4), then `Over` until `Reset()`. `StateHash()` for determinism checks. Events `KnockOut`, `RoundOver`. |
+| `FixedStepClock.cs` | Integer-microsecond fixed-step clock: `Advance(nowUsec)` returns the ticks due so exactly 60 ticks run per second at any render rate; caps catch-up at 8 and drops the rest on a hitch. |
+| `FightCamera.cs` | Camera centre X = fighters' midpoint clamped to the stage; `BothInView()` for tests. |
+
+### Presentation (`game/scripts/Fight/`, namespace `YokaiFighters.Fight`)
+| File | Purpose |
+|---|---|
+| `FightScene.cs` (`scenes/fight.tscn`) | Owns `Match` + `FixedStepClock`; each `_Process` runs the due ticks then `Render()`s. Builds the placeholder stage (floor, backdrop, corner posts), capsule fighters (mirrored by `Scale.X = Facing`, "Nose" marks facing; KO'd fighter tips over across the 30 slow frames), Camera3D at FOV 25° (F4), 200 units per metre, fixed Z = 0. `ExternalDrive` + `Step()` let tests/harness drive it without the clock or keyboard. Debug keys: P1 A/D, F strike, G cross-up; P2 ←/→, L, K; R resets after KO. |
+| `FightHud.cs` | Placeholder `CanvasLayer`: `P1Health`/`P2Health` bars and the `Banner` label (K.O., winner). ui-designer replaces it; reads `Match` only. |
+
+### Tests (`game/tests/`)
+Headless runner: `tests/test_runner.tscn` (`TestRunner.cs`) runs every `[Test]` public static method in the assembly (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. Add tests as new static classes; no NuGet needed.
+```
+cd game
+dotnet build
+<godot-console-exe> --headless --path . --import          # first run only
+<godot-console-exe> --headless --path . res://tests/test_runner.tscn
+```
+`FightLoopTests.cs` (YOK-15): clock at 24–1000 Hz and jittered frames, hitch, facing under 5,000 random ticks (plus bounds, push boxes, camera), side switch, corner, screen walls, walk speed, KO slow-down and freeze, reset, double KO, determinism by hash, scene smoke test through KO and reset.
 
 ## Content data (`data/`) and schemas (`data/schema/`, YOK-12)
 
