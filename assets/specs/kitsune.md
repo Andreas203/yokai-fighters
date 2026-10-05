@@ -56,7 +56,22 @@ If generated walk, heavy or throw clips clip the sleeves, hakama or tails and cl
 - Licence: plan tier unknown, flagged.
 
 ## Takes
-(none run)
+Take 1, 2026-10-05 (approved first pass, T-pose, nine tails not rigged).
+
+| Job | Task id | Credits (est/actual) |
+|---|---|---|
+| K1 turnaround | 01a10e15-8089-70cf-a57b-7b72c5850df8 | 9/9 |
+| K2 mesh | 01a10e18-660f-771b-b8de-f7f71792ece1 | 30/30 |
+| K3 rig | 01a10e1a-063d-7300-8ecd-5b42ad89b086 | 5/5 |
+| K4 tail image | 01a10e15-82bd-747d-b7b1-3e3390a91729 | 3/3 |
+| K5 tail mesh | 01a10e18-6a0b-72fa-b646-ad75b3210f3b | 15/15 |
+
+Total 62/62. Outputs: `characters/kitsune/kitsune-turnaround_{0,1,2}.png` (0=front, 1=side, 2=back; front used), `kitsune-mesh.glb`, `kitsune-rigged.glb`, `kitsune-walk.glb`, `kitsune-run.glb`, `tail-ref.png`, `tail.glb`.
 
 ## Acceptance
-(not yet run)
+Verdict: body **PASS WITH DEFECT (designer to look; optional RETAKE K1+K2+K3 = 44 credits, not approved)**, tail **PASS**.
+- Body look: full mask on with eye slits, fox ears, white hair tipped orange, white haori with red trim, indigo top, orange sash, red hakama, wooden sandals; no tails on the body. DEFECT: the front reference has grey smudge artefacts across the haori and hands, baked into the texture as grey patches. The side view shows a high ponytail while front/back show hair hanging; only the front was used.
+- Rig: 15,120 tris, 24-joint humanoid, 1.65 m, origin at feet, Y-up, 2K base colour, no PBR. T-pose span +-0.64 m. Walk/run GLBs included.
+- Tail: 3,161 tris, clean white-to-orange single piece, one 2K texture. Pivot is at the mesh centre (bbox ~+-0.95 m, unscaled), not the root; rescale to ~0.5 m and offset the root in Godot. Nine instances, tick-driven sway, not rigged, per designer.
+- G4: wide sleeves and knee-length hakama are a clipping risk in heavy and throw; hair hangs down the back and may clip the tail attachments. Record for clip-matcher.
+- Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.

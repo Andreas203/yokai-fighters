@@ -42,7 +42,21 @@ Hair is baked to the head. No secondary-motion physics anywhere (F3, determinism
 - Licence: plan tier unknown, flagged.
 
 ## Takes
-(none run)
+Take 1, 2026-10-05 (approved first pass, T-pose). Prompt shortened to fit the 600-char tool limit (style block condensed).
+
+| Job | Task id | Credits (est/actual) |
+|---|---|---|
+| R1 turnaround | 01a10e15-7ddd-721f-8a9a-6f01c06b18de | 9/9 |
+| R2 mesh | 01a10e18-621a-73e8-9ecd-193c46618713 | 30/30 |
+| R3 rig | 01a10e19-f774-707d-9b31-3e94ac0acdcd | 5/5 |
+
+Total 44/44. Outputs: `characters/ryo/ryo-turnaround_{0,1,2}.png` (0=back, 1=front, 2=side; front used), `ryo-mesh.glb`, `ryo-rigged.glb`, `ryo-walk.glb`, `ryo-run.glb`.
 
 ## Acceptance
-(not yet run)
+Verdict: **PASS (provisional; no in-engine render yet)**.
+- Look: front view matches palette (indigo coat, brass buttons, persimmon lining/rope, wraps, split-toe shoes), flat, outlined. Ink outline pass and toon shader are not in the repo yet, so the shaded look is unchecked.
+- Rig (parsed from glTF): 15,161 tris, 1 mesh, 1 material, 2K base colour only (no PBR), 24-joint Meshy humanoid skeleton, height 1.75 m, bbox min Y = 0 (origin at feet), Y-up. Rig GLB carries one baked clip; separate walk and run GLBs included. T-pose span is +-0.80 m, so do not use it as a rest hurtbox.
+- Deviations from the sheet: ofuda wraps read as bandage with red dots, not four distinct strips; coat tail is a short asymmetric panel, not long. Minor; flag to designer.
+- G4: the coat panel is short and sits close to the thighs, low clipping risk; clip-matcher to confirm.
+- Texture atlas is fragmented islands (normal UV layout); needs a Godot import check for seams.
+- Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.

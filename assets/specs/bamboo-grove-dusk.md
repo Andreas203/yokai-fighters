@@ -44,7 +44,22 @@ Backdrop on a quad well behind the fight plane; bamboo cluster instanced 5-8 tim
 - Licence: plan tier unknown, flagged.
 
 ## Takes
-(none run)
+Take 1, 2026-10-05 (approved first pass).
+
+| Job | Task id | Credits (est/actual) |
+|---|---|---|
+| S1 backdrop | 01a10e15-8773-723d-b136-1d23063c0abb | 9/9 |
+| S2 bamboo image | 01a10e15-8892-71a5-ba90-3fce2857b258 | 3/3 |
+| S3 bamboo mesh | 01a10e18-6da0-7768-890d-83095f28f92b | 15/15 |
+| S4 lantern image | 01a10e15-8e05-75b8-abda-39423e71b9bd | 3/3 |
+| S5 lantern mesh | 01a10e18-7297-74ea-99c7-564eeba84286 | 15/15 |
+| S6 ground strip | 01a10e15-91b3-7043-817f-24196649546d | 3/3 |
+
+Total 48/48. Outputs in `game/assets/generated/stage/bamboo-grove/`: `backdrop.png`, `bamboo-ref.png`, `bamboo-cluster.glb`, `lantern-ref.png`, `lantern.glb`, `ground-strip.png`.
 
 ## Acceptance
-(not yet run)
+- S1 backdrop: **PASS after crop**. Palette right (pine, indigo mist, persimmon glow), calm lower third with a stone path. The image has a grey letterbox border around the 16:9 art (about x 110-1266, y 75-693 of 1376x768); crop before use.
+- S2/S3 bamboo cluster: **PASS**. 3,126 tris (spec <= 3k, 4% over, accepted), one mesh, one 2K texture. Origin is the mesh centre (bbox ~+-0.95 m), not the base: re-pivot and scale in Godot.
+- S4/S5 lantern: **PASS**. 2,788 tris, same pivot note.
+- S6 ground strip: **RETAKE recommended (3 credits, not approved)**: gritty photographic texture, off-style against the flat cel look; grey letterbox border (art about x 103-1240, y 173-595); tiling seam unverified. Suggested prompt change: add "flat vector cel shapes, no grit, no noise, seamless". Usable as a placeholder after crop.
+- Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.
