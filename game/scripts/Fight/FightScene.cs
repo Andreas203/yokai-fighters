@@ -27,6 +27,8 @@ public partial class FightScene : Node3D
 
 	public Match Match { get; private set; } = new(null, LoadMoves(), LoadMoves());
 	private readonly FixedStepClock _clock = new();
+	/// <summary>YOK-22 frame-step gate (driven by DebugOverlay, debug builds only).</summary>
+	public FrameStepper Stepper { get; } = new();
 
 	private Camera3D _camera = null!;
 	private readonly Node3D[] _bodies = new Node3D[2];
@@ -54,6 +56,7 @@ public partial class FightScene : Node3D
 		_hud = new FightHud { Name = "Hud" };
 		_hud.RestartRequested += ResetFight;
 		AddChild(_hud);
+		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step
 		Render();
 	}
 
@@ -65,7 +68,7 @@ public partial class FightScene : Node3D
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
 
-		int due = _clock.Advance((long)Time.GetTicksUsec());
+		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
 		for (int i = 0; i < due; i++) Match.Step(InputDevices.Read(0), InputDevices.Read(1));
 		Render();
 	}
