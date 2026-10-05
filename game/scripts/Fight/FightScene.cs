@@ -34,6 +34,8 @@ public partial class FightScene : Node3D
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
+	/// <summary>V3 (YOK-20): started by Match.Impact, stepped once per sim tick.</summary>
+	public ScreenShake Shake { get; } = new(SimConfig.Default.ShakeFrames);
 
 	public const string FixtureNormalsDir = "res://tests/fixtures/ryo-normals";
 
@@ -55,6 +57,8 @@ public partial class FightScene : Node3D
 		AddChild(_camera);
 		_hud = new FightHud { Name = "Hud" };
 		_hud.RestartRequested += ResetFight;
+		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
+		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
 		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step
 		Render();
@@ -69,13 +73,14 @@ public partial class FightScene : Node3D
 		_resetHeld = resetDown;
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) Match.Step(InputDevices.Read(0), InputDevices.Read(1));
+		for (int i = 0; i < due; i++) { Shake.Advance(); Match.Step(InputDevices.Read(0), InputDevices.Read(1)); }
 		Render();
 	}
 
 	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw.</summary>
 	public void Step(FighterInput p1, FighterInput p2)
 	{
+		Shake.Advance();
 		Match.Step(p1, p2);
 		Render();
 	}
@@ -83,6 +88,7 @@ public partial class FightScene : Node3D
 	public void ResetFight()
 	{
 		Match.Reset();
+		Shake.Stop();
 		_clock.Restart();
 		Render();
 	}
@@ -110,6 +116,9 @@ public partial class FightScene : Node3D
 		float halfFovTan = Mathf.Tan(Mathf.DegToRad(CameraFovDegrees) / 2f);
 		float distance = viewW / (2f * halfFovTan * (16f / 9f));
 		_camera.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, distance);
+		var (sx, sy) = Shake.OffsetPx; // V3: px = gameplay units at the Z = 0 plane
+		_camera.HOffset = ToMeters(sx * SimConfig.Scale);
+		_camera.VOffset = ToMeters(sy * SimConfig.Scale);
 
 		_hud.Refresh(Match);
 	}

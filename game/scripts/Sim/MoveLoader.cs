@@ -57,6 +57,8 @@ public static class MoveLoader
 			DirectionMask = dirMask,
 		};
 
+		move = MoveData.ReadImpact(move, fd); // YOK-20: hit strength (V2) and meter gain (C5)
+
 		if (move.Hitboxes.Count > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
 			throw new FormatException($"{id}: a move with hitboxes needs hitstun and blockstun");
 		foreach (var h in move.Hitboxes)
