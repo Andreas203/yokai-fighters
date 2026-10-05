@@ -2,6 +2,9 @@ using System;
 
 namespace YokaiFighters.Sim;
 
+/// <summary>One move connecting. Attacker is the fighter index; Frame is the move frame it landed on.</summary>
+public readonly record struct HitEvent(int Attacker, string MoveId, int Frame, bool Blocked, bool Counter, int Damage);
+
 public enum MatchPhase
 {
 	/// <summary>Round in progress; inputs drive the fighters.</summary>
@@ -39,10 +42,15 @@ public sealed class Match
 
 	public event Action<Match>? KnockOut;
 	public event Action<Match>? RoundOver;
+	/// <summary>A move connected (hit or block). Raised during the world frame, before damage applies.</summary>
+	public event Action<Match, HitEvent>? Hit;
 
-	public Match(SimConfig? config = null)
+	/// <param name="p1Moves">P1's moves by slot, loaded from data at fight start (MoveLoader).</param>
+	public Match(SimConfig? config = null, MoveData[]? p1Moves = null, MoveData[]? p2Moves = null)
 	{
 		Config = config ?? SimConfig.Default;
+		P1.Moves = p1Moves ?? Array.Empty<MoveData>();
+		P2.Moves = p2Moves ?? Array.Empty<MoveData>();
 		Reset();
 	}
 
@@ -100,19 +108,36 @@ public sealed class Match
 		{
 			Fighter f = Fighters[i], o = Fighters[1 - i];
 			FighterInput input = inputs[i];
+			AdvanceState(f);
 
 			int dir = (input.Has(InputBits.Right) ? 1 : 0) - (input.Has(InputBits.Left) ? 1 : 0);
 			int before = f.X;
-			f.X += dir * Config.WalkSpeed;
+			bool canGuard = f.State is FighterState.Idle or FighterState.Blockstun;
+			f.Crouching = canGuard && input.Has(InputBits.Down);
+			f.Guarding = canGuard && dir == -f.Facing; // C3: hold back
 
-			if (f.Pressed(input, InputBits.DebugCrossUp))
+			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length)
+			{
+				f.State = FighterState.Attack;
+				f.MoveSlot = input.Move - 1;
+				f.MoveFrame = 1;
+				f.MoveConnected = false;
+				f.Guarding = false;
+				f.Crouching = false;
+			}
+			else if (f.Actionable && !f.Crouching)
+			{
+				f.X += dir * Config.WalkSpeed;
+			}
+
+			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
 				// Placeholder for a side-switching move (jump-over, Fox Mirage): land just behind the opponent.
 				int side = Math.Sign(o.X - before);
 				if (side == 0) side = f.Facing;
 				f.X = o.X + side * Config.BodyWidth;
 			}
-			if (f.Pressed(input, InputBits.DebugStrike))
+			if (f.Actionable && f.Pressed(input, InputBits.DebugStrike))
 				Fighters[1 - i].PendingDamage += Config.DebugStrikeDamage;
 
 			moved[i] = f.X - before;
@@ -121,7 +146,124 @@ public sealed class Match
 
 		ResolvePositions(moved);
 		UpdateFacing();
+		ResolveHits();
 		ApplyDamage();
+	}
+
+	/// <summary>
+	/// Start-of-frame state step. A move started on tick t plays frame n on tick t+n-1 and the fighter
+	/// acts again on tick t+TotalFrames. A stun of N frames set on tick h holds ticks h+1..h+N; the
+	/// fighter acts on tick h+N+1. So advantage = stun - (TotalFrames - frame the hit landed on).
+	/// </summary>
+	private static void AdvanceState(Fighter f)
+	{
+		switch (f.State)
+		{
+			case FighterState.Attack:
+				if (++f.MoveFrame > f.Moves[f.MoveSlot].TotalFrames) ToIdle(f);
+				break;
+			case FighterState.Hitstun:
+			case FighterState.Blockstun:
+			case FighterState.Knockdown:
+				if (f.StunLeft == 0) ToIdle(f);
+				else f.StunLeft--;
+				break;
+		}
+	}
+
+	private static void ToIdle(Fighter f) => SetState(f, FighterState.Idle, 0);
+
+	private static void SetState(Fighter f, FighterState state, int stun)
+	{
+		f.State = state;
+		f.MoveSlot = -1;
+		f.MoveFrame = 0;
+		f.MoveConnected = false;
+		f.StunLeft = stun;
+	}
+
+	/// <summary>
+	/// Both fighters' hitboxes are tested against the other's hurtboxes as they stood this frame,
+	/// then applied together, so two moves that connect on the same frame trade.
+	/// </summary>
+	private void ResolveHits()
+	{
+		bool hit0 = Connects(P1, P2), hit1 = Connects(P2, P1);
+		if (!hit0 && !hit1) return;
+		// Snapshot both moves before either hit applies: a trade interrupts both (C7: both counterhit).
+		MoveData? m0 = P1.CurrentMove, m1 = P2.CurrentMove;
+		int f0 = P1.MoveFrame, f1 = P2.MoveFrame;
+		if (hit0) ApplyHit(0, m0!, f0, m1 != null);
+		if (hit1) ApplyHit(1, m1!, f1, m0 != null);
+		ResolvePositions(stackalloc int[2]);
+	}
+
+	private bool Connects(Fighter att, Fighter def)
+	{
+		MoveData? m = att.CurrentMove;
+		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
+		if (def.State == FighterState.Knockdown || def.KnockedOut) return false;
+		MoveData? dm = def.CurrentMove;
+		foreach (var hb in m.Hitboxes)
+		{
+			if (!hb.Covers(att.MoveFrame)) continue;
+			var a = WorldBox(att, hb.Box);
+			if (dm is null)
+			{
+				if (Overlaps(a, WorldBox(def, Config.IdleHurtbox))) return true;
+				continue;
+			}
+			foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
+				if (hu.Covers(def.MoveFrame) && Overlaps(a, WorldBox(def, hu.Box))) return true;
+		}
+		return false;
+	}
+
+	private static bool Overlaps((int x0, int y0, int x1, int y1) a, (int x0, int y0, int x1, int y1) b) =>
+		a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+	/// <summary>Move-data box (units, x toward the opponent) to world centi-units, mirrored by facing.</summary>
+	public static (int x0, int y0, int x1, int y1) WorldBox(Fighter f, Box b)
+	{
+		int s = SimConfig.Scale;
+		int x0 = f.Facing > 0 ? f.X + b.X * s : f.X - (b.X + b.W) * s;
+		int y0 = f.Y + b.Y * s;
+		return (x0, y0, x0 + b.W * s, y0 + b.H * s);
+	}
+
+	private void ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking)
+	{
+		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
+		att.MoveConnected = true;
+
+		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
+		bool counter = !blocked && defenderWasAttacking;           // C7
+		int push, damage = 0;
+		if (blocked)
+		{
+			SetState(def, FighterState.Blockstun, m.Blockstun);
+			push = m.BlockPushback ?? Config.BlockPushback;
+		}
+		else
+		{
+			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
+			def.PendingDamage += damage;
+			if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
+			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
+			push = m.HitPushback ?? Config.HitPushback;
+		}
+		def.Guarding = false;
+		def.Crouching = false;
+
+		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
+		int dir = att.Facing, want = push * SimConfig.Scale;
+		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
+		int target = Math.Clamp(def.X + dir * want, lo, hi);
+		int got = Math.Abs(target - def.X);
+		def.X = target;
+		att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+
+		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>
@@ -173,13 +315,16 @@ public sealed class Match
 		}
 	}
 
-	/// <summary>Fighters always face each other; on equal X they keep their last facing.</summary>
+	/// <summary>
+	/// Free fighters turn to face the opponent; on equal X they keep their last facing. Facing is held
+	/// during a move, hitstun, blockstun and knockdown, so a crossed-up attack keeps its direction.
+	/// </summary>
 	private void UpdateFacing()
 	{
 		int dx = P2.X - P1.X;
 		if (dx == 0) return;
-		P1.Facing = Math.Sign(dx);
-		P2.Facing = -P1.Facing;
+		if (P1.State == FighterState.Idle) P1.Facing = Math.Sign(dx);
+		if (P2.State == FighterState.Idle) P2.Facing = -Math.Sign(dx);
 	}
 
 	private void ApplyDamage()
