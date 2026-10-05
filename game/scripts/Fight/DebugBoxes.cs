@@ -31,7 +31,7 @@ public static class DebugBoxes
 		bool hittable = !f.KnockedOut && f.State != FighterState.Knockdown;
 		if (m is null)
 		{
-			if (hittable) list.Add(Make(DebugBoxKind.Hurt, f, c.IdleHurtbox));
+			if (hittable) list.Add(Make(DebugBoxKind.Hurt, f, match.BodyHurtbox(f)));
 			return list;
 		}
 

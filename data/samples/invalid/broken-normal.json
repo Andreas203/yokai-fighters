@@ -1,0 +1,23 @@
+{
+  "kind": "normal",
+  "id": "broken-normal",
+  "name": "Malformed normal (validator test)",
+  "source": "ryo",
+  "clip": "sample-light-punch-clip",
+  "rules": ["C8"],
+  "input": { "button": "XP", "directions": [0] },
+  "frame_data": {
+    "startup": 4,
+    "active": 2,
+    "recovery": 8,
+    "damage": 30,
+    "hitstun": 12,
+    "blockstun": 9,
+    "hitboxes": [
+      { "frames": [8, 9], "rect": { "x": 30, "y": 110, "w": 80, "h": 30 } }
+    ],
+    "hurtboxes": [
+      { "frames": [1, 14], "rect": { "x": -45, "y": 0, "w": 90, "h": 180 } }
+    ]
+  }
+}

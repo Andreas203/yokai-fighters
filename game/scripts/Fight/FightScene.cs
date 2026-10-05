@@ -9,10 +9,10 @@ namespace YokaiFighters.Fight;
 /// then draws the current state. Gameplay never reads Godot delta (F3). 3D is presentation only:
 /// fighters sit on a fixed-Z plane (F4) under a ~25 deg perspective camera.
 /// Placeholder capsules, stage and health bars until generated assets and the HUD land.
-/// Moves load from data/moves/ at fight start (MoveLoader); with none there yet, the labelled test
-/// fixtures in tests/fixtures/moves/ stand in so the scene is playable.
-/// Debug keys: P1 A/D walk, S crouch, F/C/V move slots 1-3, G cross-up; P2 arrows walk, Down crouch,
-/// L/J/H slots 1-3, K cross-up; R reset after KO.
+/// Moves load from data/moves/ at fight start (MoveLoader); while it has no normals yet, the labelled
+/// TEST FIXTURE normals in tests/fixtures/ryo-normals/ (C8 numbers) stand in so the scene is playable.
+/// Controls are the E9 defaults through InputDevices.Read; each fighter's InputReader (Kata) parses
+/// them inside the sim. R resets after KO.
 /// </summary>
 public partial class FightScene : Node3D
 {
@@ -34,17 +34,16 @@ public partial class FightScene : Node3D
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
-	private readonly byte[] _prevMove = new byte[2];
 
-	public const string FixtureMovesDir = "res://tests/fixtures/moves";
+	public const string FixtureNormalsDir = "res://tests/fixtures/ryo-normals";
 
-	/// <summary>Both fighters' moves from data; falls back to the test fixtures while data/moves/ is empty.</summary>
+	/// <summary>Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals.</summary>
 	public static MoveData[] LoadMoves()
 	{
 		var moves = MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves");
-		if (moves.Length > 0) return moves;
-		GD.Print("FightScene: data/moves/ is empty, using TEST FIXTURE moves");
-		return MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureMovesDir));
+		if (System.Array.Exists(moves, m => m.IsNormal)) return moves;
+		GD.Print("FightScene: data/moves/ has no normals, using TEST FIXTURE normals (C8)");
+		return [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureNormalsDir))];
 	}
 
 	public override void _Ready()
@@ -70,7 +69,7 @@ public partial class FightScene : Node3D
 		_resetHeld = resetDown;
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) Match.Step(ReadKeys(0), ReadKeys(1));
+		for (int i = 0; i < due; i++) Match.Step(InputDevices.Read(0), InputDevices.Read(1));
 		Render();
 	}
 
@@ -88,37 +87,6 @@ public partial class FightScene : Node3D
 		Render();
 	}
 
-	private FighterInput ReadKeys(int player)
-	{
-		InputBits b = InputBits.None;
-		byte move = 0;
-		bool K(Key k) => Input.IsPhysicalKeyPressed(k);
-		if (player == 0)
-		{
-			if (K(Key.A)) b |= InputBits.Left;
-			if (K(Key.D)) b |= InputBits.Right;
-			if (K(Key.S)) b |= InputBits.Down;
-			if (K(Key.F)) move = 1;
-			else if (K(Key.C)) move = 2;
-			else if (K(Key.V)) move = 3;
-			if (K(Key.G)) b |= InputBits.DebugCrossUp;
-		}
-		else
-		{
-			if (K(Key.Left)) b |= InputBits.Left;
-			if (K(Key.Right)) b |= InputBits.Right;
-			if (K(Key.Down)) b |= InputBits.Down;
-			if (K(Key.L)) move = 1;
-			else if (K(Key.J)) move = 2;
-			else if (K(Key.H)) move = 3;
-			if (K(Key.K)) b |= InputBits.DebugCrossUp;
-		}
-		// Debug stand-in for the input parser (YOK-17): a move key requests its slot on the press only.
-		byte req = move != _prevMove[player] ? move : (byte)0;
-		_prevMove[player] = move;
-		return new FighterInput(b, req);
-	}
-
 	public static float ToMeters(int centiUnits) => centiUnits / (SimConfig.Scale * UnitsPerMeter);
 
 	private void Render()
@@ -133,7 +101,7 @@ public partial class FightScene : Node3D
 			float tilt = 0f;
 			if (f.KnockedOut)
 				tilt = Mathf.DegToRad(80f) * Match.KoFrame / c.KoSlowFrames; // falls over during the V4 slow-down
-			body.Scale = new Vector3(f.Facing, 1f, 1f);
+			body.Scale = new Vector3(f.Facing, f.Crouching ? 0.6f : 1f, 1f); // placeholder crouch squash
 			body.Rotation = new Vector3(0f, 0f, tilt * f.Facing);
 		}
 
