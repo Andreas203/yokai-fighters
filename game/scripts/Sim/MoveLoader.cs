@@ -37,6 +37,7 @@ public static class MoveLoader
 		JsonElement push = fd.TryGetProperty("pushback", out var pb) ? pb : default;
 
 		var activeEl = fd.TryGetProperty("active", out var a) ? a : throw new FormatException($"{id}: frame_data.active is required");
+		var (button, dirMask) = NormalInput(root, id);
 		var move = new MoveData
 		{
 			Id = id,
@@ -52,6 +53,8 @@ public static class MoveLoader
 			Low = Flag("low"),
 			Hitboxes = Boxes(fd, "hitboxes"),
 			Hurtboxes = Boxes(fd, "hurtboxes"),
+			Button = button,
+			DirectionMask = dirMask,
 		};
 
 		if (move.Hitboxes.Count > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
@@ -70,6 +73,34 @@ public static class MoveLoader
 		Directory.Exists(dir)
 			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal).Select(LoadFile).ToArray()
 			: Array.Empty<MoveData>();
+
+	/// <summary>Kind "normal" (data/schema/normal.schema.json): input.button and optional input.directions.</summary>
+	private static (InputBits button, int dirMask) NormalInput(JsonElement root, string id)
+	{
+		bool normal = root.TryGetProperty("kind", out var k) && k.GetString() == "normal";
+		if (!normal) return (InputBits.None, 0);
+		if (!root.TryGetProperty("input", out var input) || !input.TryGetProperty("button", out var b))
+			throw new FormatException($"{id}: a normal needs input.button");
+		InputBits button = b.GetString() switch
+		{
+			"LP" => InputBits.LightPunch,
+			"MP" => InputBits.MediumPunch,
+			"HP" => InputBits.HeavyPunch,
+			"LK" => InputBits.LightKick,
+			"MK" => InputBits.MediumKick,
+			"HK" => InputBits.HeavyKick,
+			var other => throw new FormatException($"{id}: unknown button '{other}'"),
+		};
+		int mask = 0;
+		if (input.TryGetProperty("directions", out var dirs))
+			foreach (var d in dirs.EnumerateArray())
+			{
+				int n = d.GetInt32();
+				if (n < 1 || n > 9) throw new FormatException($"{id}: direction {n} is not a numpad direction");
+				mask |= 1 << n;
+			}
+		return (button, mask);
+	}
 
 	private static TimedBox[] Boxes(JsonElement fd, string name)
 	{

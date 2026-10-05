@@ -27,6 +27,27 @@ public sealed record SimConfig
 
 	public int StartOffset { get; init; } = 300 * Scale;
 
+	// --- Movement (YOK-18). Frame counts are C2; distances and heights are proposed placeholders. ---
+
+	/// <summary>C2: a dash lasts 18 frames, forward or back; not actionable until it ends.</summary>
+	public int DashFrames { get; init; } = 18;
+	/// <summary>Proposed: forward dash covers 300 units, back dash 240 (no GDD figure).</summary>
+	public int DashDistance { get; init; } = 300 * Scale;
+	public int BackDashDistance { get; init; } = 240 * Scale;
+
+	/// <summary>C2: 40 frames of airtime; the fighter lands and acts again on the 41st.</summary>
+	public int JumpFrames { get; init; } = 40;
+	/// <summary>Proposed: apex 250 units (~1.25 m at E1's 200 units per metre).</summary>
+	public int JumpHeight { get; init; } = 250 * Scale;
+	/// <summary>Proposed: forward/back jumps drift 8 units per frame, 320 units over the jump.</summary>
+	public int JumpSpeedX { get; init; } = 8 * Scale;
+
+	/// <summary>Integer jump arc: height on air frame n (0..JumpFrames), a parabola from 0 to 0.</summary>
+	public int JumpY(int n) => (int)(4L * JumpHeight * n * (JumpFrames - n) / ((long)JumpFrames * JumpFrames));
+
+	/// <summary>Dash displacement on dash frame n (1..DashFrames), so the frames sum exactly to the distance.</summary>
+	public int DashStep(int n, int distance) => distance * n / DashFrames - distance * (n - 1) / DashFrames;
+
 	public int P1MaxHealth { get; init; } = 1000; // C1: Ryo
 	public int P2MaxHealth { get; init; } = 1000; // placeholder until yokai data lands
 
@@ -39,8 +60,15 @@ public sealed record SimConfig
 
 	// --- Hits (YOK-16). Fight-wide fallbacks; per-move numbers live in move data. ---------
 
-	/// <summary>Hurtbox of a fighter not in a move (units, feet-relative). Placeholder until fighter data lands.</summary>
-	public Box IdleHurtbox { get; init; } = new(-45, 0, 90, 180);
+	/// <summary>
+	/// Hurtbox of a fighter not in a move (units, feet-relative), per stance. PROPOSED (YOK-18), for
+	/// the designer: E5's single 90x180 box covers only the lower half of a 1.8 m fighter (360 units at
+	/// E1), so standing is 90x360, crouching about half plus the head (90x200), airborne tucked (90x280).
+	/// Placeholders until fighter data lands; E5 in rules.md is unchanged.
+	/// </summary>
+	public Box IdleHurtbox { get; init; } = new(-45, 0, 90, 360);
+	public Box CrouchHurtbox { get; init; } = new(-45, 0, 90, 200);
+	public Box AirHurtbox { get; init; } = new(-45, 0, 90, 280);
 
 	/// <summary>Defender slide in units when a move's data gives no pushback.</summary>
 	public int HitPushback { get; init; } = 40;
