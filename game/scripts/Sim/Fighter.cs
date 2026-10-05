@@ -34,8 +34,20 @@ public sealed class Fighter
 	public bool Guarding;
 	public bool Crouching;
 
+	// --- Movement and input (YOK-18) ---------------------------------------------------------
+	/// <summary>This fighter's input layer (YOK-17): raw history, scheme parser, command buffer.</summary>
+	public InputReader Input = new();
+	/// <summary>0 = grounded; 1..JumpFrames = frame of the jump arc (C2). Y follows the arc.</summary>
+	public int AirFrame;
+	/// <summary>Absolute X drift sign of the jump (-1, 0, +1); a hit in the air stops it.</summary>
+	public int JumpDir;
+	/// <summary>1-based dash frame (State == Dash) and absolute dash direction.</summary>
+	public int DashFrame;
+	public int DashDir;
+
+	public bool Airborne => AirFrame > 0;
 	public MoveData? CurrentMove => State == FighterState.Attack ? Moves[MoveSlot] : null;
-	/// <summary>Free to start a move or walk this frame.</summary>
+	/// <summary>Free to start a move, jump, dash or walk this frame (only ever on the ground).</summary>
 	public bool Actionable => State == FighterState.Idle && !KnockedOut;
 
 	public bool Pressed(FighterInput input, InputBits b) => input.Has(b) && (PrevBits & b) == 0;
@@ -57,6 +69,11 @@ public sealed class Fighter
 		StunLeft = 0;
 		Guarding = false;
 		Crouching = false;
+		Input.Reset();
+		AirFrame = 0;
+		JumpDir = 0;
+		DashFrame = 0;
+		DashDir = 0;
 	}
 
 	public ulong Hash(ulong h)
@@ -74,6 +91,11 @@ public sealed class Fighter
 		h = Fnv.Mix(h, MoveConnected ? 1 : 0);
 		h = Fnv.Mix(h, StunLeft);
 		h = Fnv.Mix(h, (Guarding ? 1 : 0) | (Crouching ? 2 : 0));
+		h = Fnv.Mix(h, AirFrame);
+		h = Fnv.Mix(h, JumpDir);
+		h = Fnv.Mix(h, DashFrame);
+		h = Fnv.Mix(h, DashDir);
+		h = Fnv.Mix(h, (int)Input.Pending.Kind);
 		return h;
 	}
 }
@@ -86,6 +108,10 @@ public enum FighterState
 	Blockstun,
 	/// <summary>On the floor after a knockdown move; no hurtbox.</summary>
 	Knockdown,
+	/// <summary>C2: dashing forward or back for DashFrames frames.</summary>
+	Dash,
+	/// <summary>C2: in the air (jump arc, or falling after an air hit's stun ended); lands into Idle.</summary>
+	Jump,
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>

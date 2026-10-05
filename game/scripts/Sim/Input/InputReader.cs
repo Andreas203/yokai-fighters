@@ -31,10 +31,14 @@ public sealed class InputReader
 	/// <summary>Numpad direction this tick, relative to the facing last passed in.</summary>
 	public int Direction { get; private set; } = 5;
 
+	/// <summary>Dash request this tick, relative to facing: +1 = 66, -1 = 44, 0 = none (C2).</summary>
+	public int Dash { get; private set; }
+
 	public void Update(FighterInput raw, int facing)
 	{
 		Buffer.Push(raw);
 		Direction = Buffer.Dir(0, facing);
+		Dash = DetectDash(facing);
 		if (_pending.Kind != CommandKind.None && ++_pendingAge > Config.CommandBuffer)
 			_pending = InputCommand.None;
 		Latest = Parser.Parse(Buffer, facing);
@@ -42,6 +46,20 @@ public sealed class InputReader
 		if (_pending.Kind == CommandKind.Special && Latest.Kind == CommandKind.Normal) return;
 		_pending = Latest;
 		_pendingAge = 0;
+	}
+
+	/// <summary>
+	/// 66 / 44: a fresh 6 (or 4) now, something else on the tick before, and the same direction again
+	/// within DashWindow ticks. Exact 6/4 only, so a diagonal never dashes (9 jumps, 3 crouches).
+	/// </summary>
+	int DetectDash(int facing)
+	{
+		int d = Direction;
+		if (d != 6 && d != 4) return 0;
+		if (Buffer.Dir(1, facing) == d) return 0;
+		for (int age = 2; age <= Config.DashWindow && age < Buffer.Count; age++)
+			if (Buffer.Dir(age, facing) == d) return d == 6 ? 1 : -1;
+		return 0;
 	}
 
 	public bool TryConsume(out InputCommand cmd)
@@ -58,5 +76,6 @@ public sealed class InputReader
 		_pending = Latest = InputCommand.None;
 		_pendingAge = 0;
 		Direction = 5;
+		Dash = 0;
 	}
 }

@@ -36,6 +36,18 @@ public sealed record MoveData
 	public IReadOnlyList<TimedBox> Hitboxes { get; init; } = Array.Empty<TimedBox>();
 	public IReadOnlyList<TimedBox> Hurtboxes { get; init; } = Array.Empty<TimedBox>();
 
+	/// <summary>Kind "normal" (C8): the attack button that performs it; None for specials.</summary>
+	public InputBits Button { get; init; }
+	/// <summary>Normals: bit n set = allowed on numpad direction n (relative to facing); 0 = any direction.</summary>
+	public int DirectionMask { get; init; }
+
+	public bool IsNormal => Button != InputBits.None;
+	/// <summary>A normal for this button and numpad direction (0 = no match, 1 = any-direction match, 2 = listed direction).</summary>
+	public int NormalMatch(InputBits button, int direction) =>
+		!IsNormal || button != Button ? 0
+		: DirectionMask == 0 ? 1
+		: (DirectionMask & (1 << direction)) != 0 ? 2 : 0;
+
 	public int TotalFrames => Startup + Active + Recovery;
 	public int FirstActive => Startup + 1;
 	public int LastActive => Startup + Active;

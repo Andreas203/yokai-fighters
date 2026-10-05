@@ -53,9 +53,11 @@ public static class FightLoopTests
 
 	static void AssertFacing(Match m, string when)
 	{
+		// Free (Idle) fighters face each other; facing is held during a dash or jump (YOK-18), like a move.
 		int dx = m.P2.X - m.P1.X;
-		if (dx != 0) Assert.Equal(Math.Sign(dx), m.P1.Facing, $"P1 faces P2 ({when})");
-		Assert.Equal(-m.P1.Facing, m.P2.Facing, $"P2 faces P1 ({when})");
+		if (dx == 0) return;
+		if (m.P1.State == FighterState.Idle) Assert.Equal(Math.Sign(dx), m.P1.Facing, $"P1 faces P2 ({when})");
+		if (m.P2.State == FighterState.Idle) Assert.Equal(-Math.Sign(dx), m.P2.Facing, $"P2 faces P1 ({when})");
 	}
 
 	[Test]

@@ -38,27 +38,28 @@ RULES_MD = ROOT / "docs" / "design" / "rules.md"
 
 KIND_SCHEMA = {
     "special": "special.schema.json",
+    "normal": "normal.schema.json",
     "modifier": "modifier.schema.json",
     "cancel_rule": "cancel-rule.schema.json",
     "profile": "profile.schema.json",
     "clip": "clip.schema.json",
 }
-# Folder under data/ -> the kind its files must declare. Other folders (samples/) accept any kind.
+# Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
-    "moves": "special",
-    "modifiers": "modifier",
-    "cancels": "cancel_rule",
-    "profiles": "profile",
-    "clips": "clip",
+    "moves": ("special", "normal"),
+    "modifiers": ("modifier",),
+    "cancels": ("cancel_rule",),
+    "profiles": ("profile",),
+    "clips": ("clip",),
 }
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
 
 def rel(path: Path) -> str:
     try:
-        return str(path.resolve().relative_to(ROOT))
+        return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
-        return str(path)
+        return path.as_posix()
 
 
 def load_validators() -> dict[str, Draft202012Validator]:
@@ -154,23 +155,27 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
     if "data" in parts:
         idx = len(parts) - 1 - parts[::-1].index("data")
         folder = parts[idx + 1] if idx + 1 < len(parts) - 1 else None
-        if folder in DIR_KIND and DIR_KIND[folder] != kind:
-            errs.append(("kind", f"files in data/{folder}/ must be kind '{DIR_KIND[folder]}', got '{kind}'"))
+        if folder in DIR_KIND and kind not in DIR_KIND[folder]:
+            allowed = " or ".join(f"'{k}'" for k in DIR_KIND[folder])
+            errs.append(("kind", f"files in data/{folder}/ must be kind {allowed}, got '{kind}'"))
     for i, rid in enumerate(doc.get("rules") or []):
         if isinstance(rid, str) and rid not in rule_ids:
             errs.append((f"rules.{i}", f"rule ID '{rid}' does not exist in docs/design/rules.md"))
 
-    if kind == "special":
+    if kind in ("special", "normal"):
+        clip_id = doc.get("clip")
+        clip = clips.get(clip_id) if isinstance(clip_id, str) else None
+        if isinstance(clip_id, str) and clip is None:
+            errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
+    if kind == "normal":
+        check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
+    elif kind == "special":
         inp = doc.get("input") or {}
         ks, hs = (inp.get("kata") or {}).get("slot"), (inp.get("kihon") or {}).get("slot")
         if ks and hs and ks != hs:
             errs.append(("input", f"Kata slot {ks} and Kihon slot {hs} must match (K3)"))
         if doc.get("starter") and (doc.get("source") != "ryo" or doc.get("rarity") != "common"):
             errs.append(("starter", "starters must have source 'ryo' and rarity 'common' (A1, A9)"))
-        clip_id = doc.get("clip")
-        clip = clips.get(clip_id) if isinstance(clip_id, str) else None
-        if isinstance(clip_id, str) and clip is None:
-            errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
         lv1 = ((doc.get("levels") or {}).get("1") or {}).get("frame_data")
         check_frame_data(lv1, "levels.1.frame_data", clip, clip_id, errs)
     elif kind == "cancel_rule":
@@ -204,7 +209,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             docs[f] = json.loads(f.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as e:
             failures[f] = [("(file)", f"cannot read JSON: {e}")]
-    # Clips referenced by specials: everything in data/clips/ plus clips in this run.
+    # Clips referenced by specials and normals: everything in data/clips/ plus clips in this run.
     clips: dict[str, dict] = {}
     for c in sorted((DATA / "clips").glob("*.json")) if (DATA / "clips").is_dir() else []:
         try:
