@@ -37,13 +37,26 @@ public partial class FightScene : Node3D
 
 	public const string FixtureNormalsDir = "res://tests/fixtures/ryo-normals";
 
-	/// <summary>Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals.</summary>
+	public const string FixtureThrowsDir = "res://tests/fixtures/throws";
+
+	/// <summary>
+	/// Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals
+	/// and the TEST FIXTURE throw (C4, YOK-19) while it has no throw (the grab clip is being retaken, YOK-31).
+	/// </summary>
 	public static MoveData[] LoadMoves()
 	{
 		var moves = MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves");
-		if (System.Array.Exists(moves, m => m.IsNormal)) return moves;
-		GD.Print("FightScene: data/moves/ has no normals, using TEST FIXTURE normals (C8)");
-		return [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureNormalsDir))];
+		if (!System.Array.Exists(moves, m => m.IsNormal))
+		{
+			GD.Print("FightScene: data/moves/ has no normals, using TEST FIXTURE normals (C8)");
+			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureNormalsDir))];
+		}
+		if (!System.Array.Exists(moves, m => m.IsThrow))
+		{
+			GD.Print("FightScene: data/moves/ has no throw, using the TEST FIXTURE throw (C4)");
+			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureThrowsDir))];
+		}
+		return moves;
 	}
 
 	public override void _Ready()

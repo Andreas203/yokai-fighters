@@ -47,10 +47,16 @@ public static class DebugBoxes
 	}
 
 	/// <summary>
-	/// Hook for YOK-19 (generic throws, C4): return the current move's throw boxes for this frame once
-	/// MoveData carries them. No throw data exists yet, so nothing is drawn.
+	/// YOK-19 (C4): the current throw move's throwboxes covering this frame, as <c>Match.Grabs</c> tests
+	/// them; none once the grab connected (or on a whiff's recovery).
 	/// </summary>
-	public static IEnumerable<Box> ThrowBoxes(Fighter f) => System.Array.Empty<Box>();
+	public static IEnumerable<Box> ThrowBoxes(Fighter f)
+	{
+		MoveData? m = f.CurrentMove;
+		if (m is null || !m.IsThrow || f.MoveConnected || !m.IsActive(f.MoveFrame)) yield break;
+		foreach (var tb in m.Throwboxes)
+			if (tb.Covers(f.MoveFrame)) yield return tb.Box;
+	}
 
 	static DebugBox Make(DebugBoxKind kind, Fighter f, Box b, bool spent = false)
 	{

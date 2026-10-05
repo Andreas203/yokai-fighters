@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/throw.schema.json",
+  "title": "Throw",
+  "description": "A generic throw (C4) in data/moves/<id>.json. The attacker plays its own grab clip; the defender plays the standard knockdown (E4), so there is never a paired animation. A throw cannot be blocked. The grab connects on the first active frame whose throwbox overlaps a throwable defender (grounded, not in hitstun, blockstun, knockdown or another throw); the defender then has break_window frames to press the throw buttons. Unbroken, the throw deals damage and knocks down for the fight-wide knockdown length (E4).",
+  "type": "object",
+  "required": ["kind", "id", "name", "source", "clip", "rules", "input", "frame_data"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "throw" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "source": { "$ref": "common.schema.json#/$defs/yokai" },
+    "clip": { "$ref": "common.schema.json#/$defs/id", "description": "The attacker's grab clip: data/clips/<clip>.json (F2). The defender never needs a matching clip (C4)." },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "input": {
+      "type": "object",
+      "required": ["buttons"],
+      "additionalProperties": false,
+      "properties": {
+        "buttons": {
+          "description": "The two attack buttons pressed on the same tick that make the throw, and that the defender presses to break it. Same buttons in Kata and Kihon (K3).",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": { "enum": ["LP", "MP", "HP", "LK", "MK", "HK"] }
+        }
+      }
+    },
+    "frame_data": {
+      "type": "object",
+      "required": ["startup", "active", "recovery", "damage", "break_window", "throwboxes", "hurtboxes"],
+      "additionalProperties": false,
+      "properties": {
+        "startup": { "type": "integer", "minimum": 1 },
+        "active": { "type": "integer", "minimum": 1 },
+        "recovery": { "type": "integer", "minimum": 0, "description": "Frames after the active window, on a whiff and after the throw lands." },
+        "damage": { "type": "integer", "minimum": 0 },
+        "break_window": { "type": "integer", "minimum": 1, "description": "Frames after the grab in which the defender's throw press breaks it (C4: 7)." },
+        "pushback": {
+          "description": "Units the defender lands away on a completed throw, and each fighter slides on a break. Omitted values use the fight default (hit / block pushback).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on_hit": { "type": "integer", "minimum": 0 },
+            "on_break": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "throwboxes": {
+          "description": "Grab range per active-frame range, tested against the defender's stance body box. Each range must sit inside the active window.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "common.schema.json#/$defs/timedRect" }
+        },
+        "hurtboxes": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/timedRect" }
+        }
+      }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

@@ -21,7 +21,7 @@ public enum MatchPhase
 /// harness bot. Step() is exactly one 1/60 s tick; a world frame is one tick of fighter motion
 /// (the two differ only during the KO slow-down).
 /// </summary>
-public sealed class Match
+public sealed partial class Match
 {
 	public SimConfig Config { get; }
 	public Fighter[] Fighters { get; } = { new(), new() };
@@ -101,6 +101,7 @@ public sealed class Match
 	private void WorldStep(FighterInput in1, FighterInput in2)
 	{
 		WorldFrame++;
+		AdvanceThrows(); // YOK-19: break windows count down; an unbroken throw lands
 		Span<FighterInput> inputs = stackalloc FighterInput[] { in1, in2 };
 		Span<int> moved = stackalloc int[2];
 
@@ -122,7 +123,7 @@ public sealed class Match
 
 			int slot = -1;
 			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
-			else if (f.Actionable && f.Input.TryConsume(out var cmd)) slot = FindNormal(f, cmd);
+			else if (f.Actionable && f.Input.TryConsume(out var cmd)) { slot = FindThrow(f, cmd); if (slot < 0) slot = FindNormal(f, cmd); }
 
 			if (slot >= 0) StartMove(f, slot);
 			else if (f.Actionable && up) StartJump(f, dir);
@@ -147,8 +148,10 @@ public sealed class Match
 			f.PrevBits = input.Bits;
 		}
 
+		ResolveThrowBreaks(); // YOK-19: after both fighters' input, so neither side acts first
 		ResolvePositions(moved);
 		UpdateFacing();
+		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
 		ResolveHits();
 		ApplyDamage();
 	}

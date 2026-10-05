@@ -112,6 +112,8 @@ public enum FighterState
 	Dash,
 	/// <summary>C2: in the air (jump arc, or falling after an air hit's stun ended); lands into Idle.</summary>
 	Jump,
+	/// <summary>C4 (YOK-19): grabbed. StunLeft = break-window frames still open; then the throw lands.</summary>
+	Thrown,
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>
