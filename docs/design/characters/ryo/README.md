@@ -29,11 +29,11 @@ Status: first-pass concept, 2026-10-05. Not final art.
 | `ryo-meshy-front.png` | Clean front view for Meshy image-to-3D, 1024×2112: A-pose (arms ~16° out), white background, no text or effects. |
 | `ryo-meshy-front.svg` | Vector source of the Meshy image. |
 
-The Meshy image drops the held ofuda, ink energy and trailing talisman strip, which would become stray geometry. The generated mesh still has to retarget onto the purchased animation packs (clip first).
+The current Meshy image is a flat visual reference, not final concept art. Asset Smith specs the front/side/back turnaround from it and, once you approve the job, runs it and Image-to-3D through the Meshy MCP; only the selected front view goes to Image-to-3D. The turnaround drops the held ofuda, ink energy and trailing talisman strip, which would become stray geometry. The generated mesh is auto-rigged in Meshy, and its clips come from the Meshy animation pipeline (clip first, F6).
 
 ## Open questions (designer)
 
 1. Keep the collar over his mouth, or open it for story-card art and the Win 3 ending?
 2. Light the forearm wraps per filled slot on the model? In the Tanuki fight the copied move's wrap could glow to match the HUD talisman (T6).
-3. Coat tail must be bone-driven or baked into clips so the 60-tick loop stays deterministic; check against the YOK-29 model shortlist.
+3. Coat tail must be bone-driven or baked into clips so the 60-tick loop stays deterministic; record the choice in Asset Smith's rig plan (`assets/specs/ryo.md`).
 4. Name kanji: 涼 (cool), 了 (to finish, to settle), or keep katakana リョウ.

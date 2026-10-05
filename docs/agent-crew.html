@@ -163,14 +163,14 @@ footer code { font-family: var(--font-mono); font-size: 12px; }
   <header>
     <div class="eyebrow">Yokai Fighters · development crew</div>
     <h1>The Agent Crew<span class="seal-inline" aria-hidden="true">組</span></h1>
-    <p>Nine Claude Code agents build the game. The Producer tickets the work, and the main session carries each ticket along one of four workflows. You, the designer, buy the assets, settle open questions and approve every merge. Select an agent or a workflow to trace how work moves.</p>
+    <p>Ten Claude Code agents build the game. The Producer tickets the work, and the main session carries each ticket along one of four workflows. You, the designer, run the asset generators, buy the sound, settle open questions and approve every merge. Select an agent or a workflow to trace how work moves.</p>
   </header>
 
   <div class="controls" role="group" aria-label="Highlight a workflow">
     <span class="label">Workflow</span>
     <button class="chip" id="wf-all" data-wf="" aria-pressed="true">All</button>
     <button class="chip" id="wf-content" data-wf="content" aria-pressed="false">Content</button>
-    <button class="chip" id="wf-asset" data-wf="asset" aria-pressed="false">Asset</button>
+    <button class="chip" id="wf-asset" data-wf="asset" aria-pressed="false">Assets</button>
     <button class="chip" id="wf-code" data-wf="code" aria-pressed="false">Code</button>
     <button class="chip" id="wf-balance" data-wf="balance" aria-pressed="false">Balance</button>
   </div>
@@ -225,38 +225,53 @@ const NODES = {
     ],
     reads: ["Linear · YOK", "docs/design/rules.md", "GDD PDF", "harness/reports/", "production/playtests/"],
     writes: ["Linear tickets", "dispatch plan"],
-    handoff: ["asset-scout", "clip-matcher", "movesmith", "habit-writer", "gameplay-programmer", "ui-designer"],
+    handoff: ["asset-smith", "sound-scout", "clip-matcher", "movesmith", "habit-writer", "gameplay-programmer", "ui-designer"],
     never: ["Writes game content, data or code", "Answers open design questions", "Cuts scope on its own"] },
 
-  "asset-scout": { name: "Asset Scout", team: "assets", x: 280, y: 130, sub: "shortlists · sonnet", kanji: "材",
-    model: "sonnet", budget: "~45 searches · 15k in / 1.5k out each",
-    sees: "Ryo and the yokai look and sound like one world.",
-    summary: "Searches stores for packs that fit the ukiyo-e toon look and retarget onto Ryo and the yokai. Shortlists; never buys.",
+  "asset-smith": { name: "Asset Smith", team: "assets", x: 280, y: 128, sub: "gen specs · sonnet", kanji: "材",
+    model: "sonnet", budget: "6k in / 2k out per spec or acceptance pass · ~30 assets",
+    sees: "Ryo and the yokai look like one world.",
+    summary: "Writes the generation spec for every model, stage and texture; you approve the job; it runs it through the Meshy MCP and checks what comes back.",
     does: [
-      "Covers character models, fighting animation, stages, sound effects and music",
-      "Checks licence, price, Godot 4 format and rig type on the store page",
-      "Flags retarget risk for tails, shell and club ahead of the week-1 gate",
-      "Maps every planned move to a clip and flags gaps early",
+      "Builds prompts from the shared style block: turnaround first, then Meshy Image-to-3D",
+      "Plans the Meshy auto-rig, including tails, sleeves, coat tail, shell and club",
+      "Checks imports for palette, toon fit, silhouette, rig and licence",
+      "Returns ACCEPT, or RETAKE with the exact change; falls back after 3 takes",
+    ],
+    reads: ["docs/design/rules.md", "docs/design/characters/"],
+    writes: ["assets/specs/"],
+    handoff: ["designer", "clip-matcher"],
+    never: ["Runs a Meshy job you haven't approved", "Imitates an existing franchise or artist"] },
+
+  "sound-scout": { name: "Sound Scout", team: "assets", x: 280, y: 196, sub: "shortlists · sonnet", kanji: "材",
+    model: "sonnet", budget: "~20 searches · 15k in / 1.5k out each",
+    sees: "Every hit and every row sounds like the same world.",
+    summary: "Searches stores for sound-effect and music packs: impacts, yokai stings, shamisen, shakuhachi and taiko. Shortlists; never buys.",
+    does: [
+      "Covers impacts, yokai stings, whooshes, UI sounds and layered music",
+      "Checks licence, price, format and stems on the store page",
+      "Maps every V6/V9 sound need to a file and flags gaps",
     ],
     reads: ["docs/design/rules.md", "the web"],
     writes: ["assets/shortlists/"],
     handoff: ["designer", "clip-matcher"],
-    never: ["Buys anything", "Decides the asset spend"] },
+    never: ["Buys anything", "Decides the sound spend"] },
 
   "clip-matcher": { name: "Clip Matcher", team: "assets", x: 520, y: 130, sub: "clips · sonnet", kanji: "材",
     model: "sonnet", budget: "6k in / 2k out per clip batch · 5k / 2k per cue batch",
     sees: "Hits land, look and sound right on the frame.",
-    summary: "Runs first in the content pipeline: picks the clip for each move, so frame data can be written from its real timing.",
+    summary: "Runs first in the content pipeline: specs each move's clip for Meshy, runs the take you approve through the Meshy MCP and measures it, so frame data can be written from its real timing.",
     does: [
-      "Chooses each move's clip and records total frames plus the frames where the hit lands",
+      "Specs each move's clip as a Meshy library preset or a generation prompt",
+      "Measures each take at 60 fps: total frames plus the frames where the hit lands",
       "Uses the generic grab and standard knockdown for every throw",
       "Writes per-level visual presets and hit-spark colours by source",
       "Times the impact thud and yokai sting to the impact frame",
     ],
-    reads: ["assets/shortlists/", "purchased packs"],
-    writes: ["data/clips/", "data/presets/", "data/sound/"],
+    reads: ["assets/specs/", "bought sound packs"],
+    writes: ["assets/specs/clips/", "data/clips/", "data/presets/", "data/sound/"],
     handoff: ["movesmith"],
-    never: ["Requests bespoke animation", "Uses a paired throw animation"] },
+    never: ["Hand-keys animation", "Uses a paired throw animation"] },
 
   movesmith: { name: "Movesmith", team: "content", x: 520, y: 250, sub: "moves · sonnet", kanji: "技",
     model: "sonnet", budget: "3k in / 800 out per ability · up to 3 revisions",
@@ -352,14 +367,15 @@ const NODES = {
   designer: { name: "Designer (you)", team: "outside", kind: "human", x: 730, y: 480, sub: "review · decide", kanji: "人",
     model: "human", budget: "210 hours: ~60 review, 60 playtesting, 35 rules",
     sees: "The person every gate ends with.",
-    summary: "Owns the decisions the crew must never make: purchases, open design questions, the scope and balance gates, and every code merge.",
+    summary: "Owns the decisions the crew must never make: purchases, generation jobs and credits, open design questions, the scope and balance gates, and every code merge.",
     does: [
       "Reviews code PRs in one daily queue and merges what passes",
-      "Buys asset packs from the Asset Scout's shortlists",
+      "Approves each Meshy job and its credits from Asset Smith and Clip Matcher specs",
+      "Buys sound packs from the Sound Scout's shortlists",
       "Settles open questions such as each special's Lv 2 tuning step",
       "Calls the scope gate (end of week 1) and the balance gate (mid week 3)",
     ],
-    reads: ["PRs", "shortlists", "balance reports"],
+    reads: ["PRs", "asset specs", "shortlists", "balance reports"],
     writes: ["approvals", "decisions"],
     handoff: ["main", "clip-matcher"],
     never: [] },
@@ -389,13 +405,15 @@ const NODES = {
 // Edges: [id, from, to, path, workflows, label, labelX, labelY, anchor, kind]
 const EDGES = [
   ["bus", "producer", null, "M160,280 H190 M190,70 V520", ["content","asset","code","balance"], null, 0,0,"", "bus"],
-  ["d-asset", "producer", "asset-scout", "M190,130 H205", ["asset"]],
+  ["d-asset", "producer", "asset-smith", "M190,128 H205", ["asset"]],
+  ["d-sound", "producer", "sound-scout", "M190,196 H205", ["asset"]],
   ["d-clip", "producer", "clip-matcher", "M190,70 H520 V103", ["content"], "content ticket", 360, 63, "middle"],
   ["d-move", "producer", "movesmith", "M190,250 H445", ["content"]],
   ["d-habit", "producer", "habit-writer", "M190,340 H445", ["content"]],
   ["d-gp", "producer", "gameplay-programmer", "M190,440 H205", ["code"]],
   ["d-ui", "producer", "ui-designer", "M190,520 H205", ["code"]],
-  ["scout-clip", "asset-scout", "clip-matcher", "M355,130 H445", ["asset"], "bought packs", 400, 122, "middle"],
+  ["smith-clip", "asset-smith", "clip-matcher", "M355,128 H445", ["asset"], "rigs", 400, 120, "middle"],
+  ["sound-clip", "sound-scout", "clip-matcher", "M355,196 C400,196 410,150 445,150", ["asset"], "sound", 400, 216, "middle"],
   ["clip-move", "clip-matcher", "movesmith", "M520,157 V223", ["content"], "clip timing", 528, 194, "start"],
   ["move-rl", "movesmith", "rules-lawyer", "M595,250 C628,250 625,288 655,288", ["content"]],
   ["habit-rl", "habit-writer", "rules-lawyer", "M595,340 C628,340 625,302 655,302", ["content"]],
@@ -413,8 +431,8 @@ const EDGES = [
 const WORKFLOWS = {
   content: { title: "Content", text: "Moves, modifiers, trials, cards, profiles and story. Three failed gate rounds block the ticket for you.",
     steps: ["Producer ticket", "Clip Matcher (if a clip is needed)", "Movesmith or Habit Writer", "Rules Lawyer", "Harness checks", "data merges"] },
-  asset: { title: "Asset", text: "Pack research. Purchases are always your call.",
-    steps: ["Producer ticket", "Asset Scout shortlist", "you buy", "Clip Matcher"] },
+  asset: { title: "Assets", text: "Visuals are generated, sound is bought. You approve every Meshy job and make every purchase.",
+    steps: ["Producer ticket", "Asset Smith or Clip Matcher spec", "you approve → Meshy MCP", "acceptance or measured take", "Sound Scout shortlist → you buy", "Clip Matcher cues"] },
   code: { title: "Code", text: "C# and screens, each on its own YOK branch with a closed build-and-test loop through the Godot MCP.",
     steps: ["Producer ticket", "Gameplay Programmer or UI Designer", "PR", "your review", "merge"] },
   balance: { title: "Balance", text: "Measured difficulty. Tuning tickets re-enter the content workflow.",
@@ -475,7 +493,7 @@ function applyHighlight() {
     if (selected === "producer") hotEdges = new Set(EDGES.filter(e => e.from === "producer" || e.to === "producer").map(e => e.id));
     hotNodes = new Set([selected]);
     EDGES.forEach(e => { if (hotEdges.has(e.id)) { hotNodes.add(e.from); if (e.to) hotNodes.add(e.to); } });
-    if (hotEdges.has("d-asset") || hotEdges.has("d-clip") || hotEdges.has("d-move") || hotEdges.has("d-habit") || hotEdges.has("d-gp") || hotEdges.has("d-ui")) hotEdges.add("bus");
+    if (hotEdges.has("d-asset") || hotEdges.has("d-sound") || hotEdges.has("d-clip") || hotEdges.has("d-move") || hotEdges.has("d-habit") || hotEdges.has("d-gp") || hotEdges.has("d-ui")) hotEdges.add("bus");
   }
   for (const e of EDGES) {
     const hot = hotEdges.has(e.id);

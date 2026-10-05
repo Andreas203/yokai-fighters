@@ -2,11 +2,11 @@
   "kind": "clip",
   "id": "ryo-spirit-wave",
   "status": "proposed",
-  "pack": "placeholder-pack",
+  "source": "meshy-library",
   "clip": "Cast_Forward_01",
   "frames_total": 43,
   "hit_start": 14,
   "hit_end": 14,
-  "retarget_notes": "Sample only; no pack bought yet. Ryo humanoid rig, no clipping expected.",
-  "rules": ["F2", "F5"]
+  "retarget_notes": "Sample only; no take generated yet. Ryo humanoid rig, no clipping expected.",
+  "rules": ["F2", "F5", "F6"]
 }

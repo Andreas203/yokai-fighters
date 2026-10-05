@@ -15,7 +15,7 @@ JSON Schema draft 2020-12. Every content file is one JSON object with a top-leve
 | `modifier` | `modifier.schema.json` | `data/modifiers/` | Source, always common, locked, `applies_to`, effects, card |
 | `cancel_rule` | `cancel-rule.schema.json` | `data/cancels/` | Source, offering elder, always rare, path from/into/on, `once_per_combo: true` |
 | `profile` | `profile.schema.json` | `data/profiles/` | Yokai, temperament, reaction tier + frames, aggression bias, preferred range, the one habit, weighted behaviours, elder twist |
-| `clip` | `clip.schema.json` | `data/clips/` | Pack, clip, frames_total, hit_start, hit_end, retarget_notes |
+| `clip` | `clip.schema.json` | `data/clips/` | Source, clip, frames_total, hit_start, hit_end, retarget_notes |
 | — | `common.schema.json` | — | Shared `$defs`: id, yokai, rarity, status, ruleIds, card, frameRange, rect, timedRect, condition, effect |
 
 Not covered yet (out of YOK-12 scope): map, economy, story, presets, sound, trials.

@@ -31,10 +31,10 @@ Status: first-pass concept, 2026-10-05. Not final art.
 | `kitsune-meshy-front-notails.png` | Same without tails, for when tails come out badly or are built as a separate rigged mesh. |
 | `*.svg` | Vector sources of the Meshy images. |
 
-The Meshy images drop the foxfire orb and the fox hand sign, and hang the ponytail straight down. Sleeves and hakama are baked into the body, so they will not sway without added bones.
+The current Meshy images are flat visual references, not final concept art. Asset Smith specs the front/side/back turnaround from them and, once you approve the job, runs it and Image-to-3D through the Meshy MCP; only the selected front view goes to Image-to-3D. The turnaround must preserve the full fox mask: the face must never show in generated art. It drops the foxfire orb and the fox hand sign, and hangs the ponytail straight down. Sleeves and hakama are baked into the body, so they will not sway without added bones.
 
 ## Open questions (designer)
 
 1. Tail count: three for the common Kitsune and nine for the elder, or one count for both with the elder told apart by colour and VFX only (a level preset)?
-2. Tails and sleeves need bone sway baked into clips, or procedural sway driven from the tick count to stay deterministic; check against the YOK-29 model shortlist.
+2. Tails and sleeves need extra bones with sway, or procedural sway driven from the tick count to stay deterministic; record the choice in Asset Smith's rig plan (`assets/specs/kitsune.md`).
 3. Does the aggressive temperament get its own idle (leaning forward, tails flared), or share this patient stance?

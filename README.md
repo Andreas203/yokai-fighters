@@ -36,13 +36,14 @@ You play Ryo, an apprentice exorcist who binds yokai instead of destroying them,
 
 ## The agent crew
 
-The game is built with a crew of AI agents running in Claude Code. They are **development tools only**; none of them ship in the game. A human designer reviews their work, buys assets, makes cut decisions and approves every code merge.
+The game is built with a crew of AI agents running in Claude Code. They are **development tools only**; none of them ship in the game. A human designer reviews their work, runs the asset generators, buys sound, makes cut decisions and approves every code merge.
 
 | Team | Agent | Responsibility |
 |---|---|---|
 | Lead | `producer` | Turns outstanding work into Linear tickets and a dispatch plan |
-| Assets | `asset-scout` | Shortlists model, animation, sound and music packs for the designer to buy |
-| Assets | `clip-matcher` | Picks each move's animation clip, then level presets and frame-timed sound |
+| Assets | `asset-smith` | Writes generation specs for models, stages and textures, runs approved jobs through the Meshy MCP and checks the results |
+| Assets | `clip-matcher` | Specs each move's clip for Meshy and measures the generated take, then level presets and frame-timed sound |
+| Assets | `sound-scout` | Shortlists sound-effect and music packs for the designer to buy |
 | Content | `movesmith` | Writes frame data from the matched clip, hitboxes, card text and dojo trials |
 | Content | `habit-writer` | Writes yokai behaviour profiles and all story-card text |
 | Content | `rules-lawyer` | Gate: rejects content that breaks the written rules, citing the rule |
@@ -54,7 +55,7 @@ Agent definitions live in [`.claude/agents/`](.claude/agents/). Run a production
 
 ### How the agents work together
 
-Subagents in Claude Code can't call each other directly. The main Claude Code session is the orchestrator: it runs the Producer, then carries each ticket from agent to agent along one of four workflows. Agents communicate through files in the repo (clip matches, content data, harness results), Linear tickets and pull requests.
+Subagents in Claude Code can't call each other directly. The main Claude Code session is the orchestrator: it runs the Producer, then carries each ticket from agent to agent along one of its workflows. Agents communicate through files in the repo (clip matches, content data, harness results), Linear tickets and pull requests.
 
 ```mermaid
 flowchart TD
@@ -69,8 +70,9 @@ flowchart TD
     P -- "dispatch plan" --> O
 
     subgraph ASSETS["Assets team"]
-        AS["Asset Scout<br/>pack shortlists"]
-        CM["Clip Matcher<br/>clips, presets, sound cues"]
+        AS["Asset Smith<br/>generation specs + acceptance"]
+        CM["Clip Matcher<br/>clip specs, measured takes,<br/>presets, sound cues"]
+        SS["Sound Scout<br/>sound + music shortlists"]
     end
 
     subgraph ENG["Engineering team"]
@@ -89,10 +91,12 @@ flowchart TD
     R(["Designer review"])
     M[("main branch")]
 
-    O -- "asset" --> AS
-    AS -- "shortlist → designer buys" --> CM
+    O -- "generate" --> AS
+    AS -- "spec → approved → Meshy MCP → accepted rigs" --> CM
+    O -- "sound" --> SS
+    SS -- "shortlist → designer buys" --> CM
 
-    O -- "content" --> CM
+    O -- "clip" --> CM
     CM -- "clip timing" --> MS
     O -- "content" --> HW
     MS -- "content files" --> RL
@@ -113,12 +117,14 @@ flowchart TD
     SP -- "tuning recommendations" --> P
 ```
 
-**The four workflows**
+**The workflows**
 
 | Workflow | Path | Ends when |
 |---|---|---|
-| **content** | Clip Matcher (if a clip is needed) → Movesmith or Habit Writer → Rules Lawyer → harness checks | Schema, Rules Lawyer and harness pass, then the data merges. Three failed gate rounds block the ticket for the designer. |
-| **asset** | Asset Scout → designer buys → Clip Matcher | The designer has made the purchase decision |
+| **content** | Clip Matcher (if a clip is needed: see **clip**) → Movesmith or Habit Writer → Rules Lawyer → harness checks | Schema, Rules Lawyer and harness pass, then the data merges. Three failed gate rounds block the ticket for the designer. |
+| **generate** | Asset Smith spec → designer approves job and credits → Asset Smith runs it via the Meshy MCP → acceptance check | Accepted, or 3 takes then a fallback |
+| **clip** | Clip Matcher spec → designer approves the take → Clip Matcher runs it via the Meshy MCP and measures it | A measured clip in `data/clips/`, or an F5 substitute after 3 takes |
+| **sound** | Sound Scout → designer buys → Clip Matcher sound cues | The designer has made the purchase decision |
 | **code** | Gameplay Programmer or UI Designer on its own branch, build-and-test loop via the Godot MCP | The designer approves the PR. Agents never merge. |
 | **balance** | Harness results → Sparring Partner → Producer tickets the tuning | Tuning tickets re-enter the content workflow |
 
@@ -131,7 +137,7 @@ flowchart TD
 ## Technical constraints
 
 - Deterministic 60-tick loop. Animations are stepped by exact frames with `AnimationPlayer.Seek()`, and hitboxes are 2D rectangles in move data, so frame data is exactly true and whole-run bot tests are repeatable.
-- All assets are bought, not made, and unified by a toon shader. The clip is chosen first, then frame data is written from it. No bespoke animation, no paired throws.
+- Visual assets are generated through the Meshy MCP (Image-to-3D, auto-rig and animation, plus its 2D image models for turnarounds, backdrops and textures; agents run only designer-approved jobs) and unified by a toon shader; sound and music are bought. The clip is generated and measured first, then frame data is written from it. No hand-keyed animation, no paired throws. See [`docs/design/gdd-amendments.md`](docs/design/gdd-amendments.md) (AM1).
 - **Never cut:** the copy rule, the merchant, Kihon, the harness, the story cards.
 - **Cut order if behind:** scope gate (end of week 1): Kata, then meta-unlocks. Balance gate (mid week 3): modifiers 14 → 8, then dojo trials, then colour-only presets.
 
@@ -139,7 +145,7 @@ flowchart TD
 
 | Week | Milestone |
 |---|---|
-| 1 | Move list, retargeting gate, packs bought. Combat core, both control schemes, AI framework, test bot. Scope gate. |
+| 1 | Move list, fighters generated and auto-rigged, retargeting gate, sound packs bought. Combat core, both control schemes, AI framework, test bot. Scope gate. |
 | 2 | All 33 abilities, 7 behaviour profiles, Tanuki and copy rule. Map, merchant, dojo, unlocks with placeholder screens. Whole-run harness. First outside playtest. |
 | 3 | Final screens and HUD, story cards, integration. Balance gate. Feature freeze. |
 | 4–5 | Polish only: second playtest, balance, audio, effects, bug fixing. |
