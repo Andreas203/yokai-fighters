@@ -50,11 +50,11 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## F — Frame data and engine constraints
 
 - **F1** Every move has startup, active and recovery frames.
-- **F2** Clip first: Clip Matcher specs the move's clip, the designer generates it, Clip Matcher measures the approved take, then Movesmith writes frame data from that clip's real timing. Frame data that doesn't match its clip is invalid.
+- **F2** Clip first: Clip Matcher specs the move's clip, the designer approves the take, Clip Matcher runs it through the Meshy MCP and measures it, then Movesmith writes frame data from that clip's real timing. Frame data that doesn't match its clip is invalid.
 - **F3** Animations step by exact frames via `AnimationPlayer.Seek()`. Hitboxes are 2D rectangles stored in move data, not physics shapes.
 - **F4** Gameplay lives on a flat 2D plane (fixed Z); 3D is presentation only. Perspective camera, ~25° FOV.
 - **F5** No hand-keyed animation: every clip comes from the Meshy animation pipeline (F6). A move gets at most 3 generation takes; if none is usable, it becomes a mechanically equivalent move on an approved clip.
-- **F6** Visual assets are generated, sound is sourced [AM1]. Models: image-model turnaround → Meshy Image-to-3D → Meshy auto-rig (shared humanoid skeleton) → glTF into Godot. Clips: Meshy animation library or prompt generation, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures: image model. Sound and music: bought packs. The designer runs every generation job and owns the credit spend; agents write specs and check results.
+- **F6** Visual assets are generated, sound is sourced [AM1]. Every job runs through the Meshy MCP. Models: turnaround from Meshy's 2D image models → Meshy Image-to-3D → Meshy auto-rig (shared humanoid skeleton) → glTF into Godot. Clips: Meshy animation library or prompt generation, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: Meshy 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs the designer has approved at the approved credit cost.
 
 ## X — Cancels
 
@@ -201,5 +201,5 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 - Exact Lv 2 tuning step for each special.
 - Generation credit spend and sound/music spend.
 - Generator plan tier (commercial licence for generated output).
-- Designer hours for running generation jobs (the GDD budgets 10 h for purchases and gates).
+- Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.

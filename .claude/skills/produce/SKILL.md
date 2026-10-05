@@ -21,9 +21,9 @@ Every branch and PR title is `YOK-<number>-<brief-name>` for its ticket (e.g. `Y
 3. Run `rules-lawyer` on the files written. On FAIL, send the verdict back to the same author and re-run the gate. Stop after 3 failed rounds and mark the Linear ticket blocked, commenting the last verdict for the designer.
 4. If a harness exists, run its checks for the affected content (trials completable, cancel loops, copy rule). Content merges only after schema, Rules Lawyer and harness checks pass.
 
-**generate** (models, stages, UI/VFX textures): run `asset-smith` to write the spec, then move the ticket to review and list it for the designer, who runs the generator. When they report the import, run `asset-smith` again for the acceptance check. RETAKE goes back to the designer with the change; after 3 takes, mark it blocked with Asset Smith's fallback.
+**generate** (models, stages, UI/VFX textures): run `asset-smith` to write the spec, then move the ticket to review and list the job and its credit estimate for the designer. Once they approve, run `asset-smith` again to run the job through the Meshy MCP and do the acceptance check. RETAKE goes back to the designer for approval with the change and its cost; after 3 takes, mark it blocked with Asset Smith's fallback.
 
-**clip**: run `clip-matcher` to write the clip spec, then hand it to the designer to generate in Meshy. When they report the take, run `clip-matcher` to measure it and write `data/clips/`, then continue with the content workflow. Never generate or hand-key animation yourself.
+**clip**: run `clip-matcher` to write the clip spec, then list the take and its credit estimate for the designer. Once they approve, run `clip-matcher` to run the take through the Meshy MCP and measure it and write `data/clips/`, then continue with the content workflow. Never run a Meshy job without the designer's approval, and never hand-key animation.
 
 **sound**: run `sound-scout`, then move the ticket to review — purchases are the designer's call. After purchase, a follow-up ticket goes to `clip-matcher` for sound cues.
 

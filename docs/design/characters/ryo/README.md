@@ -28,9 +28,8 @@ Status: first-pass concept, 2026-10-05. Not final art.
 | `sheet.html` | Full model sheet: annotated front sketch, head, silhouette test, starter move studies, open questions. Open in a browser. |
 | `ryo-meshy-front.png` | Clean front view for Meshy image-to-3D, 1024×2112: A-pose (arms ~16° out), white background, no text or effects. |
 | `ryo-meshy-front.svg` | Vector source of the Meshy image. |
-| `..\MESHY_CONCEPT_PROMPTS.md` | Image-reference prompt and validation criteria for the final toon-shaded turnaround. Generate this before submitting to Meshy. |
 
-The current Meshy image is a flat visual reference, not final concept art. Generate the constrained front/side/back turnaround in `..\MESHY_CONCEPT_PROMPTS.md` first; upload only its selected front view to Meshy. The render drops the held ofuda, ink energy and trailing talisman strip, which would become stray geometry. The generated mesh is auto-rigged in Meshy, and its clips come from the Meshy animation pipeline (clip first, F6).
+The current Meshy image is a flat visual reference, not final concept art. Asset Smith specs the front/side/back turnaround from it and, once you approve the job, runs it and Image-to-3D through the Meshy MCP; only the selected front view goes to Image-to-3D. The turnaround drops the held ofuda, ink energy and trailing talisman strip, which would become stray geometry. The generated mesh is auto-rigged in Meshy, and its clips come from the Meshy animation pipeline (clip first, F6).
 
 ## Open questions (designer)
 

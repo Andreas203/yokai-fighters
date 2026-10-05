@@ -30,9 +30,8 @@ Status: first-pass concept, 2026-10-05. Not final art.
 | `kitsune-meshy-front.png` | Clean front view for Meshy image-to-3D, 1024×2112: A-pose (arms ~18° out), tails fanned low, white background, no text or effects. Try this first. |
 | `kitsune-meshy-front-notails.png` | Same without tails, for when tails come out badly or are built as a separate rigged mesh. |
 | `*.svg` | Vector sources of the Meshy images. |
-| `..\MESHY_CONCEPT_PROMPTS.md` | Image-reference prompt and validation criteria for the final toon-shaded turnaround. Generate this before submitting to Meshy. |
 
-The current Meshy images are flat visual references, not final concept art. Generate the constrained front/side/back turnaround in `..\MESHY_CONCEPT_PROMPTS.md` first; upload only its selected front view to Meshy. The prompt explicitly preserves the full fox mask: the face must never show in generated art. It drops the foxfire orb and the fox hand sign, and hangs the ponytail straight down. Sleeves and hakama are baked into the body, so they will not sway without added bones.
+The current Meshy images are flat visual references, not final concept art. Asset Smith specs the front/side/back turnaround from them and, once you approve the job, runs it and Image-to-3D through the Meshy MCP; only the selected front view goes to Image-to-3D. The turnaround must preserve the full fox mask: the face must never show in generated art. It drops the foxfire orb and the fox hand sign, and hangs the ponytail straight down. Sleeves and hakama are baked into the body, so they will not sway without added bones.
 
 ## Open questions (designer)
 

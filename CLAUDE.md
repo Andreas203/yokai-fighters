@@ -6,7 +6,7 @@ Single-player 2.5D roguelite fighting game for PC, built in **Godot 4 (.NET) wit
 - `Yokai_Fighters_GDD_Extended.pdf` — the full design (read with `pdftotext -layout`). `Yokai_Fighters_GDD_Short.pdf` is the 5-page summary.
 - `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated, sound is sourced). An amendment wins over the PDF section it names.
 - `docs/design/rules.md` — the written rules distilled from the GDD and its amendments, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF + amendments, they win and rules.md gets fixed.
-- The **designer** (the human) owns open questions, purchases, generation jobs and their credit spend, cut gates and every code merge. Never decide those on their behalf.
+- The **designer** (the human) owns open questions, purchases, approval of every generation job and its credit spend, cut gates and every code merge. Never decide those on their behalf.
 
 ## The agent crew
 Development tools only — none of them ship in the game. Defined in `.claude/agents/`.
@@ -28,9 +28,9 @@ Run a production pass with `/produce` (see `.claude/skills/produce/SKILL.md`): t
 
 ## Pipeline
 ```
-Asset Smith spec → designer generates → Asset Smith accepts (fighters rigged)
+Asset Smith spec → designer approves → Asset Smith runs via Meshy MCP → accepts (fighters rigged)
                                                    │
-Clip Matcher spec → designer generates take → Clip Matcher measures
+Clip Matcher spec → designer approves take → Clip Matcher runs via Meshy MCP → measures
                                                    │
                            Movesmith / Habit Writer → Rules Lawyer ──fail: back with reason──┐
                                                           │ pass                             │
@@ -66,6 +66,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.
-- Visuals are generated (Meshy + image model), sound is sourced; the designer runs every generator. Clip first, then frame data. No hand-keyed animation, no paired throws.
+- Visuals are generated through the Meshy MCP (3D, rigs, clips and 2D images), sound is sourced; agents run only jobs the designer has approved, at the approved credit cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
 - Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - Cut order if behind: scope gate (end of week 1) → Kata, then meta-unlocks; balance gate (mid week 3) → modifiers 14→8, then dojo trials, then colour-only presets. The designer makes the call.

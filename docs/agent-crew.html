@@ -231,9 +231,9 @@ const NODES = {
   "asset-smith": { name: "Asset Smith", team: "assets", x: 280, y: 128, sub: "gen specs · sonnet", kanji: "材",
     model: "sonnet", budget: "6k in / 2k out per spec or acceptance pass · ~30 assets",
     sees: "Ryo and the yokai look like one world.",
-    summary: "Writes the generation spec for every model, stage and texture; you run Meshy or the image model; it checks what comes back.",
+    summary: "Writes the generation spec for every model, stage and texture; you approve the job; it runs it through the Meshy MCP and checks what comes back.",
     does: [
-      "Builds prompts from the shared prompt package: turnaround first, then Meshy Image-to-3D",
+      "Builds prompts from the shared style block: turnaround first, then Meshy Image-to-3D",
       "Plans the Meshy auto-rig, including tails, sleeves, coat tail, shell and club",
       "Checks imports for palette, toon fit, silhouette, rig and licence",
       "Returns ACCEPT, or RETAKE with the exact change; falls back after 3 takes",
@@ -241,7 +241,7 @@ const NODES = {
     reads: ["docs/design/rules.md", "docs/design/characters/"],
     writes: ["assets/specs/"],
     handoff: ["designer", "clip-matcher"],
-    never: ["Runs a generator or spends credits", "Imitates an existing franchise or artist"] },
+    never: ["Runs a Meshy job you haven't approved", "Imitates an existing franchise or artist"] },
 
   "sound-scout": { name: "Sound Scout", team: "assets", x: 280, y: 196, sub: "shortlists · sonnet", kanji: "材",
     model: "sonnet", budget: "~20 searches · 15k in / 1.5k out each",
@@ -260,7 +260,7 @@ const NODES = {
   "clip-matcher": { name: "Clip Matcher", team: "assets", x: 520, y: 130, sub: "clips · sonnet", kanji: "材",
     model: "sonnet", budget: "6k in / 2k out per clip batch · 5k / 2k per cue batch",
     sees: "Hits land, look and sound right on the frame.",
-    summary: "Runs first in the content pipeline: specs each move's clip for Meshy, measures the take you generate, so frame data can be written from its real timing.",
+    summary: "Runs first in the content pipeline: specs each move's clip for Meshy, runs the take you approve through the Meshy MCP and measures it, so frame data can be written from its real timing.",
     does: [
       "Specs each move's clip as a Meshy library preset or a generation prompt",
       "Measures each take at 60 fps: total frames plus the frames where the hit lands",
@@ -370,7 +370,7 @@ const NODES = {
     summary: "Owns the decisions the crew must never make: purchases, generation jobs and credits, open design questions, the scope and balance gates, and every code merge.",
     does: [
       "Reviews code PRs in one daily queue and merges what passes",
-      "Runs Meshy and the image model from Asset Smith and Clip Matcher specs",
+      "Approves each Meshy job and its credits from Asset Smith and Clip Matcher specs",
       "Buys sound packs from the Sound Scout's shortlists",
       "Settles open questions such as each special's Lv 2 tuning step",
       "Calls the scope gate (end of week 1) and the balance gate (mid week 3)",
@@ -431,8 +431,8 @@ const EDGES = [
 const WORKFLOWS = {
   content: { title: "Content", text: "Moves, modifiers, trials, cards, profiles and story. Three failed gate rounds block the ticket for you.",
     steps: ["Producer ticket", "Clip Matcher (if a clip is needed)", "Movesmith or Habit Writer", "Rules Lawyer", "Harness checks", "data merges"] },
-  asset: { title: "Assets", text: "Visuals are generated, sound is bought. You run every generator and make every purchase.",
-    steps: ["Producer ticket", "Asset Smith or Clip Matcher spec", "you generate", "acceptance or measured take", "Sound Scout shortlist → you buy", "Clip Matcher cues"] },
+  asset: { title: "Assets", text: "Visuals are generated, sound is bought. You approve every Meshy job and make every purchase.",
+    steps: ["Producer ticket", "Asset Smith or Clip Matcher spec", "you approve → Meshy MCP", "acceptance or measured take", "Sound Scout shortlist → you buy", "Clip Matcher cues"] },
   code: { title: "Code", text: "C# and screens, each on its own YOK branch with a closed build-and-test loop through the Godot MCP.",
     steps: ["Producer ticket", "Gameplay Programmer or UI Designer", "PR", "your review", "merge"] },
   balance: { title: "Balance", text: "Measured difficulty. Tuning tickets re-enter the content workflow.",
