@@ -56,6 +56,20 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 - **F5** No hand-keyed animation: every clip comes from the Meshy animation pipeline (F6). A move gets at most 3 generation takes; if none is usable, it becomes a mechanically equivalent move on an approved clip.
 - **F6** Visual assets are generated, sound is sourced [AM1]. Every job runs through the Meshy MCP. Models: turnaround from Meshy's 2D image models → Meshy Image-to-3D → Meshy auto-rig (shared humanoid skeleton) → glTF into Godot. Clips: Meshy animation library or prompt generation, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: Meshy 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs the designer has approved at the approved credit cost.
 
+## E — Engine defaults (designer-approved 2026-10-06)
+
+Values the GDD leaves open, proposed by the YOK-15/16/17 code and accepted by the designer. Tunable like every other number here.
+
+- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,600 units apart (screen walls).
+- **E2** KO slow-down (V4): the world plays the 30 frames over 60 real ticks; inputs are ignored meanwhile.
+- **E3** Every yokai has 1,000 health until the yokai rules give its own figure.
+- **E4** Standard knockdown (C4): 40 frames.
+- **E5** Default pushback when a move's data gives none: 40 units on hit, 50 on block. Idle hurtbox when a move's data gives none: 90 × 180 units.
+- **E6** Blocking: crouch-blocking also blocks mids (there are no overheads). No chip damage.
+- **E7** Input timing: a motion must finish within 16 ticks of its first direction; a recognised command waits 5 ticks to be used; a charge needs 40 ticks held, with 8 ticks of grace.
+- **E8** Overlapping motions: when two motions complete in the window, the most recently completed one wins; ties go 623 > 236 > 214 > 22. Charge is a held button (`HeldTicks`); `[4]6` / `[2]8` are recognised but in no Kata slot.
+- **E9** Default controls. Keyboard P1: WASD, U/I/O punches, J/K/L kicks, Space Special. Keyboard P2: arrows, numpad 4/5/6 punches, 1/2/3 kicks, 0 Special. Pad: d-pad or left stick (0.5 deadzone), X/Y/RB punches, A/B/RT kicks, LB Special.
+
 ## X — Cancels
 
 - **X1** Ryo starts every run with no cancels. Cancel rules are rare and offered **only by elders**.
