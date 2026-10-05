@@ -21,8 +21,12 @@ public enum InputBits : ushort
 	DebugCrossUp = 1 << 9,
 }
 
-public readonly record struct FighterInput(InputBits Bits)
+/// <param name="Move">Move request this tick: 0 = none, n = the fighter's move slot n-1. The parser
+/// (YOK-17) resolves buttons and motions to a slot and sends it on the tick it's recognised; the sim
+/// starts it only if the fighter can act.</param>
+public readonly record struct FighterInput(InputBits Bits, byte Move = 0)
 {
 	public static readonly FighterInput None = new(InputBits.None);
+	public static FighterInput Attack(int slot, InputBits bits = InputBits.None) => new(bits, (byte)(slot + 1));
 	public bool Has(InputBits b) => (Bits & b) == b;
 }

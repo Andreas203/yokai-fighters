@@ -17,6 +17,15 @@
     "damage": { "type": "integer", "minimum": 0 },
     "hitstun": { "type": "integer", "minimum": 0 },
     "blockstun": { "type": "integer", "minimum": 0 },
+    "pushback": {
+      "description": "Units the defender slides away on hit / block; omitted values use the fight default. A cornered defender passes the rest to the attacker.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_hit": { "type": "integer", "minimum": 0 },
+        "on_block": { "type": "integer", "minimum": 0 }
+      }
+    },
     "meter_gain": {
       "description": "Overrides of the C5 defaults (+6 on hit, +3 on block) for this move.",
       "type": "object",

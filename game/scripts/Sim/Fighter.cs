@@ -18,6 +18,26 @@ public sealed class Fighter
 	/// <summary>Damage queued this world frame; applied simultaneously at the end of the frame.</summary>
 	internal int PendingDamage;
 
+	// --- Move state machine (YOK-16) -----------------------------------------------------
+	/// <summary>This fighter's moves, by slot (loaded from data at fight start).</summary>
+	public MoveData[] Moves = System.Array.Empty<MoveData>();
+	public FighterState State;
+	/// <summary>Slot of the move in progress (State == Attack), else -1.</summary>
+	public int MoveSlot = -1;
+	/// <summary>1-based frame of the move in progress; the frame the move starts on is frame 1.</summary>
+	public int MoveFrame;
+	/// <summary>The current move already connected (one hit per move).</summary>
+	public bool MoveConnected;
+	/// <summary>Stun frames still to play after this one (hitstun, blockstun, knockdown).</summary>
+	public int StunLeft;
+	/// <summary>Holding back this frame while able to block (C3).</summary>
+	public bool Guarding;
+	public bool Crouching;
+
+	public MoveData? CurrentMove => State == FighterState.Attack ? Moves[MoveSlot] : null;
+	/// <summary>Free to start a move or walk this frame.</summary>
+	public bool Actionable => State == FighterState.Idle && !KnockedOut;
+
 	public bool Pressed(FighterInput input, InputBits b) => input.Has(b) && (PrevBits & b) == 0;
 
 	public void Reset(int x, int facing, int maxHealth)
@@ -30,6 +50,13 @@ public sealed class Fighter
 		KnockedOut = false;
 		PrevBits = InputBits.None;
 		PendingDamage = 0;
+		State = FighterState.Idle;
+		MoveSlot = -1;
+		MoveFrame = 0;
+		MoveConnected = false;
+		StunLeft = 0;
+		Guarding = false;
+		Crouching = false;
 	}
 
 	public ulong Hash(ulong h)
@@ -41,8 +68,24 @@ public sealed class Fighter
 		h = Fnv.Mix(h, MaxHealth);
 		h = Fnv.Mix(h, KnockedOut ? 1 : 0);
 		h = Fnv.Mix(h, (int)PrevBits);
+		h = Fnv.Mix(h, (int)State);
+		h = Fnv.Mix(h, MoveSlot);
+		h = Fnv.Mix(h, MoveFrame);
+		h = Fnv.Mix(h, MoveConnected ? 1 : 0);
+		h = Fnv.Mix(h, StunLeft);
+		h = Fnv.Mix(h, (Guarding ? 1 : 0) | (Crouching ? 2 : 0));
 		return h;
 	}
+}
+
+public enum FighterState
+{
+	Idle,
+	Attack,
+	Hitstun,
+	Blockstun,
+	/// <summary>On the floor after a knockdown move; no hurtbox.</summary>
+	Knockdown,
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>

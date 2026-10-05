@@ -1,0 +1,25 @@
+{
+  "kind": "special",
+  "id": "test-sweep",
+  "name": "TEST FIXTURE: low knockdown sweep (not game content)",
+  "status": "proposed",
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 12,
+        "active": 4,
+        "recovery": 22,
+        "damage": 90,
+        "hitstun": 20,
+        "blockstun": 10,
+        "hitboxes": [
+          { "frames": [13, 16], "rect": { "x": 20, "y": 0, "w": 110, "h": 30 } }
+        ],
+        "hurtboxes": [
+          { "frames": [1, 38], "rect": { "x": -45, "y": 0, "w": 90, "h": 120 } }
+        ],
+        "properties": { "low": true, "knockdown": true }
+      }
+    }
+  }
+}
