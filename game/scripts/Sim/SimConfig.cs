@@ -37,5 +37,21 @@ public sealed record SimConfig
 	/// <summary>Placeholder strike used only until frame-data moves land (YOK-16).</summary>
 	public int DebugStrikeDamage { get; init; } = 100;
 
+	// --- Hits (YOK-16). Fight-wide fallbacks; per-move numbers live in move data. ---------
+
+	/// <summary>Hurtbox of a fighter not in a move (units, feet-relative). Placeholder until fighter data lands.</summary>
+	public Box IdleHurtbox { get; init; } = new(-45, 0, 90, 180);
+
+	/// <summary>Defender slide in units when a move's data gives no pushback.</summary>
+	public int HitPushback { get; init; } = 40;
+	public int BlockPushback { get; init; } = 50;
+
+	/// <summary>C4 "standard knockdown": frames on the floor, unhittable. Placeholder pending a designer number.</summary>
+	public int KnockdownFrames { get; init; } = 40;
+
+	/// <summary>C7 counterhit: +20% damage, +6 frames hitstun.</summary>
+	public int CounterHitDamagePct { get; init; } = 20;
+	public int CounterHitHitstun { get; init; } = 6;
+
 	public static readonly SimConfig Default = new();
 }

@@ -1,0 +1,20 @@
+{
+  "kind": "special",
+  "id": "test-dodge",
+  "name": "TEST FIXTURE: dodge with no hurtbox on frames 1-10 (not game content)",
+  "status": "proposed",
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 10,
+        "active": null,
+        "recovery": 10,
+        "damage": 0,
+        "hitboxes": [],
+        "hurtboxes": [
+          { "frames": [11, 20], "rect": { "x": -45, "y": 0, "w": 90, "h": 180 } }
+        ]
+      }
+    }
+  }
+}
