@@ -131,6 +131,7 @@ public static class DebugOverlayTests
 	public static void Scene_OverlayKeysAndFrameStep(Node runner)
 	{
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		scene.StartScreenOverride = false; // YOK-39: skip the start screen
 		runner.AddChild(scene); // live clock path (ExternalDrive off)
 		var overlay = scene.GetNodeOrNull<DebugOverlay>("DebugOverlay");
 		Assert.True(OS.IsDebugBuild() == (overlay != null), "overlay exists only in debug builds");

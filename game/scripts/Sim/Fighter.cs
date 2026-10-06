@@ -46,6 +46,12 @@ public sealed partial class Fighter
 	/// <summary>1-based dash frame (State == Dash) and absolute dash direction.</summary>
 	public int DashFrame;
 	public int DashDir;
+	/// <summary>
+	/// YOK-39: absolute direction of this tick's own walk step (-1, 0, +1), 0 when the fighter didn't
+	/// walk (e.g. only pushed). Derived from this tick's input, so it is left out of the state hash;
+	/// the presenter uses it to tell walking from being pushed.
+	/// </summary>
+	public int WalkDir;
 
 	public bool Airborne => AirFrame > 0;
 	public MoveData? CurrentMove => State == FighterState.Attack ? ActiveMove : null;
@@ -77,6 +83,7 @@ public sealed partial class Fighter
 		AirAttackUsed = false;
 		DashFrame = 0;
 		DashDir = 0;
+		WalkDir = 0;
 		ResetSpecialState(); // YOK-21 (equipped specials and held cancel rules are run state and stay)
 	}
 

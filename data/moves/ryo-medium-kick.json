@@ -31,10 +31,10 @@
           10
         ],
         "rect": {
-          "x": 70,
-          "y": 170,
-          "w": 100,
-          "h": 50
+          "x": 100,
+          "y": 160,
+          "w": 85,
+          "h": 85
         }
       }
     ],
@@ -47,8 +47,8 @@
         "rect": {
           "x": -45,
           "y": 0,
-          "w": 90,
-          "h": 360
+          "w": 80,
+          "h": 335
         }
       },
       {
@@ -57,13 +57,13 @@
           14
         ],
         "rect": {
-          "x": 50,
-          "y": 170,
-          "w": 100,
-          "h": 50
+          "x": 100,
+          "y": 135,
+          "w": 85,
+          "h": 110
         }
       }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 24, S/A/R 7/3/14. Leg is back to 31% at the cut, so it reads cleanly; a 4-tick blend-out is enough. Hitstun 18 and blockstun 15 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 24, S/A/R 7/3/14. Leg is back to 31% at the cut, so it reads cleanly; a 4-tick blend-out is enough. Hitstun 18 and blockstun 15 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

@@ -188,10 +188,10 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
-		if (FlowPaused) { Render(); return; }
+		if (FlowPaused || Stage == DemoStage.Title) { _clock.Restart(); Render(); return; } // YOK-39: no ticks before Start
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
+		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(P1Live(), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
 		CheckDuelOver(); // YOK-48
 		Render();
 	}
@@ -199,6 +199,7 @@ public partial class FightScene : Node3D
 	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw.</summary>
 	public void Step(FighterInput p1, FighterInput p2)
 	{
+		if (Stage == DemoStage.Title) return; // YOK-39: the sim waits for Start Game
 		Shake.Advance();
 		StepSim(p1, p2);
 		CheckDuelOver(); // YOK-48
@@ -296,44 +297,5 @@ public partial class FightScene : Node3D
 		});
 		AddChild(root);
 		return root;
-	}
-
-	private void BuildStage()
-	{
-		var c = Match.Config;
-		float stageW = ToMeters(c.StageHalfWidth * 2);
-		AddChild(new WorldEnvironment
-		{
-			Environment = new Environment
-			{
-				BackgroundMode = Environment.BGMode.Color,
-				BackgroundColor = new Color(0.32f, 0.22f, 0.3f), // dusk placeholder (V9 bamboo grove)
-				AmbientLightSource = Environment.AmbientSource.Color,
-				AmbientLightColor = new Color(0.5f, 0.45f, 0.5f),
-			},
-		});
-		AddChild(new DirectionalLight3D { Name = "Sun", RotationDegrees = new Vector3(-50f, -30f, 0f) });
-		AddChild(new MeshInstance3D
-		{
-			Name = "Floor",
-			Mesh = new BoxMesh { Size = new Vector3(stageW + 8f, 0.2f, 6f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.3f, 0.36f, 0.22f) } },
-			Position = new Vector3(0f, -0.1f, 0f),
-		});
-		AddChild(new MeshInstance3D
-		{
-			Name = "Backdrop",
-			Mesh = new QuadMesh { Size = new Vector2(stageW + 12f, 8f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.45f, 0.3f, 0.35f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded } },
-			Position = new Vector3(0f, 4f, -4f),
-		});
-		// Corner posts mark the stage bounds.
-		foreach (int side in new[] { -1, 1 })
-		{
-			AddChild(new MeshInstance3D
-			{
-				Name = side < 0 ? "CornerLeft" : "CornerRight",
-				Mesh = new BoxMesh { Size = new Vector3(0.2f, 5f, 0.2f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.4f, 0.55f, 0.3f) } },
-				Position = new Vector3(side * stageW / 2f, 2.5f, -0.5f),
-			});
-		}
 	}
 }

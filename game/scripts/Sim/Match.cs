@@ -117,6 +117,7 @@ public sealed partial class Match
 			Fighter f = Fighters[i], o = Fighters[1 - i];
 			FighterInput input = inputs[i];
 			AdvanceState(f);
+			f.WalkDir = 0; // YOK-39: set below only by this tick's own walk step
 			f.Input.Update(input, f.Facing); // YOK-17 parser; numpad relative to facing, SOCD-clean
 			TryBurst(i); // C6 (YOK-20): from hitstun; the fighter is then not actionable
 
@@ -148,7 +149,7 @@ public sealed partial class Match
 			if (slot >= 0) StartMove(f, slot);
 			else if (f.Actionable && up) StartJump(f, dir);
 			else if (f.Actionable && f.Input.Dash != 0) StartDash(f, f.Input.Dash * f.Facing);
-			else if (f.Actionable && !f.Crouching) f.X += dir * Config.WalkSpeed;
+			else if (f.Actionable && !f.Crouching) { f.X += dir * Config.WalkSpeed; f.WalkDir = dir; } // YOK-39: WalkDir tells walking from being pushed
 
 			if (f.State == FighterState.Dash)
 				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);

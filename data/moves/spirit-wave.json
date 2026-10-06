@@ -71,22 +71,34 @@
               44
             ],
             "rect": {
-              "x": -45,
+              "x": -40,
               "y": 0,
-              "w": 90,
-              "h": 360
+              "w": 80,
+              "h": 330
             }
           },
           {
             "frames": [
               12,
+              16
+            ],
+            "rect": {
+              "x": -60,
+              "y": 190,
+              "w": 115,
+              "h": 85
+            }
+          },
+          {
+            "frames": [
+              17,
               30
             ],
             "rect": {
-              "x": 40,
-              "y": 250,
-              "w": 130,
-              "h": 50
+              "x": 25,
+              "y": 195,
+              "w": 110,
+              "h": 65
             }
           }
         ],
@@ -96,7 +108,7 @@
             "speed": 12,
             "hitbox": {
               "x": 60,
-              "y": 230,
+              "y": 185,
               "w": 70,
               "h": 70
             },
@@ -138,5 +150,5 @@
       }
     }
   },
-  "notes": "Re-derived from clip ryo-spirit-wave-cast (frames_total 44, release frame 14 = hit_end): startup 13 = table; active is null (the hit is the projectile); recovery is stored as 31 because the validator sums startup + recovery to 44 and frame 14 is the one spawn frame; counted from the release it is the table's 30 (card text 13 / \u2014 / 30). Hand is back to 36% at the cut: 4-tick blend-out. Projectile spawns on frame 14; speed 12, its box, stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 is final (E21, recovery -4)."
+  "notes": "Re-derived from clip ryo-spirit-wave-cast (frames_total 44, release frame 14 = hit_end): startup 13 = table; active is null (the hit is the projectile); recovery is stored as 31 because the validator sums startup + recovery to 44 and frame 14 is the one spawn frame; counted from the release it is the table's 30 (card text 13 / \u2014 / 30). Hand is back to 36% at the cut: 4-tick blend-out. Projectile spawns on frame 14; speed 12, its box, stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 is final (E21, recovery -4). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }
