@@ -145,10 +145,37 @@ class ValidateDataTest(unittest.TestCase):
         for rid in ("E4", "E12", "E13", "E14", "E15"):
             self.assertIn(rid, ids)
 
+    def test_clip_structured_fields(self):
+        """YOK-53: trim_start/trim_end/speed_scale/file/yaw_offset are schema-checked and cross-checked."""
+        import json
+        path = ROOT / "data" / "clips" / "ryo-get-up.json"
+        good = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual((good["trim_start"], good["trim_end"], good["speed_scale"]), (22, 102, 2.5))
+        v = validate_data.load_validators()["clip"]
+        ids = validate_data.load_rule_ids()
+        self.assertEqual([], [e.message for e in v.iter_errors(good)])
+        self.assertEqual([], validate_data.semantic(good, path, ids, {}))
+        bad = dict(good, trim_start=-1, speed_scale=0, file="clips/x.fbx", yaw_offset=270)
+        msgs = " | ".join(e.message for e in v.iter_errors(bad))
+        for m in ("-1 is less than the minimum of 0", "0 is less than or equal to the minimum of 0", "does not match", "270 is greater than the maximum of 180"):
+            self.assertIn(m, msgs)
+        def sem(**kw):
+            d = dict(good, **kw)
+            for k in [k for k, x in kw.items() if x is None]:
+                d.pop(k)
+            return validate_data.semantic(d, path, ids, {})
+        self.assertIn(("trim_end", "trim_start and trim_end must both be set or both be absent"), sem(trim_end=None))
+        self.assertIn(("trim_end", "need trim_start <= trim_end, got 102-22"), sem(trim_start=102, trim_end=22))
+        self.assertIn(("frames_total", "trim 22-102 at 1x gives 81 frames but frames_total is 33 (F2)"), sem(speed_scale=1))
+        self.assertIn(("file", "game/assets/generated/clips/ryo/nope.glb does not exist"), sem(file="assets/generated/clips/ryo/nope.glb"))
+        bare = {k: x for k, x in good.items() if k not in ("trim_start", "trim_end", "speed_scale", "file")}
+        self.assertEqual([], [e.message for e in v.iter_errors(bare)], "the fields are optional")
+
     def test_story_cards_validate(self):
         code, out = run(ROOT / "data" / "story", SAMPLES / "sample-story-card.json")
         self.assertEqual(code, 0, out)
-        self.assertIn("3 file(s), 3 valid, 0 invalid", out)
+        n = len(list((ROOT / "data" / "story").glob("*.json"))) + 1  # every story card + the sample
+        self.assertIn(f"{n} file(s), {n} valid, 0 invalid", out)
 
     def test_malformed_story_card_fails_with_clear_messages(self):
         code, out = run(SAMPLES / "invalid" / "broken-story-card.json")

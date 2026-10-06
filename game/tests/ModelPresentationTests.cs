@@ -46,6 +46,63 @@ public static class ModelPresentationTests
 		Assert.True(Math.Abs(lp.TimeAt(99) - 48 / 60.0) < 1e-9, "clamped to the trim end");
 	}
 
+	/// <summary>Migration check (structured clip fields): every clip file carries trim/speed/file, and the catalog
+	/// built from them maps every frame exactly as the old notes parse did. If a later clip pass changes the fields
+	/// on purpose without rewriting the notes, relax this to the fields alone.</summary>
+	[Test]
+	public static void Catalog_StructuredFieldsGiveTheSameFrameMappingAsTheNotes()
+	{
+		string clipsDir = System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "../data/clips");
+		var fields = ClipCatalog.Load(clipsDir, ProjectSettings.GlobalizePath("res://"));
+		var notes = ClipCatalog.Load(clipsDir, ProjectSettings.GlobalizePath("res://"), notesOnly: true);
+		foreach (string path in System.IO.Directory.GetFiles(clipsDir, "*.json"))
+		{
+			string text = System.IO.File.ReadAllText(path);
+			foreach (string key in new[] { "\"trim_start\"", "\"trim_end\"", "\"speed_scale\"", "\"file\"" })
+				Assert.True(text.Contains(key), $"{System.IO.Path.GetFileName(path)} has {key}");
+		}
+		Assert.Equal(notes.Clips.Count, fields.Clips.Count, "same clips");
+		foreach (var n in notes.Clips.Values)
+		{
+			var f = fields[n.Id];
+			Assert.True(f != null, $"{n.Id} loads from fields");
+			Assert.Equal(n.ResPath, f!.ResPath, $"{n.Id}: same GLB");
+			Assert.Equal((n.TrimStart, n.TrimEnd, n.Speed, n.FramesTotal), (f.TrimStart, f.TrimEnd, f.Speed, f.FramesTotal), $"{n.Id}: same trim/speed");
+			for (int fr = 0; fr <= n.FramesTotal + 1; fr++)
+				Assert.Equal(n.TimeAt(fr), f.TimeAt(fr), $"{n.Id}: frame {fr} shows the same time");
+		}
+	}
+
+	[Test]
+	public static void Catalog_FieldsWinOverNotes_NotesFillWhatIsMissing()
+	{
+		string dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "yf-clip-fields-" + System.Environment.ProcessId);
+		string clips = System.IO.Path.Combine(dir, "clips"), game = System.IO.Path.Combine(dir, "game");
+		System.IO.Directory.CreateDirectory(clips);
+		System.IO.Directory.CreateDirectory(System.IO.Path.Combine(game, "assets/generated/clips/ryo"));
+		System.IO.File.WriteAllText(System.IO.Path.Combine(game, "assets/generated/clips/ryo/a.glb"), "");
+		System.IO.File.WriteAllText(System.IO.Path.Combine(game, "assets/generated/clips/ryo/b.glb"), "");
+		const string notes = "file b.glb. Trim raw 10-40 at 2x.";
+		void Clip(string id, string extra) => System.IO.File.WriteAllText(System.IO.Path.Combine(clips, id + ".json"),
+			$"{{\"kind\":\"clip\",\"id\":\"{id}\",\"frames_total\":16{extra},\"notes\":\"{notes}\"}}");
+		try
+		{
+			Clip("ryo-fields", ",\"trim_start\":5,\"trim_end\":20,\"speed_scale\":1.5,\"file\":\"assets/generated/clips/ryo/a.glb\",\"yaw_offset\":-45");
+			Clip("ryo-notes", "");
+			Clip("ryo-trim-only", ",\"trim_start\":0,\"trim_end\":15");
+			Clip("ryo-missing-file", ",\"file\":\"assets/generated/clips/ryo/none.glb\"");
+			var cat = ClipCatalog.Load(clips, game);
+			var a = cat["ryo-fields"]!;
+			Assert.Equal(("res://assets/generated/clips/ryo/a.glb", 5, 20, 1.5, -45.0), (a.ResPath, a.TrimStart, a.TrimEnd, a.Speed, a.YawOffsetDeg), "fields win");
+			var b = cat["ryo-notes"]!;
+			Assert.Equal(("res://assets/generated/clips/ryo/b.glb", 10, 40, 2.0, 0.0), (b.ResPath, b.TrimStart, b.TrimEnd, b.Speed, b.YawOffsetDeg), "notes fallback");
+			var c = cat["ryo-trim-only"]!;
+			Assert.Equal((0, 15, 1.0, "res://assets/generated/clips/ryo/b.glb"), (c.TrimStart, c.TrimEnd, c.Speed, c.ResPath), "trim fields without speed_scale = 1x; file from notes");
+			Assert.True(!cat.Has("ryo-missing-file") && cat.Problems.Exists(p => p.Contains("ryo-missing-file") && p.Contains("none.glb")), "a missing field file is a problem, not a silent fallback");
+		}
+		finally { System.IO.Directory.Delete(dir, true); }
+	}
+
 	[Test]
 	public static void AnimSets_EveryStateAndEveryMoveHasAClip()
 	{

@@ -218,6 +218,20 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
             errs.append(("hit_end", "hit_start and hit_end must both be set or both be null"))
         elif is_int(hs) and is_int(he) and is_int(ft) and not hs <= he <= ft:
             errs.append(("hit_end", f"need hit_start <= hit_end <= frames_total, got {hs}/{he}/{ft}"))
+        # YOK-53: structured trim/speed/file (ClipCatalog reads these before the notes).
+        ts, te, sp = doc.get("trim_start"), doc.get("trim_end"), doc.get("speed_scale", 1)
+        if (ts is None) != (te is None):
+            errs.append(("trim_end", "trim_start and trim_end must both be set or both be absent"))
+        elif is_int(ts) and is_int(te):
+            if ts > te:
+                errs.append(("trim_end", f"need trim_start <= trim_end, got {ts}-{te}"))
+            elif isinstance(sp, (int, float)) and not isinstance(sp, bool) and sp > 0 and is_int(ft):
+                frames = int((te - ts) / sp + 1e-9) + 1
+                if abs(frames - ft) > 1:
+                    errs.append(("frames_total", f"trim {ts}-{te} at {sp}x gives {frames} frames but frames_total is {ft} (F2)"))
+        f = doc.get("file")
+        if isinstance(f, str) and f.endswith(".glb") and not (ROOT / "game" / f).is_file():
+            errs.append(("file", f"game/{f} does not exist"))
     return errs
 
 
