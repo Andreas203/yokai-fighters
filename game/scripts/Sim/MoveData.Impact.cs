@@ -16,7 +16,8 @@ public sealed partial record MoveData
 {
 	/// <summary>
 	/// V2 strength from <c>frame_data.strength</c>. When the data omits it, a normal takes it from its
-	/// button (LP/LK light, MP/MK medium, HP/HK heavy) and any other move is medium.
+	/// button (LP/LK light, MP/MK medium, HP/HK heavy), a throw is heavy (E12: hitstop and shake as a
+	/// heavy hit) and any other move is medium.
 	/// </summary>
 	public HitStrength Strength { get; init; } = HitStrength.Medium;
 	/// <summary>True for an EX version (YOK-21 sets it): EX hits shake the screen like heavies (V3).</summary>
@@ -35,7 +36,8 @@ public sealed partial record MoveData
 	/// <summary>Reads strength and meter_gain from a frame_data block (MoveLoader).</summary>
 	public static MoveData ReadImpact(MoveData move, JsonElement fd)
 	{
-		HitStrength strength = move.IsNormal ? StrengthOfButton(move.Button) : HitStrength.Medium;
+		HitStrength strength = move.IsNormal ? StrengthOfButton(move.Button)
+			: move.IsThrow ? HitStrength.Heavy : HitStrength.Medium;
 		if (fd.TryGetProperty("strength", out var s))
 			strength = s.GetString() switch
 			{

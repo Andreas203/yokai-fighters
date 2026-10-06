@@ -76,6 +76,11 @@ public sealed partial record SimConfig
 
 	/// <summary>C4 "standard knockdown": frames on the floor, unhittable. Placeholder pending a designer number.</summary>
 	public int KnockdownFrames { get; init; } = 40;
+	/// <summary>
+	/// E12 (YOK-19): the two throw buttons count as a throw when the second goes down at most this
+	/// many ticks after the first (gaps 0..3 throw, 4 does not). Kata and Kihon alike.
+	/// </summary>
+	public int ThrowPressWindow { get; init; } = 3;
 
 	/// <summary>C7 counterhit: +20% damage, +6 frames hitstun.</summary>
 	public int CounterHitDamagePct { get; init; } = 20;

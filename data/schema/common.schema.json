@@ -21,7 +21,7 @@
     "ruleIds": {
       "description": "Rule IDs from docs/design/rules.md this content implements or depends on.",
       "type": "array",
-      "items": { "type": "string", "pattern": "^[PCKFXAYTRMSVG][0-9]+$" },
+      "items": { "type": "string", "pattern": "^[PCKFEXAYTRMSVG][0-9]+$" },
       "uniqueItems": true
     },
     "notes": { "type": "string" },

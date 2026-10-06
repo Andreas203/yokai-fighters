@@ -87,6 +87,18 @@ class ValidateDataTest(unittest.TestCase):
         v = validate_data.load_validators()["throw"]
         self.assertTrue(any("non-unique" in e.message for e in v.iter_errors(doc)))
 
+    def test_rule_id_pattern_accepts_engine_defaults(self):
+        import json, re as _re
+        common = json.loads((validate_data.SCHEMA_DIR / "common.schema.json").read_text(encoding="utf-8"))
+        pattern = common["$defs"]["ruleIds"]["items"]["pattern"]
+        for rid in ("C4", "E4", "E12", "T1", "G3"):
+            self.assertRegex(rid, pattern)
+        for rid in ("Z9", "E", "e4", "4E"):
+            self.assertIsNone(_re.match(pattern, rid), rid)
+        ids = validate_data.load_rule_ids()
+        for rid in ("E4", "E12", "E13", "E14", "E15"):
+            self.assertIn(rid, ids)
+
     def test_explicit_invalid_folder_is_checked(self):
         code, out = run(SAMPLES / "invalid")
         self.assertEqual(code, 1)

@@ -4,6 +4,13 @@ Status: take 1 and grab take 2 run and measured, 2026-10-06 (see "Grab take 2" b
 
 The GO / NO-GO lines below are **recommendations**; the designer makes the call.
 
+## Designer decision (2026-10-06)
+Gate **CLOSED**.
+- **Ryo: GO.**
+- **Kitsune: GO.** The sleeve flare on the heavy is accepted.
+- **T01 (generic throw):** both rigs use the Meshy "Step_Forward_and_Push" (preset 259) shove, head-trimmed from tick 30, with its forward step carried in move data (rules.md E15). Kitsune's take is still to be generated when clips are picked in YOK-42.
+- **Open-hand strikes accepted:** the rig has no finger bones; no code-posed fists (E15).
+
 ## Rigs and presets
 | Fighter | Rig task id | Height |
 |---|---|---|

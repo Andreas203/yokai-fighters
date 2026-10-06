@@ -4,7 +4,7 @@
   "name": "TEST FIXTURE: Ryo generic throw (C4 startup, break window and damage; active, recovery, pushback and boxes made up; not game content)",
   "status": "proposed",
   "source": "ryo",
-  "rules": ["C4"],
+  "rules": ["C4", "E4"],
   "input": {
     "buttons": ["LP", "LK"]
   },
@@ -25,5 +25,5 @@
       { "frames": [1, 27], "rect": { "x": -45, "y": 0, "w": 90, "h": 360 } }
     ]
   },
-  "notes": "TEST FIXTURE. Startup 5, break window 7 and damage 120 are C4; the LP+LK input is a proposal for the designer; active, recovery, pushback and boxes are placeholders. The grab clip is still being retaken (YOK-31), so there is no clip (F2): movesmith writes the real file in data/moves/ after clip-matcher measures the take. Never copy to data/moves/."
+  "notes": "TEST FIXTURE. Startup 5, break window 7 and damage 120 are C4; the LP+LK input (within 3 ticks) is E12; active, recovery, pushback and boxes are placeholders. The generic throw clip is the trimmed Meshy 259 shove (E15) but no take is matched yet, so there is no clip (F2): movesmith writes the real file in data/moves/ after clip-matcher measures the take. Never copy to data/moves/."
 }

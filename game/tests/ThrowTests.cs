@@ -8,7 +8,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-19: generic throws (C4, E4) through the real input layer. P1 presses LP+LK (proposed throw
+/// YOK-19: generic throws (C4, E4) through the real input layer. P1 presses LP+LK (E12 throw
 /// input) on tick 1, so throw frame n plays on tick n and the grab (frame 6) is tick 6. The break
 /// window is ticks 7..13 and an unbroken throw lands on tick 14. Uses the TEST FIXTURE throw in
 /// tests/fixtures/throws/ and the TEST FIXTURE normals.
@@ -29,13 +29,15 @@ public static class ThrowTests
 	{
 		public readonly List<(int tick, ThrowEvent e)> Throws = new();
 		public readonly List<(int tick, HitEvent e)> Hits = new();
+		public readonly List<ImpactEvent> Impacts = new();
+		public readonly List<int> Bursts = new();
 		public bool Has(ThrowOutcome o) => Throws.Any(t => t.e.Outcome == o);
 	}
 
 	/// <summary>Fighters touching mid-stage (push-box distance), or P2 pinned in the right corner.</summary>
-	static Match Setup(Log log, bool cornered = false)
+	static Match Setup(Log log, bool cornered = false, SimConfig? cfg = null)
 	{
-		var m = new Match(null, Moves(), Moves());
+		var m = new Match(cfg, Moves(), Moves());
 		if (cornered)
 		{
 			m.P2.X = m.Config.StageHalfWidth - m.Config.BodyWidth / 2;
@@ -48,6 +50,8 @@ public static class ThrowTests
 		}
 		m.Throw += (mm, e) => log.Throws.Add((mm.Tick, e));
 		m.Hit += (mm, e) => log.Hits.Add((mm.Tick, e));
+		m.Impact += (_, e) => log.Impacts.Add(e);
+		m.BurstFired += (_, i) => log.Bursts.Add(i);
 		return m;
 	}
 
@@ -71,7 +75,7 @@ public static class ThrowTests
 	{
 		var t = ThrowMove();
 		Assert.True(t.IsThrow && !t.IsNormal, "kind throw, not a normal");
-		Assert.Equal(THROW, t.ThrowButtons, "proposed input LP+LK");
+		Assert.Equal(THROW, t.ThrowButtons, "E12 input LP+LK");
 		Assert.Equal((5, 7, 120), (t.Startup, t.BreakWindow, t.Damage), "C4 startup / break window / damage");
 		Assert.Equal(40, SimConfig.Default.KnockdownFrames, "E4 standard knockdown");
 		Assert.True(t.Hitboxes.Count == 0 && t.Throwboxes.Count > 0, "throwboxes, no hitboxes");
@@ -110,9 +114,11 @@ public static class ThrowTests
 		var log = new Log();
 		var m = Setup(log);
 		var states = new List<FighterState>();
-		Run(m, 70, ThrowOn1, None, t =>
+		var downFrames = new HashSet<int>(); // world frames: the landing's 12-tick hitstop (E12) freezes the knockdown
+		Run(m, 90, ThrowOn1, None, t =>
 		{
 			states.Add(m.P2.State);
+			if (m.P2.State == FighterState.Knockdown) downFrames.Add(m.WorldFrame);
 			if (t == 1) Assert.True(m.P1.CurrentMove?.IsThrow == true && m.P1.MoveFrame == 1, "throw (not the LP jab) starts on the press");
 			if (t < LandTick) Assert.Equal(1000, m.P2.Health, $"no damage before the throw lands (tick {t})");
 		});
@@ -123,10 +129,11 @@ public static class ThrowTests
 		Assert.Equal((LandTick, 120), (land.tick, land.e.Damage), "lands after the window for 120");
 		Assert.Equal(880, m.P2.Health, "120 damage (C4)");
 		Assert.Equal(1, log.Hits.Count(h => h.e.Attacker == 0 && h.e.Damage == 120 && !h.e.Blocked), "a landed throw raises one Hit");
-		int down = states.Count(s => s == FighterState.Knockdown);
-		Assert.Equal(40, down, "standard knockdown is 40 frames (E4)");
-		Assert.Equal(FighterState.Knockdown, states[LandTick + 39 - 1], "still down on the 40th frame");
-		Assert.Equal(FighterState.Idle, states[LandTick + 40 - 1], "acts again 40 frames after landing");
+		Assert.Equal(40, downFrames.Count, "standard knockdown is 40 world frames (E4)");
+		const int Stop = 12; // heavy hitstop on the landing (E12, V2)
+		Assert.Equal(52, states.Count(s => s == FighterState.Knockdown), "40 frames + 12 hitstop ticks");
+		Assert.Equal(FighterState.Knockdown, states[LandTick + Stop + 39 - 1], "still down on the 40th frame");
+		Assert.Equal(FighterState.Idle, states[LandTick + Stop + 40 - 1], "acts again 40 frames (+ hitstop) after landing");
 		Assert.True(m.P1.Actionable, "thrower recovered");
 	}
 
@@ -270,7 +277,7 @@ public static class ThrowTests
 		Run(m, 10, None, t => t == 1 ? LK : 0);
 		Assert.True(log.Hits.Any(h => h.e.Attacker == 1 && h.tick == GrabTick), "control: P2's LK connects on tick 6");
 
-		// Same frame: the grab wins (proposal) and the strike never lands.
+		// Same frame: the grab wins (E12) and the strike never lands.
 		log = new Log();
 		m = Setup(log);
 		Run(m, 30, ThrowOn1, t => t == 1 ? LK : 0);
@@ -293,6 +300,142 @@ public static class ThrowTests
 		Run(m, LandTick, ThrowOn1, None);
 		Assert.True(m.P2.KnockedOut && m.Winner == 0 && m.Phase == MatchPhase.KoSlowMo, "a landed throw can KO");
 	}
+
+	// --- Input leniency (E12) ------------------------------------------------------------------
+
+	const InputBits MP = InputBits.MediumPunch, HP = InputBits.HeavyPunch, BURST = LP | MP | HP;
+
+	/// <summary>Presses <paramref name="first"/> on tick 1 and <paramref name="second"/> on tick 1+gap, holding both.</summary>
+	static Func<int, InputBits> Pair(InputBits first, InputBits second, int gap) =>
+		t => (t >= 1 ? first : 0) | (t >= 1 + gap ? second : 0);
+
+	[Test]
+	public static void Throw_LpLkWithinThreeTicks_BothOrders_FourIsAMiss()
+	{
+		string throwId = ThrowMove().Id;
+		foreach (var (first, second) in new[] { (LP, LK), (LK, LP) })
+			for (int gap = 0; gap <= 4; gap++)
+			{
+				var log = new Log();
+				var m = Setup(log);
+				Run(m, 40, Pair(first, second, gap), None, t =>
+				{
+					if (gap <= 3 && t == 1 + gap)
+						Assert.True(m.P1.CurrentMove?.IsThrow == true && m.P1.MoveFrame == 1, $"{first} then {second} +{gap}: throw frame 1 on the second press (a started normal is cancelled)");
+				});
+				bool throws = gap <= 3;
+				Assert.Equal(throws, log.Has(ThrowOutcome.Grab), $"{first} then {second} {gap} ticks apart throws = {throws}");
+				if (throws)
+				{
+					Assert.Equal(GrabTick + gap, log.Throws.First(x => x.e.Outcome == ThrowOutcome.Grab).tick, $"gap {gap}: grab 5 ticks after the second press");
+					Assert.True(log.Hits.All(h => h.e.MoveId == throwId), $"gap {gap}: the cancelled normal never hits");
+				}
+				else Assert.True(log.Hits.Any(h => h.e.Attacker == 0 && h.e.MoveId != throwId), "gap 4: the first button's normal plays out");
+			}
+	}
+
+	[Test]
+	public static void Throw_CancelsOnlyANormalStillInStartup()
+	{
+		// A wider window (config) lets the second press arrive after the jab's startup (LP: active from frame 5).
+		var cfg = SimConfig.Default with { ThrowPressWindow = 8 };
+		var log = new Log();
+		var m = Setup(log, cfg: cfg);
+		Run(m, 40, Pair(LP, LK, 3), None); // second press on jab frame 4: startup
+		Assert.True(log.Has(ThrowOutcome.Grab), "inside startup: cancelled into the throw");
+
+		log = new Log();
+		m = Setup(log, cfg: cfg);
+		Run(m, 40, Pair(LP, LK, 4), None); // second press on jab frame 5: active
+		Assert.True(!log.Throws.Any(), "past startup: the throw input is ignored");
+		Assert.True(log.Hits.Any(h => h.e.Attacker == 0), "the jab plays on and hits");
+
+		log = new Log();
+		m = Setup(log);
+		Run(m, 40, t => t == 1 ? MP : t == 2 ? LP | LK : 0, None); // MP is not a throw button
+		Assert.True(!log.Throws.Any(), "a normal from a non-throw button is not cancelled");
+	}
+
+	sealed class NoCommandParser : ICommandParser
+	{
+		public InputCommand Parse(InputBuffer buffer, int facing) => InputCommand.None;
+	}
+
+	[Test]
+	public static void Throw_ReadFromRawInput_SameForAnyScheme()
+	{
+		// Kihon (YOK-23) only swaps the parser; the throw check reads the raw buffer before it (K3).
+		var log = new Log();
+		var m = Setup(log);
+		m.P1.Input.Parser = new NoCommandParser();
+		Run(m, 30, Pair(LK, LP, 2), None);
+		Assert.True(log.Has(ThrowOutcome.Grab) && log.Has(ThrowOutcome.Land), "throw with a parser that yields no commands");
+	}
+
+	// --- Meter, hitstop, burst (YOK-20 integration) ---------------------------------------------
+
+	[Test]
+	public static void Throw_LandBuildsMeter_HeavyHitstopAndShake()
+	{
+		var log = new Log();
+		var m = Setup(log);
+		Run(m, LandTick, ThrowOn1, None);
+		var imp = log.Impacts.Single();
+		Assert.True(imp.Strength == HitStrength.Heavy && imp.Hitstop == 12 && imp.Shake && !imp.Blocked, "a landed throw is a heavy impact: 12 frames, shakes (E12, V2, V3)");
+		Assert.Equal(12, m.HitstopLeft, "hitstop starts on the landing tick");
+		Assert.Equal((6, 3), (m.P1.Meter, m.P2.Meter), "C5: thrower +6, thrown +3");
+
+		log = new Log();
+		m = Setup(log);
+		Run(m, 30, ThrowOn1, t => t == GrabTick + 2 ? THROW : 0);
+		Assert.True(log.Has(ThrowOutcome.Break) && log.Impacts.Count == 0, "a break is no connect");
+		Assert.Equal((0, 0), (m.P1.Meter, m.P2.Meter), "a break builds no meter");
+	}
+
+	[Test]
+	public static void Throw_CannotGrabABurstingFighter()
+	{
+		var f = new Fighter();
+		f.Reset(0, 1, 1000);
+		f.State = FighterState.Burst;
+		Assert.True(!Match.Throwable(f), "burst invulnerability also stops throws");
+
+		var log = new Log();
+		var m = Setup(log);
+		m.P2.State = FighterState.Hitstun;
+		m.P2.StunLeft = 30;
+		int x1 = m.P1.X;
+		Run(m, 40, t => t == 2 || t == 30 ? THROW : 0, t => t == 1 ? BURST : 0, t =>
+		{
+			if (t == 1 || t == 29) m.P1.X = x1; // undo the burst pushback: P1 back in throw range
+		});
+		Assert.Equal(1, log.Bursts.Single(), "P2 burst out of hitstun");
+		var grabs = log.Throws.Where(x => x.e.Outcome == ThrowOutcome.Grab).Select(x => x.tick).ToList();
+		Assert.True(!grabs.Contains(GrabTick + 1), "a throw active during the 20 invulnerable frames whiffs");
+		Assert.True(grabs.Contains(30 + GrabTick - 1), "control: after the burst the same throw grabs");
+	}
+
+	[Test]
+	public static void Throw_ThrownFighterBreaks_NeverBursts_HitstunBurstWins()
+	{
+		var log = new Log();
+		var m = Setup(log);
+		Run(m, LandTick, ThrowOn1, t => t == GrabTick + 2 ? BURST : 0);
+		Assert.True(log.Bursts.Count == 0 && !m.P2.BurstUsed && log.Has(ThrowOutcome.Land), "LP+MP+HP while thrown: no burst, no break");
+
+		log = new Log();
+		m = Setup(log);
+		Run(m, 30, ThrowOn1, t => t == GrabTick + 2 ? BURST | LK : 0);
+		Assert.True(log.Bursts.Count == 0 && !m.P2.BurstUsed && log.Has(ThrowOutcome.Break), "thrown: LP+LK(+MP+HP) breaks instead");
+
+		log = new Log();
+		m = Setup(log);
+		m.P2.State = FighterState.Hitstun;
+		m.P2.StunLeft = 30;
+		Run(m, 10, None, t => t == 1 ? BURST | LK : 0);
+		Assert.True(log.Bursts.SequenceEqual(new[] { 1 }) && !log.Throws.Any(), "in hitstun LP+LK+MP+HP bursts (burst wins when legal)");
+	}
+
 
 	// --- Overlay and determinism ---------------------------------------------------------------
 

@@ -126,7 +126,8 @@ public sealed partial class Match
 
 			int slot = -1;
 			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
-			else if (f.Actionable && f.Input.TryConsume(out var cmd)) { slot = FindThrow(f, cmd); if (slot < 0) slot = FindNormal(f, cmd); }
+			else if ((f.Actionable || InThrowCancelableStartup(f)) && (slot = FindThrow(f)) >= 0) f.Input.TryConsume(out _); // E12
+			else if (f.Actionable && f.Input.TryConsume(out var cmd)) slot = FindNormal(f, cmd);
 
 			if (slot >= 0) StartMove(f, slot);
 			else if (f.Actionable && up) StartJump(f, dir);

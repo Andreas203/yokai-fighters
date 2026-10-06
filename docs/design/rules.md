@@ -71,6 +71,10 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E9** Default controls. Keyboard P1: WASD, U/I/O punches, J/K/L kicks, Space Special. Keyboard P2: arrows, numpad 4/5/6 punches, 1/2/3 kicks, 0 Special. Pad: d-pad or left stick (0.5 deadzone), X/Y/RB punches, A/B/RT kicks, LB Special.
 - **E10** Movement (C2): forward dash 300 units, back dash 240; dash by double tap within 12 ticks. Jump height 250 units, sideways drift 8 units per frame, no pre-jump frames.
 - **E11** Jumping: holding up jumps again on landing; up + a button gives the ground normal. Ryo gets jump-in (air) normals; the data format needs an air flag for them.
+- **E12** Throw input (C4): LP+LK pressed within 3 ticks of each other, in Kata and Kihon; if the first button already started a normal, the throw cancels it while it is still in startup, otherwise the throw input is ignored. A grab beats a strike active on the same frame, but a faster strike beats the throw's startup. Throw vs throw on the same frame clash: automatic break, no damage. A strike's invulnerability does not avoid throws (a burst's invulnerability does). After a break both fighters are freed and pushed apart; no mash penalty. A throw's recovery must outlast its break window. A landed throw builds meter and causes hitstop as a heavy hit (12 frames, shakes).
+- **E13** Burst input (C6): LP+MP+HP within 3 ticks (keyboard U+I+O / numpad 4+5+6, pad X+Y+RB). The burst pushes the opponent back 200 units. A thrown fighter cannot burst; it breaks instead.
+- **E14** Meter (C5 reading): attacker +6 on hit, +3 when blocked; defender +3 per hit taken, nothing for blocking. Hitstop (V2) also applies on block. Meter resets to 0 each fight; only health carries over (C1).
+- **E15** Generated rig limits: strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists). The generic throw clip is the Meshy "Step_Forward_and_Push" (preset 259) take, head-trimmed from tick 30, with its forward step in move data: an F5 substitute after three library grabs failed.
 
 ## X — Cancels
 

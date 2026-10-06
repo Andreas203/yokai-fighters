@@ -31,26 +31,59 @@ public readonly record struct ThrowEvent(int Attacker, string MoveId, ThrowOutco
 /// SimConfig.KnockdownFrames ticks (that tick included), acting again KnockdownFrames ticks later.
 /// The thrower's clip keeps playing throughout (MoveLoader makes recovery outlast the window).
 ///
-/// Priorities (proposals for the designer): a grab and a strike active on the same frame - the grab
+/// Priorities (E12, designer decisions): a grab and a strike active on the same frame - the grab
 /// wins (grabs resolve before strikes and the grabbed fighter's move ends). Two grabs on the same frame
-/// clash (both break apart). A strike landing during the throw's startup beats it as usual.
+/// clash (automatic break, no damage). A strike landing during the throw's startup beats it as usual.
+/// Input: the two throw buttons within ThrowPressWindow ticks; a normal the first button started is
+/// cancelled into the throw while still in startup. A landed throw builds meter and hitstop as a heavy
+/// hit (OnConnect). A Thrown defender cannot burst (TryBurst needs Hitstun): it breaks instead.
 /// </summary>
 public sealed partial class Match
 {
 	/// <summary>Grab, land, break and clash, for presentation and tests. A landed throw also raises Hit.</summary>
 	public event Action<Match, ThrowEvent>? Throw;
 
-	/// <summary>Can this fighter be grabbed this frame?</summary>
+	/// <summary>
+	/// Can this fighter be grabbed this frame? Invulnerability (a burst's 20 frames, C6) is the same
+	/// check strikes use in Connects; a strike's own invulnerable hurtbox frames don't avoid throws (E12).
+	/// </summary>
 	public static bool Throwable(Fighter d) =>
-		!d.KnockedOut && !d.Airborne && d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack;
+		!d.KnockedOut && !d.Invulnerable && !d.Airborne
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack;
 
-	/// <summary>The throw for a parsed command: every throw button went down this tick (beats a normal or special). -1 = none.</summary>
-	public static int FindThrow(Fighter f, in InputCommand cmd)
+	/// <summary>
+	/// E12: the throw whose buttons were all pressed within ThrowPressWindow ticks, the last of them
+	/// this tick. Read from the raw input buffer before any scheme parser, so Kata and Kihon share it
+	/// (K3). -1 = none.
+	/// </summary>
+	public int FindThrow(Fighter f)
 	{
-		if (cmd.Kind == CommandKind.None) return -1;
 		for (int i = 0; i < f.Moves.Length; i++)
-			if (f.Moves[i].ThrowMatch(cmd.Pressed)) return i;
+			if (f.Moves[i].IsThrow && ThrowPressed(f.Input.Buffer, f.Moves[i].ThrowButtons)) return i;
 		return -1;
+	}
+
+	/// <summary>Every button of <paramref name="buttons"/> went down within the window, one of them this tick.</summary>
+	public bool ThrowPressed(InputBuffer buf, InputBits buttons)
+	{
+		if ((buf.PressedAt(0) & buttons) == 0) return false;
+		InputBits seen = InputBits.None;
+		for (int age = 0; age <= Config.ThrowPressWindow; age++) seen |= buf.PressedAt(age);
+		return (seen & buttons) == buttons;
+	}
+
+	/// <summary>
+	/// E12: the first throw button started a normal, and the second arrived inside the window while
+	/// that normal is still in startup: the throw cancels it. Past startup the throw input is ignored.
+	/// </summary>
+	private static bool InThrowCancelableStartup(Fighter f)
+	{
+		if (f.KnockedOut || f.State != FighterState.Attack) return false;
+		MoveData? m = f.CurrentMove;
+		if (m is null || !m.IsNormal || f.MoveFrame >= m.FirstActive) return false;
+		foreach (var t in f.Moves)
+			if (t.IsThrow && (t.ThrowButtons & m.Button) != 0) return true;
+		return false;
 	}
 
 	/// <summary>Start of the world frame: count the open break windows down; a closed one lands the throw.</summary>
@@ -74,7 +107,7 @@ public sealed partial class Match
 			if (d.State != FighterState.Thrown) continue;
 			MoveData? m = att.CurrentMove;
 			if (m is null || !m.IsThrow) continue;
-			if (!m.ThrowMatch(d.Input.Latest.Pressed)) continue;
+			if (!ThrowPressed(d.Input.Buffer, m.ThrowButtons)) continue; // same E12 leniency as the throw
 			d.Input.TryConsume(out _); // the break press must not come out as a normal afterwards
 			BreakApart(1 - i, m, ThrowOutcome.Break);
 		}
@@ -123,6 +156,7 @@ public sealed partial class Match
 		Slide(att, def, m.HitPushback ?? Config.HitPushback, 0);
 		Throw?.Invoke(this, new ThrowEvent(attIndex, m.Id, ThrowOutcome.Land, m.Damage));
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, att.MoveFrame, false, false, m.Damage));
+		OnConnect(attIndex, m, blocked: false, counter: false); // C5 meter (+6/+3), V2 hitstop as heavy (E12)
 	}
 
 	/// <summary>Break or clash: no damage, both fighters free and slid apart by the throw's on_break pushback.</summary>
