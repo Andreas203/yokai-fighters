@@ -137,3 +137,14 @@ Total if all four are approved: 12 credits (take 2 of 3 for each move, F5). If a
 2. Confirm the guard-pose-from-LP stand-in for idle (or add an idle take).
 3. Confirm no Ryo Foxfire take is run here (YOK-32 owns Ryo's rig).
 4. Ryo's picks: no `YOK-32-ryo-clips` branch exists on origin yet, so the flags above show which Kitsune picks should be adopted by Ryo: rows 3-12 and 14-18 all use the same preset id.
+
+## Retake run (YOK-32-clip-retakes, 2026-10-06): take 2 of 3, designer-approved, Kitsune rig, 3 credits each
+Stills: `docs/assets/clips/kitsune/hk-take2.png`, `lk-take2.png`, `getup-take2.png`.
+
+| Move | Preset | Task id | Verdict | Data |
+|---|---|---|---|---|
+| N06 heavy kick | 215 High_Kick | 01a1101d-91e6-706a-aea6-a3195cdc82a3 | WARN | `kitsune-heavy-kick.json`, 38 frames, hit 12-15, trim raw 46-93 at 1.25x. Head-high kick, hakama drawn into a tube around the leg at raw 62-72, stretch 13.6x (limit 14), left foot slide 35 cm if stripped (about 45 cm hip travel is move data) |
+| R12 get-up | 347 Stand_Up4 | 01a1101d-951b-7220-afc2-2b54408d8fe4 | WARN | `kitsune-get-up.json`, 33 frames, raw 22-102 at 2.5x. Hair covers the face and the hakama bunches on all fours, sleeve stretch 12.0x. Get-up end to jump start: hips 91 vs 88 cm, mean joint difference 22.7 deg, a 6-tick blend is enough. Face-down start does not join the face-up knockdown end |
+| N04 light kick | 103 Simple_Kick | 01a1101d-97fe-760b-b89c-0ed4c59f5f96 | FAIL (not committed) | Walking kick: hips +145 cm over the clip, 42 cm in the kick window, left foot slide 37 cm stripped, stretch 13.9x. The 211 file stays |
+
+Take 3 proposal: do not spend; F5 substitute LK = the MK clip (209) trimmed and sped up. Kitsune LP is now the F5 substitute `kitsune-light-punch.json` (MP clip 210 at 1.5x, trim raw 106-124, 13 frames, hit 5-6). Free re-timing of MP, MK, throw, HP and Foxfire is in each data file's notes.

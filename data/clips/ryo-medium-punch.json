@@ -4,7 +4,7 @@
   "status": "proposed",
   "source": "meshy-library",
   "clip": "Boxing_Guard_Prep_Straight_Punch",
-  "frames_total": 45,
+  "frames_total": 21,
   "hit_start": 7,
   "hit_end": 9,
   "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Hip-turn cross, no clipping. WARN: right planted foot pivots 9 cm raw in the window (limit 3); stripped-root slide 6 cm.",
@@ -13,5 +13,5 @@
     "F5",
     "F6"
   ],
-  "notes": "Meshy preset 210 Boxing_Guard_Prep_Straight_Punch on task 01a1100b-a271-754d-9833-81d94939c09b, file ryo-mp.glb. Raw trim: ticks 106-150 at 1x (60 ticks per second). Verdict WARN. Raw 241 ticks (4.0 s), the cross is at raw 103-122. Head-trim 106 ticks, 1.0x, tail cut at raw 150: 45 frames, hit frames 7-9 (startup 6, active 3 = C8). Only 6 ticks of anticipation remain after the trim (hand already at speed). Peak hand speed 5.1 m/s at raw 109, full reach raw 117."
+  "notes": "Meshy preset 210 Boxing_Guard_Prep_Straight_Punch on task 01a1100b-a271-754d-9833-81d94939c09b, file ryo-mp.glb. Raw trim: ticks 106-150 at 1x (60 ticks per second). Verdict WARN. Raw 241 ticks (4.0 s), the cross is at raw 103-122. Head-trim 106 ticks, 1.0x, tail cut at raw 150: 45 frames, hit frames 7-9 (startup 6, active 3 = C8). Only 6 ticks of anticipation remain after the trim (hand already at speed). Peak hand speed 5.1 m/s at raw 109, full reach raw 117. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 45 frames, hit 7-9): trim raw ticks 105-130 at 1.25x = 21 frames, hit frames 7-9, startup 6, active 3, recovery 12. hand at 72% reach at the cut; blend-out. Real contact is raw 112-123 (first arrival 112.5); hit window is the 3 frames from arrival."
 }

@@ -49,6 +49,7 @@ public partial class FightScene
 		P2Ai = P2AiEnabled && Profiles.Length > 0
 			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed)
 			: null;
+		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
 	}
 
 	public void SwapTemperament()

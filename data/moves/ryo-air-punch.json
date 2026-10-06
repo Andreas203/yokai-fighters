@@ -1,0 +1,64 @@
+{
+  "kind": "normal",
+  "id": "ryo-air-punch",
+  "name": "Air punch",
+  "status": "proposed",
+  "source": "ryo",
+  "clip": "ryo-jump-punch",
+  "rules": [
+    "E11",
+    "E19",
+    "E6",
+    "E5",
+    "F2",
+    "F3",
+    "F5",
+    "K3"
+  ],
+  "input": {
+    "buttons": [
+      "LP",
+      "MP",
+      "HP"
+    ]
+  },
+  "air": true,
+  "landing_recovery": 3,
+  "frame_data": {
+    "startup": 6,
+    "active": 10,
+    "recovery": 9,
+    "damage": 50,
+    "hitstun": 16,
+    "blockstun": 12,
+    "hitboxes": [
+      {
+        "frames": [
+          7,
+          16
+        ],
+        "rect": {
+          "x": 40,
+          "y": 20,
+          "w": 100,
+          "h": 70
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          25
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 280
+        }
+      }
+    ]
+  },
+  "notes": "Re-derived from clip ryo-jump-punch (frames_total 25, hit 7-16): startup 6, active 10, recovery 9. The clip now starts mid-air (airborne raw 6-41, trimmed before the landing), which fixes the old take-off flag; blend in from the jump over about 4 ticks. Landing recovery 3 ticks (E19). C8 has no air normals, so damage, stun and boxes are first passes. Hurtbox is the E5 airborne default. Own clip entry now (F5: the 422 clip); same timing as the kick, smaller and higher box and lower damage so the two differ."
+}

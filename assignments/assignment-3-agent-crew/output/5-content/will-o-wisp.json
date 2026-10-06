@@ -1,0 +1,19 @@
+{
+  "kind": "modifier",
+  "id": "will-o-wisp",
+  "name": "Will-o'-wisp",
+  "status": "proposed",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": false,
+  "rules": ["A2", "A8", "A9", "A10", "A12", "E20"],
+  "applies_to": { "requires": ["projectile"] },
+  "effects": [
+    { "target": "projectile.speed", "op": "mul_pct", "value": 130 }
+  ],
+  "card": {
+    "plain": "Wisp-light lends your projectile wings: it flies faster across the screen.",
+    "frames": "Projectile speed +30% (x1.3, rounded to nearest)"
+  },
+  "notes": "Rules.md Modifiers table. Data only, no new animation (A10); the visual is a preset reference for clip-matcher."
+}

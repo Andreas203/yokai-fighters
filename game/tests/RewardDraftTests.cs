@@ -19,10 +19,8 @@ public static class RewardDraftTests
 {
 	static readonly FighterInput Idle = FighterInput.None;
 	static string RepoRoot => Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
-	// The tests pin the TEST FIXTURE pool (empty data dirs force the fallback), so real content in data/ (YOK-43 modifiers) can't change them.
-	static AbilityPool Pool() => AbilityPool.Load(
-		Path.Combine(RepoRoot, "game", "tests", "fixtures", "none-moves"), Path.Combine(RepoRoot, "game", "tests", "fixtures", "none-modifiers"),
-		Path.Combine(RepoRoot, "game", "tests", "fixtures", "specials"), Path.Combine(RepoRoot, "game", "tests", "fixtures", "rewards"));
+	/// <summary>YOK-56: the fixture pool only, so these tests never depend on what is in data/.</summary>
+	static AbilityPool Pool() => AbilityPool.LoadFixtures(RepoRoot);
 
 	static MoveData[] Moves() =>
 		MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FightScene.FixtureNormalsDir))

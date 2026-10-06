@@ -52,18 +52,42 @@ public partial class FightScene : Node3D
 	/// </summary>
 	public static ControlScheme DefaultScheme { get; set; } = ControlScheme.Kihon;
 
-	/// <summary>Both fighters get the moves and Ryo's starters (A1). P2 shares Ryo's kit until the yokai kits land.</summary>
+	/// <summary>YOK-56: whom P2 (the AI) fights as; its kit loads from data like Ryo's.</summary>
+	public static string Opponent { get; set; } = "kitsune";
+
+	/// <summary>
+	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
+	/// <c>KitSources.FixturesOnly()</c> (and restore it) so they never depend on what is in data/.
+	/// </summary>
+	public static KitSources Sources { get; set; } = KitSources.Repo(RepoRoot);
+
+	public static KitSources FixtureSources => KitSources.Repo(RepoRoot).FixturesOnly();
+
+	private static string RepoRoot => System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
+
+	/// <summary>
+	/// YOK-56: P1 = Ryo's kit (his normals, throw and starters, A1), P2 = <see cref="Opponent"/>'s kit (the AI
+	/// loadout); each falls back to the TEST FIXTURES per move kind while data/moves/ has none of its own.
+	/// </summary>
 	public static Match NewMatch()
 	{
 		var cfg = Run?.MatchConfig();
-		var m = new Match(cfg, LoadMoves(), LoadMoves());
-		foreach (var f in m.Fighters)
-		{
-			EquipStarters(f, LoadSpecials());
-			f.Input.Scheme = DefaultScheme;
-		}
+		var ryo = LoadKit(Kit.Ryo);
+		var foe = LoadKit(Opponent);
+		var m = new Match(cfg, ryo.Moves, foe.Moves);
+		ryo.Equip(m.P1);
+		foe.Equip(m.P2);
+		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
 		Run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
 		return m;
+	}
+
+	/// <summary>YOK-56: one fighter's kit from <see cref="Sources"/>; fixture fallbacks are logged.</summary>
+	public static Kit LoadKit(string fighter)
+	{
+		var kit = Kit.Load(fighter, Sources);
+		foreach (var n in kit.Notes) GD.Print("FightScene: " + n);
+		return kit;
 	}
 
 	/// <summary>
@@ -72,13 +96,17 @@ public partial class FightScene : Node3D
 	/// </summary>
 	public static RunState? Run { get; set; }
 
-	/// <summary>YOK-47: specials + modifiers for the reward draft, from data/ with TEST FIXTURE fallback.</summary>
+	/// <summary>YOK-47: specials + modifiers for the reward draft, from data/ with TEST FIXTURE fallback (YOK-56: starters = Ryo's kit).</summary>
 	public static AbilityPool LoadAbilityPool() =>
-		AbilityPool.LoadRepo(System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + ".."));
+		AbilityPool.Load(Sources, System.IO.Path.Combine(RepoRoot, "data", "modifiers"));
 
 	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
 	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;
-	public void SetScheme(int player, ControlScheme scheme) => Match.Fighters[player].Input.Scheme = scheme;
+	public void SetScheme(int player, ControlScheme scheme)
+	{
+		Match.Fighters[player].Input.Scheme = scheme;
+		Recorder?.OnScheme(player, scheme); // YOK-49
+	}
 
 	/// <summary>Debug builds: F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
 	public void ToggleScheme(int player)
@@ -91,46 +119,18 @@ public partial class FightScene : Node3D
 	/// YOK-21: kind "special" files in data/moves/, falling back to the TEST FIXTURE Spirit Wave and Rising
 	/// Talisman in tests/fixtures/specials/ while data/moves/ has no specials (real ones come after F2).
 	/// </summary>
-	public static SpecialData[] LoadSpecials()
-	{
-		var specials = SpecialLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves");
-		if (specials.Length > 0) return specials;
-		GD.Print("FightScene: data/moves/ has no specials, using TEST FIXTURE Spirit Wave and Rising Talisman");
-		return SpecialLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureSpecialsDir));
-	}
+	/// YOK-56: now the fighter's kit specials (default Ryo: his starters, else the fixture starters).
+	/// </summary>
+	public static SpecialData[] LoadSpecials(string fighter = Kit.Ryo) => LoadKit(fighter).Specials;
 
 	/// <summary>A1: the starters fill their own slots (Spirit Wave A, Rising Talisman B) at Lv 1.</summary>
-	public static void EquipStarters(Fighter f, SpecialData[] specials)
-	{
-		foreach (var s in specials)
-			if (f.Specials[(int)s.Slot] is null) f.Equip(s.Slot, s, 1);
-	}
+	public static void EquipStarters(Fighter f, SpecialData[] specials) => Kit.EquipSpecials(f, specials);
 
 	/// <summary>
-	/// Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals
-	/// and the TEST FIXTURE throw (C4, YOK-19) while it has no throw (the grab clip is being retaken, YOK-31),
-	/// and the TEST FIXTURE jump-in normals (E11, YOK-55) while it has no air normal.
+	/// A fighter's normals and throw (YOK-56 kit, default Ryo): its own data/moves/ files, with the TEST FIXTURE
+	/// normals (C8), throw (C4, YOK-19) and jump-ins (E11, YOK-55) per kind while it has none of that kind.
 	/// </summary>
-	public static MoveData[] LoadMoves()
-	{
-		var moves = MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves", includeSpecials: false);
-		if (!System.Array.Exists(moves, m => m.IsNormal))
-		{
-			GD.Print("FightScene: data/moves/ has no normals, using TEST FIXTURE normals (C8)");
-			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureNormalsDir))];
-		}
-		if (!System.Array.Exists(moves, m => m.IsThrow))
-		{
-			GD.Print("FightScene: data/moves/ has no throw, using the TEST FIXTURE throw (C4)");
-			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureThrowsDir))];
-		}
-		if (!System.Array.Exists(moves, m => m.IsNormal && m.Air))
-		{
-			GD.Print("FightScene: data/moves/ has no air normals, using TEST FIXTURE jump-ins (E11)");
-			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureAirNormalsDir))];
-		}
-		return moves;
-	}
+	public static MoveData[] LoadMoves(string fighter = Kit.Ryo) => LoadKit(fighter).Moves;
 
 	public override void _Ready()
 	{
@@ -145,6 +145,7 @@ public partial class FightScene : Node3D
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
 		SetUpAi(); // YOK-27
+		StartRecording(); // YOK-49
 		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
 		Render();
 	}
@@ -157,9 +158,10 @@ public partial class FightScene : Node3D
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
 		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
+		PollReplayKey(); // YOK-49: F8 saves the replay
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) { Shake.Advance(); Match.Step(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default */ }
+		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
 		Render();
 	}
 
@@ -167,7 +169,7 @@ public partial class FightScene : Node3D
 	public void Step(FighterInput p1, FighterInput p2)
 	{
 		Shake.Advance();
-		Match.Step(p1, p2);
+		StepSim(p1, p2);
 		Render();
 	}
 
@@ -175,6 +177,7 @@ public partial class FightScene : Node3D
 	{
 		Match.Reset();
 		RebuildAi(); // YOK-27: fresh delay buffer
+		StartRecording(); // YOK-49
 		Shake.Stop();
 		_clock.Restart();
 		Render();
