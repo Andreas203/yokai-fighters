@@ -14,9 +14,9 @@ Every piece passes a written-rules gate before it reaches the game. In this run 
 
 A fighting game is unforgiving here. A move's frame data has to match what the animation shows, frame by frame, or the game feels wrong. So the crew is built around one rule, **clip first (F2)**: no frame data is written until the clip it describes has been generated *and measured*.
 
-## The crew (5 agents)
+## The crew (6 agents)
 
-All five are Claude Code subagents. Their definitions are in [`crew/agents/`](crew/agents/), and the orchestration procedure is in [`crew/orchestration/produce-SKILL.md`](crew/orchestration/produce-SKILL.md).
+All six are Claude Code subagents. Their definitions are in [`crew/agents/`](crew/agents/), and the orchestration procedure is in [`crew/orchestration/produce-SKILL.md`](crew/orchestration/produce-SKILL.md).
 
 | # | Agent | Role | Input | Output | Why it can't be removed |
 |---|---|---|---|---|---|
@@ -25,6 +25,7 @@ All five are Claude Code subagents. Their definitions are in [`crew/agents/`](cr
 | 3 | **clip-matcher** | Picks, generates and *measures* each move's animation | Rig task ids, clip-needs list, approved take list | Clip specs, the retarget go/no-go report, and `data/clips/*.json` with real frame counts and hit windows | Without it movesmith has no timing to derive from, and rule F2 forbids frame data without a measured clip |
 | 4 | **movesmith** | Designs moves from the clip timing | `data/clips/*.json`, rules tables | `data/moves/*.json` (startup/active/recovery, 2D hitboxes, damage, EX, levels), `data/modifiers/*.json`, card text | Without it the clips never become playable moves or rewards |
 | 5 | **rules-lawyer** | Gate: read-only judge against the written rules | Content files + `docs/design/rules.md` | `PASS`, or `FAIL` with the exact rule ID and fix | Without it content merges unchecked. Wrong sources, broken numbers or paired throws would reach the game |
+| 6 | **gameplay-programmer** | Builds the Godot (.NET/C#) game that plays the content, and checks it in the engine | `data/` (moves, clips, modifiers, profiles, story) + schemas + rules | The deterministic fight engine, data loaders and schemas, AI, reward draft, demo flow, the models stepped frame by frame from the clips, the hitbox overlay, and 245 automated tests | Without it the content never becomes a game. Its in-engine checks (overlay, model probes) also found bugs the files alone couldn't show, and each went back to the author agent |
 
 A human designer sits at approval gates between the agents (hexagons in the diagram). No Meshy credit is spent without their approval, and a failed gate goes back to the author agent.
 
@@ -47,6 +48,9 @@ flowchart LR
     MS -.->|timing deviates from GDD: re-time| CM
     RL -->|FAIL + rule ID| MS
     RL -->|PASS| MAIN[(main / game data)]
+    MAIN -->|loads data/*.json| GP[gameplay-programmer]
+    GP -->|playable build + 245 tests| GAME([Yokai Fighters demo])
+    GP -.->|overlay shows boxes off the model| MS
 ```
 
 **Coordination:** Claude Code subagents can't call each other. The main session is the orchestrator. It runs the `produce` procedure: start the producer, then dispatch each ticket through its workflow (generate → clip → content → gate). It passes each agent's output files and report on to the next agent. Agents run in parallel where tickets don't depend on each other, each in its own git worktree and branch, and every result lands as a pull request.
@@ -59,6 +63,7 @@ Yes, and on real work. [`run-log.md`](run-log.md) traces one full run on 5–6 O
 - Movesmith wrote frame data for both fighters. It flagged that the clips ran long, so clip-matcher re-timed them. Movesmith then re-derived the data, and every normal now matches the GDD table.
 - Once the models were in the game, movesmith re-placed all 34 moves' hitboxes on the bodies.
 - The rules-lawyer passed four content PRs (#37, #38, #39, #48), and each merged into the game's `data/`.
+- gameplay-programmer built the game that loads all of it, across 22 PRs from an empty project to a playable demo, with tests growing from 12 to 245.
 
 Examples of each stage's output are in [`output/`](output/):
 
@@ -102,14 +107,14 @@ godot --headless --path . --import   # first run only
 godot --path .                        # or open game/project.godot in the editor and press F5
 ```
 
-The fight code, the HUD and screens, the AI and the replay system were built by the project's engineering agents, which aren't part of this crew. This crew produced what the game *plays*: the models, clips, frame data, hitboxes and reward content.
+Agents 1–5 produced what the game *plays*: the models, clips, frame data, hitboxes and reward content. **gameplay-programmer** (agent 6) built the game that plays it, from the deterministic 60-tick fight engine to the demo flow; its work is listed in [`run-log.md`](run-log.md) § 6. The HUD and menu screens came from a separate `ui-designer` agent, which isn't part of this crew.
 
 ## Folder contents
 ```
 README.md            this file
 crew-diagram.md      Mermaid architecture diagram (+ crew-diagram.svg, rendered)
 run-log.md           the crew's real run, step by step, with PRs, task ids and credits
-crew/agents/         the five agent definitions (role, inputs, outputs, rules, budgets)
+crew/agents/         the six agent definitions (role, inputs, outputs, rules, budgets)
 crew/orchestration/  produce-SKILL.md, the orchestration procedure
 crew/mcp.example.json  Meshy MCP config (no key)
 output/              example outputs from each stage

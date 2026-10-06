@@ -1,6 +1,6 @@
 # Run log: what the crew produced (5–6 October 2026)
 
-This is the crew's real run on the capstone, building the Ryo vs Kitsune vertical slice of **Yokai Fighters** (Linear ticket YOK-39), from the first ticket to content that's playable in the game. Every row links to a pull request in `Andreas203/yokai-fighters` and, where Meshy was called, to the task ids logged in the spec files. Nothing below was hand-made: each artifact is an agent's output, carried to the next agent by the orchestrator.
+This is the crew's real run on the capstone, building the Ryo vs Kitsune vertical slice of **Yokai Fighters** (Linear ticket YOK-39), from the first ticket to a playable build. Every row links to a pull request in `Andreas203/yokai-fighters` and, where Meshy was called, to the task ids logged in the spec files. Nothing below was hand-made: each artifact is an agent's output, carried to the next agent by the orchestrator.
 
 **Meshy credits:** started at 1,300. 500 spent, every job within a designer-approved cap, leaving 800.
 
@@ -60,6 +60,41 @@ Designer-attention notes it raised and the designer ruled on:
 - Rising Talisman's anti-air box is small.
 
 - **Consumed by:** the game. Each passing PR merged into `data/`, and the playable slice loads it.
+
+## 6 · gameplay-programmer: the game that plays the content
+- **Input:** the merged `data/` (moves, clips, modifiers, profiles, story), the schemas and `rules.md`.
+- **Output:** a Godot 4.7 (.NET/C#) game. The fight logic is pure, integer-only C# with no Godot types, so it is deterministic and runs headless for tests and the harness. Every PR went through its own build-and-test loop and the designer's review.
+
+| PR | Ticket | What it built | Tests after |
+|---|---|---|---|
+| #12 | YOK-15 | 60-tick fixed-step fight loop, 2.5D stage, camera, KO slow-down | 12 |
+| #15 | YOK-16 | Move system from data: startup/active/recovery, 2D hit/hurt boxes, hitstun, blockstun, pushback | 27 |
+| #14 | YOK-17 | Input buffer and motion parser (Kata) | 26 |
+| #21 | YOK-22 | Hitbox overlay and frame-step (F1–F3), the tool for checking data against clips | 48 |
+| #23 | YOK-18 | Ryo's base kit: walk, dash, jump, crouch, blocking, six normals from data | 59 |
+| #25 | YOK-19 | Generic throws and throw break | 80 |
+| #26 | YOK-20 | Meter, burst, counterhits, hitstop, screen shake | 80 |
+| #29 | YOK-21 | Special slots, projectiles, EX specials, Lv 2/3 from data | 122 |
+| #30 | YOK-23 | Kihon one-button specials (the never-cut scheme) | 137 |
+| #31 | YOK-55 | Jump-in air normals | 150 |
+| #36 | YOK-27 | Behaviour-profile AI: reacts only to on-screen state after its reaction frames, with habits as data | 178 |
+| #35 | YOK-47 | Reward draft: NEW special, Lv 2 upgrade, modifier attach, health carry-over | 169 |
+| #42 | YOK-56 | Per-fighter kit loading (the bug movesmith found) | 174 |
+| #44 | YOK-49 | Record and replay: the same seed and inputs give an identical fight every tick | 185 |
+| #45 | YOK-48 | Demo flow: fight → binding line → reward → rematch → demo complete | 202 |
+| #47 | YOK-53 | Rigged models and clips in the fight, stepped with `AnimationPlayer.Seek` at the exact frame | 214 |
+| #51 | YOK-39 | Fix for Ryo "moving on his own" (pushed fighters showed a walk cycle), with a reproducing test | 216 |
+| #52 | YOK-53 | Wake-up phase (no get-up pop) and structured clip fields | 223 |
+| #50 | YOK-39 | Bamboo grove stage at dusk | 219 |
+| #53 | YOK-39 | Camera keeps both models in frame; hurtbox defaults from the models | 241 |
+| #56 | YOK-39 | Stage, camera and fighters as editable Godot scenes | 245 |
+| — | YOK-39 | Windows export of the playable demo (see README › Demo) | 245 |
+
+**How it closes the loop with the other agents:**
+- Its **hitbox overlay** on the real models showed movesmith's boxes floating above the limbs, which led to the hitbox-alignment pass (#48).
+- Its **frame-step** and **clip catalog** let clip-matcher's trims be verified frame by frame.
+- Its **per-fighter kit bug**, found by movesmith, was fixed with tests that never depend on what's in `data/`.
+- It **wired** the rules-lawyer-passed story cards and profiles into the game, and its replay test proves the content plays deterministically.
 
 ## Designer gates hit during the run
 - Approved the job list.

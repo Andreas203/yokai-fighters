@@ -1,4 +1,4 @@
-# Crew diagram: Yokai Fighters asset-to-content crew
+# Crew diagram: Yokai Fighters asset-to-game crew
 
 Solid arrows are data flow (files the next agent reads). Dotted arrows are tool calls. Hexagons are designer approval gates: no Meshy credit is spent and no content merges without one.
 
@@ -47,6 +47,11 @@ flowchart TD
     MS -- "timing deviates from GDD<br/>→ re-time (trim/speed, free)" --> CM
     RL -- "FAIL + rule ID → revise (max 3 rounds)" --> MS
     RL -- PASS --> M
+    GP["6 · gameplay-programmer<br/>IN: data/*.json + schemas + rules<br/>OUT: deterministic Godot game, loaders, AI, demo flow, tests"]
+    M -- "data/moves, clips, modifiers, profiles, story" --> GP
+    GP -- "playable build" --> DEMO([Playable demo])
+    GP -- "in-engine check: hitbox overlay<br/>on the models → boxes off → fix" --> MS
+    O --> GP
     O -. "status updates" .-> LIN
     D -. "reviews / merges" .-> M
 ```
