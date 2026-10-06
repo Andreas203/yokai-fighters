@@ -5,14 +5,15 @@ namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-22 debug overlay + frame-step, debug builds only (FightScene adds it when OS.IsDebugBuild()).
-/// F1 toggles the box overlay, F2 pauses/resumes, F3 advances exactly one tick (pausing first if running).
+/// F1 toggles the box overlay, F2 pauses/resumes, F3 advances exactly one tick (pausing first if running),
+/// F4 switches P1 between Kihon and Kata (YOK-23; the box labels name each player's scheme).
 /// Keys avoid the E9 game layouts. Boxes come from <see cref="DebugBoxes"/> (the sim's own data for the
 /// current frame); this node only projects them from the Z = 0 fight plane to the screen.
 /// Colours: red hit (dim once the move connected), green hurt, yellow throw, blue push.
 /// </summary>
 public partial class DebugOverlay : CanvasLayer
 {
-	public const Key ToggleKey = Key.F1, PauseKey = Key.F2, StepKey = Key.F3;
+	public const Key ToggleKey = Key.F1, PauseKey = Key.F2, StepKey = Key.F3, SchemeKey = Key.F4;
 
 	/// <summary>The fight this overlay reads; set before adding the node (FightScene does it).</summary>
 	public FightScene Scene { get; set; } = null!;
@@ -45,6 +46,7 @@ public partial class DebugOverlay : CanvasLayer
 			case ToggleKey: ShowBoxes = !ShowBoxes; break;
 			case PauseKey: Stepper.TogglePause(); break;
 			case StepKey: Stepper.RequestStep(); break;
+			case SchemeKey: _scene.ToggleScheme(0); break;
 			default: return false;
 		}
 		_canvas.QueueRedraw();
@@ -88,7 +90,7 @@ public partial class DebugOverlay : CanvasLayer
 				_canvas.DrawRect(r, col, false, 2f);
 			}
 			// Labels sit under the HUD on each player's side so they never overlap when fighters touch.
-			string text = $"P{i + 1} {DebugBoxes.Label(m.Fighters[i])}";
+			string text = $"P{i + 1} {m.Fighters[i].Input.Scheme}  {DebugBoxes.Label(m.Fighters[i])}";
 			Vector2 size = font.GetStringSize(text, HorizontalAlignment.Left, -1, 20);
 			float width = _canvas.Size.X;
 			var pos = new Vector2(i == 0 ? 60 : width - 60 - size.X, 260);
