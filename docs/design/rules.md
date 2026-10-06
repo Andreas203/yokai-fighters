@@ -60,7 +60,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 
 Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by the designer. Tunable like every other number here.
 
-- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart (screen walls; was 1,600, lowered in YOK-39 so both rigged models, up to 200 units behind their position, stay in frame: 1,520 + 2 × 200 = 1,920; designer to confirm). The camera follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
+- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart (screen walls; was 1,600, lowered in YOK-39 so both rigged models, up to 200 units behind their position, stay in frame: 1,520 + 2 × 200 = 1,920; designer-approved 2026-10-06). The camera follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
 - **E2** KO slow-down (V4): the world plays the 30 frames over 60 real ticks; inputs are ignored meanwhile.
 - **E3** Every yokai has 1,000 health until the yokai rules give its own figure.
 - **E4** Standard knockdown (C4): 40 frames.
