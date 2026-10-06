@@ -44,12 +44,33 @@ public partial class FightScene : Node3D
 
 	public const string FixtureSpecialsDir = "res://tests/fixtures/specials";
 
+	/// <summary>
+	/// YOK-23 (minimum of YOK-25): the scheme every player starts a fight with. The demo plays on Kihon (K2,
+	/// never cut, K4); a title-screen choice can set it before the fight scene loads.
+	/// </summary>
+	public static ControlScheme DefaultScheme { get; set; } = ControlScheme.Kihon;
+
 	/// <summary>Both fighters get the moves and Ryo's starters (A1). P2 shares Ryo's kit until the yokai kits land.</summary>
 	public static Match NewMatch()
 	{
 		var m = new Match(null, LoadMoves(), LoadMoves());
-		foreach (var f in m.Fighters) EquipStarters(f, LoadSpecials());
+		foreach (var f in m.Fighters)
+		{
+			EquipStarters(f, LoadSpecials());
+			f.Input.Scheme = DefaultScheme;
+		}
 		return m;
+	}
+
+	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
+	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;
+	public void SetScheme(int player, ControlScheme scheme) => Match.Fighters[player].Input.Scheme = scheme;
+
+	/// <summary>Debug builds: F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
+	public void ToggleScheme(int player)
+	{
+		SetScheme(player, SchemeOf(player) == ControlScheme.Kihon ? ControlScheme.Kata : ControlScheme.Kihon);
+		GD.Print($"FightScene: P{player + 1} scheme {SchemeOf(player)}");
 	}
 
 	/// <summary>
@@ -103,7 +124,7 @@ public partial class FightScene : Node3D
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
-		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step
+		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
 		Render();
 	}
 

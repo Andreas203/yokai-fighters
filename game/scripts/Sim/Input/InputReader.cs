@@ -1,8 +1,8 @@
 namespace YokaiFighters.Sim;
 
 /// <summary>
-/// One fighter's input layer: raw history (InputBuffer), a scheme parser (Kata now, Kihon in
-/// YOK-23) and the command buffer. Call Update once per sim tick with that tick's raw input and
+/// One fighter's input layer: raw history (InputBuffer), the scheme's parser (Kata or Kihon,
+/// <see cref="Scheme"/>) and the command buffer. Call Update once per sim tick with that tick's raw input and
 /// the fighter's facing; the move system then calls TryConsume. A parsed command waits
 /// CommandBuffer ticks, so a press during recovery or hitstop still comes out on the first
 /// actionable tick. A newer command replaces a waiting one, except that a normal never replaces
@@ -22,6 +22,20 @@ public sealed class InputReader
 		Config = cfg ?? InputConfig.Default;
 		Buffer = new InputBuffer(Config.HistoryTicks);
 		Parser = parser ?? new KataParser(Config);
+	}
+
+	/// <summary>
+	/// YOK-23: Kata (K1) or Kihon (K2). Setting it swaps only the parser; history, the waiting command
+	/// and everything else stay, so a mid-session switch changes parsing and nothing more. Reset keeps it.
+	/// </summary>
+	public ControlScheme Scheme
+	{
+		get => Parser is KihonParser ? ControlScheme.Kihon : ControlScheme.Kata;
+		set
+		{
+			if (value == Scheme) return;
+			Parser = value == ControlScheme.Kihon ? new KihonParser(Config) : new KataParser(Config);
+		}
 	}
 
 	/// <summary>The command parsed on this tick (None if no button went down).</summary>
