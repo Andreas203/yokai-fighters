@@ -24,7 +24,7 @@ public readonly record struct InputCommand(
 		InputBits.None, InputBits.None, 5, false);
 }
 
-/// <summary>Turns the raw buffer into this tick's command. Kata here; Kihon (YOK-23) implements the same.</summary>
+/// <summary>Turns the raw buffer into this tick's command: KataParser (K1) or KihonParser (K2, YOK-23).</summary>
 public interface ICommandParser
 {
 	InputCommand Parse(InputBuffer buffer, int facing);

@@ -55,10 +55,16 @@ public sealed partial class Match
 	public const InputBits Punches = InputBits.LightPunch | InputBits.MediumPunch | InputBits.HeavyPunch;
 	public const InputBits Kicks = InputBits.LightKick | InputBits.MediumKick | InputBits.HeavyKick;
 
-	/// <summary>EX input (designer proposal, SimConfig.ExPressWindow): two punches or two kicks.</summary>
+	/// <summary>
+	/// EX input (SimConfig.ExPressWindow): a motion special (Kata, or Kihon motion), two punches or two kicks
+	/// (designer proposal); Kihon Special + direction (E18), Special + any one punch or kick. The Special bit
+	/// only reaches here from the Kihon parser.
+	/// </summary>
 	public static bool ExPair(InputBits pressed) =>
-		System.Numerics.BitOperations.PopCount((uint)(pressed & Punches)) >= 2
-		|| System.Numerics.BitOperations.PopCount((uint)(pressed & Kicks)) >= 2;
+		(pressed & InputBits.Special) != 0
+			? (pressed & InputBits.Attacks) != 0
+			: System.Numerics.BitOperations.PopCount((uint)(pressed & Punches)) >= 2
+			  || System.Numerics.BitOperations.PopCount((uint)(pressed & Kicks)) >= 2;
 
 	public int ProjectileCount(int owner)
 	{
@@ -93,7 +99,7 @@ public sealed partial class Match
 		f.ActiveSpecial = slot;
 		f.ActiveEx = isEx;
 		f.ActivePrecision = precision;
-		f.SpecialButtons = buttons & InputBits.Attacks;
+		f.SpecialButtons = buttons & (InputBits.Attacks | InputBits.Special); // Special: Kihon (YOK-23)
 		SpecialStarted?.Invoke(this, new SpecialEvent(i, slot, m.Id, eq.Level, isEx, precision));
 		return true;
 	}
