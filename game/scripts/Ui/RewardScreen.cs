@@ -47,6 +47,9 @@ public partial class RewardScreen : Control
 		Showing = true; Visible = true; QueueRedraw();
 	}
 
+	/// <summary>YOK-48: hide without picking (the flow restarted underneath it).</summary>
+	public void Dismiss() { Showing = false; Visible = false; _source = null; }
+
 	private RewardOffer? Offer => _source?.Offer;
 
 	public void Move(int dir)

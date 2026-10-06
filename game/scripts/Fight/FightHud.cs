@@ -100,7 +100,7 @@ public partial class FightHud : CanvasLayer
 		_banner.Text = m.Phase switch
 		{
 			MatchPhase.KoSlowMo => "K.O.",
-			MatchPhase.Over when m.Winner == 0 => "Ryo wins\nR to reset",
+			MatchPhase.Over when m.Winner == 0 => "Ryo wins",
 			_ => "",
 		};
 		if (ryoLost && !_loseScreen.Visible) _restart.GrabFocus();
