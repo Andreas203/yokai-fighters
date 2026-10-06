@@ -44,7 +44,7 @@ public sealed class StoryLibrary : Ui.IStorySource
 	public StoryCardData this[string id] =>
 		_cards.TryGetValue(id, out var c) ? c : throw new KeyNotFoundException($"no story card '{id}' in data/story/");
 
-	/// <summary>S3: "Forgive me, {yokai}. I'll give it back." with the yokai's display name.</summary>
+	/// <summary>S3: "Forgive me, {yokai}. I'll set your spirit free." with the yokai's display name.</summary>
 	public string BindingLine(string yokai) => this[BindingLineId].FillText(yokai: yokai);
 
 	/// <summary>Lose screen title and text for the yokai that won.</summary>

@@ -40,3 +40,19 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | §12 Risks | — | **New:** "Generated assets drift apart in style" → shared style block (`assets/specs/style.md`), one toon shader and outline pass, and Asset Smith acceptance checks against the V1 palette and silhouette. |
 | §12 Risks | — | **New:** "Generated clips are noisy (foot slide, jitter, inconsistent timing between takes)" → Clip Matcher measures every take on 60-tick frames and rejects jitter on hit frames; take cap, then F5 substitution. |
 | §12 Open questions | "the asset spend" | "the generation credit spend and the sound/music spend; the generator plan tier (licence); designer hours for approving generation jobs". |
+
+---
+
+## AM2 — The binding line promises freedom (2026-10-06)
+
+**Decision.** Ryo's line at every binding changes from a promise to *give back* to a promise to *set the yokai's spirit free*. He still apologises first. The ending pays off the new promise.
+
+### PDF sections replaced
+
+| PDF section | Was | Now |
+|---|---|---|
+| Story card schedule, every binding (and the §1 walkthrough) | "Forgive me, {yokai}. I'll give it back." | "Forgive me, {yokai}. I'll set your spirit free." |
+| Story card schedule, Win 3 (ending) | Ryo binds the Tanuki and releases every yokai, his own included: "I said I'd give it back." | Same scene: "I said I'd set you free." |
+
+Rule S3 in `docs/design/rules.md` carries the new wording.
+

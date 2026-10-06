@@ -49,5 +49,5 @@ public sealed class StubRewardSource : IRewardSource, IStorySource
 
 	public void Pick(int cardIndex, string? targetId) => LastPick = (cardIndex, targetId);
 
-	public string BindingLine(string yokai) => $"Forgive me, {yokai}. I'll give it back.";
+	public string BindingLine(string yokai) => $"Forgive me, {yokai}. I'll set your spirit free.";
 }

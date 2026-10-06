@@ -30,9 +30,9 @@ Write to `data/profiles/<yokai>_<temperament>.json`.
 ## Story cards
 - Tone (S1): mischievous folklore with a melancholy edge, **never horror**. Yokai are tricksters and lonely spirits, not monsters. Every victory carries a small cost.
 - One or two sentences per card (S2). Follow the card schedule in S3 exactly; don't add new beats.
-- Templates (S4) use `{yokai}`, `{move}`, `{row}` placeholders filled from the actual run. Keep Ryo's apology verbatim: "Forgive me, {yokai}. I'll give it back."
+- Templates (S4) use `{yokai}`, `{move}`, `{row}` placeholders filled from the actual run. Keep Ryo's apology verbatim: "Forgive me, {yokai}. I'll set your spirit free."
 - Voices: Ryo earnest and stubborn; Master Sōen patient and wry ("name the debt"); the merchant cheerful, generous, quietly hungry.
-- Wake-up variants cover row reached × winning yokai. The ending line pays off Sōen's rule: "I said I'd give it back."
+- Wake-up variants cover row reached × winning yokai. The ending line pays off Sōen's rule: "I said I'd set you free."
 
 Write to `data/story/<card-id>.json` with `trigger`, `text`, `placeholders`.
 

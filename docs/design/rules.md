@@ -202,7 +202,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 - **S1** Tone: mischievous folklore with a melancholy edge, never horror. Yokai are tricksters and lonely spirits, not monsters.
 - **S2** Cards are one or two sentences.
-- **S3** Card schedule: intro (first run: Master Sōen, "name the debt"); every binding: "Forgive me, {yokai}. I'll give it back."; row 4: "That {move} of yours... I'd love one." (templated to copy target); first loss: Tanuki names the move it would have stolen; later losses: variants by row reached and winning yokai; boss node: merchant drops disguise; Win 1: why the Tanuki collects; Win 2: talismans are cages too; Win 3: Ryo binds the Tanuki and releases every yokai — "I said I'd give it back."
+- **S3** Card schedule: intro (first run: Master Sōen, "name the debt"); every binding: "Forgive me, {yokai}. I'll set your spirit free."; row 4: "That {move} of yours... I'd love one." (templated to copy target); first loss: Tanuki names the move it would have stolen; later losses: variants by row reached and winning yokai; boss node: merchant drops disguise; Win 1: why the Tanuki collects; Win 2: talismans are cages too; Win 3: Ryo binds the Tanuki and releases every yokai — "I said I'd set you free." [AM2]
 - **S4** Templated cards must use the actual move/yokai names from the player's run.
 
 ## V — Presentation and feel
