@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-get-up",
+  "status": "proposed",
+  "source": "meshy-library",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "clip": "Stand_Up4",
+  "frames_total": 33,
+  "trim_start": 22,
+  "trim_end": 102,
+  "speed_scale": 2.5,
+  "file": "assets/generated/clips/ryo/ryo-get-up.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: starts face-down, so it does not join the supine knockdown end pose without a roll (see notes). Edge stretch 7.9x max, no clipping in the stills, tail clear. Planted feet 2.7/1.7 cm raw.",
+  "notes": "Meshy preset 347 Stand_Up4 (take 2 of 3, designer-approved) on task 01a1101d-939c-742e-a867-d76c1c6e784f, file game/assets/generated/clips/ryo/ryo-get-up.glb. Raw 102 ticks (1.7 s): prone and face-down on all fours (hips 31-38 cm), hips rise from raw 24, kneels raw 40-60, stands by raw 100 (hips 89-91 cm, torso still leaning 23 deg). Trim raw 22-102 at 2.5x = 33 frames (rough target 25; 3.0x gives 27 frames at 27 deg per tick, the limit is 30; designer call). Max joint rate 9 deg per raw tick = 22 at 2.5x. Hips drift 66 cm forward as he rises (move data; stripped, the planted feet slide 22 and 20 cm). JOIN FROM THE KNOCKDOWN: the knockdown ends on the back (face up, head 50 cm behind the hips), this clip starts face-down with the head 44 cm ahead of the hips: torso 150 deg and chest-facing about 120-145 deg apart, so a 4-tick blend would pop through a roll-over. Needs either a long invulnerable wake-up roll (data, 10+ ticks) or a knockdown that ends prone. JOIN TO THE NEXT MOVE: end pose hips 89 cm (idle 76) vs guard idle 75-78 and jump start 91 cm; torso lean 23 deg vs 3-5 at the jump start; mean joint difference to the jump start 26.5 deg, so a 6-tick blend is enough."
+}

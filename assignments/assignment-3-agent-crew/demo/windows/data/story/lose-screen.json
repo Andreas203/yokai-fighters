@@ -1,0 +1,12 @@
+{
+  "kind": "story_card",
+  "id": "lose-screen",
+  "status": "proposed",
+  "trigger": "Ryo is knocked out in a duel (demo default; later variants by row reached and winning yokai, S3)",
+  "title": "Ryo is defeated",
+  "text": "{yokai} slips off between the lanterns, tails swaying, and does not look back. Somewhere a bound thing is still waiting for someone to return it.",
+  "placeholders": ["yokai"],
+  "speaker": "narrator",
+  "rules": ["S1", "S2", "S3"],
+  "notes": "Replaces the HUD placeholders 'Ryo is defeated' / 'The yokai slips free.' Demo text with yokai = Kitsune: 'Kitsune slips off between the lanterns, tails swaying, and does not look back. Somewhere a bound thing is still waiting for someone to return it.'"
+}

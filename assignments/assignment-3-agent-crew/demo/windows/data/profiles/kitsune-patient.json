@@ -1,0 +1,30 @@
+{
+  "kind": "profile",
+  "id": "kitsune-patient",
+  "status": "proposed",
+  "yokai": "kitsune",
+  "temperament": "patient",
+  "reaction": { "tier": "yokai", "frames": 22 },
+  "aggression_bias": 25,
+  "preferred_range": "full_screen",
+  "habit": {
+    "id": "jumps-after-knockdown",
+    "description": "Often jumps the moment she gets up from a knockdown. Meet her in the air or walk under the jump and punish the landing.",
+    "when": "self_got_up",
+    "do": "jump",
+    "chance_pct": 70
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    { "when": "at_full_screen", "do": "special:foxfire", "weight": 40 },
+    { "when": "at_mid_range", "do": "special:foxfire", "weight": 20 },
+    { "when": "opponent_jumping", "do": "normal:kitsune-heavy-punch", "weight": 70 },
+    { "when": "at_close_range", "do": "dash_back", "weight": 50 },
+    { "when": "at_close_range", "do": "normal:kitsune-light-punch", "weight": 15 },
+    { "when": "projectile_on_screen", "do": "block", "weight": 60 },
+    { "when": "opponent_attacking", "do": "block", "weight": 70 },
+    { "when": "neutral", "do": "walk_back", "weight": 20 }
+  ],
+  "rules": ["Y1", "Y2", "Y4", "P6", "E22"],
+  "notes": "Kitsune patient (Y2): holds full screen, anti-airs jumps with heavy punch. Same habit as aggressive (70%, tell_cover 0, demo tier). Light/heavy kick not referenced yet; add once retaken. Kit ids from YOK-45 (PR #38)."
+}

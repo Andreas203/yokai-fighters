@@ -1,0 +1,19 @@
+{
+  "kind": "modifier",
+  "id": "fox-patience",
+  "name": "Fox's Patience",
+  "status": "proposed",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": false,
+  "rules": ["A2", "A8", "A9", "A10", "A12", "C5", "E20"],
+  "applies_to": { "requires": [] },
+  "effects": [
+    { "target": "meter_gain.on_block", "op": "mul_pct", "value": 125 }
+  ],
+  "card": {
+    "plain": "The fox waits and learns: this special builds more spirit meter when the foe blocks it.",
+    "frames": "Meter gain on block +25% (C5 default 3 becomes 4, rounded to nearest)"
+  },
+  "notes": "Rules.md Modifiers table; the C5 attacker gain on block is 3, so +25% = 4 (E20). Any special can take it."
+}

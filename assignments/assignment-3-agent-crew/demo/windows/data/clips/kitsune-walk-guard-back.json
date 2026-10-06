@@ -1,0 +1,20 @@
+{
+  "kind": "clip",
+  "id": "kitsune-walk-guard-back",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "688 Walk_Fight_Back_inplace",
+  "frames_total": 104,
+  "trim_start": 0,
+  "trim_end": 103,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/kitsune/kitsune-guard-walk-back.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. Guarded backward loop, in place: root drift 0.2 cm, stance foot 0.57-0.61 m/s (about 0.010 m per tick). Loop pop 7.4 deg on the first vs last pose (small, blend over 2 ticks). Hakama stretch 544 edges, 6.4x, same class as the free walk; stills clean; tails clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-8968-7618-8ced-06214e02cfd3; file game/assets/generated/clips/kitsune/kitsune-guard-walk-back.glb; trim raw 60 fps ticks 0-103 inclusive (trim is data, no hand keying). Loop, 104 ticks."
+}

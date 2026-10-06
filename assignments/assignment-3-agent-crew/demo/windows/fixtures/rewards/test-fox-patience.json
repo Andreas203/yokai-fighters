@@ -1,0 +1,18 @@
+{
+  "kind": "modifier",
+  "id": "test-fox-patience",
+  "name": "Fox's Patience",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": false,
+  "rules": ["A2", "A8", "A10", "C5"],
+  "applies_to": { "requires": [] },
+  "effects": [
+    { "target": "meter_gain.on_block", "op": "mul_pct", "value": 125 }
+  ],
+  "card": {
+    "plain": "TEST FIXTURE: this special builds 25% more meter when blocked.",
+    "frames": "Meter on block x1.25 (3 -> 4)"
+  },
+  "notes": "TEST FIXTURE (YOK-47): rules.md Modifiers table, read as the attacker's C5 gain when this special is blocked. The real file comes from movesmith (YOK-46)."
+}

@@ -1,0 +1,31 @@
+{
+  "kind": "profile",
+  "id": "kitsune-aggressive",
+  "status": "proposed",
+  "yokai": "kitsune",
+  "temperament": "aggressive",
+  "reaction": { "tier": "yokai", "frames": 22 },
+  "aggression_bias": 75,
+  "preferred_range": "mid",
+  "habit": {
+    "id": "jumps-after-knockdown",
+    "description": "Often jumps the moment she gets up from a knockdown. Meet her in the air or walk under the jump and punish the landing.",
+    "when": "self_got_up",
+    "do": "jump",
+    "chance_pct": 70
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    { "when": "at_mid_range", "do": "special:foxfire", "weight": 40 },
+    { "when": "at_mid_range", "do": "walk_forward", "weight": 30 },
+    { "when": "at_full_screen", "do": "dash_forward", "weight": 40 },
+    { "when": "at_close_range", "do": "normal:kitsune-medium-kick", "weight": 30 },
+    { "when": "at_close_range", "do": "normal:kitsune-light-punch", "weight": 20 },
+    { "when": "at_close_range", "do": "throw", "weight": 15 },
+    { "when": "opponent_jumping", "do": "normal:kitsune-heavy-punch", "weight": 40 },
+    { "when": "opponent_attacking", "do": "block", "weight": 30 },
+    { "when": "opponent_whiffed", "do": "normal:kitsune-medium-punch", "weight": 50 }
+  ],
+  "rules": ["Y1", "Y2", "Y4", "P6", "E22"],
+  "notes": "Kitsune aggressive (Y2): Foxfire at mid range while advancing. Habit 70% and tell_cover 0 so a tester can name it in 2-3 fights (demo tier). Light kick and heavy kick are not referenced yet: add to close-range pokes once their retakes land. Kit ids from YOK-45 (PR #38); in the harness P2 still shares Ryo's kit so non-habit moves are not exercised there."
+}

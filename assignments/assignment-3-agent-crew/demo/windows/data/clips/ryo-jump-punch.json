@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-jump-punch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "clip": "422 Rising_Flying_Kick (F5 substitute: the jump-in kick clip for the air punch)",
+  "frames_total": 25,
+  "trim_start": 22,
+  "trim_end": 46,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/ryo/ryo-jump-kick.glb",
+  "hit_start": 7,
+  "hit_end": 16,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). F5 substitute: the jump-in punch preset 457 failed (a 2.9 m leap that ends on all fours). Same clip as ryo-jump-kick, so the same WARN: the body tips toward horizontal and a leg is the striking limb, a kick pose standing in for a punch. Designer-approved, no credits. Stretched edges 5.8x at the crotch on the full clip.",
+  "notes": "Designer-approved F5 substitute. Source task 01a1100b-c3f6-7505-b271-e44951bd8675 (file game/assets/generated/clips/ryo/ryo-jump-kick.glb). Trim raw ticks 22-46 at 1.0x = 25 frames, hit frames 7-16 (raw 28-37, leg horizontal and extended), startup 6, active 10, recovery 9. Airborne raw 6-41, so the clip starts mid-air. The root travels 1.4 m on the full clip (drift is move data, E10)."
+}
