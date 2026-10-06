@@ -39,36 +39,42 @@ public sealed class AbilityPool
 	public IEnumerable<SpecialData> Starters => Specials.Where(s => s.Starter);
 
 	/// <summary>
-	/// Real data first; while it is missing, the TEST FIXTURES: starters from <paramref name="fixtureSpecialsDir"/>
-	/// when <paramref name="movesDir"/> has no starter, drafted specials and modifiers from
-	/// <paramref name="fixtureRewardsDir"/> when the data has none (movesmith delivers them after the
-	/// Rules Lawyer gate, YOK-43/46).
+	/// Real data first; while it is missing, the TEST FIXTURES (movesmith delivers real files after the Rules
+	/// Lawyer gate). YOK-56: starters are Ryo's kit (<see cref="Kit.LoadSpecials"/>, A1), with its own fixture
+	/// fallback. Drafted specials are every non-starter special in <paramref name="movesDir"/> whatever its
+	/// source (the draft filters by the beaten yokai, A8; the Tanuki copy rule sees all of them), and modifiers
+	/// every file in <paramref name="modifiersDir"/>; the fixtures in <paramref name="fixtureRewardsDir"/> fill in
+	/// per source yokai, only for a yokai the data has none of.
 	/// </summary>
-	public static AbilityPool Load(string movesDir, string modifiersDir, string fixtureSpecialsDir, string fixtureRewardsDir)
+	public static AbilityPool Load(string movesDir, string modifiersDir, string fixtureSpecialsDir, string fixtureRewardsDir) =>
+		Load(new KitSources(movesDir, "", "", "", fixtureSpecialsDir, fixtureRewardsDir), modifiersDir);
+
+	public static AbilityPool Load(KitSources src, string modifiersDir)
 	{
 		var notes = new List<string>();
-		var specials = SpecialLoader.LoadDirectory(movesDir).ToList();
-		if (!specials.Any(s => s.Starter))
-		{
-			notes.Add($"no starter specials in {movesDir}: TEST FIXTURE starters");
-			specials.AddRange(SpecialLoader.LoadDirectory(fixtureSpecialsDir).Where(s => s.Starter));
-		}
-		if (!specials.Any(s => !s.Starter))
-		{
-			notes.Add($"no drafted specials in {movesDir}: TEST FIXTURE rewards");
-			specials.AddRange(SpecialLoader.LoadDirectory(fixtureRewardsDir).Where(s => !s.Starter));
-		}
+		var specials = Kit.LoadSpecials(Kit.Ryo, src, notes).ToList();
+		var drafted = SpecialLoader.LoadDirectory(src.MovesDir).Where(s => !s.Starter).ToList();
+		var fixtureDrafted = SpecialLoader.LoadDirectory(src.FixtureRewardsDir).Where(s => !s.Starter)
+			.Where(s => !drafted.Any(d => d.Source == s.Source)).ToList();
+		foreach (var y in fixtureDrafted.Select(s => s.Source).Distinct())
+			notes.Add($"{y}: no drafted specials in {src.MovesDir}, TEST FIXTURE rewards");
+		specials.AddRange(drafted);
+		specials.AddRange(fixtureDrafted);
+
 		var modifiers = ModifierLoader.LoadDirectory(modifiersDir).ToList();
-		if (modifiers.Count == 0)
-		{
-			notes.Add($"no modifiers in {modifiersDir}: TEST FIXTURE modifiers");
-			modifiers.AddRange(ModifierLoader.LoadDirectory(fixtureRewardsDir));
-		}
+		var fixtureMods = ModifierLoader.LoadDirectory(src.FixtureRewardsDir)
+			.Where(f => !modifiers.Any(m => m.Source == f.Source)).ToList();
+		foreach (var y in fixtureMods.Select(m => m.Source).Distinct())
+			notes.Add($"{y}: no modifiers in {modifiersDir}, TEST FIXTURE modifiers");
+		modifiers.AddRange(fixtureMods);
 		return new AbilityPool(specials, modifiers, notes);
 	}
 
 	/// <summary>Loads from the repo root (the folder holding <c>data/</c> and <c>game/</c>).</summary>
-	public static AbilityPool LoadRepo(string repoRoot) => Load(
-		Path.Combine(repoRoot, "data", "moves"), Path.Combine(repoRoot, "data", "modifiers"),
-		Path.Combine(repoRoot, "game", "tests", "fixtures", "specials"), Path.Combine(repoRoot, "game", "tests", "fixtures", "rewards"));
+	public static AbilityPool LoadRepo(string repoRoot) =>
+		Load(KitSources.Repo(repoRoot), Path.Combine(repoRoot, "data", "modifiers"));
+
+	/// <summary>The TEST FIXTURE pool only: tests that must not depend on what is in <c>data/</c>.</summary>
+	public static AbilityPool LoadFixtures(string repoRoot) =>
+		Load(KitSources.Repo(repoRoot).FixturesOnly(), "");
 }

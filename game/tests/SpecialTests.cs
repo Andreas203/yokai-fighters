@@ -440,9 +440,15 @@ public static class SpecialTests
 	[Test]
 	public static void FightSceneEquipsStarters()
 	{
-		var m = FightScene.NewMatch();
-		Assert.True(m.P1.Specials[(int)SpecialSlot.A] != null && m.P1.Specials[(int)SpecialSlot.B] != null, "Ryo's starters in the fight scene");
-		Assert.True(!m.P1.Moves.Any(mv => mv.Id.Contains("spirit-wave")), "specials are not loaded as slot moves");
+		var saved = FightScene.Sources;
+		FightScene.Sources = FightScene.FixtureSources; // YOK-56: never depend on what is in data/
+		try
+		{
+			var m = FightScene.NewMatch();
+			Assert.True(m.P1.Specials[(int)SpecialSlot.A] != null && m.P1.Specials[(int)SpecialSlot.B] != null, "Ryo's starters in the fight scene");
+			Assert.True(!m.P1.Moves.Any(mv => mv.Id.Contains("spirit-wave")), "specials are not loaded as slot moves");
+		}
+		finally { FightScene.Sources = saved; }
 	}
 
 	[Test]

@@ -1,0 +1,29 @@
+{
+  "kind": "profile",
+  "id": "test-kitsune-aggressive",
+  "status": "proposed",
+  "yokai": "kitsune",
+  "temperament": "aggressive",
+  "reaction": { "tier": "yokai", "frames": 22 },
+  "aggression_bias": 75,
+  "preferred_range": "mid",
+  "habit": {
+    "id": "jumps-after-knockdown",
+    "description": "Often jumps after being knocked down.",
+    "when": "self_got_up",
+    "do": "jump",
+    "chance_pct": 60
+  },
+  "behaviours": [
+    { "when": "at_mid_range", "do": "special:test-spirit-wave", "weight": 40 },
+    { "when": "at_mid_range", "do": "walk_forward", "weight": 30 },
+    { "when": "at_full_screen", "do": "dash_forward", "weight": 40 },
+    { "when": "at_close_range", "do": "normal:test-ryo-medium-kick", "weight": 30 },
+    { "when": "at_close_range", "do": "throw", "weight": 20 },
+    { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 40 },
+    { "when": "opponent_attacking", "do": "block", "weight": 30 },
+    { "when": "opponent_whiffed", "do": "normal:test-ryo-heavy-kick", "weight": 50 }
+  ],
+  "rules": ["Y1", "Y2", "Y4", "P6"],
+  "notes": "TEST FIXTURE for YOK-27 (not game content): Kitsune aggressive shape from Y2 on Ryo's fixture kit (Spirit Wave stands in for Foxfire). The real profile is habit-writer's (YOK-44) in data/profiles/."
+}

@@ -76,7 +76,7 @@ public static class RyoKitTests
 	[Test]
 	public static void Scene_FallsBackToFixtureNormals()
 	{
-		var moves = Fight.FightScene.LoadMoves();
+		var moves = Kit.Load(Kit.Ryo, Fight.FightScene.FixtureSources).Moves; // YOK-56: fixtures, whatever is in data/
 		Assert.True(C8.All(c => moves.Count(m => m.Button == c.button && !m.Air) == 1), "the fight scene has one ground normal per button");
 	}
 
