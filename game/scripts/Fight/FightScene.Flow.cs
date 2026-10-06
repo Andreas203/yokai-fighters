@@ -8,7 +8,7 @@ using YokaiFighters.Ui;
 namespace YokaiFighters.Fight;
 
 /// <summary>Where the YOK-39 demo is: in a duel, or on one of the screens between and after duels.</summary>
-public enum DemoStage { Fighting, Binding, Reward, Complete, Lost }
+public enum DemoStage { Title, Fighting, Binding, Reward, Complete, Lost }
 
 /// <summary>
 /// YOK-48 demo flow (YOK-39 vertical slice): boot straight into Ryo vs Kitsune on a fresh run (C1, 1,000 health),
@@ -33,6 +33,11 @@ public partial class FightScene
 
 	private void PickRunSeed() => RunSeed = FixedRunSeed ?? (uint)System.Random.Shared.Next();
 	public DemoStage Stage { get; private set; } = DemoStage.Fighting;
+	/// <summary>YOK-39: null = the start screen shows at boot unless the scene is test-driven (<see cref="ExternalDrive"/>); true/false forces it.</summary>
+	public bool? StartScreenOverride { get; set; }
+	public StartScreen Title { get; private set; } = null!;
+	/// <summary>Buttons held when Start (or a Restart) was pressed: ignored as P1 input until released, so Space does not fire a Special.</summary>
+	private InputBits _suppress;
 	/// <summary>1 = the first fight, 2 = the rematch.</summary>
 	public int Duel { get; private set; } = 1;
 	/// <summary>The run this scene plays (fresh at boot and on every Restart; <see cref="Run"/> if a caller set one).</summary>
@@ -86,6 +91,10 @@ public partial class FightScene
 		layer.AddChild(CompleteScreen = new DemoCompleteScreen { Name = "Complete" });
 		CompleteScreen.RestartRequested += RestartRun;
 		ApplyDemoCompleteCard();
+		layer.AddChild(Title = new StartScreen { Name = "Title" });
+		Title.Started += BeginFight;
+		if (StartScreenOverride ?? !ExternalDrive) Stage = DemoStage.Title; // shown by Title._Ready's Visible default
+		else Title.Visible = false;
 		if (!OS.IsDebugBuild()) return;
 		var menuLayer = new CanvasLayer { Name = "DebugMenuLayer", Layer = 20 };
 		AddChild(menuLayer);
@@ -115,6 +124,30 @@ public partial class FightScene
 		if (DebugMenu.Visible) { DebugMenu.Close(); _clock.Restart(); } // no catch-up burst on resume
 		else DebugMenu.Open();
 	}
+
+	/// <summary>Start Game: the first fight begins now; whatever was held to press it is ignored until released.</summary>
+	private void BeginFight()
+	{
+		if (Stage != DemoStage.Title) return;
+		Stage = DemoStage.Fighting;
+		_suppress = HeldBits();
+		_clock.Restart();
+	}
+
+	private static InputBits HeldBits() => InputDevices.Read(0).Bits;
+
+	/// <summary>P1's live input minus anything still held from a screen button (Start, Restart).</summary>
+	private FighterInput P1Live()
+	{
+		InputBits raw = HeldBits();
+		_suppress &= raw;
+		return new FighterInput(raw & ~_suppress);
+	}
+
+	/// <summary>Test seam: the mask applied to a raw P1 read of <paramref name="raw"/>, advancing the release tracking.</summary>
+	public InputBits SuppressedInputForTest(InputBits raw) { _suppress &= raw; return raw & ~_suppress; }
+	/// <summary>Test seam: pretend these were held when Start was pressed.</summary>
+	public void ArmSuppressForTest(InputBits held) => _suppress = held;
 
 	private void PollFlowKeys()
 	{
@@ -169,6 +202,7 @@ public partial class FightScene
 		HideFlowScreens();
 		DemoRun = RunState.NewRun(Pool);
 		PickRunSeed();
+		_suppress = HeldBits(); // the Space/A that pressed Restart must not fire a Special
 		Draft = null;
 		Duel = 1;
 		Stage = DemoStage.Fighting;

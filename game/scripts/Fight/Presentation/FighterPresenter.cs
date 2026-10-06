@@ -170,11 +170,16 @@ public sealed class FighterPresenter
 			case FighterState.Burst:
 				return (PoseKind.Burst, C(PoseKind.Burst), _set.BurstFrame, false, false);
 		}
-		// Idle: crouch, walk (from the sim's own movement this frame) or stand.
+		// Idle: crouch, walk or stand. Walk only when the fighter took its own walk step this frame and
+		// moved that way (YOK-39): being pushed by the opponent's push box slides the guard stance instead
+		// of playing a walk cycle with no input, and holding back against a corner doesn't walk in place.
 		if (f.Crouching) return (PoseKind.Crouch, C(PoseKind.Crouch), 1, true, false);
-		int dx = fresh ? 0 : (f.X - _prevX) * f.Facing;
-		if (dx > 0) return (PoseKind.WalkFwd, C(PoseKind.WalkFwd), 1, true, false);
-		if (dx < 0) return (PoseKind.WalkBack, C(PoseKind.WalkBack), 1, true, false);
+		int dx = fresh ? 0 : f.X - _prevX;
+		if (f.WalkDir != 0 && Math.Sign(dx) == f.WalkDir)
+		{
+			var k = f.WalkDir == f.Facing ? PoseKind.WalkFwd : PoseKind.WalkBack;
+			return (k, C(k), 1, true, false);
+		}
 		// The idle loop runs on the world frame so it never restarts between moves.
 		int idleTotal = _cat[C(PoseKind.Idle)]?.FramesTotal ?? 1;
 		return (PoseKind.Idle, C(PoseKind.Idle), m.WorldFrame % idleTotal + 1, true, false);

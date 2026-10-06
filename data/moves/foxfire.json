@@ -68,10 +68,10 @@
               49
             ],
             "rect": {
-              "x": -45,
-              "y": 0,
-              "w": 90,
-              "h": 360
+              "x": -30,
+              "y": 5,
+              "w": 80,
+              "h": 315
             }
           }
         ],
@@ -81,7 +81,7 @@
             "speed": 5,
             "hitbox": {
               "x": 100,
-              "y": 200,
+              "y": 240,
               "w": 60,
               "h": 50
             },
@@ -125,5 +125,5 @@
       }
     }
   },
-  "notes": "ONE file serves both fighters: source kitsune (A8), slot C so Ryo can draft it into C and the Tanuki can copy it (T0); data identical for whoever casts it (K3). Clip kitsune-foxfire (49 frames, hit 16-19) has the same 49 frames and hit window as Ryo's ryo-foxfire-cast, so this one file fits both rigs. 15/4/30 = A table, no deviation. Active 4 is the release window; the flame spawns on frame 16 at the hand (about 50 cm = 100 units forward, chest height); the projectile, not the body, carries the hit. Blend-out: hand at about 80% at the cut, blend the last 4-6 ticks. Projectile speed 5 units/tick (slow, proposed). Body hurtbox only: sleeves not added. Damage 70 from the A table; hitstun/blockstun are placeholders. Lv 2 and EX remain proposed."
+  "notes": "ONE file serves both fighters: source kitsune (A8), slot C so Ryo can draft it into C and the Tanuki can copy it (T0); data identical for whoever casts it (K3). Clip kitsune-foxfire (49 frames, hit 16-19) has the same 49 frames and hit window as Ryo's ryo-foxfire-cast, so this one file fits both rigs. 15/4/30 = A table, no deviation. Active 4 is the release window; the flame spawns on frame 16 at the hand (about 50 cm = 100 units forward, chest height); the projectile, not the body, carries the hit. Blend-out: hand at about 80% at the cut, blend the last 4-6 ticks. Projectile speed 5 units/tick (slow, proposed). Body hurtbox only: sleeves not added. Damage 70 from the A table; hitstun/blockstun are placeholders. Lv 2 and EX remain proposed. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

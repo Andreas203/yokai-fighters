@@ -29,13 +29,25 @@
       {
         "frames": [
           6,
+          6
+        ],
+        "rect": {
+          "x": 30,
+          "y": 60,
+          "w": 45,
+          "h": 95
+        }
+      },
+      {
+        "frames": [
+          7,
           7
         ],
         "rect": {
-          "x": 40,
-          "y": 110,
-          "w": 90,
-          "h": 50
+          "x": 50,
+          "y": 65,
+          "w": 35,
+          "h": 95
         }
       }
     ],
@@ -46,10 +58,10 @@
           16
         ],
         "rect": {
-          "x": -45,
-          "y": 0,
-          "w": 90,
-          "h": 360
+          "x": -50,
+          "y": 5,
+          "w": 80,
+          "h": 345
         }
       },
       {
@@ -58,13 +70,13 @@
           11
         ],
         "rect": {
-          "x": 40,
-          "y": 110,
+          "x": -5,
+          "y": 50,
           "w": 90,
-          "h": 50
+          "h": 110
         }
       }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 16, S/A/R 5/2/9. Knee is back to 39% at the cut: blend the last 4 ticks out. Hitstun 13 and blockstun 10 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. Knee strike (clip 211 re-timed), hip height, reach about 0.6 m."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 16, S/A/R 5/2/9. Knee is back to 39% at the cut: blend the last 4 ticks out. Hitstun 13 and blockstun 10 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. Knee strike (clip 211 re-timed), hip height, reach about 0.6 m. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }
