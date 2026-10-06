@@ -173,10 +173,10 @@ public static class MoveSystemTests
 		var hitTicks = new List<int>();
 		for (int t = 1; t <= 120; t++)
 		{
-			int before = hits.Count;
+			int before = hits.Count, wf = m.WorldFrame;
 			m.Step(t == 1 ? FighterInput.Attack(sweep) : m.P1.Actionable ? FighterInput.Attack(jab) : Idle, Idle);
 			if (hits.Count > before) hitTicks.Add(t);
-			if (m.P2.State == FighterState.Knockdown) { down++; lastDown = t; }
+			if (m.P2.State == FighterState.Knockdown) { lastDown = t; if (m.WorldFrame != wf) down++; } // world frames (hitstop ticks freeze, V2)
 		}
 		Assert.Equal(m.Config.KnockdownFrames + 1, down, "the hit frame plus KnockdownFrames from config");
 		Assert.Equal(13, hitTicks[0], "sweep lands on its first active frame");
@@ -208,8 +208,9 @@ public static class MoveSystemTests
 		int stun = 0;
 		for (int t = 2; t <= 60; t++)
 		{
+			int wf = m.WorldFrame;
 			m.Step(Idle, Idle);
-			if (m.P2.State == FighterState.Hitstun) stun++;
+			if (m.P2.State == FighterState.Hitstun && m.WorldFrame != wf) stun++; // world frames, not hitstop ticks (V2)
 		}
 		Assert.Equal(1, hits.Count, "jab beats the slower sweep");
 		Assert.True(hits[0].Counter, "counterhit (C7)");

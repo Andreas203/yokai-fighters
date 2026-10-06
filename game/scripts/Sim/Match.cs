@@ -64,6 +64,7 @@ public sealed partial class Match
 		KoFrame = 0;
 		_koTicks = 0;
 		Winner = -1;
+		ResetMeterState(); // YOK-20
 	}
 
 	/// <summary>Queue damage on a fighter; applied at the end of the current world frame.</summary>
@@ -95,6 +96,7 @@ public sealed partial class Match
 			return;
 		}
 
+		if (HitstopStep(in1, in2)) return; // V2 (YOK-20): both fighters frozen
 		WorldStep(in1, in2);
 	}
 
@@ -111,6 +113,7 @@ public sealed partial class Match
 			FighterInput input = inputs[i];
 			AdvanceState(f);
 			f.Input.Update(input, f.Facing); // YOK-17 parser; numpad relative to facing, SOCD-clean
+			TryBurst(i); // C6 (YOK-20): from hitstun; the fighter is then not actionable
 
 			int pad = f.Input.Direction;
 			int rel = pad % 3 == 0 ? 1 : pad % 3 == 1 ? -1 : 0; // 3/6/9 forward, 1/4/7 back
@@ -187,6 +190,7 @@ public sealed partial class Match
 			case FighterState.Hitstun:
 			case FighterState.Blockstun:
 			case FighterState.Knockdown:
+			case FighterState.Burst:
 				if (f.StunLeft > 0) f.StunLeft--;
 				else if (f.Airborne) SetState(f, FighterState.Jump, 0); // stun over mid-air: fall, no control
 				else ToIdle(f);
@@ -274,7 +278,7 @@ public sealed partial class Match
 	{
 		MoveData? m = att.CurrentMove;
 		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
-		if (def.State == FighterState.Knockdown || def.KnockedOut) return false;
+		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
 		MoveData? dm = def.CurrentMove;
 		foreach (var hb in m.Hitboxes)
 		{
@@ -341,6 +345,7 @@ public sealed partial class Match
 		att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
+		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>
@@ -434,6 +439,7 @@ public sealed partial class Match
 		h = Fnv.Mix(h, _koTicks);
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
-		return P2.Hash(h);
+		h = P2.Hash(h);
+		return HashMeterState(h);
 	}
 }

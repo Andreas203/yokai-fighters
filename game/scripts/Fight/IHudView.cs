@@ -1,9 +1,10 @@
+using YokaiFighters.Sim;
+
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// Read-only HUD view of Ryo's meter and burst (C5, C6). The sim does not track these yet (YOK-20):
-/// until then <see cref="StubHudView"/> supplies values; YOK-20 implements this interface over the
-/// real fighter state and assigns it to <see cref="FightHud.View"/>. The HUD never writes through it.
+/// Read-only HUD view of Ryo's meter and burst (C5, C6). <see cref="MatchHudView"/> is the live one
+/// over the sim (YOK-20), assigned to <see cref="FightHud.View"/>. The HUD never writes through it.
 /// </summary>
 public interface IHudView
 {
@@ -14,10 +15,19 @@ public interface IHudView
 	bool BurstAvailable { get; }
 }
 
-/// <summary>Fixed stub values so the layout can be reviewed before YOK-20.</summary>
-public sealed class StubHudView : IHudView
+/// <summary>YOK-20: live meter and burst of one fighter (0 = Ryo), read straight from the Match each frame.</summary>
+public sealed class MatchHudView : IHudView
 {
-	public int Meter { get; set; } = 140;
-	public int MeterMax => 300;
-	public bool BurstAvailable { get; set; } = true;
+	private readonly Match _match;
+	private readonly int _fighter;
+
+	public MatchHudView(Match match, int fighter = 0)
+	{
+		_match = match;
+		_fighter = fighter;
+	}
+
+	public int Meter => _match.Fighters[_fighter].Meter;
+	public int MeterMax => _match.Config.MeterMax;
+	public bool BurstAvailable => !_match.Fighters[_fighter].BurstUsed;
 }

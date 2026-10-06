@@ -13,6 +13,7 @@
     "damage": 30,
     "hitstun": 12,
     "blockstun": 9,
+    "strength": "huge",
     "hitboxes": [
       { "frames": [8, 9], "rect": { "x": 30, "y": 110, "w": 80, "h": 30 } }
     ],

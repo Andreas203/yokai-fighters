@@ -1,6 +1,6 @@
 # YOK-31 Retarget gate (G4): walk, heavy punch, generic grab on Ryo and Kitsune
 
-Status: take 1 run and measured, 2026-10-06. Designer approved 12 credits (4 x `meshy_animate`); spent 12; balance 959 -> 947. Walks reused free. No retakes, no `data/clips/` entries (those follow the gate decision). Spec: `assets/specs/clips/yok-31-retarget-gate.md`.
+Status: take 1 and grab take 2 run and measured, 2026-10-06 (see "Grab take 2" below; it supersedes the line "Both characters still owe a passing grab"). Designer approved 12 credits (4 x `meshy_animate`); spent 12; balance 959 -> 947. Walks reused free. No retakes, no `data/clips/` entries (those follow the gate decision). Spec: `assets/specs/clips/yok-31-retarget-gate.md`.
 
 The GO / NO-GO lines below are **recommendations**; the designer makes the call.
 
@@ -80,6 +80,49 @@ Both characters still owe a passing grab (T01) before the gate can fully close.
 | Tails overlap the hair | Godot-side: move the tail root back / raise it, narrow the fan; or tie the hair up in the same Kitsune "Take 3" | 0 (data) |
 | Heavy contact late (tick 38-42 raw) | Movesmith head-trims 28 ticks (data, no credits) or retake with 195 `Right_Upper_Hook_from_Guard`, which has not been previewed | 0 / 6 |
 
+## Grab take 2 (T01, take 2 of 3), 2026-10-06
+Designer approved up to 12 credits; **spent 6; balance 947 -> 941**. Ryo only: both candidate presets failed on Ryo, so by the agreed order the Kitsune was not run (6 credits saved). GLBs: `game/assets/generated/clips/ryo-grab-2.glb`, `ryo-grab-3.glb` (downloaded from the returned URLs).
+
+Designer decisions recorded: Ryo GO for walk and heavy. Kitsune's heavy sleeve flare accepted for the demo. The heavy head-trim is Movesmith's, in frame data. Tail root and fan will be moved in Godot. Open-hand strikes (no finger bones, mitt hands) are still undecided; both grab takes also show open palms.
+
+| Take | Fighter | Task id | Action | Credits | Ticks @60 | Verdict |
+|---|---|---|---|---|---|---|
+| T3 grab | Ryo | `01a10e69-98a9-7088-a761-e49d556113e6` | 259 `Step_Forward_and_Push` | 3 | 285 (142 keys, 4.73 s) | **FAIL** |
+| T4 grab | Ryo | `01a10e6c-8bc6-7482-a91a-2fcc991b9195` | 421 `Over_Shoulder_Throw` | 3 | 261 (130 keys, 4.33 s) | **FAIL** |
+| T5 grab | Kitsune | not run | n/a | 0 | n/a | n/a |
+
+| Measure | T3 Ryo 259 | T4 Ryo 421 |
+|---|---|---|
+| Root drift end - start (xz) | 1.07 m (slow creeping advance, hips z 0 -> 1.05 m) | 0.13 m |
+| Root y range / loop pop | 0.24 m / 0.17 m (ends crouched) | 0.34 m / 0.29 m (ends crouched, hips y 0.6) |
+| Planted-foot shift raw (L / R) | 5.5 / 2.6 cm | 3.0 / 3.2 cm |
+| Planted-foot shift if root stripped (L / R) | 32.7 / 13.2 cm | 11.4 / 10.4 cm |
+| Max joint rotation per tick (limit 30) | 6.3 deg, no jitter | 22.5 deg (RightForeArm) |
+| Reach / contact | Two-hand forward palm push. Hands idle until tick ~14, reach 0.16 -> 0.41 m forward of the hips by tick 30 and 0.5 m at tick 42; peak 3.1 m/s at tick 25. Contact is tick 30-36, 16-22 ticks after the reach starts (target 6) | No forward grab. Guard, hand to face (tick 30), arm sweep (54), both hands forward at head height (90-102), second reach (150), lunge with hands overhead (204), ends crouched. No hands-closed moment, no throw |
+| Trimmable ~30-tick window | Ticks 14-44 holds the reach, but the right foot steps 0.9 m and hips travel 0.33 m in it, so stripping root motion slides the planted left foot ~33 cm. A head-trim starting at tick 30 gets contact in ~6 ticks but has no wind-up and still carries the step | None |
+| Edges stretched > 2x (max) | 150 (5.7x, toe and upper leg) vs Ryo walk 55 | 164 (5.4x, upper legs) |
+| Arm verts inside torso core (bind 0) | 0 | 47 (tick 106) |
+| Leg vs other-leg axis min (bind 9.4 cm) | 2.7 cm (stride) | 8.4 cm |
+| Stills | `docs/assets/retarget-gate/ryo-grab-2.png` ticks 0, 14, 24, 30, 36, 42, 60 | `docs/assets/retarget-gate/ryo-grab-3.png` ticks 0, 30, 54, 90, 114, 204 |
+
+**T3 FAIL.** The closer one: the first ~45 ticks are a quick two-handed reach and read in the stills as a palm push at ticks 36-42, with no coat clipping and arms clear of the torso. But it is a 4.7 s slow-walking push, contact is 16-22 ticks into the reach, and the useful part includes a lunge step whose root travel cannot be stripped without a 33 cm foot slide. Marginal even as an F5 "shove" substitute.
+
+**T4 FAIL.** `Over_Shoulder_Throw` is a martial-arts form (blocks and sweeps), not a throw; 261 ticks; ends crouched; nothing resembles a fast grab. Retarget quality is clean (no jitter, no leg crossing).
+
+The retarget on Ryo is not in question: all four non-walk presets run on his rig without coat or sleeve clipping. The grab fails because the library presets tried are not grabs.
+
+### Gate recommendation after take 2 (designer decides)
+| Character | Walk | Heavy | Grab (T01) | Recommendation |
+|---|---|---|---|---|
+| Ryo | PASS | PASS (28-tick head-trim by Movesmith) | FAIL on 3 presets, a source problem and not a retarget problem | **GO** for the retarget gate. The grab needs another source |
+| Kitsune | WARN | WARN (sleeve flare accepted for the demo) | not run | **CONDITIONAL GO**, unchanged. Hakama, hair and tails behaved on every clip; sleeve stretch is the known cost. Her grab is untested, but a preset that fails on Ryo would fail on her |
+
+Take count for T01: take 1 (389) and take 2 (259 and 421 under one approval) are used; one take is left. The tooling cannot list or preview the library, so every further preset is a guess by name. Options:
+1. **Substitute (F5)**: use 259 head-trimmed from tick 30 as a "shove" with the step in move data. Free, but flags a change to T01 and needs the foot-slide check on the trimmed window.
+2. **Take 3**: one more name-based guess, 239 `Crouch_Pull_and_Throw` (unseen, likely long as well), 3 credits per rig. Low odds.
+3. **Reuse the heavy-derived clip** (194, trimmed, already on both rigs) for T01. Free.
+Recommend option 1, after a designer look at `ryo-grab-2.png`.
+
 ## Stills
 Rendered headless-free in Godot 4.7.2 (Forward+, AMD 7900 XT): runtime `GLTFDocument` load of each GLB, `AnimationPlayer.seek` per tick, front and side camera, flat light, grey background. Top row front view, bottom row side view; the tick is in each label. Kitsune stills include the proxy tail fan.
 
@@ -91,6 +134,8 @@ Rendered headless-free in Godot 4.7.2 (Forward+, AMD 7900 XT): runtime `GLTFDocu
 | `docs/assets/retarget-gate/kitsune-heavy.png` | 0, 24, 34, 42, 56 |
 | `docs/assets/retarget-gate/ryo-grab.png` | 0, 54, 120, 204, 216, 250 |
 | `docs/assets/retarget-gate/kitsune-grab.png` | 0, 54, 120, 204, 216, 250 |
+| `docs/assets/retarget-gate/ryo-grab-2.png` (take 2, 259) | 0, 14, 24, 30, 36, 42, 60 |
+| `docs/assets/retarget-gate/ryo-grab-3.png` (take 2, 421) | 0, 30, 54, 90, 114, 204 |
 
 ## Method limits
 - Clipping figures are proxies on a single merged mesh (no per-part segmentation): "arm verts inside torso core" uses a capsule from hips to neck at 60% of the 30th-percentile bind radius; stretched edges compare skinned to bind edge length. The stills are the real verdict.

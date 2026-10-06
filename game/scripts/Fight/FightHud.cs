@@ -17,8 +17,8 @@ public partial class FightHud : CanvasLayer
 
 	private const float BarWidth = 760f, BarHeight = 34f, Margin = 60f, TopY = 56f;
 
-	/// <summary>Meter/burst source. Swap in the real one when YOK-20 lands.</summary>
-	public IHudView View { get; set; } = new StubHudView();
+	/// <summary>Meter/burst source (YOK-20): FightScene assigns a MatchHudView over Ryo; defaults to one over the refreshed match.</summary>
+	public IHudView? View { get; set; }
 
 	/// <summary>Raised by the lose screen's Restart button; the scene wires it to its reset path.</summary>
 	public event Action? RestartRequested;
@@ -75,6 +75,7 @@ public partial class FightHud : CanvasLayer
 	{
 		if (_banner == null) return; // before _Ready
 		_match = m;
+		View ??= new MatchHudView(m);
 		_canvas.QueueRedraw();
 		bool ryoLost = m.Phase == MatchPhase.Over && m.Winner != 0;
 		_banner.Text = m.Phase switch
@@ -128,7 +129,7 @@ public partial class FightHud : CanvasLayer
 				DrawRect(new Rect2(fx, TopY, w, BarHeight), i == 0 ? Seal : Persimmon);
 				Text(font, new Vector2(x, TopY + BarHeight + 40f), HealthText(names[i], f), i == 0 ? HorizontalAlignment.Left : HorizontalAlignment.Right, BarWidth, 30);
 			}
-			DrawMeter(Hud.View, font);
+			if (Hud.View != null) DrawMeter(Hud.View, font);
 		}
 
 		private void DrawMeter(IHudView v, Font font)

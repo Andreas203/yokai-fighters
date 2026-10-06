@@ -62,7 +62,14 @@ Take 1, 2026-10-06, designer-approved (heavy + grab on both rebuilt rigs, 12 cre
 | T2 | Kitsune | `01a10e5b-4a7d-77c0-902a-36f5aa60a3b2` | 389 | 3 | FAIL |
 | W1/W2 | both | free rig walks | `walking_man` | 0 | PASS / WARN |
 
-Full measurements, stills and the GO / NO-GO recommendation: `docs/assets/retarget_gate.md`. Take count for T01 is now 1 of 3.
+Grab take 2, 2026-10-06, designer-approved up to 12 credits; spent 6, balance 947 -> 941. Ryo only (both presets failed, so the Kitsune was not run).
+
+| Take | Fighter | Task id | Action id (preset) | Credits | Verdict |
+|---|---|---|---|---|---|
+| T3 | Ryo | `01a10e69-98a9-7088-a761-e49d556113e6` | 259 `Step_Forward_and_Push` | 3 | FAIL (285 ticks, 1.07 m travel, contact 16-22 ticks into the reach) |
+| T4 | Ryo | `01a10e6c-8bc6-7482-a91a-2fcc991b9195` | 421 `Over_Shoulder_Throw` | 3 | FAIL (261 ticks, blocking form, no grab) |
+
+Full measurements, stills and the GO / NO-GO recommendation: `docs/assets/retarget_gate.md`. Take count for T01: takes 1 and 2 used (2 of 3). Substitute options in the gate doc.
 
 ## Output when run
 Per take: task id, credits spent, GLB path, a measurements table for items 1-7, PASS/FAIL per rig, and GO/NO-GO per character. `data/clips/<move-id>.json` is written only for passing takes.

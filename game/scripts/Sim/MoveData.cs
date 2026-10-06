@@ -17,7 +17,7 @@ public readonly record struct TimedBox(int First, int Last, Box Box)
 /// Every gameplay number here comes from data; the sim never special-cases a move (A5, A10).
 /// Frames are 1-based: startup S, active A, recovery R; active frames are S+1..S+A (F1).
 /// </summary>
-public sealed record MoveData
+public sealed partial record MoveData
 {
 	public required string Id { get; init; }
 	public required int Startup { get; init; }

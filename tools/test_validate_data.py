@@ -52,6 +52,7 @@ class ValidateDataTest(unittest.TestCase):
         prefix = "data/samples/invalid/broken-normal.json: "
         self.assertIn(prefix + "input.button: 'XP' is not one of", out)
         self.assertIn(prefix + "input.directions.0: 0 is less than the minimum of 1", out)
+        self.assertIn(prefix + "frame_data.strength: 'huge' is not one of", out)  # V2 (YOK-20)
         self.assertIn(prefix + "frame_data.hitboxes.0.frames: hitbox frames 8-9 fall outside 5-6", out)
         self.assertIn(prefix + "frame_data: startup+active+recovery = 14 but clip 'sample-light-punch-clip' has frames_total 13 (F2)", out)
 
