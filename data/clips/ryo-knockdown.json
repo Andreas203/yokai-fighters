@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-knockdown",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Knock_Down_1",
+  "frames_total": 41,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: a back flip with the legs overhead, more dramatic than a standard knockdown; sleeves and legs do not clip in the stills; stretched edges up to 7.1x at the crotch during the flip. Leg-vs-leg axis min 1 cm at the flip.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 190 Knock_Down_1 on task 01a1100b-ae90-75f8-8e53-6c75728f4c53, file ryo-knockdown.glb. Raw trim: ticks 50-130 at 2x (60 ticks per second). Verdict WARN. Raw 199 ticks (3.3 s): stagger from raw 40, backward fall with a flip (feet reach 1.1 m at raw 80-90), on his back by raw 125, flat at 198. Trim raw 50-130, 2.0x: 41 frames (E4 = 40). Also the generic throw victim (C4). Hips drift 0.84 m over the full clip (strip), 4 cm inside the trim window. Peak joint rate about 19 deg per raw tick, so about 38 deg per tick at 2.0x (over the 30 limit); 1.6x gives 51 frames at 30 deg."
+}

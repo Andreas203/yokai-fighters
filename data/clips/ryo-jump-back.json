@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-jump-back",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Back_Jump",
+  "frames_total": 41,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: shorter air time than neutral; arms flail, no clipping in the stills; leg-vs-leg axis min 6.7 cm. Stretched edges 6.2x at the crotch.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 468 Back_Jump on task 01a1100b-d0ef-76a8-83b6-0d92b252e5c7, file ryo-jump-back.glb. Raw trim: ticks 10-50 at 1x (60 ticks per second). Verdict WARN. Raw 59 ticks (0.97 s). Root travels 1.85 m back (strip). Airborne only raw 14-34 (21 ticks, peak foot 0.74 m) against the E10 40-frame jump; 0.52x would match it but looks floaty. Trim raw 10-50, 1.0x: 41 frames. Movesmith/designer choice."
+}

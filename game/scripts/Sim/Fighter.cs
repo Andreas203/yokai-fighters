@@ -131,6 +131,14 @@ public static class Fnv
 	public const ulong Offset = 14695981039346656037UL;
 	private const ulong Prime = 1099511628211UL;
 
+	/// <summary>YOK-47: mixes a string's UTF-16 code units (ids in run state), stable across runs.</summary>
+	public static ulong MixString(ulong h, string s)
+	{
+		h = Mix(h, s.Length);
+		foreach (char c in s) h = Mix(h, c);
+		return h;
+	}
+
 	public static ulong Mix(ulong h, int v)
 	{
 		unchecked

@@ -14,13 +14,16 @@ public sealed class EquippedSpecial
 	public MoveData Move { get; }
 	/// <summary>The EX version (C5), or null when the data has none.</summary>
 	public MoveData? ExMove { get; }
+	/// <summary>YOK-47: the attached modifier (A2: at most one), already applied to Move and ExMove.</summary>
+	public ModifierData? Modifier { get; }
 
-	public EquippedSpecial(SpecialData data, int level)
+	public EquippedSpecial(SpecialData data, int level, ModifierData? modifier = null, SimConfig? defaults = null)
 	{
 		Data = data;
 		Level = level;
-		Move = data.Build(level, false);
-		ExMove = data.HasEx ? data.Build(level, true) : null;
+		Modifier = modifier;
+		Move = data.Build(level, false, modifier, defaults);
+		ExMove = data.HasEx ? data.Build(level, true, modifier, defaults) : null;
 	}
 }
 
@@ -54,10 +57,17 @@ public sealed partial class Fighter
 
 	public const int MaxCancelRules = 2;
 
-	public void Equip(SpecialSlot slot, SpecialData data, int level = 1)
+	public void Equip(SpecialSlot slot, SpecialData data, int level = 1, ModifierData? modifier = null, SimConfig? defaults = null)
 	{
 		if (slot == SpecialSlot.None) throw new ArgumentException("slot A-D", nameof(slot));
-		Specials[(int)slot] = new EquippedSpecial(data, level);
+		Specials[(int)slot] = new EquippedSpecial(data, level, modifier, defaults);
+	}
+
+	/// <summary>YOK-47, A2: attaches (or replaces) the slot's one modifier; rebuilds the moves from data.</summary>
+	public void AttachModifier(SpecialSlot slot, ModifierData modifier, SimConfig? defaults = null)
+	{
+		var s = Specials[(int)slot] ?? throw new InvalidOperationException($"slot {slot} is empty");
+		Specials[(int)slot] = new EquippedSpecial(s.Data, s.Level, modifier, defaults);
 	}
 
 	public void Unequip(SpecialSlot slot) => Specials[(int)slot] = null;
@@ -67,7 +77,7 @@ public sealed partial class Fighter
 	{
 		var s = Specials[(int)slot] ?? throw new InvalidOperationException($"slot {slot} is empty");
 		int level = Math.Min(3, s.Level + 1);
-		Specials[(int)slot] = new EquippedSpecial(s.Data, level);
+		Specials[(int)slot] = new EquippedSpecial(s.Data, level, s.Modifier);
 		return level;
 	}
 
@@ -101,7 +111,11 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (int)ActiveSpecial | (ActiveEx ? 16 : 0) | (ActivePrecision ? 32 : 0) | (MoveBlocked ? 64 : 0));
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
-		for (int i = 1; i < Specials.Length; i++) h = Fnv.Mix(h, Specials[i]?.Level ?? 0);
+		for (int i = 1; i < Specials.Length; i++)
+		{
+			h = Fnv.Mix(h, Specials[i]?.Level ?? 0);
+			h = Fnv.MixString(h, Specials[i]?.Modifier?.Id ?? "");
+		}
 		return h;
 	}
 }
