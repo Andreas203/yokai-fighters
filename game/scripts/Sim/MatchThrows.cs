@@ -49,7 +49,7 @@ public sealed partial class Match
 	/// </summary>
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
-		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack;
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing; // YOK-55: landing recovery
 
 	/// <summary>
 	/// E12: the throw whose buttons were all pressed within ThrowPressWindow ticks, the last of them
@@ -78,7 +78,7 @@ public sealed partial class Match
 	/// </summary>
 	private static bool InThrowCancelableStartup(Fighter f)
 	{
-		if (f.KnockedOut || f.State != FighterState.Attack) return false;
+		if (f.KnockedOut || f.State != FighterState.Attack || f.Airborne) return false; // no throws from an air normal
 		MoveData? m = f.CurrentMove;
 		if (m is null || !m.IsNormal || f.MoveFrame >= m.FirstActive) return false;
 		foreach (var t in f.Moves)

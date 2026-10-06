@@ -38,6 +38,9 @@ public sealed partial record MoveData
 
 	/// <summary>Kind "normal" (C8): the attack button that performs it; None for specials.</summary>
 	public InputBits Button { get; init; }
+	/// <summary>E19: every button that performs this normal (an air normal may list several); defaults to <see cref="Button"/>.</summary>
+	public InputBits Buttons { get => _buttons == InputBits.None ? Button : _buttons; init => _buttons = value; }
+	private readonly InputBits _buttons;
 	/// <summary>Normals: bit n set = allowed on numpad direction n (relative to facing); 0 = any direction.</summary>
 	public int DirectionMask { get; init; }
 
@@ -57,7 +60,7 @@ public sealed partial record MoveData
 	public bool ThrowMatch(InputBits pressed) => IsThrow && (pressed & ThrowButtons) == ThrowButtons;
 	/// <summary>A normal for this button and numpad direction (0 = no match, 1 = any-direction match, 2 = listed direction).</summary>
 	public int NormalMatch(InputBits button, int direction) =>
-		!IsNormal || button != Button ? 0
+		!IsNormal || button == InputBits.None || (button & Buttons) != button ? 0
 		: DirectionMask == 0 ? 1
 		: (DirectionMask & (1 << direction)) != 0 ? 2 : 0;
 

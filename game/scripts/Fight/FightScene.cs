@@ -42,6 +42,8 @@ public partial class FightScene : Node3D
 
 	public const string FixtureThrowsDir = "res://tests/fixtures/throws";
 
+	public const string FixtureAirNormalsDir = "res://tests/fixtures/ryo-air-normals";
+
 	public const string FixtureSpecialsDir = "res://tests/fixtures/specials";
 
 	/// <summary>
@@ -94,7 +96,8 @@ public partial class FightScene : Node3D
 
 	/// <summary>
 	/// Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals
-	/// and the TEST FIXTURE throw (C4, YOK-19) while it has no throw (the grab clip is being retaken, YOK-31).
+	/// and the TEST FIXTURE throw (C4, YOK-19) while it has no throw (the grab clip is being retaken, YOK-31),
+	/// and the TEST FIXTURE jump-in normals (E11, YOK-55) while it has no air normal.
 	/// </summary>
 	public static MoveData[] LoadMoves()
 	{
@@ -108,6 +111,11 @@ public partial class FightScene : Node3D
 		{
 			GD.Print("FightScene: data/moves/ has no throw, using the TEST FIXTURE throw (C4)");
 			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureThrowsDir))];
+		}
+		if (!System.Array.Exists(moves, m => m.IsNormal && m.Air))
+		{
+			GD.Print("FightScene: data/moves/ has no air normals, using TEST FIXTURE jump-ins (E11)");
+			moves = [.. moves, .. MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureAirNormalsDir))];
 		}
 		return moves;
 	}

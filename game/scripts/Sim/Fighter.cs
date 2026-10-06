@@ -41,6 +41,8 @@ public sealed partial class Fighter
 	public int AirFrame;
 	/// <summary>Absolute X drift sign of the jump (-1, 0, +1); a hit in the air stops it.</summary>
 	public int JumpDir;
+	/// <summary>E11 (YOK-55): this jump's air normal is spent (or the fighter is falling from a hit); cleared on jump and landing.</summary>
+	public bool AirAttackUsed;
 	/// <summary>1-based dash frame (State == Dash) and absolute dash direction.</summary>
 	public int DashFrame;
 	public int DashDir;
@@ -72,6 +74,7 @@ public sealed partial class Fighter
 		Input.Reset();
 		AirFrame = 0;
 		JumpDir = 0;
+		AirAttackUsed = false;
 		DashFrame = 0;
 		DashDir = 0;
 		ResetSpecialState(); // YOK-21 (equipped specials and held cancel rules are run state and stay)
@@ -94,6 +97,7 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (Guarding ? 1 : 0) | (Crouching ? 2 : 0));
 		h = Fnv.Mix(h, AirFrame);
 		h = Fnv.Mix(h, JumpDir);
+		h = Fnv.Mix(h, AirAttackUsed ? 1 : 0);
 		h = Fnv.Mix(h, DashFrame);
 		h = Fnv.Mix(h, DashDir);
 		h = Fnv.Mix(h, (int)Input.Pending.Kind);
@@ -117,6 +121,8 @@ public enum FighterState
 	Thrown,
 	/// <summary>C6 (YOK-20): bursting out of hitstun; invulnerable, no control, for BurstFrames frames.</summary>
 	Burst,
+	/// <summary>E11 (YOK-55): touched down during an air normal; standing, no control or guard, throwable, StunLeft frames.</summary>
+	Landing,
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>

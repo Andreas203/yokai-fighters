@@ -170,6 +170,10 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
+        if "landing_recovery" in doc and doc.get("air") is not True:  # E11: only jump-ins land mid-move
+            errs.append(("landing_recovery", "landing_recovery is only for air normals (set \"air\": true) (E11)"))
+        if "buttons" in (doc.get("input") or {}) and doc.get("air") is not True:  # E19: several buttons only mid-jump
+            errs.append(("input.buttons", "input.buttons is only for air normals (set \"air\": true); ground normals use input.button (E19)"))
     elif kind == "throw":  # C4: throwboxes inside the active window, clip timing as for strikes (F2)
         fd = doc.get("frame_data")
         check_frame_data(fd, "frame_data", clip, clip_id, errs)
