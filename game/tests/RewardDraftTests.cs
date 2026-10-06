@@ -372,6 +372,7 @@ public static class RewardDraftTests
 		var (d, ci) = DraftWithModifier(run, pool, "test-will-o-wisp");
 		var src = new DraftRewardSource(d, run);
 		Assert.Equal("Kitsune", src.Offer.Yokai, "yokai name");
+		Assert.Equal("Forgive me, Kitsune. I'll give it back.", ((IStorySource)src).BindingLine(src.Offer.Yokai), "YOK-44: binding line from data/story");
 		Assert.Equal("NewMove,Upgrade,Modifier", string.Join(",", src.Offer.Cards.Select(c => c.Kind)), "UI kinds");
 		Assert.Equal("NEW - Lv 1", src.Offer.Cards[0].Tag, "tag");
 		Assert.True(src.Offer.Cards[ci].TargetPrompt != null, "modifier asks for a target");

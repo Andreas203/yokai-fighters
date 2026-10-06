@@ -15,7 +15,7 @@
     "chance_pct": 60
   },
   "behaviours": [
-    { "when": "at_mid_range", "do": "special:test-spirit-wave", "weight": 40 },
+    { "when": "at_mid_range", "do": "special:test-foxfire", "weight": 40 },
     { "when": "at_mid_range", "do": "walk_forward", "weight": 30 },
     { "when": "at_full_screen", "do": "dash_forward", "weight": 40 },
     { "when": "at_close_range", "do": "normal:test-ryo-medium-kick", "weight": 30 },
@@ -25,5 +25,5 @@
     { "when": "opponent_whiffed", "do": "normal:test-ryo-heavy-kick", "weight": 50 }
   ],
   "rules": ["Y1", "Y2", "Y4", "P6"],
-  "notes": "TEST FIXTURE for YOK-27 (not game content): Kitsune aggressive shape from Y2 on Ryo's fixture kit (Spirit Wave stands in for Foxfire). The real profile is habit-writer's (YOK-44) in data/profiles/."
+  "notes": "TEST FIXTURE for YOK-27 (not game content): Kitsune aggressive shape from Y2 on the fixture Kitsune kit (Ryo's fixture normals stand in; her fixture Foxfire in slot C). The real profile is habit-writer's (YOK-44) in data/profiles/."
 }

@@ -1,0 +1,12 @@
+{
+  "kind": "story_card",
+  "id": "sample-story-card",
+  "status": "proposed",
+  "trigger": "SAMPLE (not game content): row 4 Tanuki forecast",
+  "title": "A merchant's smile",
+  "text": "That {move} of yours... I'd love one.",
+  "placeholders": ["move"],
+  "speaker": "Tanuki",
+  "rules": ["S2", "S3", "S4"],
+  "notes": "Schema sample for story_card; the real cards are habit-writer's in data/story/."
+}

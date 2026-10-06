@@ -29,7 +29,7 @@ class ValidateDataTest(unittest.TestCase):
     def test_each_valid_sample_type_present_and_passes(self):
         code, out = run(SAMPLES)
         self.assertEqual(code, 0, out)
-        self.assertIn("7 valid, 0 invalid", out)
+        self.assertIn("8 valid, 0 invalid", out)
 
     def test_malformed_special_fails_with_clear_messages(self):
         code, out = run(SAMPLES / "ryo-spirit-wave.json", SAMPLES / "invalid" / "broken-wave.json")
@@ -145,10 +145,36 @@ class ValidateDataTest(unittest.TestCase):
         for rid in ("E4", "E12", "E13", "E14", "E15"):
             self.assertIn(rid, ids)
 
+    def test_story_cards_validate(self):
+        code, out = run(ROOT / "data" / "story", SAMPLES / "sample-story-card.json")
+        self.assertEqual(code, 0, out)
+        self.assertIn("3 file(s), 3 valid, 0 invalid", out)
+
+    def test_malformed_story_card_fails_with_clear_messages(self):
+        code, out = run(SAMPLES / "invalid" / "broken-story-card.json")
+        self.assertEqual(code, 1)
+        prefix = "data/samples/invalid/broken-story-card.json: "
+        self.assertIn(prefix + "(root): 'speaker' is a required property", out)
+        self.assertIn(prefix + "(root): Additional properties are not allowed ('mood' was unexpected)", out)
+        self.assertIn(prefix + "trigger: '' should be non-empty", out)
+        self.assertIn(prefix + "placeholders: {item} is used but not listed in placeholders (S4)", out)
+        self.assertIn(prefix + "placeholders: 'move' is listed but {move} is not used in title or text", out)
+
+    def test_story_card_kind_only_in_story_folder(self):
+        import json, tempfile
+        card = json.loads((ROOT / "data" / "story" / "binding-line.json").read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "data" / "moves" / "binding-line.json"
+            bad.parent.mkdir(parents=True)
+            bad.write_text(json.dumps(card), encoding="utf-8")
+            code, out = run(bad)
+        self.assertEqual(code, 1)
+        self.assertIn("files in data/moves/ must be kind", out)
+
     def test_explicit_invalid_folder_is_checked(self):
         code, out = run(SAMPLES / "invalid")
         self.assertEqual(code, 1)
-        self.assertIn("3 file(s), 0 valid, 3 invalid", out)
+        self.assertIn("4 file(s), 0 valid, 4 invalid", out)
 
 
 if __name__ == "__main__":

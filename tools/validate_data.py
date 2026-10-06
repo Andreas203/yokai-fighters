@@ -44,6 +44,7 @@ KIND_SCHEMA = {
     "cancel_rule": "cancel-rule.schema.json",
     "profile": "profile.schema.json",
     "clip": "clip.schema.json",
+    "story_card": "story-card.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -52,6 +53,7 @@ DIR_KIND = {
     "cancels": ("cancel_rule",),
     "profiles": ("profile",),
     "clips": ("clip",),
+    "story": ("story_card",),
 }
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
@@ -200,6 +202,16 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
         tier = (doc.get("reaction") or {}).get("tier")
         if tier and tanuki != (tier == "tanuki"):
             errs.append(("reaction.tier", "the 'tanuki' reaction tier is for the Tanuki only, and the Tanuki must use it (Y4)"))
+    elif kind == "story_card":  # S4: the game fills exactly the listed run names
+        listed = {x for x in doc.get("placeholders") or [] if isinstance(x, str)}
+        used: set[str] = set()
+        for key in ("title", "text"):
+            if isinstance(doc.get(key), str):
+                used |= set(re.findall(r"\{([^{}]*)\}", doc[key]))
+        for name in sorted(used - listed):
+            errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
+        for name in sorted(listed - used):
+            errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
     elif kind == "clip":
         hs, he, ft = doc.get("hit_start"), doc.get("hit_end"), doc.get("frames_total")
         if (hs is None) != (he is None):
