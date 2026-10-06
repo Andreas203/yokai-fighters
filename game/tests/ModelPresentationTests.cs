@@ -119,6 +119,49 @@ public static class ModelPresentationTests
 		}
 	}
 
+	/// <summary>
+	/// YOK-39 bug "Ryo moves on his own": the Kitsune walking into an idle Ryo pushes him back half her
+	/// walk speed (push boxes, each gives half) and the presenter, which chose walk from the X change,
+	/// played Ryo's walk-back cycle with no input held. Being pushed must keep the stance; the pusher walks.
+	/// </summary>
+	[Test]
+	public static void Presenter_PushedFighterDoesNotWalk_PusherDoes()
+	{
+		var m = FightScene.NewMatch();
+		var p1 = Presenter(0); var p2 = Presenter(1);
+		p1.Observe(m, 0); p2.Observe(m, 1);
+		int pushedTicks = 0;
+		for (int t = 1; t <= 90; t++)
+		{
+			int x0 = m.P1.X;
+			m.Step(FighterInput.None, new FighterInput(InputBits.Left)); // P2 faces left: walking forward
+			p1.Observe(m, 0); p2.Observe(m, 1);
+			if (m.P1.X == x0) continue;
+			pushedTicks++;
+			Assert.Equal(FighterState.Idle, m.P1.State, $"tick {t}: pushed P1 is idle");
+			Assert.Equal(PoseKind.Idle, p1.Sample.Kind, $"tick {t}: pushed P1 (x {x0} -> {m.P1.X}, no input) keeps the guard stance");
+			Assert.Equal(PoseKind.WalkFwd, p2.Sample.Kind, $"tick {t}: P2 pushing forward walks");
+			Assert.Equal(0, m.P1.WalkDir, $"tick {t}: P1 holds nothing, so no walk step");
+			Assert.Equal(-1, m.P2.WalkDir, $"tick {t}: P2 walks left");
+		}
+		Assert.True(pushedTicks > 10, $"P2 pushed P1 for a while ({pushedTicks} ticks)");
+	}
+
+	/// <summary>YOK-39: holding back against the corner moves nothing, so the stance holds (no walking in place).</summary>
+	[Test]
+	public static void Presenter_WalkNeedsBothInputAndMovement()
+	{
+		var m = FightScene.NewMatch();
+		var p = Presenter(0);
+		p.Observe(m, 0);
+		for (int t = 0; t < 400; t++) { m.Step(new FighterInput(InputBits.Left), FighterInput.None); p.Observe(m, 0); }
+		int x0 = m.P1.X;
+		m.Step(new FighterInput(InputBits.Left), FighterInput.None); p.Observe(m, 0);
+		Assert.Equal(x0, m.P1.X, "P1 is at the stage corner");
+		Assert.Equal(-1, m.P1.WalkDir, "still holding back");
+		Assert.Equal(PoseKind.Idle, p.Sample.Kind, "no walk cycle in place against the corner");
+	}
+
 	[Test]
 	public static void Presenter_NewMatchInstanceStartsFresh()
 	{
