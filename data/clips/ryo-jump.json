@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-jump",
+  "status": "final",
+  "source": "meshy-library",
+  "clip": "Regular_Jump",
+  "frames_total": 53,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Arms spread wide in the air, no clipping in the stills (arm verts in torso core 70 at the arm swing, 1.3%). Planted-foot shift 4.3 / 0.8 cm raw.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 466 Regular_Jump on task 01a1100b-bce7-727a-8ab1-2c4474d00010, file ryo-jump.glb. Raw trim: ticks 32-76 at 0.85x (60 ticks per second). Verdict PASS. Raw 115 ticks (1.9 s), in place (drift 1 mm). Feet leave the ground at raw 34, land at raw 66 (33 ticks airborne, peak foot 0.82 m). Trim raw 32-76 (E10: no pre-jump frames), 0.85x: 53 frames, about 39 airborne (E10 40) plus landing. Reused for jump-fwd (drift 8 units per frame is data)."
+}
