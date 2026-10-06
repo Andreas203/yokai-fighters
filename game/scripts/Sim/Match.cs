@@ -211,9 +211,13 @@ public sealed partial class Match
 			case FighterState.Dash:
 				if (++f.DashFrame > Config.DashFrames) ToIdle(f);
 				break;
+			case FighterState.Knockdown when f.StunLeft == 0 && !f.Airborne && Config.WakeUpFrames > 0:
+				SetState(f, FighterState.WakeUp, Config.WakeUpFrames - 1); // this tick + WakeUpFrames-1 more, then acts
+				break;
 			case FighterState.Hitstun:
 			case FighterState.Blockstun:
 			case FighterState.Knockdown:
+			case FighterState.WakeUp:
 			case FighterState.Burst:
 			case FighterState.Landing:
 				if (f.StunLeft > 0) f.StunLeft--;

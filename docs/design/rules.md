@@ -83,6 +83,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E21** Lv 2 steps (A4, designer decision YOK-41): Spirit Wave recovers 4 frames faster; Rising Talisman recovers 6 frames faster. Both are relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1).
 - **E22** Behaviour-profile AI (Y2, Y4, P6): the AI sees a read-only snapshot of the screen, its own fighter included, delayed by its reaction frames (apprentice 30, yokai 22, elders 18, Tanuki 15). Habits are data: trigger → action → chance, and `tell_cover_pct` hides the tell some of the time (a per-tier difficulty knob, default 0). First-pass spacing: close under 250 units, mid under 600; neutral spacing weight 40; walk plans 15 ticks, block plans 20. The standard-tier AI doesn't use EX or burst yet.
 - **E23** Demo flow (YOK-39): each new run draws a new reward-draft seed (duel n uses seed + n, so a replay of the run offers the same cards). Restart keeps the temperament chosen in the debug menu (F9). Replaying a finished duel with R is debug-only, so players can't skip the reward. The "demo complete" text is a story card.
+- **E24** Wake-up (C4, E4): after the 40-frame knockdown the fighter has a 28-frame wake-up: invulnerable, can't be thrown, can't act. The model rolls onto its front over the first 10 frames, then plays the get-up. Total down time is 68 frames. A held jump leaves on the first actionable frame (the Kitsune's habit, Y2).
 
 ## X — Cancels
 

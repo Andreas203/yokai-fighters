@@ -13,6 +13,9 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int TrimEnd, double Speed, int FramesTotal)
 {
+	/// <summary>Optional <c>yaw_offset</c> (degrees) from the clip file; presentation does not apply it yet.</summary>
+	public double YawOffsetDeg { get; init; }
+
 	public const double RawTicksPerSecond = 60.0;
 
 	/// <summary>Raw tick shown on game frame <paramref name="frame"/> (clamped to 1..FramesTotal and the trim end).</summary>
@@ -30,9 +33,10 @@ public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int Trim
 }
 
 /// <summary>
-/// YOK-53: reads every clip file. The trim, speed and GLB file are prose in <c>notes</c> today (clip.schema.json has
-/// no structured fields for them), so this parses the last "trim raw ticks A-B at Sx" sentence (a RE-TIMED pass
-/// supersedes the earlier trim) and the first "file X.glb". Clips that don't parse are listed in <see cref="Problems"/>.
+/// YOK-53: reads every clip file. The structured fields <c>trim_start</c>/<c>trim_end</c>, <c>speed_scale</c>,
+/// <c>file</c> (relative to game/) and <c>yaw_offset</c> win; each one missing falls back to the prose in <c>notes</c>:
+/// the last "trim raw ticks A-B at Sx" sentence (a RE-TIMED pass supersedes the earlier trim) and the first
+/// "file X.glb". Clips that resolve to neither are listed in <see cref="Problems"/>.
 /// </summary>
 public sealed class ClipCatalog
 {
@@ -79,7 +83,8 @@ public sealed class ClipCatalog
 	}
 
 	/// <summary>Loads data/clips/*.json; <paramref name="gameDir"/> is the Godot project folder (res://).</summary>
-	public static ClipCatalog Load(string clipsDir, string gameDir)
+	/// <paramref name="notesOnly"/> ignores the structured fields (the pre-field behaviour; migration check).
+	public static ClipCatalog Load(string clipsDir, string gameDir, bool notesOnly = false)
 	{
 		var cat = new ClipCatalog();
 		if (!Directory.Exists(clipsDir)) { cat.Problems.Add($"no clips folder {clipsDir}"); return cat; }
@@ -92,12 +97,32 @@ public sealed class ClipCatalog
 			string id = root.GetProperty("id").GetString()!;
 			string notes = root.TryGetProperty("notes", out var n) ? n.GetString() ?? "" : "";
 			int total = root.GetProperty("frames_total").GetInt32();
-			var trim = ParseTrim(notes);
-			string? rel = ResolveFile(id, notes, r => File.Exists(Path.Combine(gameDir, r)));
-			if (trim is null) { cat.Problems.Add($"{id}: no trim in notes"); continue; }
-			if (rel is null) { cat.Problems.Add($"{id}: GLB not found from notes"); continue; }
+			bool Num(string key, out JsonElement v)
+			{
+				v = default;
+				return !notesOnly && root.TryGetProperty(key, out v) && v.ValueKind == JsonValueKind.Number;
+			}
+			(int Start, int End, double Speed)? trim;
+			if (Num("trim_start", out var ts) && Num("trim_end", out var te))
+				trim = (ts.GetInt32(), te.GetInt32(), Num("speed_scale", out var sp) ? sp.GetDouble() : 1.0);
+			else
+			{
+				trim = ParseTrim(notes);
+				if (trim is { } t && Num("speed_scale", out var sp2)) trim = (t.Start, t.End, sp2.GetDouble());
+			}
+			Func<string, bool> exists = r => File.Exists(Path.Combine(gameDir, r));
+			string? rel;
+			if (!notesOnly && root.TryGetProperty("file", out var fe) && fe.ValueKind == JsonValueKind.String)
+			{
+				rel = fe.GetString()!.Replace('\\', '/');
+				if (!exists(rel)) { cat.Problems.Add($"{id}: file game/{rel} not found"); continue; }
+			}
+			else rel = ResolveFile(id, notes, exists);
+			if (trim is null) { cat.Problems.Add($"{id}: no trim (fields or notes)"); continue; }
+			if (rel is null) { cat.Problems.Add($"{id}: GLB not found (fields or notes)"); continue; }
 			var (s, e, speed) = trim.Value;
-			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total);
+			double yaw = Num("yaw_offset", out var yw) ? yw.GetDouble() : 0.0;
+			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total) { YawOffsetDeg = yaw };
 		}
 		return cat;
 	}

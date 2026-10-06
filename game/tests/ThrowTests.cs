@@ -115,7 +115,7 @@ public static class ThrowTests
 		var m = Setup(log);
 		var states = new List<FighterState>();
 		var downFrames = new HashSet<int>(); // world frames: the landing's 12-tick hitstop (E12) freezes the knockdown
-		Run(m, 90, ThrowOn1, None, t =>
+		Run(m, 90 + m.Config.WakeUpFrames, ThrowOn1, None, t =>
 		{
 			states.Add(m.P2.State);
 			if (m.P2.State == FighterState.Knockdown) downFrames.Add(m.WorldFrame);
@@ -133,7 +133,10 @@ public static class ThrowTests
 		const int Stop = 12; // heavy hitstop on the landing (E12, V2)
 		Assert.Equal(52, states.Count(s => s == FighterState.Knockdown), "40 frames + 12 hitstop ticks");
 		Assert.Equal(FighterState.Knockdown, states[LandTick + Stop + 39 - 1], "still down on the 40th frame");
-		Assert.Equal(FighterState.Idle, states[LandTick + Stop + 40 - 1], "acts again 40 frames (+ hitstop) after landing");
+		// YOK-53 follow-up: then the invulnerable wake-up, then actionable.
+		int wake = m.Config.WakeUpFrames;
+		for (int k = 0; k < wake; k++) Assert.Equal(FighterState.WakeUp, states[LandTick + Stop + 40 + k - 1], $"getting up, wake-up frame {k + 1}");
+		Assert.Equal(FighterState.Idle, states[LandTick + Stop + 40 + wake - 1], "acts again 40 + wake-up frames (+ hitstop) after landing");
 		Assert.True(m.P1.Actionable, "thrower recovered");
 	}
 
