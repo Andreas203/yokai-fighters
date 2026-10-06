@@ -17,12 +17,19 @@
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "input": {
       "type": "object",
-      "required": ["button"],
+      "oneOf": [{ "required": ["button"] }, { "required": ["buttons"] }],
       "additionalProperties": false,
       "properties": {
         "button": {
           "enum": ["LP", "MP", "HP", "LK", "MK", "HK"],
           "description": "The attack button (K1, K2): light/medium/heavy punch and kick."
+        },
+        "buttons": {
+          "description": "E19: air normals only. Every button that performs this normal (e.g. LP/MP/HP for the air punch), so no press mid-jump does nothing. Use instead of 'button'; the heaviest listed sets hit strength.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["LP", "MP", "HP", "LK", "MK", "HK"] }
         },
         "directions": {
           "description": "Numpad directions relative to facing on the press (6 = toward the opponent, 2 = down). Omitted = any direction. A normal that lists the direction wins over one that does not, so a crouching variant can be added later without touching the standing one.",
@@ -35,13 +42,13 @@
     },
     "air": {
       "type": "boolean",
-      "description": "E11 (YOK-55): a jump-in normal. true = it comes out only while airborne (one per jump) and ends on landing; false or omitted = a ground normal, never used in the air. Air normals are not overheads (E6): standing and crouching guard both block them."
+      "description": "E11 (YOK-55): a jump-in normal. true = it comes out only while airborne (one per jump) and ends on landing (E19); false or omitted = a ground normal, never used in the air. Air normals are not overheads (E6): standing and crouching guard both block them."
     },
     "landing_recovery": {
       "type": "integer",
       "minimum": 0,
       "maximum": 30,
-      "description": "Air normals only: frames the fighter can't act after touching down mid-move (the move ends on landing). Omitted = the engine default (3, designer proposal)."
+      "description": "Air normals only: frames the fighter can't act after touching down mid-move (the move ends on landing). Omitted = the engine default of 3 (E19). The fighter can't block and can be thrown during these frames, and nothing cancels them."
     },
     "frame_data": { "$ref": "frame-data.schema.json" },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }

@@ -9,7 +9,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-55: Ryo's jump-in normals (E11) from the TEST FIXTURE files in tests/fixtures/ryo-air-normals/
-/// (air punch on HP, air kick on HK; made-up numbers), next to the ground fixtures. Driven through the
+/// (air punch on LP/MP/HP, air kick on LK/MK/HK, E19; made-up numbers), next to the ground fixtures. Driven through the
 /// real input layer, so Kata and Kihon share it (K3).
 /// </summary>
 public static class AirNormalTests
@@ -18,6 +18,8 @@ public static class AirNormalTests
 	static FighterInput In(InputBits b) => new(b);
 	const InputBits U = InputBits.Up, R = InputBits.Right, D = InputBits.Down;
 	const InputBits HP = InputBits.HeavyPunch, HK = InputBits.HeavyKick, LP = InputBits.LightPunch;
+	static readonly InputBits[] Punches = { InputBits.LightPunch, InputBits.MediumPunch, InputBits.HeavyPunch };
+	static readonly InputBits[] Kicks = { InputBits.LightKick, InputBits.MediumKick, InputBits.HeavyKick };
 
 	static MoveData[] Air() => MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FightScene.FixtureAirNormalsDir));
 	static MoveData[] Kit() =>
@@ -49,9 +51,11 @@ public static class AirNormalTests
 	public static void Fixtures_LoadAsAirNormals()
 	{
 		var air = Air();
-		Assert.Equal(2, air.Length, "proposal: one air punch + one air kick");
+		Assert.Equal(2, air.Length, "E19: one air punch + one air kick");
 		Assert.True(air.All(a => a.Air && a.IsNormal && a.LandingRecovery == 3), "air flag and landing recovery 3 from data");
-		Assert.True(new[] { HP, HK }.All(b => air.Count(a => a.Button == b) == 1), "on HP and HK");
+		Assert.True(new[] { HP, HK }.All(b => air.Count(a => a.Button == b) == 1), "representative button = heaviest listed (sets strength)");
+		Assert.Equal(Punches.Aggregate((a, b) => a | b), AirMove(HP).Buttons, "air punch on LP/MP/HP (E19)");
+		Assert.Equal(Kicks.Aggregate((a, b) => a | b), AirMove(HK).Buttons, "air kick on LK/MK/HK (E19)");
 		Assert.True(Kit().Where(k => !Air().Any(a => a.Id == k.Id)).All(k => !k.Air), "ground fixtures are not air normals");
 		Assert.True(FightScene.LoadMoves().Count(mv => mv.Air) == 2, "the fight scene falls back to the air fixtures");
 	}
@@ -100,6 +104,47 @@ public static class AirNormalTests
 	}
 
 	[Test]
+	public static void Air_EveryButtonGivesAnAirNormal()
+	{
+		// E19 (designer): a press mid-jump never does nothing. Any punch = the air punch, any kick = the air kick.
+		foreach (var (buttons, expect) in new[] { (Punches, AirMove(HP)), (Kicks, AirMove(HK)) })
+			foreach (var b in buttons)
+			{
+				var m = Apart();
+				m.Step(In(U), Idle);
+				m.Step(In(b), Idle);
+				Assert.True(m.P1.State == FighterState.Attack && m.P1.ActiveMove!.Id == expect.Id, $"{b}: {expect.Id}");
+				Assert.True(m.P1.AirAttackUsed, $"{b}: uses the jump's air normal");
+			}
+	}
+
+	[Test]
+	public static void Loader_ButtonsList()
+	{
+		const string json = "{\"kind\":\"normal\",\"id\":\"x\",\"air\":true,\"input\":{\"buttons\":[\"MK\",\"LK\"]}," +
+			"\"frame_data\":{\"startup\":3,\"active\":2,\"recovery\":5,\"damage\":10}}";
+		var mv = MoveLoader.Parse(json);
+		Assert.Equal(InputBits.LightKick | InputBits.MediumKick, mv.Buttons, "both listed buttons");
+		Assert.Equal(InputBits.MediumKick, mv.Button, "heaviest listed is the representative button");
+		Assert.Equal(HitStrength.Medium, mv.Strength, "strength from the heaviest listed");
+		Assert.True(mv.NormalMatch(InputBits.LightKick, 5) > 0 && mv.NormalMatch(InputBits.HeavyKick, 5) == 0, "matches only listed buttons");
+		foreach (var bad in new[]
+		{
+			json.Replace("\"air\":true,", ""),
+			json.Replace("[\"MK\",\"LK\"]", "[\"MK\",\"MK\"]"),
+			json.Replace("[\"MK\",\"LK\"]", "[]"),
+			json.Replace("\"buttons\":[\"MK\",\"LK\"]", "\"button\":\"LK\",\"buttons\":[\"MK\"]"),
+		})
+		{
+			bool threw = false;
+			try { MoveLoader.Parse(bad); } catch (FormatException) { threw = true; }
+			Assert.True(threw, $"rejected (ground with several / duplicate / empty / both keys): {bad}");
+		}
+		var single = MoveLoader.Parse(json.Replace("\"buttons\":[\"MK\",\"LK\"]", "\"button\":\"LK\""));
+		Assert.Equal(InputBits.LightKick, single.Buttons, "input.button still valid");
+	}
+
+	[Test]
 	public static void Air_ExplicitSlotOnlyWhileAirborne()
 	{
 		var m = Apart();
@@ -118,15 +163,13 @@ public static class AirNormalTests
 	}
 
 	[Test]
-	public static void Air_OnePerJump_AndNoneForButtonsWithoutOne()
+	public static void Air_OnePerJump()
 	{
 		var m = Apart();
 		var punch = AirMove(HP);
 		m.Step(In(U), Idle);
-		m.Step(In(LP), Idle);
-		Assert.Equal(FighterState.Jump, m.P1.State, "LP has no air normal (proposal: HP and HK only)");
-		m.Step(In(HP), Idle); // tick 3
-		for (int t = 4; t <= 3 + punch.TotalFrames; t++) m.Step(Idle, Idle);
+		m.Step(In(HP), Idle); // tick 2
+		for (int t = 3; t <= 2 + punch.TotalFrames; t++) m.Step(Idle, Idle);
 		Assert.Equal(FighterState.Jump, m.P1.State, "the air punch ended mid-air: falling");
 		m.Step(In(HK), Idle);
 		Assert.Equal(FighterState.Jump, m.P1.State, "one air normal per jump");

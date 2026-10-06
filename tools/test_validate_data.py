@@ -101,6 +101,28 @@ class ValidateDataTest(unittest.TestCase):
         doc["air"] = True
         self.assertEqual([], validate_data.semantic(doc, path, validate_data.load_rule_ids(), {}))
 
+    def test_air_normal_buttons(self):
+        # E19: an air normal lists every punch (or kick); exactly one of button / buttons; ground normals use one button.
+        import json
+        path = FIXTURE_AIR / "test-ryo-air-punch.json"
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(["LP", "MP", "HP"], doc["input"]["buttons"])
+        kick = json.loads((FIXTURE_AIR / "test-ryo-air-kick.json").read_text(encoding="utf-8"))
+        self.assertEqual(["LK", "MK", "HK"], kick["input"]["buttons"])
+        v = validate_data.load_validators()["normal"]
+        self.assertEqual([], [e.message for e in v.iter_errors(doc) if "clip" not in e.message])
+        doc["input"]["button"] = "HP"
+        self.assertTrue(any(e.validator == "oneOf" for e in v.iter_errors(doc)))
+        del doc["input"]["button"], doc["input"]["buttons"]
+        self.assertTrue(any(e.validator == "oneOf" for e in v.iter_errors(doc)))
+        for bad in (["LP", "LP"], [], ["XP"]):
+            doc["input"]["buttons"] = bad
+            self.assertTrue(list(v.iter_errors(doc)), bad)
+        doc["input"]["buttons"] = ["LP", "MP", "HP"]
+        del doc["air"], doc["landing_recovery"]
+        errs = validate_data.semantic(doc, path, validate_data.load_rule_ids(), {})
+        self.assertIn(("input.buttons", 'input.buttons is only for air normals (set "air": true); ground normals use input.button (E19)'), errs)
+
     def test_throw_semantic_checks(self):
         import json
         doc = json.loads((FIXTURE_THROWS / "test-ryo-throw.json").read_text(encoding="utf-8"))

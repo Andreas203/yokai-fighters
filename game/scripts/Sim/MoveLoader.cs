@@ -37,7 +37,7 @@ public static class MoveLoader
 		JsonElement push = fd.TryGetProperty("pushback", out var pb) ? pb : default;
 
 		var activeEl = fd.TryGetProperty("active", out var a) ? a : throw new FormatException($"{id}: frame_data.active is required");
-		var (button, dirMask) = NormalInput(root, id);
+		var (button, buttons, dirMask) = NormalInput(root, id);
 		InputBits throwButtons = ThrowInput(root, id);
 		var move = new MoveData
 		{
@@ -55,6 +55,7 @@ public static class MoveLoader
 			Hitboxes = Boxes(fd, "hitboxes"),
 			Hurtboxes = Boxes(fd, "hurtboxes"),
 			Button = button,
+			Buttons = buttons,
 			DirectionMask = dirMask,
 			ThrowButtons = throwButtons,
 			Throwboxes = Boxes(fd, "throwboxes"),
@@ -65,6 +66,8 @@ public static class MoveLoader
 		};
 		if (move.LandingRecovery is int lr && (!move.Air || lr < 0))
 			throw new FormatException($"{id}: landing_recovery needs \"air\": true and must be >= 0 (E11)");
+		if (buttons != button && !move.Air)
+			throw new FormatException($"{id}: input.buttons (several buttons) is only for air normals (E19)");
 		if (move.IsThrow)
 		{
 			if (move.BreakWindow < 1) throw new FormatException($"{id}: a throw needs frame_data.break_window >= 1");
@@ -137,23 +140,31 @@ public static class MoveLoader
 		var other => throw new FormatException($"{id}: unknown button '{other}'"),
 	};
 
-	/// <summary>Kind "normal" (data/schema/normal.schema.json): input.button and optional input.directions.</summary>
-	private static (InputBits button, int dirMask) NormalInput(JsonElement root, string id)
+	/// <summary>
+	/// Kind "normal" (data/schema/normal.schema.json): input.button, or input.buttons for an air normal (E19),
+	/// and optional input.directions. Returns the representative button (the heaviest listed, which sets
+	/// hit strength) and the mask of every button that performs it.
+	/// </summary>
+	private static (InputBits button, InputBits buttons, int dirMask) NormalInput(JsonElement root, string id)
 	{
 		bool normal = root.TryGetProperty("kind", out var k) && k.GetString() == "normal";
-		if (!normal) return (InputBits.None, 0);
-		if (!root.TryGetProperty("input", out var input) || !input.TryGetProperty("button", out var b))
-			throw new FormatException($"{id}: a normal needs input.button");
-		InputBits button = b.GetString() switch
+		if (!normal) return (InputBits.None, InputBits.None, 0);
+		if (!root.TryGetProperty("input", out var input))
+			throw new FormatException($"{id}: a normal needs input.button or input.buttons");
+		bool one = input.TryGetProperty("button", out var b), many = input.TryGetProperty("buttons", out var bs);
+		if (one == many)
+			throw new FormatException($"{id}: a normal needs exactly one of input.button or input.buttons");
+		InputBits button = InputBits.None, buttons = InputBits.None;
+		int bestRank = -1;
+		foreach (var el in one ? new[] { b } : bs.EnumerateArray().ToArray())
 		{
-			"LP" => InputBits.LightPunch,
-			"MP" => InputBits.MediumPunch,
-			"HP" => InputBits.HeavyPunch,
-			"LK" => InputBits.LightKick,
-			"MK" => InputBits.MediumKick,
-			"HK" => InputBits.HeavyKick,
-			var other => throw new FormatException($"{id}: unknown button '{other}'"),
-		};
+			InputBits bit = ButtonBit(el.GetString(), id);
+			if ((buttons & bit) != 0) throw new FormatException($"{id}: input.buttons lists '{el.GetString()}' twice");
+			buttons |= bit;
+			int rank = (int)MoveData.StrengthOfButton(bit);
+			if (rank > bestRank) { button = bit; bestRank = rank; }
+		}
+		if (buttons == InputBits.None) throw new FormatException($"{id}: input.buttons is empty");
 		int mask = 0;
 		if (input.TryGetProperty("directions", out var dirs))
 			foreach (var d in dirs.EnumerateArray())
@@ -162,7 +173,7 @@ public static class MoveLoader
 				if (n < 1 || n > 9) throw new FormatException($"{id}: direction {n} is not a numpad direction");
 				mask |= 1 << n;
 			}
-		return (button, mask);
+		return (button, buttons, mask);
 	}
 
 	private static TimedBox[] Boxes(JsonElement fd, string name)

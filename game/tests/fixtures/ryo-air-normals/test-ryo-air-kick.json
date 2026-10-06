@@ -6,11 +6,16 @@
   "source": "ryo",
   "rules": [
     "E11",
+    "E19",
     "E6",
     "C8"
   ],
   "input": {
-    "button": "HK"
+    "buttons": [
+      "LK",
+      "MK",
+      "HK"
+    ]
   },
   "air": true,
   "landing_recovery": 3,
@@ -62,5 +67,5 @@
       }
     ]
   },
-  "notes": "TEST FIXTURE. Proposed slots (designer call): one air punch + one air kick, both on the heavy buttons; the real file uses clip-matcher's Rising_Flying_Kick clip (YOK-32) and movesmith's frame data from it (F2). landing_recovery 3 is a proposal. Never copy to data/moves/."
+  "notes": "TEST FIXTURE. E19 (designer): one air punch on any punch, one air kick on any kick; this one on LK/MK/HK. The real file uses clip-matcher's Rising_Flying_Kick clip (YOK-32) and movesmith's frame data from it (F2). landing_recovery 3 is the E19 default. Never copy to data/moves/."
 }
