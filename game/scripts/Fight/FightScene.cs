@@ -89,16 +89,19 @@ public partial class FightScene : Node3D
 	/// YOK-56: P1 = Ryo's kit (his normals, throw and starters, A1), P2 = <see cref="Opponent"/>'s kit (the AI
 	/// loadout); each falls back to the TEST FIXTURES per move kind while data/moves/ has none of its own.
 	/// </summary>
-	public static Match NewMatch()
+	public static Match NewMatch() => NewMatch(Run);
+
+	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
+	public static Match NewMatch(RunState? run)
 	{
-		var cfg = Run?.MatchConfig();
+		var cfg = run?.MatchConfig();
 		var ryo = LoadKit(Kit.Ryo);
 		var foe = LoadKit(Opponent);
 		var m = new Match(cfg, ryo.Moves, foe.Moves);
 		ryo.Equip(m.P1);
 		foe.Equip(m.P2);
 		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
-		Run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
+		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
 		return m;
 	}
 
@@ -154,19 +157,21 @@ public partial class FightScene : Node3D
 
 	public override void _Ready()
 	{
+		SetUpRun(); // YOK-48: a fresh run, the first fight built from it
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
 		_bodies[1] = BuildFighter("Kitsune", new Color(0.95f, 0.55f, 0.2f));
 		_camera = new Camera3D { Name = "Camera", Fov = CameraFovDegrees, Current = true };
 		AddChild(_camera);
 		_hud = new FightHud { Name = "Hud" };
-		_hud.RestartRequested += ResetFight;
+		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
 		SetUpAi(); // YOK-27
 		StartRecording(); // YOK-49
+		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
 		Render();
 	}
@@ -175,14 +180,17 @@ public partial class FightScene : Node3D
 	{
 		if (ExternalDrive) return;
 
-		bool resetDown = Input.IsPhysicalKeyPressed(Key.R);
+		bool resetDown = OS.IsDebugBuild() && Input.IsPhysicalKeyPressed(Key.R); // debug only: players can't skip the reward (YOK-48)
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
 		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
 		PollReplayKey(); // YOK-49: F8 saves the replay
+		PollFlowKeys(); // YOK-48: F9 debug menu
+		if (FlowPaused) { Render(); return; }
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
 		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
+		CheckDuelOver(); // YOK-48
 		Render();
 	}
 
@@ -191,11 +199,15 @@ public partial class FightScene : Node3D
 	{
 		Shake.Advance();
 		StepSim(p1, p2);
+		CheckDuelOver(); // YOK-48
 		Render();
 	}
 
+	/// <summary>Replays the current duel (R after a KO): same run, same carried health; the flow screens close.</summary>
 	public void ResetFight()
 	{
+		HideFlowScreens(); // YOK-48
+		Stage = DemoStage.Fighting;
 		Match.Reset();
 		RebuildAi(); // YOK-27: fresh delay buffer
 		StartRecording(); // YOK-49

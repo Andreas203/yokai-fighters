@@ -25,6 +25,9 @@ public partial class StoryCard : Control
 
 	public void Display(string text) { Text = text; Showing = true; Visible = true; QueueRedraw(); }
 
+	/// <summary>YOK-48: hide without raising <see cref="Finished"/> (the flow restarted underneath it).</summary>
+	public void Dismiss() { Showing = false; Visible = false; }
+
 	public void Continue()
 	{
 		if (!Showing) return;
