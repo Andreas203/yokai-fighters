@@ -4,7 +4,7 @@
   "status": "final",
   "source": "meshy-library",
   "clip": "Right_Jab_from_Guard",
-  "frames_total": 25,
+  "frames_total": 13,
   "hit_start": 5,
   "hit_end": 6,
   "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Open-hand jab, no clipping; arm verts in torso core 36 of ~5,400 (0.7%). Planted-foot shift in window 4.6 cm L / 2.9 cm R raw (limit 3, minor). Body yaw swings -45 deg to -4 deg into the punch.",
@@ -13,5 +13,5 @@
     "F5",
     "F6"
   ],
-  "notes": "Meshy preset 192 Right_Jab_from_Guard on task 01a1100b-a09e-777e-b304-a4ea9bb17af0, file ryo-lp.glb. Raw trim: ticks 30-66 at 1.5x (60 ticks per second). Verdict PASS. Raw 123 ticks (2.03 s). Head-trim 30 ticks, 1.5x, tail cut at raw tick 66: 25 frames, hit on frames 5-6 (startup 4, active 2 = C8). Arm stays at 90% reach to raw tick 46 so the hit pose reads longer than the data window. Hips net travel 11 cm back inside the window, do not strip (sway only). Peak hand speed 6.3 m/s raw."
+  "notes": "Meshy preset 192 Right_Jab_from_Guard on task 01a1100b-a09e-777e-b304-a4ea9bb17af0, file ryo-lp.glb. Raw trim: ticks 30-66 at 1.5x (60 ticks per second). Verdict PASS. Raw 123 ticks (2.03 s). Head-trim 30 ticks, 1.5x, tail cut at raw tick 66: 25 frames, hit on frames 5-6 (startup 4, active 2 = C8). Arm stays at 90% reach to raw tick 46 so the hit pose reads longer than the data window. Hips net travel 11 cm back inside the window, do not strip (sway only). Peak hand speed 6.3 m/s raw. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 25 frames, hit 5-6): trim raw ticks 30-48 at 1.5x = 13 frames, hit frames 5-6, startup 4, active 2, recovery 7. arm still at 78% reach at the cut (raw 48); the retraction is a 4-6 tick blend-out in data."
 }

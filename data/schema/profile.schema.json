@@ -55,6 +55,12 @@
         }
       }
     },
+    "tell_cover_pct": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Difficulty knob (YOK-27): chance a habit that rolled true is held back anyway, so harder opponents show their tell less. Default 0."
+    },
     "elder_twist": {
       "type": "object",
       "required": ["id", "description"],
@@ -74,7 +80,7 @@
         "neutral", "at_close_range", "at_mid_range", "at_full_screen",
         "opponent_jumping", "opponent_knocked_down", "self_knocked_down", "self_got_up",
         "projectile_on_screen", "blocked_projectile", "blocked_two_hits_in_row",
-        "opponent_whiffed", "opponent_blocking", "opponent_in_recovery",
+        "opponent_whiffed", "opponent_blocking", "opponent_in_recovery", "opponent_attacking",
         "opponent_used_same_special_twice"
       ]
     },
