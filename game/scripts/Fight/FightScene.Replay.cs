@@ -24,6 +24,7 @@ public partial class FightScene
 	private void StepSim(FighterInput p1, FighterInput p2)
 	{
 		Match.Step(p1, p2);
+		ObservePresentation(); // YOK-53: clip frames follow the sim tick
 		Recorder?.Record(p1, p2, Match.StateHash());
 	}
 

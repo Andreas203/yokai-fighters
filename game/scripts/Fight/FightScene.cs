@@ -157,6 +157,7 @@ public partial class FightScene : Node3D
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
 		_bodies[1] = BuildFighter("Kitsune", new Color(0.95f, 0.55f, 0.2f));
+		BuildModels(); // YOK-53: rigged fighters over the capsules
 		_camera = new Camera3D { Name = "Camera", Fov = CameraFovDegrees, Current = true };
 		AddChild(_camera);
 		_hud = new FightHud { Name = "Hud" };
@@ -180,6 +181,7 @@ public partial class FightScene : Node3D
 		_resetHeld = resetDown;
 		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
 		PollReplayKey(); // YOK-49: F8 saves the replay
+		PollModelKey(); // YOK-53: F9 models/capsules
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
 		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
@@ -221,6 +223,7 @@ public partial class FightScene : Node3D
 			body.Scale = new Vector3(f.Facing, f.Crouching ? 0.6f : 1f, 1f); // placeholder crouch squash
 			body.Rotation = new Vector3(0f, 0f, tilt * f.Facing);
 		}
+		RenderModels(); // YOK-53
 
 		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen.
 		float viewW = ToMeters(c.ViewWidth);
