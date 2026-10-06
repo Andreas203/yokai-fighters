@@ -380,6 +380,14 @@ public static class KihonTests
 	[Test]
 	public static void FightScene_DefaultsToKihon_F4TogglesP1(Node runner)
 	{
+		var saved = FightScene.Sources;
+		FightScene.Sources = FightScene.FixtureSources; // YOK-56: never depend on what is in data/
+		try { DefaultsToKihon(runner); }
+		finally { FightScene.Sources = saved; }
+	}
+
+	static void DefaultsToKihon(Node runner)
+	{
 		var nm = FightScene.NewMatch();
 		Assert.True(nm.P1.Input.Scheme == ControlScheme.Kihon && nm.P2.Input.Scheme == ControlScheme.Kihon, "demo default: Kihon");
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();

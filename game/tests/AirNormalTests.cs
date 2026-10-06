@@ -57,7 +57,7 @@ public static class AirNormalTests
 		Assert.Equal(Punches.Aggregate((a, b) => a | b), AirMove(HP).Buttons, "air punch on LP/MP/HP (E19)");
 		Assert.Equal(Kicks.Aggregate((a, b) => a | b), AirMove(HK).Buttons, "air kick on LK/MK/HK (E19)");
 		Assert.True(Kit().Where(k => !Air().Any(a => a.Id == k.Id)).All(k => !k.Air), "ground fixtures are not air normals");
-		Assert.True(FightScene.LoadMoves().Count(mv => mv.Air) == 2, "the fight scene falls back to the air fixtures");
+		Assert.True(YokaiFighters.Sim.Kit.Load(YokaiFighters.Sim.Kit.Ryo, FightScene.FixtureSources).Moves.Count(mv => mv.Air) == 2, "Ryo's kit falls back to the air fixtures");
 	}
 
 	[Test]

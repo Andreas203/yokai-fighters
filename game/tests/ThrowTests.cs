@@ -502,6 +502,6 @@ public static class ThrowTests
 	[Test]
 	public static void Scene_LoadsFixtureThrow()
 	{
-		Assert.Equal(1, FightScene.LoadMoves().Count(mv => mv.IsThrow), "the fight scene has the TEST FIXTURE throw while data/moves/ has none");
+		Assert.Equal(1, YokaiFighters.Sim.Kit.Load(YokaiFighters.Sim.Kit.Ryo, FightScene.FixtureSources).Moves.Count(mv => mv.IsThrow), "Ryo's kit has the TEST FIXTURE throw while data/moves/ has none of his");
 	}
 }
