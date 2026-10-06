@@ -22,7 +22,7 @@ public static class AiTests
 		{ "kind": "profile", "id": "test-anti-air", "yokai": "kitsune", "temperament": "patient",
 		  "reaction": { "tier": "yokai", "frames": {{frames}} }, "aggression_bias": 50, "preferred_range": "mid",
 		  "habit": { "id": "jumps-after-knockdown", "description": "d", "when": "self_got_up", "do": "jump", "chance_pct": 60 },
-		  "behaviours": [ { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 100 } ],
+		  "behaviours": [ { "when": "opponent_jumping", "do": "normal:kitsune-heavy-punch", "weight": 100 } ],
 		  "rules": ["Y4"] }
 		""";
 
