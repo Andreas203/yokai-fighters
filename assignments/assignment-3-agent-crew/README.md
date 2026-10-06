@@ -90,7 +90,7 @@ The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grov
 1. **Start screen** with the controls ([`demo/1-start-screen.png`](demo/1-start-screen.png)).
 2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([`demo/2-fight-bamboo-grove.png`](demo/2-fight-bamboo-grove.png)).
 3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([`demo/3-hitbox-overlay.png`](demo/3-hitbox-overlay.png)).
-4. **Win:** the binding line, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
+4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
 5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([`demo/6-demo-complete.png`](demo/6-demo-complete.png)).
 
 **Play it on Windows, no install needed:**
