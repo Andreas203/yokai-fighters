@@ -78,7 +78,11 @@ public partial class FightScene : Node3D
 
 	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
 	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;
-	public void SetScheme(int player, ControlScheme scheme) => Match.Fighters[player].Input.Scheme = scheme;
+	public void SetScheme(int player, ControlScheme scheme)
+	{
+		Match.Fighters[player].Input.Scheme = scheme;
+		Recorder?.OnScheme(player, scheme); // YOK-49
+	}
 
 	/// <summary>Debug builds: F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
 	public void ToggleScheme(int player)
@@ -145,6 +149,7 @@ public partial class FightScene : Node3D
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
 		SetUpAi(); // YOK-27
+		StartRecording(); // YOK-49
 		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
 		Render();
 	}
@@ -157,9 +162,10 @@ public partial class FightScene : Node3D
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
 		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
+		PollReplayKey(); // YOK-49: F8 saves the replay
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) { Shake.Advance(); Match.Step(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default */ }
+		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
 		Render();
 	}
 
@@ -167,7 +173,7 @@ public partial class FightScene : Node3D
 	public void Step(FighterInput p1, FighterInput p2)
 	{
 		Shake.Advance();
-		Match.Step(p1, p2);
+		StepSim(p1, p2);
 		Render();
 	}
 
@@ -175,6 +181,7 @@ public partial class FightScene : Node3D
 	{
 		Match.Reset();
 		RebuildAi(); // YOK-27: fresh delay buffer
+		StartRecording(); // YOK-49
 		Shake.Stop();
 		_clock.Restart();
 		Render();
