@@ -20,6 +20,8 @@ public readonly record struct TimedBox(int First, int Last, Box Box)
 public sealed partial record MoveData
 {
 	public required string Id { get; init; }
+	/// <summary>YOK-56: whose kit the move belongs to (the file's <c>source</c>: "ryo", "kitsune", ...); "" when absent.</summary>
+	public string Source { get; init; } = "";
 	public required int Startup { get; init; }
 	/// <summary>0 when the body never hits ("active": null, projectile moves).</summary>
 	public required int Active { get; init; }

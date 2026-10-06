@@ -42,6 +42,7 @@ public static class MoveLoader
 		var move = new MoveData
 		{
 			Id = id,
+			Source = root.TryGetProperty("source", out var srcEl) && srcEl.ValueKind == JsonValueKind.String ? srcEl.GetString()! : "",
 			Startup = Req("startup"),
 			Active = activeEl.ValueKind == JsonValueKind.Null ? 0 : activeEl.GetInt32(),
 			Recovery = Req("recovery"),
