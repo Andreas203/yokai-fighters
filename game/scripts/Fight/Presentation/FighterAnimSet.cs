@@ -20,10 +20,10 @@ public sealed class FighterAnimSet
 	/// <summary>Rigged model (res://).</summary>
 	public required string ModelPath { get; init; }
 	/// <summary>
-	/// Fixed yaw (degrees) on top of turning the model's +Z toward +X (facing right). The guard clips start with the
-	/// hips yawed about -45° (clip notes), so this turns the guard stance side-on to the camera.
+	/// YOK-39: the fighter's body scene (rigged model, mirror/yaw, Animator, toon look, tails), edited in Godot and
+	/// instanced by <see cref="FighterModel.Create"/>. The guard-stance yaw and the Kitsune's tails live there now.
 	/// </summary>
-	public float YawOffsetDeg { get; init; }
+	public required string ScenePath { get; init; }
 	public required IReadOnlyDictionary<PoseKind, string> Clips { get; init; }
 	/// <summary>Move clip overrides for this body (e.g. Ryo casting Foxfire uses his own cast take).</summary>
 	public IReadOnlyDictionary<string, string> ClipOverrides { get; init; } = new Dictionary<string, string>();
@@ -35,9 +35,6 @@ public sealed class FighterAnimSet
 	public int BurstFrame { get; init; } = 1;
 	/// <summary>Clips that play airborne: their hips are not allowed above the rest height (the sim draws the arc).</summary>
 	public ISet<string> AirClips { get; init; } = new HashSet<string>();
-	/// <summary>Kitsune: nine rigid tails on the hips (E15/G4); null for no tails.</summary>
-	public string? TailPath { get; init; }
-
 	public string? ClipFor(PoseKind kind) => Clips.TryGetValue(kind, out var c) ? c : null;
 
 	public string MoveClip(string clip) => ClipOverrides.TryGetValue(clip, out var o) ? o : clip;
@@ -48,7 +45,7 @@ public sealed class FighterAnimSet
 	{
 		Fighter = "ryo",
 		ModelPath = "res://assets/generated/characters/ryo/ryo-rigged.glb",
-		YawOffsetDeg = 0f,
+		ScenePath = "res://scenes/fighters/ryo.tscn",
 		JumpFrameOffset = 0,
 		LandingFrame = 40,
 		BurstFrame = 10,
@@ -82,12 +79,11 @@ public sealed class FighterAnimSet
 	{
 		Fighter = "kitsune",
 		ModelPath = "res://assets/generated/characters/kitsune/kitsune-rigged.glb",
-		YawOffsetDeg = 0f,
+		ScenePath = "res://scenes/fighters/kitsune.tscn",
 		JumpFrameOffset = 2,
 		LandingFrame = 37,
 		BurstFrame = 10,
 		AirClips = SharedAir,
-		TailPath = "res://assets/generated/characters/kitsune/tail.glb",
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "kitsune-idle",

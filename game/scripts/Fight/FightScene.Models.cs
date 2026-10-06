@@ -28,15 +28,33 @@ public partial class FightScene
 	public FighterModel? ModelOf(int i) => _models[i];
 	public FighterPresenter? PresenterOf(int i) => _presenters[i];
 
+	/// <summary>
+	/// YOK-39: the fighters are scenes (<see cref="FighterAnimSet.ScenePath"/>) placed in fight.tscn as Fighters/P1 and
+	/// Fighters/P2; a slot holding another fighter than the match's (e.g. a different opponent) is swapped at load.
+	/// </summary>
 	private void BuildModels()
 	{
+		var slots = GetNodeOrNull<Node3D>("Fighters");
+		if (slots is null) { slots = new Node3D { Name = "Fighters" }; AddChild(slots); }
 		for (int i = 0; i < 2; i++)
 		{
 			var set = FighterAnimSet.For(i == 0 ? Kit.Ryo : Opponent);
 			_presenters[i] = new FighterPresenter(set, Catalog, MoveClips);
-			var model = FighterModel.Create(set, Catalog);
-			if (model is null) { GD.PushWarning($"YOK-53: no model for {set.Fighter}, keeping the capsule"); continue; }
-			AddChild(model);
+			string slot = i == 0 ? "P1" : "P2";
+			var model = slots.GetNodeOrNull<FighterModel>(slot);
+			if (model != null && (model.Fighter != set.Fighter || !model.Setup(set, Catalog)))
+			{
+				slots.RemoveChild(model);
+				model.QueueFree();
+				model = null;
+			}
+			if (model is null)
+			{
+				model = FighterModel.Create(set, Catalog);
+				if (model is null) { GD.PushWarning($"YOK-53: no model for {set.Fighter}, keeping the capsule"); continue; }
+				model.Name = slot;
+				slots.AddChild(model);
+			}
 			_models[i] = model;
 		}
 		foreach (string p in Catalog.Problems) GD.PushWarning("YOK-53 clip: " + p);

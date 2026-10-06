@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "InkOutline"
+cull_mode = 1
+shading_mode = 0
+albedo_color = Color(0.08, 0.06, 0.07, 1)
+grow = true

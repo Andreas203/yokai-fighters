@@ -1,0 +1,115 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_riydk"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/kitsune/kitsune-rigged.glb" id="2_u1m64"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/kitsune/tail.glb" id="3_eupsx"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="4_ldgij"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="5_f8dl2"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="6_dhdp7"]
+
+[node name="Kitsune" type="Node3D" unique_id=1830531114]
+script = ExtResource("1_riydk")
+Fighter = "kitsune"
+
+[node name="Mirror" type="Node3D" parent="." unique_id=1055103684]
+
+[node name="Yaw" type="Node3D" parent="Mirror" unique_id=31901255]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=1780161145 instance=ExtResource("2_u1m64")]
+
+[node name="Tails" type="BoneAttachment3D" parent="Mirror/Yaw" unique_id=1184180358]
+bone_name = "Hips"
+use_external_skeleton = true
+external_skeleton = NodePath("../Model/Armature/Skeleton3D")
+
+[node name="Tail0" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=1758756138]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail0" unique_id=1750010008]
+transform = Transform3D(0.9945219, -0.104528464, 0, 0.073912784, 0.7032332, 0.70710677, -0.073912784, -0.7032332, 0.70710677, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail0/Fan" unique_id=1141975087 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail1" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=739787676]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail1" unique_id=647779435]
+transform = Transform3D(0.9914449, 0.1305262, 0, -0.07945932, 0.6035534, 0.7933533, 0.10355339, -0.7865661, 0.6087614, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail1/Fan" unique_id=1172749085 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail2" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=1740939055]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail2" unique_id=1491417466]
+transform = Transform3D(0.98768836, -0.15643448, 0, 0.07821723, 0.49384415, 0.86602545, -0.13547623, -0.85536325, 0.49999997, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail2/Fan" unique_id=1032804576 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail3" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=171967961]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail3" unique_id=2079765599]
+transform = Transform3D(0.9832549, 0.18223552, 0, -0.069738515, 0.37627536, 0.9238795, 0.16836366, -0.90840906, 0.38268343, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail3/Fan" unique_id=1048666227 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail4" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=1119490067]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail4" unique_id=1026766062]
+transform = Transform3D(0.9781476, -0.2079117, 0, 0.053811513, 0.25316325, 0.9659258, -0.20082727, -0.944818, 0.25881907, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail4/Fan" unique_id=653491188 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail5" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=206953404]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail5" unique_id=1903722339]
+transform = Transform3D(0.9832549, 0.18223552, 0, -0.023786519, 0.12834057, 0.9914448, 0.18067646, -0.97484297, 0.13052624, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail5/Fan" unique_id=1325701850 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail6" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=1826137809]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail6" unique_id=470995629]
+transform = Transform3D(0.98768836, -0.15643448, 0, -6.837968e-09, -4.317323e-08, 1, -0.15643448, -0.98768836, -4.371139e-08, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail6/Fan" unique_id=588300120 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail7" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=124247091]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail7" unique_id=726637252]
+transform = Transform3D(0.9914449, 0.1305262, 0, 0.01703709, -0.12940955, 0.9914449, 0.12940954, -0.98296297, -0.13052621, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail7/Fan" unique_id=551393730 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Tail8" type="Node3D" parent="Mirror/Yaw/Tails" unique_id=1547235269]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -4, -16)
+
+[node name="Fan" type="Node3D" parent="Mirror/Yaw/Tails/Tail8" unique_id=179406090]
+transform = Transform3D(0.9945219, -0.104528464, 0, -0.027053958, -0.2574012, 0.9659258, -0.100966744, -0.9606344, -0.25881904, 0, 0, 0)
+
+[node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail8/Fan" unique_id=275206006 instance=ExtResource("3_eupsx")]
+transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
+
+[node name="Animator" type="AnimationPlayer" parent="." unique_id=1019203756]
+deterministic = true
+root_node = NodePath("../Mirror/Yaw/Model")
+callback_mode_process = 2
+
+[node name="Toon" type="Node" parent="." unique_id=638011263]
+script = ExtResource("4_ldgij")
+Toon = ExtResource("5_f8dl2")
+Outline = ExtResource("6_dhdp7")

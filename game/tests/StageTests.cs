@@ -52,14 +52,21 @@ public static class StageTests
 	[Test]
 	public static void Stage_ClearBandBehindTheFight_LanternsDeep(Node runner)
 	{
+		// YOK-39: the props are placed by hand in bamboo_grove.tscn, so the rule is checked here, not enforced in code.
+		// Each prop's front = its centre z + its footprint radius (largest horizontal mesh extent / 2, any yaw).
 		var scene = Load(runner);
 		foreach (var n in scene.StageRoot.GetNode("Props").GetChildren().Cast<Node3D>())
 		{
 			var p = n.Position;
-			if (n.Name.ToString().StartsWith("Lantern"))
+			bool lantern = n.Name.ToString().StartsWith("Lantern");
+			Aabb own = n.GetChildren().Select(BambooGroveStage.LocalBounds).Aggregate((a, b) => a.Merge(b)); // in the prop's own (unyawed, unscaled) space
+			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * n.Basis.Scale.Y;
+			float front = p.Z + radius, limit = BambooGroveStage.FrontLimit(p.X, lantern);
+			if (lantern)
 				Assert.True(p.Z <= BambooGroveStage.LanternMaxZ, $"{n.Name} at z {p.Z}: lanterns stay deep in the grove");
 			if (Mathf.Abs(p.X) < BambooGroveStage.ClearBandHalfX)
-				Assert.True(p.Z <= BambooGroveStage.ClearBandBackZ, $"{n.Name} at ({p.X}, {p.Z}) is inside the clear band behind the fight");
+				Assert.True(front <= BambooGroveStage.ClearBandBackZ + 1e-3f, $"{n.Name} at ({p.X}, {p.Z}) reaches z {front}, inside the clear band behind the fight (|x| < {BambooGroveStage.ClearBandHalfX}, z > {BambooGroveStage.ClearBandBackZ})");
+			Assert.True(front <= limit + 1e-3f, $"{n.Name}: front z {front} past its limit {limit}");
 		}
 		scene.QueueFree();
 	}

@@ -9,10 +9,20 @@ namespace YokaiFighters.Fight;
 /// advances on its own (manual callback mode): every render calls <c>Seek(t, true)</c> at the exact frame time.
 /// Blends are computed from the tick (seek the source pose, capture, seek the target, slerp). Mirroring is
 /// Scale.X = Facing on <see cref="Mirror"/>, like the hitbox data (mirrored by facing).
+/// YOK-39: the body is a scene (<c>scenes/fighters/&lt;id&gt;.tscn</c>, path in <see cref="FighterAnimSet.ScenePath"/>)
+/// edited in Godot: Mirror → Yaw → Model (the rigged GLB), the "Animator" AnimationPlayer (Manual, rooted at the
+/// model), a <see cref="ToonLook"/>, and for the Kitsune "Tails" (a BoneAttachment3D on the hips) holding the placed
+/// tails. Nodes are found by name; this script only adds the clip library and steps poses from the sim.
 /// </summary>
 public partial class FighterModel : Node3D
 {
 	public const string LibraryName = "yf";
+	/// <summary>Node names the script looks up (the scene's contract).</summary>
+	public const string MirrorName = "Mirror", PlayerName = "Animator", TailsName = "Tails";
+
+	/// <summary>Fighter id this scene shows (matches <see cref="FighterAnimSet.Fighter"/>).</summary>
+	[Export] public string Fighter { get; set; } = "";
+
 	public AnimationPlayer Player { get; private set; } = null!;
 	public Skeleton3D Skeleton { get; private set; } = null!;
 	public Node3D Mirror { get; private set; } = null!;
@@ -25,36 +35,43 @@ public partial class FighterModel : Node3D
 	/// <summary>Built (root-motion-stripped) library per fighter id.</summary>
 	private static readonly Dictionary<string, AnimationLibrary> LibraryCache = new();
 
-	/// <summary>Builds the model; null when the model or its skeleton can't load (the scene keeps the capsule).</summary>
+	/// <summary>Instances the fighter's scene and sets it up; null when the model or its skeleton can't load (the fight keeps the capsule).</summary>
 	public static FighterModel? Create(FighterAnimSet set, ClipCatalog catalog)
 	{
-		if (!ResourceLoader.Exists(set.ModelPath)) return null;
-		var scene = GD.Load<PackedScene>(set.ModelPath).Instantiate<Node3D>();
-		var skel = scene.FindChild("Skeleton3D", true, false) as Skeleton3D;
-		var player = scene.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
-		if (skel is null || player is null) { scene.Free(); return null; }
+		if (!ResourceLoader.Exists(set.ModelPath) || !ResourceLoader.Exists(set.ScenePath)) return null;
+		if (GD.Load<PackedScene>(set.ScenePath)?.Instantiate() is not FighterModel model) return null;
+		if (model.Setup(set, catalog)) return model;
+		model.Free();
+		return null;
+	}
 
-		var model = new FighterModel { Name = set.Fighter + "-model", AnimSet = set, Skeleton = skel, Player = player };
-		model.Mirror = new Node3D { Name = "Mirror" };
-		model.AddChild(model.Mirror);
-		var yaw = new Node3D { Name = "Yaw", RotationDegrees = new Vector3(0f, 90f + set.YawOffsetDeg, 0f) }; // model +Z → +X
-		model.Mirror.AddChild(yaw);
-		yaw.AddChild(scene);
-		model._hips = skel.FindBone("Hips");
+	/// <summary>Binds the scene's nodes and adds the clip library; false when the scene has no skeleton or Animator.</summary>
+	public bool Setup(FighterAnimSet set, ClipCatalog catalog)
+	{
+		var skel = FindChild("Skeleton3D", true, false) as Skeleton3D;
+		var player = FindChild(PlayerName, true, false) as AnimationPlayer;
+		var mirror = FindChild(MirrorName, true, false) as Node3D;
+		if (skel is null || player is null || mirror is null) return false;
+		AnimSet = set; Skeleton = skel; Player = player; Mirror = mirror;
+		_hips = skel.FindBone("Hips");
 
-		player.CallbackModeProcess = AnimationMixer.AnimationCallbackModeProcess.Manual; // F3: never self-advance
+		// F3: never self-advance (also set in the scene; enforced here because determinism depends on it).
+		player.CallbackModeProcess = AnimationMixer.AnimationCallbackModeProcess.Manual;
 		player.Deterministic = true;
 		if (!LibraryCache.TryGetValue(set.Fighter, out var lib))
 		{
-			lib = BuildLibrary(set, catalog, skel, model._hips);
+			lib = BuildLibrary(set, catalog, skel, _hips);
 			LibraryCache[set.Fighter] = lib;
 		}
 		if (player.HasAnimationLibrary(LibraryName)) player.RemoveAnimationLibrary(LibraryName);
 		player.AddAnimationLibrary(LibraryName, lib);
 
-		ApplyToon(scene);
-		if (set.TailPath != null) model.BuildTails(set.TailPath);
-		return model;
+		_tails.Clear();
+		if (FindChild(TailsName, true, false) is Node tails)
+			foreach (Node t in tails.GetChildren())
+				if (t is Node3D t3) _tails.Add(t3);
+		SwayTails(0);
+		return true;
 	}
 
 	/// <summary>
@@ -150,105 +167,26 @@ public partial class FighterModel : Node3D
 		Player.Seek(t, true);
 	}
 
-	// ---- Kitsune's nine tails: rigid, on the hips, sway from the world frame (no physics) ----
+	// ---- Kitsune's nine tails: rigid, placed in the scene on the hips, sway from the world frame (no physics) ----
 
 	public const int TailCount = 9;
-	public const float TailLength = 0.55f;      // metres along the tail mesh (its 1.9 m height scaled down)
+	/// <summary>Sway amplitude (degrees, in the side plane) and period (world frames per cycle).</summary>
+	[Export] public float TailSwayDeg { get; set; } = 5f;
+	[Export] public int TailSwayPeriod { get; set; } = 96;
+
 	/// <summary>
-	/// The fan opens in the side plane (what the 2.5D camera sees): from TailFanFromDeg off vertical, back over the
-	/// floor, to TailFanToDeg. Narrowed and pushed off the back (TailBackCm) so the top tail clears her hair (gate note).
+	/// Deterministic sway from the world frame (no physics): each tail on its own phase. Each "Tails" child is a pivot
+	/// whose rotation only carries the sway; the fan pose (pitch, splay) is its placed "Fan" child, edited in the scene.
 	/// </summary>
-	public const float TailFanFromDeg = 45f, TailFanToDeg = 105f;
-	public const float TailSpreadDeg = 12f;     // small left/right splay so the fan has depth
-	public const float TailBackCm = 16f, TailDownCm = 4f;
-	public const float TailSwayDeg = 5f;
-	public const int TailSwayPeriod = 96;       // world frames per sway cycle
-
-	private void BuildTails(string path)
-	{
-		if (_hips < 0 || !ResourceLoader.Exists(path)) return;
-		var tailScene = GD.Load<PackedScene>(path);
-		var attach = new BoneAttachment3D { Name = "Tails", BoneName = "Hips" };
-		Skeleton.AddChild(attach);
-		float s = TailLength / 1.9f;
-		for (int i = 0; i < TailCount; i++)
-		{
-			// Pivot in metres (the Armature is scaled 0.01), behind the hips.
-			var pivot = new Node3D { Name = $"Tail{i}", Scale = Vector3.One * 100f, Position = new Vector3(0f, -TailDownCm, -TailBackCm) };
-			attach.AddChild(pivot);
-			var tail = tailScene.Instantiate<Node3D>();
-			tail.Scale = Vector3.One * s;
-			// The mesh is a flat card centred on its origin: bottom end on the pivot, face turned to the side camera.
-			tail.Position = new Vector3(0f, 0.95f * s, 0f);
-			tail.RotationDegrees = new Vector3(0f, 90f, 0f);
-			pivot.AddChild(tail);
-			ApplyToon(tail);
-			_tails.Add(pivot);
-		}
-		SwayTails(0);
-	}
-
-	/// <summary>Deterministic sway from the world frame (no physics): each tail on its own phase.</summary>
 	private void SwayTails(int worldFrame)
 	{
 		int n = _tails.Count;
+		if (n == 0 || TailSwayPeriod <= 0) return;
 		for (int i = 0; i < n; i++)
 		{
-			float u = n == 1 ? 0.5f : i / (float)(n - 1);
 			float phase = (worldFrame + i * 11) % TailSwayPeriod / (float)TailSwayPeriod;
 			float sway = TailSwayDeg * Mathf.Sin(Mathf.Tau * phase);
-			float pitch = Mathf.Lerp(TailFanFromDeg, TailFanToDeg, u) + sway;
-			float splay = (i % 2 == 0 ? 1f : -1f) * TailSpreadDeg * (1f - Mathf.Abs(u - 0.5f));
-			_tails[i].RotationDegrees = new Vector3(-pitch, 0f, splay);
+			_tails[i].RotationDegrees = new Vector3(-sway, 0f, 0f);
 		}
-	}
-
-	// ---- V1 toon look: toon diffuse/specular + inverted-hull ink outline (one shared outline material) ----
-
-	public const float OutlineMetres = 0.008f;
-	private static readonly Dictionary<float, StandardMaterial3D> Outlines = new();
-
-	/// <summary>V1 toon diffuse/specular + ink outline on every mesh under <paramref name="root"/>; stage props reuse it (YOK-39).</summary>
-	public static void ApplyToon(Node root, float outlineMetres = OutlineMetres)
-	{
-		foreach (var node in root.FindChildren("*", "MeshInstance3D", true, false))
-		{
-			var mi = (MeshInstance3D)node;
-			if (mi.Mesh is null) continue;
-			float scale = WorldScale(mi);
-			for (int sfc = 0; sfc < mi.Mesh.GetSurfaceCount(); sfc++)
-			{
-				if (mi.GetActiveMaterial(sfc) is not BaseMaterial3D baseMat) continue;
-				var m = (BaseMaterial3D)baseMat.Duplicate();
-				m.DiffuseMode = BaseMaterial3D.DiffuseModeEnum.Toon;
-				m.SpecularMode = BaseMaterial3D.SpecularModeEnum.Toon;
-				m.Roughness = 1f;
-				m.NextPass = Outline(outlineMetres / scale);
-				mi.SetSurfaceOverrideMaterial(sfc, m);
-			}
-		}
-	}
-
-	private static float WorldScale(Node3D n)
-	{
-		float s = 1f;
-		for (Node? p = n; p != null; p = p.GetParent()) if (p is Node3D p3) s *= p3.Scale.Y;
-		return Mathf.Abs(s) < 1e-6f ? 1f : Mathf.Abs(s);
-	}
-
-	private static StandardMaterial3D Outline(float grow)
-	{
-		float key = MathF.Round(grow, 5);
-		if (Outlines.TryGetValue(key, out var m)) return m;
-		m = new StandardMaterial3D
-		{
-			ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-			AlbedoColor = new Color(0.08f, 0.06f, 0.07f),
-			CullMode = BaseMaterial3D.CullModeEnum.Front,
-			Grow = true,
-			GrowAmount = key,
-		};
-		Outlines[key] = m;
-		return m;
 	}
 }
