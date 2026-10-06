@@ -11,7 +11,7 @@ OUT="$REPO/build/windows"
 
 rm -rf "$OUT" "$REPO/build/YokaiFighters-Demo-Windows.zip"
 mkdir -p "$OUT"
-(cd "$REPO/game" && dotnet build -c ExportRelease)
+(cd "$REPO/game" && dotnet build)  # Godot compiles the export configuration itself
 "$GODOT" --headless --path "$REPO/game" --export-release "Windows Desktop" ../build/windows/YokaiFighters.exe
 
 mkdir -p "$OUT/data" "$OUT/fixtures"
