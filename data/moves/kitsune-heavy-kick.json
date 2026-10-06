@@ -27,12 +27,24 @@
       {
         "frames": [
           12,
+          13
+        ],
+        "rect": {
+          "x": 90,
+          "y": 165,
+          "w": 85,
+          "h": 75
+        }
+      },
+      {
+        "frames": [
+          14,
           15
         ],
         "rect": {
-          "x": 35,
-          "y": 230,
-          "w": 100,
+          "x": 100,
+          "y": 220,
+          "w": 80,
           "h": 80
         }
       }
@@ -44,22 +56,34 @@
           38
         ],
         "rect": {
-          "x": -45,
-          "y": 0,
-          "w": 90,
-          "h": 360
+          "x": -65,
+          "y": 5,
+          "w": 105,
+          "h": 315
         }
       },
       {
         "frames": [
           12,
+          14
+        ],
+        "rect": {
+          "x": 90,
+          "y": 165,
+          "w": 90,
+          "h": 105
+        }
+      },
+      {
+        "frames": [
+          15,
           19
         ],
         "rect": {
-          "x": 25,
-          "y": 200,
+          "x": 80,
+          "y": 235,
           "w": 95,
-          "h": 120
+          "h": 85
         }
       }
     ],
@@ -67,5 +91,5 @@
       "knockdown": true
     }
   },
-  "notes": "High_Kick (215), head-high (foot 129-144 cm = y 258-288 units; hitbox y 230-310), clip 38 frames (1.25x), hit 12-15: 11/4/23. Deviation from C8 12/4/22: startup -1, recovery +1 (same 38-frame total). Knockdown per C8 (90). Hips travel 45 cm in the clip: a data step (E15) replaces it. Blend-out: foot at 66% reach at the cut, blend the last 4-6 ticks. Body hurtbox E5 for the whole move; leg box while extended. Hitstun/blockstun are placeholders; damage is the C8 number."
+  "notes": "High_Kick (215), head-high (foot 129-144 cm = y 258-288 units; hitbox y 230-310), clip 38 frames (1.25x), hit 12-15: 11/4/23. Deviation from C8 12/4/22: startup -1, recovery +1 (same 38-frame total). Knockdown per C8 (90). Hips travel 45 cm in the clip: a data step (E15) replaces it. Blend-out: foot at 66% reach at the cut, blend the last 4-6 ticks. Body hurtbox E5 for the whole move; leg box while extended. Hitstun/blockstun are placeholders; damage is the C8 number. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

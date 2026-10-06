@@ -33,9 +33,9 @@
         ],
         "rect": {
           "x": 20,
-          "y": 60,
-          "w": 100,
-          "h": 200
+          "y": 150,
+          "w": 110,
+          "h": 120
         }
       }
     ],
@@ -46,13 +46,13 @@
           30
         ],
         "rect": {
-          "x": -45,
-          "y": 0,
-          "w": 90,
-          "h": 360
+          "x": -25,
+          "y": 5,
+          "w": 95,
+          "h": 310
         }
       }
     ]
   },
-  "notes": "Generic throw (C4), 259 shove. Clip 30 frames, palm reach window 6-12: 5/7/18, startup = C4's 5, no deviation. Recovery 18 outlasts the 7-frame break window (E12). The clip carries a 28 cm hip advance that must be replaced by a data step (E15); the throw schema has no forward-travel field, so that step is NOT yet encoded (needs a schema/engine follow-up). Pushback left to fight defaults. Same buttons as Ryo's throw; Ryo's file is a separate id."
+  "notes": "Generic throw (C4), 259 shove. Clip 30 frames, palm reach window 6-12: 5/7/18, startup = C4's 5, no deviation. Recovery 18 outlasts the 7-frame break window (E12). The clip carries a 28 cm hip advance that must be replaced by a data step (E15); the throw schema has no forward-travel field, so that step is NOT yet encoded (needs a schema/engine follow-up). Pushback left to fight defaults. Same buttons as Ryo's throw; Ryo's file is a separate id. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

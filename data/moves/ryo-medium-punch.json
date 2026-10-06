@@ -31,10 +31,10 @@
           9
         ],
         "rect": {
-          "x": 60,
-          "y": 250,
-          "w": 135,
-          "h": 44
+          "x": 55,
+          "y": 235,
+          "w": 85,
+          "h": 45
         }
       }
     ],
@@ -45,10 +45,10 @@
           21
         ],
         "rect": {
-          "x": -45,
+          "x": -40,
           "y": 0,
-          "w": 90,
-          "h": 360
+          "w": 80,
+          "h": 335
         }
       },
       {
@@ -57,13 +57,13 @@
           13
         ],
         "rect": {
-          "x": 40,
-          "y": 250,
-          "w": 135,
-          "h": 44
+          "x": 50,
+          "y": 230,
+          "w": 90,
+          "h": 50
         }
       }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 21, S/A/R 6/3/12. Hand is at 72% reach at the cut: blend the retraction out over 4-6 ticks. Hitstun 16 and blockstun 13 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 21, S/A/R 6/3/12. Hand is at 72% reach at the cut: blend the retraction out over 4-6 ticks. Hitstun 16 and blockstun 13 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }
