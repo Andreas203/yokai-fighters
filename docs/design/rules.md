@@ -60,11 +60,11 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 
 Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by the designer. Tunable like every other number here.
 
-- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,600 units apart (screen walls).
+- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart (screen walls; was 1,600, lowered in YOK-39 so both rigged models, up to 200 units behind their position, stay in frame: 1,520 + 2 × 200 = 1,920; designer-approved 2026-10-06). The camera follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
 - **E2** KO slow-down (V4): the world plays the 30 frames over 60 real ticks; inputs are ignored meanwhile.
 - **E3** Every yokai has 1,000 health until the yokai rules give its own figure.
 - **E4** Standard knockdown (C4): 40 frames.
-- **E5** Default pushback when a move's data gives none: 40 units on hit, 50 on block. Hurtbox when a move's data gives none: standing 90 × 360, crouching 90 × 200, airborne 90 × 280 units.
+- **E5** Default pushback when a move's data gives none: 40 units on hit, 50 on block. Hurtbox when a move's data gives none: standing 90 × 320, crouching 90 × 240, airborne 90 × 270 starting 40 units above the feet (x -45, y 40), measured from the rigged models in YOK-33 hitbox alignment (designer accepted, YOK-39).
 - **E6** Blocking: crouch-blocking also blocks mids (there are no overheads). No chip damage.
 - **E7** Input timing: a motion must finish within 16 ticks of its first direction; a recognised command waits 5 ticks to be used; a charge needs 40 ticks held, with 8 ticks of grace.
 - **E8** Overlapping motions: when two motions complete in the window, the most recently completed one wins; ties go 623 > 236 > 214 > 22. Charge is a held button (`HeldTicks`); `[4]6` / `[2]8` are recognised but in no Kata slot.

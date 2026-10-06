@@ -100,7 +100,7 @@ public static class ReplayTests
 	static void RandomCoverage()
 	{
 		FightScene.Run = null;
-		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (2, ControlScheme.Kihon, ControlScheme.Kata), (5, ControlScheme.Kata, ControlScheme.Kata) }) // seed 5: seed 3 stopped bursting once wake-ups lengthened knockdowns
+		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (4, ControlScheme.Kihon, ControlScheme.Kata), (5, ControlScheme.Kata, ControlScheme.Kata) }) // seed 5: seed 3 stopped bursting once wake-ups lengthened knockdowns; seed 4: seed 2 stopped bursting with the YOK-39 screen walls (1520)
 		{
 			var m = FightScene.NewMatch();
 			m.P1.Input.Scheme = s1;

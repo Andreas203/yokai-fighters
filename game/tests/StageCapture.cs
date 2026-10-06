@@ -19,10 +19,11 @@ public partial class StageCapture : Node
 		await Shot("mid-stage", 0);
 		await Shot("left-corner", -1);
 		await Shot("right-corner", 1);
+		await Shot("max-separation", 2); // YOK-39: both walk apart to the screen walls
 		GetTree().Quit();
 	}
 
-	/// <summary>side 0: walk in to mid-range; -1/+1: both walk to that corner (Ryo leads, the Kitsune follows).</summary>
+	/// <summary>side 0: walk in to mid-range; -1/+1: both walk to that corner (Ryo leads, the Kitsune follows); 2: walk apart to the screen walls.</summary>
 	private async System.Threading.Tasks.Task Shot(string name, int side)
 	{
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
@@ -31,6 +32,8 @@ public partial class StageCapture : Node
 		var toward = side < 0 ? InputBits.Left : InputBits.Right;
 		if (side == 0)
 			for (int t = 0; t < 20; t++) scene.Step(new FighterInput(InputBits.Right), new FighterInput(InputBits.Left));
+		else if (side == 2)
+			for (int t = 0; t < 300; t++) scene.Step(new FighterInput(InputBits.Left), new FighterInput(InputBits.Right));
 		else
 			for (int t = 0, lastX = int.MinValue; t < 1500 && scene.Match.Fighters[side < 0 ? 0 : 1].X != lastX; t++)
 			{
