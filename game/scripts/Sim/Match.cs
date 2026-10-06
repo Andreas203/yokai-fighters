@@ -65,6 +65,8 @@ public sealed partial class Match
 		_koTicks = 0;
 		Winner = -1;
 		ResetMeterState(); // YOK-20
+		Projectiles.Clear(); // YOK-21
+		_projectileSerial = 0;
 	}
 
 	/// <summary>Queue damage on a fighter; applied at the end of the current world frame.</summary>
@@ -126,8 +128,17 @@ public sealed partial class Match
 
 			int slot = -1;
 			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
+			else if (f.Actionable && input.IsSpecialRequest(out var reqSlot, out bool reqEx))
+				TryStartSpecial(i, reqSlot, reqEx, precision: false, InputBits.None); // YOK-21: direct slot request
 			else if ((f.Actionable || InThrowCancelableStartup(f)) && (slot = FindThrow(f)) >= 0) f.Input.TryConsume(out _); // E12
-			else if (f.Actionable && f.Input.TryConsume(out var cmd)) slot = FindNormal(f, cmd);
+			else if (f.Actionable && f.Input.TryConsume(out var cmd))
+			{
+				// YOK-21: a special command fires its slot's special; an empty slot (or no room for another
+				// projectile) gives the button's normal instead.
+				if (cmd.Kind != CommandKind.Special || !TryStartSpecial(i, cmd.Slot, ExPair(cmd.Pressed), cmd.Precision, cmd.Pressed))
+					slot = FindNormal(f, cmd with { Kind = CommandKind.Normal });
+			}
+			else if (f.State == FighterState.Attack && !TryExUpgrade(i)) TryCancel(i); // YOK-21 hooks
 
 			if (slot >= 0) StartMove(f, slot);
 			else if (f.Actionable && up) StartJump(f, dir);
@@ -155,8 +166,10 @@ public sealed partial class Match
 		ResolveThrowBreaks(); // YOK-19: after both fighters' input, so neither side acts first
 		ResolvePositions(moved);
 		UpdateFacing();
+		StepProjectiles();    // YOK-21: travel, despawn, spawn on the move's spawn frame
 		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
 		ResolveHits();
+		ResolveProjectiles(); // YOK-21: clashes, then projectile hits
 		ApplyDamage();
 	}
 
@@ -183,7 +196,7 @@ public sealed partial class Match
 		switch (f.State)
 		{
 			case FighterState.Attack:
-				if (++f.MoveFrame > f.Moves[f.MoveSlot].TotalFrames) ToIdle(f);
+				if (++f.MoveFrame > f.ActiveMove!.TotalFrames) ToIdle(f);
 				break;
 			case FighterState.Dash:
 				if (++f.DashFrame > Config.DashFrames) ToIdle(f);
@@ -202,6 +215,8 @@ public sealed partial class Match
 	private static void StartMove(Fighter f, int slot)
 	{
 		f.State = FighterState.Attack;
+		f.ResetSpecialMoveState();
+		f.ActiveMove = f.Moves[slot];
 		f.MoveSlot = slot;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -257,6 +272,8 @@ public sealed partial class Match
 		f.StunLeft = stun;
 		f.DashFrame = 0;
 		f.DashDir = 0;
+		f.ResetSpecialMoveState();
+		if (state == FighterState.Idle) f.CancelUsed = 0; // X3: the combo is over
 	}
 
 	/// <summary>
@@ -280,19 +297,20 @@ public sealed partial class Match
 		MoveData? m = att.CurrentMove;
 		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
 		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
-		MoveData? dm = def.CurrentMove;
+		InvulnAgainst kind = att.Airborne ? InvulnAgainst.Strike | InvulnAgainst.Air : InvulnAgainst.Strike;
+		if (def.CurrentMove?.InvulnAt(def.MoveFrame, kind) == true) return false; // YOK-21: properties.invuln
 		foreach (var hb in m.Hitboxes)
-		{
-			if (!hb.Covers(att.MoveFrame)) continue;
-			var a = WorldBox(att, hb.Box);
-			if (dm is null)
-			{
-				if (Overlaps(a, WorldBox(def, BodyHurtbox(def)))) return true;
-				continue;
-			}
-			foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
-				if (hu.Covers(def.MoveFrame) && Overlaps(a, WorldBox(def, hu.Box))) return true;
-		}
+			if (hb.Covers(att.MoveFrame) && HurtOverlaps(def, WorldBox(att, hb.Box))) return true;
+		return false;
+	}
+
+	/// <summary>A world box against the defender's hurtboxes: its move's boxes on this frame, else its stance box.</summary>
+	private bool HurtOverlaps(Fighter def, (int x0, int y0, int x1, int y1) a)
+	{
+		MoveData? dm = def.CurrentMove;
+		if (dm is null) return Overlaps(a, WorldBox(def, BodyHurtbox(def)));
+		foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
+			if (hu.Covers(def.MoveFrame) && Overlaps(a, WorldBox(def, hu.Box))) return true;
 		return false;
 	}
 
@@ -312,12 +330,18 @@ public sealed partial class Match
 		return (x0, y0, x0 + b.W * s, y0 + b.H * s);
 	}
 
-	private void ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking)
+	/// <param name="projectile">YOK-21: the hit came from this projectile, not the attacker's body: the attacker's
+	/// move doesn't count as connected, the push follows the projectile and a cornered defender hands none back.</param>
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
-		att.MoveConnected = true;
-
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
+		if (projectile is null)
+		{
+			att.MoveConnected = true;
+			att.MoveBlocked = blocked;
+		}
+
 		bool counter = !blocked && defenderWasAttacking;           // C7
 		int push, damage = 0;
 		if (blocked)
@@ -338,15 +362,16 @@ public sealed partial class Match
 		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
-		int dir = att.Facing, want = push * SimConfig.Scale;
+		int dir = projectile?.Dir ?? att.Facing, want = push * SimConfig.Scale;
 		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
 		int target = Math.Clamp(def.X + dir * want, lo, hi);
 		int got = Math.Abs(target - def.X);
 		def.X = target;
-		att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+		if (projectile is null) att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
+		return blocked;
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>
@@ -441,6 +466,6 @@ public sealed partial class Match
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
 		h = P2.Hash(h);
-		return HashMeterState(h);
+		return HashProjectiles(HashMeterState(h));
 	}
 }

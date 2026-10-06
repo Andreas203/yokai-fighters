@@ -75,6 +75,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E13** Burst input (C6): LP+MP+HP within 3 ticks (keyboard U+I+O / numpad 4+5+6, pad X+Y+RB). The burst pushes the opponent back 200 units. A thrown fighter cannot burst; it breaks instead.
 - **E14** Meter (C5 reading): attacker +6 on hit, +3 when blocked; defender +3 per hit taken, nothing for blocking. Hitstop (V2) also applies on block. Meter resets to 0 each fight; only health carries over (C1).
 - **E15** Generated rig limits: strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists). The generic throw clip is the Meshy "Step_Forward_and_Push" (preset 259) take, head-trimmed from tick 30, with its forward step in move data: an F5 substitute after three library grabs failed.
+- **E16** EX specials (C5): the special's motion + any two punches or any two kicks, the second button up to 2 ticks late (the special turns into EX in place); costs the special's meter from data (1 bar). LP+LK stays the throw (E12) and wins. Without enough meter the plain version comes out and nothing is spent.
+- **E17** Levels and projectiles: Lv 3 keeps the Lv 2 step and adds its evolution. One projectile per fighter on screen unless the move's data allows more; a second input gives the button's normal instead. Equal projectiles cancel out; a projectile with more hits beats a weaker one and keeps its remaining hits. Throws ignore throw-invulnerability data (E12).
 
 ## X — Cancels
 

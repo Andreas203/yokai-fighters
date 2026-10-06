@@ -3,7 +3,7 @@ using YokaiFighters.Sim;
 
 namespace YokaiFighters.Fight;
 
-public enum DebugBoxKind { Hit, Hurt, Throw, Push }
+public enum DebugBoxKind { Hit, Hurt, Throw, Push, Projectile }
 
 /// <summary>One box to draw, in world centi-units (same space as <see cref="Fighter.X"/>). Spent = the move already connected.</summary>
 public readonly record struct DebugBox(DebugBoxKind Kind, int X0, int Y0, int X1, int Y1, bool Spent = false);
@@ -26,6 +26,14 @@ public static class DebugBoxes
 		int half = c.BodyWidth / 2;
 		list.Add(new DebugBox(DebugBoxKind.Push, f.X - half, f.Y + c.IdleHurtbox.Y * SimConfig.Scale,
 			f.X + half, f.Y + (c.IdleHurtbox.Y + c.IdleHurtbox.H) * SimConfig.Scale));
+
+		// YOK-21: this fighter's projectiles, exactly the boxes Match.ResolveProjectiles tests.
+		foreach (var p in match.Projectiles)
+			if (p.Owner == fighter)
+			{
+				var (px0, py0, px1, py1) = p.WorldBox();
+				list.Add(new DebugBox(DebugBoxKind.Projectile, px0, py0, px1, py1));
+			}
 
 		MoveData? m = f.CurrentMove;
 		bool hittable = !f.KnockedOut && f.State != FighterState.Knockdown;
@@ -72,7 +80,8 @@ public static class DebugBoxes
 		if (m != null)
 		{
 			string phase = f.MoveFrame <= m.Startup ? "startup" : m.IsActive(f.MoveFrame) ? "active" : "recovery";
-			s += $" {m.Id} (slot {f.MoveSlot + 1}) {f.MoveFrame}/{m.TotalFrames} {phase}";
+			string slot = f.ActiveSpecial != SpecialSlot.None ? $"special {f.ActiveSpecial}{(f.ActiveEx ? " EX" : "")}" : $"slot {f.MoveSlot + 1}";
+			s += $" {m.Id} ({slot}) {f.MoveFrame}/{m.TotalFrames} {phase}";
 		}
 		return s + $"  stun {f.StunLeft}";
 	}

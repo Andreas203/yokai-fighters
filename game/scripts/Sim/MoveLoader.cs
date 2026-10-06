@@ -75,6 +75,10 @@ public static class MoveLoader
 				throw new FormatException($"{id}: throwbox frames {t.First}-{t.Last} outside the active window");
 
 		move = MoveData.ReadImpact(move, fd); // YOK-20: hit strength (V2) and meter gain (C5)
+		move = MoveData.ReadSpecialProperties(move, fd); // YOK-21: projectile, invuln, cancel windows
+
+		if (move.Projectile != null && move.Damage > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
+			throw new FormatException($"{id}: a damaging projectile needs hitstun and blockstun");
 
 		if (move.Hitboxes.Count > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
 			throw new FormatException($"{id}: a move with hitboxes needs hitstun and blockstun");
@@ -88,10 +92,20 @@ public static class MoveLoader
 		Parse(File.ReadAllText(path), Path.GetFileNameWithoutExtension(path));
 
 	/// <summary>Every *.json in the folder, sorted by file name so slot order is deterministic.</summary>
-	public static MoveData[] LoadDirectory(string dir) =>
+	/// <param name="includeSpecials">False skips kind "special" files: the fight loads those into slots A-D
+	/// through <see cref="SpecialLoader"/> (YOK-21). Tests keep the default to run fixture specials by slot.</param>
+	public static MoveData[] LoadDirectory(string dir, bool includeSpecials = true) =>
 		Directory.Exists(dir)
-			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal).Select(LoadFile).ToArray()
+			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
+				.Where(f => includeSpecials || KindOf(f) != "special").Select(LoadFile).ToArray()
 			: Array.Empty<MoveData>();
+
+	/// <summary>The file's top-level "kind" (null when absent).</summary>
+	public static string? KindOf(string path)
+	{
+		using var doc = JsonDocument.Parse(File.ReadAllText(path));
+		return doc.RootElement.TryGetProperty("kind", out var k) ? k.GetString() : null;
+	}
 
 	/// <summary>Kind "throw" (data/schema/throw.schema.json): the two input.buttons, ORed. None for other kinds.</summary>
 	private static InputBits ThrowInput(JsonElement root, string id)
