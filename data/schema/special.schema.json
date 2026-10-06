@@ -11,7 +11,7 @@
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "status": { "$ref": "common.schema.json#/$defs/status" },
-    "source": { "$ref": "common.schema.json#/$defs/yokai" },
+    "source": { "$ref": "common.schema.json#/$defs/yokai", "description": "Who it comes from (A8). YOK-56: 'ryo' + starter = Ryo's kit (A1); a yokai's specials are its own kit in fights and draftable after beating it." },
     "starter": { "type": "boolean", "description": "Ryo's starters fill two slots at run start (A1)." },
     "rarity": { "$ref": "common.schema.json#/$defs/rarity" },
     "locked": { "type": "boolean", "description": "Starts locked behind meta-unlocks (A11, the ◆ marks)." },

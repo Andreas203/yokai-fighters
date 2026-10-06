@@ -11,7 +11,7 @@
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "status": { "$ref": "common.schema.json#/$defs/status" },
-    "source": { "$ref": "common.schema.json#/$defs/yokai" },
+    "source": { "$ref": "common.schema.json#/$defs/yokai", "description": "Whose kit the throw belongs to (YOK-56: the fight loads each fighter's own files by source)." },
     "clip": { "$ref": "common.schema.json#/$defs/id", "description": "The attacker's grab clip: data/clips/<clip>.json (F2). The defender never needs a matching clip (C4)." },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "input": {
