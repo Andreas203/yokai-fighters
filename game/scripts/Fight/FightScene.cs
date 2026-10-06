@@ -188,10 +188,10 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
-		if (FlowPaused) { Render(); return; }
+		if (FlowPaused || Stage == DemoStage.Title) { _clock.Restart(); Render(); return; } // YOK-39: no ticks before Start
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
+		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(P1Live(), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
 		CheckDuelOver(); // YOK-48
 		Render();
 	}
@@ -199,6 +199,7 @@ public partial class FightScene : Node3D
 	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw.</summary>
 	public void Step(FighterInput p1, FighterInput p2)
 	{
+		if (Stage == DemoStage.Title) return; // YOK-39: the sim waits for Start Game
 		Shake.Advance();
 		StepSim(p1, p2);
 		CheckDuelOver(); // YOK-48
