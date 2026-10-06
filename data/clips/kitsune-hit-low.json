@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-hit-low",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "171 Hit_Reaction_to_Waist",
+  "frames_total": 37,
+  "hit_start": 3,
+  "hit_end": 13,
+  "retarget_notes": "WARN. Doubles at the waist (torso 1 to 38 deg over raw ticks 12-22, head down 20 cm), hold to raw 46. Planted feet 0.5 cm, hips shift 12 cm sideways. Sleeves 7.3x at the hit, stills clean. Tail proxy dips 1.7 cm under the floor for 18 ticks at the bend (data fix: tail root or fan).",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-45dd-724a-afb2-327d778f1f87; file game/assets/generated/clips/kitsune/kitsune-hit-low.glb; trim raw 60 fps ticks 10-46 inclusive (trim is data, no hand keying). Frames 1-37. Snap frames 3-13, hold frame 13+ (raw 22 to 46)."
+}

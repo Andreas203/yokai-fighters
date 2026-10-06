@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-crouch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "258 CrouchLookAroundBow",
+  "frames_total": 30,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. The clip starts already squatting and never stands up: there is no stand-to-crouch transition in it (max joint 3.9 deg per tick over 352 ticks). Only the hold is usable (hips 56 cm vs 91 standing, torso 26 deg forward). Hakama bunches at the knees with no poke-through; sleeves low; tail proxy clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-3f90-750c-9cc6-387b5c496768; file game/assets/generated/clips/kitsune/kitsune-crouch.glb; trim raw 60 fps ticks 108-137 inclusive (trim is data, no hand keying). Hold frames 108-137 (head sway only). Down and up (about 6 ticks each) must be a data blend from idle, not a clip. Deep squat, not a fighting crouch: designer to confirm it reads."
+}

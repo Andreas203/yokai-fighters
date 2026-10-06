@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-foxfire",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "136 mage_soell_cast_7",
+  "frames_total": 95,
+  "hit_start": 19,
+  "hit_end": 30,
+  "retarget_notes": "WARN. Forearm-raise cast: the right hand rises from the chest to 50 cm forward at raw 64 (release visible from raw 53) and holds there to raw 100, then retracts. Hips advance 34 cm over the cast and the right foot shuffles 33 cm (21 cm if stripped): the projectile spawn point must be taken from the hand, not the origin. Sleeve stretch at the release is the lowest of all hit takes (6.1x vs the heavy 9.6x) but the cuffs flare forward with the lining visible. Hakama clean; tails clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-7dd0-77bc-bf29-391d4c8fcd25; file game/assets/generated/clips/kitsune/kitsune-foxfire.glb; trim raw 60 fps ticks 35-129 inclusive (trim is data, no hand keying). Frames 1-95. Projectile release at hit_start frame 19 (raw 53); hit_end frame 30 = full extension (raw 64); hold to frame 66, recovery to 95 (could be cut to about 70). Startup 18 vs 15 in the design. The same clip must work on Ryo (T0)."
+}

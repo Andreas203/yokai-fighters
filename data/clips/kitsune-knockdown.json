@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-knockdown",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "190 Knock_Down_1",
+  "frames_total": 49,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. Not a plain fall: the clip walks 70 cm, then she somersaults backward (legs go overhead raw 60-80) and lands flat on her back. The hakama flips up over the torso at raw 70-90 (a full inverted skirt, stretch 14.9x, no sleeve inversion); sleeves are fine. Lies flat from raw tick 95 (hips 29 cm, torso 94 deg). Tail proxy stays above the floor, but the fan is crushed under the body in the stills. Hips drift is small once trimmed (4 cm).",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-7228-76d3-9c4c-5d8988209547; file game/assets/generated/clips/kitsune/kitsune-knockdown.glb; trim raw 60 fps ticks 52-100 inclusive (trim is data, no hand keying). Frames 1-49: flat from frame 44 (raw 95), held to 49. 44 ticks vs the E4 40 standard. Unusual flip: designer look needed; fallback 187 Knock_Down (3 credits). hit fields null. The get-up must start supine head-to-minus-z (hips-aligned join)."
+}

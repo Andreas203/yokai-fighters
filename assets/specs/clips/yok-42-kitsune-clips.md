@@ -1,6 +1,6 @@
 # YOK-42: Kitsune demo clips (Foxfire + normals), Foxfire level preset, bamboo-grove dusk stage preset
 
-Status: SPEC ONLY, awaiting designer approval. No Meshy job has been run and no credits spent.
+Status: **TAKE 1 RUN AND MEASURED (2026-10-06): 18 takes, 54 credits, no retakes. See `## Takes`.** The spec below is unchanged except where the takes log says otherwise.
 Context: YOK-39 demo, retarget gate closed (`docs/assets/retarget_gate.md`): Kitsune GO, wide-sleeve flare on big arm swings accepted; hakama and hair held up. Strikes are open-handed (no finger bones). Rules: F2, F5 (cap 3 takes per move), F6 (in place, one preset shared by every rig), C4 (generic grab, no paired throw), A5/V8 (data-only level presets), V5 (foxfire-orange sparks), V9 (stage). The demo ships silent: no sound cues.
 
 Kitsune rig: `01a10e47-91f6-709b-bd34-8884f8cbabbb`. Ryo rig: `01a10e47-857e-73a0-9f7a-cd74795198fb`.
@@ -85,7 +85,51 @@ The stage assets are generated per `assets/specs/bamboo-grove-dusk.md` (YOK-29/3
 
 ## Takes
 
-None yet. Each run appends: take number, task id, rig, credits, balance before/after, measured verdict.
+Take 1, 2026-10-06. Designer-approved this session: Kitsune rig `01a10e47-91f6-709b-bd34-8884f8cbabbb` only, 18 takes x 3 = **54 credits**, first take only, no retakes. Spent **54**. Balance at the check before the run 941; after the run 818, which includes the Ryo agent's parallel YOK-32 spend (69), so mine is 941 - 54 = 887 before theirs. Three rows were added to the 15 first-pass rows: guarded walk forward 689, guarded walk back 688, one guard idle (250 `Idle_10`; no Ryo id was pushed yet, so chosen from the public table's previews: a looping fighting stance, arms close to the body, 89-frame preview. If YOK-32 picks another idle, the Kitsune idle is the one to keep in sync).
+
+GLBs: `game/assets/generated/clips/kitsune/kitsune-<name>.glb` are animation-only copies (skeleton, skin and animation kept, the mesh replaced by one invisible triangle, no textures; made by `tools/strip_clip.py`; poses verified identical to the full files in Godot 4.6.3, max joint-matrix difference 0). 18 files, 2 MB in total. The full 4.6 MB files are not committed: re-download them for free from the task ids below with `meshy_download_model` (task_type animation). Stills: `docs/assets/clips/kitsune/<name>.png` (front on the top row, side below, with the 9-capsule proxy tail fan on the hips; seven to eight raw ticks per sheet across the usable window). Measured with `tools/measure_clip.py` (numpy, FK plus linear-blend skinning, 60 ticks) and Godot 4.6.3 stills.
+
+### Verdicts
+
+Criteria: PASS = nothing to flag. WARN = usable, a named cost the designer can accept (sleeve flare in the accepted heavy class, treadmill walk, data blend needed). RETAKE = a spec criterion fails: more than 35 cm of body travel in the usable window, a required motion absent or 5x longer than needed, a tube-deformed hakama, or a hit-frame sleeve stretch above 14x (the accepted heavy peaks at 9.6x on its hit frames, 11.7x over the clip). "Ticks" are raw 60 fps ticks at 30 fps keys.
+
+| # | Move | Preset | Task id | Raw ticks | Trim (raw) | Frames / hit window | Verdict |
+|---|---|---|---|---|---|---|---|
+| 3 | jump | 466 | `01a1100b-3de4-7225-8eaf-8a047bfe2257` | 114 | 30-78 | 49; airborne 3-37 | WARN (arms swing wide, sleeves like wings at the apex, 11.3x) |
+| 4 | crouch | 258 | `01a1100b-3f90-750c-9cc6-387b5c496768` | 352 | hold 108-137 | 30 | WARN (**no stand-to-crouch transition in the clip**; hold only; down/up is a data blend; deep squat) |
+| 5 | block high | 139 | `01a1100b-411d-73c3-b9a1-93acbc8fa464` | 98 | 14-50 | 37; flex 19-25, hold from 27 | WARN (sleeves pile at the head, lining visible, 11.4x) |
+| 6 | block low | 146 | `01a1100b-42d4-7488-8182-7a76ef612eac` | 34 | 0-34 | 35; hold from 29 | WARN (cuffs open to the camera 12.7x; right foot drifts 7.3 cm) |
+| 7 | hit high | 174 | `01a1100b-4478-710f-b827-d5a3bc27c8ae` | 172 | 28-60 | 33; snap 3-17, hold after | WARN (hips 13 cm back; tail proxy 1 cm under floor on one tick) |
+| 8 | hit low | 171 | `01a1100b-45dd-724a-afb2-327d778f1f87` | 100 | 10-46 | 37; snap 3-13, hold after | WARN (tail proxy 1.7 cm under floor for 18 ticks) |
+| 9 | knockdown | 190 | `01a1100b-7228-76d3-9c4c-5d8988209547` | 198 | 52-100 | 49; flat from 44 | WARN (a backward somersault, hakama flips over the torso at raw 70-90, 14.9x; 44 vs 40 ticks) |
+| 10 | get-up | 344 | `01a1100b-738a-7041-839a-dbb2a8ccf02b` | 498 | 104-364 | 261 of continuous motion | **RETAKE** (about 4.4 s from lying to standing; target 25 ticks; cannot be trimmed, a 10x speed-up smears) |
+| 11 | LP | 192 | `01a1100b-74f7-749d-89a7-ca797e1ce8a3` | 122 | 26-67 | 42; hit 9-22 | **RETAKE** (hit-frame sleeve stretch 16.6x, 336 stretched sleeve edges per tick vs the heavy's 172; lining visible on both sleeves) |
+| 12 | MP | 210 | `01a1100b-764a-75b4-b229-55e9f0974eb8` | 240 | 103-167 | 65; hit 10-19 | WARN (long sleeve flare at full reach 7.7x; guard frames fold sleeves over the face) |
+| 13 | HP (existing) | 194 | `01a10e5b-4763-7086-95f6-9b05c342b132` | 63 | 28-62 | 35; hit 11-14 | WARN (gate, accepted) |
+| 14 | LK | 211 | `01a1100b-77c2-716a-aa3b-b824c890837c` | 152 | 42-114 | 73 | **RETAKE** (the hips advance 41 cm in the usable window, 76 cm in the clip; stripped, both planted feet slide 13.5 cm) |
+| 15 | MK | 209 | `01a1100b-7944-77f4-ae8b-d192ac8fa326` | 84 | 29-63 | 35; hit 11-25 | WARN (a head-high kick, foot 107 cm; hakama drawn into a tube around the leg; 11.9x sleeves) |
+| 16 | HK | 207 | `01a1100b-7ad5-7627-be19-120b28f86a52` | 162 | 69-114 | 46; hit 15-21 | **RETAKE** (a spinning kick: 65 cm sideways root travel, left foot slides 22.5 cm stripped; the hakama is dragged into a tube around the leg at 83-89) |
+| 17 | throw | 259 | `01a1100b-7c57-73cf-a0d0-82566171bd64` | 284 | 30-60 | 31; hit 4-20 | WARN (28 cm hip advance must be replayed from move data, 30 cm slide if stripped; the accepted shove) |
+| 18 | Foxfire | 136 | `01a1100b-7dd0-77bc-bf29-391d4c8fcd25` | 162 | 35-129 | 95; release 19, extended 30, hold to 66 | WARN (34 cm hip advance, right foot shuffles 33 cm: spawn point is the hand; startup 18 vs 15) |
+| +1 | walk guarded fwd | 689 | `01a1100b-7f34-7143-8c35-78c8784825ad` | 104 | 0-103 | 104 loop | WARN (hakama stretch at the free-walk level; stance foot 0.64-0.72 m/s) |
+| +2 | walk guarded back | 688 | `01a1100b-8968-7618-8ced-06214e02cfd3` | 104 | 0-103 | 104 loop | WARN (loop pop 7.4 deg; stance foot 0.57-0.61 m/s) |
+| +3 | idle (guard) | 250 | `01a1100b-8ac2-7638-8dca-a0a81de6ab39` | 222 | 0-221 | 222 loop | **PASS** (loop closes at 0.3 deg, root 0, feet planted 0 cm) |
+| 1 | walk (free rig) | `walking_man` | n/a | 64 | 0-63 | 64 loop | WARN (YOK-31, unchanged) |
+
+Dash (row 2, free rig run) was not part of this run's measurement. All takes: no jitter (max joint rotation per tick 3-19 deg, limit 30), no inside-out sleeve in the stills of the WARN clips beyond the accepted-heavy class, tails (proxy fan) clear of legs and hair in every pose; the proxy dips under the floor only in the two hit reactions (1-1.7 cm) and in the supine get-up. The proxy tail test against the hakama is not discriminating (the proxy root sits inside the skirt in the bind pose), so the stills decide.
+
+### Retakes proposed (designer approves; nothing run)
+| Move | Why | Proposed preset | Credits |
+|---|---|---|---|
+| get-up (R12) | 344 is a 4.4 s rise | 347 `Stand_Up4` (spec fallback, a quick roll-and-rise; unseen, verify on the preview) | 3 |
+| LP (N01) | sleeve inversion on the jab at the hit frames | 191 `Left_Jab_from_Guard` (the mirrored jab; same family, may share the flare, so it is not a sure fix) | 3 |
+| LK (N04) | 41 cm lunge | 103 `Simple_Kick` (Fighting; unseen, check the preview first); 215 `High_Kick` is the other candidate | 3 |
+| HK (N06) | spinning kick, 65 cm sideways travel | 213 `Leg_Sweep` (spec fallback) | 3 |
+
+Total if all four are approved: 12 credits (take 2 of 3 for each move, F5). If a retake is not approved, the move substitution rule applies (F5): LP could reuse MP (210) trimmed, LK could reuse MK (209). The Ryo rig takes the same ids, so a shared retake is 3 credits per rig, counted in YOK-32.
+
+### Data written
+`data/clips/kitsune-*.json` for every PASS and WARN take (16 files, schema-valid): idle, walk-fwd, walk-guard-fwd, walk-guard-back, crouch, jump, block-high, block-low, hit-high, hit-low, knockdown, medium-punch, medium-kick, heavy-punch, throw, foxfire. None for the RETAKE rows. `hit_start`/`hit_end` for a hit reaction are the visible snap; for blocks, jump, crouch, walks, idle and knockdown they are null. The Foxfire (V8) and bamboo-grove presets stay in this spec because `data/schema/` has no preset schema.
 
 ## Needed from the designer
 

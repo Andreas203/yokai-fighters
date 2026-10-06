@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-hit-high",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "174 Face_Punch_Reaction",
+  "frames_total": 33,
+  "hit_start": 3,
+  "hit_end": 17,
+  "retarget_notes": "WARN. Clear head and torso snap-back (torso 5 to 38 deg over raw ticks 30-44, head z -30 cm), recoil held to raw tick 60. Hips drift 13 cm back, stance feet shift 5/7.5 cm while the weight moves. Sleeves flare as the arms open (7.4x, lining visible at tick 28-36). Tail proxy dips 1 cm under the floor on one tick (data fix: raise the tail root).",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-4478-710f-b827-d5a3bc27c8ae; file game/assets/generated/clips/kitsune/kitsune-hit-high.glb; trim raw 60 fps ticks 28-60 inclusive (trim is data, no hand keying). Frames 1-33. hit_start/hit_end = the visible reaction (snap 3-17), then hold frame 17+ (raw 44 to 60) for hitstun; the raw clip recovers over raw 60-130, not used."
+}

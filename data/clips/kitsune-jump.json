@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-jump",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "466 Regular_Jump",
+  "frames_total": 49,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. Root drift 4 cm xz, height is the clip own (hips +39 cm at apex), planted feet 2.5/4.0 cm. Arms swing out wide on the way up (hands to 190 cm) so the haori sleeves spread like wings at the apex; stretch up to 11.3x with no inside-out cuff in stills. Hakama holds; tail proxy clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-3de4-7225-8eaf-8a047bfe2257; file game/assets/generated/clips/kitsune/kitsune-jump.glb; trim raw 60 fps ticks 30-78 inclusive (trim is data, no hand keying). Frames: pre-jump push 1-2 (E10 ok after head-trim from raw 30), feet leave floor at frame 3 (raw 32), apex frames 19-22, feet touch frame 37 (raw 66), landing crouch to 49. Airborne 35 ticks vs the 40 target."
+}
