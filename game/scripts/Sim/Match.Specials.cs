@@ -56,8 +56,9 @@ public sealed partial class Match
 	public const InputBits Kicks = InputBits.LightKick | InputBits.MediumKick | InputBits.HeavyKick;
 
 	/// <summary>
-	/// EX input (designer proposal, SimConfig.ExPressWindow): Kata, two punches or two kicks; Kihon (YOK-23,
-	/// designer proposal), Special + any one punch or kick. The Special bit only reaches here from the Kihon parser.
+	/// EX input (SimConfig.ExPressWindow): a motion special (Kata, or Kihon motion), two punches or two kicks
+	/// (designer proposal); Kihon Special + direction (E18), Special + any one punch or kick. The Special bit
+	/// only reaches here from the Kihon parser.
 	/// </summary>
 	public static bool ExPair(InputBits pressed) =>
 		(pressed & InputBits.Special) != 0

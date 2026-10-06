@@ -69,7 +69,7 @@ public static class KihonTests
 		var cases = new (string dir, SpecialSlot slot)[]
 		{
 			("5", SpecialSlot.A), ("6", SpecialSlot.B), ("4", SpecialSlot.C), ("2", SpecialSlot.D),
-			// Diagonals: designer proposal (down wins; the vertical part of up is ignored).
+			// Diagonals (E18): down-diagonals are D; up-diagonals are their horizontal, up is A.
 			("3", SpecialSlot.D), ("1", SpecialSlot.D), ("8", SpecialSlot.A), ("9", SpecialSlot.B), ("7", SpecialSlot.C),
 		};
 		foreach (int facing in new[] { 1, -1 })
@@ -86,18 +86,69 @@ public static class KihonTests
 	}
 
 	[Test]
-	public static void Parser_KihonIgnoresMotions_KataIgnoresSpecial()
+	public static void Parser_KihonAcceptsMotionsAt100_KataIgnoresSpecial()
 	{
 		var k = Parse("5 2 3 6+LP", ControlScheme.Kihon);
-		Assert.True(k.Kind == CommandKind.Normal && k.Button == LP && !k.Precision, "Kihon: 236+LP is just a normal");
-		Assert.Equal(6, k.Direction, "normal keeps its direction");
+		Assert.True(k.Kind == CommandKind.Special && k.Slot == SpecialSlot.A && k.Motion == Motion.Qcf236,
+			"Kihon: 236+LP fires slot A, exactly as Kata (E18)");
+		Assert.True(!k.Precision, "Kihon motion: no precision bonus (100% damage, E18)");
+		Assert.Equal(LP, k.Pressed, "Kihon motion: Pressed has no Special bit, so Kata EX pairs apply");
+		var kata = Parse("5 2 3 6+LP", ControlScheme.Kata);
+		Assert.Equal(kata with { Precision = false }, k, "Kihon motion command = Kata's minus precision");
+		Assert.Equal(SpecialSlot.D, Parse("5 2 5 2+HK", ControlScheme.Kihon).Slot, "Kihon: 22+K fires slot D");
 		Assert.Equal(CommandKind.None, Parse("5 5+S", ControlScheme.Kata).Kind, "Kata: Special does nothing");
 		Assert.Equal(CommandKind.None, Parse("5 5+S 5+S", ControlScheme.Kihon).Kind, "held Special fires once (edge only)");
 		var ex = Parse("5 6+S+MK", ControlScheme.Kihon);
 		Assert.True(ex.Kind == CommandKind.Special && ex.Slot == SpecialSlot.B && ex.Button == MK, "Special + MK: slot B, button MK");
-		Assert.True(Match.ExPair(ex.Pressed), "Special + one kick reads as EX (designer proposal)");
+		Assert.True(Match.ExPair(ex.Pressed), "Special + one kick reads as EX (E18)");
 		Assert.True(!Match.ExPair(Parse("5 6+S", ControlScheme.Kihon).Pressed), "Special alone is not EX");
 		Assert.True(!Match.ExPair(LP) && Match.ExPair(LP | MP) && !Match.ExPair(LP | LK), "Kata EX pairs unchanged");
+	}
+
+	[Test]
+	public static void Parser_SameTickSpecialBeatsMotion()
+	{
+		// 236 completes on the tick Special goes down: Special + direction (6 = forward = B) wins over the motion (A).
+		var both = Parse("5 2 3 6+S+LP", ControlScheme.Kihon);
+		Assert.True(both.Kind == CommandKind.Special && both.Slot == SpecialSlot.B && both.Motion == Motion.None,
+			"same tick: Special + forward = B, motion ignored (E18)");
+		Assert.True((both.Pressed & S) != 0 && Match.ExPair(both.Pressed), "the attack is the Kihon EX button");
+		Assert.Equal(SpecialSlot.B, Parse("5 2 3 6+S", ControlScheme.Kihon).Slot, "Special alone after 236: B");
+		// Facing left: the same physical input recorded mirrored still resolves to B, not the motion's A.
+		Assert.Equal(SpecialSlot.B, Parse("5 2 3 6+S+LP", ControlScheme.Kihon, -1).Slot, "mirrored: B");
+	}
+
+	/// <summary>Raw stream over all nine directions and attacks (never Special), so K1 motions form often.</summary>
+	static List<FighterInput> MotionStream(uint seed, int n)
+	{
+		var rng = new SimRng(seed);
+		InputBits[] buttons = { InputBits.None, InputBits.None, LP, MP, HP, LK, MK, InputBits.HeavyKick, LP | MP, LK | MK, LP | LK };
+		var list = new List<FighterInput>();
+		int dir = 5;
+		for (int t = 0; t < n; t++)
+		{
+			if (rng.Next(3) == 0) dir = 1 + rng.Next(9);
+			list.Add(new FighterInput(Numpad.ToBits(dir, 1) | buttons[rng.Next(buttons.Length)]));
+		}
+		return list;
+	}
+
+	[Test]
+	public static void K3_MotionCommandsIdenticalInBothSchemes_ExceptPrecision()
+	{
+		var kata = new InputReader { Scheme = ControlScheme.Kata };
+		var kihon = new InputReader { Scheme = ControlScheme.Kihon };
+		int specials = 0;
+		var stream = MotionStream(7, 4000);
+		for (int t = 0; t < stream.Count; t++)
+		{
+			int facing = (t / 250) % 2 == 0 ? 1 : -1; // flip sides now and then
+			kata.Update(stream[t], facing);
+			kihon.Update(stream[t], facing);
+			Assert.Equal(kata.Latest with { Precision = false }, kihon.Latest, $"tick {t}: same command, 100% in Kihon");
+			if (kata.Latest.Kind == CommandKind.Special) { specials++; Assert.True(kata.Latest.Precision, "Kata motion: precision"); }
+		}
+		Assert.True(specials > 20, $"the stream formed motions ({specials})");
 	}
 
 	// --- Match: slots, damage, facing ----------------------------------------------------------
@@ -123,14 +174,44 @@ public static class KihonTests
 	[Test]
 	public static void Match_KihonDealsFullDamage_KataGetsPrecision()
 	{
-		foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
+		// Kihon Special + direction and Kihon motion: 100% of 60 (K2, E18); Kata motion: +10% (K1).
+		foreach (var (scheme, seq, expected) in new[] {
+			(ControlScheme.Kihon, "5+S", 60), (ControlScheme.Kihon, "2 3 6+LP", 60), (ControlScheme.Kata, "2 3 6+LP", 66) })
 		{
 			var hits = new List<HitEvent>();
 			var m = Setup(scheme, hits: hits);
-			Play(m, Seq(scheme == ControlScheme.Kihon ? "5+S" : "2 3 6+LP"), total: 120);
-			Assert.Equal(1, hits.Count, $"{scheme}: the wave hits once");
-			int expected = scheme == ControlScheme.Kihon ? 60 : 66; // K2 100% of 60; K1 +10%
-			Assert.Equal(1000 - expected, m.P2.Health, $"{scheme}: damage");
+			Play(m, Seq(seq), total: 120);
+			Assert.Equal(1, hits.Count, $"{scheme} [{seq}]: the wave hits once");
+			Assert.Equal(1000 - expected, m.P2.Health, $"{scheme} [{seq}]: damage");
+		}
+	}
+
+	[Test]
+	public static void Match_KihonMotionFiresItsSlot_SameTickSpecialWins_MotionEx()
+	{
+		var m = Setup(fillCD: true);
+		Play(m, Seq("2 3 6+LP"), Seq("2 1 4+LP", -1));
+		Assert.Equal(SpecialSlot.A, m.P1.ActiveSpecial, "Kihon 236+P: slot A");
+		Assert.Equal(SpecialSlot.C, m.P2.ActiveSpecial, "Kihon 214+P (facing left): slot C");
+		Assert.True(!m.P1.ActivePrecision && !m.P2.ActivePrecision, "Kihon motion: no precision");
+
+		var both = Setup(fillCD: true);
+		both.P1.Meter = 100;
+		Play(both, Seq("2 3 6+S+LP"));
+		Assert.True(both.P1.ActiveSpecial == SpecialSlot.B && both.P1.ActiveEx, "same tick: Special + forward + LP = EX B, not the motion's A");
+
+		var ex = Setup();
+		ex.P1.Meter = 100;
+		Play(ex, Seq("2 3 6+LP+MP"));
+		Assert.True(ex.P1.ActiveSpecial == SpecialSlot.A && ex.P1.ActiveEx && !ex.P1.ActivePrecision && ex.P1.Meter == 0,
+			"Kihon motion + two punches: EX exactly as Kata, at 100%");
+
+		foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
+		{
+			var thr = Setup(scheme, p2x: -300 + 120);
+			thr.P1.Meter = 100;
+			Play(thr, Seq("2 3 6+LP+LK"));
+			Assert.True(thr.P1.CurrentMove is { IsThrow: true } && thr.P1.Meter == 100, $"{scheme}: motion + LP+LK is still the throw");
 		}
 	}
 
@@ -163,6 +244,17 @@ public static class KihonTests
 			Assert.Equal(ex ? 0 : 100, m.P1.Meter, $"gap {gap}: meter");
 			Assert.Equal(SpecialSlot.A, m.P1.ActiveSpecial, $"gap {gap}: still slot A");
 			Assert.True(!m.P1.ActivePrecision, "Kihon EX: no precision");
+		}
+		for (int early = 1; early <= 2; early++) // attack 1-2 ticks before Special: its normal, never EX (E18)
+		{
+			var m = Setup();
+			m.P1.Meter = 100;
+			var input = new List<FighterInput> { new(LK) };
+			for (int k = 1; k < early; k++) input.Add(Idle);
+			input.Add(new FighterInput(S));
+			Play(m, input);
+			Assert.True(m.P1.CurrentMove is { IsNormal: true, Button: InputBits.LightKick }, $"LK {early} early: the LK normal");
+			Assert.True(!m.P1.ActiveEx && m.P1.Meter == 100, $"LK {early} early: no EX, no meter");
 		}
 		var poor = Setup();
 		poor.P1.Meter = 99;
