@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-hit-low",
+  "status": "final",
+  "source": "meshy-library",
+  "clip": "Hit_Reaction_to_Waist",
+  "frames_total": 17,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). No clipping (4 arm verts in torso core at the bend). Planted-foot shift 3.1 / 2.1 cm raw.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 171 Hit_Reaction_to_Waist on task 01a1100b-ad15-751e-b145-9fec4694b545, file ryo-hit-low.glb. Raw trim: ticks 8-50 at 2.6x (60 ticks per second). Verdict PASS. Raw 101 ticks (1.67 s). Doubles over at the waist, deepest at raw 50. Trim raw 8-50, 2.6x: 17 frames, hold the bent pose. Hips drop 10 cm."
+}

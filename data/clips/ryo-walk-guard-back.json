@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-walk-guard-back",
+  "status": "final",
+  "source": "meshy-library",
+  "clip": "Walk_Fight_Back_inplace",
+  "frames_total": 104,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Guard held, no clipping, max joint rate 5.9 deg per tick.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 688 Walk_Fight_Back_inplace on task 01a1100b-cf61-7394-82d1-36faa648c4e4, file ryo-walk-guard-back.glb. Raw trim: ticks 0-104 at 1x (60 ticks per second). Verdict PASS. Raw 105 ticks (1.73 s), in place, loop 104 frames; loop closes within 4.8 deg (RightLeg), a small pop. Stance-foot ground speed about 0.6 m/s (0.010 m per tick), so data walk-back speed should match. Replaces the reversed free walk (U2)."
+}

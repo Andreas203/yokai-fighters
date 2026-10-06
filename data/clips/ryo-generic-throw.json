@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-generic-throw",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Step_Forward_and_Push",
+  "frames_total": 61,
+  "hit_start": 6,
+  "hit_end": 12,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Gate result FAIL as a grab, accepted as a shove substitute (F5) by the designer. No clipping, no jitter (max 6.3 deg per tick).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 259 Step_Forward_and_Push on task 01a10e69-98a9-7088-a761-e49d556113e6, file ryo-grab-2.glb. Raw trim: ticks 30-90 at 1x (60 ticks per second). Verdict WARN. T01 generic throw (C4), generated and measured in YOK-31 (file game/assets/generated/clips/ryo-grab-2.glb, 285 raw ticks). Head-trim from raw 30 (designer decision), tail cut at raw 90: 61 frames, hit frames 6-12 (startup 5 = C4). A two-hand palm push; the forward step (about 0.9 m) is move data (E15). Stripping the root slides the left foot about 33 cm."
+}

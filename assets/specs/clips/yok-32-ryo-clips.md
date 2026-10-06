@@ -1,6 +1,6 @@
 # YOK-32 Ryo clip picks for the YOK-39 demo (spec step, nothing run)
 
-Ticket YOK-32. Rules: F2, F5, F6, C2-C8, E4, E10, E11, V8. **Status: AWAITING DESIGNER APPROVAL. No credit-spending job has been run.** Balance at spec time: 941 credits (free check).
+Ticket YOK-32. Rules: F2, F5, F6, C2-C8, E4, E10, E11, V8. **Status: RUN (23 takes, 69 credits, designer-approved; see Takes). Balance after: 818.**
 Rig: Ryo `01a10e47-857e-73a0-9f7a-cd74795198fb`. Retarget gate closed, Ryo GO (`docs/assets/retarget_gate.md`). Open-handed strikes (no finger bones). Demo ships silent: no sound cues in this pass.
 
 ## How the ids were found (and how much to trust them)
@@ -87,4 +87,62 @@ Run only approved lines on the Ryo rig (check balance first; log each task id un
 Colours are palette proposals from V1 for the designer to adjust. Lv 3 (Great Wave, Heaven Seal) presets are out of scope for the demo set.
 
 ## Takes
-None run. Balance 941.
+Run 2026-10-06 on the Ryo rig `01a10e47-857e-73a0-9f7a-cd74795198fb`, designer-approved: 23 takes x 3 = **69 credits**, first take only, no retakes. Balance before 941 (shared with the Kitsune run of 54), after 818, so this run spent exactly 69. Full GLBs (4.3 MB each, 95 MB for 23) are not committed. The committed `game/assets/generated/clips/ryo/ryo-<move>.glb` are **animation-only** copies (skeleton, skin and animation kept, mesh replaced by one hidden triangle, no textures; 70-120 KB each). Sampled Godot 4.7.2 poses of the stripped and the full file are identical. The full files can be re-downloaded from the task ids below with `meshy_download_model` (no credits).
+
+Measured as in the YOK-31 gate: skeleton FK and linear-blend skinning at every 60-fps tick (clips come as 30 fps keys), stills rendered in Godot 4.7.2 (camera follows the hips, tick in each label) under `docs/assets/clips/ryo/ryo-<move>.png`. "Raw ticks" count 60 per second from the clip start. Hits are the visible contact or release window; frames are 1-based after the trim (`data/clips/ryo-*.json`).
+
+| Move | Preset | Task id | Credits | Raw ticks | Trim / speed | Frames | Hit | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| N01 light punch | 192 Right_Jab_from_Guard | 01a1100b-a09e-777e-b304-a4ea9bb17af0 | 3 | 123 | 30-66, 1.5x | 25 | 5-6 | PASS |
+| N02 medium punch | 210 Boxing_Guard_Prep_Straight_Punch | 01a1100b-a271-754d-9833-81d94939c09b | 3 | 241 | 106-150, 1.0x | 45 | 7-9 | WARN |
+| N04 light kick | 211 Boxing_Guard_Step_Knee_Strike | 01a1100b-a402-765a-8d8d-29284d6a3161 | 3 | 153 | 46-100, 1.5x | 37 | 6-7 | WARN |
+| N05 medium kick | 209 Boxing_Guard_Right_Straight_Kick | 01a1100b-a57c-71e7-8cbf-99916ac3aada | 3 | 85 | 33-70, 1.2x | 32 | 8-10 | WARN |
+| N06 heavy kick | 207 Roundhouse_Kick | 01a1100b-a710-75cf-b687-8b2adafacfaa | 3 | 163 | none | none | none | **RETAKE** |
+| R07 block high | 139 Block2 | 01a1100b-a8cb-747b-a769-b3db687ac12c | 3 | 99 | 20-30, hold | 11 | none | PASS |
+| R08 block low | 146 Block10 | 01a1100b-aa32-77b6-9211-30179c1e069f | 3 | 35 | 0-34, hold | 35 | none | PASS |
+| R09 hit high | 174 Face_Punch_Reaction | 01a1100b-abad-7540-9b76-d13be5d7c6d7 | 3 | 173 | 28-70, 2.5x | 18 | none | PASS |
+| R10 hit low | 171 Hit_Reaction_to_Waist | 01a1100b-ad15-751e-b145-9fec4694b545 | 3 | 101 | 8-50, 2.6x | 17 | none | PASS |
+| R11 knockdown | 190 Knock_Down_1 | 01a1100b-ae90-75f8-8e53-6c75728f4c53 | 3 | 199 | 50-130, 2.0x | 41 | none | WARN |
+| R12 get-up | 344 Stand_Up1 | 01a1100b-b874-7129-a557-0ae49d5a5aba | 3 | 499 | 100-370, 4.0x | 69 | none | WARN |
+| R06 crouch | 258 CrouchLookAroundBow | 01a1100b-b9f9-7773-a18d-d0ebc717b339 | 3 | 353 | hold raw 100 | 1 | none | WARN |
+| dash back | 543 Step_Back | 01a1100b-bb66-7261-83e1-2fb15cb5cd52 | 3 | 55 | 0-55, 3.0x | 19 | none | PASS |
+| R05 jump | 466 Regular_Jump | 01a1100b-bce7-727a-8ab1-2c4474d00010 | 3 | 115 | 32-76, 0.85x | 53 | none | PASS |
+| S01 Spirit Wave | 133 mage_soell_cast_4 | 01a1100b-be4d-7666-8a24-144f0d06edbc | 3 | 135 | 18-75, 1.0x | 58 | 14-16 | WARN |
+| S02 Rising Talisman | 196 Left_Uppercut_from_Guard | 01a1100b-bfb5-776a-95e7-4d2986c2a48c | 3 | 83 | 17-60, 1.0x | 44 | 6-13 | WARN |
+| S03 Foxfire | 136 mage_soell_cast_7 | 01a1100b-c129-7727-8ad9-cdc35fb05ff9 | 3 | 163 | 39-130, 1.0x | 92 | 16-19 | WARN |
+| jump-in punch | 457 Jumping_Punch | 01a1100b-c292-74e1-944e-1ea34687d474 | 3 | 163 | none | none | none | **RETAKE** |
+| jump-in kick | 422 Rising_Flying_Kick | 01a1100b-c3f6-7505-b271-e44951bd8675 | 3 | 93 | 4-66, 1.0x | 63 | 25-34 | WARN |
+| U1 guarded walk fwd | 689 Walk_Fight_Forward_inplace | 01a1100b-c587-72dd-b1c0-afee2b13bbbf | 3 | 105 | loop 104 | 104 | none | PASS |
+| U2 guarded walk back | 688 Walk_Fight_Back_inplace | 01a1100b-cf61-7394-82d1-36faa648c4e4 | 3 | 105 | loop 104 | 104 | none | PASS |
+| U3 back jump | 468 Back_Jump | 01a1100b-d0ef-76a8-83b6-0d92b252e5c7 | 3 | 59 | 10-50, 1.0x | 41 | none | WARN |
+| looping guard idle | 250 Idle_10 | 01a1100b-d24d-718f-873d-31d57646e812 | 3 | 223 | loop 222 | 222 | none | PASS |
+
+Already existing, matches written in `data/clips/`: heavy punch (194, task 01a10e5b-45a5-7037-98b1-83de6aa9f9e9, head-trim 28, 35 frames, hit 11-14), generic throw (259, task 01a10e69-98a9-7088-a761-e49d556113e6, head-trim 30, tail cut at raw 90: 61 frames, hit 6-12) and the free rig walk (64-frame loop).
+
+### Idle pick
+Previews of the library's idle and fighting-stance rows (GIFs, free): `Combat_Stance` 89 holds a sword and shield, `Idle_5` 245 is a loose one-hand pose, `Idle` 0, `Idle_02` 11 and `Idle_03` to `Idle_15` are relaxed or fidgeting stands. **Idle_10 (250)** is a two-fist guard with bent knees and a small bob, 3.56 s preview, 3.70 s on the rig, loops closed (0 deg). Hips sit at 75 cm against 85-87 cm in the strike clips, so every attack should blend in over 8-10 ticks. Open hands (E15).
+
+### Verdict notes
+- **Root motion.** Most strikes keep net drift under 11 cm; do not strip pelvis sway. Clips that travel (knee 211: 81 cm step, Foxfire 136: 55 cm step, jump kick 422: 1.4 m, back jump 468: 1.85 m, dash back 543: 45 cm, get-up 344: 66 cm) need the travel stripped and carried by move data; the foot slide that appears after stripping is listed in each `data/clips` note.
+- **Orientation.** Every Ryo guard clip starts with the hips yawed about -45 to -50 deg from +Z (side-on stance). Strikes rotate toward -4 deg at contact. The model node needs one fixed yaw so the strike axis lies along the fight axis; this is data.
+- **Jitter.** Max joint rate is 5-19 deg per raw tick for all clips; the speed-ups push the knockdown (2.0x, about 38) and get-up (4.0x, about 35) past the 30 limit.
+- **Clipping.** No coat, sleeve or leg clipping visible in any still. Edge stretch at the crotch (RightUpLeg) reaches 6-7x on kicks, flips and the knockdown but not in the stills; the YOK-31 gate had 3.8x on the heavy.
+- **Sound.** None (the demo ships silent).
+
+### Retakes proposed (designer approves, 3 credits each, take 2 of 3)
+| Move | Why it failed | Proposed fallback | Cost |
+|---|---|---|---|
+| N06 heavy kick (207) | A spinning leap: the body pitches forward about 90 deg, the hips travel 1.67 m, feet reach 0.47 m off the ground at raw 80, the kick lands at raw 83-89, and edges stretch 6.6x. Not a ground kick | **215 High_Kick** (2.04 s preview, standing guard to a high kick, no spin; a ground move) first, 213 Leg_Sweep (2.44 s, a turning low sweep) second | 3 |
+| jump-in punch (457) | Not a jump-in punch: it launches 1.7 m high with the arms up, travels 2.9 m, the punch is a swing at raw 80, and it ends in an all-fours landing at raw 120. Hip height 1.71 m, leg-vs-leg axis 0.4 cm | No good library candidate seen (Flying_Fist_Kick 94 is 4.7 s and rolls). **Free option (F5):** jump-in L/M/H reuse the jump-in kick take (ryo-jump-kick) with different data, or the neutral jump | 0 (or 3 for 94, low odds) |
+| R12 get-up (344), optional | Usable at 4x (69 frames) but long | 347 Stand_Up4 (1.64 s, rises from prone, so it starts face-down) | 3 |
+
+### Shared moves with the Kitsune run (PR #33), judged on Ryo's own rig
+Ryo's clothes are fitted (no hakama or sleeve flare), so cloth issues do not apply; motion issues do, and they match hers. Idle: both rigs use 250 `Idle_10`.
+
+| Move | Ryo result | Same retake for both rigs? |
+|---|---|---|
+| Get-up 344 | WARN: about 4.4 s of real rise (raw 100-370), 69 frames at 4x | Yes, 347 `Stand_Up4` for both (motion problem) |
+| Light kick 211 | WARN: 81 cm step then knee; 40 cm hip travel in the trim window, 12 cm slide if stripped | Yes: if retaken, 103 `Simple_Kick` or 215 `High_Kick` serves both; on Ryo it is usable as WARN if the designer prefers no spend |
+| Heavy kick 207 | RETAKE: spin, 1.67 m travel (hers 65 cm sideways), airborne | Yes, same retake for both. She proposed 213 `Leg_Sweep`; I saw both previews and 215 `High_Kick` (2.04 s, no spin) looks the safer ground kick. Designer picks one id for both (F6) |
+| Crouch 258 | WARN: starts already squatting, no transition; also turned -59 deg | Same for both: data blend from the idle guard; swap both to 319 if it reads badly |
+| Others (192, 210, 209, 139, 146, 174, 171, 190, 136) | PASS/WARN as in the table; 190 flips and 136 steps 55 cm | No retake needed on Ryo; see her notes for cloth-specific WARNs |

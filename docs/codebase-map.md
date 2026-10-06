@@ -138,3 +138,6 @@ Beyond the schema it checks: id = file name; files in `data/<folder>/` have that
 
 ### Samples
 `data/samples/` holds one valid file per kind (Spirit Wave + its clip, a sample light punch normal + its clip, Will-o'-wisp, Fox Step, Kitsune patient). Paths print with `/` on every OS. `data/samples/invalid/` holds deliberately malformed files; the default run skips them and `tools/test_validate_data.py` asserts they fail with the expected messages.
+
+### UI screens (`game/scripts/Ui/`, YOK-52, namespace `YokaiFighters.Ui`)
+`IRewardSource.cs` holds `CardView`, `TargetView`, `RewardOffer`, `IRewardSource` (`Offer`, `Pick(cardIndex, targetId?)`), `IStorySource` and the TEST FIXTURE `StubRewardSource` (Kitsune: Foxfire NEW, Spirit Wave UPGRADE, Will-o-wisp MODIFIER). **Adapter needed**: wrap the YOK-47 draft system in `IRewardSource`, and YOK-44 story data in `IStorySource`. `RewardScreen` (cards step + modifier target step, frame-data toggle; Left/Right, Enter, Esc, Tab, pad d-pad/A/B/Y; event `Picked(card, target)` after `Pick`), `StoryCard` (`Display(text)`, event `Finished`), `Paint` (Godot-drawn talisman, brush, seal; the generated UI textures are RGB without alpha). Tests `tests/RewardScreenTests.cs`; screenshots `tests/reward_capture.tscn` (to `docs/screens/yok-52/`). Routing is YOK-48.

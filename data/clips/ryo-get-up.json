@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "ryo-get-up",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Stand_Up1",
+  "frames_total": 69,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: far longer than the target. Fallback 347 Stand_Up4 (1.64 s, about 98 ticks, rises from prone, so it starts face-down, not face-up). Planted-foot shift 0.8 / 1.4 cm raw, no clipping. Needs a 4-tick blend from the knockdown final pose (supine).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 344 Stand_Up1 on task 01a1100b-b874-7129-a557-0ae49d5a5aba, file ryo-get-up.glb. Raw trim: ticks 100-370 at 4x (60 ticks per second). Verdict WARN. Raw 499 ticks (8.3 s): lies on his back to raw 100, sits up by raw 140, kneels/crouches 270-330, stands by raw 360. Trim raw 100-370, 4.0x: 69 frames (rough target 25-50, so 69 is long; the first 40 frames can be the invulnerable wake-up). 4x raises the joint rate to about 35 deg per tick. Hips drift 66 cm forward as he rises (strip)."
+}
