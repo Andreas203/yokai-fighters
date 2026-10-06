@@ -58,6 +58,9 @@ public sealed partial class Match
 	{
 		P1.Reset(-Config.StartOffset, +1, Config.P1MaxHealth);
 		P2.Reset(+Config.StartOffset, -1, Config.P2MaxHealth);
+		// YOK-47: run health carries into the fight (C1, R3).
+		if (Config.P1StartHealth is int h1) P1.Health = Math.Clamp(h1, 1, Config.P1MaxHealth);
+		if (Config.P2StartHealth is int h2) P2.Health = Math.Clamp(h2, 1, Config.P2MaxHealth);
 		Phase = MatchPhase.Fighting;
 		Tick = 0;
 		WorldFrame = 0;
