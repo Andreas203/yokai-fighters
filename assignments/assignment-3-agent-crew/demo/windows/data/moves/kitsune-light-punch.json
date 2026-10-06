@@ -1,0 +1,69 @@
+{
+  "kind": "normal",
+  "id": "kitsune-light-punch",
+  "name": "Kitsune light punch",
+  "status": "proposed",
+  "source": "kitsune",
+  "clip": "kitsune-light-punch",
+  "rules": [
+    "C8",
+    "F2",
+    "F5",
+    "E1",
+    "E5",
+    "V2"
+  ],
+  "input": {
+    "button": "LP"
+  },
+  "frame_data": {
+    "startup": 4,
+    "active": 2,
+    "recovery": 7,
+    "damage": 30,
+    "hitstun": 12,
+    "blockstun": 9,
+    "strength": "light",
+    "hitboxes": [
+      {
+        "frames": [
+          5,
+          6
+        ],
+        "rect": {
+          "x": 55,
+          "y": 225,
+          "w": 95,
+          "h": 50
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          13
+        ],
+        "rect": {
+          "x": -30,
+          "y": 5,
+          "w": 80,
+          "h": 305
+        }
+      },
+      {
+        "frames": [
+          5,
+          10
+        ],
+        "rect": {
+          "x": 55,
+          "y": 225,
+          "w": 95,
+          "h": 50
+        }
+      }
+    ]
+  },
+  "notes": "F5 substitute: the medium punch cross, 13 frames at 1.5x, hit 5-6. Clip-derived 4/2/7 = C8, no deviation. Blend-out: the clip cuts with the hand at 82% reach, so blend the last 4-6 ticks to idle. Hurtbox: E5 standing body 90x360 for the whole move; sleeves are cloth, not body; only the bare striking limb gets an extra hurtbox while extended. Hitstun/blockstun are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number (no Kitsune table exists). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
+}

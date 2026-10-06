@@ -1,0 +1,20 @@
+{
+  "kind": "clip",
+  "id": "kitsune-block-low",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "146 Block10",
+  "frames_total": 35,
+  "trim_start": 0,
+  "trim_end": 34,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/kitsune/kitsune-block-low.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. Ends in a low crouched guard (hips 74 cm, torso 30 deg) as wanted. Right foot drifts 7.3 cm while the stance widens and the hips shift 8 cm sideways. Sleeve cuffs open toward the camera and the lining shows (12.7x). Hakama gathers at the knees, no poke-through.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-42d4-7488-8182-7a76ef612eac; file game/assets/generated/clips/kitsune/kitsune-block-low.glb; trim raw 60 fps ticks 0-34 inclusive (trim is data, no hand keying). Frames 1-35. Hold frame 29 (raw 28) to the end. hit fields null."
+}

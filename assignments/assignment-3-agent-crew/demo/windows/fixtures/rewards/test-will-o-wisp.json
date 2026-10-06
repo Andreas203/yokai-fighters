@@ -1,0 +1,18 @@
+{
+  "kind": "modifier",
+  "id": "test-will-o-wisp",
+  "name": "Will-o'-wisp",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": false,
+  "rules": ["A2", "A8", "A10"],
+  "applies_to": { "requires": ["projectile"] },
+  "effects": [
+    { "target": "projectile.speed", "op": "mul_pct", "value": 130 }
+  ],
+  "card": {
+    "plain": "TEST FIXTURE: your projectiles fly 30% faster.",
+    "frames": "Projectile speed x1.3"
+  },
+  "notes": "TEST FIXTURE (YOK-47): rules.md Modifiers table. The real file comes from movesmith (YOK-46)."
+}

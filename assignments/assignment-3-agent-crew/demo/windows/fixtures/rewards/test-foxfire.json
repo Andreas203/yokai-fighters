@@ -1,0 +1,70 @@
+{
+  "kind": "special",
+  "id": "test-foxfire",
+  "name": "Foxfire",
+  "status": "proposed",
+  "source": "kitsune",
+  "starter": false,
+  "rarity": "common",
+  "locked": false,
+  "clip": "kitsune-foxfire",
+  "rules": ["A3", "A7", "A8", "E17", "K1", "K2"],
+  "input": {
+    "kata": { "slot": "C", "motion": "214" },
+    "kihon": { "slot": "C", "direction": "back" }
+  },
+  "card": {
+    "plain": "TEST FIXTURE: a slow fox flame that drifts across the screen.",
+    "frames": "15 / 4 / 30 frames, 70 damage, slow projectile"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      { "target": "projectile.hits", "op": "set", "value": 2 }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 15,
+        "active": 4,
+        "recovery": 30,
+        "damage": 70,
+        "hitstun": 20,
+        "blockstun": 16,
+        "hitboxes": [],
+        "hurtboxes": [
+          { "frames": [1, 49], "rect": { "x": -45, "y": 0, "w": 90, "h": 360 } }
+        ],
+        "properties": {
+          "projectile": {
+            "spawn_frame": 16,
+            "speed": 6,
+            "hitbox": { "x": 60, "y": 120, "w": 60, "h": 60 },
+            "hits": 1
+          }
+        }
+      }
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": { "target": "recovery", "op": "add", "value": -4 },
+      "notes": "Placeholder Lv 2 step (YOK-41 decides)."
+    },
+    "3": {
+      "evolution": {
+        "id": "piercing-foxfire",
+        "name": "Piercing Foxfire",
+        "preset": "piercing-foxfire",
+        "changes": [
+          { "target": "projectile.passes_projectiles", "op": "set", "value": true }
+        ],
+        "card": {
+          "plain": "Your foxfire passes through projectiles.",
+          "frames": "15 / 4 / 30 frames, 70 damage, passes through projectiles"
+        }
+      }
+    }
+  },
+  "notes": "TEST FIXTURE (YOK-47). Startup/active/recovery/damage are the rules.md specials table; stun, speed, boxes, Lv 2 and EX are placeholders. Real Foxfire comes from movesmith after the Rules Lawyer gate (YOK-43/46). Never copy to data/moves/."
+}

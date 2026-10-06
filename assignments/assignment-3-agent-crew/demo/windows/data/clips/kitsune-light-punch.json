@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "kitsune-light-punch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "clip": "210 Boxing_Guard_Prep_Straight_Punch (F5 substitute: the medium punch clip, faster)",
+  "frames_total": 13,
+  "trim_start": 106,
+  "trim_end": 124,
+  "speed_scale": 1.5,
+  "file": "assets/generated/clips/kitsune/kitsune-mp.glb",
+  "hit_start": 5,
+  "hit_end": 6,
+  "retarget_notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb. F5 substitute for the light punch (the 192 jab failed at the hit frames on her sleeves, 16.6x): the same clip and notes as kitsune-medium-punch (cross with a hip turn, sleeve flare 7.7x at full reach, accepted WARN class), played at 1.5x with a tighter trim. Root travel 5 cm. Tail clear.",
+  "notes": "Designer-approved F5 substitute, no Meshy credits. Source task 01a1100b-764a-75b4-b229-55e9f0974eb8 (file game/assets/generated/clips/kitsune/kitsune-mp.glb). Trim raw ticks 106-124 at 1.5x = 13 frames, hit frames 5-6 (raw 112 and 113.5, hand at 90-97% of its reach, peak raw 116), startup 4, active 2, recovery 7 = C8 4/2/7. 1.5x gives 27.6 deg per tick (limit 30). Hand at 82% reach at the cut, blend-out. Shares the animation with the medium punch."
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-crouch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "CrouchLookAroundBow",
+  "frames_total": 1,
+  "trim_start": 100,
+  "trim_end": 100,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/ryo/ryo-crouch.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: arms hang near the knees (not a guard) and the squat is turned about -59 deg from the camera axis, like the idle guard (-50). Planted-foot shift 2.7 / 2.1 cm. Alt 319 air_squat if it reads badly.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 258 CrouchLookAroundBow on task 01a1100b-b9f9-7773-a18d-d0ebc717b339, file ryo-crouch.glb. Raw trim: ticks 100-100 at 1x (60 ticks per second). Verdict WARN. Raw 353 ticks (5.87 s): a held low squat (hips 51 cm), no down/up transition. Use one hold frame (raw 100); the 6-tick down and up are a data blend. Loop closes (0 deg). Arms hang and he looks around."
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-heavy-punch",
+  "status": "final",
+  "source": "meshy-library",
+  "clip": "Right_Uppercut_from_Guard",
+  "frames_total": 34,
+  "trim_start": 28,
+  "trim_end": 61,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/ryo-heavy.glb",
+  "hit_start": 11,
+  "hit_end": 14,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Retarget PASS in the gate (docs/assets/retarget_gate.md): no clipping, max 12.7 deg per tick, planted-foot shift 3.1 / 2.4 cm.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 194 Right_Uppercut_from_Guard on task 01a10e5b-45a5-7037-98b1-83de6aa9f9e9, file ryo-heavy.glb. Raw trim: ticks 28-62 at 1x (60 ticks per second). Verdict PASS. Generated and measured in YOK-31. Raw 63 samples, head-trim 28: 35 frames, hit frames 11-14 (startup 10, active 4, recovery 20 = C8). Do not strip the pelvis sway (net travel 0.5 cm). File game/assets/generated/clips/ryo-heavy.glb. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 35 frames, hit 11-14): trim raw ticks 28-61 at 1.0x = 34 frames, hit frames 11-14, startup 10, active 4, recovery 20. one frame cut (35 to 34), arm at 74% at the cut."
+}

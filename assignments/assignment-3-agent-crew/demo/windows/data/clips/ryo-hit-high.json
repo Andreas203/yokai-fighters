@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-hit-high",
+  "status": "final",
+  "source": "meshy-library",
+  "clip": "Face_Punch_Reaction",
+  "frames_total": 18,
+  "trim_start": 28,
+  "trim_end": 70,
+  "speed_scale": 2.5,
+  "file": "assets/generated/clips/ryo/ryo-hit-high.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). Clean head/torso snap, no clipping. Planted-foot shift 6.8 cm raw on the stagger step (accepted for a reaction).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 174 Face_Punch_Reaction on task 01a1100b-abad-7540-9b76-d13be5d7c6d7, file ryo-hit-high.glb. Raw trim: ticks 28-70 at 2.5x (60 ticks per second). Verdict PASS. Raw 173 ticks (2.87 s); idle for the first 28. Trim raw 28-70, 2.5x: 18 frames, hold the recoil pose (lean at raw 45-64). Also the throw-break clip for both fighters (T02, not paired). Hips travel 16 cm back inside the window."
+}

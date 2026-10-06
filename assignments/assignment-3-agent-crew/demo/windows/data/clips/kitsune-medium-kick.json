@@ -1,0 +1,20 @@
+{
+  "kind": "clip",
+  "id": "kitsune-medium-kick",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "209 Boxing_Guard_Right_Straight_Kick",
+  "frames_total": 24,
+  "trim_start": 31,
+  "trim_end": 59,
+  "speed_scale": 1.2,
+  "file": "assets/generated/clips/kitsune/kitsune-mk.glb",
+  "hit_start": 8,
+  "hit_end": 10,
+  "retarget_notes": "WARN. Straight front kick, in place: root travel 14 cm, planted left foot 0.4 cm. The foot rises to 107 cm (a head-high kick, not a mid kick) and the hakama is dragged into a tube around the leg on frames 13-25 (stills), stretching hakama edges to 12.1x; no poke-through. Sleeves swing out (11.9x, the accepted-heavy class). Tail proxy clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-7944-77f4-ae8b-d192ac8fa326; file game/assets/generated/clips/kitsune/kitsune-mk.glb; trim raw 60 fps ticks 29-63 inclusive (trim is data, no hand keying). Frames 1-35. Foot reaches full extension frame 13 (raw 41, speed 9.8 m/s); hit window frames 11-25. Raw clip 84 ticks. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 35 frames, hit 11-25): trim raw ticks 31-59 at 1.2x = 24 frames, hit frames 8-10, startup 7, active 3, recovery 14. leg back to 40% at the cut."
+}

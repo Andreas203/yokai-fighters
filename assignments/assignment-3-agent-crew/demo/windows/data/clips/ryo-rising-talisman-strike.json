@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-rising-talisman-strike",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Left_Uppercut_from_Guard",
+  "frames_total": 41,
+  "trim_start": 17,
+  "trim_end": 57,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/ryo/ryo-rising-talisman.glb",
+  "hit_start": 6,
+  "hit_end": 13,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN: the preset reads as a horizontal jab, not a rising uppercut; the upward arc has to come from the VFX. No clipping (7 arm verts). Planted-foot shift 2.6 / 3.9 cm raw.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 196 Left_Uppercut_from_Guard on task 01a1100b-bfb5-776a-95e7-4d2986c2a48c, file ryo-rising-talisman.glb. Raw trim: ticks 17-60 at 1x (60 ticks per second). Verdict WARN. S02 Rising Talisman. Raw 83 ticks (1.37 s). The left hand shoots straight forward (3.5 m/s at raw 20, reach 0.58 m raw 24, held to 29). Trim raw 17-60: 44 frames, hit frames 6-13 (startup 5, active 8). Hips 13 cm forward. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 44 frames, hit 6-13): trim raw ticks 17-57 at 1.0x = 41 frames, hit frames 6-13, startup 5, active 8, recovery 28. hand back to 13% at the cut."
+}

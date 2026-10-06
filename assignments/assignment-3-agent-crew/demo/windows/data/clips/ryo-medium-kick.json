@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "ryo-medium-kick",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Boxing_Guard_Right_Straight_Kick",
+  "frames_total": 24,
+  "trim_start": 33,
+  "trim_end": 61,
+  "speed_scale": 1.2,
+  "file": "assets/generated/clips/ryo/ryo-mk.glb",
+  "hit_start": 8,
+  "hit_end": 10,
+  "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). No clipping, but WARN on look: both arms swing out wide (left arm horizontal) as counterweight and the stance drops the guard; reads as a loose front kick. Planted-foot shift 3.6 cm raw. Stretched edges up to 6.4x at the crotch (RightUpLeg), not visible in stills.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 209 Boxing_Guard_Right_Straight_Kick on task 01a1100b-a57c-71e7-8cbf-99916ac3aada, file ryo-mk.glb. Raw trim: ticks 33-70 at 1.2x (60 ticks per second). Verdict WARN. Raw 85 ticks (1.4 s). Head-trim 33 ticks, 1.2x, tail cut at raw 70: 32 frames, hit frames 8-10 (startup 7, active 3 = C8). Foot peaks 9.8 m/s at raw 39, full reach 0.76 m at raw 41, leg at hip height. Hips travel 8 cm. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 32 frames, hit 8-10): trim raw ticks 33-61 at 1.2x = 24 frames, hit frames 8-10, startup 7, active 3, recovery 14. leg back to 31% reach at the cut, reads as a full kick and retraction."
+}

@@ -98,7 +98,9 @@ The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grov
 4. **Win:** the binding line, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
 5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([`demo/6-demo-complete.png`](demo/6-demo-complete.png)).
 
-**Play it on Windows, no install needed:** download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB). Unzip it anywhere and run `YokaiFighters.exe`, keeping the folders beside it. The start screen lists the keyboard and gamepad controls.
+**Play it from this folder (Windows):** the exported game is in [`demo/windows/`](demo/windows/). Clone the repo with Git LFS installed (`git lfs install`, then `git clone https://github.com/Andreas203/yokai-fighters.git`; the exe and .NET DLLs are LFS files), then double-click `assignments/assignment-3-agent-crew/demo/windows/PLAY.bat`. The launcher checks that the build is complete and tells you what to do if it isn't (e.g. run `git lfs pull`).
+
+**Or download it, no git needed:** download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB). Unzip it anywhere and run `YokaiFighters.exe`, keeping the folders beside it. The start screen lists the keyboard and gamepad controls.
 
 To run it from source instead, install Godot 4.7 (.NET) and the .NET 10 SDK, then:
 ```
@@ -121,4 +123,5 @@ crew/orchestration/  produce-SKILL.md, the orchestration procedure
 crew/mcp.example.json  Meshy MCP config (no key)
 output/              example outputs from each stage
 demo/                screenshots of the playable vertical slice
+demo/windows/        the playable Windows build (PLAY.bat; exe + DLLs via Git LFS)
 ```
