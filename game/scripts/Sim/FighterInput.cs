@@ -38,6 +38,19 @@ public readonly record struct FighterInput(InputBits Bits, byte Move = 0)
 {
 	public static readonly FighterInput None = new(InputBits.None);
 	public static FighterInput Attack(int slot, InputBits bits = InputBits.None) => new(bits, (byte)(slot + 1));
+
+	/// <summary>YOK-21: Move values from here up request the special in slot A-D (201-204), EX 205-208.</summary>
+	public const int SpecialRequestBase = 200;
+	/// <summary>Requests the special loaded in a slot directly (tests, AI): no motion, so no Kata precision bonus.</summary>
+	public static FighterInput Special(SpecialSlot slot, bool ex = false, InputBits bits = InputBits.None) =>
+		new(bits, (byte)(SpecialRequestBase + (int)slot + (ex ? 4 : 0)));
+	public bool IsSpecialRequest(out SpecialSlot slot, out bool ex)
+	{
+		int n = Move - SpecialRequestBase;
+		ex = n > 4;
+		slot = n is >= 1 and <= 8 ? (SpecialSlot)(ex ? n - 4 : n) : SpecialSlot.None;
+		return slot != SpecialSlot.None;
+	}
 	public bool Has(InputBits b) => (Bits & b) == b;
 	public FighterInput With(InputBits b) => new(Bits | b);
 }

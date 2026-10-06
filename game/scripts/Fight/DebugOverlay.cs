@@ -59,6 +59,7 @@ public partial class DebugOverlay : CanvasLayer
 		DebugBoxKind.Hit => b.Spent ? new Color(1f, 0.2f, 0.2f, 0.4f) : new Color(1f, 0.15f, 0.15f),
 		DebugBoxKind.Hurt => new Color(0.2f, 1f, 0.3f),
 		DebugBoxKind.Throw => new Color(1f, 0.9f, 0.1f),
+		DebugBoxKind.Projectile => new Color(1f, 0.3f, 0.9f),
 		_ => new Color(0.3f, 0.6f, 1f),
 	};
 

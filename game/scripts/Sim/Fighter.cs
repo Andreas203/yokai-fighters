@@ -46,7 +46,7 @@ public sealed partial class Fighter
 	public int DashDir;
 
 	public bool Airborne => AirFrame > 0;
-	public MoveData? CurrentMove => State == FighterState.Attack ? Moves[MoveSlot] : null;
+	public MoveData? CurrentMove => State == FighterState.Attack ? ActiveMove : null;
 	/// <summary>Free to start a move, jump, dash or walk this frame (only ever on the ground).</summary>
 	public bool Actionable => State == FighterState.Idle && !KnockedOut;
 
@@ -74,6 +74,7 @@ public sealed partial class Fighter
 		JumpDir = 0;
 		DashFrame = 0;
 		DashDir = 0;
+		ResetSpecialState(); // YOK-21 (equipped specials and held cancel rules are run state and stay)
 	}
 
 	public ulong Hash(ulong h)
@@ -96,7 +97,7 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, DashFrame);
 		h = Fnv.Mix(h, DashDir);
 		h = Fnv.Mix(h, (int)Input.Pending.Kind);
-		return h;
+		return HashSpecialState(h);
 	}
 }
 

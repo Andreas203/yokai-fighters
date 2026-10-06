@@ -107,7 +107,8 @@
             "hits": { "type": "integer", "minimum": 1 },
             "lifetime": { "type": "integer", "minimum": 1, "description": "Ticks before it fades; omit for screen edge." },
             "passes_projectiles": { "type": "boolean" },
-            "absorbs_projectiles": { "type": "integer", "minimum": 0 }
+            "absorbs_projectiles": { "type": "integer", "minimum": 0 },
+            "max_active": { "type": "integer", "minimum": 1, "description": "How many of the owner's projectiles from this move may be on screen at once; omitted = 1 (YOK-21: one per owner)." }
           }
         },
         "low": { "type": "boolean", "description": "Must be blocked crouching (C3)." },

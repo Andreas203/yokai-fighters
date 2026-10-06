@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using YokaiFighters.Sim;
 
@@ -25,7 +26,7 @@ public partial class FightScene : Node3D
 	/// <summary>When true, the clock and keyboard are bypassed and the owner calls Step() (tests, harness).</summary>
 	[Export] public bool ExternalDrive { get; set; }
 
-	public Match Match { get; private set; } = new(null, LoadMoves(), LoadMoves());
+	public Match Match { get; private set; } = NewMatch();
 	private readonly FixedStepClock _clock = new();
 	/// <summary>YOK-22 frame-step gate (driven by DebugOverlay, debug builds only).</summary>
 	public FrameStepper Stepper { get; } = new();
@@ -41,13 +42,42 @@ public partial class FightScene : Node3D
 
 	public const string FixtureThrowsDir = "res://tests/fixtures/throws";
 
+	public const string FixtureSpecialsDir = "res://tests/fixtures/specials";
+
+	/// <summary>Both fighters get the moves and Ryo's starters (A1). P2 shares Ryo's kit until the yokai kits land.</summary>
+	public static Match NewMatch()
+	{
+		var m = new Match(null, LoadMoves(), LoadMoves());
+		foreach (var f in m.Fighters) EquipStarters(f, LoadSpecials());
+		return m;
+	}
+
+	/// <summary>
+	/// YOK-21: kind "special" files in data/moves/, falling back to the TEST FIXTURE Spirit Wave and Rising
+	/// Talisman in tests/fixtures/specials/ while data/moves/ has no specials (real ones come after F2).
+	/// </summary>
+	public static SpecialData[] LoadSpecials()
+	{
+		var specials = SpecialLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves");
+		if (specials.Length > 0) return specials;
+		GD.Print("FightScene: data/moves/ has no specials, using TEST FIXTURE Spirit Wave and Rising Talisman");
+		return SpecialLoader.LoadDirectory(ProjectSettings.GlobalizePath(FixtureSpecialsDir));
+	}
+
+	/// <summary>A1: the starters fill their own slots (Spirit Wave A, Rising Talisman B) at Lv 1.</summary>
+	public static void EquipStarters(Fighter f, SpecialData[] specials)
+	{
+		foreach (var s in specials)
+			if (f.Specials[(int)s.Slot] is null) f.Equip(s.Slot, s, 1);
+	}
+
 	/// <summary>
 	/// Both fighters' moves from data; adds the TEST FIXTURE normals (C8) while data/moves/ has no normals
 	/// and the TEST FIXTURE throw (C4, YOK-19) while it has no throw (the grab clip is being retaken, YOK-31).
 	/// </summary>
 	public static MoveData[] LoadMoves()
 	{
-		var moves = MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves");
+		var moves = MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/moves", includeSpecials: false);
 		if (!System.Array.Exists(moves, m => m.IsNormal))
 		{
 			GD.Print("FightScene: data/moves/ has no normals, using TEST FIXTURE normals (C8)");
@@ -133,7 +163,35 @@ public partial class FightScene : Node3D
 		_camera.HOffset = ToMeters(sx * SimConfig.Scale);
 		_camera.VOffset = ToMeters(sy * SimConfig.Scale);
 
+		RenderProjectiles();
 		_hud.Refresh(Match);
+	}
+
+	private readonly List<MeshInstance3D> _projectiles = new();
+
+	/// <summary>YOK-21 placeholder: one glowing box per projectile, sized from its data hitbox.</summary>
+	private void RenderProjectiles()
+	{
+		var list = Match.Projectiles;
+		while (_projectiles.Count < list.Count)
+		{
+			var node = new MeshInstance3D
+			{
+				Name = $"Projectile{_projectiles.Count}",
+				Mesh = new BoxMesh { Size = Vector3.One, Material = new StandardMaterial3D { AlbedoColor = new Color(0.6f, 0.9f, 1f), EmissionEnabled = true, Emission = new Color(0.4f, 0.8f, 1f) } },
+			};
+			AddChild(node);
+			_projectiles.Add(node);
+		}
+		for (int k = 0; k < _projectiles.Count; k++)
+		{
+			var node = _projectiles[k];
+			node.Visible = k < list.Count;
+			if (!node.Visible) continue;
+			var (x0, y0, x1, y1) = list[k].WorldBox();
+			node.Position = new Vector3(ToMeters((x0 + x1) / 2), ToMeters((y0 + y1) / 2), 0f);
+			node.Scale = new Vector3(ToMeters(x1 - x0), ToMeters(y1 - y0), 0.3f);
+		}
 	}
 
 	private Node3D BuildFighter(string name, Color color)
