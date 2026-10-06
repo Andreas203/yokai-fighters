@@ -59,6 +59,6 @@ public static class RewardScreenTests
 	[Test]
 	public static void BindingLineTemplate()
 	{
-		Assert.Equal("Forgive me, Kitsune. I'll give it back.", new StubRewardSource().BindingLine("Kitsune"), "S3 line");
+		Assert.Equal("Forgive me, Kitsune. I'll set your spirit free.", new StubRewardSource().BindingLine("Kitsune"), "S3 line");
 	}
 }

@@ -40,7 +40,7 @@ public static class StoryTests
 	{
 		var lib = FightScene.LoadStory();
 		IStorySource src = lib;
-		Assert.Equal("Forgive me, Kitsune. I'll give it back.", src.BindingLine("Kitsune"), "S3 binding line from data/story");
+		Assert.Equal("Forgive me, Kitsune. I'll set your spirit free.", src.BindingLine("Kitsune"), "S3 binding line from data/story");
 		var (title, text) = lib.LoseScreen("Kitsune");
 		Assert.Equal("Ryo is defeated", title, "lose title from data/story");
 		Assert.True(text.StartsWith("Kitsune slips off between the lanterns") && !text.Contains('{'), $"lose text filled: {text}");
