@@ -1,6 +1,6 @@
 # Lv 2 proposals and Foxfire card (YOK-43)
 
-Status: all `proposed`. The designer decides the Lv 2 steps in YOK-41 (rules.md open question). One tuning step per move (A4); Lv 3 keeps it (E17). Card text lives in each special's `card` block (E20). The Lv 1 files are YOK-33's (Ryo) and YOK-45's (Kitsune), so these blocks are for them to take once decided.
+Status: the Spirit Wave and Rising Talisman Lv 2 steps are **final** (designer decision YOK-41, 2026-10-06, rule E21) as relative steps on whatever the clip-derived Lv 1 recovery is; the frames text updates when Lv 1 is re-derived. Foxfire's Lv 2 is still `proposed` (YOK-45). One tuning step per move (A4); Lv 3 keeps it (E17). Card text lives in each special's `card` block (E20). The Lv 1 files are YOK-33's (Ryo) and YOK-45's (Kitsune), so these blocks are for them to take once decided.
 
 ## Spirit Wave: recover 4 frames faster
 
@@ -8,7 +8,7 @@ Reasoning: the Lv 1 wave leaves 30 frames of recovery, so Ryo can't follow it up
 
 ```json
 "2": {
-  "status": "proposed",
+  "status": "final",
   "tuning": { "target": "recovery", "op": "add", "value": -4 },
   "card": {
     "plain": "Lv 1 → Lv 2: Spirit Wave recovers 4 frames faster, so you can follow it in.",
@@ -23,7 +23,7 @@ Reasoning: at 28 recovery a whiffed or blocked anti-air is a free punish, so pla
 
 ```json
 "2": {
-  "status": "proposed",
+  "status": "final",
   "tuning": { "target": "recovery", "op": "add", "value": -6 },
   "card": {
     "plain": "Lv 1 → Lv 2: Rising Talisman recovers 6 frames faster, so a missed anti-air costs less.",
