@@ -18,13 +18,14 @@ public sealed record KitSources(
 	string FixtureRewardsDir)
 {
 	/// <summary>The repo layout: the folder holding <c>data/</c> and <c>game/</c>.</summary>
-	public static KitSources Repo(string repoRoot)
-	{
-		string fx = Path.Combine(repoRoot, "game", "tests", "fixtures");
-		return new(Path.Combine(repoRoot, "data", "moves"),
-			Path.Combine(fx, "ryo-normals"), Path.Combine(fx, "ryo-air-normals"), Path.Combine(fx, "throws"),
-			Path.Combine(fx, "specials"), Path.Combine(fx, "rewards"));
-	}
+	public static KitSources Repo(string repoRoot) =>
+		At(Path.Combine(repoRoot, "data"), Path.Combine(repoRoot, "game", "tests", "fixtures"));
+
+	/// <summary>YOK-39: any layout (the exported build keeps <c>data/</c> and <c>fixtures/</c> next to the exe).</summary>
+	public static KitSources At(string dataDir, string fixturesDir) =>
+		new(Path.Combine(dataDir, "moves"),
+			Path.Combine(fixturesDir, "ryo-normals"), Path.Combine(fixturesDir, "ryo-air-normals"), Path.Combine(fixturesDir, "throws"),
+			Path.Combine(fixturesDir, "specials"), Path.Combine(fixturesDir, "rewards"));
 
 	/// <summary>Same fixtures, no real content: tests that must not depend on what is in <c>data/</c>.</summary>
 	public KitSources FixturesOnly() => this with { MovesDir = "" };

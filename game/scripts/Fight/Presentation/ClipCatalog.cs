@@ -84,7 +84,11 @@ public sealed class ClipCatalog
 
 	/// <summary>Loads data/clips/*.json; <paramref name="gameDir"/> is the Godot project folder (res://).</summary>
 	/// <paramref name="notesOnly"/> ignores the structured fields (the pre-field behaviour; migration check).
-	public static ClipCatalog Load(string clipsDir, string gameDir, bool notesOnly = false)
+	public static ClipCatalog Load(string clipsDir, string gameDir, bool notesOnly = false) =>
+		Load(clipsDir, r => File.Exists(Path.Combine(gameDir, r)), notesOnly);
+
+	/// <summary>YOK-39: <paramref name="existsUnderGame"/> checks a path relative to res:// (the exported build packs GLBs in the PCK).</summary>
+	public static ClipCatalog Load(string clipsDir, Func<string, bool> existsUnderGame, bool notesOnly = false)
 	{
 		var cat = new ClipCatalog();
 		if (!Directory.Exists(clipsDir)) { cat.Problems.Add($"no clips folder {clipsDir}"); return cat; }
@@ -110,7 +114,7 @@ public sealed class ClipCatalog
 				trim = ParseTrim(notes);
 				if (trim is { } t && Num("speed_scale", out var sp2)) trim = (t.Start, t.End, sp2.GetDouble());
 			}
-			Func<string, bool> exists = r => File.Exists(Path.Combine(gameDir, r));
+			Func<string, bool> exists = existsUnderGame;
 			string? rel;
 			if (!notesOnly && root.TryGetProperty("file", out var fe) && fe.ValueKind == JsonValueKind.String)
 			{

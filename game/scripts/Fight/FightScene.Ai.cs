@@ -26,7 +26,7 @@ public partial class FightScene
 	/// <summary>Kitsune profiles from data/profiles/, else the test fixtures. Aggressive first.</summary>
 	public static BehaviourProfile[] LoadProfiles()
 	{
-		var all = BehaviourProfile.LoadDirectory(ProjectSettings.GlobalizePath("res://") + "../data/profiles");
+		var all = BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles"));
 		var kitsune = Array.FindAll(all, p => p.Yokai == "kitsune");
 		if (kitsune.Length == 0)
 		{

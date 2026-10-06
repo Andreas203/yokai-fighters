@@ -59,12 +59,12 @@ public partial class FightScene : Node3D
 	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
 	/// <c>KitSources.FixturesOnly()</c> (and restore it) so they never depend on what is in data/.
 	/// </summary>
-	public static KitSources Sources { get; set; } = KitSources.Repo(RepoRoot);
+	public static KitSources Sources { get; set; } = KitSources.At(ContentPaths.DataDir, ContentPaths.FixturesDir);
 
-	public static KitSources FixtureSources => KitSources.Repo(RepoRoot).FixturesOnly();
+	public static KitSources FixtureSources => KitSources.At(ContentPaths.DataDir, ContentPaths.FixturesDir).FixturesOnly();
 
 	/// <summary>YOK-44: story cards (habit-writer's data/story/).</summary>
-	public static string StoryDir => System.IO.Path.Combine(RepoRoot, "data", "story");
+	public static string StoryDir => ContentPaths.Data("story");
 
 	public static Story.StoryLibrary LoadStory() => Story.StoryLibrary.LoadDirectory(StoryDir);
 
@@ -82,8 +82,6 @@ public partial class FightScene : Node3D
 			GD.PushWarning($"lose screen keeps its placeholder: {e.Message}");
 		}
 	}
-
-	private static string RepoRoot => System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
 
 	/// <summary>
 	/// YOK-56: P1 = Ryo's kit (his normals, throw and starters, A1), P2 = <see cref="Opponent"/>'s kit (the AI
@@ -121,7 +119,7 @@ public partial class FightScene : Node3D
 
 	/// <summary>YOK-47: specials + modifiers for the reward draft, from data/ with TEST FIXTURE fallback (YOK-56: starters = Ryo's kit).</summary>
 	public static AbilityPool LoadAbilityPool() =>
-		AbilityPool.Load(Sources, System.IO.Path.Combine(RepoRoot, "data", "modifiers"));
+		AbilityPool.Load(Sources, ContentPaths.Data("modifiers"));
 
 	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
 	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;

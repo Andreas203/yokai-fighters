@@ -17,8 +17,8 @@ public partial class FightScene
 
 	private static ClipCatalog? _catalog;
 	private static Dictionary<string, string>? _moveClips;
-	public static ClipCatalog Catalog => _catalog ??= ClipCatalog.Load(System.IO.Path.Combine(RepoRoot, "data", "clips"), ProjectSettings.GlobalizePath("res://"));
-	public static IReadOnlyDictionary<string, string> MoveClips => _moveClips ??= ClipCatalog.LoadMoveClips(System.IO.Path.Combine(RepoRoot, "data", "moves"));
+	public static ClipCatalog Catalog => _catalog ??= ClipCatalog.Load(ContentPaths.Data("clips"), r => ResourceLoader.Exists("res://" + r)); // YOK-39: GLBs live in the PCK when exported
+	public static IReadOnlyDictionary<string, string> MoveClips => _moveClips ??= ClipCatalog.LoadMoveClips(ContentPaths.Data("moves"));
 
 	private readonly FighterModel?[] _models = new FighterModel?[2];
 	private readonly FighterPresenter?[] _presenters = new FighterPresenter?[2];
