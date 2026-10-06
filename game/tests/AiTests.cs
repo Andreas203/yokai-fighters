@@ -17,12 +17,24 @@ public static class AiTests
 	static BehaviourProfile Patient => Fixture("test-kitsune-patient");
 	static BehaviourProfile Aggressive => Fixture("test-kitsune-aggressive");
 
+	/// <summary>
+	/// The fight with fixture kits only (YOK-56): Kitsune gets Ryo's TEST FIXTURE normals/throw as stand-ins plus her
+	/// fixture Foxfire, whatever is in data/moves/, so every AI test runs the same with or without real content.
+	/// </summary>
+	static Match NewMatch()
+	{
+		var saved = FightScene.Sources;
+		FightScene.Sources = FightScene.FixtureSources;
+		try { return FightScene.NewMatch(); }
+		finally { FightScene.Sources = saved; }
+	}
+
 	/// <summary>A profile that anti-airs every jump it sees (rate 100) and otherwise only spaces.</summary>
 	static string AntiAirJson(int frames) => $$"""
 		{ "kind": "profile", "id": "test-anti-air", "yokai": "kitsune", "temperament": "patient",
 		  "reaction": { "tier": "yokai", "frames": {{frames}} }, "aggression_bias": 50, "preferred_range": "mid",
 		  "habit": { "id": "jumps-after-knockdown", "description": "d", "when": "self_got_up", "do": "jump", "chance_pct": 60 },
-		  "behaviours": [ { "when": "opponent_jumping", "do": "normal:kitsune-heavy-punch", "weight": 100 } ],
+		  "behaviours": [ { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 100 } ],
 		  "rules": ["Y4"] }
 		""";
 
@@ -47,6 +59,17 @@ public static class AiTests
 		}
 	}
 
+	/// <summary>Every move the fixture profiles and the anti-air profile name is in the fixture Kitsune kit (else the AI silently skips it).</summary>
+	[Test]
+	public static void FixtureProfiles_MovesExistInFixtureKit()
+	{
+		var loadout = AiLoadout.From(NewMatch().P2);
+		foreach (var p in new[] { Patient, Aggressive, BehaviourProfile.Parse(AntiAirJson(22)) })
+		foreach (var b in p.Behaviours)
+			if (b.Do.MoveId is not null)
+				Assert.True(loadout.TryGet(b.Do, out _, out _), $"{p.Id}: {b.Do} is not in the fixture kit");
+	}
+
 	/// <summary>P6 by construction: the AI only ever gets AiView, which carries no input, parser or match.</summary>
 	[Test]
 	public static void View_HasNoInputOrMatchAccess()
@@ -63,7 +86,7 @@ public static class AiTests
 
 	static List<FighterInput> RunAi(BehaviourProfile profile, Func<int, FighterInput> p1, int steps, uint seed = 5)
 	{
-		var m = FightScene.NewMatch();
+		var m = NewMatch();
 		var ai = new ProfileAi(profile, 1, AiLoadout.From(m.P2), seed);
 		var outs = new List<FighterInput>();
 		for (int k = 1; k <= steps && m.Phase != MatchPhase.Over; k++)
@@ -116,7 +139,7 @@ public static class AiTests
 		foreach (int frames in new[] { 30, 22, 18, 15 })
 		{
 			var profile = BehaviourProfile.Parse(AntiAirJson(frames)); // changed in the data, not in code
-			var r = AiHarness.Run(FightScene.NewMatch, profile, P1Script.Jumper, 11, 2400);
+			var r = AiHarness.Run(NewMatch, profile, P1Script.Jumper, 11, 2400);
 			Assert.True(r.AntiAirResponse.Count >= 15, $"r{frames}: answered {r.AntiAirResponse.Count} of {r.P1Jumps} jumps");
 			foreach (int resp in r.AntiAirResponse) Assert.Equal(frames, resp, $"r{frames}: anti-air starts exactly reaction frames after the jump shows");
 			Assert.True(r.MeanResponse < prev, $"faster tier answers faster ({r.MeanResponse} vs {prev})");
@@ -128,17 +151,17 @@ public static class AiTests
 	[Test]
 	public static void Habit_WakeUpJumpIsVisibleAndRepeatable()
 	{
-		var r = AiHarness.Run(FightScene.NewMatch, Patient, P1Script.Thrower, 3, 7200);
+		var r = AiHarness.Run(NewMatch, Patient, P1Script.Thrower, 3, 7200);
 		Assert.True(r.WakeUps >= 20, $"enough knockdowns to read the tell ({r.WakeUps})");
 		int pct = 100 * r.WakeJumps / r.WakeUps;
 		Assert.True(pct is >= 40 and <= 80, $"wake-up jump rate {pct}% near the profile's 60% ({r.WakeJumps}/{r.WakeUps})");
 		// Every fired habit is a jump on the first actionable frame (bar a KO knockdown with no wake-up), and only those.
 		Assert.True(r.WakeJumps <= r.HabitFired && r.WakeJumps >= r.HabitFired - r.Rounds, $"wake jumps {r.WakeJumps} = habits fired {r.HabitFired}");
 		Assert.True(r.WakeJumpsPunished * 10 >= r.WakeJumps * 9, $"punishable: a tester who knows it anti-airs {r.WakeJumpsPunished}/{r.WakeJumps}");
-		var again = AiHarness.Run(FightScene.NewMatch, Patient, P1Script.Thrower, 3, 7200);
+		var again = AiHarness.Run(NewMatch, Patient, P1Script.Thrower, 3, 7200);
 		Assert.Equal(r.DecisionsCsv(), again.DecisionsCsv(), "same seed, same log");
 
-		var covered = AiHarness.Run(FightScene.NewMatch, Patient with { TellCoverPct = 100 }, P1Script.Thrower, 3, 3600);
+		var covered = AiHarness.Run(NewMatch, Patient with { TellCoverPct = 100 }, P1Script.Thrower, 3, 3600);
 		Assert.True(covered.HabitCovered > 0 && covered.WakeJumps == 0, $"tell_cover_pct 100 hides the tell ({covered.HabitCovered} covered, {covered.WakeJumps} jumps)");
 	}
 
@@ -148,7 +171,7 @@ public static class AiTests
 	{
 		var p = BehaviourProfile.Parse(AntiAirJson(18).Replace("\"when\": \"self_got_up\", \"do\": \"jump\", \"chance_pct\": 60",
 			"\"when\": \"opponent_jumping\", \"do\": \"dash_back\", \"chance_pct\": 100"));
-		var r = AiHarness.Run(FightScene.NewMatch, p, P1Script.Jumper, 2, 1200);
+		var r = AiHarness.Run(NewMatch, p, P1Script.Jumper, 2, 1200);
 		int habits = r.Decisions.FindAll(d => d.Kind == "habit" && d.Trigger == "opponent_jumping" && d.Action == "dash_back").Count;
 		Assert.True(habits >= 10 && habits == r.P1Jumps, $"dash back on every seen jump ({habits}/{r.P1Jumps})");
 		Assert.Equal(0, r.AntiAirResponse.Count, "the habit outranks the anti-air reaction");
@@ -159,9 +182,9 @@ public static class AiTests
 	{
 		foreach (var script in new[] { P1Script.Random, P1Script.Thrower })
 		{
-			var a = AiHarness.Run(FightScene.NewMatch, Aggressive, script, 9, 5000);
-			var b = AiHarness.Run(FightScene.NewMatch, Aggressive, script, 9, 5000);
-			var c = AiHarness.Run(FightScene.NewMatch, Aggressive, script, 10, 5000);
+			var a = AiHarness.Run(NewMatch, Aggressive, script, 9, 5000);
+			var b = AiHarness.Run(NewMatch, Aggressive, script, 9, 5000);
+			var c = AiHarness.Run(NewMatch, Aggressive, script, 10, 5000);
 			Assert.Equal(a.FinalHash, b.FinalHash, $"{script}: same seed, same fight");
 			Assert.Equal(a.DecisionsCsv(), b.DecisionsCsv(), $"{script}: same decisions");
 			Assert.True(a.DecisionsCsv() != c.DecisionsCsv(), $"{script}: another seed plays differently");
@@ -173,8 +196,8 @@ public static class AiTests
 	public static void Temperaments_PlayDifferently()
 	{
 		int Offence(AiHarness.Result r) => r.Decisions.FindAll(d => d.Action.StartsWith("normal:") || d.Action.StartsWith("special:") || d.Action == "throw" || d.Action.StartsWith("dash_forward") || d.Action == "walk_forward").Count;
-		var agg = AiHarness.Run(FightScene.NewMatch, Aggressive, P1Script.Random, 4, 3600);
-		var pat = AiHarness.Run(FightScene.NewMatch, Patient, P1Script.Random, 4, 3600);
+		var agg = AiHarness.Run(NewMatch, Aggressive, P1Script.Random, 4, 3600);
+		var pat = AiHarness.Run(NewMatch, Patient, P1Script.Random, 4, 3600);
 		Assert.True(Offence(agg) > Offence(pat), $"aggressive {Offence(agg)} offensive decisions vs patient {Offence(pat)}");
 	}
 

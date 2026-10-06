@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/story-card.schema.json",
+  "title": "Story card",
+  "description": "One story card in data/story/<id>.json (S1-S4): one or two sentences in the game's tone, shown at a fixed moment of the run. Templated names ({yokai}, {move}) are filled from the player's run (S4); every placeholder used in title or text must be listed in placeholders, and every listed one used.",
+  "type": "object",
+  "required": ["kind", "id", "status", "trigger", "text", "speaker", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "story_card" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "trigger": { "type": "string", "minLength": 1, "description": "When the card shows (the S3 schedule entry it implements)." },
+    "title": { "type": "string", "minLength": 1, "maxLength": 60, "description": "Optional heading shown above the text." },
+    "text": { "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2)." },
+    "placeholders": {
+      "type": "array",
+      "items": { "enum": ["yokai", "move"] },
+      "uniqueItems": true,
+      "description": "Run names the game fills in (S4): {yokai} = the yokai's display name, {move} = the copy target's move name."
+    },
+    "speaker": { "type": "string", "minLength": 1, "description": "Who says it, e.g. Ryo, narrator, Master Soen, Tanuki." },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

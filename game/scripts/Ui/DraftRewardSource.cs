@@ -12,16 +12,19 @@ namespace YokaiFighters.Ui;
 /// The offer-level <see cref="RewardOffer.Targets"/> are slots A-D for the offer's modifier card
 /// (eligible = the draft lists that special as a target). <see cref="Pick"/> throws when the draft refuses.
 /// </summary>
-public sealed class DraftRewardSource : IRewardSource
+public sealed class DraftRewardSource : IRewardSource, IStorySource
 {
 	readonly IRewardDraft _draft;
 	readonly RunState _run;
+	readonly Lazy<IStorySource> _story;
 
 	public RewardOffer Offer { get; }
 	public PickResult? LastResult { get; private set; }
 
-	public DraftRewardSource(IRewardDraft draft, RunState run)
+	/// <param name="story">Story cards for the binding line (YOK-44); default = data/story/ via <see cref="Fight.FightScene.LoadStory"/>, loaded on first use.</param>
+	public DraftRewardSource(IRewardDraft draft, RunState run, IStorySource? story = null)
 	{
+		_story = new Lazy<IStorySource>(() => story ?? Fight.FightScene.LoadStory());
 		_draft = draft;
 		_run = run;
 		var cards = draft.Offer.Cards.Select(ToView).ToArray();
@@ -39,6 +42,9 @@ public sealed class DraftRewardSource : IRewardSource
 		}).ToArray();
 		Offer = new RewardOffer(Title(draft.Offer.Yokai), cards, targets);
 	}
+
+	/// <summary>S3 binding line from data/story/binding-line.json, {yokai} filled (S4).</summary>
+	public string BindingLine(string yokai) => _story.Value.BindingLine(yokai);
 
 	static string Title(string id) => id.Length == 0 ? id : char.ToUpperInvariant(id[0]) + id[1..];
 

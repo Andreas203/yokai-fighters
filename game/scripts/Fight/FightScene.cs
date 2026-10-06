@@ -63,6 +63,26 @@ public partial class FightScene : Node3D
 
 	public static KitSources FixtureSources => KitSources.Repo(RepoRoot).FixturesOnly();
 
+	/// <summary>YOK-44: story cards (habit-writer's data/story/).</summary>
+	public static string StoryDir => System.IO.Path.Combine(RepoRoot, "data", "story");
+
+	public static Story.StoryLibrary LoadStory() => Story.StoryLibrary.LoadDirectory(StoryDir);
+
+	/// <summary>Fills the HUD lose screen from data/story/lose-screen.json; keeps the placeholder (and warns) if it is missing or bad.</summary>
+	private void ApplyLoseCard()
+	{
+		try
+		{
+			var (title, text) = LoadStory().LoseScreen(Story.StoryLibrary.DisplayName(Opponent));
+			_hud.SetLoseText(title, text);
+		}
+		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
+			or System.Collections.Generic.KeyNotFoundException or System.InvalidOperationException)
+		{
+			GD.PushWarning($"lose screen keeps its placeholder: {e.Message}");
+		}
+	}
+
 	private static string RepoRoot => System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
 
 	/// <summary>
@@ -142,6 +162,7 @@ public partial class FightScene : Node3D
 		_hud = new FightHud { Name = "Hud" };
 		_hud.RestartRequested += ResetFight;
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
+		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
 		SetUpAi(); // YOK-27

@@ -27,6 +27,7 @@ public partial class FightHud : CanvasLayer
 	private Label _banner = null!;
 	private Control _loseScreen = null!;
 	private Button _restart = null!;
+	private Label _loseTitle = null!, _loseText = null!;
 	private Match? _match;
 
 	public override void _Ready()
@@ -46,9 +47,13 @@ public partial class FightHud : CanvasLayer
 		_loseScreen.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		_loseScreen.AddChild(new ColorRect { Color = new Color(Ink, 0.55f), Size = new Vector2(1920f, 1080f), MouseFilter = Control.MouseFilterEnum.Ignore });
 		_loseScreen.AddChild(new TalismanPanel { Position = new Vector2(660f, 300f), Size = new Vector2(600f, 440f), MouseFilter = Control.MouseFilterEnum.Ignore });
-		_loseScreen.AddChild(MakeLabel("Title", "Ryo is defeated", new Vector2(660f, 350f), new Vector2(600f, 80f), 54));
-		_loseScreen.AddChild(MakeLabel("Sub", "The yokai slips free.", new Vector2(660f, 450f), new Vector2(600f, 50f), 28));
-		_restart = new Button { Name = "Restart", Text = "Restart", Position = new Vector2(760f, 560f), Size = new Vector2(400f, 100f) };
+		// Placeholders until SetLoseText gives the YOK-44 story card (data/story/lose-screen.json).
+		_loseScreen.AddChild(_loseTitle = MakeLabel("Title", "Ryo is defeated", new Vector2(660f, 340f), new Vector2(600f, 70f), 50));
+		_loseScreen.AddChild(_loseText = MakeLabel("Sub", "The yokai slips free.", new Vector2(700f, 415f), new Vector2(520f, 160f), 24));
+		_loseText.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		_loseText.VerticalAlignment = VerticalAlignment.Center;
+		if (_pendingLose is { } pl) SetLoseText(pl.Title, pl.Text);
+		_restart = new Button { Name = "Restart", Text = "Restart", Position = new Vector2(760f, 600f), Size = new Vector2(400f, 100f) };
 		_restart.AddThemeFontSizeOverride("font_size", 44);
 		foreach (string c in new[] { "font_color", "font_hover_color", "font_focus_color", "font_pressed_color" })
 			_restart.AddThemeColorOverride(c, Paper);
@@ -62,6 +67,20 @@ public partial class FightHud : CanvasLayer
 		_loseScreen.AddChild(_restart);
 		AddChild(_loseScreen);
 	}
+
+	private (string? Title, string Text)? _pendingLose;
+
+	/// <summary>The lose screen's story card, already filled with the run's names (S4). Null title keeps the current one.</summary>
+	public void SetLoseText(string? title, string text)
+	{
+		_pendingLose = (title, text);
+		if (_loseText == null) return; // applied in _Ready
+		if (title != null) _loseTitle.Text = title;
+		_loseText.Text = text;
+	}
+
+	public string LoseTitle => _loseTitle?.Text ?? "";
+	public string LoseText => _loseText?.Text ?? "";
 
 	private static Label MakeLabel(string name, string text, Vector2 pos, Vector2 size, int fontSize)
 	{

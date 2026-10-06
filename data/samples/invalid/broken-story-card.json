@@ -1,0 +1,10 @@
+{
+  "kind": "story_card",
+  "id": "broken-story-card",
+  "status": "final",
+  "trigger": "",
+  "text": "Forgive me, {yokai}. I'll give back the {item}.",
+  "placeholders": ["yokai", "move"],
+  "rules": ["S3"],
+  "mood": "sad"
+}
