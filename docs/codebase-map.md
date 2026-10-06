@@ -29,6 +29,16 @@ Pure C#, **no Godot types**, integers only, so it runs headless for tests and th
 | `FixedStepClock.cs` | Integer-microsecond fixed-step clock: `Advance(nowUsec)` returns the ticks due so exactly 60 ticks run per second at any render rate; caps catch-up at 8 and drops the rest on a hitch. |
 | `FightCamera.cs` | Camera centre X = fighters' midpoint clamped to the stage; `BothInView()` for tests. |
 
+### Run state and reward draft (`game/scripts/Sim/Run/`, namespace `YokaiFighters.Sim`, YOK-47)
+Pure C#, no Godot, deterministic (seeded `SimRng`). Ryo's run state between duels and the three-card draft (A7).
+
+| File | Purpose |
+|---|---|
+| `RewardTypes.cs` | **Reward-screen contract (YOK-52 binds to it).** `CardKind` (NewSpecial, Upgrade, Modifier); `CardView(Index, Kind, Badge "NEW"/"UPGRADE"/"MODIFIER", AbilityId, Name, Plain, Frames, Source, Targets)` (A12: `Plain` first, `Frames` behind the toggle; `NeedsTarget` when `Targets.Count > 1`); `CardTarget(Slot, SpecialId, SpecialName, Level, Plain, Frames)` = the result on that special; `RewardOffer(Yokai, Cards)`; `PickResult(Ok, Error, Card, Slot, Level)`; `IRewardDraft { Offer; Picked; Pick(cardIndex, SpecialSlot? target = null) }` (null target = the card's only target; a failed pick changes nothing; one pick per draft). |
+| `RunState.cs` | Ryo's run: `Health` (carries, C1), slots A-D of `OwnedSpecial(Data, Level, Modifier)`. `NewRun(pool)` = starters at Lv 1 (A1), 1,000 health. `AfterDuel(healthLeft)` = R3: health left + 50, capped at 1,000. `MatchConfig(baseCfg)` (P1 start health) + `ApplyTo(fighter)` (equip slots, levels, modifiers) set up the next `Match`. |
+| `RewardDraft.cs` | `RewardDraft.Build(run, pool, yokai, seed)` → `IRewardDraft`. Cards in order NEW (an unlocked common special of the beaten yokai Ryo doesn't own), UPGRADE (owned special below Lv 3, player picks), MODIFIER (an unlocked modifier of that yokai, attached to an eligible owned special without one, player picks). `Pick` applies to the `RunState`. |
+| `AbilityPool.cs`, `ModifierData.cs` | Specials (`data/moves/`) + modifiers (`data/modifiers/`), with TEST FIXTURE fallback (`tests/fixtures/rewards/`). `ModifierData` = kind `modifier`: `applies_to.requires`, effects applied on top of the special's build (generic, no per-name code). |
+
 ### Input layer (`game/scripts/Sim/Input/`, namespace `YokaiFighters.Sim`, YOK-17)
 Pure C#, deterministic, shared by Kata and Kihon (K3): only the `ICommandParser` differs (`KataParser` / `KihonParser`, chosen by `InputReader.Scheme`). Throws (E12) and burst (E13) read the raw buffer; EX (E16) is `Match.ExPair`: motion specials (Kata, and Kihon motions) two punches/two kicks, Kihon `Special` + any one attack (E18), same tick or up to 2 ticks after `Special` (in-place upgrade, `TryExUpgrade`; `Fighter.SpecialButtons` keeps the `Special` bit). Per fighter: `InputReader.Update(raw, facing)` once per tick, then the move system calls `TryConsume(out InputCommand)`.
 
