@@ -1,0 +1,16 @@
+{
+  "kind": "clip",
+  "id": "kitsune-walk-guard-fwd",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "689 Walk_Fight_Forward_inplace",
+  "frames_total": 104,
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "WARN. Guarded loop, arms low and close. In-place treadmill: root drift 0.4 cm, stance foot 0.64-0.72 m/s (about 0.011 m per tick), so set walk speed in data to that to avoid slide. Loop pop 3.5 deg. Hakama stretch at the accepted free-walk level (650 edges, 7.1x vs 604, 7.3x); no leg poke-through in stills; tails clear.",
+  "rules": [
+    "F2",
+    "F6"
+  ],
+  "notes": "Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb; task 01a1100b-7f34-7143-8c35-78c8784825ad; file game/assets/generated/clips/kitsune/kitsune-guard-walk-fwd.glb; trim raw 60 fps ticks 0-103 inclusive (trim is data, no hand keying). Loop, 104 ticks (1.73 s), slower than the 64-tick free walk."
+}
