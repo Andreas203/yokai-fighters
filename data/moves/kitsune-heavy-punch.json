@@ -18,7 +18,7 @@
   "frame_data": {
     "startup": 10,
     "active": 4,
-    "recovery": 21,
+    "recovery": 20,
     "damage": 80,
     "hitstun": 24,
     "blockstun": 18,
@@ -41,7 +41,7 @@
       {
         "frames": [
           1,
-          35
+          34
         ],
         "rect": {
           "x": -45,
@@ -67,5 +67,5 @@
       "anti_air": true
     }
   },
-  "notes": "Uppercut clip 35 frames, hit 11-14. Deviation from C8 10/4/20: recovery +1 (clip 35 frames). Hitbox rises (y 190-320) as an uppercut; anti_air flag is a proposal from the box shape. Hurtbox: the E5 standing body 90x360 for the whole move; the wide sleeves are NOT added (they are cloth, not body); only the bare striking limb gets an extra hurtbox while it is extended. Hitstun, blockstun and pushback are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number (no Kitsune table exists)."
+  "notes": "Uppercut clip 34 frames, hit 11-14: 10/4/20 = C8, no deviation. Blend-out: arm at 71% at the cut, blend the last 4-6 ticks. anti_air flag is a proposal from the box shape (hitbox rises to y 320). Body hurtbox E5 for the whole move; bare striking limb box while extended. Hitstun, blockstun and pushback are placeholders (not in rules.md); damage is the C8 number."
 }

@@ -20,16 +20,16 @@
     ]
   },
   "frame_data": {
-    "startup": 3,
-    "active": 17,
-    "recovery": 11,
+    "startup": 5,
+    "active": 7,
+    "recovery": 18,
     "damage": 120,
     "break_window": 7,
     "throwboxes": [
       {
         "frames": [
-          4,
-          20
+          6,
+          12
         ],
         "rect": {
           "x": 20,
@@ -43,7 +43,7 @@
       {
         "frames": [
           1,
-          31
+          30
         ],
         "rect": {
           "x": -45,
@@ -54,5 +54,5 @@
       }
     ]
   },
-  "notes": "Generic throw (C4), 259 shove. Clip 31 frames, hands contact 4-20 so startup 3 / active 17 / recovery 11. Deviation from C4 startup 5: -2 (the clip note says startup 4; the validator ties hit_start 4 to startup 3). Active 17 is the clip window; recovery 11 outlasts the 7-frame break window (E12). The clip carries a 28 cm hip advance that must be replaced by a data step (E15); the throw schema has no forward-travel field, so that step is NOT yet encoded (needs a schema/engine follow-up). Pushback left to fight defaults. Same buttons as Ryo's throw; Ryo's file (YOK-33) is a separate id."
+  "notes": "Generic throw (C4), 259 shove. Clip 30 frames, palm reach window 6-12: 5/7/18, startup = C4's 5, no deviation. Recovery 18 outlasts the 7-frame break window (E12). The clip carries a 28 cm hip advance that must be replaced by a data step (E15); the throw schema has no forward-travel field, so that step is NOT yet encoded (needs a schema/engine follow-up). Pushback left to fight defaults. Same buttons as Ryo's throw; Ryo's file is a separate id."
 }

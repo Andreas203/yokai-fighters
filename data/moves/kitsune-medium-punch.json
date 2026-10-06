@@ -16,9 +16,9 @@
     "button": "MP"
   },
   "frame_data": {
-    "startup": 9,
-    "active": 10,
-    "recovery": 46,
+    "startup": 6,
+    "active": 3,
+    "recovery": 12,
     "damage": 50,
     "hitstun": 17,
     "blockstun": 13,
@@ -26,8 +26,8 @@
     "hitboxes": [
       {
         "frames": [
-          10,
-          19
+          7,
+          9
         ],
         "rect": {
           "x": 45,
@@ -41,7 +41,7 @@
       {
         "frames": [
           1,
-          65
+          21
         ],
         "rect": {
           "x": -45,
@@ -52,8 +52,8 @@
       },
       {
         "frames": [
-          10,
-          22
+          7,
+          13
         ],
         "rect": {
           "x": 35,
@@ -64,5 +64,5 @@
       }
     ]
   },
-  "notes": "Clip 65 frames, hit 10-19. Deviation from C8 6/3/12: startup +3, active +7, recovery +34. The clip says recovery can be cut at about frame 48 (clip-matcher trim) which would give 9/10/29. Hurtbox: the E5 standing body 90x360 for the whole move; the wide sleeves are NOT added (they are cloth, not body); only the bare striking limb gets an extra hurtbox while it is extended. Hitstun, blockstun and pushback are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number (no Kitsune table exists)."
+  "notes": "Clip 21 frames (1.25x), hit 7-9: 6/3/12 = C8, no deviation. Blend-out: hand at 72% reach at the cut, blend the last 4-6 ticks. Hurtbox: E5 standing body for the whole move; sleeves not added; bare striking limb box while extended. Hitstun, blockstun and pushback are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number."
 }

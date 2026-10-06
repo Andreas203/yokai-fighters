@@ -37,8 +37,8 @@
     }
   },
   "card": {
-    "plain": "Launch a slow fox flame.",
-    "frames": "18 / - / 77 frames, 70 damage, slow projectile"
+    "plain": "Launch a slow fox flame that drifts across the screen.",
+    "frames": "15 / 4 / 30 frames, 70 damage, slow projectile"
   },
   "ex": {
     "meter_cost": 100,
@@ -53,9 +53,9 @@
   "levels": {
     "1": {
       "frame_data": {
-        "startup": 18,
-        "active": null,
-        "recovery": 77,
+        "startup": 15,
+        "active": 4,
+        "recovery": 30,
         "damage": 70,
         "hitstun": 20,
         "blockstun": 14,
@@ -65,7 +65,7 @@
           {
             "frames": [
               1,
-              95
+              49
             ],
             "rect": {
               "x": -45,
@@ -77,7 +77,7 @@
         ],
         "properties": {
           "projectile": {
-            "spawn_frame": 19,
+            "spawn_frame": 16,
             "speed": 5,
             "hitbox": {
               "x": 100,
@@ -119,11 +119,11 @@
           }
         ],
         "card": {
-          "plain": "Your flame passes through enemy projectiles.",
-          "frames": "18 / - / 77 frames, 70 damage, passes projectiles"
+          "plain": "Your foxfire passes through projectiles.",
+          "frames": "15 / 4 / 30 frames, 70 damage, passes through projectiles"
         }
       }
     }
   },
-  "notes": "ONE file serves both fighters: source kitsune (A8), slot C so Ryo can draft it into C as a reward and the Tanuki can copy it (T0); data identical for whoever casts it (K3). Clip kitsune-foxfire (95 frames, hit 19) is the reference; Ryo's cast clip data/clips/ryo-foxfire-cast.json (92 frames, hit 16-19) differs in timing and would need the engine to use this data with his clip, since the validator ties frame data to one clip. Deviation from A table 15/4/30: startup 18 (+3), active - (projectile, release frame 19), recovery 77 (+47) because the clip is 95 frames with a held pose to frame 66; clip-matcher notes it could be cut to about 70 total (recovery 52). Projectile speed 5 units/tick (slow, proposed), spawn rect at the hand (about 50 cm = 100 units forward, chest height). Body hurtbox only: sleeves not added. Damage 70 from the A table; hitstun/blockstun placeholders. EX is a proposal: 2 hits."
+  "notes": "ONE file serves both fighters: source kitsune (A8), slot C so Ryo can draft it into C and the Tanuki can copy it (T0); data identical for whoever casts it (K3). Clip kitsune-foxfire (49 frames, hit 16-19) has the same 49 frames and hit window as Ryo's ryo-foxfire-cast, so this one file fits both rigs. 15/4/30 = A table, no deviation. Active 4 is the release window; the flame spawns on frame 16 at the hand (about 50 cm = 100 units forward, chest height); the projectile, not the body, carries the hit. Blend-out: hand at about 80% at the cut, blend the last 4-6 ticks. Projectile speed 5 units/tick (slow, proposed). Body hurtbox only: sleeves not added. Damage 70 from the A table; hitstun/blockstun are placeholders. Lv 2 and EX remain proposed."
 }

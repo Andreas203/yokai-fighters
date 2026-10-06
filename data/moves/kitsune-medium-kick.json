@@ -16,9 +16,9 @@
     "button": "MK"
   },
   "frame_data": {
-    "startup": 10,
-    "active": 15,
-    "recovery": 10,
+    "startup": 7,
+    "active": 3,
+    "recovery": 14,
     "damage": 55,
     "hitstun": 18,
     "blockstun": 14,
@@ -26,8 +26,8 @@
     "hitboxes": [
       {
         "frames": [
-          11,
-          25
+          8,
+          10
         ],
         "rect": {
           "x": 35,
@@ -41,7 +41,7 @@
       {
         "frames": [
           1,
-          35
+          24
         ],
         "rect": {
           "x": -45,
@@ -52,8 +52,8 @@
       },
       {
         "frames": [
-          11,
-          25
+          8,
+          14
         ],
         "rect": {
           "x": 25,
@@ -64,5 +64,5 @@
       }
     ]
   },
-  "notes": "Head-high straight kick, clip 35 frames, hit 11-25 (foot at 107 cm = 214 units, hitbox y 150-210). Deviation from C8 7/3/14: startup +3, active +12, recovery -4. A 15-frame active window is the clip's truth; designer may want a shorter active via a re-trim. Standing mid (not low). The hakama tube around the leg is not added to the hurtbox beyond the leg box. Hurtbox: the E5 standing body 90x360 for the whole move; the wide sleeves are NOT added (they are cloth, not body); only the bare striking limb gets an extra hurtbox while it is extended. Hitstun, blockstun and pushback are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number (no Kitsune table exists)."
+  "notes": "Head-high straight kick (foot at 107 cm = 214 units, hitbox y 150-210), clip 24 frames (1.2x), hit 8-10: 7/3/14 = C8, no deviation. Blend-out: leg back to 40% at the cut, blend the last 4-6 ticks. Standing mid (not low). Hakama tube not added to the hurtbox beyond the leg box. Body hurtbox E5 for the whole move. Hitstun, blockstun and pushback are placeholders (not in rules.md); damage is the C8 number."
 }
