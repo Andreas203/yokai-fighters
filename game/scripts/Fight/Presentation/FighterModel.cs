@@ -52,7 +52,7 @@ public partial class FighterModel : Node3D
 		if (player.HasAnimationLibrary(LibraryName)) player.RemoveAnimationLibrary(LibraryName);
 		player.AddAnimationLibrary(LibraryName, lib);
 
-		model.ApplyToon(scene);
+		ApplyToon(scene);
 		if (set.TailPath != null) model.BuildTails(set.TailPath);
 		return model;
 	}
@@ -208,7 +208,8 @@ public partial class FighterModel : Node3D
 	public const float OutlineMetres = 0.008f;
 	private static readonly Dictionary<float, StandardMaterial3D> Outlines = new();
 
-	private void ApplyToon(Node root)
+	/// <summary>V1 toon diffuse/specular + ink outline on every mesh under <paramref name="root"/>; stage props reuse it (YOK-39).</summary>
+	public static void ApplyToon(Node root, float outlineMetres = OutlineMetres)
 	{
 		foreach (var node in root.FindChildren("*", "MeshInstance3D", true, false))
 		{
@@ -222,7 +223,7 @@ public partial class FighterModel : Node3D
 				m.DiffuseMode = BaseMaterial3D.DiffuseModeEnum.Toon;
 				m.SpecularMode = BaseMaterial3D.SpecularModeEnum.Toon;
 				m.Roughness = 1f;
-				m.NextPass = Outline(OutlineMetres / scale);
+				m.NextPass = Outline(outlineMetres / scale);
 				mi.SetSurfaceOverrideMaterial(sfc, m);
 			}
 		}

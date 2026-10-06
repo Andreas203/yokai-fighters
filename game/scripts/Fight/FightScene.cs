@@ -298,43 +298,4 @@ public partial class FightScene : Node3D
 		AddChild(root);
 		return root;
 	}
-
-	private void BuildStage()
-	{
-		var c = Match.Config;
-		float stageW = ToMeters(c.StageHalfWidth * 2);
-		AddChild(new WorldEnvironment
-		{
-			Environment = new Environment
-			{
-				BackgroundMode = Environment.BGMode.Color,
-				BackgroundColor = new Color(0.32f, 0.22f, 0.3f), // dusk placeholder (V9 bamboo grove)
-				AmbientLightSource = Environment.AmbientSource.Color,
-				AmbientLightColor = new Color(0.5f, 0.45f, 0.5f),
-			},
-		});
-		AddChild(new DirectionalLight3D { Name = "Sun", RotationDegrees = new Vector3(-50f, -30f, 0f) });
-		AddChild(new MeshInstance3D
-		{
-			Name = "Floor",
-			Mesh = new BoxMesh { Size = new Vector3(stageW + 8f, 0.2f, 6f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.3f, 0.36f, 0.22f) } },
-			Position = new Vector3(0f, -0.1f, 0f),
-		});
-		AddChild(new MeshInstance3D
-		{
-			Name = "Backdrop",
-			Mesh = new QuadMesh { Size = new Vector2(stageW + 12f, 8f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.45f, 0.3f, 0.35f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded } },
-			Position = new Vector3(0f, 4f, -4f),
-		});
-		// Corner posts mark the stage bounds.
-		foreach (int side in new[] { -1, 1 })
-		{
-			AddChild(new MeshInstance3D
-			{
-				Name = side < 0 ? "CornerLeft" : "CornerRight",
-				Mesh = new BoxMesh { Size = new Vector3(0.2f, 5f, 0.2f), Material = new StandardMaterial3D { AlbedoColor = new Color(0.4f, 0.55f, 0.3f) } },
-				Position = new Vector3(side * stageW / 2f, 2.5f, -0.5f),
-			});
-		}
-	}
 }
