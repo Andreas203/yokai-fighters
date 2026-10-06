@@ -1,0 +1,179 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FightStage.cs" id="1_y5820"]
+[ext_resource type="Texture2D" path="res://assets/generated/stage/bamboo-grove/backdrop.png" id="2_f8psq"]
+[ext_resource type="Shader" path="res://shaders/toon_floor.gdshader" id="3_ys7b0"]
+[ext_resource type="Texture2D" path="res://assets/generated/stage/bamboo-grove/ground-strip.png" id="4_pwjba"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/bamboo-grove/bamboo-cluster.glb" id="5_sn3id"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/bamboo-grove/lantern.glb" id="6_6uu0c"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="7_1agtv"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="8_wb53e"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="9_42tgq"]
+
+[sub_resource type="Environment" id="Environment_yv3ky"]
+background_mode = 1
+background_color = Color(0.18, 0.21, 0.34, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.42, 0.42, 0.58, 1)
+ambient_light_energy = 0.55
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.27, 0.29, 0.45, 1)
+fog_density = 0.55
+fog_depth_curve = 1.2
+fog_depth_begin = 14.0
+fog_depth_end = 30.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m51xx"]
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("2_f8psq")
+uv1_scale = Vector3(0.84011626, 0.8046875, 1)
+uv1_offset = Vector3(0.07994186, 0.09765625, 0)
+
+[sub_resource type="QuadMesh" id="QuadMesh_4fleh"]
+size = Vector2(36, 19.245674)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qchpt"]
+render_priority = 0
+shader = ExtResource("3_ys7b0")
+shader_parameter/tex = ExtResource("4_pwjba")
+shader_parameter/art_rect = Vector4(0.0766369, 0.22526042, 0.84598213, 0.5494792)
+shader_parameter/tiles = Vector2(10, 16.839455)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_fxqhh"]
+material = SubResource("ShaderMaterial_qchpt")
+size = Vector2(40, 25)
+
+[node name="Stage" type="Node3D" unique_id=685045354]
+script = ExtResource("1_y5820")
+Kind = "bamboo-grove"
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=2048669397]
+environment = SubResource("Environment_yv3ky")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=482970356]
+transform = Transform3D(0.57357645, 0.33317915, -0.7483326, 0, 0.9135454, 0.40673664, 0.81915206, -0.23329456, 0.5239881, 0, 0, 0)
+light_color = Color(1, 0.74, 0.52, 1)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="." unique_id=2047084189]
+transform = Transform3D(0.49999997, -0.4967318, 0.70940655, 0, 0.81915206, 0.57357645, -0.86602545, -0.2867882, 0.409576, 0, 0, 0)
+light_color = Color(0.55, 0.64, 0.95, 1)
+light_energy = 0.4
+
+[node name="Backdrop" type="MeshInstance3D" parent="." unique_id=712132684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.8586154, -16)
+material_override = SubResource("StandardMaterial3D_m51xx")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_4fleh")
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=211461579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.5)
+mesh = SubResource("PlaneMesh_fxqhh")
+
+[node name="Props" type="Node3D" parent="." unique_id=469812743]
+
+[node name="Bamboo0" type="Node3D" parent="Props" unique_id=736929778]
+transform = Transform3D(-1.0818131, 0, -4.6858444, 0, 4.8091016, 0, 4.6858444, 0, -1.0818131, -14.17, 0, -9.59)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo0" unique_id=111411783]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo0/Pivot" unique_id=1224167308 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo1" type="Node3D" parent="Props" unique_id=1918727943]
+transform = Transform3D(0.12882021, 0, -3.688948, 0, 3.6911964, 0, 3.688948, 0, 0.12882021, -11.23, 0, -4.65)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo1" unique_id=1084663822]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo1/Pivot" unique_id=99236512 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo2" type="Node3D" parent="Props" unique_id=1431318335]
+transform = Transform3D(-0.19939168, 0, 3.804621, 0, 3.8098423, 0, -3.804621, 0, -0.19939168, -8.29, 0, -10.61)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo2" unique_id=1538462294]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo2/Pivot" unique_id=569597722 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo3" type="Node3D" parent="Props" unique_id=733485083]
+transform = Transform3D(3.29746, 0, 2.4848142, 0, 4.128867, 0, -2.4848142, 0, 3.29746, -2.54, 0, -12.46)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo3" unique_id=1547157582]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo3/Pivot" unique_id=645659684 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo4" type="Node3D" parent="Props" unique_id=1416382924]
+transform = Transform3D(1.5540504, 0, 5.0830684, 0, 5.315323, 0, -5.0830684, 0, 1.5540504, 2.96, 0, -12.41)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo4" unique_id=961473877]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo4/Pivot" unique_id=1054473150 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo5" type="Node3D" parent="Props" unique_id=1731061619]
+transform = Transform3D(-4.381824, 0, -0.30640665, 0, 4.392524, 0, 0.30640665, 0, -4.381824, 8.18, 0, -10.47)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo5" unique_id=27286938]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo5/Pivot" unique_id=132306007 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo6" type="Node3D" parent="Props" unique_id=202691270]
+transform = Transform3D(-3.4612727, 0, 0.24203575, 0, 3.4697247, 0, -0.24203575, 0, -3.4612727, 11.77, 0, -4.8)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo6" unique_id=722982678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo6/Pivot" unique_id=2111776343 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo7" type="Node3D" parent="Props" unique_id=1684546086]
+transform = Transform3D(2.0218577, 0, -3.1133873, 0, 3.712289, 0, 3.1133873, 0, 2.0218577, 14, 0, -8.06)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo7" unique_id=1546963173]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo7/Pivot" unique_id=1608102091 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo8" type="Node3D" parent="Props" unique_id=123826430]
+transform = Transform3D(4.1519637, 0, -0.07247363, 0, 4.152596, 0, 0.07247363, 0, 4.1519637, -16.63, 0, -5.77)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo8" unique_id=1908825441]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo8/Pivot" unique_id=380009194 instance=ExtResource("5_sn3id")]
+
+[node name="Bamboo9" type="Node3D" parent="Props" unique_id=1552923251]
+transform = Transform3D(-3.6420197, 0, 1.325587, 0, 3.8757565, 0, -1.325587, 0, -3.6420197, 17.73, 0, -5.21)
+
+[node name="Pivot" type="Node3D" parent="Props/Bamboo9" unique_id=1879865855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.007538557)
+
+[node name="Model" type="Node3D" parent="Props/Bamboo9/Pivot" unique_id=974594163 instance=ExtResource("5_sn3id")]
+
+[node name="Lantern0" type="Node3D" parent="Props" unique_id=1473412547]
+transform = Transform3D(0.111388974, 0, -0.70328194, 0, 0.7120485, 0, 0.70328194, 0, 0.111388974, -3.32, 0, -12.7)
+
+[node name="Pivot" type="Node3D" parent="Props/Lantern0" unique_id=174760744]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0019714832, 0.951201, 0.0018630624)
+
+[node name="Model" type="Node3D" parent="Props/Lantern0/Pivot" unique_id=1033751423 instance=ExtResource("6_6uu0c")]
+
+[node name="Lantern1" type="Node3D" parent="Props" unique_id=1332561635]
+transform = Transform3D(0.69638216, 0, 0.35482442, 0, 0.781568, 0, -0.35482442, 0, 0.69638216, 3.0300002, 0, -11.46)
+
+[node name="Pivot" type="Node3D" parent="Props/Lantern1" unique_id=1377941602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0019714832, 0.951201, 0.0018630624)
+
+[node name="Model" type="Node3D" parent="Props/Lantern1/Pivot" unique_id=2087426860 instance=ExtResource("6_6uu0c")]
+
+[node name="PropToon" type="Node" parent="." unique_id=1754854512]
+script = ExtResource("7_1agtv")
+Toon = ExtResource("8_wb53e")
+Outline = ExtResource("9_42tgq")
+OutlineMetres = 0.02
+Target = NodePath("../Props")

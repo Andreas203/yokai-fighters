@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FightStage.cs" id="1_six3r"]
+
+[sub_resource type="Environment" id="Environment_fwc4m"]
+background_mode = 1
+background_color = Color(0.32, 0.22, 0.3, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.45, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7c265"]
+albedo_color = Color(0.3, 0.36, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o5v4i"]
+material = SubResource("StandardMaterial3D_7c265")
+size = Vector3(27.2, 0.2, 6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x00tx"]
+shading_mode = 0
+albedo_color = Color(0.45, 0.3, 0.35, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_7oshn"]
+material = SubResource("StandardMaterial3D_x00tx")
+size = Vector2(31.2, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_54xks"]
+albedo_color = Color(0.4, 0.55, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_saf7s"]
+material = SubResource("StandardMaterial3D_54xks")
+size = Vector3(0.2, 5, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w4lhh"]
+albedo_color = Color(0.4, 0.55, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nuyvb"]
+material = SubResource("StandardMaterial3D_w4lhh")
+size = Vector3(0.2, 5, 0.2)
+
+[node name="Stage" type="Node3D" unique_id=183963772]
+script = ExtResource("1_six3r")
+Kind = "placeholder"
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=512708819]
+environment = SubResource("Environment_fwc4m")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=577148241]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=113530061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_o5v4i")
+
+[node name="Backdrop" type="MeshInstance3D" parent="." unique_id=1951646777]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -4)
+mesh = SubResource("QuadMesh_7oshn")
+
+[node name="CornerLeft" type="MeshInstance3D" parent="." unique_id=1870117094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.6, 2.5, -0.5)
+mesh = SubResource("BoxMesh_saf7s")
+
+[node name="CornerRight" type="MeshInstance3D" parent="." unique_id=1766659452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 2.5, -0.5)
+mesh = SubResource("BoxMesh_nuyvb")

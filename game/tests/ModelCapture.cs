@@ -75,10 +75,10 @@ public partial class ModelCapture : Node
 		drive(scene);
 		if (closeup >= 0)
 		{
-			var cam = scene.GetNode<Camera3D>("Camera");
+			var cam = scene.Camera;
 			var who3 = scene.ModelOf(closeup)!;
-			cam.Position = who3.Position + new Vector3(0.4f, 1.2f, 4.2f);
-			cam.LookAt(who3.Position + new Vector3(0f, 0.5f, 0f));
+			cam.GlobalPosition = who3.GlobalPosition + new Vector3(0.4f, 1.2f, 4.2f);
+			cam.LookAt(who3.GlobalPosition + new Vector3(0f, 0.5f, 0f));
 		}
 		GD.Print($"{name}: P1 {scene.Match.P1.State} pose {scene.PresenterOf(0)?.Sample}; P2 {scene.Match.P2.State} stun {scene.Match.P2.StunLeft} pose {scene.PresenterOf(1)?.Sample}");
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -106,10 +106,10 @@ public partial class ModelCapture : Node
 		}
 		if (closeup >= 0)
 		{
-			var cam = scene.GetNode<Camera3D>("Camera");
+			var cam = scene.Camera;
 			var who3 = scene.ModelOf(closeup)!;
-			cam.Position = who3.Position + (swap ? new Vector3(2.4f, 1.3f, -1.2f) : new Vector3(0.6f, 1.1f, 2.6f)); // swap: from behind her back
-			cam.LookAt(who3.Position + new Vector3(0f, 0.9f, 0f));
+			cam.GlobalPosition = who3.GlobalPosition + (swap ? new Vector3(2.4f, 1.3f, -1.2f) : new Vector3(0.6f, 1.1f, 2.6f)); // swap: from behind her back
+			cam.LookAt(who3.GlobalPosition + new Vector3(0f, 0.9f, 0f));
 		}
 		var f1 = scene.Match.P1; var f2 = scene.Match.P2;
 		GD.Print($"{name}: P1 {f1.State} {f1.CurrentMove?.Id} {f1.MoveFrame} pose {scene.PresenterOf(0)?.Sample}; P2 {f2.State} {f2.CurrentMove?.Id} {f2.MoveFrame} pose {scene.PresenterOf(1)?.Sample}");

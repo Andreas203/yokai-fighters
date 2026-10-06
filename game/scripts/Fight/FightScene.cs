@@ -32,6 +32,10 @@ public partial class FightScene : Node3D
 	public FrameStepper Stepper { get; } = new();
 
 	private Camera3D _camera = null!;
+	private Node3D _cameraRig = null!;
+	/// <summary>YOK-39: the camera (scenes/camera_rig.tscn, "CameraRig/Camera" in fight.tscn); its rig is moved from the sim each render.</summary>
+	public Camera3D Camera => _camera;
+	public Node3D CameraRig => _cameraRig;
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
@@ -162,8 +166,8 @@ public partial class FightScene : Node3D
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
 		_bodies[1] = BuildFighter("Kitsune", new Color(0.95f, 0.55f, 0.2f));
 		BuildModels(); // YOK-53: rigged fighters over the capsules
-		_camera = new Camera3D { Name = "Camera", Fov = CameraFovDegrees, Current = true };
-		AddChild(_camera);
+		_cameraRig = GetNode<Node3D>("CameraRig"); // YOK-39: scenes/camera_rig.tscn
+		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
@@ -238,11 +242,8 @@ public partial class FightScene : Node3D
 		}
 		RenderModels(); // YOK-53
 
-		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen.
-		float viewW = ToMeters(c.ViewWidth);
-		float halfFovTan = Mathf.Tan(Mathf.DegToRad(CameraFovDegrees) / 2f);
-		float distance = viewW / (2f * halfFovTan * (16f / 9f));
-		_camera.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, distance);
+		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen; the rig carries the camera.
+		_cameraRig.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, CameraDistance(c));
 		var (sx, sy) = Shake.OffsetPx; // V3: px = gameplay units at the Z = 0 plane
 		_camera.HOffset = ToMeters(sx * SimConfig.Scale);
 		_camera.VOffset = ToMeters(sy * SimConfig.Scale);

@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_nbsab"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/ryo/ryo-rigged.glb" id="2_bu2r8"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="3_py8fm"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="4_q067e"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="5_0egmn"]
+
+[node name="Ryo" type="Node3D" unique_id=445748489]
+script = ExtResource("1_nbsab")
+Fighter = "ryo"
+
+[node name="Mirror" type="Node3D" parent="." unique_id=1834994460]
+
+[node name="Yaw" type="Node3D" parent="Mirror" unique_id=1421149248]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=954421727 instance=ExtResource("2_bu2r8")]
+
+[node name="Animator" type="AnimationPlayer" parent="." unique_id=139787941]
+deterministic = true
+root_node = NodePath("../Mirror/Yaw/Model")
+callback_mode_process = 2
+
+[node name="Toon" type="Node" parent="." unique_id=718027301]
+script = ExtResource("3_py8fm")
+Toon = ExtResource("4_q067e")
+Outline = ExtResource("5_0egmn")
