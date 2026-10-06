@@ -25,8 +25,13 @@ public partial class FightScene
 	/// <summary>Duels in the demo: the first fight and the rematch.</summary>
 	public const int DemoDuels = 2;
 
-	/// <summary>Seed for the reward draft (duel n uses RunSeed + n), so the same run offers the same cards.</summary>
+	/// <summary>Seed for the reward draft (duel n uses RunSeed + n), so one run offers the same cards on replay.
+	/// A fresh run picks a new seed unless <see cref="FixedRunSeed"/> is set (tests, harness).</summary>
 	public uint RunSeed { get; set; } = 48;
+	/// <summary>Set to pin every run to one seed; null = a new random seed per run (designer decision, YOK-48).</summary>
+	public uint? FixedRunSeed { get; set; }
+
+	private void PickRunSeed() => RunSeed = FixedRunSeed ?? (uint)System.Random.Shared.Next();
 	public DemoStage Stage { get; private set; } = DemoStage.Fighting;
 	/// <summary>1 = the first fight, 2 = the rematch.</summary>
 	public int Duel { get; private set; } = 1;
@@ -50,6 +55,7 @@ public partial class FightScene
 	{
 		Pool = LoadAbilityPool();
 		DemoRun = Run ?? RunState.NewRun(Pool);
+		PickRunSeed();
 		Match = NewMatch(DemoRun);
 	}
 
@@ -146,6 +152,7 @@ public partial class FightScene
 	{
 		HideFlowScreens();
 		DemoRun = RunState.NewRun(Pool);
+		PickRunSeed();
 		Draft = null;
 		Duel = 1;
 		Stage = DemoStage.Fighting;

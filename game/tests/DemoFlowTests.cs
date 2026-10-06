@@ -241,4 +241,19 @@ public static class DemoFlowTests
 		Assert.Equal("aggressive", s.P2Ai!.Profile.Temperament, "the chosen temperament carries into the restart");
 		Assert.Equal(FightScene.DebugMenuKey, Key.F9, "F9: clear of E9 keys and the F1-F8 debug keys");
 	});
+
+	/// <summary>Designer decision (YOK-48): each new run draws a new reward seed; a pinned seed stays put.</summary>
+	[Test]
+	public static void RunSeed_NewPerRunUnlessPinned(Node runner) => WithScene(runner, s =>
+	{
+		var seeds = new System.Collections.Generic.HashSet<uint> { s.RunSeed };
+		for (int i = 0; i < 8; i++) { s.RestartRun(); seeds.Add(s.RunSeed); }
+		Assert.True(seeds.Count > 1, "restarts draw new seeds");
+
+		s.FixedRunSeed = 7;
+		s.RestartRun();
+		Assert.Equal(7u, s.RunSeed, "pinned seed");
+		s.RestartRun();
+		Assert.Equal(7u, s.RunSeed, "pinned seed survives restart");
+	});
 }

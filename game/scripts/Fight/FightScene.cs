@@ -180,7 +180,7 @@ public partial class FightScene : Node3D
 	{
 		if (ExternalDrive) return;
 
-		bool resetDown = Input.IsPhysicalKeyPressed(Key.R);
+		bool resetDown = OS.IsDebugBuild() && Input.IsPhysicalKeyPressed(Key.R); // debug only: players can't skip the reward (YOK-48)
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
 		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
