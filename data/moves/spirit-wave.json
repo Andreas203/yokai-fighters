@@ -17,6 +17,7 @@
     "E1",
     "E16",
     "E17",
+    "E21",
     "F2",
     "F3",
     "K1",
@@ -36,7 +37,7 @@
   },
   "card": {
     "plain": "Throw a wave of spirit ink across the screen.",
-    "frames": "13 / - / 45 frames, 60 damage, projectile"
+    "frames": "13 / \u2014 / 30 frames, 60 damage, projectile"
   },
   "ex": {
     "meter_cost": 100,
@@ -58,7 +59,7 @@
       "frame_data": {
         "startup": 13,
         "active": null,
-        "recovery": 45,
+        "recovery": 31,
         "damage": 60,
         "hitstun": 20,
         "blockstun": 16,
@@ -67,7 +68,7 @@
           {
             "frames": [
               1,
-              58
+              44
             ],
             "rect": {
               "x": -45,
@@ -79,7 +80,7 @@
           {
             "frames": [
               12,
-              40
+              30
             ],
             "rect": {
               "x": 40,
@@ -106,13 +107,16 @@
       "preset": "spirit-wave-lv1"
     },
     "2": {
-      "status": "proposed",
+      "status": "final",
       "tuning": {
         "target": "recovery",
         "op": "add",
         "value": -4
       },
-      "notes": "Placeholder only (the A4 example step). Real Lv 2 steps are YOK-43's proposals; the designer decides in YOK-41. Not written by YOK-33."
+      "card": {
+        "plain": "Lv 1 \u2192 Lv 2: Spirit Wave recovers 4 frames faster, so you can follow it in.",
+        "frames": "13 / \u2014 / 26 frames (recovery -4), 60 damage, projectile"
+      }
     },
     "3": {
       "evolution": {
@@ -134,5 +138,5 @@
       }
     }
   },
-  "notes": "Startup 13 = table. Recovery is clip-derived: clip frames_total 58 - startup 13 = 45; table target 30 (43 total; the clip spec said blend out earlier). The clip wins (F2); recommend clip-matcher cut the tail. Projectile spawns on frame 14 (clip: release at raw 31). Projectile speed 12, its box (a ball at shoulder height where the hand whips out), stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 and Lv 3 are placeholders from other tickets."
+  "notes": "Re-derived from clip ryo-spirit-wave-cast (frames_total 44, release frame 14 = hit_end): startup 13 = table; active is null (the hit is the projectile); recovery is stored as 31 because the validator sums startup + recovery to 44 and frame 14 is the one spawn frame; counted from the release it is the table's 30 (card text 13 / \u2014 / 30). Hand is back to 36% at the cut: 4-tick blend-out. Projectile spawns on frame 14; speed 12, its box, stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 is final (E21, recovery -4)."
 }

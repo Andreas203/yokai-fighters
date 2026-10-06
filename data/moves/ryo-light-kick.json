@@ -1,0 +1,70 @@
+{
+  "kind": "normal",
+  "id": "ryo-light-kick",
+  "name": "Light kick",
+  "status": "proposed",
+  "source": "ryo",
+  "clip": "ryo-light-kick",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "E6",
+    "F2",
+    "F3",
+    "K3",
+    "V2"
+  ],
+  "input": {
+    "button": "LK"
+  },
+  "frame_data": {
+    "startup": 5,
+    "active": 2,
+    "recovery": 9,
+    "damage": 30,
+    "hitstun": 13,
+    "blockstun": 10,
+    "hitboxes": [
+      {
+        "frames": [
+          6,
+          7
+        ],
+        "rect": {
+          "x": 40,
+          "y": 110,
+          "w": 90,
+          "h": 50
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          16
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      },
+      {
+        "frames": [
+          5,
+          11
+        ],
+        "rect": {
+          "x": 40,
+          "y": 110,
+          "w": 90,
+          "h": 50
+        }
+      }
+    ]
+  },
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 16, S/A/R 5/2/9. Knee is back to 39% at the cut: blend the last 4 ticks out. Hitstun 13 and blockstun 10 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. Knee strike (clip 211 re-timed), hip height, reach about 0.6 m."
+}

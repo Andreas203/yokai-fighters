@@ -23,7 +23,7 @@
   "frame_data": {
     "startup": 5,
     "active": 7,
-    "recovery": 49,
+    "recovery": 18,
     "damage": 120,
     "break_window": 7,
     "pushback": {
@@ -48,7 +48,7 @@
       {
         "frames": [
           1,
-          61
+          30
         ],
         "rect": {
           "x": -45,
@@ -59,5 +59,5 @@
       }
     ]
   },
-  "notes": "Startup 5 = C4 5, break window 7 and damage 120 = C4. Active 7 (frames 6-12) and recovery 49 (= 61 - 12) are clip-derived (F2); C4/E12 give no active or recovery target, only that recovery must outlast the break window (7). The 259 shove clip is long: the clip-matcher may cut its tail. The forward step (about 0.9 m, E15) belongs in move data but throw.schema.json has no forward-travel field: follow-up for the schema owner. Pushback 80 / 60 and the throwbox (palm reach about 0.55 m plus body, torso height) are first passes."
+  "notes": "Re-derived from the re-timed clip (frames_total 30, hit 6-12): startup 5 = C4, active 7, recovery 18 (clip-derived; outlasts the 7-frame break window, E12). Palms are back to 31% at the cut: 4-tick blend-out. Break window 7 and damage 120 = C4. The forward step (about 0.9 m, E15) belongs in move data but throw.schema.json has no forward-travel field: follow-up for the schema owner. Pushback 80 / 60 and the throwbox are first passes."
 }

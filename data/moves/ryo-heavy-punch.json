@@ -20,10 +20,10 @@
   "frame_data": {
     "startup": 10,
     "active": 4,
-    "recovery": 21,
+    "recovery": 20,
     "damage": 80,
-    "hitstun": 26,
-    "blockstun": 22,
+    "hitstun": 24,
+    "blockstun": 21,
     "hitboxes": [
       {
         "frames": [
@@ -42,7 +42,7 @@
       {
         "frames": [
           1,
-          35
+          34
         ],
         "rect": {
           "x": -45,
@@ -65,5 +65,5 @@
       }
     ]
   },
-  "notes": "Startup 10 and active 4 match C8 (10/4). Recovery is clip-derived (frames_total 35 - hit_end 14 = 21); C8 target 20. F2: the clip wins. Recommend clip-matcher cut the tail to the target (blend out) and this file be re-derived. Hitstun 26 and blockstun 22 are not in rules.md: set against the C8 recovery so on-hit advantage is about +4 and on-block about +1 once the tail is cut (until then the move is minus); the harness tunes them. Boxes in units (E1, 200/m, origin at the feet, 1.8 m = 360) read from the stills in docs/assets/clips/ryo/. Extra hurtbox = the extended limb. Rising uppercut: the box spans chest to head height."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 34, S/A/R 10/4/20. Arm is at 74% reach at the cut: blend the retraction out over 4-6 ticks. Hitstun 24 and blockstun 21 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb."
 }

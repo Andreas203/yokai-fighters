@@ -91,6 +91,14 @@ public static class ReplayTests
 	[Test]
 	public static void RandomSpecialsThrowsBurstAirNormals_ReplayIdentically()
 	{
+		var saved = FightScene.Sources;
+		FightScene.Sources = FightScene.FixtureSources; // YOK-56: never depend on what is in data/ (coverage needs the fixture kit)
+		try { RandomCoverage(); }
+		finally { FightScene.Sources = saved; }
+	}
+
+	static void RandomCoverage()
+	{
 		FightScene.Run = null;
 		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (2, ControlScheme.Kihon, ControlScheme.Kata), (3, ControlScheme.Kata, ControlScheme.Kata) })
 		{

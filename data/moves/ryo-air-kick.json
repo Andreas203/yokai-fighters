@@ -25,17 +25,17 @@
   "air": true,
   "landing_recovery": 3,
   "frame_data": {
-    "startup": 24,
+    "startup": 6,
     "active": 10,
-    "recovery": 29,
+    "recovery": 9,
     "damage": 70,
     "hitstun": 18,
     "blockstun": 14,
     "hitboxes": [
       {
         "frames": [
-          25,
-          34
+          7,
+          16
         ],
         "rect": {
           "x": 40,
@@ -49,7 +49,7 @@
       {
         "frames": [
           1,
-          63
+          25
         ],
         "rect": {
           "x": -45,
@@ -60,5 +60,5 @@
       }
     ]
   },
-  "notes": "Clip ryo-jump-kick (Rising_Flying_Kick 422): startup 24, active 10 (hit 25-34), recovery 29 are clip-derived (F2); C8 has no air normals, so no table target. Damage, stun and boxes have no rule: first passes. FLAG: the clip includes the take-off, so startup 24 is long against a 40-frame jump (C2): the kick only completes if pressed early in the jump. Recommend a head-trim in the clip match so the move starts in the air. Hurtbox is the E5 airborne default (the clip's body goes horizontal). Leg horizontal and fully extended, foot reach 0.85 m."
+  "notes": "Re-derived from clip ryo-jump-kick (frames_total 25, hit 7-16): startup 6, active 10, recovery 9. The clip now starts mid-air (airborne raw 6-41, trimmed before the landing), which fixes the old take-off flag; blend in from the jump over about 4 ticks. Landing recovery 3 ticks (E19). C8 has no air normals, so damage, stun and boxes are first passes. Hurtbox is the E5 airborne default."
 }

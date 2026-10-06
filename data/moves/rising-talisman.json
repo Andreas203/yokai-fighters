@@ -16,6 +16,7 @@
     "C5",
     "E1",
     "E16",
+    "E21",
     "F2",
     "F3",
     "K1",
@@ -35,7 +36,7 @@
   },
   "card": {
     "plain": "A rising talisman strike that beats jumps.",
-    "frames": "5 / 8 / 31 frames, 90 damage, air-invulnerable frames 1-5"
+    "frames": "5 / 8 / 28 frames, 90 damage, air-invulnerable frames 1-5"
   },
   "ex": {
     "meter_cost": 100,
@@ -57,7 +58,7 @@
       "frame_data": {
         "startup": 5,
         "active": 8,
-        "recovery": 31,
+        "recovery": 28,
         "damage": 90,
         "hitstun": 24,
         "blockstun": 16,
@@ -79,7 +80,7 @@
           {
             "frames": [
               1,
-              44
+              41
             ],
             "rect": {
               "x": -45,
@@ -117,13 +118,16 @@
       "preset": "rising-talisman-lv1"
     },
     "2": {
-      "status": "proposed",
+      "status": "final",
       "tuning": {
         "target": "recovery",
         "op": "add",
-        "value": -4
+        "value": -6
       },
-      "notes": "Placeholder only (the A4 example step). Real Lv 2 steps are YOK-43's proposals; the designer decides in YOK-41. Not written by YOK-33."
+      "card": {
+        "plain": "Lv 1 \u2192 Lv 2: Rising Talisman recovers 6 frames faster, so a missed anti-air costs less.",
+        "frames": "5 / 8 / 22 frames (recovery -6), 90 damage, air-invulnerable frames 1-5"
+      }
     },
     "3": {
       "evolution": {
@@ -145,5 +149,5 @@
       }
     }
   },
-  "notes": "Startup 5, active 8 and air-invuln frames 1-5 match the table. Recovery is clip-derived: clip frames_total 44 - 13 = 31; table target 28 (+3, clip wins). Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX (clip notes). Hitstun 24, blockstun 16 and the EX (+30% damage, knockdown, 100 meter) are first passes. Lv 2 and Lv 3 are placeholders from other tickets."
+  "notes": "Re-derived from clip ryo-rising-talisman-strike (frames_total 41, hit 6-13): 5/8/28 = the table, no deviation left. Hand is back to 13% at the cut, so no blend-out is needed. Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX. Hitstun 24, blockstun 16 and the EX are first passes. Lv 2 is final (E21, recovery -6)."
 }
