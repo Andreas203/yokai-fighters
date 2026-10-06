@@ -1,0 +1,12 @@
+{
+  "kind": "story_card",
+  "id": "demo-complete",
+  "status": "proposed",
+  "trigger": "Demo end: Ryo wins the rematch and binds the Kitsune a second time (replaces the 'Demo complete' / 'Thanks for playing.' placeholders)",
+  "title": "Thanks for playing the demo",
+  "text": "{yokai} lets the lantern light settle on Ryo's shoulders, and for once says nothing clever. The road runs on past the torii, where other spirits are still waiting to be asked.",
+  "placeholders": ["yokai"],
+  "speaker": "narrator",
+  "rules": ["S1", "S2", "S4"],
+  "notes": "Demo text with yokai = Kitsune. Two sentences; the title carries the thanks note. Hints at more yokai and a road ahead without naming the Tanuki."
+}
