@@ -19,7 +19,8 @@ public static class RewardDraftTests
 {
 	static readonly FighterInput Idle = FighterInput.None;
 	static string RepoRoot => Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
-	static AbilityPool Pool() => AbilityPool.LoadRepo(RepoRoot);
+	/// <summary>YOK-56: the fixture pool only, so these tests never depend on what is in data/.</summary>
+	static AbilityPool Pool() => AbilityPool.LoadFixtures(RepoRoot);
 
 	static MoveData[] Moves() =>
 		MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FightScene.FixtureNormalsDir))
