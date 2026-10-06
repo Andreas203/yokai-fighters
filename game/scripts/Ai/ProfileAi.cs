@@ -69,7 +69,7 @@ public sealed class ProfileAi
 		if (prev is not null && prev.Tick != view.Tick) Events(prev, view, rose);
 
 		// The habit (Y2) first. A wake-up habit is rolled when the AI sees itself go down and pre-holds its
-		// direction through the knockdown, so it comes out on the first actionable frame (and is punishable).
+		// direction through the knockdown and the wake-up, so it comes out on the first actionable frame (and is punishable).
 		var h = Profile.Habit;
 		bool wakeUp = h.When == Observation.SelfGotUp;
 		if (rose[(int)(wakeUp ? Observation.SelfKnockedDown : h.When)])
@@ -82,7 +82,7 @@ public sealed class ProfileAi
 			Record(tick, view, kind, h.When, h.Do.ToString(), roll, h.ChancePct);
 			if (fire && !covered)
 			{
-				int wake = view.Tick + view.HitstopLeft + s.StunLeft + 1;
+				int wake = view.Tick + view.HitstopLeft + s.StunLeft + 1 + (s.State == FighterState.Knockdown ? view.WakeUpFrames : 0);
 				_plan = Build(h.Do, view, tick, true, wakeUp ? Math.Max(0, wake - tick) : 0);
 			}
 		}
@@ -169,7 +169,7 @@ public sealed class ProfileAi
 		Edge(Observation.OpponentJumping, o.Airborne, po.Airborne);
 		Edge(Observation.OpponentKnockedDown, o.State == FighterState.Knockdown, po.State == FighterState.Knockdown);
 		Edge(Observation.SelfKnockedDown, s.State == FighterState.Knockdown, ps.State == FighterState.Knockdown);
-		Edge(Observation.SelfGotUp, ps.State == FighterState.Knockdown && s.State != FighterState.Knockdown, false);
+		Edge(Observation.SelfGotUp, ps.State.IsDown() && !s.State.IsDown(), false); // after the wake-up, on the first actionable frame
 		bool shot = HasShot(view), shotBefore = HasShot(prev);
 		Edge(Observation.ProjectileOnScreen, shot, shotBefore);
 		Edge(Observation.OpponentInRecovery, o.Recovering, po.Recovering);

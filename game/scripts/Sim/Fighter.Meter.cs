@@ -10,8 +10,8 @@ public sealed partial class Fighter
 	/// <summary>C6: the burst has been spent this fight.</summary>
 	public bool BurstUsed;
 
-	/// <summary>No hurtbox at all (burst invulnerability). Knockdown is handled separately.</summary>
-	public bool Invulnerable => State == FighterState.Burst;
+	/// <summary>No hurtbox at all (burst invulnerability, or getting up after a knockdown). Knockdown is handled separately.</summary>
+	public bool Invulnerable => State is FighterState.Burst or FighterState.WakeUp;
 
 	public void GainMeter(int points, int max) => Meter = Math.Clamp(Meter + points, 0, max);
 

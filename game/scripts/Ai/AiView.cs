@@ -31,12 +31,15 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 {
 	public FighterView Fighter(int i) => i == 0 ? P1 : P2;
 
+	/// <summary>Get-up frames after a knockdown ends (SimConfig.WakeUpFrames): a fixed, visible animation length.</summary>
+	public int WakeUpFrames { get; init; }
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
 		var shots = new ProjectileView[m.Projectiles.Count];
 		for (int i = 0; i < shots.Length; i++) shots[i] = new(m.Projectiles[i].Owner, m.Projectiles[i].X, m.Projectiles[i].Dir);
-		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots);
+		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames };
 	}
 
 	private static FighterView Of(Fighter f)

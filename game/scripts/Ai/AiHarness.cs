@@ -99,7 +99,7 @@ public static class AiHarness
 			if (pendingJump >= 0 && !p1.Airborne) pendingJump = -1; // landed unanswered
 
 			if (p2.State == FighterState.Knockdown && aiPrev != FighterState.Knockdown) r.Knockdowns++;
-			if (aiPrev == FighterState.Knockdown && p2.State != FighterState.Knockdown)
+			if (aiPrev.IsDown() && !p2.State.IsDown())
 			{
 				r.WakeUps++;
 				if (p2.Airborne) { r.WakeJumps++; inWakeJump = true; }
@@ -147,12 +147,12 @@ public static class AiHarness
 		return new FighterInput(bits);
 	}
 
-	/// <summary>Walk in and throw (C4 knocks down), so the AI's wake-up habit shows; idle while it is down. A
+	/// <summary>Walk in and throw (C4 knocks down), so the AI's wake-up habit shows; idle while it is down or getting up. A
 	/// tester who has learned the tell: when the AI jumps, walk under it and heavy punch it on the way down.</summary>
 	public static FighterInput Thrower(Match m)
 	{
 		Fighter p1 = m.P1, p2 = m.P2;
-		if (!p1.Actionable || p2.State is FighterState.Knockdown or FighterState.Thrown) return FighterInput.None;
+		if (!p1.Actionable || p2.State is FighterState.Knockdown or FighterState.WakeUp or FighterState.Thrown) return FighterInput.None;
 		int dx = p2.X - p1.X;
 		InputBits fwd = dx >= 0 ? InputBits.Right : InputBits.Left;
 		if (p2.Airborne)

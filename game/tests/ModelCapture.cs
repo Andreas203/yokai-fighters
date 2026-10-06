@@ -16,7 +16,20 @@ public partial class ModelCapture : Node
 
 	public override async void _Ready()
 	{
-		foreach (string a in OS.GetCmdlineUserArgs()) if (a.StartsWith("out=")) _dir = a[4..];
+		string? only = null;
+		foreach (string a in OS.GetCmdlineUserArgs())
+		{
+			if (a.StartsWith("out=")) _dir = a[4..];
+			if (a.StartsWith("only=")) only = a[5..];
+		}
+		if (only == "wake")
+		{
+			// Knockdown → get-up join, close on the Kitsune: d = world frames since the throw put her down.
+			foreach (int d in new[] { 22, 24, 25, 26, 28, 34, 39, 40, 41, 43, 45, 47, 50, 54, 60, 67, 68 })
+				await Custom($"wake-d{d:00}", sc => Down(sc, d), closeup: 1);
+			GetTree().Quit();
+			return;
+		}
 		await Shot("ryo-heavy-kick-active", "ryo-heavy-kick", null, 0, 12, boxes: true);
 		await Shot("kitsune-heavy-kick-active", null, "kitsune-heavy-kick", 1, 12, boxes: true);
 		await Shot("ryo-jab-active", "ryo-light-punch", null, 0, 5, boxes: true);
@@ -42,13 +55,31 @@ public partial class ModelCapture : Node
 		for (int t = 0; t < 200 && !(sc.Match.P2.State == FighterState.Knockdown && sc.Match.P2.StunLeft <= stunLeft); t++) sc.Step(FighterInput.None, FighterInput.None);
 	}
 
-	private async System.Threading.Tasks.Task Custom(string name, Action<FightScene> drive)
+	/// <summary>Ryo throws the Kitsune, then steps until she has been down for <paramref name="frames"/> world frames.</summary>
+	private static void Down(FightScene sc, int frames)
+	{
+		int thr = Array.FindIndex(sc.Match.P1.Moves, m => m.IsThrow);
+		for (int t = 0; t < 200 && sc.Match.P2.X - sc.Match.P1.X > 9000; t++) sc.Step(new FighterInput(InputBits.Right), FighterInput.None);
+		sc.Step(FighterInput.Attack(thr), FighterInput.None);
+		for (int t = 0; t < 200 && sc.Match.P2.State != FighterState.Knockdown; t++) sc.Step(FighterInput.None, FighterInput.None);
+		int start = sc.Match.WorldFrame;
+		for (int t = 0; t < 400 && sc.Match.WorldFrame - start < frames - 1; t++) sc.Step(FighterInput.None, FighterInput.None);
+	}
+
+	private async System.Threading.Tasks.Task Custom(string name, Action<FightScene> drive, int closeup = -1)
 	{
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
 		scene.ExternalDrive = true;
 		AddChild(scene);
 		for (int t = 0; t < WalkTicks; t++) scene.Step(new FighterInput(InputBits.Right), new FighterInput(InputBits.Left));
 		drive(scene);
+		if (closeup >= 0)
+		{
+			var cam = scene.GetNode<Camera3D>("Camera");
+			var who3 = scene.ModelOf(closeup)!;
+			cam.Position = who3.Position + new Vector3(0.4f, 1.2f, 4.2f);
+			cam.LookAt(who3.Position + new Vector3(0f, 0.5f, 0f));
+		}
 		GD.Print($"{name}: P1 {scene.Match.P1.State} pose {scene.PresenterOf(0)?.Sample}; P2 {scene.Match.P2.State} stun {scene.Match.P2.StunLeft} pose {scene.PresenterOf(1)?.Sample}");
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);

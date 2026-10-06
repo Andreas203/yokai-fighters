@@ -36,7 +36,7 @@ public static class DebugBoxes
 			}
 
 		MoveData? m = f.CurrentMove;
-		bool hittable = !f.KnockedOut && f.State != FighterState.Knockdown;
+		bool hittable = !f.KnockedOut && !f.State.IsDown();
 		if (m is null)
 		{
 			if (hittable) list.Add(Make(DebugBoxKind.Hurt, f, match.BodyHurtbox(f)));

@@ -20,14 +20,15 @@ public sealed class FighterPresenter
 {
 	public const int DefaultBlend = 4;   // clip notes: 4-6 tick blend-outs
 	public const int CrouchBlend = 6;    // crouch down/up is a data blend (clip notes)
-	public const int GetUpBlend = 6;     // knockdown end (face up) → get-up start (face down): flagged, see GetUpTicks
+	public const int GetUpBlend = 6;     // get-up end → the next pose (clip notes: a 6-tick blend is enough)
 	public const int HitBlend = 2;       // a hit reaction should read at once
 	/// <summary>
-	/// The sim's knockdown (E4, 40 frames) has no separate wake-up, so the get-up clip's last GetUpTicks frames
-	/// (kneel → stand) play over the knockdown's last GetUpTicks frames. The knockdown clip ends face up and the
-	/// get-up starts face down (~150° apart, clip notes): an open designer question; this is a stopgap.
+	/// Wake-up roll: the knockdown clip ends face up, the get-up clip starts face down (~150° apart, clip notes).
+	/// The sim's WakeUp state (SimConfig.WakeUpFrames) plays the get-up clip's last WakeUpFrames frames; over the
+	/// first WakeRollBlend of them the pose blends from the knockdown's final frame, so the body turns over onto
+	/// its front while it starts to rise instead of popping. Designer proposal alongside WakeUpFrames.
 	/// </summary>
-	public const int GetUpTicks = 16;
+	public const int WakeRollBlend = 10;
 
 	private readonly FighterAnimSet _set;
 	private readonly ClipCatalog _cat;
@@ -116,7 +117,8 @@ public sealed class FighterPresenter
 			case PoseKind.JumpBack:
 				return Math.Clamp(f.AirFrame + _set.JumpFrameOffset, 1, total);
 			case PoseKind.GetUp:
-				return Math.Clamp(total - f.StunLeft + 1, 1, total);
+				// Wake-up frame k of N has StunLeft N-k: the clip's last N frames, ending on its last frame.
+				return Math.Clamp(total - f.StunLeft, 1, total);
 		}
 		int n = _frameBase + elapsed;
 		return _loop ? ((n - 1) % total + total) % total + 1 : Math.Clamp(n, 1, total);
@@ -152,9 +154,11 @@ public sealed class FighterPresenter
 				return (k, C(k), 1, false, f.StunLeft > _prevStun && !fresh);
 			}
 			case FighterState.Knockdown:
-				return f.StunLeft <= GetUpTicks && _cat.Has(C(PoseKind.GetUp))
+				return (PoseKind.Knockdown, C(PoseKind.Knockdown), 1, false, false);
+			case FighterState.WakeUp:
+				return _cat.Has(C(PoseKind.GetUp))
 					? (PoseKind.GetUp, C(PoseKind.GetUp), 1, false, false)
-					: (PoseKind.Knockdown, C(PoseKind.Knockdown), 1, false, false);
+					: (PoseKind.Knockdown, C(PoseKind.Knockdown), 1, false, false); // no get-up clip: stay down until actionable
 			case FighterState.Dash:
 			{
 				var k = f.DashDir == f.Facing ? PoseKind.Dash : PoseKind.DashBack;
@@ -185,6 +189,7 @@ public sealed class FighterPresenter
 	private int BlendInto(PoseKind from, PoseKind to, Fighter f)
 	{
 		if (to is PoseKind.HitHigh or PoseKind.HitLow or PoseKind.Thrown or PoseKind.BlockHigh or PoseKind.BlockLow) return HitBlend;
+		if (to == PoseKind.GetUp && from == PoseKind.Knockdown) return WakeRollBlend;
 		if (to == PoseKind.GetUp || from == PoseKind.GetUp) return GetUpBlend;
 		if (to == PoseKind.Crouch || from == PoseKind.Crouch) return CrouchBlend;
 		if (to == PoseKind.Attack) return Math.Min(DefaultBlend, Math.Max(1, f.CurrentMove?.Startup ?? DefaultBlend));

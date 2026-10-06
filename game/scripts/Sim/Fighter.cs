@@ -123,6 +123,17 @@ public enum FighterState
 	Burst,
 	/// <summary>E11 (YOK-55): touched down during an air normal; standing, no control or guard, throwable, StunLeft frames.</summary>
 	Landing,
+	/// <summary>
+	/// YOK-53 follow-up: getting up after the E4 knockdown. Invulnerable (no hurtbox, not throwable), no control,
+	/// for SimConfig.WakeUpFrames frames while the get-up clip plays; then Idle and actionable.
+	/// </summary>
+	WakeUp,
+}
+
+public static class FighterStates
+{
+	/// <summary>On the floor or getting up: the whole down time after a knockdown (Knockdown then WakeUp).</summary>
+	public static bool IsDown(this FighterState s) => s is FighterState.Knockdown or FighterState.WakeUp;
 }
 
 /// <summary>FNV-1a over ints, for state hashes in determinism and replay checks.</summary>

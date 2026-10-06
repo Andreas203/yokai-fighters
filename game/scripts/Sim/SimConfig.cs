@@ -80,6 +80,13 @@ public sealed partial record SimConfig
 	/// <summary>C4 "standard knockdown": frames on the floor, unhittable. Placeholder pending a designer number.</summary>
 	public int KnockdownFrames { get; init; } = 40;
 	/// <summary>
+	/// YOK-53 follow-up: invulnerable, non-actionable get-up frames after the knockdown (E4 stays 40), so the
+	/// presenter can roll the fighter from the knockdown's face-up end onto the get-up clip's face-down start and
+	/// play the get-up (347 Stand_Up4, 33 frames) without a pop. 28 is a DESIGNER PROPOSAL (40 + 28 = 68 frames
+	/// down, 1.13 s). 0 = no wake-up phase (the old behaviour).
+	/// </summary>
+	public int WakeUpFrames { get; init; } = 28;
+	/// <summary>
 	/// E12 (YOK-19): the two throw buttons count as a throw when the second goes down at most this
 	/// many ticks after the first (gaps 0..3 throw, 4 does not). Kata and Kihon alike.
 	/// </summary>
