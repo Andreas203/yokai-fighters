@@ -98,7 +98,9 @@ The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grov
 4. **Win:** the binding line, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
 5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([`demo/6-demo-complete.png`](demo/6-demo-complete.png)).
 
-To play it, install Godot 4.7 (.NET) and the .NET 10 SDK, then:
+**Play it on Windows, no install needed:** download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB). Unzip it anywhere and run `YokaiFighters.exe`, keeping the folders beside it. The start screen lists the keyboard and gamepad controls.
+
+To run it from source instead, install Godot 4.7 (.NET) and the .NET 10 SDK, then:
 ```
 git clone https://github.com/Andreas203/yokai-fighters.git
 cd yokai-fighters/game

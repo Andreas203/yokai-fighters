@@ -88,7 +88,7 @@ Designer-attention notes it raised and the designer ruled on:
 | #50 | YOK-39 | Bamboo grove stage at dusk | 219 |
 | #53 | YOK-39 | Camera keeps both models in frame; hurtbox defaults from the models | 241 |
 | #56 | YOK-39 | Stage, camera and fighters as editable Godot scenes | 245 |
-| — | YOK-39 | Windows export of the playable demo (see README › Demo) | 245 |
+| #57 | YOK-39 | Windows export: data located next to the exe in release builds, export preset, [release `demo-v0.1`](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) | 247 |
 
 **How it closes the loop with the other agents:**
 - Its **hitbox overlay** on the real models showed movesmith's boxes floating above the limbs, which led to the hitbox-alignment pass (#48).
