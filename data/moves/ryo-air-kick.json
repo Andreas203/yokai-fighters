@@ -1,0 +1,64 @@
+{
+  "kind": "normal",
+  "id": "ryo-air-kick",
+  "name": "Air kick",
+  "status": "proposed",
+  "source": "ryo",
+  "clip": "ryo-jump-kick",
+  "rules": [
+    "E11",
+    "E19",
+    "E6",
+    "E5",
+    "F2",
+    "F3",
+    "F5",
+    "K3"
+  ],
+  "input": {
+    "buttons": [
+      "LK",
+      "MK",
+      "HK"
+    ]
+  },
+  "air": true,
+  "landing_recovery": 3,
+  "frame_data": {
+    "startup": 24,
+    "active": 10,
+    "recovery": 29,
+    "damage": 70,
+    "hitstun": 18,
+    "blockstun": 14,
+    "hitboxes": [
+      {
+        "frames": [
+          25,
+          34
+        ],
+        "rect": {
+          "x": 40,
+          "y": -10,
+          "w": 130,
+          "h": 100
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          63
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 280
+        }
+      }
+    ]
+  },
+  "notes": "Clip ryo-jump-kick (Rising_Flying_Kick 422): startup 24, active 10 (hit 25-34), recovery 29 are clip-derived (F2); C8 has no air normals, so no table target. Damage, stun and boxes have no rule: first passes. FLAG: the clip includes the take-off, so startup 24 is long against a 40-frame jump (C2): the kick only completes if pressed early in the jump. Recommend a head-trim in the clip match so the move starts in the air. Hurtbox is the E5 airborne default (the clip's body goes horizontal). Leg horizontal and fully extended, foot reach 0.85 m."
+}

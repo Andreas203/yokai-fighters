@@ -1,0 +1,63 @@
+{
+  "kind": "throw",
+  "id": "ryo-generic-throw",
+  "name": "Throw",
+  "status": "proposed",
+  "source": "ryo",
+  "clip": "ryo-generic-throw",
+  "rules": [
+    "C4",
+    "E4",
+    "E12",
+    "E15",
+    "F2",
+    "F3",
+    "K3"
+  ],
+  "input": {
+    "buttons": [
+      "LP",
+      "LK"
+    ]
+  },
+  "frame_data": {
+    "startup": 5,
+    "active": 7,
+    "recovery": 49,
+    "damage": 120,
+    "break_window": 7,
+    "pushback": {
+      "on_hit": 80,
+      "on_break": 60
+    },
+    "throwboxes": [
+      {
+        "frames": [
+          6,
+          12
+        ],
+        "rect": {
+          "x": 20,
+          "y": 40,
+          "w": 120,
+          "h": 240
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          61
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      }
+    ]
+  },
+  "notes": "Startup 5 = C4 5, break window 7 and damage 120 = C4. Active 7 (frames 6-12) and recovery 49 (= 61 - 12) are clip-derived (F2); C4/E12 give no active or recovery target, only that recovery must outlast the break window (7). The 259 shove clip is long: the clip-matcher may cut its tail. The forward step (about 0.9 m, E15) belongs in move data but throw.schema.json has no forward-travel field: follow-up for the schema owner. Pushback 80 / 60 and the throwbox (palm reach about 0.55 m plus body, torso height) are first passes."
+}
