@@ -80,6 +80,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E18** Kihon (K2): Special + direction picks slots A–D (neutral A, forward B, back C, down D; down-diagonals D, up-diagonals as their horizontal, up A); Special beats jump. K1 motions also work in Kihon, at 100% damage. Kihon EX: Special + direction + one extra punch or kick within 2 ticks. An attack pressed before Special gives its normal. Both players default to Kihon in the demo; F4 toggles P1's scheme in debug builds.
 - **E19** Air normals (E11): any punch gives Ryo's air punch, any kick his air kick; one per jump; touchdown ends the move into 3 landing frames (per-move override), during which the fighter can't block and can be thrown. Facing is fixed for the whole jump.
 - **E20** Reward draft (A2–A4, A7, A12): percentage effects round to the nearest whole number, so Fox's Patience's +25% meter on block turns the 3 of C5 into 4. The UPGRADE card names one owned special (chosen by the run's seed); the player picks only a MODIFIER's target. A special that already carries a modifier can't take another. If the pool can't fill three cards, extra NEW or MODIFIER cards fill in, otherwise fewer cards show. Card text lives in each special's or modifier's `card` block; there is no separate `data/cards/` folder.
+- **E21** Lv 2 steps (A4, designer decision YOK-41): Spirit Wave recovers 4 frames faster; Rising Talisman recovers 6 frames faster. Both are relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1).
 
 ## X — Cancels
 
@@ -223,7 +224,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## Open questions (designer decides; do not invent answers)
 
-- Exact Lv 2 tuning step for each special.
+- Exact Lv 2 tuning step for each special other than Spirit Wave and Rising Talisman (E21).
 - Generation credit spend and sound/music spend.
 - Generator plan tier (commercial licence for generated output).
 - Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
