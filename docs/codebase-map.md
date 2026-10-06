@@ -6,6 +6,14 @@ Maintained by `gameplay-programmer` (and `ui-designer` for UI scenes). Agents re
 
 Godot 4.7 .NET, C# (`YokaiFighters.csproj`, net10.0). Boot: `scenes/main.tscn` (`scripts/Main.cs`) changes to `scenes/fight.tscn`, which runs the YOK-39 demo flow (`FightScene.Flow.cs`, YOK-48). Its C# loader will adopt the schemas below (YOK-40).
 
+### Content paths and Windows export (YOK-39)
+
+| File | Purpose |
+|---|---|
+| `scripts/ContentPaths.cs` | Where the System.IO-read JSON lives. `Resolve(exported, exePath, resDir)` (pure, tested): editor/tests = repo root (`data/`, `game/tests/fixtures/`); exported build (feature `template`) = the exe's folder (`data/`, `fixtures/`). `ContentPaths.Data(sub)` / `FixturesDir` are what `FightScene` (kits via `KitSources.At`, pool, story, profiles, clips) uses. Clip GLB existence is `ResourceLoader.Exists` (they are in the PCK when exported). |
+| `export_presets.cfg` | "Windows Desktop" release, x86_64, embedded PCK, `tests/*` excluded, output `../build/windows/YokaiFighters.exe` (+ `data_YokaiFighters_windows_x86_64/` .NET assemblies). |
+| `tools/export-windows.sh` | Export steps: Godot `--export-release`, copy `data/{clips,modifiers,moves,profiles,story}` and the kit-fallback fixture folders to `build/windows/`, zip to `build/YokaiFighters-Demo-Windows.zip` (`build/` git-ignored). Needs the 4.7.2.stable.mono templates. |
+
 ### Simulation core (`game/scripts/Sim/`, namespace `YokaiFighters.Sim`, YOK-15)
 Pure C#, **no Godot types**, integers only, so it runs headless for tests and the harness bot and replays exactly from per-tick inputs.
 
