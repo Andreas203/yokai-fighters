@@ -10,7 +10,7 @@ The crew turns a character design into **game-ready fighting content**. Its outp
 - frame data and hitboxes derived from those clips
 - reward modifiers and card text
 
-Every piece passes a written-rules gate before it reaches the game. In this run it produced the assets and content for the game's first vertical slice, **Ryo vs the Kitsune in the bamboo grove at dusk**. That covers both fighters, nine tails, the stage props and backdrop, 41 measured clips, frame data, and two reward modifiers.
+Every piece passes a written-rules gate before it reaches the game. In this run it produced the assets and content for the game's first vertical slice, **Ryo vs the Kitsune in the bamboo grove at dusk**. That covers both fighters, nine tails, the stage props and backdrop, 41 measured clips (re-timed onto the GDD's frame targets), frame data and hitboxes for every move of both fighters, and two reward modifiers. All of it now runs in a playable demo (see Demo below).
 
 A fighting game is unforgiving here. A move's frame data has to match what the animation shows, frame by frame, or the game feels wrong. So the crew is built around one rule, **clip first (F2)**: no frame data is written until the clip it describes has been generated *and measured*.
 
@@ -44,6 +44,7 @@ flowchart LR
     CM -.->|animate| MESHY
     CM -->|data/clips/*.json| MS[movesmith]
     MS -->|data/moves, data/modifiers| RL{rules-lawyer}
+    MS -.->|timing deviates from GDD: re-time| CM
     RL -->|FAIL + rule ID| MS
     RL -->|PASS| MAIN[(main / game data)]
 ```
@@ -55,7 +56,9 @@ flowchart LR
 Yes, and on real work. [`run-log.md`](run-log.md) traces one full run on 5–6 October 2026: producer → asset-smith → clip-matcher → movesmith → rules-lawyer. It lists the pull request, the Meshy task ids and the credits for each step. In that run:
 - 500 Meshy credits were spent, all inside approved caps.
 - 41 clips were measured.
-- A rules-lawyer `PASS` let the modifiers merge into the game's `data/`.
+- Movesmith wrote frame data for both fighters. It flagged that the clips ran long, so clip-matcher re-timed them. Movesmith then re-derived the data, and every normal now matches the GDD table.
+- Once the models were in the game, movesmith re-placed all 34 moves' hitboxes on the bodies.
+- The rules-lawyer passed four content PRs (#37, #38, #39, #48), and each merged into the game's `data/`.
 
 Examples of each stage's output are in [`output/`](output/):
 
@@ -66,24 +69,40 @@ Examples of each stage's output are in [`output/`](output/):
 | `3-retarget-gate/` | clip-matcher | The gate report and measured stills (the Kitsune's sleeve flare; the shove substituted for the failed grab) |
 | `4-clips/` | clip-matcher | Clip stills and the `data/clips` JSON movesmith reads |
 | `5-content/` | movesmith | Modifier files that passed rules-lawyer |
+| `6-frame-data/` | movesmith | Final move files derived from the re-timed clips (Ryo's light punch 4/2/7 = C8; the heavy kick; the shared Foxfire) |
+| `7-hitbox-alignment/` | movesmith → rules-lawyer | Before and after captures: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
 
-Failure handling also ran. Three library grabs failed measurement, so clip-matcher applied the F5 substitute. Six clips were proposed for retake rather than forced. Movesmith flagged clip timings that disagree with the GDD instead of hiding them, and found an engine bug that became its own ticket.
+Failure handling also ran:
+- Three library grabs failed measurement, so clip-matcher applied the F5 substitute.
+- Six clips were proposed for retake rather than forced.
+- Movesmith flagged clip timings that disagreed with the GDD instead of hiding them. That loop (movesmith → clip-matcher re-time → movesmith) brought every normal onto target.
+- Movesmith also found an engine bug, which became its own ticket.
 
 ### Running it yourself
 1. Open the repo in Claude Code. The agents in `.claude/agents/` and the `produce` skill load automatically.
 2. Add the Meshy MCP server (`crew/mcp.example.json`, with your own `MESHY_API_KEY`) and connect Linear.
 3. Run `/produce YOK-<ticket>`, for example `/produce YOK-39`. The orchestrator stops at each approval gate and asks before spending credits.
 
-## Demo (work in progress)
+## Demo: the vertical slice
 
-The slice is not yet playable end to end. The win → reward → rematch flow and the wiring of the generated models into the fight are still open tickets. A prototype fight already runs in Godot with placeholder capsules:
-- Kihon controls
-- the AI-driven Kitsune
-- the meter
-- the reward screen
-- the hitbox overlay used to check frame data against clips
+The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grove at dusk. It uses the rigged models, measured clips, frame data and hitboxes this crew produced, plus the two reward modifiers:
 
-Screenshots are in [`demo/`](demo/). Those systems were built by the project's engineering agents, which are outside this crew, so they're shown only to illustrate where the crew's data ends up.
+1. **Start screen** with the controls ([`demo/1-start-screen.png`](demo/1-start-screen.png)).
+2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([`demo/2-fight-bamboo-grove.png`](demo/2-fight-bamboo-grove.png)).
+3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([`demo/3-hitbox-overlay.png`](demo/3-hitbox-overlay.png)).
+4. **Win:** the binding line, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
+5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([`demo/6-demo-complete.png`](demo/6-demo-complete.png)).
+
+To play it, install Godot 4.7 (.NET) and the .NET 10 SDK, then:
+```
+git clone https://github.com/Andreas203/yokai-fighters.git
+cd yokai-fighters/game
+dotnet build
+godot --headless --path . --import   # first run only
+godot --path .                        # or open game/project.godot in the editor and press F5
+```
+
+The fight code, the HUD and screens, the AI and the replay system were built by the project's engineering agents, which aren't part of this crew. This crew produced what the game *plays*: the models, clips, frame data, hitboxes and reward content.
 
 ## Folder contents
 ```
@@ -94,5 +113,5 @@ crew/agents/         the five agent definitions (role, inputs, outputs, rules, b
 crew/orchestration/  produce-SKILL.md, the orchestration procedure
 crew/mcp.example.json  Meshy MCP config (no key)
 output/              example outputs from each stage
-demo/                prototype screenshots
+demo/                screenshots of the playable vertical slice
 ```

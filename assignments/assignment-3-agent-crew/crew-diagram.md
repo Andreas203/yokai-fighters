@@ -44,6 +44,7 @@ flowchart TD
 
     O --> MS
     MS -- "data/moves, data/modifiers<br/>(frame data from clip timing, F2)" --> RL
+    MS -- "timing deviates from GDD<br/>→ re-time (trim/speed, free)" --> CM
     RL -- "FAIL + rule ID → revise (max 3 rounds)" --> MS
     RL -- PASS --> M
     O -. "status updates" .-> LIN
