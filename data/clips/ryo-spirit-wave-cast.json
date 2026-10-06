@@ -4,14 +4,14 @@
   "status": "proposed",
   "source": "meshy-library",
   "clip": "mage_soell_cast_4",
-  "frames_total": 58,
+  "frames_total": 44,
   "hit_start": 14,
-  "hit_end": 16,
+  "hit_end": 14,
   "retarget_notes": "Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). WARN on look: both arms spread wide (about a T-pose) at the release, so it reads as a sweeping wave, not a forward two-hand thrust; no clipping (39 arm verts in torso core). Planted-foot shift 5.0 / 4.1 cm raw. Playable on Ryo only, no yokai rig needed.",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "Meshy preset 133 mage_soell_cast_4 on task 01a1100b-be4d-7666-8a24-144f0d06edbc, file ryo-spirit-wave.glb. Raw trim: ticks 18-75 at 1x (60 ticks per second). Verdict WARN. S01 Spirit Wave. Raw 135 ticks (2.23 s). The right hand whips out (8.7 m/s at raw 31, reach 0.58 m at 35, held to raw 43); the projectile spawns at raw 31 = frame 14 (startup 13). Trim raw 18-75: 58 frames (target 43: blend out earlier). Hips lunge 10 cm forward."
+  "notes": "Meshy preset 133 mage_soell_cast_4 on task 01a1100b-be4d-7666-8a24-144f0d06edbc, file ryo-spirit-wave.glb. Raw trim: ticks 18-75 at 1x (60 ticks per second). Verdict WARN. S01 Spirit Wave. Raw 135 ticks (2.23 s). The right hand whips out (8.7 m/s at raw 31, reach 0.58 m at 35, held to raw 43); the projectile spawns at raw 31 = frame 14 (startup 13). Trim raw 18-75: 58 frames (target 43: blend out earlier). Hips lunge 10 cm forward. RE-TIMED (YOK-32 free pass, data only: trim and speed, no hand keying; supersedes the trim above; was 58 frames, hit 14-16): trim raw ticks 18-61 at 1.0x = 44 frames, hit frames 14-14, startup 13, active 1, recovery 30. hand back to 36% at the cut; projectile moves use hit_end = hit_start (release frame 14)."
 }

@@ -146,3 +146,17 @@ Ryo's clothes are fitted (no hakama or sleeve flare), so cloth issues do not app
 | Heavy kick 207 | RETAKE: spin, 1.67 m travel (hers 65 cm sideways), airborne | Yes, same retake for both. She proposed 213 `Leg_Sweep`; I saw both previews and 215 `High_Kick` (2.04 s, no spin) looks the safer ground kick. Designer picks one id for both (F6) |
 | Crouch 258 | WARN: starts already squatting, no transition; also turned -59 deg | Same for both: data blend from the idle guard; swap both to 319 if it reads badly |
 | Others (192, 210, 209, 139, 146, 174, 171, 190, 136) | PASS/WARN as in the table; 190 flips and 136 steps 55 cm | No retake needed on Ryo; see her notes for cloth-specific WARNs |
+
+## Retake run (YOK-32-clip-retakes, 2026-10-06): take 2 of 3, designer-approved 6 takes = 18 credits (3 per rig), balance 818 to 800
+Full GLBs are not committed (re-download free from the task ids). Stills (front on top, side below): `docs/assets/clips/ryo/ryo-hk-take2.png`, `ryo-lk-take2.png`, `ryo-get-up-take2.png`. Measured as before (60 ticks, FK plus skinning, Godot 4.7.2).
+
+| Move | Preset | Task id | Credits | Verdict | Data |
+|---|---|---|---|---|---|
+| N06 heavy kick | 215 High_Kick | 01a1101d-8fc1-70e8-9782-2ba6cf7fbaa3 | 3 | WARN | `ryo-heavy-kick.json`, 38 frames, hit 12-15, trim raw 46-93 at 1.25x. Head-high kick (foot 129-144 cm), no spin, hips 50 cm, 21 cm slide if stripped |
+| R12 get-up | 347 Stand_Up4 | 01a1101d-939c-742e-a867-d76c1c6e784f | 3 | WARN | `ryo-get-up.json` replaced, 33 frames, raw 22-102 at 2.5x. Starts face-down: does NOT join the face-up knockdown end pose without a roll |
+| N04 light kick | 103 Simple_Kick | 01a1101d-969d-70c2-9c2d-89e7332991d9 | 3 | FAIL (not committed) | A walking kick: hips advance 158 cm over the clip, 46 cm inside the kick window (raw 40-66), left foot slides 37 cm if stripped; kick peaks at raw 57. Worse than 211, so the 211 file and data stay |
+
+Take 3 proposal for the light kick (last take before F5): do not spend. F5 substitute: both rigs use the medium-kick clip (209) played faster with a tighter trim (Kitsune MK is WARN with 2 cm travel); light-kick damage and frame data stay. Ryo may also keep 211 (WARN, 12 cm slide). Designer decides.
+
+### Free re-timing pass (data only, no credits; trim plus speed, F2/F5)
+Each data file's `notes` records the new trim, speed and startup/active/recovery. F5 substitute written: `ryo-jump-punch` (the 422 jump-in kick clip, trim raw 22-46, 25 frames, hit 7-16). `ryo-jump-kick` now starts mid-air at raw 22.
