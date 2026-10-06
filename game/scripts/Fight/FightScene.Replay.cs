@@ -18,7 +18,7 @@ public partial class FightScene
 	private bool _saveReplayHeld;
 
 	/// <summary>Starts a fresh recording of the current match (fight start and every reset).</summary>
-	public void StartRecording() => Recorder = ReplayRecorder.Begin(Match, P2Ai, AiSeed, Run);
+	public void StartRecording() => Recorder = ReplayRecorder.Begin(Match, P2Ai, AiSeed, DemoRun ?? Run); // YOK-48: the demo's run
 
 	/// <summary>The one place the scene advances the sim: step, then record what the sim saw.</summary>
 	private void StepSim(FighterInput p1, FighterInput p2)

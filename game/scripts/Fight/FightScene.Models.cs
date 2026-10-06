@@ -7,13 +7,13 @@ namespace YokaiFighters.Fight;
 /// <summary>
 /// YOK-53 partial: the rigged fighters. Each sim tick <see cref="ObservePresentation"/> maps every fighter's sim
 /// state to a clip frame (<see cref="FighterPresenter"/>); each render poses the models with AnimationPlayer.Seek.
-/// The capsules stay as the fallback (models missing) and a debug view (F9). Presentation never writes the sim.
+/// The capsules stay as the fallback (models missing) and a debug view (F10). Presentation never writes the sim.
 /// </summary>
 public partial class FightScene
 {
-	/// <summary>Show rigged models (true) or the placeholder capsules; F9 flips it in debug builds.</summary>
+	/// <summary>Show rigged models (true) or the placeholder capsules; F10 flips it in debug builds.</summary>
 	public static bool ShowModels { get; set; } = true;
-	public const Key ModelToggleKey = Key.F9;
+	public const Key ModelToggleKey = Key.F10;
 
 	private static ClipCatalog? _catalog;
 	private static Dictionary<string, string>? _moveClips;
