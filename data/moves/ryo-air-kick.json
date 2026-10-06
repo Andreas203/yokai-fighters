@@ -38,10 +38,10 @@
           16
         ],
         "rect": {
-          "x": 40,
-          "y": -10,
-          "w": 130,
-          "h": 100
+          "x": 115,
+          "y": 165,
+          "w": 90,
+          "h": 65
         }
       }
     ],
@@ -52,13 +52,13 @@
           25
         ],
         "rect": {
-          "x": -45,
+          "x": -90,
           "y": 0,
-          "w": 90,
-          "h": 280
+          "w": 120,
+          "h": 325
         }
       }
     ]
   },
-  "notes": "Re-derived from clip ryo-jump-kick (frames_total 25, hit 7-16): startup 6, active 10, recovery 9. The clip now starts mid-air (airborne raw 6-41, trimmed before the landing), which fixes the old take-off flag; blend in from the jump over about 4 ticks. Landing recovery 3 ticks (E19). C8 has no air normals, so damage, stun and boxes are first passes. Hurtbox is the E5 airborne default."
+  "notes": "Re-derived from clip ryo-jump-kick (frames_total 25, hit 7-16): startup 6, active 10, recovery 9. The clip now starts mid-air (airborne raw 6-41, trimmed before the landing), which fixes the old take-off flag; blend in from the jump over about 4 ticks. Landing recovery 3 ticks (E19). C8 has no air normals, so damage, stun and boxes are first passes. Hurtbox is the E5 airborne default. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

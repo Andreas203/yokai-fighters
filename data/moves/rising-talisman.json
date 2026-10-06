@@ -69,10 +69,10 @@
               13
             ],
             "rect": {
-              "x": 30,
-              "y": 150,
-              "w": 100,
-              "h": 230
+              "x": 65,
+              "y": 225,
+              "w": 75,
+              "h": 55
             }
           }
         ],
@@ -83,10 +83,10 @@
               41
             ],
             "rect": {
-              "x": -45,
+              "x": -40,
               "y": 0,
-              "w": 90,
-              "h": 360
+              "w": 80,
+              "h": 335
             }
           },
           {
@@ -95,10 +95,10 @@
               17
             ],
             "rect": {
-              "x": 30,
-              "y": 230,
-              "w": 100,
-              "h": 120
+              "x": 55,
+              "y": 210,
+              "w": 85,
+              "h": 70
             }
           }
         ],
@@ -149,5 +149,5 @@
       }
     }
   },
-  "notes": "Re-derived from clip ryo-rising-talisman-strike (frames_total 41, hit 6-13): 5/8/28 = the table, no deviation left. Hand is back to 13% at the cut, so no blend-out is needed. Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX. Hitstun 24, blockstun 16 and the EX are first passes. Lv 2 is final (E21, recovery -6)."
+  "notes": "Re-derived from clip ryo-rising-talisman-strike (frames_total 41, hit 6-13): 5/8/28 = the table, no deviation left. Hand is back to 13% at the cut, so no blend-out is needed. Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX. Hitstun 24, blockstun 16 and the EX are first passes. Lv 2 is final (E21, recovery -6). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

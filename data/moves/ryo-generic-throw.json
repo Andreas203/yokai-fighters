@@ -38,9 +38,9 @@
         ],
         "rect": {
           "x": 20,
-          "y": 40,
-          "w": 120,
-          "h": 240
+          "y": 150,
+          "w": 110,
+          "h": 120
         }
       }
     ],
@@ -51,13 +51,13 @@
           30
         ],
         "rect": {
-          "x": -45,
+          "x": -35,
           "y": 0,
-          "w": 90,
-          "h": 360
+          "w": 100,
+          "h": 340
         }
       }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (frames_total 30, hit 6-12): startup 5 = C4, active 7, recovery 18 (clip-derived; outlasts the 7-frame break window, E12). Palms are back to 31% at the cut: 4-tick blend-out. Break window 7 and damage 120 = C4. The forward step (about 0.9 m, E15) belongs in move data but throw.schema.json has no forward-travel field: follow-up for the schema owner. Pushback 80 / 60 and the throwbox are first passes."
+  "notes": "Re-derived from the re-timed clip (frames_total 30, hit 6-12): startup 5 = C4, active 7, recovery 18 (clip-derived; outlasts the 7-frame break window, E12). Palms are back to 31% at the cut: 4-tick blend-out. Break window 7 and damage 120 = C4. The forward step (about 0.9 m, E15) belongs in move data but throw.schema.json has no forward-travel field: follow-up for the schema owner. Pushback 80 / 60 and the throwbox are first passes. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

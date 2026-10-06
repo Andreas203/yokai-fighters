@@ -31,10 +31,10 @@
           6
         ],
         "rect": {
-          "x": 60,
-          "y": 262,
-          "w": 110,
-          "h": 40
+          "x": 70,
+          "y": 230,
+          "w": 80,
+          "h": 45
         }
       }
     ],
@@ -45,10 +45,10 @@
           13
         ],
         "rect": {
-          "x": -45,
+          "x": -35,
           "y": 0,
-          "w": 90,
-          "h": 360
+          "w": 85,
+          "h": 330
         }
       },
       {
@@ -57,13 +57,13 @@
           10
         ],
         "rect": {
-          "x": 40,
-          "y": 262,
-          "w": 110,
-          "h": 40
+          "x": 65,
+          "y": 220,
+          "w": 85,
+          "h": 55
         }
       }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 13, S/A/R 4/2/7. Arm is still at 78% reach at the cut: the engine blends the retraction out over 4-6 ticks. Hitstun 11 and blockstun 8 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 13, S/A/R 4/2/7. Arm is still at 78% reach at the cut: the engine blends the retraction out over 4-6 ticks. Hitstun 11 and blockstun 8 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }

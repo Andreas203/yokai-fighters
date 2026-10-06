@@ -27,13 +27,25 @@
       {
         "frames": [
           8,
+          9
+        ],
+        "rect": {
+          "x": 110,
+          "y": 115,
+          "w": 85,
+          "h": 80
+        }
+      },
+      {
+        "frames": [
+          10,
           10
         ],
         "rect": {
-          "x": 35,
-          "y": 150,
-          "w": 95,
-          "h": 60
+          "x": 110,
+          "y": 175,
+          "w": 80,
+          "h": 45
         }
       }
     ],
@@ -44,25 +56,37 @@
           24
         ],
         "rect": {
-          "x": -45,
+          "x": -35,
           "y": 0,
-          "w": 90,
-          "h": 360
+          "w": 80,
+          "h": 310
         }
       },
       {
         "frames": [
           8,
+          10
+        ],
+        "rect": {
+          "x": 110,
+          "y": 115,
+          "w": 85,
+          "h": 105
+        }
+      },
+      {
+        "frames": [
+          11,
           14
         ],
         "rect": {
-          "x": 25,
-          "y": 120,
-          "w": 90,
-          "h": 100
+          "x": 105,
+          "y": 185,
+          "w": 80,
+          "h": 65
         }
       }
     ]
   },
-  "notes": "Head-high straight kick (foot at 107 cm = 214 units, hitbox y 150-210), clip 24 frames (1.2x), hit 8-10: 7/3/14 = C8, no deviation. Blend-out: leg back to 40% at the cut, blend the last 4-6 ticks. Standing mid (not low). Hakama tube not added to the hurtbox beyond the leg box. Body hurtbox E5 for the whole move. Hitstun, blockstun and pushback are placeholders (not in rules.md); damage is the C8 number."
+  "notes": "Head-high straight kick (foot at 107 cm = 214 units, hitbox y 150-210), clip 24 frames (1.2x), hit 8-10: 7/3/14 = C8, no deviation. Blend-out: leg back to 40% at the cut, blend the last 4-6 ticks. Standing mid (not low). Hakama tube not added to the hurtbox beyond the leg box. Body hurtbox E5 for the whole move. Hitstun, blockstun and pushback are placeholders (not in rules.md); damage is the C8 number. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
 }
