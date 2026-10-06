@@ -39,6 +39,7 @@ RULES_MD = ROOT / "docs" / "design" / "rules.md"
 KIND_SCHEMA = {
     "special": "special.schema.json",
     "normal": "normal.schema.json",
+    "throw": "throw.schema.json",
     "modifier": "modifier.schema.json",
     "cancel_rule": "cancel-rule.schema.json",
     "profile": "profile.schema.json",
@@ -46,7 +47,7 @@ KIND_SCHEMA = {
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
-    "moves": ("special", "normal"),
+    "moves": ("special", "normal", "throw"),
     "modifiers": ("modifier",),
     "cancels": ("cancel_rule",),
     "profiles": ("profile",),
@@ -162,13 +163,19 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
         if isinstance(rid, str) and rid not in rule_ids:
             errs.append((f"rules.{i}", f"rule ID '{rid}' does not exist in docs/design/rules.md"))
 
-    if kind in ("special", "normal"):
+    if kind in ("special", "normal", "throw"):
         clip_id = doc.get("clip")
         clip = clips.get(clip_id) if isinstance(clip_id, str) else None
         if isinstance(clip_id, str) and clip is None:
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
+    elif kind == "throw":  # C4: throwboxes inside the active window, clip timing as for strikes (F2)
+        fd = doc.get("frame_data")
+        check_frame_data(fd, "frame_data", clip, clip_id, errs)
+        if isinstance(fd, dict) and is_int(fd.get("startup")) and is_int(fd.get("active")):
+            s = fd["startup"]
+            check_ranges(fd.get("throwboxes"), s + 1, s + fd["active"], "frame_data.throwboxes", "throwbox", errs)
     elif kind == "special":
         inp = doc.get("input") or {}
         ks, hs = (inp.get("kata") or {}).get("slot"), (inp.get("kihon") or {}).get("slot")

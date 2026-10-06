@@ -103,6 +103,7 @@ public sealed partial class Match
 	private void WorldStep(FighterInput in1, FighterInput in2)
 	{
 		WorldFrame++;
+		AdvanceThrows(); // YOK-19: break windows count down; an unbroken throw lands
 		Span<FighterInput> inputs = stackalloc FighterInput[] { in1, in2 };
 		Span<int> moved = stackalloc int[2];
 
@@ -125,6 +126,7 @@ public sealed partial class Match
 
 			int slot = -1;
 			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
+			else if ((f.Actionable || InThrowCancelableStartup(f)) && (slot = FindThrow(f)) >= 0) f.Input.TryConsume(out _); // E12
 			else if (f.Actionable && f.Input.TryConsume(out var cmd)) slot = FindNormal(f, cmd);
 
 			if (slot >= 0) StartMove(f, slot);
@@ -150,8 +152,10 @@ public sealed partial class Match
 			f.PrevBits = input.Bits;
 		}
 
+		ResolveThrowBreaks(); // YOK-19: after both fighters' input, so neither side acts first
 		ResolvePositions(moved);
 		UpdateFacing();
+		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
 		ResolveHits();
 		ApplyDamage();
 	}

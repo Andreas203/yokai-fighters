@@ -42,6 +42,19 @@ public sealed partial record MoveData
 	public int DirectionMask { get; init; }
 
 	public bool IsNormal => Button != InputBits.None;
+
+	// --- Throws (YOK-19, kind "throw", C4) -------------------------------------------------
+	/// <summary>The two buttons pressed together that make the throw (and break it); None for strikes.</summary>
+	public InputBits ThrowButtons { get; init; }
+	/// <summary>Grab range per active-frame range, tested against the defender's stance body box.</summary>
+	public IReadOnlyList<TimedBox> Throwboxes { get; init; } = Array.Empty<TimedBox>();
+	/// <summary>C4: frames after the grab in which the defender's throw press breaks it.</summary>
+	public int BreakWindow { get; init; }
+	/// <summary>Units each fighter slides apart on a break; null falls back to SimConfig.BlockPushback.</summary>
+	public int? BreakPushback { get; init; }
+	public bool IsThrow => ThrowButtons != InputBits.None;
+	/// <summary>A throw command: every throw button went down on this tick (other buttons may too).</summary>
+	public bool ThrowMatch(InputBits pressed) => IsThrow && (pressed & ThrowButtons) == ThrowButtons;
 	/// <summary>A normal for this button and numpad direction (0 = no match, 1 = any-direction match, 2 = listed direction).</summary>
 	public int NormalMatch(InputBits button, int direction) =>
 		!IsNormal || button != Button ? 0

@@ -38,6 +38,7 @@ public static class MoveLoader
 
 		var activeEl = fd.TryGetProperty("active", out var a) ? a : throw new FormatException($"{id}: frame_data.active is required");
 		var (button, dirMask) = NormalInput(root, id);
+		InputBits throwButtons = ThrowInput(root, id);
 		var move = new MoveData
 		{
 			Id = id,
@@ -55,7 +56,23 @@ public static class MoveLoader
 			Hurtboxes = Boxes(fd, "hurtboxes"),
 			Button = button,
 			DirectionMask = dirMask,
+			ThrowButtons = throwButtons,
+			Throwboxes = Boxes(fd, "throwboxes"),
+			BreakWindow = Opt(fd, "break_window") ?? 0,
+			BreakPushback = Opt(push, "on_break"),
 		};
+		if (move.IsThrow)
+		{
+			if (move.BreakWindow < 1) throw new FormatException($"{id}: a throw needs frame_data.break_window >= 1");
+			if (move.Throwboxes.Count == 0) throw new FormatException($"{id}: a throw needs throwboxes");
+			if (move.Hitboxes.Count > 0) throw new FormatException($"{id}: a throw has throwboxes, not hitboxes (C4)");
+			// The grab clip must still be playing when the throw lands (BreakWindow frames after the grab).
+			if (move.Recovery <= move.BreakWindow)
+				throw new FormatException($"{id}: a throw's recovery ({move.Recovery}) must outlast its break window ({move.BreakWindow})");
+		}
+		foreach (var t in move.Throwboxes)
+			if (!move.IsActive(t.First) || !move.IsActive(t.Last))
+				throw new FormatException($"{id}: throwbox frames {t.First}-{t.Last} outside the active window");
 
 		move = MoveData.ReadImpact(move, fd); // YOK-20: hit strength (V2) and meter gain (C5)
 
@@ -75,6 +92,32 @@ public static class MoveLoader
 		Directory.Exists(dir)
 			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal).Select(LoadFile).ToArray()
 			: Array.Empty<MoveData>();
+
+	/// <summary>Kind "throw" (data/schema/throw.schema.json): the two input.buttons, ORed. None for other kinds.</summary>
+	private static InputBits ThrowInput(JsonElement root, string id)
+	{
+		bool isThrow = root.TryGetProperty("kind", out var k) && k.GetString() == "throw";
+		if (!isThrow) return InputBits.None;
+		if (!root.TryGetProperty("input", out var input) || !input.TryGetProperty("buttons", out var bs))
+			throw new FormatException($"{id}: a throw needs input.buttons");
+		InputBits mask = InputBits.None;
+		int n = 0;
+		foreach (var b in bs.EnumerateArray()) { mask |= ButtonBit(b.GetString(), id); n++; }
+		if (n != 2 || System.Numerics.BitOperations.PopCount((uint)mask) != 2)
+			throw new FormatException($"{id}: a throw needs exactly two different buttons");
+		return mask;
+	}
+
+	private static InputBits ButtonBit(string? name, string id) => name switch
+	{
+		"LP" => InputBits.LightPunch,
+		"MP" => InputBits.MediumPunch,
+		"HP" => InputBits.HeavyPunch,
+		"LK" => InputBits.LightKick,
+		"MK" => InputBits.MediumKick,
+		"HK" => InputBits.HeavyKick,
+		var other => throw new FormatException($"{id}: unknown button '{other}'"),
+	};
 
 	/// <summary>Kind "normal" (data/schema/normal.schema.json): input.button and optional input.directions.</summary>
 	private static (InputBits button, int dirMask) NormalInput(JsonElement root, string id)
