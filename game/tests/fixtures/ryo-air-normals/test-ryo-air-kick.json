@@ -1,0 +1,66 @@
+{
+  "kind": "normal",
+  "id": "test-ryo-air-kick",
+  "name": "TEST FIXTURE: Ryo air kick (jump-in, E11; all numbers and boxes made up; not game content)",
+  "status": "proposed",
+  "source": "ryo",
+  "rules": [
+    "E11",
+    "E6",
+    "C8"
+  ],
+  "input": {
+    "button": "HK"
+  },
+  "air": true,
+  "landing_recovery": 3,
+  "frame_data": {
+    "startup": 7,
+    "active": 8,
+    "recovery": 10,
+    "damage": 80,
+    "hitstun": 18,
+    "blockstun": 14,
+    "hitboxes": [
+      {
+        "frames": [
+          8,
+          15
+        ],
+        "rect": {
+          "x": 10,
+          "y": -80,
+          "w": 110,
+          "h": 100
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          25
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 280
+        }
+      },
+      {
+        "frames": [
+          8,
+          15
+        ],
+        "rect": {
+          "x": 10,
+          "y": -80,
+          "w": 90,
+          "h": 100
+        }
+      }
+    ]
+  },
+  "notes": "TEST FIXTURE. Proposed slots (designer call): one air punch + one air kick, both on the heavy buttons; the real file uses clip-matcher's Rising_Flying_Kick clip (YOK-32) and movesmith's frame data from it (F2). landing_recovery 3 is a proposal. Never copy to data/moves/."
+}

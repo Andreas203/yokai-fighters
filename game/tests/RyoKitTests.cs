@@ -77,7 +77,7 @@ public static class RyoKitTests
 	public static void Scene_FallsBackToFixtureNormals()
 	{
 		var moves = Fight.FightScene.LoadMoves();
-		Assert.True(C8.All(c => moves.Count(m => m.Button == c.button) == 1), "the fight scene has one normal per button");
+		Assert.True(C8.All(c => moves.Count(m => m.Button == c.button && !m.Air) == 1), "the fight scene has one ground normal per button");
 	}
 
 	// --- Six normals through the input layer -------------------------------------------------

@@ -6,6 +6,7 @@
   "type": "object",
   "required": ["kind", "id", "name", "source", "clip", "rules", "input", "frame_data"],
   "additionalProperties": false,
+  "dependentRequired": { "landing_recovery": ["air"] },
   "properties": {
     "kind": { "const": "normal" },
     "id": { "$ref": "common.schema.json#/$defs/id" },
@@ -31,6 +32,16 @@
           "items": { "type": "integer", "minimum": 1, "maximum": 9 }
         }
       }
+    },
+    "air": {
+      "type": "boolean",
+      "description": "E11 (YOK-55): a jump-in normal. true = it comes out only while airborne (one per jump) and ends on landing; false or omitted = a ground normal, never used in the air. Air normals are not overheads (E6): standing and crouching guard both block them."
+    },
+    "landing_recovery": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 30,
+      "description": "Air normals only: frames the fighter can't act after touching down mid-move (the move ends on landing). Omitted = the engine default (3, designer proposal)."
     },
     "frame_data": { "$ref": "frame-data.schema.json" },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }

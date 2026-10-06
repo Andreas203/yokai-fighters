@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "data" / "samples"
 FIXTURE_NORMALS = ROOT / "game" / "tests" / "fixtures" / "ryo-normals"
 FIXTURE_THROWS = ROOT / "game" / "tests" / "fixtures" / "throws"
+FIXTURE_AIR = ROOT / "game" / "tests" / "fixtures" / "ryo-air-normals"
 
 
 def run(*paths):
@@ -76,6 +77,29 @@ class ValidateDataTest(unittest.TestCase):
         lines = [l for l in out.splitlines() if not l.startswith("validate_data:")]
         self.assertEqual(len(lines), 1, out)
         self.assertTrue(lines[0].endswith("(root): 'clip' is a required property"), lines[0])
+
+    def test_air_normal_fixtures_match_schema_except_clip(self):
+        # YOK-55 TEST FIXTURES (E11): jump-in normals with the air flag and landing recovery, no clip yet (F2).
+        code, out = run(FIXTURE_AIR)
+        lines = [l for l in out.splitlines() if not l.startswith("validate_data:")]
+        self.assertEqual(len(lines), 2, out)
+        for line in lines:
+            self.assertTrue(line.endswith("(root): 'clip' is a required property"), line)
+
+    def test_landing_recovery_needs_air(self):
+        import json
+        path = FIXTURE_AIR / "test-ryo-air-punch.json"
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        v = validate_data.load_validators()["normal"]
+        doc["air"] = "yes"
+        self.assertTrue(any("is not of type 'boolean'" in e.message for e in v.iter_errors(doc)))
+        del doc["air"]
+        self.assertTrue(any("'air' is a dependency of 'landing_recovery'" in e.message for e in v.iter_errors(doc)))
+        doc["air"] = False
+        errs = validate_data.semantic(doc, path, validate_data.load_rule_ids(), {})
+        self.assertIn(("landing_recovery", 'landing_recovery is only for air normals (set "air": true) (E11)'), errs)
+        doc["air"] = True
+        self.assertEqual([], validate_data.semantic(doc, path, validate_data.load_rule_ids(), {}))
 
     def test_throw_semantic_checks(self):
         import json

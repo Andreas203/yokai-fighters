@@ -60,7 +60,11 @@ public static class MoveLoader
 			Throwboxes = Boxes(fd, "throwboxes"),
 			BreakWindow = Opt(fd, "break_window") ?? 0,
 			BreakPushback = Opt(push, "on_break"),
+			Air = button != InputBits.None && root.TryGetProperty("air", out var air) && air.GetBoolean(), // E11 (YOK-55)
+			LandingRecovery = Opt(root, "landing_recovery"),
 		};
+		if (move.LandingRecovery is int lr && (!move.Air || lr < 0))
+			throw new FormatException($"{id}: landing_recovery needs \"air\": true and must be >= 0 (E11)");
 		if (move.IsThrow)
 		{
 			if (move.BreakWindow < 1) throw new FormatException($"{id}: a throw needs frame_data.break_window >= 1");

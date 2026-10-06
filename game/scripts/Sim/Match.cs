@@ -127,7 +127,7 @@ public sealed partial class Match
 			f.Guarding = canGuard && rel < 0; // C3: hold back, standing or crouching (E6)
 
 			int slot = -1;
-			if (f.Actionable && input.Move > 0 && input.Move <= f.Moves.Length) slot = input.Move - 1; // explicit request (tests, AI)
+			if (input.Move > 0 && input.Move <= f.Moves.Length && CanStartSlot(f, input.Move - 1)) slot = input.Move - 1; // explicit request (tests, AI); air normals only in a jump (YOK-55)
 			else if (f.Actionable && input.IsSpecialRequest(out var reqSlot, out bool reqEx))
 				TryStartSpecial(i, reqSlot, reqEx, precision: false, InputBits.None); // YOK-21: direct slot request
 			else if ((f.Actionable || InThrowCancelableStartup(f)) && (slot = FindThrow(f)) >= 0) f.Input.TryConsume(out _); // E12
@@ -138,7 +138,9 @@ public sealed partial class Match
 				if (cmd.Kind != CommandKind.Special || !TryStartSpecial(i, cmd.Slot, ExPair(cmd.Pressed), cmd.Precision, cmd.Pressed))
 					slot = FindNormal(f, cmd with { Kind = CommandKind.Normal });
 			}
-			else if (f.State == FighterState.Attack && !TryExUpgrade(i)) TryCancel(i); // YOK-21 hooks
+			else if (CanAirAttack(f) && f.Input.TryConsume(out var airCmd))
+				slot = FindNormal(f, airCmd with { Kind = CommandKind.Normal }); // E11 (YOK-55): the button's air normal
+			else if (f.State == FighterState.Attack && !f.Airborne && !TryExUpgrade(i)) TryCancel(i); // YOK-21 hooks; none in the air
 
 			if (slot >= 0) StartMove(f, slot);
 			else if (f.Actionable && up) StartJump(f, dir);
@@ -188,7 +190,9 @@ public sealed partial class Match
 				f.AirFrame = 0;
 				f.JumpDir = 0;
 				f.Y = 0;
+				f.AirAttackUsed = false;
 				if (f.State == FighterState.Jump) ToIdle(f);
+				else if (f.State == FighterState.Attack) LandAirAttack(f); // E11: touchdown ends an air normal
 			}
 			else f.Y = Config.JumpY(f.AirFrame);
 		}
@@ -196,7 +200,9 @@ public sealed partial class Match
 		switch (f.State)
 		{
 			case FighterState.Attack:
-				if (++f.MoveFrame > f.ActiveMove!.TotalFrames) ToIdle(f);
+				if (++f.MoveFrame <= f.ActiveMove!.TotalFrames) break;
+				if (f.Airborne) SetState(f, FighterState.Jump, 0); // air normal over before touchdown: fall
+				else ToIdle(f);
 				break;
 			case FighterState.Dash:
 				if (++f.DashFrame > Config.DashFrames) ToIdle(f);
@@ -205,8 +211,9 @@ public sealed partial class Match
 			case FighterState.Blockstun:
 			case FighterState.Knockdown:
 			case FighterState.Burst:
+			case FighterState.Landing:
 				if (f.StunLeft > 0) f.StunLeft--;
-				else if (f.Airborne) SetState(f, FighterState.Jump, 0); // stun over mid-air: fall, no control
+				else if (f.Airborne) { SetState(f, FighterState.Jump, 0); f.AirAttackUsed = true; } // stun over mid-air: fall, no control (no air normal)
 				else ToIdle(f);
 				break;
 		}
@@ -222,6 +229,7 @@ public sealed partial class Match
 		f.MoveConnected = false;
 		f.Guarding = false;
 		f.Crouching = false;
+		if (f.Airborne) f.AirAttackUsed = true; // E11: one air normal per jump
 	}
 
 	/// <summary>A jump started on tick t is air frame 1 on tick t; the fighter acts again on t+JumpFrames.</summary>
@@ -231,6 +239,7 @@ public sealed partial class Match
 		f.AirFrame = 1;
 		f.Y = Config.JumpY(1);
 		f.JumpDir = dir;
+		f.AirAttackUsed = false;
 		f.Guarding = false;
 		f.Crouching = false;
 	}
@@ -248,6 +257,7 @@ public sealed partial class Match
 	/// <summary>
 	/// The normal for a parsed command: same button, and a listed direction beats an any-direction
 	/// normal (ties by slot order). Kata and Kihon commands look identical here (K3). -1 = none.
+	/// E11 (YOK-55): airborne fighters pick only air normals, grounded ones only ground normals.
 	/// </summary>
 	public static int FindNormal(Fighter f, in InputCommand cmd)
 	{
@@ -255,6 +265,7 @@ public sealed partial class Match
 		int best = -1, bestScore = 0;
 		for (int i = 0; i < f.Moves.Length; i++)
 		{
+			if (f.Moves[i].Air != f.Airborne) continue;
 			int score = f.Moves[i].NormalMatch(cmd.Button, cmd.Direction);
 			if (score > bestScore) { best = i; bestScore = score; }
 		}
