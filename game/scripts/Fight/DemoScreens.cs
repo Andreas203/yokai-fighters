@@ -11,6 +11,20 @@ public partial class DemoCompleteScreen : Control
 {
 	public event Action? RestartRequested;
 	public Button Restart { get; private set; } = null!;
+	/// <summary>Placeholders until <see cref="SetText"/> fills them from data/story/demo-complete.json.</summary>
+	public const string PlaceholderTitle = "Demo complete", PlaceholderText = "Thanks for playing.";
+	public string TitleText { get; private set; } = PlaceholderTitle;
+	public string BodyText { get; private set; } = PlaceholderText;
+	private Label? _title, _sub;
+
+	/// <summary>The story card's title (null keeps the placeholder title) and text.</summary>
+	public void SetText(string? title, string text)
+	{
+		TitleText = title ?? PlaceholderTitle;
+		BodyText = text;
+		if (_title != null) _title.Text = TitleText;
+		if (_sub != null) _sub.Text = BodyText;
+	}
 
 	public override void _Ready()
 	{
@@ -19,8 +33,8 @@ public partial class DemoCompleteScreen : Control
 		SetAnchorsPreset(LayoutPreset.FullRect);
 		AddChild(new ColorRect { Color = new Color(FightHud.Ink, 0.55f), Size = new Vector2(1920f, 1080f), MouseFilter = MouseFilterEnum.Ignore });
 		AddChild(new Panel { Position = new Vector2(660f, 300f), Size = new Vector2(600f, 440f), MouseFilter = MouseFilterEnum.Ignore });
-		AddChild(DemoUi.Label("Title", "Demo complete", new Vector2(660f, 340f), new Vector2(600f, 70f), 50));
-		AddChild(DemoUi.Label("Sub", "Thanks for playing.", new Vector2(700f, 415f), new Vector2(520f, 160f), 28));
+		AddChild(_title = DemoUi.Label("Title", TitleText, new Vector2(660f, 340f), new Vector2(600f, 70f), 40));
+		AddChild(_sub = DemoUi.Label("Sub", BodyText, new Vector2(700f, 410f), new Vector2(520f, 180f), 24));
 		AddChild(Restart = DemoUi.Button("Restart", new Vector2(760f, 600f), new Vector2(400f, 100f), 44));
 		Restart.Pressed += () => RestartRequested?.Invoke();
 	}

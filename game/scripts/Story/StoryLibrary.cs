@@ -31,7 +31,7 @@ public sealed record StoryCardData(string Id, string? Title, string Text, IReadO
 /// </summary>
 public sealed class StoryLibrary : Ui.IStorySource
 {
-	public const string BindingLineId = "binding-line", LoseScreenId = "lose-screen";
+	public const string BindingLineId = "binding-line", LoseScreenId = "lose-screen", DemoCompleteId = "demo-complete";
 
 	readonly Dictionary<string, StoryCardData> _cards;
 
@@ -51,6 +51,13 @@ public sealed class StoryLibrary : Ui.IStorySource
 	public (string? Title, string Text) LoseScreen(string yokai)
 	{
 		var c = this[LoseScreenId];
+		return (c.FillTitle(yokai: yokai), c.FillText(yokai: yokai));
+	}
+
+	/// <summary>YOK-53 (for YOK-48): demo-complete card title and text, {yokai} = the yokai just bound.</summary>
+	public (string? Title, string Text) DemoComplete(string yokai)
+	{
+		var c = this[DemoCompleteId];
 		return (c.FillTitle(yokai: yokai), c.FillText(yokai: yokai));
 	}
 

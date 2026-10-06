@@ -256,4 +256,30 @@ public static class DemoFlowTests
 		s.RestartRun();
 		Assert.Equal(7u, s.RunSeed, "pinned seed survives restart");
 	});
+
+	[Test]
+	public static void DemoComplete_ShowsTheStoryCard(Node runner) => WithScene(runner, s =>
+	{
+		var lib = FightScene.LoadStory();
+		if (!lib.Has(StoryLibrary.DemoCompleteId)) { Assert.Equal(DemoCompleteScreen.PlaceholderTitle, s.CompleteScreen.TitleText, "no card: placeholder"); return; }
+		var (title, text) = lib.DemoComplete("Kitsune");
+		Assert.Equal(title, s.CompleteScreen.TitleText, "title from data/story/demo-complete.json");
+		Assert.Equal(text, s.CompleteScreen.BodyText, "text from the card");
+		Assert.True(text.StartsWith("Kitsune ") && !text.Contains('{'), "{yokai} filled with the opponent's display name");
+	});
+
+	[Test]
+	public static void DemoComplete_KeepsThePlaceholderWithoutACard()
+	{
+		var lib = new StoryLibrary(Array.Empty<StoryCardData>());
+		bool threw = false;
+		try { lib.DemoComplete("Kitsune"); } catch (System.Collections.Generic.KeyNotFoundException) { threw = true; }
+		Assert.True(threw, "missing card throws the exception ApplyDemoCompleteCard catches");
+		var screen = new DemoCompleteScreen();
+		Assert.Equal(DemoCompleteScreen.PlaceholderTitle, screen.TitleText, "placeholder title");
+		Assert.Equal(DemoCompleteScreen.PlaceholderText, screen.BodyText, "placeholder text");
+		screen.SetText(null, "x");
+		Assert.Equal(DemoCompleteScreen.PlaceholderTitle, screen.TitleText, "a card without a title keeps the placeholder title");
+		screen.Free();
+	}
 }
