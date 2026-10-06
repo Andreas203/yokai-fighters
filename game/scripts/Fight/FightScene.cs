@@ -144,6 +144,7 @@ public partial class FightScene : Node3D
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		AddChild(_hud);
+		SetUpAi(); // YOK-27
 		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
 		Render();
 	}
@@ -155,9 +156,10 @@ public partial class FightScene : Node3D
 		bool resetDown = Input.IsPhysicalKeyPressed(Key.R);
 		if (resetDown && !_resetHeld && Match.Phase == MatchPhase.Over) ResetFight();
 		_resetHeld = resetDown;
+		PollAiKeys(); // YOK-27: F6 temperament, F7 P2 AI on/off
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
-		for (int i = 0; i < due; i++) { Shake.Advance(); Match.Step(InputDevices.Read(0), InputDevices.Read(1)); }
+		for (int i = 0; i < due; i++) { Shake.Advance(); Match.Step(InputDevices.Read(0), P2Input()); /* YOK-27: P2 AI by default */ }
 		Render();
 	}
 
@@ -172,6 +174,7 @@ public partial class FightScene : Node3D
 	public void ResetFight()
 	{
 		Match.Reset();
+		RebuildAi(); // YOK-27: fresh delay buffer
 		Shake.Stop();
 		_clock.Restart();
 		Render();
