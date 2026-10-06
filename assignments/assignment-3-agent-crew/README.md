@@ -83,11 +83,6 @@ Failure handling also ran:
 - Movesmith flagged clip timings that disagreed with the GDD instead of hiding them. That loop (movesmith → clip-matcher re-time → movesmith) brought every normal onto target.
 - Movesmith also found an engine bug, which became its own ticket.
 
-### Running it yourself
-1. Open the repo in Claude Code. The agents in `.claude/agents/` and the `produce` skill load automatically.
-2. Add the Meshy MCP server (`crew/mcp.example.json`, with your own `MESHY_API_KEY`) and connect Linear.
-3. Run `/produce YOK-<ticket>`, for example `/produce YOK-39`. The orchestrator stops at each approval gate and asks before spending credits.
-
 ## Demo: the vertical slice
 
 The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grove at dusk. It uses the rigged models, measured clips, frame data and hitboxes this crew produced, plus the two reward modifiers:
