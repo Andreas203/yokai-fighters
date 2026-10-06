@@ -1,0 +1,129 @@
+{
+  "kind": "special",
+  "id": "foxfire",
+  "name": "Foxfire",
+  "status": "proposed",
+  "source": "kitsune",
+  "starter": false,
+  "rarity": "common",
+  "locked": false,
+  "clip": "kitsune-foxfire",
+  "rules": [
+    "A1",
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "A12",
+    "C5",
+    "F2",
+    "K1",
+    "K2",
+    "K3",
+    "T0",
+    "V5",
+    "E1",
+    "E5"
+  ],
+  "input": {
+    "kata": {
+      "slot": "C",
+      "motion": "214"
+    },
+    "kihon": {
+      "slot": "C",
+      "direction": "back"
+    }
+  },
+  "card": {
+    "plain": "Launch a slow fox flame.",
+    "frames": "18 / - / 77 frames, 70 damage, slow projectile"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "projectile.hits",
+        "op": "set",
+        "value": 2
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 18,
+        "active": null,
+        "recovery": 77,
+        "damage": 70,
+        "hitstun": 20,
+        "blockstun": 14,
+        "strength": "medium",
+        "hitboxes": [],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              95
+            ],
+            "rect": {
+              "x": -45,
+              "y": 0,
+              "w": 90,
+              "h": 360
+            }
+          }
+        ],
+        "properties": {
+          "projectile": {
+            "spawn_frame": 19,
+            "speed": 5,
+            "hitbox": {
+              "x": 100,
+              "y": 200,
+              "w": 60,
+              "h": 50
+            },
+            "hits": 1
+          }
+        }
+      },
+      "preset": "foxfire-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "properties.projectile.max_active",
+        "op": "set",
+        "value": 2
+      },
+      "card": {
+        "plain": "Lv 1 -> Lv 2: you can keep two flames on screen at once.",
+        "frames": "Lv 1 -> Lv 2: max flames on screen 1 -> 2"
+      },
+      "preset": "foxfire-lv2",
+      "notes": "Proposed (open question). Changes how you fight: stagger two flames to cover a jump. Alternative if the designer prefers a numeric step: recovery -10."
+    },
+    "3": {
+      "evolution": {
+        "id": "piercing-foxfire",
+        "name": "Piercing Foxfire",
+        "status": "final",
+        "preset": "foxfire-piercing",
+        "changes": [
+          {
+            "target": "properties.projectile.passes_projectiles",
+            "op": "set",
+            "value": true
+          }
+        ],
+        "card": {
+          "plain": "Your flame passes through enemy projectiles.",
+          "frames": "18 / - / 77 frames, 70 damage, passes projectiles"
+        }
+      }
+    }
+  },
+  "notes": "ONE file serves both fighters: source kitsune (A8), slot C so Ryo can draft it into C as a reward and the Tanuki can copy it (T0); data identical for whoever casts it (K3). Clip kitsune-foxfire (95 frames, hit 19) is the reference; Ryo's cast clip data/clips/ryo-foxfire-cast.json (92 frames, hit 16-19) differs in timing and would need the engine to use this data with his clip, since the validator ties frame data to one clip. Deviation from A table 15/4/30: startup 18 (+3), active - (projectile, release frame 19), recovery 77 (+47) because the clip is 95 frames with a held pose to frame 66; clip-matcher notes it could be cut to about 70 total (recovery 52). Projectile speed 5 units/tick (slow, proposed), spawn rect at the hand (about 50 cm = 100 units forward, chest height). Body hurtbox only: sleeves not added. Damage 70 from the A table; hitstun/blockstun placeholders. EX is a proposal: 2 hits."
+}

@@ -1,0 +1,71 @@
+{
+  "kind": "normal",
+  "id": "kitsune-heavy-punch",
+  "name": "Kitsune heavy punch",
+  "status": "proposed",
+  "source": "kitsune",
+  "clip": "kitsune-heavy-punch",
+  "rules": [
+    "C8",
+    "F2",
+    "E1",
+    "E5",
+    "V2"
+  ],
+  "input": {
+    "button": "HP"
+  },
+  "frame_data": {
+    "startup": 10,
+    "active": 4,
+    "recovery": 21,
+    "damage": 80,
+    "hitstun": 24,
+    "blockstun": 18,
+    "strength": "heavy",
+    "hitboxes": [
+      {
+        "frames": [
+          11,
+          14
+        ],
+        "rect": {
+          "x": 40,
+          "y": 190,
+          "w": 80,
+          "h": 130
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          35
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      },
+      {
+        "frames": [
+          11,
+          18
+        ],
+        "rect": {
+          "x": 35,
+          "y": 200,
+          "w": 75,
+          "h": 110
+        }
+      }
+    ],
+    "properties": {
+      "anti_air": true
+    }
+  },
+  "notes": "Uppercut clip 35 frames, hit 11-14. Deviation from C8 10/4/20: recovery +1 (clip 35 frames). Hitbox rises (y 190-320) as an uppercut; anti_air flag is a proposal from the box shape. Hurtbox: the E5 standing body 90x360 for the whole move; the wide sleeves are NOT added (they are cloth, not body); only the bare striking limb gets an extra hurtbox while it is extended. Hitstun, blockstun and pushback are placeholders on the Ryo fixture scale (not in rules.md); damage is the C8 number (no Kitsune table exists)."
+}

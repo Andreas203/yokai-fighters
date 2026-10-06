@@ -1,0 +1,58 @@
+{
+  "kind": "throw",
+  "id": "kitsune-throw",
+  "name": "Kitsune throw",
+  "status": "proposed",
+  "source": "kitsune",
+  "clip": "kitsune-throw",
+  "rules": [
+    "C4",
+    "E4",
+    "E12",
+    "E15",
+    "F2",
+    "T0"
+  ],
+  "input": {
+    "buttons": [
+      "LP",
+      "LK"
+    ]
+  },
+  "frame_data": {
+    "startup": 3,
+    "active": 17,
+    "recovery": 11,
+    "damage": 120,
+    "break_window": 7,
+    "throwboxes": [
+      {
+        "frames": [
+          4,
+          20
+        ],
+        "rect": {
+          "x": 20,
+          "y": 60,
+          "w": 100,
+          "h": 200
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          31
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 90,
+          "h": 360
+        }
+      }
+    ]
+  },
+  "notes": "Generic throw (C4), 259 shove. Clip 31 frames, hands contact 4-20 so startup 3 / active 17 / recovery 11. Deviation from C4 startup 5: -2 (the clip note says startup 4; the validator ties hit_start 4 to startup 3). Active 17 is the clip window; recovery 11 outlasts the 7-frame break window (E12). The clip carries a 28 cm hip advance that must be replaced by a data step (E15); the throw schema has no forward-travel field, so that step is NOT yet encoded (needs a schema/engine follow-up). Pushback left to fight defaults. Same buttons as Ryo's throw; Ryo's file (YOK-33) is a separate id."
+}

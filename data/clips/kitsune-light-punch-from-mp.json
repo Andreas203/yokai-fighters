@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "kitsune-light-punch-from-mp",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "210 Boxing_Guard_Prep_Straight_Punch (MP clip at 2x speed, F5)",
+  "frames_total": 33,
+  "hit_start": 5,
+  "hit_end": 10,
+  "retarget_notes": "Derived, not measured: kitsune-medium-punch played at 2x (designer-approved F5 speed-up). Same sleeve flare WARN as the MP clip, shown for half as long.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "PROVISIONAL stand-in written by movesmith (YOK-45) because the retake run's kitsune-light-punch clip entry was not on main. 65 frames / 2 = 33 (rounded up); hit window 10-19 -> 5-10 (ceil). Replace by clip-matcher's measured entry and repoint the move's clip field, then delete this file."
+}
