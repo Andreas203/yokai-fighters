@@ -55,14 +55,26 @@ public partial class FightScene : Node3D
 	/// <summary>Both fighters get the moves and Ryo's starters (A1). P2 shares Ryo's kit until the yokai kits land.</summary>
 	public static Match NewMatch()
 	{
-		var m = new Match(null, LoadMoves(), LoadMoves());
+		var cfg = Run?.MatchConfig();
+		var m = new Match(cfg, LoadMoves(), LoadMoves());
 		foreach (var f in m.Fighters)
 		{
 			EquipStarters(f, LoadSpecials());
 			f.Input.Scheme = DefaultScheme;
 		}
+		Run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
 		return m;
 	}
+
+	/// <summary>
+	/// YOK-47: the run in progress. When set, the next fight's P1 (Ryo) takes its specials (levels,
+	/// modifiers) and carried health (C1, R3); null = a standalone fight with the starters at full health.
+	/// </summary>
+	public static RunState? Run { get; set; }
+
+	/// <summary>YOK-47: specials + modifiers for the reward draft, from data/ with TEST FIXTURE fallback.</summary>
+	public static AbilityPool LoadAbilityPool() =>
+		AbilityPool.LoadRepo(System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + ".."));
 
 	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
 	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;

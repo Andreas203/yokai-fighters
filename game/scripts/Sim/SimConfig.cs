@@ -50,6 +50,9 @@ public sealed partial record SimConfig
 
 	public int P1MaxHealth { get; init; } = 1000; // C1: Ryo
 	public int P2MaxHealth { get; init; } = 1000; // placeholder until yokai data lands
+	/// <summary>YOK-47: health at fight start (C1 carry-over, R3); null = max health.</summary>
+	public int? P1StartHealth { get; init; }
+	public int? P2StartHealth { get; init; }
 
 	/// <summary>V4: the round-ending blow plays this many world frames at half speed.</summary>
 	public int KoSlowFrames { get; init; } = 30;
