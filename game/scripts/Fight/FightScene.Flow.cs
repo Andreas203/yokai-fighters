@@ -59,6 +59,21 @@ public partial class FightScene
 		Match = NewMatch(DemoRun);
 	}
 
+	/// <summary>Fills the demo-complete screen from data/story/demo-complete.json; keeps the placeholder (and warns) if missing or bad.</summary>
+	private void ApplyDemoCompleteCard()
+	{
+		try
+		{
+			var (title, text) = LoadStory().DemoComplete(Story.StoryLibrary.DisplayName(Opponent));
+			CompleteScreen.SetText(title, text);
+		}
+		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
+			or System.Collections.Generic.KeyNotFoundException or System.InvalidOperationException)
+		{
+			GD.PushWarning($"demo-complete screen keeps its placeholder: {e.Message}");
+		}
+	}
+
 	/// <summary>Called at the end of _Ready (after the HUD and AI): the screens and the debug menu.</summary>
 	private void SetUpFlow()
 	{
@@ -70,6 +85,7 @@ public partial class FightScene
 		Rewards.Picked += (_, _) => StartRematch();
 		layer.AddChild(CompleteScreen = new DemoCompleteScreen { Name = "Complete" });
 		CompleteScreen.RestartRequested += RestartRun;
+		ApplyDemoCompleteCard();
 		if (!OS.IsDebugBuild()) return;
 		var menuLayer = new CanvasLayer { Name = "DebugMenuLayer", Layer = 20 };
 		AddChild(menuLayer);
