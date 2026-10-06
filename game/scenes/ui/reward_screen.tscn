@@ -1,0 +1,154 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Ui/RewardScreen.cs" id="2_RewardScreen"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="3_BrushStroke"]
+[ext_resource type="PackedScene" path="res://scenes/ui/reward_card.tscn" id="4_reward_card"]
+[ext_resource type="PackedScene" path="res://scenes/ui/target_card.tscn" id="5_target_card"]
+
+[node name="Rewards" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_talisman_theme")
+mouse_filter = 0
+script = ExtResource("2_RewardScreen")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.94)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchor_right = 1
+offset_left = 0
+offset_top = 52
+offset_right = 0
+offset_bottom = 139
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 64
+text = "Kitsune yields three talismans"
+horizontal_alignment = 1
+
+[node name="TitleRule" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -360
+offset_top = 138
+offset_right = 360
+offset_bottom = 162
+mouse_filter = 2
+script = ExtResource("3_BrushStroke")
+Thickness = 8
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="TargetHeading" type="Label" parent="."]
+layout_mode = 1
+anchor_right = 1
+offset_left = 0
+offset_top = 181
+offset_right = 0
+offset_bottom = 225
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 32
+text = "Spirit Wave: Your wave hits harder and recovers faster."
+horizontal_alignment = 1
+visible = false
+
+[node name="Cards" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchor_right = 1
+offset_left = 0
+offset_top = 201
+offset_right = 0
+offset_bottom = 901
+mouse_filter = 2
+theme_override_constants/separation = 60
+alignment = 1
+
+[node name="Card1" parent="Cards" instance=ExtResource("4_reward_card")]
+layout_mode = 2
+
+[node name="Card2" parent="Cards" instance=ExtResource("4_reward_card")]
+layout_mode = 2
+
+[node name="Card3" parent="Cards" instance=ExtResource("4_reward_card")]
+layout_mode = 2
+
+[node name="Targets" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchor_right = 1
+offset_left = 0
+offset_top = 266
+offset_right = 0
+offset_bottom = 736
+mouse_filter = 2
+visible = false
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Target1" parent="Targets" instance=ExtResource("5_target_card")]
+layout_mode = 2
+
+[node name="Target2" parent="Targets" instance=ExtResource("5_target_card")]
+layout_mode = 2
+
+[node name="Target3" parent="Targets" instance=ExtResource("5_target_card")]
+layout_mode = 2
+
+[node name="Target4" parent="Targets" instance=ExtResource("5_target_card")]
+layout_mode = 2
+
+[node name="FrameToggle" type="Button" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1
+anchor_right = 0.5
+anchor_bottom = 1
+offset_left = -220
+offset_top = -140
+offset_right = 220
+offset_bottom = -80
+theme_type_variation = &"ToggleButton"
+theme_override_font_sizes/font_size = 28
+text = "Frame data: off  (Tab / Y)"
+focus_mode = 0
+
+[node name="HintCards" type="Label" parent="."]
+layout_mode = 1
+anchor_top = 1
+anchor_right = 1
+anchor_bottom = 1
+offset_left = 0
+offset_top = -68
+offset_right = 0
+offset_bottom = -32
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 26
+text = "Left / Right  choose      Enter / A  take"
+horizontal_alignment = 1
+
+[node name="HintTarget" type="Label" parent="."]
+layout_mode = 1
+anchor_top = 1
+anchor_right = 1
+anchor_bottom = 1
+offset_left = 0
+offset_top = -68
+offset_right = 0
+offset_bottom = -32
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 26
+text = "Left / Right  choose      Enter / A  attach      Esc / B  back"
+horizontal_alignment = 1
+visible = false

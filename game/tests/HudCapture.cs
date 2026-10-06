@@ -22,6 +22,8 @@ public partial class HudCapture : Node
 		for (int t = 0; t < 600 && scene.Match.Phase != MatchPhase.Over; t++)
 			scene.Step(FighterInput.None, new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
 		await Snap(dir + "/hud_lose.png");
+		scene.CompleteScreen.Show();
+		await Snap(dir + "/demo_complete.png");
 		GetTree().Quit();
 	}
 

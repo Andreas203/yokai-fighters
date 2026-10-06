@@ -15,8 +15,8 @@ public partial class RewardCapture : Node
 		foreach (string a in OS.GetCmdlineUserArgs()) if (a.StartsWith("out=")) dir = a[4..];
 		var layer = new CanvasLayer(); AddChild(layer);
 		var src = new StubRewardSource();
-		var story = new StoryCard(); layer.AddChild(story);
-		var reward = new RewardScreen(); layer.AddChild(reward);
+		var story = GD.Load<PackedScene>("res://scenes/ui/story_card.tscn").Instantiate<StoryCard>(); layer.AddChild(story);
+		var reward = GD.Load<PackedScene>("res://scenes/ui/reward_screen.tscn").Instantiate<RewardScreen>(); layer.AddChild(reward);
 
 		story.Display(src.BindingLine(src.Offer.Yokai));
 		await Snap(dir + "/reward_binding.png");

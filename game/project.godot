@@ -24,6 +24,10 @@ common/physics_ticks_per_second=60
 common/max_physics_steps_per_frame=8
 common/physics_jitter_fix=0.0
 
+[gui]
+
+theme/custom="res://ui/talisman_theme.tres"
+
 [display]
 
 window/size/viewport_width=1920

@@ -275,7 +275,7 @@ public static class DemoFlowTests
 		bool threw = false;
 		try { lib.DemoComplete("Kitsune"); } catch (System.Collections.Generic.KeyNotFoundException) { threw = true; }
 		Assert.True(threw, "missing card throws the exception ApplyDemoCompleteCard catches");
-		var screen = new DemoCompleteScreen();
+		var screen = GD.Load<PackedScene>("res://scenes/ui/demo_complete.tscn").Instantiate<DemoCompleteScreen>();
 		Assert.Equal(DemoCompleteScreen.PlaceholderTitle, screen.TitleText, "placeholder title");
 		Assert.Equal(DemoCompleteScreen.PlaceholderText, screen.BodyText, "placeholder text");
 		screen.SetText(null, "x");

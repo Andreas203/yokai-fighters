@@ -1,0 +1,184 @@
+[gd_resource type="Theme" format=3]
+
+[sub_resource type="StyleBoxFlat" id="burst"]
+bg_color = Color(0.72, 0.16, 0.14, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.13, 0.14, 0.25, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="burst_off"]
+bg_color = Color(0.45, 0.45, 0.45, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.13, 0.14, 0.25, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="btn_hi"]
+bg_color = Color(0.7536, 0.2608, 0.2432, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn"]
+bg_color = Color(0.72, 0.16, 0.14, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="frame"]
+bg_color = Color(0.13, 0.14, 0.25, 0.1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="hp_bg"]
+bg_color = Color(0.93, 0.89, 0.78, 0)
+
+[sub_resource type="StyleBoxFlat" id="hp_p1"]
+bg_color = Color(0.72, 0.16, 0.14, 1)
+
+[sub_resource type="StyleBoxFlat" id="hp_p2"]
+bg_color = Color(0.85, 0.4, 0.15, 1)
+
+[sub_resource type="StyleBoxFlat" id="hp_frame"]
+bg_color = Color(0.93, 0.89, 0.78, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="mt_bg"]
+bg_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="mt_fill"]
+bg_color = Color(0.22, 0.38, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="mt_full"]
+bg_color = Color(0.85, 0.4, 0.15, 1)
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+bg_color = Color(0.93, 0.89, 0.78, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="tag_mod"]
+bg_color = Color(0.2, 0.25, 0.5, 1)
+
+[sub_resource type="StyleBoxFlat" id="tag_new"]
+bg_color = Color(0.85, 0.4, 0.15, 1)
+
+[sub_resource type="StyleBoxFlat" id="tag_up"]
+bg_color = Color(0.22, 0.38, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="tog_hi"]
+bg_color = Color(0.9384, 0.9032, 0.8064, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="tog"]
+bg_color = Color(0.93, 0.89, 0.78, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.14, 0.25, 1)
+
+[resource]
+default_font_size = 26
+BurstSeal/base_type = &"Panel"
+BurstSeal/styles/panel = SubResource("burst")
+BurstSealSpent/base_type = &"Panel"
+BurstSealSpent/styles/panel = SubResource("burst_off")
+Button/colors/font_color = Color(0.93, 0.89, 0.78, 1)
+Button/colors/font_focus_color = Color(0.93, 0.89, 0.78, 1)
+Button/colors/font_hover_color = Color(0.93, 0.89, 0.78, 1)
+Button/colors/font_pressed_color = Color(0.93, 0.89, 0.78, 1)
+Button/font_sizes/font_size = 44
+Button/styles/focus = SubResource("btn_hi")
+Button/styles/hover = SubResource("btn_hi")
+Button/styles/normal = SubResource("btn")
+Button/styles/pressed = SubResource("btn")
+FadedLabel/colors/font_color = Color(0.13, 0.14, 0.25, 1)
+FrameBox/base_type = &"Panel"
+FrameBox/styles/panel = SubResource("frame")
+GreyLabel/base_type = &"Label"
+GreyLabel/colors/font_color = Color(0.315, 0.315, 0.315, 1)
+HealthBar/base_type = &"ProgressBar"
+HealthBar/styles/background = SubResource("hp_bg")
+HealthBar/styles/fill = SubResource("hp_p1")
+HealthBarEnemy/base_type = &"ProgressBar"
+HealthBarEnemy/styles/background = SubResource("hp_bg")
+HealthBarEnemy/styles/fill = SubResource("hp_p2")
+HealthFrame/base_type = &"Panel"
+HealthFrame/styles/panel = SubResource("hp_frame")
+IndigoLabel/base_type = &"Label"
+IndigoLabel/colors/font_color = Color(0.2, 0.25, 0.5, 1)
+Label/colors/font_color = Color(0.13, 0.14, 0.25, 1)
+Label/font_sizes/font_size = 26
+MeterBar/base_type = &"ProgressBar"
+MeterBar/styles/background = SubResource("mt_bg")
+MeterBar/styles/fill = SubResource("mt_fill")
+MeterBarFull/base_type = &"ProgressBar"
+MeterBarFull/styles/background = SubResource("mt_bg")
+MeterBarFull/styles/fill = SubResource("mt_full")
+OutlinedLabel/base_type = &"Label"
+OutlinedLabel/colors/font_color = Color(0.93, 0.89, 0.78, 1)
+OutlinedLabel/colors/font_outline_color = Color(0.13, 0.14, 0.25, 1)
+OutlinedLabel/constants/outline_size = 8
+Panel/styles/panel = SubResource("panel")
+PaperLabel/base_type = &"Label"
+PaperLabel/colors/font_color = Color(0.93, 0.89, 0.78, 1)
+PersimmonLabel/base_type = &"Label"
+PersimmonLabel/colors/font_color = Color(0.6375, 0.3, 0.1125, 1)
+PineLabel/base_type = &"Label"
+PineLabel/colors/font_color = Color(0.22, 0.38, 0.3, 1)
+SealLabel/base_type = &"Label"
+SealLabel/colors/font_color = Color(0.72, 0.16, 0.14, 1)
+TagModifier/base_type = &"Panel"
+TagModifier/styles/panel = SubResource("tag_mod")
+TagNew/base_type = &"Panel"
+TagNew/styles/panel = SubResource("tag_new")
+TagUpgrade/base_type = &"Panel"
+TagUpgrade/styles/panel = SubResource("tag_up")
+ToggleButton/base_type = &"Button"
+ToggleButton/colors/font_color = Color(0.13, 0.14, 0.25, 1)
+ToggleButton/colors/font_focus_color = Color(0.13, 0.14, 0.25, 1)
+ToggleButton/colors/font_hover_color = Color(0.13, 0.14, 0.25, 1)
+ToggleButton/colors/font_pressed_color = Color(0.13, 0.14, 0.25, 1)
+ToggleButton/styles/focus = SubResource("tog_hi")
+ToggleButton/styles/hover = SubResource("tog_hi")
+ToggleButton/styles/normal = SubResource("tog")
+ToggleButton/styles/pressed = SubResource("tog")
+ToggleButtonOn/base_type = &"Button"
+ToggleButtonOn/colors/font_color = Color(0.93, 0.89, 0.78, 1)
+ToggleButtonOn/colors/font_focus_color = Color(0.93, 0.89, 0.78, 1)
+ToggleButtonOn/colors/font_hover_color = Color(0.93, 0.89, 0.78, 1)
+ToggleButtonOn/colors/font_pressed_color = Color(0.93, 0.89, 0.78, 1)
+ToggleButtonOn/styles/focus = SubResource("btn_hi")
+ToggleButtonOn/styles/hover = SubResource("btn_hi")
+ToggleButtonOn/styles/normal = SubResource("btn")
+ToggleButtonOn/styles/pressed = SubResource("btn")

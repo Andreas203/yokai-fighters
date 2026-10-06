@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Fight/DemoDebugMenu.cs" id="2_DemoDebugMenu"]
+
+[node name="DebugMenu" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_talisman_theme")
+mouse_filter = 0
+script = ExtResource("2_DemoDebugMenu")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 1
+offset_left = 710
+offset_top = 260
+offset_right = 1210
+offset_bottom = 700
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Heading" type="Label" parent="Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(500, 50)
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 34
+text = "DEBUG  (F9 closes)"
+horizontal_alignment = 1
+
+[node name="Current" type="Label" parent="Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(500, 40)
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 26
+text = "Kitsune temperament: aggressive"
+horizontal_alignment = 1
+
+[node name="TemperamentTemplate" type="Button" parent="Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(500, 70)
+theme_override_font_sizes/font_size = 30
+text = "Kitsune: aggressive"
+
+[node name="RestartRun" type="Button" parent="Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(500, 70)
+theme_override_font_sizes/font_size = 30
+text = "Restart run (first fight)"
+
+[node name="Resume" type="Button" parent="Box"]
+layout_mode = 2
+custom_minimum_size = Vector2(500, 70)
+theme_override_font_sizes/font_size = 30
+text = "Resume"
