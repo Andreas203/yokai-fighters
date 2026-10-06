@@ -19,8 +19,21 @@ public sealed partial record SimConfig
 	/// <summary>Push-box width: two fighters' centres never get closer than this on the ground.</summary>
 	public int BodyWidth { get; init; } = 120 * Scale;
 
-	/// <summary>Screen walls: the farthest two fighters may be apart so both stay in view.</summary>
-	public int MaxSeparation { get; init; } = 1600 * Scale;
+	/// <summary>
+	/// Screen walls: the farthest two fighters may be apart so both stay in view. YOK-39: 1520, not E1's 1600, so
+	/// both models' back reach (a knocked-down body lies 200 behind its X, <see cref="ModelBackReach"/>) fits the
+	/// 1920 view: 1520 + 2 x 200 = 1920. Rules value (E1), designer to confirm.
+	/// </summary>
+	public int MaxSeparation { get; init; } = 1520 * Scale;
+
+	/// <summary>
+	/// YOK-39: how far a fighter's rigged model reaches past its X toward its facing (front) and away from it (back),
+	/// in centi-units, over every frame of every clip (bones + a flesh pad, the Kitsune's tails; measured by
+	/// ModelExtentTests: front 219 in the jump kick, back 187 lying in the knockdown; rounded up). Used only by
+	/// <see cref="FightCamera"/>'s clamp (so also where projectiles leave the screen); constants, so deterministic.
+	/// </summary>
+	public int ModelFrontReach { get; init; } = 240 * Scale;
+	public int ModelBackReach { get; init; } = 200 * Scale;
 
 	/// <summary>C2: walk crosses the 1920-unit screen in ~2.5 s (150 ticks) = 12.8 units/tick.</summary>
 	public int WalkSpeed { get; init; } = 1280;
@@ -64,14 +77,12 @@ public sealed partial record SimConfig
 	// --- Hits (YOK-16). Fight-wide fallbacks; per-move numbers live in move data. ---------
 
 	/// <summary>
-	/// Hurtbox of a fighter not in a move (units, feet-relative), per stance. PROPOSED (YOK-18), for
-	/// the designer: E5's single 90x180 box covers only the lower half of a 1.8 m fighter (360 units at
-	/// E1), so standing is 90x360, crouching about half plus the head (90x200), airborne tucked (90x280).
-	/// Placeholders until fighter data lands; E5 in rules.md is unchanged.
+	/// Hurtbox of a fighter not in a move (units, feet-relative), per stance (E5): measured from the rigged
+	/// models in YOK-33 hitbox alignment and accepted by the designer (YOK-39). Moves keep their own boxes.
 	/// </summary>
-	public Box IdleHurtbox { get; init; } = new(-45, 0, 90, 360);
-	public Box CrouchHurtbox { get; init; } = new(-45, 0, 90, 200);
-	public Box AirHurtbox { get; init; } = new(-45, 0, 90, 280);
+	public Box IdleHurtbox { get; init; } = new(-45, 0, 90, 320);
+	public Box CrouchHurtbox { get; init; } = new(-45, 0, 90, 240);
+	public Box AirHurtbox { get; init; } = new(-45, 40, 90, 270);
 
 	/// <summary>Defender slide in units when a move's data gives no pushback.</summary>
 	public int HitPushback { get; init; } = 40;

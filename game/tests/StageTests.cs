@@ -28,8 +28,8 @@ public static class StageTests
 		Assert.True(stage.HasNode("Backdrop") && stage.HasNode("Floor") && stage.HasNode("Sun") && stage.HasNode("Fill"), "backdrop, floor, key and fill");
 		Assert.True(stage.GetNode<WorldEnvironment>("Environment").Environment.FogEnabled, "dusk fog");
 		var props = stage.GetNode<Node3D>("Props").GetChildren();
-		Assert.Equal(12, props.Count(p => p.Name.ToString().StartsWith("Bamboo")), "bamboo clusters");
-		Assert.Equal(3, props.Count(p => p.Name.ToString().StartsWith("Lantern")), "lanterns");
+		Assert.Equal(10, props.Count(p => p.Name.ToString().StartsWith("Bamboo")), "bamboo clusters (YOK-39: 12 -> 10)");
+		Assert.Equal(2, props.Count(p => p.Name.ToString().StartsWith("Lantern")), "lanterns (YOK-39: 3 -> 2, deep)");
 		foreach (var mi in Meshes(stage.GetNode("Props")))
 			Assert.True(mi.GetActiveMaterial(0) is BaseMaterial3D { DiffuseMode: BaseMaterial3D.DiffuseModeEnum.Toon, NextPass: not null }, $"{mi.Name}: toon + outline");
 		scene.Step(FighterInput.None, FighterInput.None);
@@ -50,12 +50,27 @@ public static class StageTests
 	}
 
 	[Test]
+	public static void Stage_ClearBandBehindTheFight_LanternsDeep(Node runner)
+	{
+		var scene = Load(runner);
+		foreach (var n in scene.StageRoot.GetNode("Props").GetChildren().Cast<Node3D>())
+		{
+			var p = n.Position;
+			if (n.Name.ToString().StartsWith("Lantern"))
+				Assert.True(p.Z <= BambooGroveStage.LanternMaxZ, $"{n.Name} at z {p.Z}: lanterns stay deep in the grove");
+			if (Mathf.Abs(p.X) < BambooGroveStage.ClearBandHalfX)
+				Assert.True(p.Z <= BambooGroveStage.ClearBandBackZ, $"{n.Name} at ({p.X}, {p.Z}) is inside the clear band behind the fight");
+		}
+		scene.QueueFree();
+	}
+
+	[Test]
 	public static void Stage_CoversCameraRangeAtBothCorners(Node runner)
 	{
 		var scene = Load(runner);
 		var c = scene.Match.Config;
 		float tan = Mathf.Tan(Mathf.DegToRad(FightScene.CameraFovDegrees) / 2f), d = FightScene.CameraDistance(c);
-		float camLimit = FightScene.ToMeters(System.Math.Max(0, c.StageHalfWidth - c.ViewWidth / 2));
+		float camLimit = FightScene.ToMeters(FightCamera.Limit(c)); // YOK-39: reaches the cornered model
 		var backdrop = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop");
 		var size = ((QuadMesh)backdrop.Mesh).Size;
 		float dist = d - backdrop.Position.Z, halfW = dist * tan * 16f / 9f, halfH = dist * tan;

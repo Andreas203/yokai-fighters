@@ -30,17 +30,28 @@ public static class BambooGroveStage
 	public const float PropMaxZ = -2f;
 	public const float PropOutlineMetres = 0.02f;
 
-	/// <summary>Bamboo clusters: x, z, height (m) before jitter.</summary>
+	/// <summary>
+	/// YOK-39 clear band: behind the fighting area (|x| &lt; <see cref="ClearBandHalfX"/>, the stage plus a margin) no
+	/// prop's footprint comes nearer than <see cref="ClearBandBackZ"/>, so nothing sits right behind a fighter and reads
+	/// as attached to them. Lanterns (small, fighter-sized) stay at or behind <see cref="LanternMaxZ"/> everywhere.
+	/// </summary>
+	public const float ClearBandHalfX = 10.5f, ClearBandBackZ = -8f, LanternMaxZ = -10f;
+
+	/// <summary>Bamboo clusters: x, z, height (m) before jitter. Ten (was twelve): the two at mid-depth behind the fight are gone.</summary>
 	private static readonly (float X, float Z, float H)[] Bamboo =
 	{
-		(-14f, -9.5f, 8f), (-11f, -5f, 7f), (-8f, -11f, 8.5f), (-5.5f, -6.5f, 7.5f), (-2.5f, -12.5f, 9f),
-		(3f, -12f, 9f), (5.5f, -6f, 7.5f), (8.5f, -10.5f, 8.5f), (11.5f, -4.5f, 7f), (14.5f, -8.5f, 8f),
+		(-14f, -9.5f, 8f), (-11.5f, -5f, 7f), (-8f, -11f, 8.5f), (-2.5f, -12.5f, 9f),
+		(3f, -12f, 9f), (8.5f, -10.5f, 8.5f), (12f, -4.5f, 7f), (14.5f, -8.5f, 8f),
 		(-17f, -6f, 7.5f), (17.5f, -5.5f, 7.5f),
 	};
-	/// <summary>Stone lanterns: x, z, height (m), outside the middle of the fighter band.</summary>
+	/// <summary>
+	/// Stone lanterns: x, z, height (m), deep in the grove (behind <see cref="LanternMaxZ"/>). Two (was three), placed
+	/// by parallax so that in the standard framings (mid-stage clinch, max separation, either corner) each one shows
+	/// in a gap between the fighters rather than behind one: at z -12 a lantern appears at about (x - camera x) x 0.5.
+	/// </summary>
 	private static readonly (float X, float Z, float H)[] Lanterns =
 	{
-		(-7.5f, -5.5f, 1.3f), (8f, -6f, 1.3f), (-16.5f, -6f, 1.4f),
+		(-3.2f, -12.5f, 1.3f), (2.9f, -11.5f, 1.4f), // the second in front of the x 3 bamboo
 	};
 
 	/// <summary>Builds the grove under <paramref name="root"/>; false (partly built, caller clears it) when the backdrop or ground is missing.</summary>
@@ -57,9 +68,9 @@ public static class BambooGroveStage
 		root.AddChild(props);
 		PackedScene? bamboo = LoadScene(dir + "bamboo-cluster.glb"), lantern = LoadScene(dir + "lantern.glb");
 		for (int i = 0; i < Bamboo.Length && bamboo != null; i++)
-			AddProp(props, bamboo, $"Bamboo{i}", Bamboo[i], rng, scaleJitterPct: 15, posJitterCm: 60);
+			AddProp(props, bamboo, $"Bamboo{i}", Bamboo[i], rng, scaleJitterPct: 15, posJitterCm: 60, PropMaxZ);
 		for (int i = 0; i < Lanterns.Length && lantern != null; i++)
-			AddProp(props, lantern, $"Lantern{i}", Lanterns[i], rng, scaleJitterPct: 8, posJitterCm: 20);
+			AddProp(props, lantern, $"Lantern{i}", Lanterns[i], rng, scaleJitterPct: 8, posJitterCm: 20, LanternMaxZ);
 		return true;
 	}
 
@@ -171,7 +182,7 @@ void fragment() {
 	SPECULAR = 0.0;
 }";
 
-	private static void AddProp(Node3D parent, PackedScene scene, string name, (float X, float Z, float H) spot, SimRng rng, int scaleJitterPct, int posJitterCm)
+	private static void AddProp(Node3D parent, PackedScene scene, string name, (float X, float Z, float H) spot, SimRng rng, int scaleJitterPct, int posJitterCm, float maxZ)
 	{
 		var model = scene.Instantiate<Node3D>();
 		Aabb box = LocalBounds(model);
@@ -188,9 +199,11 @@ void fragment() {
 		holder.AddChild(pivot);
 		parent.AddChild(holder);
 		FighterModel.ApplyToon(model, PropOutlineMetres);
-		// Keep the back of the prop (its radius after the yaw) behind the gameplay plane too.
+		// Keep the front of the prop (its radius after the yaw) behind its limit: the gameplay plane, the lantern
+		// depth, and the clear band behind the fighting area (YOK-39).
 		float radius = Mathf.Max(box.Size.X, box.Size.Z) * 0.5f * scale;
-		if (z + radius > PropMaxZ) holder.Position = new Vector3(x, 0f, PropMaxZ - radius);
+		float limit = Math.Abs(x) < ClearBandHalfX ? Math.Min(maxZ, ClearBandBackZ) : maxZ;
+		if (z + radius > limit) holder.Position = new Vector3(x, 0f, limit - radius);
 	}
 
 	/// <summary>Bounds of every mesh under <paramref name="n"/> in its parent's space (works before entering the tree).</summary>
