@@ -105,6 +105,7 @@ Designer-attention notes it raised and the designer ruled on:
 - Approved the clip list, its upgrades and the retakes.
 - Decided the Lv 2 steps.
 - Accepted the re-timing and the hurtbox defaults.
+- Rewrote the binding line to "Forgive me, {yokai}. I'll set your spirit free." (GDD amendment AM2). The rules-lawyer passed the new story card before it merged (#62).
 - Approved every merge.
 
 No Meshy job ran without an approval, and every spend stayed at or under its cap.
