@@ -1,0 +1,477 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Fight/StartScreen.cs" id="2_StartScreen"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="3_TalismanPanel"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="4_BrushStroke"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="5_SealStamp"]
+
+[node name="Title" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_talisman_theme")
+mouse_filter = 0
+script = ExtResource("2_StartScreen")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.96)
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -810
+offset_top = -500
+offset_right = 810
+offset_bottom = 500
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_TalismanPanel")
+
+[node name="TitleText" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = -3
+offset_right = 1620
+offset_bottom = 132
+theme_override_font_sizes/font_size = 96
+text = "Yokai Fighters"
+horizontal_alignment = 1
+
+[node name="TitleRule" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 610
+offset_top = 112
+offset_right = 1010
+offset_bottom = 136
+mouse_filter = 2
+script = ExtResource("4_BrushStroke")
+Thickness = 9
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="Subtitle" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 135
+offset_right = 1620
+offset_bottom = 190
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 36
+text = "Demo — Ryo vs the Kitsune"
+horizontal_alignment = 1
+
+[node name="Seal" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 1466
+offset_top = 46
+offset_right = 1554
+offset_bottom = 134
+mouse_filter = 2
+script = ExtResource("5_SealStamp")
+Glyph = "YF"
+
+[node name="KeyboardHeading" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 208
+offset_right = 460
+offset_bottom = 250
+theme_type_variation = &"SealLabel"
+theme_override_font_sizes/font_size = 30
+text = "KEYBOARD"
+
+[node name="KeyboardRule" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 244
+offset_right = 840
+offset_bottom = 268
+mouse_filter = 2
+script = ExtResource("4_BrushStroke")
+Thickness = 5
+
+[node name="KeyboardGrid" type="GridContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 274
+offset_right = 840
+offset_bottom = 654
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 2
+
+[node name="Action1" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Move"
+
+[node name="Binding1" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "A / D"
+
+[node name="Action2" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Crouch / Jump"
+
+[node name="Binding2" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "S / W"
+
+[node name="Action3" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Dash"
+
+[node name="Binding3" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "double-tap A / D"
+
+[node name="Action4" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Punch  L M H"
+
+[node name="Binding4" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "U  I  O"
+
+[node name="Action5" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Kick  L M H"
+
+[node name="Binding5" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "J  K  L"
+
+[node name="Action6" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Special"
+
+[node name="Binding6" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "Space + direction"
+
+[node name="Action7" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "EX (1 bar)"
+
+[node name="Binding7" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "Special + direction + a button"
+
+[node name="Action8" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Throw"
+
+[node name="Binding8" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "U + J"
+
+[node name="Action9" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Burst (when hit)"
+
+[node name="Binding9" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "U + I + O"
+
+[node name="Action10" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Block"
+
+[node name="Binding10" type="Label" parent="Panel/KeyboardGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(530, 38)
+theme_override_font_sizes/font_size = 26
+text = "hold back (crouch for lows)"
+
+[node name="GamepadHeading" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 860
+offset_top = 208
+offset_right = 1260
+offset_bottom = 250
+theme_type_variation = &"SealLabel"
+theme_override_font_sizes/font_size = 30
+text = "GAMEPAD"
+
+[node name="GamepadRule" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 860
+offset_top = 244
+offset_right = 1560
+offset_bottom = 268
+mouse_filter = 2
+script = ExtResource("4_BrushStroke")
+Thickness = 5
+
+[node name="PadGrid" type="GridContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 860
+offset_top = 274
+offset_right = 1560
+offset_bottom = 654
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 2
+
+[node name="Action1" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Move"
+
+[node name="Binding1" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "D-pad / stick"
+
+[node name="Action2" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Crouch / Jump"
+
+[node name="Binding2" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "Down / Up"
+
+[node name="Action3" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Dash"
+
+[node name="Binding3" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "double-tap left / right"
+
+[node name="Action4" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Punch  L M H"
+
+[node name="Binding4" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "X  Y  RB"
+
+[node name="Action5" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Kick  L M H"
+
+[node name="Binding5" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "A  B  RT"
+
+[node name="Action6" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Special"
+
+[node name="Binding6" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "LB + direction"
+
+[node name="Action7" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "EX (1 bar)"
+
+[node name="Binding7" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "Special + direction + a button"
+
+[node name="Action8" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Throw"
+
+[node name="Binding8" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "X + A"
+
+[node name="Action9" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Burst (when hit)"
+
+[node name="Binding9" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "X + Y + RB"
+
+[node name="Action10" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(250, 38)
+theme_type_variation = &"PineLabel"
+theme_override_font_sizes/font_size = 26
+text = "Block"
+
+[node name="Binding10" type="Label" parent="Panel/PadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(450, 38)
+theme_override_font_sizes/font_size = 26
+text = "hold back (down for lows)"
+
+[node name="SpecialsLine" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 656
+offset_right = 1560
+offset_bottom = 698
+theme_override_font_sizes/font_size = 28
+text = "Special + neutral: Spirit Wave   forward: Rising Talisman   back: your drafted special"
+
+[node name="NormalNote" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 698
+offset_right = 1560
+offset_bottom = 732
+theme_override_font_sizes/font_size = 24
+text = "An attack pressed before Special gives its normal instead."
+
+[node name="Divider" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 742
+offset_right = 1560
+offset_bottom = 766
+mouse_filter = 2
+script = ExtResource("4_BrushStroke")
+Thickness = 4
+Ink = Color(0.13, 0.14, 0.25, 0.5)
+
+[node name="Hint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 762
+offset_right = 1620
+offset_bottom = 806
+theme_type_variation = &"PersimmonLabel"
+theme_override_font_sizes/font_size = 32
+text = "Beat the Kitsune to bind her and draft one of her powers."
+horizontal_alignment = 1
+
+[node name="Start" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 560
+offset_top = 816
+offset_right = 1060
+offset_bottom = 906
+theme_override_font_sizes/font_size = 46
+text = "Start Game"
+
+[node name="StartHint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 914
+offset_right = 1620
+offset_bottom = 952
+theme_override_font_sizes/font_size = 26
+text = "Enter / Space / A  start"
+horizontal_alignment = 1
+
+[node name="DebugKeys" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 958
+offset_right = 1620
+offset_bottom = 990
+theme_type_variation = &"FadedLabel"
+theme_override_font_sizes/font_size = 20
+text = "Debug:  F1 boxes   F2 pause   F3 step   F4 Kata/Kihon   F6 temperament   F7 P2 control   F8 replay   F9 menu   F10 models"
+horizontal_alignment = 1

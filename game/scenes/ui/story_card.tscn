@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Ui/StoryCard.cs" id="2_StoryCard"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="3_TalismanPanel"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="4_BrushStroke"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="5_SealStamp"]
+
+[node name="StoryCard" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_talisman_theme")
+mouse_filter = 0
+script = ExtResource("2_StoryCard")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.94)
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -560
+offset_top = -190
+offset_right = 560
+offset_bottom = 190
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_TalismanPanel")
+
+[node name="Text" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 94
+offset_right = 1060
+offset_bottom = 290
+theme_override_font_sizes/font_size = 52
+text = "Forgive me, Kitsune. I'll give it back."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Rule" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 290
+offset_right = 380
+offset_bottom = 314
+mouse_filter = 2
+script = ExtResource("4_BrushStroke")
+Thickness = 8
+
+[node name="Prompt" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 316
+offset_right = 460
+offset_bottom = 352
+theme_override_font_sizes/font_size = 26
+text = "Enter / A  continue"
+
+[node name="Seal" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 1004
+offset_top = 284
+offset_right = 1076
+offset_bottom = 356
+mouse_filter = 2
+script = ExtResource("5_SealStamp")

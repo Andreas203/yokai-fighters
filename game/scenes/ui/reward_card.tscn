@@ -1,0 +1,145 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Ui/RewardCard.cs" id="2_RewardCard"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="3_TalismanPanel"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="4_SealStamp"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="5_BrushStroke"]
+
+[node name="RewardCard" type="Control"]
+layout_mode = 1
+offset_left = 0
+offset_top = 0
+offset_right = 520
+offset_bottom = 700
+theme = ExtResource("1_talisman_theme")
+custom_minimum_size = Vector2(520, 700)
+script = ExtResource("2_RewardCard")
+
+[node name="Body" type="Control" parent="."]
+layout_mode = 1
+offset_left = 0
+offset_top = 0
+offset_right = 520
+offset_bottom = 700
+mouse_filter = 2
+script = ExtResource("3_TalismanPanel")
+Highlight = true
+Border = Color(0.85, 0.4, 0.15, 1)
+
+[node name="Crest" type="Control" parent="Body"]
+layout_mode = 1
+offset_left = 36
+offset_top = 46
+offset_right = 124
+offset_bottom = 134
+mouse_filter = 2
+script = ExtResource("4_SealStamp")
+Glyph = "F"
+
+[node name="Name" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 140
+offset_top = 35
+offset_right = 500
+offset_bottom = 95
+theme_override_font_sizes/font_size = 44
+text = "Foxfire"
+
+[node name="Source" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 140
+offset_top = 92
+offset_right = 500
+offset_bottom = 126
+theme_type_variation = &"GreyLabel"
+theme_override_font_sizes/font_size = 26
+text = "Kitsune - special"
+
+[node name="Rule" type="Control" parent="Body"]
+layout_mode = 1
+offset_left = 30
+offset_top = 148
+offset_right = 490
+offset_bottom = 172
+mouse_filter = 2
+script = ExtResource("5_BrushStroke")
+Thickness = 6
+
+[node name="TagPanel" type="Panel" parent="Body"]
+layout_mode = 1
+offset_left = 30
+offset_top = 185
+offset_right = 490
+offset_bottom = 233
+mouse_filter = 2
+theme_type_variation = &"TagNew"
+
+[node name="Tag" type="Label" parent="Body/TagPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 30
+text = "NEW - Lv 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Plain" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 36
+offset_top = 256
+offset_right = 484
+offset_bottom = 440
+theme_override_font_sizes/font_size = 32
+text = "A slow, drifting flame. It leaves fading copies behind it."
+autowrap_mode = 3
+
+[node name="TargetPrompt" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 36
+offset_top = 452
+offset_right = 484
+offset_bottom = 516
+theme_type_variation = &"IndigoLabel"
+theme_override_font_sizes/font_size = 26
+text = "Pick the special to carry it"
+autowrap_mode = 3
+
+[node name="FrameBox" type="Panel" parent="Body"]
+layout_mode = 1
+anchor_top = 1
+anchor_right = 1
+anchor_bottom = 1
+offset_left = 30
+offset_top = -190
+offset_right = -30
+offset_bottom = -40
+mouse_filter = 2
+theme_type_variation = &"FrameBox"
+
+[node name="FrameHeading" type="Label" parent="Body/FrameBox"]
+layout_mode = 1
+offset_left = 12
+offset_top = 6
+offset_right = 240
+offset_bottom = 36
+theme_type_variation = &"SealLabel"
+theme_override_font_sizes/font_size = 22
+text = "FRAME DATA"
+
+[node name="FrameText" type="Label" parent="Body/FrameBox"]
+layout_mode = 1
+anchor_right = 1
+anchor_bottom = 1
+offset_left = 12
+offset_top = 38
+offset_right = -12
+offset_bottom = -4
+theme_override_font_sizes/font_size = 24
+text = "Startup 15 / Active 4 / Recovery 30
+Damage 70 / Slow projectile"
+autowrap_mode = 3

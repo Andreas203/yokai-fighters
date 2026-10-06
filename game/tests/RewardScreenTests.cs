@@ -9,7 +9,7 @@ public static class RewardScreenTests
 	static (RewardScreen, StubRewardSource) Make(Node host)
 	{
 		var src = new StubRewardSource();
-		var s = new RewardScreen();
+		var s = GD.Load<PackedScene>("res://scenes/ui/reward_screen.tscn").Instantiate<RewardScreen>();
 		host.AddChild(s);
 		s.Present(src);
 		return (s, src);

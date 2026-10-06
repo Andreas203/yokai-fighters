@@ -1,0 +1,175 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/FightHud.cs" id="1_FightHud"]
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="2_talisman_theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/lose_screen.tscn" id="3_lose_screen"]
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("1_FightHud")
+
+[node name="Banner" type="Label" parent="."]
+layout_mode = 3
+anchor_right = 1
+offset_left = 0
+offset_top = 330
+offset_right = 0
+offset_bottom = 490
+grow_horizontal = 2
+theme_type_variation = &"OutlinedLabel"
+theme_override_font_sizes/font_size = 96
+text = ""
+horizontal_alignment = 1
+theme = ExtResource("2_talisman_theme")
+mouse_filter = 2
+theme_override_constants/outline_size = 12
+
+[node name="Strip" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_talisman_theme")
+mouse_filter = 2
+
+[node name="P1Frame" type="Panel" parent="Strip"]
+layout_mode = 1
+offset_left = 52
+offset_top = 48
+offset_right = 828
+offset_bottom = 98
+mouse_filter = 2
+theme_type_variation = &"HealthFrame"
+
+[node name="P2Frame" type="Panel" parent="Strip"]
+layout_mode = 1
+anchor_left = 1
+anchor_right = 1
+offset_left = -828
+offset_top = 48
+offset_right = -52
+offset_bottom = 98
+mouse_filter = 2
+theme_type_variation = &"HealthFrame"
+
+[node name="P1Health" type="ProgressBar" parent="Strip"]
+layout_mode = 1
+offset_left = 60
+offset_top = 56
+offset_right = 820
+offset_bottom = 90
+mouse_filter = 2
+theme_type_variation = &"HealthBar"
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+
+[node name="P2Health" type="ProgressBar" parent="Strip"]
+layout_mode = 1
+anchor_left = 1
+anchor_right = 1
+offset_left = -820
+offset_top = 56
+offset_right = -60
+offset_bottom = 90
+mouse_filter = 2
+theme_type_variation = &"HealthBarEnemy"
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+fill_mode = 1
+
+[node name="P1HealthText" type="Label" parent="Strip"]
+layout_mode = 1
+offset_left = 60
+offset_top = 98
+offset_right = 820
+offset_bottom = 142
+theme_type_variation = &"OutlinedLabel"
+theme_override_font_sizes/font_size = 30
+text = "RYO · 1000 / 1000"
+mouse_filter = 2
+
+[node name="P2HealthText" type="Label" parent="Strip"]
+layout_mode = 1
+anchor_left = 1
+anchor_right = 1
+offset_left = -820
+offset_top = 98
+offset_right = -60
+offset_bottom = 142
+theme_type_variation = &"OutlinedLabel"
+theme_override_font_sizes/font_size = 30
+text = "KITSUNE · 1000 / 1000"
+horizontal_alignment = 2
+mouse_filter = 2
+
+[node name="Meter" type="HBoxContainer" parent="Strip"]
+layout_mode = 1
+offset_left = 60
+offset_top = 154
+offset_right = 796
+offset_bottom = 176
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Meter1" type="ProgressBar" parent="Strip/Meter"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 22)
+mouse_filter = 2
+theme_type_variation = &"MeterBar"
+max_value = 100.0
+show_percentage = false
+
+[node name="Meter2" type="ProgressBar" parent="Strip/Meter"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 22)
+mouse_filter = 2
+theme_type_variation = &"MeterBar"
+max_value = 100.0
+show_percentage = false
+
+[node name="Meter3" type="ProgressBar" parent="Strip/Meter"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 22)
+mouse_filter = 2
+theme_type_variation = &"MeterBar"
+max_value = 100.0
+show_percentage = false
+
+[node name="BurstSeal" type="Panel" parent="Strip"]
+layout_mode = 1
+offset_left = 812
+offset_top = 139
+offset_right = 864
+offset_bottom = 191
+mouse_filter = 2
+theme_type_variation = &"BurstSeal"
+
+[node name="BurstLetter" type="Label" parent="Strip/BurstSeal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 28
+text = "B"
+horizontal_alignment = 1
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="MeterText" type="Label" parent="Strip"]
+layout_mode = 1
+offset_left = 60
+offset_top = 180
+offset_right = 460
+offset_bottom = 212
+theme_type_variation = &"OutlinedLabel"
+theme_override_font_sizes/font_size = 22
+text = "METER 0 / 300"
+mouse_filter = 2
+
+[node name="LoseScreen" parent="." instance=ExtResource("3_lose_screen")]

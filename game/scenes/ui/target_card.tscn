@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
+[ext_resource type="Script" path="res://scripts/Ui/TargetCard.cs" id="2_TargetCard"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="3_TalismanPanel"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="4_SealStamp"]
+
+[node name="TargetCard" type="Control"]
+layout_mode = 1
+offset_left = 0
+offset_top = 0
+offset_right = 400
+offset_bottom = 470
+theme = ExtResource("1_talisman_theme")
+custom_minimum_size = Vector2(400, 470)
+script = ExtResource("2_TargetCard")
+
+[node name="Body" type="Control" parent="."]
+layout_mode = 1
+offset_left = 0
+offset_top = 0
+offset_right = 400
+offset_bottom = 440
+mouse_filter = 2
+script = ExtResource("3_TalismanPanel")
+Highlight = true
+Border = Color(0.85, 0.4, 0.15, 1)
+
+[node name="Crest" type="Control" parent="Body"]
+layout_mode = 1
+offset_left = 156
+offset_top = 46
+offset_right = 244
+offset_bottom = 134
+mouse_filter = 2
+script = ExtResource("4_SealStamp")
+Glyph = "A"
+
+[node name="Name" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 0
+offset_top = 152
+offset_right = 400
+offset_bottom = 202
+theme_override_font_sizes/font_size = 36
+text = "Spirit Wave"
+horizontal_alignment = 1
+
+[node name="Level" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 0
+offset_top = 202
+offset_right = 400
+offset_bottom = 242
+theme_override_font_sizes/font_size = 28
+text = "Lv 1"
+horizontal_alignment = 1
+
+[node name="Note" type="Label" parent="Body"]
+layout_mode = 1
+offset_left = 24
+offset_top = 272
+offset_right = 376
+offset_bottom = 340
+theme_override_font_sizes/font_size = 26
+text = "No modifier yet"
+horizontal_alignment = 1
+autowrap_mode = 3

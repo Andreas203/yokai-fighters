@@ -1,6 +1,33 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/Fight/FightScene.cs" id="1_fight"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/story_card.tscn" id="3_story"]
+[ext_resource type="PackedScene" path="res://scenes/ui/reward_screen.tscn" id="4_reward"]
+[ext_resource type="PackedScene" path="res://scenes/ui/demo_complete.tscn" id="5_complete"]
+[ext_resource type="PackedScene" path="res://scenes/ui/start_screen.tscn" id="6_start"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_menu.tscn" id="7_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_overlay"]
 
 [node name="Fight" type="Node3D"]
 script = ExtResource("1_fight")
+
+[node name="Hud" parent="." instance=ExtResource("2_hud")]
+
+[node name="Flow" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="BindingCard" parent="Flow" instance=ExtResource("3_story")]
+
+[node name="Rewards" parent="Flow" instance=ExtResource("4_reward")]
+
+[node name="Complete" parent="Flow" instance=ExtResource("5_complete")]
+
+[node name="Title" parent="Flow" instance=ExtResource("6_start")]
+
+[node name="DebugMenuLayer" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="DebugMenu" parent="DebugMenuLayer" instance=ExtResource("7_menu")]
+
+[node name="DebugOverlay" parent="." instance=ExtResource("8_overlay")]

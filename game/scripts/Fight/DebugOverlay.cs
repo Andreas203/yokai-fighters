@@ -15,21 +15,20 @@ public partial class DebugOverlay : CanvasLayer
 {
 	public const Key ToggleKey = Key.F1, PauseKey = Key.F2, StepKey = Key.F3, SchemeKey = Key.F4;
 
-	/// <summary>The fight this overlay reads; set before adding the node (FightScene does it).</summary>
+	/// <summary>The fight this overlay reads: its parent <see cref="FightScene"/> (the overlay is an instance of
+	/// <c>scenes/ui/debug_overlay.tscn</c> in fight.tscn), or set it before adding the node.</summary>
 	public FightScene Scene { get; set; } = null!;
 	private FightScene _scene => Scene;
-	private readonly Control _canvas = new() { Name = "Canvas", MouseFilter = Control.MouseFilterEnum.Ignore };
+	private Control _canvas = null!;
 
 	public bool ShowBoxes { get; set; }
 	public FrameStepper Stepper => _scene.Stepper;
 
-	public DebugOverlay()
+	public override void _Ready()
 	{
-		Name = "DebugOverlay";
-		Layer = 50;
-		_canvas.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		Scene ??= GetParent<FightScene>();
+		_canvas = Ui.UiFind.Get<Control>(this, "Canvas");
 		_canvas.Draw += DrawOverlay;
-		AddChild(_canvas);
 	}
 
 	public override void _UnhandledInput(InputEvent e)

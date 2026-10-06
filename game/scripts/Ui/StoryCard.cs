@@ -1,12 +1,12 @@
 using System;
 using Godot;
-using YokaiFighters.Fight;
 
 namespace YokaiFighters.Ui;
 
 /// <summary>
-/// Story-card beat (intro, binding, wake-up...): paper panel, 1-2 sentences, a red seal, a continue prompt.
-/// Text is data (<see cref="Display"/>). Confirm = Enter / pad A / click; Space is not used (a gameplay key).
+/// Story-card beat (intro, binding, wake-up...): layout lives in <c>scenes/ui/story_card.tscn</c> (paper panel,
+/// 1-2 sentences, a red seal, a continue prompt). This script only sets the text from data (<see cref="Display"/>)
+/// and handles input. Confirm = Enter / pad A / click; Space is not used (a gameplay key).
 /// </summary>
 public partial class StoryCard : Control
 {
@@ -14,16 +14,20 @@ public partial class StoryCard : Control
 	public string Text { get; private set; } = "";
 	public bool Showing { get; private set; }
 
-	private void FitViewport() { Position = Vector2.Zero; Size = GetViewportRect().Size; QueueRedraw(); }
+	private Label? _text;
 
 	public override void _Ready()
 	{
-		FitViewport(); GetViewport().SizeChanged += FitViewport;
-		MouseFilter = MouseFilterEnum.Stop;
+		_text = UiFind.Get<Label>(this, "Text");
+		GuiInput += OnGuiInput;
 		Visible = false;
 	}
 
-	public void Display(string text) { Text = text; Showing = true; Visible = true; QueueRedraw(); }
+	public void Display(string text)
+	{
+		Text = text; Showing = true; Visible = true;
+		if (_text != null) _text.Text = text;
+	}
 
 	/// <summary>YOK-48: hide without raising <see cref="Finished"/> (the flow restarted underneath it).</summary>
 	public void Dismiss() { Showing = false; Visible = false; }
@@ -35,26 +39,16 @@ public partial class StoryCard : Control
 		Finished?.Invoke();
 	}
 
+	private void OnGuiInput(InputEvent e)
+	{
+		if (Showing && e is InputEventMouseButton { Pressed: true }) { AcceptEvent(); Continue(); }
+	}
+
 	public override void _UnhandledInput(InputEvent e)
 	{
 		if (!Showing) return;
 		if (e is InputEventKey { Pressed: true, Echo: false } k && (k.Keycode == Key.Enter || k.Keycode == Key.KpEnter || k.Keycode == Key.Escape)
-			|| e is InputEventJoypadButton { Pressed: true } j && (j.ButtonIndex == JoyButton.A || j.ButtonIndex == JoyButton.B)
-			|| e is InputEventMouseButton { Pressed: true })
+			|| e is InputEventJoypadButton { Pressed: true } j && (j.ButtonIndex == JoyButton.A || j.ButtonIndex == JoyButton.B))
 		{ GetViewport().SetInputAsHandled(); Continue(); }
-	}
-
-	public override void _Draw()
-	{
-		if (!Showing) return;
-		Vector2 s = Size;
-		DrawRect(new Rect2(Vector2.Zero, s), new Color(FightHud.Ink, 0.94f));
-		var panel = new Rect2(s.X / 2 - 560, s.Y / 2 - 190, 1120, 380);
-		Paint.Talisman(this, panel, FightHud.Paper);
-		Font f = ThemeDB.FallbackFont;
-		DrawMultilineString(f, new Vector2(panel.Position.X + 60, panel.Position.Y + 150), Text, HorizontalAlignment.Center, panel.Size.X - 120, 52, 3, FightHud.Ink);
-		Paint.Seal(this, new Vector2(panel.End.X - 80, panel.End.Y - 60), 36, "");
-		Paint.Brush(this, new Vector2(panel.Position.X + 60, panel.End.Y - 78), 320, 8, FightHud.Ink);
-		DrawString(f, new Vector2(panel.Position.X + 60, panel.End.Y - 36), "Enter / A  continue", HorizontalAlignment.Left, -1, 26, FightHud.Ink);
 	}
 }

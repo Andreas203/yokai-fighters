@@ -82,23 +82,21 @@ public partial class FightScene
 	/// <summary>Called at the end of _Ready (after the HUD and AI): the screens and the debug menu.</summary>
 	private void SetUpFlow()
 	{
-		var layer = new CanvasLayer { Name = "Flow", Layer = 5 };
-		AddChild(layer);
-		layer.AddChild(BindingCard = new StoryCard { Name = "BindingCard" });
+		// The screens are instances of scenes/ui/*.tscn in fight.tscn (Flow layer 5, DebugMenuLayer 20); this only wires them.
+		BindingCard = GetNode<StoryCard>("Flow/BindingCard");
 		BindingCard.Finished += ShowRewards;
-		layer.AddChild(Rewards = new RewardScreen { Name = "Rewards" });
+		Rewards = GetNode<RewardScreen>("Flow/Rewards");
 		Rewards.Picked += (_, _) => StartRematch();
-		layer.AddChild(CompleteScreen = new DemoCompleteScreen { Name = "Complete" });
+		CompleteScreen = GetNode<DemoCompleteScreen>("Flow/Complete");
 		CompleteScreen.RestartRequested += RestartRun;
 		ApplyDemoCompleteCard();
-		layer.AddChild(Title = new StartScreen { Name = "Title" });
+		Title = GetNode<StartScreen>("Flow/Title");
 		Title.Started += BeginFight;
-		if (StartScreenOverride ?? !ExternalDrive) Stage = DemoStage.Title; // shown by Title._Ready's Visible default
+		if (StartScreenOverride ?? !ExternalDrive) Stage = DemoStage.Title; // shown by default in the scene
 		else Title.Visible = false;
-		if (!OS.IsDebugBuild()) return;
-		var menuLayer = new CanvasLayer { Name = "DebugMenuLayer", Layer = 20 };
-		AddChild(menuLayer);
-		menuLayer.AddChild(DebugMenu = new DemoDebugMenu { Name = "DebugMenu", Scene = this });
+		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
+		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
+		DebugMenu.Bind(this);
 		foreach (string arg in OS.GetCmdlineUserArgs())
 			if (arg.StartsWith("--temperament=", StringComparison.Ordinal)) SetTemperament(arg["--temperament=".Length..]);
 	}

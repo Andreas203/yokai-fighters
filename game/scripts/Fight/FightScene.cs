@@ -164,16 +164,16 @@ public partial class FightScene : Node3D
 		BuildModels(); // YOK-53: rigged fighters over the capsules
 		_camera = new Camera3D { Name = "Camera", Fov = CameraFovDegrees, Current = true };
 		AddChild(_camera);
-		_hud = new FightHud { Name = "Hud" };
+		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
-		AddChild(_hud);
 		SetUpAi(); // YOK-27
 		StartRecording(); // YOK-49
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
-		if (OS.IsDebugBuild()) AddChild(new DebugOverlay { Scene = this }); // YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme
+		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
+		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
 		Render();
 	}
 
