@@ -3,3 +3,7 @@
 bin/
 obj/
 *.translation
+# Godot's own leftovers: csproj backups and the textures it extracts from each GLB on import
+*.csproj.old*
+assets/generated/**/*.jpg
+assets/generated/**/*.jpg.import
