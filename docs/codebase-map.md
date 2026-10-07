@@ -4,7 +4,7 @@ Maintained by `gameplay-programmer` (and `ui-designer` for UI scenes). Agents re
 
 ## Godot project (`game/`)
 
-Godot 4.7 .NET, C# (`YokaiFighters.csproj`, net10.0). Boot: `scenes/main.tscn` (`scripts/Main.cs`) changes to `scenes/fight.tscn`, which runs the YOK-39 demo flow (`FightScene.Flow.cs`, YOK-48). Its C# loader will adopt the schemas below (YOK-40).
+Godot 4.7 .NET, C# (`YokaiFighters.csproj`, net10.0). Boot: the main scene is `scenes/fight.tscn` (also the scene to open in the editor), which runs the YOK-39 demo flow (`FightScene.Flow.cs`, YOK-48). Its C# loader will adopt the schemas below (YOK-40).
 
 ### Content paths and Windows export (YOK-39)
 
