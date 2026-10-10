@@ -2,7 +2,7 @@ using Godot;
 
 namespace YokaiFighters.Ui.Kit;
 
-/// <summary>Heading text with a red brush-stroke underline (the brush look until a brush font is chosen). Text and underline width are exports.</summary>
+/// <summary>Live heading text with a real-alpha ink underline (system serif until a brush font is chosen). Text and underline width are exports.</summary>
 [Tool]
 public partial class KitHeading : VBoxContainer
 {
@@ -10,6 +10,8 @@ public partial class KitHeading : VBoxContainer
 	private float _underline = 420f;
 	[Export] public string Text { get => _text; set { _text = value; Apply(); } }
 	[Export] public float UnderlineWidth { get => _underline; set { _underline = value; Apply(); } }
+
+	[Export] public Texture2D? UnderlineArt { get => GetNodeOrNull<TextureRect>("Underline")?.Texture; set { if (GetNodeOrNull<TextureRect>("Underline") is { } art) art.Texture = value; } }
 
 	public override void _Ready() => Apply();
 

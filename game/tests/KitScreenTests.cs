@@ -167,7 +167,7 @@ public static class KitScreenTests
 	{
 		var theme = GD.Load<Theme>("res://ui/talisman_theme.tres");
 		foreach (var v in new[] { "PaperSheet", "PaperCard", "PaperDialog" })
-			Assert.True(theme.GetStylebox("panel", v) is PaperStyleBox, v + " panel is the PaperStyleBox (swap this one resource for a texture)");
+			Assert.True(theme.GetStylebox("panel", v) is StyleBoxTexture, v + " panel uses nine-slice texture");
 		var sheet = GD.Load<PackedScene>("res://scenes/ui/kit/paper_sheet.tscn").Instantiate<PaperSheet>();
 		host.AddChild(sheet);
 		sheet.Card = true;
@@ -182,7 +182,7 @@ public static class KitScreenTests
 	{
 		var b = GD.Load<PackedScene>("res://scenes/ui/kit/kit_backdrop.tscn").Instantiate<KitBackdrop>();
 		host.AddChild(b);
-		Assert.True(!b.GetNode<Control>("DimLayer").Visible && !b.GetNode<Control>("Art").Visible, "clear and artless by default");
+		Assert.True(!b.GetNode<Control>("DimLayer").Visible && b.GetNode<Control>("Art").Visible, "clear with night art by default");
 		b.Dim = 0.5f;
 		Assert.True(b.GetNode<ColorRect>("DimLayer").Visible && Mathf.IsEqualApprox(b.GetNode<ColorRect>("DimLayer").Color.A, 0.5f), "dim shows");
 		b.Art = GD.Load<Texture2D>("res://assets/generated/ui/paper-panel.png");
@@ -200,7 +200,7 @@ public static class KitScreenTests
 		var g = GD.Load<PackedScene>("res://scenes/ui/kit/kit_gallery.tscn").Instantiate<KitGallery>();
 		g.Size = KitGallery.Design;
 		host.AddChild(g);
-		for (int page = 0; page < 2; page++)
+		for (int page = 0; page < g.PageCount; page++)
 		{
 			g.ShowPage(page);
 			var root = g.PageRoot(page);
@@ -224,6 +224,39 @@ public static class KitScreenTests
 		Assert.Equal(3, Count<KeyChipFooter>(a), "keyboard, pad and choose footers");
 		Assert.Equal(8, Count<CornerOrnament>(g.PageRoot(1)), "ornaments: 2 in the dialog, 2 in the sheet instance, 4 slots");
 		g.Free();
+	}
+
+	[Test]
+	public static void Plates_AreBoundedAndHaveRealAlpha()
+	{
+		foreach (var name in new[] { "rice-sheet", "rice-card", "red-brush", "ink-underline", "title-wordmark", "fox-mask", "ryo-portrait", "burst-blank", "selection-frame", "blossom-corner" })
+		{
+			using var image = GD.Load<Texture2D>($"res://assets/generated/ui/{name}.png").GetImage();
+			Assert.True(image.GetWidth() <= 1024 && image.GetHeight() <= 640, name + " bounded for UI use");
+			Assert.True(image.DetectAlpha() != Image.AlphaMode.None, name + " has real alpha");
+		}
+		using var frame = GD.Load<Texture2D>("res://assets/generated/ui/selection-frame.png").GetImage();
+		Assert.True(frame.GetPixel(frame.GetWidth() / 2, frame.GetHeight() / 2).A < 0.01f, "selection centre transparent");
+	}
+
+	[Test]
+	public static void Plates_ResourceOverridesAndOrnamentVisibility(Node host)
+	{
+		var art = GD.Load<Texture2D>("res://assets/generated/ui/fox-mask.png");
+		var card = GD.Load<PackedScene>("res://scenes/ui/kit/kit_card.tscn").Instantiate<KitCard>();
+		host.AddChild(card); card.SelectionArt = art;
+		Assert.True(card.GetNode<NinePatchRect>("Stroke").Texture == art, "card frame swappable");
+		Assert.True(!card.GetNode<NinePatchRect>("Stroke").DrawCenter, "frame cannot cover live card text");
+		card.Free();
+		var row = Row("Start"); host.AddChild(row); row.StrokeArt = art;
+		Assert.True(row.GetNode<TextureRect>("Stroke").Texture == art, "button stroke swappable"); row.Free();
+		var heading = GD.Load<PackedScene>("res://scenes/ui/kit/kit_heading.tscn").Instantiate<KitHeading>();
+		host.AddChild(heading); heading.UnderlineArt = art;
+		Assert.True(heading.GetNode<TextureRect>("Underline").Texture == art, "heading underline swappable"); heading.Free();
+		var sheet = GD.Load<PackedScene>("res://scenes/ui/kit/paper_sheet.tscn").Instantiate<PaperSheet>();
+		host.AddChild(sheet); sheet.Ornaments = false;
+		Assert.True(!sheet.GetNode<Control>("CornerTL").Visible && !sheet.GetNode<Control>("CornerBR").Visible, "ornaments hide at runtime");
+		sheet.Ornaments = true; Assert.True(sheet.GetNode<Control>("CornerTL").Visible, "ornaments restore"); sheet.Free();
 	}
 
 	static int Count<T>(Node n) where T : Node => (n is T ? 1 : 0) + n.GetChildren().Sum(Count<T>);

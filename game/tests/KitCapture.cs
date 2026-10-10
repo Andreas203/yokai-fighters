@@ -12,19 +12,24 @@ public partial class KitCapture : Node
 {
 	public override async void _Ready()
 	{
+		if (DisplayServer.GetName() == "headless")
+		{
+			GD.PrintErr("KitCapture needs a rendering display; headless uses the dummy renderer and cannot capture pixels.");
+			GetTree().Quit(2); return;
+		}
 		string dir = ".";
 		foreach (string a in OS.GetCmdlineUserArgs()) if (a.StartsWith("out=")) dir = a[4..];
 		string tag = GetWindow().Size.Y >= 1000 ? "1080p" : "720p";
 		var g = GD.Load<PackedScene>("res://scenes/ui/kit/kit_gallery.tscn").Instantiate<KitGallery>();
 		AddChild(g);
 		int problems = 0;
-		for (int page = 0; page < 2; page++)
+		for (int page = 0; page < g.PageCount; page++)
 		{
 			g.ShowPage(page);
 			for (int i = 0; i < 6; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 			foreach (var p in KitGallery.Audit(g.PageRoot(page))) { GD.PrintErr("AUDIT " + p); problems++; }
 			await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-			string path = $"{dir}/gallery_{(page == 0 ? "a" : "b")}_{tag}.png";
+			string path = $"{dir}/gallery_{((char)('a' + page))}_{tag}.png";
 			GetViewport().GetTexture().GetImage().SavePng(path);
 			GD.Print("saved " + path);
 		}

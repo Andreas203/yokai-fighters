@@ -4,7 +4,7 @@ using Godot;
 namespace YokaiFighters.Ui.Kit;
 
 /// <summary>
-/// Dev scene showing every kit component in every state (normal, focused, disabled, pressed) on two pages; keys 1 / 2 switch.
+/// Dev scene showing every kit component in every state (normal, focused, disabled, pressed) plus title, reward and HUD studies; keys 1–5 switch.
 /// Components are the kit scenes themselves, instanced here with a pinned <see cref="KitState"/>; the gallery is not shipped UI,
 /// so it assembles them in code. <see cref="Audit"/> reports controls that fall outside the 1920x1080 design canvas, text that does not
 /// fit its control, and text that would be under <see cref="MinPx720"/> px at 1280x720.
@@ -15,7 +15,8 @@ public partial class KitGallery : Control
 	public static readonly Vector2 Design = new(1920, 1080);
 	private static readonly KitState[] States = { KitState.Normal, KitState.Focused, KitState.Disabled, KitState.Pressed };
 
-	private readonly Control[] _pages = new Control[2];
+	private readonly Control[] _pages = new Control[5];
+	public int PageCount => _pages.Length;
 	public int Page { get; private set; }
 	public Control PageRoot(int i) => _pages[i];
 
@@ -27,6 +28,7 @@ public partial class KitGallery : Control
 		back.Name = "Backdrop";
 		AddChild(back);
 		_pages[0] = BuildPageA(); _pages[1] = BuildPageB();
+		_pages[2] = BuildTitleProof(); _pages[3] = BuildRewardProof(); _pages[4] = BuildPlatesPage();
 		foreach (var p in _pages) { p.SetAnchorsPreset(LayoutPreset.FullRect); AddChild(p); }
 		ShowPage(0);
 	}
@@ -41,6 +43,9 @@ public partial class KitGallery : Control
 	{
 		if (e is InputEventKey { Pressed: true, Keycode: Key.Key1 }) ShowPage(0);
 		if (e is InputEventKey { Pressed: true, Keycode: Key.Key2 }) ShowPage(1);
+		if (e is InputEventKey { Pressed: true, Keycode: Key.Key3 }) ShowPage(2);
+		if (e is InputEventKey { Pressed: true, Keycode: Key.Key4 }) ShowPage(3);
+		if (e is InputEventKey { Pressed: true, Keycode: Key.Key5 }) ShowPage(4);
 	}
 
 	// ---- helpers ----
@@ -138,7 +143,7 @@ public partial class KitGallery : Control
 			var card = Scene("kit_card").Instantiate<KitCard>();
 			card.Position = new Vector2(x, 70); card.Size = new Vector2(420, 280);
 			card.GetNode<Label>("Box/Title").Text = $"{StateName(s)} card";
-			card.GetNode<Label>("Box/Body").Text = s switch { KitState.Disabled => "Greyed out: needs a projectile.", KitState.Focused => "Red brush under, persimmon frame.", KitState.Pressed => "Pushed in while held.", _ => "A plain paper card." };
+			card.GetNode<Label>("Box/Body").Text = s switch { KitState.Disabled => "Greyed out: needs a projectile.", KitState.Focused => "Red brush frame, persimmon edge.", KitState.Pressed => "Pushed in while held.", _ => "A plain paper card." };
 			card.Preview = s;
 			card.Name = "Card" + s;
 			page.AddChild(card);

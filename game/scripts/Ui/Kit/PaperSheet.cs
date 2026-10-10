@@ -12,7 +12,8 @@ public partial class PaperSheet : Control
 {
 	private bool _card;
 	[Export] public bool Card { get => _card; set { _card = value; Apply(); } }
-	[Export] public bool Ornaments { get; set; } = true;
+	private bool _ornaments = true;
+	[Export] public bool Ornaments { get => _ornaments; set { _ornaments = value; Apply(); } }
 
 	public VBoxContainer? Content => GetNodeOrNull<VBoxContainer>("Panel/Content");
 
