@@ -9,11 +9,12 @@ namespace YokaiFighters.Ui;
 public enum SettingsTab { Sound, Controls }
 
 /// <summary>
-/// YOK-58 MOCKUP settings sheet (<c>scenes/ui/settings_panel.tscn</c>), opened from the title and the pause menu.
+/// Settings sheet (<c>scenes/ui/settings_panel.tscn</c>), opened from the title and the pause menu.
 /// SOUND: master, music and effects sliders (Left/Right on focus, steps of 5), a mute toggle and a Preview cue per
 /// slider (placeholder synthesised sound). CONTROLS: Kata / Kihon toggle with its one-line explanation (K1, K2;
 /// P4: Kihon is easier, not stronger) and read-only keyboard and pad bindings built from the live layouts
-/// (<see cref="StartScreen.Rows"/>). Values live in <see cref="MenuSettings"/>; nothing is saved yet.
+/// (<see cref="StartScreen.Rows"/>). Values live in <see cref="MenuSettings"/>, which saves each change when the boot
+/// flow has attached the player's settings file; the sheet is the same wherever it is opened from.
 /// </summary>
 public partial class SettingsPanel : Control
 {
@@ -61,7 +62,7 @@ public partial class SettingsPanel : Control
 		_kihon.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kihon);
 
 		var (musicBus, sfxBus) = MenuSettings.EnsureBuses();
-		string[] buses = { "Master", MenuSettings.MusicBus, MenuSettings.SfxBus };
+		string[] buses = { MenuSettings.MasterBus,MenuSettings.MusicBus, MenuSettings.SfxBus };
 		var cues = new[] { MenuSettings.Cue.Bell, MenuSettings.Cue.Pad, MenuSettings.Cue.Hit };
 		for (int i = 0; i < 3; i++)
 		{

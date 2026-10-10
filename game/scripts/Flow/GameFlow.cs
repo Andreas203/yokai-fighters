@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using YokaiFighters.Fight;
+using YokaiFighters.Settings;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
 
@@ -36,6 +37,28 @@ public partial class GameFlow : Node
 	/// <summary>Configures each fight scene before it joins the tree (tests: <c>ExternalDrive</c>).</summary>
 	public Action<FightScene>? ConfigureFight { get; set; }
 
+	/// <summary>
+	/// Settings file for this boot. Null (the default) = the player's <see cref="UserSettingsPath"/> when this node is
+	/// the running game's main scene, and no file at all when it is instanced by something else (tests, captures), so
+	/// those can never read or write the player's file. Tests set a temp path to exercise the load.
+	/// </summary>
+	public string? SettingsFile { get; set; }
+	/// <summary>What the settings file held at boot; null when none was used.</summary>
+	public SettingsLoad? SettingsLoaded { get; private set; }
+
+	public static string UserSettingsPath => ProjectSettings.GlobalizePath("user://" + SettingsStore.FileName);
+
+	/// <summary>Before the menus are ready, so the title and control select first draw with the saved values.</summary>
+	public override void _EnterTree()
+	{
+		string? path = SettingsFile ?? (GetTree().CurrentScene == this ? UserSettingsPath : null);
+		if (path == null) return;
+		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
+		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
+		if (SettingsLoaded.Status is not (SettingsLoadStatus.Loaded or SettingsLoadStatus.Missing))
+			GD.PushWarning($"GameFlow: settings {path}: {SettingsLoaded.Status} ({string.Join("; ", SettingsLoaded.Problems)})");
+	}
+
 	public override void _Ready()
 	{
 		Title = GetNode<TitleMenu>("Menus/Title");
@@ -64,7 +87,11 @@ public partial class GameFlow : Node
 		if (direct is { } scheme) Router.StartFightDirect(scheme);
 	}
 
-	public override void _ExitTree() => MenuSettings.Changed -= OnSettingsChanged;
+	public override void _ExitTree()
+	{
+		MenuSettings.Changed -= OnSettingsChanged;
+		if (SettingsLoaded != null) MenuSettings.Detach(); // every change is already on disk
+	}
 
 	private void OnSettingsChanged() => Router.ChooseScheme(MenuSettings.Scheme);
 
