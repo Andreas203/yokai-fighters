@@ -1,37 +1,81 @@
 using System;
 using Godot;
+using YokaiFighters.Settings;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Ui;
 
 /// <summary>
-/// YOK-58 MOCKUP: in-memory sound and control settings shared by the title and pause menus. Nothing is saved to
-/// disk and the fight's scheme is not touched (that wiring is a follow-up ticket); sound does drive the real
-/// audio buses so the sliders can be heard. Buses "Music" and "SFX" are created on first use, sent to Master.
+/// The live settings shared by every menu (title, control select, settings sheet, pause, move list): the sound levels
+/// drive the audio buses, the scheme is the one control select shows and the boot flow hands to the fight.
+/// <para>
+/// Saved only when a <see cref="SettingsStore"/> is attached (<see cref="Attach"/>), which the boot scene does when it
+/// is the running game. Nothing else attaches one: tests, captures, the harness and a fight scene opened on its own
+/// run on <see cref="SettingsData.Defaults"/> and never read or write the player's file. The sim never reads this
+/// class; the fight gets its scheme as an argument (<c>FightScene.PlayerScheme</c>).
+/// </para>
 /// </summary>
 public static class MenuSettings
 {
-	public const string MusicBus = "Music", SfxBus = "SFX";
+	/// <summary>Bus names of <c>res://default_bus_layout.tres</c> (Master is bus 0).</summary>
+	public const string MasterBus = "Master", MusicBus = "Music", SfxBus = "Effects";
 
-	public static int Master { get; private set; } = 80;
-	public static int Music { get; private set; } = 70;
-	public static int Sfx { get; private set; } = 80;
-	public static bool Muted { get; private set; }
-	/// <summary>E18: both players default to Kihon in the demo.</summary>
-	public static ControlScheme Scheme { get; private set; } = ControlScheme.Kihon;
+	private static SettingsData _data = SettingsData.Defaults;
+
+	public static int Master => _data.Master;
+	public static int Music => _data.Music;
+	public static int Sfx => _data.Effects;
+	public static bool Muted => _data.Muted;
+	/// <summary>E18: Kihon unless the player chose otherwise.</summary>
+	public static ControlScheme Scheme => _data.Scheme;
+	/// <summary>The current values as plain data.</summary>
+	public static SettingsData Current => _data;
+
+	/// <summary>Where changes are saved; null (the default) = in memory only.</summary>
+	public static SettingsStore? Store { get; private set; }
 
 	public static event Action? Changed;
 
-	public static void SetMaster(int v) { Master = Math.Clamp(v, 0, 100); Apply(); }
-	public static void SetMusic(int v) { Music = Math.Clamp(v, 0, 100); Apply(); }
-	public static void SetSfx(int v) { Sfx = Math.Clamp(v, 0, 100); Apply(); }
-	public static void SetMuted(bool m) { Muted = m; Apply(); }
-	public static void SetScheme(ControlScheme s) { Scheme = s; Changed?.Invoke(); }
+	public static void SetMaster(int v) => Set(_data with { Master = SettingsData.ClampLevel(v) });
+	public static void SetMusic(int v) => Set(_data with { Music = SettingsData.ClampLevel(v) });
+	public static void SetSfx(int v) => Set(_data with { Effects = SettingsData.ClampLevel(v) });
+	public static void SetMuted(bool m) => Set(_data with { Muted = m });
+	public static void SetScheme(ControlScheme s) => Set(_data with { Scheme = s });
 
-	/// <summary>Test hook: back to the defaults.</summary>
-	public static void Reset() { Master = 80; Music = 70; Sfx = 80; Muted = false; Scheme = ControlScheme.Kihon; Apply(); }
+	/// <summary>
+	/// Loads the store's file into the live settings (buses included) and saves every later change to it. Never
+	/// throws: a missing, corrupt or older file gives defaults for whatever could not be read (see the result).
+	/// </summary>
+	public static SettingsLoad Attach(SettingsStore store)
+	{
+		Store = store;
+		SettingsLoad load = store.Load();
+		_data = load.Data;
+		Apply();
+		return load;
+	}
 
-	/// <summary>Creates the Music / SFX buses if missing and returns their indices.</summary>
+	/// <summary>Stops saving; the values stay.</summary>
+	public static void Detach() => Store = null;
+
+	/// <summary>Test hook: back to the defaults, with no store attached (so a test can never write a settings file by accident).</summary>
+	public static void Reset()
+	{
+		Store = null;
+		_data = SettingsData.Defaults;
+		Apply();
+	}
+
+	private static void Set(SettingsData next)
+	{
+		bool changed = next != _data;
+		_data = next;
+		Apply();
+		if (changed && Store is { } store && !store.Save(_data))
+			GD.PushWarning($"MenuSettings: could not save {store.Path}: {store.LastSaveError}");
+	}
+
+	/// <summary>The Music / Effects bus indices; the buses come from the bus layout and are created here only if it did not load.</summary>
 	public static (int Music, int Sfx) EnsureBuses()
 	{
 		return (Ensure(MusicBus), Ensure(SfxBus));
@@ -42,22 +86,26 @@ public static class MenuSettings
 			AudioServer.AddBus();
 			i = AudioServer.BusCount - 1;
 			AudioServer.SetBusName(i, name);
-			AudioServer.SetBusSend(i, "Master");
+			AudioServer.SetBusSend(i, MasterBus);
 			return i;
 		}
 	}
 
+	/// <summary>Levels to buses: <see cref="AudioLevels.ToDb"/>, and a bus at 0 is muted. "Mute all" mutes Master and leaves the levels alone.</summary>
 	private static void Apply()
 	{
 		var (m, s) = EnsureBuses();
-		AudioServer.SetBusVolumeDb(0, Db(Master));
-		AudioServer.SetBusMute(0, Muted);
-		AudioServer.SetBusVolumeDb(m, Db(Music));
-		AudioServer.SetBusVolumeDb(s, Db(Sfx));
+		SetBus(0, Master, Muted);
+		SetBus(m, Music, false);
+		SetBus(s, Sfx, false);
 		Changed?.Invoke();
-	}
 
-	private static float Db(int percent) => percent <= 0 ? -80f : Mathf.LinearToDb(percent / 100f);
+		static void SetBus(int bus, int level, bool muted)
+		{
+			AudioServer.SetBusVolumeDb(bus, AudioLevels.ToDb(level));
+			AudioServer.SetBusMute(bus, muted || AudioLevels.IsMute(level));
+		}
+	}
 
 	/// <summary>Placeholder preview cues, synthesised (no sound asset yet; the sourced pack replaces them).</summary>
 	public enum Cue { Bell, Hit, Pad }
