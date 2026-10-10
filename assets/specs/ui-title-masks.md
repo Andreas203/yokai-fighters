@@ -45,7 +45,15 @@ Known risk from `ui-paper-demo.md` U3: the generator drifted to glossy 3D and a 
 3. The Oni and Kappa masks have no character sheet yet. Accept folklore-led looks for now?
 
 ## Takes
-None yet. Not approved.
+Designer approved M1-M3 (9 credits), skipped M4. Not run yet: the Meshy MCP tools were not available in the asset-smith session (no `meshy_*` tools exposed), so no balance check and no jobs were made. 0 credits spent.
+
+| Job | Task id | Credits (est/actual) |
+|---|---|---|
+| M1 Kitsune | not run | 3/0 |
+| M2 Oni | not run | 3/0 |
+| M3 Kappa | not run | 3/0 |
+| M4 Tanuki | skipped by designer | 0/0 |
+| B1 Backdrop | not approved | 0/0 |
 
 ## Acceptance
-Pending.
+Pending (no outputs yet).
