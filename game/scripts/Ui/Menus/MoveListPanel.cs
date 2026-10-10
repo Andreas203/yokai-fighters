@@ -33,6 +33,7 @@ public partial class MoveListPanel : Control
 
 	public override void _Ready()
 	{
+		MenuInput.EnsurePadConfirm();
 		_baseRows = UiFind.Get<VBoxContainer>(this, "BaseRows");
 		_cards = UiFind.Get<VBoxContainer>(this, "SpecialCards");
 		_frameToggle = UiFind.Get<Button>(this, "FrameToggle");
@@ -77,16 +78,16 @@ public partial class MoveListPanel : Control
 
 	private Control BuildRow(MoveRow row)
 	{
-		var box = new HBoxContainer { CustomMinimumSize = new Vector2(0, 52), MouseFilter = MouseFilterEnum.Ignore };
+		var box = new HBoxContainer { CustomMinimumSize = new Vector2(0, 46), MouseFilter = MouseFilterEnum.Ignore };
 		box.AddThemeConstantOverride("separation", 0);
 		var name = new Label { Text = row.Name, CustomMinimumSize = new Vector2(190, 0), VerticalAlignment = VerticalAlignment.Center, ThemeTypeVariation = "PineLabel", ClipText = true };
 		name.AddThemeFontSizeOverride("font_size", 24);
-		var input = new Label { Text = row.Input, CustomMinimumSize = new Vector2(300, 0), VerticalAlignment = VerticalAlignment.Center, ClipText = true };
+		var input = new Label { Text = row.InputFor(MenuSettings.Scheme == ControlScheme.Kata), CustomMinimumSize = new Vector2(292, 0), VerticalAlignment = VerticalAlignment.Center, ClipText = true };
 		input.AddThemeFontSizeOverride("font_size", 21);
 		var right = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(100, 0), Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
 		right.AddThemeConstantOverride("separation", 0);
 		var plain = new Label { Text = row.Plain, ClipText = true, CustomMinimumSize = new Vector2(100, 0) };
-		plain.AddThemeFontSizeOverride("font_size", 20);
+		plain.AddThemeFontSizeOverride("font_size", 18);
 		var frames = new Label { Text = row.Frames, ThemeTypeVariation = "PersimmonLabel", ClipText = true, Visible = false, CustomMinimumSize = new Vector2(100, 0) };
 		frames.AddThemeFontSizeOverride("font_size", 18);
 		right.AddChild(plain); right.AddChild(frames);
@@ -106,12 +107,13 @@ public partial class MoveListPanel : Control
 		_frameToggle.ThemeTypeVariation = FrameDataVisible ? "ToggleButtonOn" : "ToggleButton";
 		_schemeToggle.Text = kata ? "Inputs: Kata  (Q / X)" : "Inputs: Kihon  (Q / X)";
 		_subtitle.Text = kata ? "Ryo's kit. Kata: motion specials deal +10% (precision)." : "Ryo's kit. Kihon: Special + direction, 100% damage.";
-		foreach (var (_, frames, _) in _rows) frames.Visible = FrameDataVisible;
+		foreach (var (input, frames, row) in _rows) { frames.Visible = FrameDataVisible; frames.GetParent<Control>().GetChild<Label>(0).Visible = !FrameDataVisible; input.Text = row.InputFor(kata); } // frame line replaces the plain line, so rows keep their height
 		for (int i = 0; i < _slotCards.Count; i++) _slotCards[i].Bind(View.Slots[i], kata, FrameDataVisible);
-		_legend.Text = "Button keys and pad layout: Settings, Controls."; // the full bindings live there (no duplicate table here)
+		_legend.Text = "Keys and pad: Settings, Controls."; // the full bindings live there (no duplicate table here)
 	}
 
-	public override void _UnhandledInput(InputEvent e)
+	// _Input, not _UnhandledInput: Tab is also Godot's focus-next, and the GUI would swallow it before the frame-data shortcut ran.
+	public override void _Input(InputEvent e)
 	{
 		if (!Visible) return;
 		if (MenuInput.Back(e)) BackRequested?.Invoke();

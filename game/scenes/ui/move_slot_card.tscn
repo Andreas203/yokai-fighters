@@ -81,3 +81,14 @@ text = ""
 theme_override_font_sizes/font_size = 17
 theme_type_variation = &"PersimmonLabel"
 autowrap_mode = 3
+
+[node name="Mod" type="Label" parent="."]
+layout_mode = 1
+offset_left = 112
+offset_top = 122
+offset_right = 550
+offset_bottom = 172
+text = ""
+theme_override_font_sizes/font_size = 17
+theme_type_variation = &"PersimmonLabel"
+autowrap_mode = 3

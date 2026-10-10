@@ -86,7 +86,7 @@ public static class StartScreenTests
 		}
 		Assert.Equal(InputBits.HeavyKick, InputDevices.FromPad(_ => false, 0, 0, 1f), "RT = heavy kick");
 		Assert.Equal("RT", StartScreen.PadLabel(InputBits.HeavyKick), "RT label");
-		Assert.True(StartScreen.Rows().Any(r => r.Action == "Throw" && r.Keyboard == "U + J"), "throw U + J");
+		Assert.True(StartScreen.Rows().Any(r => r.Action.StartsWith("Throw") && r.Keyboard == "U + J"), "throw U + J");
 		Assert.True(StartScreen.Rows().Any(r => r.Action.StartsWith("Burst") && r.Keyboard == "U + I + O"), "burst U + I + O");
 	}
 }

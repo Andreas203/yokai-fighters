@@ -32,10 +32,13 @@ public partial class PauseMenu : Control
 	private Label _confirmTitle = null!, _confirmText = null!, _runName = null!, _runSub = null!;
 	private ProgressBar _runBar = null!;
 	private Action? _confirmAction;
+	private readonly FocusLock _focusLock = new();
+	private Button[] Mains => new[] { ResumeButton, MoveListButton, SettingsButton, RestartButton, QuitButton };
 	private string _movesDir = "";
 
 	public override void _Ready()
 	{
+		MenuInput.EnsurePadConfirm();
 		ProcessMode = ProcessModeEnum.Always;
 		ResumeButton = UiFind.Get<Button>(this, "Resume");
 		MoveListButton = UiFind.Get<Button>(this, "MoveList");
@@ -53,11 +56,15 @@ public partial class PauseMenu : Control
 		ResumeButton.Pressed += Resume;
 		MoveListButton.Pressed += () => ShowSheet(MoveList);
 		SettingsButton.Pressed += () => ShowSheet(Settings);
-		RestartButton.Pressed += () => Ask("Restart run?", "This run ends here and a new one begins.", "Restart", () => { Close(); RestartRequested?.Invoke(); });
-		QuitButton.Pressed += () => Ask("Quit to title?", "You can continue this run from the title screen.", "Quit", () => { Close(); QuitToTitleRequested?.Invoke(); });
+		RestartButton.Pressed += () => Ask(RestartButton, "Restart run?", "This run ends here and a new one begins.", "Restart", () => { Close(); RestartRequested?.Invoke(); });
+		QuitButton.Pressed += () => Ask(QuitButton, "Quit to title?", "You can continue this run from the title screen.", "Quit", () => { Close(); QuitToTitleRequested?.Invoke(); });
 		_confirmNo.Pressed += CloseConfirm;
 		_confirmYes.Pressed += () => { var a = _confirmAction; CloseConfirm(); a?.Invoke(); };
-		MenuInput.WrapVertical(ResumeButton, QuitButton);
+		MenuInput.WrapVertical(Mains);
+		// The confirm box is modal for focus: Cancel and the action button only reach each other (the buttons underneath are locked while it is open).
+		MenuInput.Neighbours(_confirmNo, null, null, _confirmYes, _confirmYes);
+		MenuInput.Neighbours(_confirmYes, null, null, _confirmNo, _confirmNo);
+		MenuInput.Ring(_confirmNo, _confirmYes);
 
 		MoveList = GD.Load<PackedScene>("res://scenes/ui/move_list_panel.tscn").Instantiate<MoveListPanel>();
 		Settings = GD.Load<PackedScene>("res://scenes/ui/settings_panel.tscn").Instantiate<SettingsPanel>();
@@ -88,26 +95,32 @@ public partial class PauseMenu : Control
 
 	public void Close()
 	{
+		_focusLock.Release();
 		Visible = false;
 		MoveList.Visible = false; Settings.Visible = false; ConfirmBox.Visible = false;
 		if (FreezeTree && IsInsideTree()) GetTree().Paused = false;
 	}
 
+	public void OpenMoveList() => ShowSheet(MoveList);
+	public void OpenSettings(SettingsTab tab = SettingsTab.Sound) { ShowSheet(Settings); Settings.ShowTab(tab); }
+
 	public void Resume() { Close(); ResumeRequested?.Invoke(); }
 
-	private void ShowSheet(Control sheet) { sheet.Visible = true; }
-	private void CloseSheet(Control sheet, Button back) { sheet.Visible = false; back.GrabFocus(); }
+	// A sheet is modal for focus: the five pause buttons cannot be reached until it closes, then the opener gets focus back.
+	private void ShowSheet(Control sheet) { _focusLock.Engage(Mains); sheet.Visible = true; }
+	private void CloseSheet(Control sheet, Button back) { sheet.Visible = false; _focusLock.Release(); back.GrabFocus(); }
 
 	private Button? _askedFrom;
-	private void Ask(string title, string text, string yes, Action action)
+	private void Ask(Button from, string title, string text, string yes, Action action)
 	{
-		_askedFrom = GetViewport().GuiGetFocusOwner() as Button;
+		_askedFrom = from;
 		_confirmTitle.Text = title; _confirmText.Text = text; _confirmYes.Text = yes; _confirmAction = action;
+		_focusLock.Engage(Mains);
 		ConfirmBox.Visible = true;
 		_confirmNo.GrabFocus();
 	}
 
-	private void CloseConfirm() { ConfirmBox.Visible = false; _confirmAction = null; (_askedFrom ?? ResumeButton).GrabFocus(); }
+	private void CloseConfirm() { ConfirmBox.Visible = false; _confirmAction = null; _focusLock.Release(); (_askedFrom ?? ResumeButton).GrabFocus(); }
 
 	public override void _UnhandledInput(InputEvent e)
 	{

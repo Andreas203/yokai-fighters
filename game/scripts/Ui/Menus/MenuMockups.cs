@@ -5,7 +5,7 @@ using YokaiFighters.Sim;
 
 namespace YokaiFighters.Ui;
 
-public enum MockScreen { Title, TitleNoSave, Pause, PauseConfirm, MoveList, MoveListFrames, MoveListKata, Sound, Controls }
+public enum MockScreen { Title, TitleNoSave, Pause, PauseConfirm, MoveList, MoveListFrames, MoveListKata, Sound, Controls, ControlsKata }
 
 /// <summary>
 /// YOK-58 MOCKUP host (<c>scenes/ui/menu_mockups.tscn</c>): opens the title and pause menus on their own, without touching
@@ -38,6 +38,7 @@ public partial class MenuMockups : Node
 		Run = RunState.NewRun(pool);
 		Run.LevelUp(SpecialSlot.B);                            // Rising Talisman Lv 2
 		if (pool.Special("foxfire") is { } fox) Run.Equip(fox); // a drafted special in slot C
+		if (pool.Modifier("will-o-wisp") is { } wisp && Run.CanAttach(SpecialSlot.C, wisp)) Run.Attach(SpecialSlot.C, wisp); // shows the modifier on the move list (A2)
 		Run.SetHealth(720);
 
 		if (WithFight)
@@ -94,7 +95,7 @@ public partial class MenuMockups : Node
 		Current = screen;
 		Pause.Close(); Title.Visible = false;
 		GetTree().Paused = true; // title screens freeze the stage behind them too
-		MenuSettings.SetScheme(screen == MockScreen.MoveListKata ? ControlScheme.Kata : ControlScheme.Kihon);
+		MenuSettings.SetScheme(screen is MockScreen.MoveListKata or MockScreen.ControlsKata ? ControlScheme.Kata : ControlScheme.Kihon);
 		switch (screen)
 		{
 			case MockScreen.Title: case MockScreen.TitleNoSave:
@@ -105,13 +106,12 @@ public partial class MenuMockups : Node
 			case MockScreen.Pause: Pause.Open(); break;
 			case MockScreen.PauseConfirm: Pause.Open(); Pause.RestartButton.EmitSignal(BaseButton.SignalName.Pressed); break;
 			case MockScreen.MoveList: case MockScreen.MoveListFrames: case MockScreen.MoveListKata:
-				Pause.Open(); Pause.MoveList.Visible = true;
+				Pause.Open(); Pause.OpenMoveList();
 				if (screen == MockScreen.MoveListFrames && !Pause.MoveList.FrameDataVisible) Pause.MoveList.ToggleFrameData();
 				if (screen != MockScreen.MoveListFrames && Pause.MoveList.FrameDataVisible) Pause.MoveList.ToggleFrameData();
 				break;
-			case MockScreen.Sound: case MockScreen.Controls:
-				Pause.Open(); Pause.Settings.Visible = true;
-				Pause.Settings.ShowTab(screen == MockScreen.Sound ? SettingsTab.Sound : SettingsTab.Controls);
+			case MockScreen.Sound: case MockScreen.Controls: case MockScreen.ControlsKata:
+				Pause.Open(); Pause.OpenSettings(screen == MockScreen.Sound ? SettingsTab.Sound : SettingsTab.Controls);
 				break;
 		}
 	}

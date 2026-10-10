@@ -31,12 +31,14 @@ public partial class TitleMenu : Control
 	private Button[] _all = null!;
 	private SavedRunSummary? _saved;
 	private SettingsPanel? _settings;
+	private readonly FocusLock _focusLock = new();
 
 	public bool HasSavedRun => _saved != null;
 	public SettingsPanel? Settings => _settings;
 
 	public override void _Ready()
 	{
+		MenuInput.EnsurePadConfirm();
 		StartButton = UiFind.Get<Button>(this, "Start");
 		ContinueButton = UiFind.Get<Button>(this, "Continue");
 		PracticeButton = UiFind.Get<Button>(this, "Practice");
@@ -57,10 +59,10 @@ public partial class TitleMenu : Control
 		foreach (var b in _all)
 		{
 			b.FocusEntered += Describe;
-			b.MouseEntered += () => { if (!b.Disabled) b.GrabFocus(); };
+			b.MouseEntered += () => { if (!b.Disabled && b.FocusMode != FocusModeEnum.None) b.GrabFocus(); };
 		}
 		// Wrap focus top <-> bottom. Disabled buttons are skipped by Godot's focus search, so Continue greys out cleanly.
-		MenuInput.WrapVertical(StartButton, QuitButton);
+		MenuInput.WrapVertical(_all); // explicit chain through every entry: greyed Continue is passed over, no layout geometry involved
 		_settings = GD.Load<PackedScene>("res://scenes/ui/settings_panel.tscn").Instantiate<SettingsPanel>();
 		AddChild(_settings);
 		_settings.BackRequested += CloseSettings;
@@ -73,14 +75,18 @@ public partial class TitleMenu : Control
 	{
 		_saved = saved;
 		if (ContinueButton == null) return;
+		bool locked = _focusLock.Active;
+		if (locked) _focusLock.Release(); // settings is open over us: set the real mode, then lock again
 		ContinueButton.Disabled = saved == null;
 		ContinueButton.FocusMode = saved == null ? FocusModeEnum.None : FocusModeEnum.All;
 		if (saved == null && ContinueButton.HasFocus()) StartButton.GrabFocus();
+		if (locked) _focusLock.Engage(_all);
 		Describe();
 	}
 
-	public void OpenSettings() { _settings!.Visible = true; }
-	public void CloseSettings() { _settings!.Visible = false; SettingsButton.GrabFocus(); }
+	// The settings sheet is modal for focus: the five title buttons cannot be reached until it closes; Settings gets focus back.
+	public void OpenSettings() { _focusLock.Engage(_all); _settings!.Visible = true; }
+	public void CloseSettings() { _settings!.Visible = false; _focusLock.Release(); SettingsButton.GrabFocus(); }
 
 	private void Describe()
 	{

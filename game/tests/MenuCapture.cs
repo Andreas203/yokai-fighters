@@ -13,7 +13,7 @@ public partial class MenuCapture : Node
 	{
 		(MockScreen.Title, "title"), (MockScreen.TitleNoSave, "title_no_saved_run"), (MockScreen.Pause, "pause"),
 		(MockScreen.PauseConfirm, "pause_confirm"), (MockScreen.MoveList, "move_list"), (MockScreen.MoveListFrames, "move_list_frame_data"),
-		(MockScreen.MoveListKata, "move_list_kata"), (MockScreen.Sound, "settings_sound"), (MockScreen.Controls, "settings_controls"),
+		(MockScreen.MoveListKata, "move_list_kata"), (MockScreen.Sound, "settings_sound"), (MockScreen.Controls, "settings_controls"), (MockScreen.ControlsKata, "settings_controls_kata"),
 	};
 
 	public override async void _Ready()

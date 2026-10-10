@@ -19,7 +19,7 @@ public static class MenuMockupTests
 	public static void MoveList_BaseKit_HasEveryRowAndRealNames()
 	{
 		var v = MoveListSource.Build(NewRun(), MovesDir);
-		string[] expected = { "Walk", "Dash", "Jump", "Block", "Light punch", "Medium punch", "Heavy punch", "Light kick", "Medium kick", "Heavy kick", "Throw", "Burst" };
+		string[] expected = { "Walk", "Dash", "Jump", "Air punch", "Air kick", "Block", "Light punch", "Medium punch", "Heavy punch", "Light kick", "Medium kick", "Heavy kick", "Throw", "Burst", "EX special" };
 		Assert.Equal(string.Join("|", expected), string.Join("|", v.Base.Select(r => r.Name)), "base kit order");
 		// names and frame data come from the data files
 		var lp = MoveLoader.LoadFile(Path.Combine(MovesDir, "ryo-light-punch.json"));
@@ -60,16 +60,16 @@ public static class MenuMockupTests
 	public static void MoveListPanel_InputsFollowScheme_FramesBehindToggle(Node host)
 	{
 		var p = MakeMoveList(host);
-		Assert.Equal(12, p.BaseRowCount, "12 base rows");
+		Assert.Equal(15, p.BaseRowCount, "15 base rows");
 		Assert.Equal(4, p.SlotCards.Count, "4 slot cards");
 		var input = UiFind.Get<Label>(p.SlotCards[0], "Input");
 		Assert.True(input.Text.StartsWith("Kihon: Special + neutral"), "Kihon default (E18): " + input.Text);
 		MenuSettings.SetScheme(ControlScheme.Kata);
 		Assert.True(input.Text.StartsWith("Kata: Down"), "Kata motion: " + input.Text);
-		Assert.True(!p.FramesShownOn(4) && !p.FrameDataVisible, "frame data hidden by default");
+		Assert.True(!p.FramesShownOn(6) && !p.FrameDataVisible, "frame data hidden by default");
 		Assert.True(!UiFind.Get<Label>(p.SlotCards[0], "Frames").Visible, "card frames hidden");
 		p.ToggleFrameData();
-		Assert.True(p.FramesShownOn(4), "row frames shown after toggle");
+		Assert.True(p.FramesShownOn(6), "row frames shown after toggle");
 		Assert.True(UiFind.Get<Label>(p.SlotCards[0], "Frames").Visible, "card frames shown after toggle");
 		MenuSettings.Reset();
 		p.QueueFree();
@@ -168,7 +168,7 @@ public static class MenuMockupTests
 		m.Resume();
 		Assert.True(resumes == 1 && !tree.Paused, "Resume unfreezes");
 		m.MoveListButton.EmitSignal(BaseButton.SignalName.Pressed);
-		Assert.True(m.MoveList.Visible && m.MoveList.BaseRowCount == 12, "move list opens with the base kit");
+		Assert.True(m.MoveList.Visible && m.MoveList.BaseRowCount == 15, "move list opens with the base kit");
 		tree.Paused = false;
 		m.QueueFree();
 	}
