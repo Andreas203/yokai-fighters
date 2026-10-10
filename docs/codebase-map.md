@@ -226,6 +226,19 @@ Notes for editing:
 - Screens that are hidden at runtime (lose, story card, reward, demo complete, debug menu) are visible in the editor; the reward screen's target step (`Targets`, `TargetHeading`, `HintTarget`) is hidden in the scene, toggle the eye to edit it. The reward-card scene shows the "selected, frame data on" state; the script sets the real state at runtime.
 - `TalismanPanel`, `BrushStroke` and `SealStamp` are `[Tool]` nodes with exported colours / thickness / glyph; the script rebuilds the project on first open (`dotnet build` in `game/`) before they draw in the editor.
 - Screenshots: `tests/hud_capture.tscn` (HUD, lose, demo complete), `tests/reward_capture.tscn` (binding, cards, frame data, target step), `tests/start_capture.tscn`; PNGs in `docs/screens/yok-39-editable-ui/`.
+### Menu mockups (`game/scripts/Ui/Menus/`, YOK-58, namespace `YokaiFighters.Ui`)
+MOCKUPS with placeholder art; not wired into the boot (YOK-48 still boots `fight.tscn`). Open `scenes/ui/menu_mockups.tscn` (F6 in the editor, or `godot --path game res://scenes/ui/menu_mockups.tscn`): keys 1-9 jump between screens, H hides the key strip. Screenshots: `tests/menu_capture.tscn` (`-- out=<dir> [only=name,name]`), PNGs in `docs/screenshots/YOK-58/`. Render without a GPU: `xvfb-run` + `--rendering-method gl_compatibility --rendering-driver opengl3`.
+
+| Scene | Holds | Script |
+|---|---|---|
+| `ui/title_menu.tscn` | Start, Continue (disabled + unfocusable without a saved run), Practice, Settings, Quit; detail card follows focus; instances the settings sheet | `Menus/TitleMenu.cs` (`SetSavedRun(SavedRunSummary?)`, one event per entry) |
+| `ui/pause_menu.tscn` | Run strip, Resume, Move list, Settings, Restart run, Quit to title, confirm box; instances the two sheets below | `Menus/PauseMenu.cs` (`Bind(run, row, rows, opponent, movesDir)`, `Open/Close` pause the tree, `Resume`) |
+| `ui/move_list_panel.tscn` | Base kit rows (built in code), 4 instances of `move_slot_card.tscn`, scheme and frame-data toggles | `Menus/MoveListPanel.cs`, `MoveSlotCard.cs`, `LevelPips.cs` |
+| `ui/settings_panel.tscn` | Sound tab (3 `InkSlider`s, mute, Preview cues) and Controls tab (Kata / Kihon, one-line K1/K2 text, bindings tables) | `Menus/SettingsPanel.cs` |
+| `ui/menu_mockups.tscn` | Host: live fight behind (Ryo 720 / 1000) frozen by pausing the tree, title + pause layers | `Menus/MenuMockups.cs` |
+
+`MoveListSource.Build(run, movesDir)` builds the move list from `data/moves` (names, `MoveLoader` frame data) and `RunState` (slots, levels, `SpecialData.Build(level)`); base-kit plain lines are placeholder UI copy (`PlainCopy`). `MenuSettings` = in-memory sound/scheme state (creates Music/SFX buses; nothing saved, fight scheme not touched). `MenuInput` = shared keys (Esc / pad B back, Esc / pad Start pause, Tab / pad Y frame data, Q / pad X scheme, Q-E / LB-RB tabs). Theme gained a `Button` disabled style (grey). Tests: `tests/MenuMockupTests.cs`.
+
 ### Stage, camera and fighters (YOK-39)
 `fight.tscn` instances these too, so the whole fight shows in the editor's 3D view: `Stage`, `CameraRig`, `Fighters/P1`, `Fighters/P2`, next to the UI children. Code only moves them from the sim (camera position, fighter position/facing, animation frames, tail sway); everything placed or styled is in the scenes.
 

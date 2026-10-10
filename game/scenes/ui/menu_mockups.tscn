@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/Menus/MenuMockups.cs" id="1_MenuMockups"]
+
+[node name="MenuMockups" type="Node"]
+script = ExtResource("1_MenuMockups")

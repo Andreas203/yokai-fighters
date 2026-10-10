@@ -1,0 +1,250 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/PauseMenu.cs" id="r1"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="r4"]
+
+[node name="PauseMenu" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+mouse_filter = 0
+script = ExtResource("r1")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.8)
+
+[node name="Panel" type="Control" parent="."]
+script = ExtResource("r2")
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380
+offset_top = -470
+offset_right = 380
+offset_bottom = 470
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleText" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 10
+offset_right = 760
+offset_bottom = 112
+text = "Paused"
+theme_override_font_sizes/font_size = 80
+horizontal_alignment = 1
+
+[node name="TitleRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 180
+offset_top = 100
+offset_right = 580
+offset_bottom = 124
+mouse_filter = 2
+Thickness = 8
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="Seal" type="Control" parent="Panel"]
+script = ExtResource("r4")
+layout_mode = 1
+offset_left = 640
+offset_top = 34
+offset_right = 712
+offset_bottom = 106
+mouse_filter = 2
+Glyph = "II"
+
+[node name="RunStrip" type="Panel" parent="Panel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 142
+offset_right = 700
+offset_bottom = 254
+theme_type_variation = &"FrameBox"
+mouse_filter = 2
+
+[node name="RunName" type="Label" parent="Panel/RunStrip"]
+layout_mode = 1
+offset_left = 20
+offset_top = 4
+offset_right = 620
+offset_bottom = 50
+text = "RYO  ·  720 / 1000"
+theme_override_font_sizes/font_size = 34
+
+[node name="RunBar" type="ProgressBar" parent="Panel/RunStrip"]
+layout_mode = 1
+offset_left = 20
+offset_top = 54
+offset_right = 620
+offset_bottom = 70
+theme_type_variation = &"HealthBar"
+max_value = 1000.0
+value = 720.0
+show_percentage = false
+mouse_filter = 2
+
+[node name="RunSub" type="Label" parent="Panel/RunStrip"]
+layout_mode = 1
+offset_left = 20
+offset_top = 72
+offset_right = 620
+offset_bottom = 106
+text = "Row 3 of 8  ·  vs Kitsune"
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"PineLabel"
+
+[node name="Menu" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 80
+offset_top = 276
+offset_right = 680
+offset_bottom = 792
+theme_override_constants/separation = 14
+
+[node name="Resume" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 92)
+theme_override_font_sizes/font_size = 42
+text = "Resume"
+
+[node name="MoveList" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 92)
+theme_override_font_sizes/font_size = 42
+text = "Move list"
+
+[node name="Settings" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 92)
+theme_override_font_sizes/font_size = 42
+text = "Settings"
+
+[node name="Restart" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 92)
+theme_override_font_sizes/font_size = 42
+text = "Restart run"
+
+[node name="QuitToTitle" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 92)
+theme_override_font_sizes/font_size = 42
+text = "Quit to title"
+
+[node name="Hint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 820
+offset_right = 760
+offset_bottom = 860
+text = "Esc / Start  resume"
+theme_override_font_sizes/font_size = 30
+theme_type_variation = &"PersimmonLabel"
+horizontal_alignment = 1
+
+[node name="Frozen" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 866
+offset_right = 760
+offset_bottom = 900
+text = "The fight is frozen while you are here."
+theme_override_font_sizes/font_size = 22
+theme_type_variation = &"FadedLabel"
+horizontal_alignment = 1
+
+[node name="Confirm" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+mouse_filter = 0
+
+[node name="ConfirmDim" type="ColorRect" parent="Confirm"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.7)
+
+[node name="ConfirmPanel" type="Control" parent="Confirm"]
+script = ExtResource("r2")
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -410
+offset_top = -190
+offset_right = 410
+offset_bottom = 190
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ConfirmTitle" type="Label" parent="Confirm/ConfirmPanel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 26
+offset_right = 820
+offset_bottom = 86
+text = "Restart run?"
+theme_override_font_sizes/font_size = 50
+theme_type_variation = &"SealLabel"
+horizontal_alignment = 1
+
+[node name="ConfirmText" type="Label" parent="Confirm/ConfirmPanel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 100
+offset_right = 770
+offset_bottom = 230
+text = "This run ends here and a new one begins."
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ConfirmNo" type="Button" parent="Confirm/ConfirmPanel"]
+layout_mode = 1
+offset_left = 60
+offset_top = 264
+offset_right = 390
+offset_bottom = 344
+text = "Cancel"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"ToggleButton"
+
+[node name="ConfirmYes" type="Button" parent="Confirm/ConfirmPanel"]
+layout_mode = 1
+offset_left = 430
+offset_top = 264
+offset_right = 760
+offset_bottom = 344
+text = "Restart"
+theme_override_font_sizes/font_size = 38
