@@ -1,0 +1,171 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/MoveListPanel.cs" id="r1"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
+
+[node name="MoveListPanel" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+mouse_filter = 0
+script = ExtResource("r1")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.96)
+
+[node name="Panel" type="Control" parent="."]
+script = ExtResource("r2")
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -850
+offset_top = -500
+offset_right = 850
+offset_bottom = 500
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 14
+offset_right = 700
+offset_bottom = 100
+text = "Move list"
+theme_override_font_sizes/font_size = 64
+
+[node name="TitleRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 50
+offset_top = 92
+offset_right = 430
+offset_bottom = 116
+mouse_filter = 2
+Thickness = 8
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="Subtitle" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 114
+offset_right = 1000
+offset_bottom = 150
+text = "Ryo, base kit and the specials you carry"
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"PineLabel"
+
+[node name="SchemeToggle" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 880
+offset_top = 22
+offset_right = 1250
+offset_bottom = 82
+text = "Inputs: Kihon  (Q / X)"
+theme_override_font_sizes/font_size = 24
+theme_type_variation = &"ToggleButton"
+
+[node name="FrameToggle" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 1270
+offset_top = 22
+offset_right = 1650
+offset_bottom = 82
+text = "Frame data: off  (Tab / Y)"
+theme_override_font_sizes/font_size = 24
+theme_type_variation = &"ToggleButton"
+
+[node name="BaseHeading" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 162
+offset_right = 500
+offset_bottom = 202
+text = "BASE KIT"
+theme_override_font_sizes/font_size = 30
+theme_type_variation = &"SealLabel"
+
+[node name="BaseRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 50
+offset_top = 198
+offset_right = 1050
+offset_bottom = 222
+mouse_filter = 2
+Thickness = 5
+
+[node name="BaseRows" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 222
+offset_right = 1050
+offset_bottom = 880
+theme_override_constants/separation = 0
+mouse_filter = 2
+
+[node name="SpecialsHeading" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 1090
+offset_top = 162
+offset_right = 1650
+offset_bottom = 202
+text = "SPECIALS"
+theme_override_font_sizes/font_size = 30
+theme_type_variation = &"SealLabel"
+
+[node name="SpecialsRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 1090
+offset_top = 198
+offset_right = 1650
+offset_bottom = 222
+mouse_filter = 2
+Thickness = 5
+
+[node name="SpecialCards" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 1090
+offset_top = 226
+offset_right = 1650
+offset_bottom = 946
+theme_override_constants/separation = 4
+mouse_filter = 2
+
+[node name="Legend" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 898
+offset_right = 1050
+offset_bottom = 934
+text = ""
+theme_override_font_sizes/font_size = 22
+theme_type_variation = &"FadedLabel"
+
+[node name="Hint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 952
+offset_right = 1650
+offset_bottom = 988
+text = "Esc / B  back          Tab / Y  frame data          Q / X  switch Kata / Kihon"
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"PersimmonLabel"
+horizontal_alignment = 1

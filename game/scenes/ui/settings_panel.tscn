@@ -1,0 +1,386 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/SettingsPanel.cs" id="r1"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="r4"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/InkSlider.cs" id="r5"]
+
+[node name="SettingsPanel" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+mouse_filter = 0
+script = ExtResource("r1")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.13, 0.14, 0.25, 0.96)
+
+[node name="Panel" type="Control" parent="."]
+script = ExtResource("r2")
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -650
+offset_top = -470
+offset_right = 650
+offset_bottom = 470
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 14
+offset_right = 700
+offset_bottom = 100
+text = "Settings"
+theme_override_font_sizes/font_size = 64
+
+[node name="TitleRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 50
+offset_top = 92
+offset_right = 400
+offset_bottom = 116
+mouse_filter = 2
+Thickness = 8
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="Seal" type="Control" parent="Panel"]
+script = ExtResource("r4")
+layout_mode = 1
+offset_left = 1180
+offset_top = 34
+offset_right = 1252
+offset_bottom = 106
+mouse_filter = 2
+Glyph = "YF"
+
+[node name="TabSound" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 50
+offset_top = 126
+offset_right = 370
+offset_bottom = 190
+text = "Sound"
+theme_override_font_sizes/font_size = 34
+theme_type_variation = &"ToggleButtonOn"
+
+[node name="TabControls" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 390
+offset_top = 126
+offset_right = 710
+offset_bottom = 190
+text = "Controls"
+theme_override_font_sizes/font_size = 34
+theme_type_variation = &"ToggleButton"
+
+[node name="SoundPage" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 214
+offset_right = 1300
+offset_bottom = 820
+mouse_filter = 2
+
+[node name="MasterLabel" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 24
+offset_right = 340
+offset_bottom = 88
+text = "Master volume"
+theme_override_font_sizes/font_size = 34
+vertical_alignment = 1
+
+[node name="MasterSlider" type="HSlider" parent="Panel/SoundPage"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 360
+offset_top = 24
+offset_right = 900
+offset_bottom = 88
+max_value = 100.0
+step = 5.0
+value = 80.0
+size_flags_vertical = 1
+
+[node name="MasterValue" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 920
+offset_top = 24
+offset_right = 1020
+offset_bottom = 88
+text = "80"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"SealLabel"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MasterPreview" type="Button" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 1050
+offset_top = 24
+offset_right = 1250
+offset_bottom = 88
+text = "Preview"
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"ToggleButton"
+
+[node name="MusicLabel" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 136
+offset_right = 340
+offset_bottom = 200
+text = "Music"
+theme_override_font_sizes/font_size = 34
+vertical_alignment = 1
+
+[node name="MusicSlider" type="HSlider" parent="Panel/SoundPage"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 360
+offset_top = 136
+offset_right = 900
+offset_bottom = 200
+max_value = 100.0
+step = 5.0
+value = 80.0
+size_flags_vertical = 1
+
+[node name="MusicValue" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 920
+offset_top = 136
+offset_right = 1020
+offset_bottom = 200
+text = "80"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"SealLabel"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MusicPreview" type="Button" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 1050
+offset_top = 136
+offset_right = 1250
+offset_bottom = 200
+text = "Preview"
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"ToggleButton"
+
+[node name="SfxLabel" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 248
+offset_right = 340
+offset_bottom = 312
+text = "Sound effects"
+theme_override_font_sizes/font_size = 34
+vertical_alignment = 1
+
+[node name="SfxSlider" type="HSlider" parent="Panel/SoundPage"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 360
+offset_top = 248
+offset_right = 900
+offset_bottom = 312
+max_value = 100.0
+step = 5.0
+value = 80.0
+size_flags_vertical = 1
+
+[node name="SfxValue" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 920
+offset_top = 248
+offset_right = 1020
+offset_bottom = 312
+text = "80"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"SealLabel"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SfxPreview" type="Button" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 1050
+offset_top = 248
+offset_right = 1250
+offset_bottom = 312
+text = "Preview"
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"ToggleButton"
+
+[node name="Mute" type="Button" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 372
+offset_right = 560
+offset_bottom = 444
+text = "Mute all: off"
+theme_override_font_sizes/font_size = 32
+theme_type_variation = &"ToggleButton"
+
+[node name="SoundNote" type="Label" parent="Panel/SoundPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 470
+offset_right = 1250
+offset_bottom = 540
+text = "Preview plays a placeholder cue. The sourced sound pack replaces it."
+theme_override_font_sizes/font_size = 24
+theme_type_variation = &"FadedLabel"
+autowrap_mode = 3
+
+[node name="ControlsPage" type="Control" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 214
+offset_right = 1300
+offset_bottom = 820
+mouse_filter = 2
+visible = false
+
+[node name="SchemeHeading" type="Label" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 0
+offset_right = 700
+offset_bottom = 40
+text = "CONTROL SCHEME"
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"SealLabel"
+
+[node name="Kata" type="Button" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 46
+offset_right = 430
+offset_bottom = 122
+text = "Kata"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"ToggleButton"
+
+[node name="Kihon" type="Button" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 450
+offset_top = 46
+offset_right = 830
+offset_bottom = 122
+text = "Kihon"
+theme_override_font_sizes/font_size = 38
+theme_type_variation = &"ToggleButtonOn"
+
+[node name="SchemeLine" type="Label" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 132
+offset_right = 1250
+offset_bottom = 172
+text = ""
+theme_override_font_sizes/font_size = 27
+
+[node name="SchemeNote" type="Label" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 172
+offset_right = 1250
+offset_bottom = 206
+text = "Combos, cancels, throws and burst work the same in both."
+theme_override_font_sizes/font_size = 22
+theme_type_variation = &"PineLabel"
+
+[node name="KeyboardHeading" type="Label" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 222
+offset_right = 640
+offset_bottom = 258
+text = "KEYBOARD  (view only)"
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"SealLabel"
+
+[node name="KeyboardRule" type="Control" parent="Panel/ControlsPage"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 50
+offset_top = 252
+offset_right = 610
+offset_bottom = 274
+mouse_filter = 2
+Thickness = 4
+
+[node name="KeyboardGrid" type="GridContainer" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 50
+offset_top = 280
+offset_right = 620
+offset_bottom = 620
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 2
+
+[node name="PadHeading" type="Label" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 680
+offset_top = 222
+offset_right = 1250
+offset_bottom = 258
+text = "GAMEPAD  (view only)"
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"SealLabel"
+
+[node name="PadRule" type="Control" parent="Panel/ControlsPage"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 680
+offset_top = 252
+offset_right = 1250
+offset_bottom = 274
+mouse_filter = 2
+Thickness = 4
+
+[node name="PadGrid" type="GridContainer" parent="Panel/ControlsPage"]
+layout_mode = 1
+offset_left = 680
+offset_top = 280
+offset_right = 1250
+offset_bottom = 620
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 2
+
+[node name="Hint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 876
+offset_right = 1300
+offset_bottom = 914
+text = "Esc / B  back          Q / E  or  LB / RB  switch tab"
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"PersimmonLabel"
+horizontal_alignment = 1

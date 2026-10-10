@@ -1,0 +1,258 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/TitleMenu.cs" id="r1"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
+[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="r4"]
+[ext_resource type="Script" path="res://scripts/Ui/YokaiMask.cs" id="r5"]
+[ext_resource type="Script" path="res://scripts/Ui/TitleBackdrop.cs" id="r6"]
+
+[node name="TitleMenu" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+mouse_filter = 0
+script = ExtResource("r1")
+
+[node name="Backdrop" type="Control" parent="."]
+script = ExtResource("r6")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -810
+offset_top = -540
+offset_right = 810
+offset_bottom = 540
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="Control" parent="Panel"]
+script = ExtResource("r2")
+layout_mode = 1
+offset_left = 90
+offset_top = 425
+offset_right = 1530
+offset_bottom = 975
+mouse_filter = 2
+
+[node name="MaskOni" type="Control" parent="Panel"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 293
+offset_top = 0
+offset_right = 467
+offset_bottom = 330
+mouse_filter = 2
+Yokai = "oni"
+CordLength = 70.0
+Phase = 0.0
+
+[node name="MaskKitsune" type="Control" parent="Panel"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 723
+offset_top = 0
+offset_right = 897
+offset_bottom = 330
+mouse_filter = 2
+Yokai = "kitsune"
+CordLength = 34.0
+Phase = 2.1
+
+[node name="MaskKappa" type="Control" parent="Panel"]
+script = ExtResource("r5")
+layout_mode = 1
+offset_left = 1153
+offset_top = 0
+offset_right = 1327
+offset_bottom = 330
+mouse_filter = 2
+Yokai = "kappa"
+CordLength = 70.0
+Phase = 4.2
+
+[node name="TitleText" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 250
+offset_right = 1620
+offset_bottom = 380
+text = "Yokai Fighters"
+theme_override_font_sizes/font_size = 88
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.93, 0.89, 0.78, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.14, 1)
+theme_override_constants/outline_size = 14
+
+[node name="TitleRule" type="Control" parent="Panel"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 610
+offset_top = 350
+offset_right = 1010
+offset_bottom = 374
+mouse_filter = 2
+Thickness = 9
+Ink = Color(0.72, 0.16, 0.14, 1)
+
+[node name="Subtitle" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 372
+offset_right = 1620
+offset_bottom = 424
+text = "Bind the yokai. Borrow their power."
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.93, 0.89, 0.78, 0.92)
+theme_override_colors/font_outline_color = Color(0.05, 0.06, 0.14, 1)
+theme_override_constants/outline_size = 8
+
+[node name="Seal" type="Control" parent="Panel"]
+script = ExtResource("r4")
+layout_mode = 1
+offset_left = 1460
+offset_top = 276
+offset_right = 1548
+offset_bottom = 364
+mouse_filter = 2
+Glyph = "YF"
+
+[node name="Menu" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+offset_left = 130
+offset_top = 462
+offset_right = 750
+offset_bottom = 882
+theme_override_constants/separation = 10
+
+[node name="Start" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 76)
+theme_override_font_sizes/font_size = 44
+text = "Start"
+
+[node name="Continue" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 76)
+theme_override_font_sizes/font_size = 44
+text = "Continue"
+
+[node name="Practice" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 76)
+theme_override_font_sizes/font_size = 44
+text = "Practice"
+
+[node name="Settings" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 76)
+theme_override_font_sizes/font_size = 44
+text = "Settings"
+
+[node name="Quit" type="Button" parent="Panel/Menu"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 76)
+theme_override_font_sizes/font_size = 44
+text = "Quit"
+
+[node name="Detail" type="Panel" parent="Panel"]
+layout_mode = 1
+offset_left = 830
+offset_top = 462
+offset_right = 1500
+offset_bottom = 882
+theme_type_variation = &"FrameBox"
+mouse_filter = 2
+
+[node name="DetailHeading" type="Label" parent="Panel/Detail"]
+layout_mode = 1
+offset_left = 32
+offset_top = 24
+offset_right = 640
+offset_bottom = 70
+text = "NEW RUN"
+theme_override_font_sizes/font_size = 34
+theme_type_variation = &"SealLabel"
+
+[node name="DetailRule" type="Control" parent="Panel/Detail"]
+script = ExtResource("r3")
+layout_mode = 1
+offset_left = 32
+offset_top = 66
+offset_right = 640
+offset_bottom = 90
+mouse_filter = 2
+Thickness = 5
+
+[node name="DetailBody" type="Label" parent="Panel/Detail"]
+layout_mode = 1
+offset_left = 32
+offset_top = 100
+offset_right = 640
+offset_bottom = 250
+text = "Begin a new run: eight duels, one Tanuki."
+theme_override_font_sizes/font_size = 32
+autowrap_mode = 3
+
+[node name="DetailExtra" type="Label" parent="Panel/Detail"]
+layout_mode = 1
+offset_left = 32
+offset_top = 262
+offset_right = 640
+offset_bottom = 400
+text = ""
+theme_override_font_sizes/font_size = 28
+theme_type_variation = &"PineLabel"
+autowrap_mode = 3
+
+[node name="DetailSeal" type="Control" parent="Panel/Detail"]
+script = ExtResource("r4")
+layout_mode = 1
+offset_left = 540
+offset_top = 320
+offset_right = 630
+offset_bottom = 410
+mouse_filter = 2
+Glyph = "YF"
+Fill = Color(0.72, 0.16, 0.14, 0.35)
+
+[node name="Hint" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 902
+offset_right = 1620
+offset_bottom = 946
+text = "Up / Down  choose        Enter / A  confirm"
+theme_override_font_sizes/font_size = 32
+theme_type_variation = &"PersimmonLabel"
+horizontal_alignment = 1
+
+[node name="Build" type="Label" parent="Panel"]
+layout_mode = 1
+offset_left = 0
+offset_top = 1030
+offset_right = 1620
+offset_bottom = 1062
+text = "Demo build  -  menu mockup, placeholder art"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+theme_override_colors/font_color = Color(0.93, 0.89, 0.78, 0.6)
