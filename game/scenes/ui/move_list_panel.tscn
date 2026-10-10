@@ -116,7 +116,7 @@ layout_mode = 1
 offset_left = 50
 offset_top = 222
 offset_right = 1050
-offset_bottom = 880
+offset_bottom = 948
 theme_override_constants/separation = 0
 mouse_filter = 2
 
@@ -151,12 +151,13 @@ mouse_filter = 2
 
 [node name="Legend" type="Label" parent="Panel"]
 layout_mode = 1
-offset_left = 50
-offset_top = 898
+offset_left = 430
+offset_top = 168
 offset_right = 1050
-offset_bottom = 934
+offset_bottom = 204
 text = ""
-theme_override_font_sizes/font_size = 22
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 20
 theme_type_variation = &"FadedLabel"
 
 [node name="Hint" type="Label" parent="Panel"]

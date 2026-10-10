@@ -45,6 +45,7 @@ public partial class SettingsPanel : Control
 
 	public override void _Ready()
 	{
+		MenuInput.EnsurePadConfirm();
 		_soundPage = UiFind.Get<Control>(this, "SoundPage");
 		_controlsPage = UiFind.Get<Control>(this, "ControlsPage");
 		_tabSound = UiFind.Get<Button>(this, "TabSound");
@@ -77,6 +78,7 @@ public partial class SettingsPanel : Control
 		MenuSettings.Changed += Refresh;
 		TreeExiting += () => MenuSettings.Changed -= Refresh;
 		FillBindings();
+		WireFocus();
 		ShowTab(SettingsTab.Sound);
 		Visible = false;
 		VisibilityChanged += () => { if (Visible) FocusFirst(); };
@@ -94,6 +96,7 @@ public partial class SettingsPanel : Control
 		_controlsPage.Visible = tab == SettingsTab.Controls;
 		_tabSound.ThemeTypeVariation = tab == SettingsTab.Sound ? "ToggleButtonOn" : "ToggleButton";
 		_tabControls.ThemeTypeVariation = tab == SettingsTab.Controls ? "ToggleButtonOn" : "ToggleButton";
+		WireRing();
 		Refresh();
 		if (Visible) FocusFirst();
 	}
@@ -120,17 +123,53 @@ public partial class SettingsPanel : Control
 		_kata.ThemeTypeVariation = kata ? "ToggleButtonOn" : "ToggleButton";
 		_kihon.ThemeTypeVariation = kata ? "ToggleButton" : "ToggleButtonOn";
 		_schemeLine.Text = kata ? KataLine : KihonLine;
+		if (_shownScheme != MenuSettings.Scheme) FillBindings(); // Special / EX rows are scheme-specific (E16 / E18)
 	}
 
-	/// <summary>Keyboard and pad tables from the live bindings, the same rows as the boot start screen.</summary>
+	private ControlScheme? _shownScheme;
+
+	/// <summary>
+	/// Explicit focus graph, so the sheet never relies on layout geometry and nothing outside it is reachable: tabs on top, then the
+	/// page (Sound: slider rows with Preview to the right, then Mute; Controls: Kata / Kihon). Tab / Shift+Tab cycle the same set
+	/// (<see cref="WireRing"/>). A direction with nothing beyond it stays on the control.
+	/// </summary>
+	private void WireFocus()
+	{
+		MenuInput.Neighbours(_tabSound, null, _sliders[0], _tabControls, _tabControls);
+		MenuInput.Neighbours(_tabControls, null, _kata, _tabSound, _tabSound);
+		for (int i = 0; i < 3; i++)
+		{
+			Control up = i == 0 ? _tabSound : _sliders[i - 1], upP = i == 0 ? _tabControls : _previews[i - 1];
+			Control down = i == 2 ? _mute : _sliders[i + 1], downP = i == 2 ? _mute : _previews[i + 1];
+			MenuInput.Neighbours(_sliders[i], up, down, null, _previews[i]);
+			MenuInput.Neighbours(_previews[i], upP, downP, _sliders[i], null);
+		}
+		MenuInput.Neighbours(_mute, _sliders[2], null, null, null);
+		MenuInput.Neighbours(_kata, _tabControls, null, null, _kihon);
+		MenuInput.Neighbours(_kihon, _tabControls, null, _kata, null);
+	}
+
+	private void WireRing()
+	{
+		Control first = Tab == SettingsTab.Sound ? _sliders[0] : _kata;
+		_tabSound.FocusNeighborBottom = _tabSound.GetPathTo(first);
+		_tabControls.FocusNeighborBottom = _tabControls.GetPathTo(first);
+		if (Tab == SettingsTab.Sound)
+			MenuInput.Ring(_tabSound, _tabControls, _sliders[0], _previews[0], _sliders[1], _previews[1], _sliders[2], _previews[2], _mute);
+		else
+			MenuInput.Ring(_tabSound, _tabControls, _kata, _kihon);
+	}
+
+	/// <summary>Keyboard and pad tables from the live bindings, the same rows as the boot start screen, with the Special / EX rows for the chosen scheme.</summary>
 	private void FillBindings()
 	{
-		var rows = StartScreen.Rows();
+		_shownScheme = MenuSettings.Scheme;
+		var rows = StartScreen.Rows(MenuSettings.Scheme);
 		Fill(UiFind.Get<GridContainer>(this, "KeyboardGrid"), rows.Select(r => (r.Action, r.Keyboard)).ToList());
 		Fill(UiFind.Get<GridContainer>(this, "PadGrid"), rows.Select(r => (r.Action, r.Pad)).ToList());
 		static void Fill(GridContainer grid, System.Collections.Generic.List<(string Action, string Binding)> rows)
 		{
-			foreach (Node c in grid.GetChildren()) c.QueueFree();
+			foreach (Node c in grid.GetChildren()) { grid.RemoveChild(c); c.QueueFree(); }
 			foreach (var (a, b) in rows)
 			{
 				var la = new Label { Text = a, ThemeTypeVariation = "PineLabel", CustomMinimumSize = new Vector2(215, 34), ClipText = true };

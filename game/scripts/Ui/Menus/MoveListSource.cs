@@ -7,10 +7,15 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Ui;
 
 /// <summary>One base-kit row: what it is called, the input, a plain-language line, and the frame line (behind the toggle).</summary>
-public sealed record MoveRow(string Id, string Name, string Input, string Plain, string Frames);
+public sealed record MoveRow(string Id, string Name, string Input, string Plain, string Frames, string? KataInput = null)
+{
+	/// <summary>The input line for the shown scheme: most rows are the same in both; EX differs (E16 / E18).</summary>
+	public string InputFor(bool kata) => kata && KataInput != null ? KataInput : Input;
+}
 
 /// <summary>One special slot A-D. Empty = nothing owned there yet. Both schemes' inputs are kept; the panel shows the active one.</summary>
-public sealed record SlotRow(string Slot, bool Empty, string Name, int Level, int MaxLevel, string KataInput, string KihonInput, string Plain, string Frames);
+public sealed record SlotRow(string Slot, bool Empty, string Name, int Level, int MaxLevel, string KataInput, string KihonInput, string Plain, string Frames,
+	string ModifierName = "", string ModifierPlain = "");
 
 public sealed record MoveListView(IReadOnlyList<MoveRow> Base, IReadOnlyList<SlotRow> Slots);
 
@@ -29,8 +34,9 @@ public static class MoveListSource
 	};
 	public const string ThrowId = "ryo-generic-throw";
 
-	/// <summary>Base-kit rows after which the panel draws a group divider (movement | normals | throw and burst).</summary>
-	public static readonly int[] GroupBreaksAfter = { 3, 9 };
+	/// <summary>Base-kit rows after which the panel draws a group divider (movement, air and block | six normals | throw, burst, EX).</summary>
+	public static readonly int[] GroupBreaksAfter = { 6, 12 };
+	public const string AirPunchId = "ryo-air-punch", AirKickId = "ryo-air-kick";
 
 	// PLACEHOLDER COPY (designer / movesmith to replace): A12 wants plain language first; normals have no card text in data yet.
 	private static readonly Dictionary<string, string> PlainCopy = new()
@@ -45,8 +51,11 @@ public static class MoveListSource
 		["ryo-light-kick"] = "Fast, short kick. Safe when blocked.",
 		["ryo-medium-kick"] = "Mid-range kick for keeping your space.",
 		["ryo-heavy-kick"] = "Wide sweeping kick. Slow, but it hits hard.",
-		[ThrowId] = "Grabs a guarding foe. They can break it.",
-		["burst"] = "Break a combo once per fight. Costs all meter.",
+		[ThrowId] = "Grabs a guarding foe. Break it: press LP + LK.", // GDD 3.2: break by pressing throw; E12 input
+		["burst"] = "Break a combo for all your meter. Not from throws.", // E13: a thrown fighter breaks, it cannot burst
+		[AirPunchId] = "Dive-in punch. One per jump.",
+		[AirKickId] = "Dive-in kick. One per jump.",
+		["ex"] = "Stronger special for 1 bar. No bar: plain one.", // E16: without the meter the plain version comes out
 	};
 
 	/// <summary>K1 motions and K2 directions per slot, as written in the rules (display only; parsing lives in the input layer).</summary>
@@ -68,11 +77,15 @@ public static class MoveListSource
 			new("walk", "Walk", "Hold back / forward", Plain("walk"), $"Crosses the screen in about {WalkSeconds(cfg):0.0} seconds"),
 			new("dash", "Dash", "Double-tap back / forward", Plain("dash"), $"{cfg.DashFrames} frames"),
 			new("jump", "Jump", "Up, up-forward, up-back", Plain("jump"), $"{cfg.JumpFrames} frames in the air"),
+			FromFile(movesDir, AirPunchId, _ => "Jump + any punch", air: true, landing: cfg.AirLandingRecovery),
+			FromFile(movesDir, AirKickId, _ => "Jump + any kick", air: true, landing: cfg.AirLandingRecovery),
 			new("block", "Block", "Hold back (crouch: lows)", Plain("block"), "No chip damage"),
 		};
 		foreach (string id in NormalIds) rows.Add(FromFile(movesDir, id, ButtonLabel));
 		rows.Add(FromFile(movesDir, ThrowId, ButtonLabel));
 		rows.Add(new("burst", "Burst", "LP + MP + HP while hit", Plain("burst"), $"{cfg.BurstFrames} invulnerable frames, once per fight"));
+		// E16 (Kata) / E18 (Kihon). GDD 3.2 only says an EX special costs 1 bar; the input is the designer-proposal in SimConfig.ExPressWindow.
+		rows.Add(new("ex", "EX special", "Special + dir + punch / kick", Plain("ex"), $"Costs {cfg.ExCost / cfg.MeterBar} bar, second button within {cfg.ExPressWindow - 1} ticks", KataInput: "Motion + 2 punches / 2 kicks"));
 
 		var slots = new List<SlotRow>();
 		foreach (var slot in new[] { SpecialSlot.A, SpecialSlot.B, SpecialSlot.C, SpecialSlot.D })
@@ -84,14 +97,17 @@ public static class MoveListSource
 				slots.Add(new(letter, true, "Empty", 0, 3, kata, kihon, "Win a duel and draft a power from the yokai you bind.", ""));
 				continue;
 			}
-			var m = owned.Data.Build(owned.Level, false);
-			string ex = owned.Data.HasEx ? $"\nEX costs {owned.Data.ExCost / 100} bar" : "";
-			slots.Add(new(letter, false, owned.Data.Name, owned.Level, owned.Data.MaxLevel, kata, kihon, owned.Data.CardPlain, FrameLine(m) + ex));
+			// The move the sim would run: level, then the equipped modifier on top (A2, A10), using the same fight defaults as ApplyTo.
+			var m = new EquippedSpecial(owned.Data, owned.Level, owned.Modifier, run.MatchConfig(cfg)).Move;
+			string ex = owned.Data.HasEx ? $"\nEX costs {owned.Data.ExCost / cfg.MeterBar} bar" : "";
+			var mod = owned.Modifier;
+			string frames = FrameLine(m) + (mod is { CardFrames.Length: > 0 } ? $"\n{mod.Name}: {mod.CardFrames}" : "") + ex;
+			slots.Add(new(letter, false, owned.Data.Name, owned.Level, owned.Data.MaxLevel, kata, kihon, owned.Data.CardPlain, frames, mod?.Name ?? "", mod?.CardPlain ?? ""));
 		}
 		return new MoveListView(rows, slots);
 	}
 
-	private static MoveRow FromFile(string dir, string id, Func<string, string> input)
+	private static MoveRow FromFile(string dir, string id, Func<string, string> input, bool air = false, int landing = 0)
 	{
 		string path = Path.Combine(dir, id + ".json");
 		using var doc = JsonDocument.Parse(File.ReadAllText(path));
@@ -106,7 +122,9 @@ public static class MoveListSource
 			label = string.Join(" + ", parts);
 		}
 		else label = input(inp.GetProperty("button").GetString() ?? "?");
-		return new MoveRow(id, name, label, Plain(id), FrameLine(MoveLoader.LoadFile(path)));
+		var move = MoveLoader.LoadFile(path);
+		string frames = FrameLine(move) + (air ? $", {move.LandingRecovery ?? landing} landing" : "");
+		return new MoveRow(id, name, air ? input("") : label, Plain(id), frames);
 	}
 
 	/// <summary>Seconds to walk one screen width (C2 says about 2.5).</summary>

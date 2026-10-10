@@ -44,9 +44,17 @@ public partial class StartScreen : Control
 	/// <summary>One row: what it does, the keyboard text, the pad text.</summary>
 	public readonly record struct Row(string Action, string Keyboard, string Pad);
 
-	/// <summary>The controls outline, built from the live bindings.</summary>
-	public static List<Row> Rows()
+	/// <summary>The controls outline for the boot screen (Kihon is the default scheme, E18).</summary>
+	public static List<Row> Rows() => Rows(ControlScheme.Kihon);
+
+	/// <summary>
+	/// The controls outline, built from the live bindings. The Special and EX rows follow the scheme: Kata draws the motion
+	/// (K1) and EX is the motion + two punches or two kicks (E16); Kihon is Special + direction (K2) and EX adds one punch or
+	/// kick (E18). The Throw row also names the break (E12, GDD 3.2: break by pressing throw).
+	/// </summary>
+	public static List<Row> Rows(ControlScheme scheme)
 	{
+		bool kata = scheme == ControlScheme.Kata;
 		var k = InputDevices.P1Keys;
 		static string K(Key key) => KeyLabel(key);
 		static string P(InputBits b) => PadLabel(b);
@@ -58,9 +66,13 @@ public partial class StartScreen : Control
 			new("Dash", $"double-tap {K(k.Left)} / {K(k.Right)}", "double-tap left / right"),
 			new("Punch  L M H", $"{K(k.LP)}  {K(k.MP)}  {K(k.HP)}", Chord("  ", InputBits.LightPunch, InputBits.MediumPunch, InputBits.HeavyPunch)),
 			new("Kick  L M H", $"{K(k.LK)}  {K(k.MK)}  {K(k.HK)}", Chord("  ", InputBits.LightKick, InputBits.MediumKick, InputBits.HeavyKick)),
-			new("Special", $"{K(k.Special)} + direction", $"{P(InputBits.Special)} + direction"),
-			new("EX (1 bar)", "Special + direction + a button", "Special + direction + a button"),
-			new("Throw", $"{K(k.LP)} + {K(k.LK)}", Chord(" + ", InputBits.LightPunch, InputBits.LightKick)),
+			kata
+				? new("Special (A-D)", "draw the motion", "draw the motion")
+				: new("Special", $"{K(k.Special)} + direction", $"{P(InputBits.Special)} + direction"),
+			kata
+				? new("EX (1 bar)", "motion + 2 punches or 2 kicks", "motion + 2 punches or 2 kicks")
+				: new("EX (1 bar)", $"{K(k.Special)} + direction + 1 button", $"{P(InputBits.Special)} + direction + 1 button"),
+			new("Throw / break it", $"{K(k.LP)} + {K(k.LK)}", Chord(" + ", InputBits.LightPunch, InputBits.LightKick)),
 			new("Burst (when hit)", $"{K(k.LP)} + {K(k.MP)} + {K(k.HP)}", Chord(" + ", InputBits.LightPunch, InputBits.MediumPunch, InputBits.HeavyPunch)),
 			new("Block", "hold back (crouch for lows)", "hold back (down for lows)"),
 		};

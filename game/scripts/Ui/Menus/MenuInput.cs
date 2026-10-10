@@ -23,11 +23,67 @@ public static class MenuInput
 		_ => 0,
 	};
 
-	/// <summary>Wraps focus from the first/last of a vertical button list to the other end (list order = top to bottom).</summary>
+	/// <summary>
+	/// Godot 4.7's default <c>ui_accept</c> has no pad button (Enter, Keypad Enter, Space only), so a controller could move focus but never
+	/// press a menu button. Adds pad A to it (once). Menus call this from <c>_Ready</c>; the fight reads the pad itself and is unaffected.
+	/// </summary>
+	public static void EnsurePadConfirm()
+	{
+		foreach (var ev in InputMap.ActionGetEvents("ui_accept")) if (ev is InputEventJoypadButton { ButtonIndex: JoyButton.A }) return;
+		InputMap.ActionAddEvent("ui_accept", new InputEventJoypadButton { ButtonIndex = JoyButton.A });
+	}
+
+	/// <summary>
+	/// Explicit up / down chain through a vertical button list (top to bottom), wrapping from the last to the first and back.
+	/// Left / right stay on the button. Nothing depends on layout geometry; a disabled entry (FocusMode None) is passed over by Godot's focus search.
+	/// </summary>
 	public static void WrapVertical(params Control[] list)
 	{
 		if (list.Length < 2) return;
-		list[0].FocusNeighborTop = list[0].GetPathTo(list[^1]);
-		list[^1].FocusNeighborBottom = list[^1].GetPathTo(list[0]);
+		for (int i = 0; i < list.Length; i++)
+			Neighbours(list[i], list[(i + list.Length - 1) % list.Length], list[(i + 1) % list.Length], null, null);
+		Ring(list);
+	}
+
+	/// <summary>Sets a control's four directional neighbours (null = stay on itself, so focus cannot escape that way).</summary>
+	public static void Neighbours(Control c, Control? up, Control? down, Control? left, Control? right)
+	{
+		c.FocusNeighborTop = c.GetPathTo(up ?? c);
+		c.FocusNeighborBottom = c.GetPathTo(down ?? c);
+		c.FocusNeighborLeft = c.GetPathTo(left ?? c);
+		c.FocusNeighborRight = c.GetPathTo(right ?? c);
+	}
+
+	/// <summary>Tab / Shift+Tab order: a closed ring through <paramref name="list"/> (so next / previous cannot leave it either).</summary>
+	public static void Ring(params Control[] list)
+	{
+		for (int i = 0; i < list.Length; i++)
+		{
+			list[i].FocusNext = list[i].GetPathTo(list[(i + 1) % list.Length]);
+			list[i].FocusPrevious = list[i].GetPathTo(list[(i + list.Length - 1) % list.Length]);
+		}
+	}
+}
+
+/// <summary>
+/// Modal focus for an overlay (confirm box, settings sheet): while engaged, the controls underneath cannot take
+/// keyboard / controller focus at all (FocusMode None), so no directional, Tab or hover move can reach them.
+/// <see cref="Release"/> puts each control's previous focus mode back (a greyed Continue stays unfocusable).
+/// </summary>
+public sealed class FocusLock
+{
+	private readonly System.Collections.Generic.Dictionary<Control, Control.FocusModeEnum> _saved = new();
+	public bool Active => _saved.Count > 0;
+
+	public void Engage(System.Collections.Generic.IEnumerable<Control> underneath)
+	{
+		if (Active) return;
+		foreach (var c in underneath) { _saved[c] = c.FocusMode; c.FocusMode = Control.FocusModeEnum.None; }
+	}
+
+	public void Release()
+	{
+		foreach (var (c, mode) in _saved) if (GodotObject.IsInstanceValid(c)) c.FocusMode = mode;
+		_saved.Clear();
 	}
 }
