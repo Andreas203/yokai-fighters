@@ -6,41 +6,38 @@ using YokaiFighters.Sim;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>YOK-39 start screen: boots first, the sim waits for Start, Restart skips it, text matches InputDevices.</summary>
+/// <summary>
+/// YOK-39 start screen, now the control-select step of the boot flow (see BootFlowTests for the routing): the fight
+/// scene no longer holds it and always starts in the fight; held buttons are masked on entry; the scheme choice
+/// redraws the controls; text matches InputDevices.
+/// </summary>
 public static class StartScreenTests
 {
-	static FightScene NewScene(Node runner, bool? start)
+	static FightScene NewScene(Node runner)
 	{
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
 		scene.ExternalDrive = true;
-		scene.StartScreenOverride = start;
 		runner.AddChild(scene);
 		return scene;
 	}
 
 	[Test]
-	public static void Boots_ToStartScreen_SimWaits(Node runner)
+	public static void FightScene_HasNoStartScreen_AndTicksAtOnce(Node runner)
 	{
-		var s = NewScene(runner, true);
-		Assert.Equal(DemoStage.Title, s.Stage, "boot stage");
-		Assert.True(s.Title.Visible, "start screen visible");
+		var s = NewScene(runner);
+		Assert.Equal(DemoStage.Fighting, s.Stage, "the fight scene starts in the fight");
+		Assert.True(s.GetNodeOrNull("Flow/Title") == null, "no start screen inside the fight scene");
 		int tick = s.Match.Tick;
-		for (int i = 0; i < 30; i++) s.Step(FighterInput.None, FighterInput.None);
-		Assert.Equal(tick, s.Match.Tick, "no ticks before Start");
-		s.Title.OnStart();
-		Assert.Equal(DemoStage.Fighting, s.Stage, "Start begins the fight");
-		Assert.True(!s.Title.Visible, "screen hidden");
 		s.Step(FighterInput.None, FighterInput.None);
-		Assert.Equal(tick + 1, s.Match.Tick, "sim ticks after Start");
+		Assert.Equal(tick + 1, s.Match.Tick, "the first Step ticks");
 		s.QueueFree();
 	}
 
 	[Test]
-	public static void Start_DoesNotLeakHeldInput(Node runner)
+	public static void Entry_DoesNotLeakHeldInput(Node runner)
 	{
-		var s = NewScene(runner, true);
-		s.Title.OnStart();
-		s.ArmSuppressForTest(InputBits.Special); // Space held to press Start
+		var s = NewScene(runner);
+		s.ArmSuppressForTest(InputBits.Special); // Space held to press Start Game
 		Assert.Equal(InputBits.None, s.SuppressedInputForTest(InputBits.Special), "Special masked while held");
 		Assert.Equal(InputBits.Left, s.SuppressedInputForTest(InputBits.Special | InputBits.Left), "other keys pass");
 		Assert.Equal(InputBits.None, s.SuppressedInputForTest(InputBits.None), "released");
@@ -49,22 +46,43 @@ public static class StartScreenTests
 	}
 
 	[Test]
-	public static void Restart_SkipsStartScreen(Node runner)
+	public static void Restart_StaysInTheFight(Node runner)
 	{
-		var s = NewScene(runner, true);
-		s.Title.OnStart();
+		var s = NewScene(runner);
 		s.RestartRun();
 		Assert.Equal(DemoStage.Fighting, s.Stage, "restart goes straight to the fight");
-		Assert.True(!s.Title.Visible, "start screen stays hidden");
+		Assert.Equal(1, s.Duel, "first duel");
 		s.QueueFree();
 	}
 
 	[Test]
-	public static void TestDrivenScenes_SkipStartScreen(Node runner)
+	public static void ControlSelect_ChoiceRedrawsControls_AndStartsOnce(Node runner)
 	{
-		var s = NewScene(runner, null);
-		Assert.Equal(DemoStage.Fighting, s.Stage, "ExternalDrive scenes boot into the fight");
-		s.QueueFree();
+		YokaiFighters.Ui.MenuSettings.Reset();
+		var screen = GD.Load<PackedScene>("res://scenes/ui/start_screen.tscn").Instantiate<StartScreen>();
+		runner.AddChild(screen);
+		try
+		{
+			var grid = YokaiFighters.Ui.UiFind.Get<GridContainer>(screen, "KeyboardGrid");
+			string Table() => string.Join("|", grid.GetChildren().OfType<Label>().Where(l => l.Visible).Select(l => l.Text));
+			Assert.Equal(ControlScheme.Kihon, StartScreen.Scheme, "Kihon by default (E18)");
+			Assert.True(screen.KihonButton.Text.StartsWith("●") && screen.KataButton.Text.StartsWith("○"), "Kihon marked");
+			Assert.True(Table().Contains("Space + direction"), "Kihon table: Special + direction (K2)");
+			screen.KataButton.EmitSignal(BaseButton.SignalName.Pressed);
+			Assert.Equal(ControlScheme.Kata, StartScreen.Scheme, "Kata chosen");
+			Assert.True(screen.KataButton.Text.StartsWith("●") && screen.KihonButton.Text.StartsWith("○"), "Kata marked");
+			Assert.True(Table().Contains("draw the motion") && !Table().Contains("Space + direction"), "Kata table: motions (K1)");
+			screen.KihonButton.EmitSignal(BaseButton.SignalName.Pressed);
+			Assert.Equal(ControlScheme.Kihon, StartScreen.Scheme, "back to Kihon");
+			int started = 0, back = 0;
+			screen.Started += () => started++;
+			screen.BackRequested += () => back++;
+			screen.OnStart();
+			screen.OnStart();
+			Assert.Equal(1, started, "Start raises once per opening");
+			Assert.True(!screen.Visible, "hidden after Start");
+		}
+		finally { YokaiFighters.Ui.MenuSettings.Reset(); screen.QueueFree(); }
 	}
 
 	[Test]

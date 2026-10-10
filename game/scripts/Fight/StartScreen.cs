@@ -8,8 +8,11 @@ using YokaiFighters.Ui;
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-39 start screen, shown when the game boots (before the first fight): title, subtitle, Start Game and the
-/// default Kihon controls, keyboard and pad side by side. The layout, fonts and fixed copy live in
+/// YOK-39 start screen, now the boot flow's control-select step (title → this → fight; <see cref="Flow.GameFlow"/>
+/// instances it, the fight scene no longer does): title, subtitle, Kata / Kihon choice, Start Game and the chosen
+/// scheme's controls, keyboard and pad side by side. The choice is <see cref="MenuSettings.Scheme"/> (shared with the
+/// settings sheet); Left / Right or a click picks, Q / pad X flips it, Esc / pad B raises <see cref="BackRequested"/>.
+/// A UI ticket restyles this to docs/design/screens/control-select.png. The layout, fonts and fixed copy live in
 /// <c>scenes/ui/start_screen.tscn</c>; this script renders the controls table into the scene's two grids and
 /// handles Start. Start = Enter / Space / pad A (the focused button) or a click; it raises <see cref="Started"/> once.
 /// Keyboard text is read from <see cref="InputDevices.P1Keys"/>; the pad table <see cref="PadMap"/> is pinned to
@@ -18,6 +21,15 @@ namespace YokaiFighters.Fight;
 public partial class StartScreen : Control
 {
 	public event Action? Started;
+	/// <summary>Esc / pad B: back to the title.</summary>
+	public event Action? BackRequested;
+
+	public Button KataButton { get; private set; } = null!;
+	public Button KihonButton { get; private set; } = null!;
+	/// <summary>The scheme the fight will start with (the settings sheet's value).</summary>
+	public static ControlScheme Scheme => MenuSettings.Scheme;
+	private Label _specialsLine = null!, _normalNote = null!;
+	private string _kihonSpecials = "";
 
 	public Button Start { get; private set; } = null!;
 	private Control? _debugKeys;
@@ -83,12 +95,50 @@ public partial class StartScreen : Control
 		MouseFilter = MouseFilterEnum.Stop;
 		_debugKeys = UiFind.Get<Control>(this, "DebugKeys");
 		_debugKeys.Visible = _showDebugKeys;
-		var rows = Rows();
-		FillGrid(UiFind.Get<GridContainer>(this, "KeyboardGrid"), rows.Select(r => (r.Action, r.Keyboard)).ToList());
-		FillGrid(UiFind.Get<GridContainer>(this, "PadGrid"), rows.Select(r => (r.Action, r.Pad)).ToList());
+		MenuInput.EnsurePadConfirm();
+		_specialsLine = UiFind.Get<Label>(this, "SpecialsLine");
+		_normalNote = UiFind.Get<Label>(this, "NormalNote");
+		_kihonSpecials = _specialsLine.Text; // the scene's copy is the Kihon line
+		KataButton = UiFind.Get<Button>(this, "Kata");
+		KihonButton = UiFind.Get<Button>(this, "Kihon");
+		KataButton.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kata);
+		KihonButton.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kihon);
 		Start = UiFind.Get<Button>(this, "Start");
 		Start.Pressed += OnStart;
-		Start.GrabFocus();
+		// Kata - Start - Kihon on one row; up / down stay put, nothing else on the screen takes focus.
+		MenuInput.Neighbours(KataButton, null, null, KihonButton, Start);
+		MenuInput.Neighbours(Start, null, null, KataButton, KihonButton);
+		MenuInput.Neighbours(KihonButton, null, null, Start, KataButton);
+		MenuInput.Ring(KataButton, Start, KihonButton);
+		MenuSettings.Changed += ShowScheme;
+		ShowScheme();
+		if (IsVisibleInTree()) Start.GrabFocus();
+	}
+
+	public override void _ExitTree() => MenuSettings.Changed -= ShowScheme;
+
+	/// <summary>Marks the chosen scheme and redraws the controls tables and the specials line for it.</summary>
+	private void ShowScheme()
+	{
+		bool kata = Scheme == ControlScheme.Kata;
+		KataButton.Text = (kata ? "● " : "○ ") + "Kata";
+		KihonButton.Text = (kata ? "○ " : "● ") + "Kihon";
+		var rows = Rows(Scheme);
+		FillGrid(UiFind.Get<GridContainer>(this, "KeyboardGrid"), rows.Select(r => (r.Action, r.Keyboard)).ToList());
+		FillGrid(UiFind.Get<GridContainer>(this, "PadGrid"), rows.Select(r => (r.Action, r.Pad)).ToList());
+		_specialsLine.Text = kata ? SettingsPanel.KataLine : _kihonSpecials;
+		_normalNote.Visible = !kata; // "an attack before Special" is a Kihon note
+	}
+
+	public override void _UnhandledInput(InputEvent e)
+	{
+		if (!IsVisibleInTree()) return;
+		if (MenuInput.Back(e)) { GetViewport().SetInputAsHandled(); BackRequested?.Invoke(); }
+		else if (MenuInput.Scheme(e))
+		{
+			GetViewport().SetInputAsHandled();
+			MenuSettings.SetScheme(Scheme == ControlScheme.Kata ? ControlScheme.Kihon : ControlScheme.Kata);
+		}
 	}
 
 	/// <summary>Writes the rows into the grid's Label pairs (action, binding), copying the last pair if the scene has fewer than needed.</summary>
@@ -114,6 +164,8 @@ public partial class StartScreen : Control
 	}
 
 	public void Open() { Visible = true; Start.GrabFocus(); }
+
+	public void Close() => Visible = false;
 
 	/// <summary>Raises <see cref="Started"/> and hides the screen (once per opening).</summary>
 	public void OnStart()

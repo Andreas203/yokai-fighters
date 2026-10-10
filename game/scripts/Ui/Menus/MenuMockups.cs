@@ -46,7 +46,6 @@ public partial class MenuMockups : Node
 			_previousRun = FightScene.Run;
 			FightScene.Run = Run;
 			_fight = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
-			_fight.StartScreenOverride = false;
 			_fight.ProcessMode = ProcessModeEnum.Pausable; // the host runs while paused (keys); the fight must not
 			AddChild(_fight);
 		}
