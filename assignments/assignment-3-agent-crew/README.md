@@ -16,7 +16,7 @@ A fighting game is unforgiving here. A move's frame data has to match what the a
 
 ## The crew (6 agents)
 
-All six are Claude Code subagents. Their definitions are in [`crew/agents/`](crew/agents/), and the orchestration procedure is in [`crew/orchestration/produce-SKILL.md`](crew/orchestration/produce-SKILL.md).
+All six are Claude Code subagents. Their definitions are the ones the project runs, in [`.claude/agents/`](../../.claude/agents/) ([producer](../../.claude/agents/producer.md), [asset-smith](../../.claude/agents/asset-smith.md), [clip-matcher](../../.claude/agents/clip-matcher.md), [movesmith](../../.claude/agents/movesmith.md), [rules-lawyer](../../.claude/agents/rules-lawyer.md), [gameplay-programmer](../../.claude/agents/gameplay-programmer.md)). The orchestration procedure is [`.claude/skills/produce/SKILL.md`](../../.claude/skills/produce/SKILL.md), and the Meshy MCP config (no key) is [`.mcp.example.json`](../../.mcp.example.json).
 
 | # | Agent | Role | Input | Output | Why it can't be removed |
 |---|---|---|---|---|---|
@@ -31,33 +31,67 @@ A human designer sits at approval gates between the agents (hexagons in the diag
 
 ## Architecture
 
-The full diagram is in [`crew-diagram.md`](crew-diagram.md) (rendered: [`crew-diagram.svg`](crew-diagram.svg)). Summary:
+Solid arrows are data flow (files the next agent reads). Dotted arrows are tool calls. Hexagons are designer approval gates: no Meshy credit is spent and no content merges without one. The whole ten-agent crew is drawn in the [project README](../../README.md#how-the-agents-work-together).
 
 ```mermaid
-flowchart LR
-    D([Designer]) --> O[[Orchestrator: /produce]]
-    O --> P[producer] -->|dispatch plan| O
-    P -.->|tickets| LIN[(Linear)]
-    O --> AS[asset-smith] -->|spec + credits| G1{{approve}} --> AS
-    AS -.->|image→3D, rig| MESHY[(Meshy MCP)]
-    AS -->|rigged GLBs| CM[clip-matcher]
-    CM -->|take list + credits| G2{{approve}} --> CM
-    CM -.->|animate| MESHY
-    CM -->|data/clips/*.json| MS[movesmith]
-    MS -->|data/moves, data/modifiers| RL{rules-lawyer}
-    MS -.->|timing deviates from GDD: re-time| CM
-    RL -->|FAIL + rule ID| MS
-    RL -->|PASS| MAIN[(main / game data)]
-    MAIN -->|loads data/*.json| GP[gameplay-programmer]
-    GP -->|playable build + 245 tests| GAME([Yokai Fighters demo])
-    GP -.->|overlay shows boxes off the model| MS
+flowchart TD
+    D([Designer<br/>approves jobs, credits, gates, merges])
+    O[["Orchestrator<br/>main Claude Code session<br/>runs /produce, carries outputs between agents"]]
+
+    P["1 · producer<br/>IN: GDD, rules.md, Linear board, repo<br/>OUT: tickets + ordered dispatch plan"]
+    AS["2 · asset-smith<br/>IN: character sheets, style rules<br/>OUT: generation specs → rigged models, stage, UI textures"]
+    CM["3 · clip-matcher<br/>IN: rigged fighters, clip needs<br/>OUT: measured clips → data/clips/*.json"]
+    MS["4 · movesmith<br/>IN: data/clips/*.json, rules tables<br/>OUT: frame data, hitboxes, modifiers, card text"]
+    RL{"5 · rules-lawyer<br/>IN: content files + rules.md<br/>OUT: PASS / FAIL + rule ID"}
+
+    G1{{"approve job list<br/>+ credit cap"}}
+    G2{{"approve takes<br/>+ credit cap"}}
+    G3{{"gate call: GO / fallback"}}
+    M[("main branch<br/>game data")]
+
+    LIN[(Linear<br/>YOK tickets)]
+    MESHY[(Meshy MCP<br/>image · 3D · rig · animate)]
+    REPO[(Repo files<br/>specs · GLBs · JSON)]
+
+    D -- "request: build the vertical slice" --> O
+    O --> P
+    P -. "create / update tickets" .-> LIN
+    P -- "dispatch plan" --> O
+
+    O --> AS
+    AS -- "spec + credit estimate" --> G1
+    G1 -- approved --> AS
+    AS -. "text/image→image, image→3D, rig" .-> MESHY
+    AS -- "rigged GLBs, turnarounds, acceptance verdicts" --> REPO
+
+    REPO -- "rigged fighters" --> CM
+    O --> CM
+    CM -- "clip spec + credit estimate" --> G2
+    G2 -- approved --> CM
+    CM -. "meshy_animate" .-> MESHY
+    CM -- "retarget gate report" --> G3
+    G3 -- GO --> CM
+    CM -- "data/clips/*.json<br/>(frames, hit window, trim)" --> MS
+
+    O --> MS
+    MS -- "data/moves, data/modifiers<br/>(frame data from clip timing, F2)" --> RL
+    MS -- "timing deviates from GDD<br/>→ re-time (trim/speed, free)" --> CM
+    RL -- "FAIL + rule ID → revise (max 3 rounds)" --> MS
+    RL -- PASS --> M
+    GP["6 · gameplay-programmer<br/>IN: data/*.json + schemas + rules<br/>OUT: deterministic Godot game, loaders, AI, demo flow, tests"]
+    M -- "data/moves, clips, modifiers, profiles, story" --> GP
+    GP -- "playable build" --> DEMO([Playable demo])
+    GP -- "in-engine check: hitbox overlay<br/>on the models → boxes off → fix" --> MS
+    O --> GP
+    O -. "status updates" .-> LIN
+    D -. "reviews / merges" .-> M
 ```
 
 **Coordination:** Claude Code subagents can't call each other. The main session is the orchestrator. It runs the `produce` procedure: start the producer, then dispatch each ticket through its workflow (generate → clip → content → gate). It passes each agent's output files and report on to the next agent. Agents run in parallel where tickets don't depend on each other, each in its own git worktree and branch, and every result lands as a pull request.
 
 ## Does it run?
 
-Yes, and on real work. [`run-log.md`](run-log.md) traces one full run on 5–6 October 2026: producer → asset-smith → clip-matcher → movesmith → rules-lawyer. It lists the pull request, the Meshy task ids and the credits for each step. In that run:
+Yes, and on real work. [`docs/crew/vertical-slice-run-log.md`](../../docs/crew/vertical-slice-run-log.md) traces one full run on 5–6 October 2026: producer → asset-smith → clip-matcher → movesmith → rules-lawyer. It lists the pull request, the Meshy task ids and the credits for each step. In that run:
 - 500 Meshy credits were spent, all inside approved caps.
 - 41 clips were measured.
 - Movesmith wrote frame data for both fighters. It flagged that the clips ran long, so clip-matcher re-timed them. Movesmith then re-derived the data, and every normal now matches the GDD table.
@@ -65,17 +99,17 @@ Yes, and on real work. [`run-log.md`](run-log.md) traces one full run on 5–6 O
 - The rules-lawyer passed four content PRs (#37, #38, #39, #48), and each merged into the game's `data/`.
 - gameplay-programmer built the game that loads all of it, across 22 PRs from an empty project to a playable demo, with tests growing from 12 to 245.
 
-Examples of each stage's output are in [`output/`](output/):
+The outputs are in the project itself, where the game and the next agent read them:
 
-| Folder | Stage | What's in it |
+| Stage | Agent | Where it is |
 |---|---|---|
-| `1-references/` | asset-smith | The chosen stylised references |
-| `2-models/` | asset-smith | Turnarounds, the stage backdrop and the approved job list |
-| `3-retarget-gate/` | clip-matcher | The gate report and measured stills (the Kitsune's sleeve flare; the shove substituted for the failed grab) |
-| `4-clips/` | clip-matcher | Clip stills and the `data/clips` JSON movesmith reads |
-| `5-content/` | movesmith | Modifier files that passed rules-lawyer |
-| `6-frame-data/` | movesmith | Final move files derived from the re-timed clips (Ryo's light punch 4/2/7 = C8; the heavy kick; the shared Foxfire) |
-| `7-hitbox-alignment/` | movesmith → rules-lawyer | Before and after captures: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
+| References | asset-smith | The chosen stylised references: [Ryo E](../../docs/design/characters/ryo/references/ryo-ref-e.png), [Kitsune D](../../docs/design/characters/kitsune/references/kitsune-ref-d.png) |
+| Models and stage | asset-smith | The approved job list [`assets/specs/yok-29-job-list.md`](../../assets/specs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](../../game/assets/generated/characters/); the [stage backdrop](../../game/assets/generated/stage/bamboo-grove/backdrop.png) |
+| Retarget gate | clip-matcher | The gate report [`docs/assets/retarget_gate.md`](../../docs/assets/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](../../docs/assets/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](../../docs/assets/retarget-gate/ryo-grab-2.png)) |
+| Clips | clip-matcher | [`data/clips/`](../../data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](../../data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](../../data/clips/kitsune-foxfire.json); stills in [`docs/assets/clips/`](../../docs/assets/clips/) |
+| Reward content | movesmith | Modifier files that passed rules-lawyer: [`will-o-wisp.json`](../../data/modifiers/will-o-wisp.json), [`fox-patience.json`](../../data/modifiers/fox-patience.json) |
+| Frame data | movesmith | [`data/moves/`](../../data/moves/), derived from the re-timed clips: [Ryo's light punch](../../data/moves/ryo-light-punch.json) (4/2/7 = C8), the [heavy kick](../../data/moves/ryo-heavy-kick.json), the shared [Foxfire](../../data/moves/foxfire.json) |
+| Hitbox alignment | movesmith → rules-lawyer | [`docs/screenshots/hitbox-alignment/`](../../docs/screenshots/hitbox-alignment/), before and after: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
 
 Failure handling also ran:
 - Three library grabs failed measurement, so clip-matcher applied the F5 substitute.
@@ -87,11 +121,11 @@ Failure handling also ran:
 
 The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grove at dusk. It uses the rigged models, measured clips, frame data and hitboxes this crew produced, plus the two reward modifiers:
 
-1. **Start screen** with the controls ([`demo/1-start-screen.png`](demo/1-start-screen.png)).
-2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([`demo/2-fight-bamboo-grove.png`](demo/2-fight-bamboo-grove.png)).
-3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([`demo/3-hitbox-overlay.png`](demo/3-hitbox-overlay.png)).
-4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([`demo/4-binding-line.png`](demo/4-binding-line.png), [`demo/5-reward-cards.png`](demo/5-reward-cards.png)).
-5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([`demo/6-demo-complete.png`](demo/6-demo-complete.png)).
+1. **Start screen** with the controls ([screenshot](../../docs/screens/yok-39-editable-ui/start.png)).
+2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([screenshot](../../docs/screenshots/bamboo-grove/fight.png)).
+3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([screenshot](../../docs/screenshots/YOK-53/ryo-heavy-kick-active.png)).
+4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([screenshot](../../docs/screens/yok-39-editable-ui/reward_binding.png), [screenshot](../../docs/screens/yok-39-editable-ui/reward_cards.png)).
+5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([screenshot](../../docs/screens/yok-39-editable-ui/demo_complete.png)).
 
 **Play it on Windows, no install needed:**
 1. Download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB).
@@ -107,16 +141,8 @@ godot --headless --path . --import   # first run only
 godot --path .                        # or open game/project.godot in the editor and press F5
 ```
 
-Agents 1–5 produced what the game *plays*: the models, clips, frame data, hitboxes and reward content. **gameplay-programmer** (agent 6) built the game that plays it, from the deterministic 60-tick fight engine to the demo flow; its work is listed in [`run-log.md`](run-log.md) § 6. The HUD and menu screens came from a separate `ui-designer` agent, which isn't part of this crew.
+Agents 1–5 produced what the game *plays*: the models, clips, frame data, hitboxes and reward content. **gameplay-programmer** (agent 6) built the game that plays it, from the deterministic 60-tick fight engine to the demo flow; its work is listed in the [run log](../../docs/crew/vertical-slice-run-log.md), § 6. The HUD and menu screens came from a separate `ui-designer` agent, which isn't part of this crew.
 
-## Folder contents
-```
-README.md            this file
-crew-diagram.md      Mermaid architecture diagram (+ crew-diagram.svg, rendered)
-run-log.md           the crew's real run, step by step, with PRs, task ids and credits
-crew/agents/         the six agent definitions (role, inputs, outputs, rules, budgets)
-crew/orchestration/  produce-SKILL.md, the orchestration procedure
-crew/mcp.example.json  Meshy MCP config (no key)
-output/              example outputs from each stage
-demo/                screenshots of the playable vertical slice
-```
+## Where everything lives
+
+This folder holds only this write-up. The agent definitions, the run log and every output are in the project, linked above, so there is one copy of each and it is the one the game uses.

@@ -1,0 +1,537 @@
+{
+  "meta": {
+    "run": "critic-seeded-faults",
+    "command": "critic-test",
+    "retrieval": "v2",
+    "gen_model": "sonnet",
+    "critic_model": "opus",
+    "chunks": 83,
+    "notes": 13
+  },
+  "validation": {
+    "ran": true,
+    "ok": true,
+    "files": 2,
+    "report": "validate_data: 2 file(s), 2 valid, 0 invalid (2 with 'proposed' values awaiting the designer)"
+  },
+  "results": [
+    {
+      "id": "wake-up-oni-early",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Oni wins at row 2 or 3",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Oni at row 2 or 3. The run ended at row 5 or earlier.",
+      "retrieval": {
+        "mode": "v2",
+        "queries": [
+          {
+            "label": "situation",
+            "query": "wake-up card after a loss, Ryo wakes at the province's edge",
+            "scope": "01-vibe/Story.md",
+            "k": 2,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Wake-up cards",
+                "score": 26.545
+              },
+              {
+                "id": "01-vibe/Story.md#The illusion loop",
+                "score": 15.415
+              }
+            ]
+          },
+          {
+            "label": "talismans",
+            "query": "talismans after a loss: run ended at row 5 or earlier, every talisman blank",
+            "scope": "01-vibe/Story.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Talismans",
+                "score": 26.281
+              }
+            ]
+          },
+          {
+            "label": "yokai",
+            "query": "Oni personality stage folklore iron club",
+            "scope": "01-vibe/Characters.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Characters.md#Oni",
+                "score": 15.058
+              }
+            ]
+          },
+          {
+            "label": "voice",
+            "query": "narrator voice wake-up card present tense",
+            "scope": "01-vibe/Tone.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Tone.md#Voice: the narrator",
+                "score": 26.789
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Wake-up cards",
+            "score": 26.545,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "A wake-up card shows after a loss. Ryo wakes at the province's edge.\n\n- First loss: a cheerful voice names the move the Tanuki would have stolen. This teaches the copy rule before the player has met the boss.\n- Later losses vary by the row reached and by which yokai won. The yokai that won is named through `{yokai}`.\n- A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked.\n- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.\n- A later-loss card does not reveal that the merchant is the Tanuki. The reveal belongs to the boss node."
+          },
+          {
+            "id": "01-vibe/Story.md#The illusion loop",
+            "score": 15.415,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "The Tanuki has folded a rural Japanese province, at the end of autumn, into an illusion. Every run is one pass through that illusion. The yokai inside it are real spirits, trapped and made to fight again each loop. When Ryo falls, the loop closes and he wakes at the province's edge to walk in again. Each Tanuki win, up to three, makes the yokai react faster and lean aggressive, framed as the illusion growing stronger."
+          },
+          {
+            "id": "01-vibe/Story.md#Talismans",
+            "score": 26.281,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "- Binding: the round-ending blow slows, then an ink stroke seals the yokai into a paper talisman.\n- After a loss, Ryo's talismans are blank again.\n- The one exception is the carry-over: if the run reached row 6 or further, one talisman stays faintly inked, and that special starts the next run at Lv 2. A run that ended at row 5 or earlier leaves every talisman blank.\n- Abilities bought from the merchant appear in grey \"borrowed ink\" and never carry over."
+          },
+          {
+            "id": "01-vibe/Characters.md#Oni",
+            "score": 15.058,
+            "source": "GDD §2.2, §5.1; docs/design/characters/",
+            "text": "The rushdown yokai of the snowbound mountain shrine gate. Proud and blunt, it dashes in and swings an iron club. Its hit sparks are oni red.\n\nFolklore reference: oni carry the kanabō, an iron club; the saying \"an oni with an iron club\" means strength made stronger.\n\nReference images: none yet."
+          },
+          {
+            "id": "01-vibe/Tone.md#Voice: the narrator",
+            "score": 26.789,
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "The narrator is quiet and observant, in present tense. In the GDD's sample cards the wake-up card addresses the player as \"you\" (\"You wake at the province's edge.\") and the win card names Ryo (\"Ryo has no answer yet.\"). The narrator describes what is seen and lets the cost stay unspoken or half spoken."
+          },
+          {
+            "id": "01-vibe/Tone.md#The tone line",
+            "score": "pinned",
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "Yokai Fighters is mischievous folklore with a melancholy edge, never horror (S1). Yokai are tricksters and lonely spirits, not monsters, and every victory carries a small cost. The setting is a rural Japanese province at the end of autumn, so the mood is dusk, lantern light and things about to end, not night and dread.\n\nThree checks for any line of text:\n\n- Mischief: someone in the line is teasing, bargaining or getting away with something.\n- Melancholy: something is owed, borrowed, waiting or left behind.\n- No horror: nothing is gory, cruel, demonic or frightening. A yokai that wins walks away; it does not hurt Ryo for pleasure."
+          },
+          {
+            "id": "01-vibe/Tone.md#Card form",
+            "score": "pinned",
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "- A story card is one or two sentences (S2), at most 280 characters.\n- Present tense, plain words, one concrete image per card: a lantern, a paper screen, a tail, a teacup, an ink stroke.\n- Names come from the player's run through `{yokai}` and `{move}` placeholders (S4). A card never hard-codes a move the player may not own.\n- Images come from the game's own world: paper talismans, ink, brush strokes, red seals, lanterns, bamboo, snow on a shrine gate, a riverbank, a tea house with paper screens.\n- A card does not explain a rule in system words. It does not say \"health\", \"frames\", \"level\" or \"roguelite\"; it says what a person standing there would see."
+          },
+          {
+            "id": "01-vibe/Tone.md#Do and don't examples",
+            "score": "pinned",
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "| Do | Don't | Why |\n|---|---|---|\n| \"Kitsune slips off between the lanterns, tails swaying, and does not look back.\" | \"The fox demon sinks its fangs into Ryo and howls over his broken body.\" | Yokai are tricksters, not monsters. A loss is a yokai leaving, not a killing. |\n| \"Somewhere a bound thing is still waiting for someone to return it.\" | \"Ryo has failed, and the darkness swallows the province forever.\" | Melancholy is small and specific: a debt, a wait. It is never doom. |\n| \"Shame about that Foxfire. I'd have taken good care of it.\" | \"Your Foxfire is MINE now, fool! Tremble before me!\" | The Tanuki is cheerful and covetous. It never gloats or threatens. |\n| \"Forgive me, Kitsune. I'll set your spirit free.\" | \"Got you! Another one for the collection.\" | Ryo apologises. Collecting is what the Tanuki does. |\n| \"Which of us is the collector, little exorcist?\" | \"LOL, nice talismans, bro.\" | Wit is dry and in period. No modern slang, no memes, no fourth wall. |"
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Wake-up cards",
+        "01-vibe/Story.md#The illusion loop",
+        "01-vibe/Story.md#Talismans",
+        "01-vibe/Characters.md#Oni",
+        "01-vibe/Tone.md#Voice: the narrator",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Tone.md#Do and don't examples"
+      ],
+      "seeded": true,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "{yokai} brings the club down until the snow runs red, and laughs over what is left of you. You wake screaming at the province's edge, your talismans blank, all but one."
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "tone_drift",
+              "check": "S1 never horror",
+              "quote": "scream",
+              "problem": "'scream' reads as horror; the tone is never horror.",
+              "evidence": "01-vibe/Tone.md#The tone line",
+              "fix": "Replace the image with one from the game's world."
+            }
+          ],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "{yokai} brings the club down until the snow runs red",
+              "problem": "The line is gory and shows the yokai violently harming Ryo, which breaks the no-horror check.",
+              "evidence": "01-vibe/Tone.md#The tone line: No horror: nothing is gory, cruel, demonic or frightening. A yokai that wins walks away; it does not hurt Ryo for pleasure.",
+              "fix": "Replace the beating with the yokai leaving, for example shouldering its iron club and walking back up toward the snowbound shrine gate."
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "and laughs over what is left of you",
+              "problem": "The winning yokai gloats over Ryo and has harmed him, which the wake-up card rules forbid.",
+              "evidence": "01-vibe/Story.md#Wake-up cards: The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.",
+              "fix": "Have {yokai} turn away without a word or go back to what it was doing, with no laughter and no injury to Ryo."
+            },
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "You wake screaming",
+              "problem": "Waking screaming is frightening and loud, which breaks the no-horror check and the quiet narrator who leaves the cost unspoken or half spoken.",
+              "evidence": "01-vibe/Tone.md#Voice: the narrator: The narrator is quiet and observant, in present tense. ... The narrator describes what is seen and lets the cost stay unspoken or half spoken.",
+              "fix": "Use a plain, quiet waking such as \"You wake at the province's edge\"."
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "your talismans blank, all but one",
+              "problem": "The run ended at row 5 or earlier, so every talisman is blank and none stays inked.",
+              "evidence": "01-vibe/Story.md#Talismans: A run that ended at row 5 or earlier leaves every talisman blank.",
+              "fix": "Drop \"all but one\" and say the talismans are blank, every one."
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "You wake at the province's edge, every talisman blank. Up the mountain, {yokai} shoulders its iron club and walks back toward the snowy shrine gate without a word."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-oni-early",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Oni at row 2 or 3 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "You wake at the province's edge, every talisman blank. Up the mountain, {yokai} shoulders its iron club and walks back toward the snowy shrine gate without a word.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run critic-seeded-faults) from vault chunks: 01-vibe/Story.md#Wake-up cards; 01-vibe/Story.md#The illusion loop; 01-vibe/Story.md#Talismans; 01-vibe/Characters.md#Oni; 01-vibe/Tone.md#Voice: the narrator; 01-vibe/Tone.md#The tone line; 01-vibe/Tone.md#Card form; 01-vibe/Tone.md#Do and don't examples"
+      }
+    },
+    {
+      "id": "elder-intro-elder-oni",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Elder Oni",
+      "brief": "Write the one-line intro card shown on the map node of the Elder Oni, before the duel starts.",
+      "retrieval": {
+        "mode": "v2",
+        "queries": [
+          {
+            "label": "twist",
+            "query": "Elder Oni elder twist and the habit the twist breaks",
+            "scope": "02-mechanics/Yokai.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "02-mechanics/Yokai.md#Oni",
+                "score": 22.647
+              }
+            ]
+          },
+          {
+            "label": "card",
+            "query": "elder intro card: one line that teaches the twist",
+            "scope": "01-vibe/Story.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 16.062
+              }
+            ]
+          },
+          {
+            "label": "yokai",
+            "query": "Oni personality folklore stage",
+            "scope": "01-vibe/Characters.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Characters.md#Oni",
+                "score": 6.08
+              }
+            ]
+          },
+          {
+            "label": "voice",
+            "query": "narrator voice quiet observant",
+            "scope": "01-vibe/Tone.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Tone.md#Voice: the narrator",
+                "score": 18.509
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Yokai.md#Oni",
+            "score": 22.647,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Oni is the rushdown yokai. Its relentless pressure teaches the player to block. It offers Iron-Club Charge, Oni Quake and the Oni modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Dashes in constantly |\n| Patient temperament | Walks in and punishes whiffs with its charge |\n| Habit to punish | Dashes in after blocking a projectile |\n| Elder | Elder Oni |\n| Elder twist | Armour on every special |\n| Habit the twist breaks | Mashing jabs to interrupt it stops working |\n| Elder offers | The cancel rule Oni Chain |"
+          },
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 16.062,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Characters.md#Oni",
+            "score": 6.08,
+            "source": "GDD §2.2, §5.1; docs/design/characters/",
+            "text": "The rushdown yokai of the snowbound mountain shrine gate. Proud and blunt, it dashes in and swings an iron club. Its hit sparks are oni red.\n\nFolklore reference: oni carry the kanabō, an iron club; the saying \"an oni with an iron club\" means strength made stronger.\n\nReference images: none yet."
+          },
+          {
+            "id": "01-vibe/Tone.md#Voice: the narrator",
+            "score": 18.509,
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "The narrator is quiet and observant, in present tense. In the GDD's sample cards the wake-up card addresses the player as \"you\" (\"You wake at the province's edge.\") and the win card names Ryo (\"Ryo has no answer yet.\"). The narrator describes what is seen and lets the cost stay unspoken or half spoken."
+          },
+          {
+            "id": "01-vibe/Tone.md#The tone line",
+            "score": "pinned",
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "Yokai Fighters is mischievous folklore with a melancholy edge, never horror (S1). Yokai are tricksters and lonely spirits, not monsters, and every victory carries a small cost. The setting is a rural Japanese province at the end of autumn, so the mood is dusk, lantern light and things about to end, not night and dread.\n\nThree checks for any line of text:\n\n- Mischief: someone in the line is teasing, bargaining or getting away with something.\n- Melancholy: something is owed, borrowed, waiting or left behind.\n- No horror: nothing is gory, cruel, demonic or frightening. A yokai that wins walks away; it does not hurt Ryo for pleasure."
+          },
+          {
+            "id": "01-vibe/Tone.md#Card form",
+            "score": "pinned",
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "- A story card is one or two sentences (S2), at most 280 characters.\n- Present tense, plain words, one concrete image per card: a lantern, a paper screen, a tail, a teacup, an ink stroke.\n- Names come from the player's run through `{yokai}` and `{move}` placeholders (S4). A card never hard-codes a move the player may not own.\n- Images come from the game's own world: paper talismans, ink, brush strokes, red seals, lanterns, bamboo, snow on a shrine gate, a riverbank, a tea house with paper screens.\n- A card does not explain a rule in system words. It does not say \"health\", \"frames\", \"level\" or \"roguelite\"; it says what a person standing there would see."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Yokai.md#Oni",
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Characters.md#Oni",
+        "01-vibe/Tone.md#Voice: the narrator",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Tone.md#Do and don't examples",
+        "02-mechanics/Yokai.md#Elders"
+      ],
+      "seeded": true,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "No guard in the province has ever stopped the Elder Oni's club, so do not try to block it."
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "No guard in the province has ever stopped the Elder Oni's club, so do not try to block it.",
+              "problem": "The draft teaches that the Elder Oni's club cannot be blocked, but the twist is armour on every special (jabs no longer interrupt it), and the Oni is the yokai that teaches the player to block.",
+              "evidence": "01-vibe/Story.md#Elder intro cards: Elder Oni | 5 or 8 | Armour on every special. 02-mechanics/Yokai.md#Oni: Habit the twist breaks | Mashing jabs to interrupt it stops working. 02-mechanics/Yokai.md#Oni: Its relentless pressure teaches the player to block.",
+              "fix": "Show the Oni swinging through hits that should have stopped it, for example: \"Quick blows land on the Elder Oni like snow on a shrine gate, and its iron club keeps swinging through them.\""
+            },
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "so do not try to block it",
+              "problem": "The line gives a direct gameplay instruction in mechanic terms instead of letting the quiet, observant narrator describe what is seen.",
+              "evidence": "01-vibe/Tone.md#Card form: A card does not explain a rule in system words. [...] it says what a person standing there would see. 01-vibe/Tone.md#Voice: the narrator: The narrator describes what is seen and lets the cost stay unspoken or half spoken.",
+              "fix": "Drop the instruction and give one concrete present-tense image that implies the twist, such as blows glancing off the Oni while its club keeps coming."
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "Quick blows land on the Elder Oni like snow on a shrine gate, and its iron club keeps swinging through them."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-elder-oni",
+        "status": "proposed",
+        "trigger": "Intro card on the Elder Oni's map node, rows 5 and 8 (Y3)",
+        "title": "Elder Oni",
+        "text": "Quick blows land on the Elder Oni like snow on a shrine gate, and its iron club keeps swinging through them.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run critic-seeded-faults) from vault chunks: 02-mechanics/Yokai.md#Oni; 01-vibe/Story.md#Elder intro cards; 01-vibe/Characters.md#Oni; 01-vibe/Tone.md#Voice: the narrator; 01-vibe/Tone.md#The tone line; 01-vibe/Tone.md#Card form"
+      }
+    },
+    {
+      "id": "onis-hide-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Oni's Hide",
+      "brief": "Write the reward card text for the modifier Oni's Hide, offered by the Oni.",
+      "retrieval": {
+        "mode": "v2",
+        "queries": [
+          {
+            "label": "effect",
+            "query": "Oni's Hide modifier effect on the special it is attached to",
+            "scope": "02-mechanics/Abilities.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "02-mechanics/Abilities.md#Oni modifiers",
+                "score": 15.437
+              }
+            ]
+          },
+          {
+            "label": "voice",
+            "query": "reward card voice: plain and frames examples",
+            "scope": "01-vibe/Tone.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Tone.md#Reward card voice",
+                "score": 12.664
+              }
+            ]
+          },
+          {
+            "label": "yokai",
+            "query": "Oni personality folklore",
+            "scope": "01-vibe/Characters.md",
+            "k": 1,
+            "hits": [
+              {
+                "id": "01-vibe/Characters.md#Oni",
+                "score": 6.08
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Abilities.md#Oni modifiers",
+            "score": 15.437,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "A modifier attaches to one special and changes how it plays without new animation (A10). The Oni offers these five.\n\n| Modifier | Effect on the special it is attached to | Locked |\n|---|---|---|\n| Oni's Hide | Armour on frames 1–5 | no |\n| Iron Will | Can't be interrupted by projectiles | no |\n| Rage Ember | +15% damage while Ryo is below 30% health | ◆ |\n| Club Momentum | Pushes the opponent 50% further toward the corner | ◆ |\n| Brute Recovery | 4 fewer recovery frames on block | ◆ |"
+          },
+          {
+            "id": "01-vibe/Tone.md#Reward card voice",
+            "score": 12.664,
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "Reward cards are plain language first, with frame data behind a toggle (A12).\n\n- `plain` is one sentence, at most 140 characters, that says what changes when the player fights. It may open with a short folklore image, then states the effect in ordinary words.\n- `frames` is the exact number from the ability table, with no flavour.\n- A plain line never promises more than the table gives.\n\n| Ability | plain | frames |\n|---|---|---|\n| Foxfire | \"Launch a slow fox flame that drifts across the screen.\" | \"15 / 4 / 30 frames, 70 damage, slow projectile\" |\n| Will-o'-wisp | \"Wisp-light lends your projectile wings: it flies faster across the screen.\" | \"Projectile speed +30% (x1.3, rounded to nearest)\" |\n| Fox's Patience | \"The fox waits and learns: this special builds more spirit meter when the foe blocks it.\" | \"Meter gain on block +25% (C5 default 3 becomes 4, rounded to nearest)\" |\n| Oni's Hide (GDD mockup, attached to Rising Talisman) | \"Your uppercut can't be interrupted early on.\" | not written yet |"
+          },
+          {
+            "id": "01-vibe/Characters.md#Oni",
+            "score": 6.08,
+            "source": "GDD §2.2, §5.1; docs/design/characters/",
+            "text": "The rushdown yokai of the snowbound mountain shrine gate. Proud and blunt, it dashes in and swings an iron club. Its hit sparks are oni red.\n\nFolklore reference: oni carry the kanabō, an iron club; the saying \"an oni with an iron club\" means strength made stronger.\n\nReference images: none yet."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Abilities.md#Oni modifiers",
+        "01-vibe/Tone.md#Reward card voice",
+        "01-vibe/Characters.md#Oni",
+        "02-mechanics/Abilities.md#The reward screen"
+      ],
+      "seeded": true,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "The oni's hide shrugs off every blow for the whole move and hits harder too.",
+            "frames": "Armour on frames 1-12, +10% damage"
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "shrugs off every blow for the whole move",
+              "problem": "The plain line promises armour for the entire move, but the table only gives armour on the first five frames.",
+              "evidence": "01-vibe/Tone.md#Reward card voice: A plain line never promises more than the table gives. / 02-mechanics/Abilities.md#Oni modifiers: Oni's Hide | Armour on frames 1–5",
+              "fix": "Limit the claim to the start of the move, e.g. \"The oni's hide hardens you: this special can't be interrupted early on.\""
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "and hits harder too",
+              "problem": "Oni's Hide has no damage effect in the ability table; the draft invents a damage bonus.",
+              "evidence": "02-mechanics/Abilities.md#Oni modifiers: Oni's Hide | Armour on frames 1–5 | no",
+              "fix": "Remove the damage claim so the plain line states only the early armour."
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "Armour on frames 1-12",
+              "problem": "The frame window is wrong; the table gives armour on frames 1–5, not 1–12.",
+              "evidence": "02-mechanics/Abilities.md#Oni modifiers: Oni's Hide | Armour on frames 1–5 | no",
+              "fix": "Change the frames line to \"Armour on frames 1–5\"."
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "+10% damage",
+              "problem": "The frames line adds a +10% damage bonus that does not exist for Oni's Hide in the ability table.",
+              "evidence": "01-vibe/Tone.md#Reward card voice: `frames` is the exact number from the ability table, with no flavour. / 02-mechanics/Abilities.md#Oni modifiers: Oni's Hide | Armour on frames 1–5",
+              "fix": "Delete \"+10% damage\" so the frames line carries only the table's value."
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "plain": "The oni's hide hardens you: this special can't be interrupted in its first few frames.",
+            "frames": "Armour on frames 1–5"
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "modifier": "Oni's Hide",
+        "source": "oni",
+        "status": "proposed",
+        "card": {
+          "plain": "The oni's hide hardens you: this special can't be interrupted in its first few frames.",
+          "frames": "Armour on frames 1–5"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run critic-seeded-faults) from vault chunks: 02-mechanics/Abilities.md#Oni modifiers; 01-vibe/Tone.md#Reward card voice; 01-vibe/Characters.md#Oni"
+      }
+    }
+  ]
+}

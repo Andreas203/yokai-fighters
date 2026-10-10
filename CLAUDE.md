@@ -57,6 +57,8 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `game/` | Godot project | gameplay-programmer, ui-designer |
 | `harness/results/`, `harness/reports/` | Raw bot runs, balance reports | gameplay-programmer, sparring-partner |
 | `docs/codebase-map.md` | Maintained map of the code, to keep agent context small | gameplay-programmer |
+| `vault/` | The design as linked notes, one topic per note; the retrieval store for the content pipeline | designer |
+| `tools/content_pipeline/` | Drafts card text from the vault (retrieval, generator, critic); output is `proposed` and still goes through the Rules Lawyer | designer |
 
 ## Tickets, branches and PRs
 - Tickets live in **Linear**: team `Yokai-fighters` (key `YOK`), project "Yokai Fighters: 5-Week Capstone Build", grouped under Epics A–F.

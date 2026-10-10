@@ -1,0 +1,1080 @@
+{
+  "meta": {
+    "run": "v1-single-query",
+    "command": "generate",
+    "retrieval": "v1",
+    "gen_model": "sonnet",
+    "critic_model": "opus",
+    "chunks": 83,
+    "notes": 13
+  },
+  "validation": {
+    "ran": true,
+    "ok": true,
+    "files": 6,
+    "report": "validate_data: 6 file(s), 6 valid, 0 invalid (6 with 'proposed' values awaiting the designer)"
+  },
+  "results": [
+    {
+      "id": "wake-up-oni-early",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Oni wins at row 2 or 3",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Oni at row 2 or 3. The run ended at row 5 or earlier.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Wake-up story card shown after Ryo loses a duel to the Oni at row 2 or 3.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Wake-up cards",
+                "score": 17.868
+              },
+              {
+                "id": "01-vibe/Story.md#Card schedule",
+                "score": 13.313
+              },
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 13.264
+              },
+              {
+                "id": "02-mechanics/Run-Loop.md#The map",
+                "score": 11.419
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Wake-up cards",
+            "score": 17.868,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "A wake-up card shows after a loss. Ryo wakes at the province's edge.\n\n- First loss: a cheerful voice names the move the Tanuki would have stolen. This teaches the copy rule before the player has met the boss.\n- Later losses vary by the row reached and by which yokai won. The yokai that won is named through `{yokai}`.\n- A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked.\n- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.\n- A later-loss card does not reveal that the merchant is the Tanuki. The reveal belongs to the boss node."
+          },
+          {
+            "id": "01-vibe/Story.md#Card schedule",
+            "score": 13.313,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "The story is delivered through short cards of one or two sentences, so it never interrupts the run for long (S2, S3). No new beats are added to this schedule.\n\n| When | Card | Speaker |\n|---|---|---|\n| First run, before row 1 | Intro: Master Sōen's rule, \"name the debt\" | Master Sōen |\n| Every binding | \"Forgive me, {yokai}. I'll set your spirit free.\" | Ryo |\n| Row 4, merchant still disguised | \"That {move} of yours... I'd love one.\" | Merchant |\n| First loss | Wake-up card: the Tanuki names the move it would have stolen, teaching the copy rule | Narrator, with the Tanuki's voice |\n| Later losses | Wake-up variants by row reached and by which yokai won | Narrator |\n| Every run that reaches the boss | The merchant drops his disguise at the Tanuki's node | Narrator |\n| Win 1 | Why the Tanuki collects techniques | Narrator and the Tanuki |\n| Win 2 | The Tanuki points out that Ryo's talismans are cages too | The Tanuki |\n| Win 3 (ending) | Ryo binds the Tanuki and releases every yokai, his own included: \"I said I'd set you free.\" | Ryo |"
+          },
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 13.264,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "02-mechanics/Run-Loop.md#The map",
+            "score": 11.419,
+            "source": "GDD §1.2, §1.5, §6.1",
+            "text": "Eight rows, one node per row (R1). Each node shows which yokai waits there, so choosing a path is choosing which powers you can earn (R2).\n\n| Row | Node |\n|---|---|\n| 1 | Apprentice duel, guided on the first run |\n| 2 | Duel |\n| 3 | Duel |\n| 4 | Rest stop: always the merchant |\n| 5 | Duel: always an elder |\n| 6 | Duel |\n| 7 | Rest stop: the merchant again, or a dojo |\n| 8 | Duel: always an elder |\n| After 8 | The Tanuki |\n\nThat is 6 duels, two of them against elders, and 2 rest stops."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Wake-up cards",
+        "01-vibe/Story.md#Card schedule",
+        "01-vibe/Story.md#Elder intro cards",
+        "02-mechanics/Run-Loop.md#The map",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Tone.md#Voice: the narrator",
+        "01-vibe/Story.md#Talismans"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "Ryo wakes at the province's edge, every talisman blank. Whatever {yokai} wanted, it has already gone back to its own business, leaving him only the dust and the walk back."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-oni-early",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Oni at row 2 or 3 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "Ryo wakes at the province's edge, every talisman blank. Whatever {yokai} wanted, it has already gone back to its own business, leaving him only the dust and the walk back.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Wake-up cards; 01-vibe/Story.md#Card schedule; 01-vibe/Story.md#Elder intro cards; 02-mechanics/Run-Loop.md#The map"
+      }
+    },
+    {
+      "id": "wake-up-nine-tails-row-5",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Nine-Tailed Kitsune wins at row 5",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Nine-Tailed Kitsune at row 5. The run ended at row 5 or earlier.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Wake-up story card shown after Ryo loses a duel to the Nine-Tailed Kitsune at row 5.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 20.421
+              },
+              {
+                "id": "01-vibe/Story.md#Wake-up cards",
+                "score": 19.038
+              },
+              {
+                "id": "01-vibe/Story.md#Card schedule",
+                "score": 11.61
+              },
+              {
+                "id": "01-vibe/Characters.md#Kitsune",
+                "score": 11.345
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 20.421,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Story.md#Wake-up cards",
+            "score": 19.038,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "A wake-up card shows after a loss. Ryo wakes at the province's edge.\n\n- First loss: a cheerful voice names the move the Tanuki would have stolen. This teaches the copy rule before the player has met the boss.\n- Later losses vary by the row reached and by which yokai won. The yokai that won is named through `{yokai}`.\n- A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked.\n- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.\n- A later-loss card does not reveal that the merchant is the Tanuki. The reveal belongs to the boss node."
+          },
+          {
+            "id": "01-vibe/Story.md#Card schedule",
+            "score": 11.61,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "The story is delivered through short cards of one or two sentences, so it never interrupts the run for long (S2, S3). No new beats are added to this schedule.\n\n| When | Card | Speaker |\n|---|---|---|\n| First run, before row 1 | Intro: Master Sōen's rule, \"name the debt\" | Master Sōen |\n| Every binding | \"Forgive me, {yokai}. I'll set your spirit free.\" | Ryo |\n| Row 4, merchant still disguised | \"That {move} of yours... I'd love one.\" | Merchant |\n| First loss | Wake-up card: the Tanuki names the move it would have stolen, teaching the copy rule | Narrator, with the Tanuki's voice |\n| Later losses | Wake-up variants by row reached and by which yokai won | Narrator |\n| Every run that reaches the boss | The merchant drops his disguise at the Tanuki's node | Narrator |\n| Win 1 | Why the Tanuki collects techniques | Narrator and the Tanuki |\n| Win 2 | The Tanuki points out that Ryo's talismans are cages too | The Tanuki |\n| Win 3 (ending) | Ryo binds the Tanuki and releases every yokai, his own included: \"I said I'd set you free.\" | Ryo |"
+          },
+          {
+            "id": "01-vibe/Characters.md#Kitsune",
+            "score": 11.345,
+            "source": "GDD §2.2, §5.1; docs/design/characters/",
+            "text": "The fox of the bamboo grove at dusk, a zoner who holds the screen with slow foxfire. She teases and slips away. She wears a full white fox mask with red markings for the whole fight, and has three tails; the Nine-Tailed elder has nine. Her hit sparks are foxfire orange.\n\nFolklore reference: kitsune are fox spirits that grow more tails with age, up to nine, and kitsunebi (foxfire) is the ghost light they carry.\n\nReference images: `docs/design/characters/kitsune/`."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Story.md#Wake-up cards",
+        "01-vibe/Story.md#Card schedule",
+        "01-vibe/Characters.md#Kitsune",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Tone.md#Voice: the narrator",
+        "01-vibe/Story.md#Talismans"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "Ryo wakes at the province's edge, his talismans blank as unwritten paper. Far off, {yokai} slips back into the bamboo, her foxfire dimming behind her, and does not look back."
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "lore_break",
+              "check": "S4 hard-coded move",
+              "quote": "Foxfire",
+              "problem": "The card names the move 'Foxfire', which the player may not own in this run.",
+              "evidence": "01-vibe/Tone.md#Card form",
+              "fix": "Remove the move name."
+            }
+          ],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "Ryo wakes at the province's edge, his talismans blank as unwritten paper. Far off, {yokai} slips back into the bamboo, her tails swaying in the dusk, and does not look back."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-nine-tails-row-5",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Nine-Tailed Kitsune at row 5 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "Ryo wakes at the province's edge, his talismans blank as unwritten paper. Far off, {yokai} slips back into the bamboo, her tails swaying in the dusk, and does not look back.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Elder intro cards; 01-vibe/Story.md#Wake-up cards; 01-vibe/Story.md#Card schedule; 01-vibe/Characters.md#Kitsune"
+      }
+    },
+    {
+      "id": "wake-up-kappa-row-6",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Kappa wins at row 6",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Kappa at row 6. The run reached row 6.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Wake-up story card shown after Ryo loses a duel to the Kappa at row 6.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Wake-up cards",
+                "score": 19.227
+              },
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 13.39
+              },
+              {
+                "id": "01-vibe/Story.md#Card schedule",
+                "score": 11.61
+              },
+              {
+                "id": "01-vibe/Tone.md#Voice: the narrator",
+                "score": 11.013
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Wake-up cards",
+            "score": 19.227,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "A wake-up card shows after a loss. Ryo wakes at the province's edge.\n\n- First loss: a cheerful voice names the move the Tanuki would have stolen. This teaches the copy rule before the player has met the boss.\n- Later losses vary by the row reached and by which yokai won. The yokai that won is named through `{yokai}`.\n- A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked.\n- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.\n- A later-loss card does not reveal that the merchant is the Tanuki. The reveal belongs to the boss node."
+          },
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 13.39,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Story.md#Card schedule",
+            "score": 11.61,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "The story is delivered through short cards of one or two sentences, so it never interrupts the run for long (S2, S3). No new beats are added to this schedule.\n\n| When | Card | Speaker |\n|---|---|---|\n| First run, before row 1 | Intro: Master Sōen's rule, \"name the debt\" | Master Sōen |\n| Every binding | \"Forgive me, {yokai}. I'll set your spirit free.\" | Ryo |\n| Row 4, merchant still disguised | \"That {move} of yours... I'd love one.\" | Merchant |\n| First loss | Wake-up card: the Tanuki names the move it would have stolen, teaching the copy rule | Narrator, with the Tanuki's voice |\n| Later losses | Wake-up variants by row reached and by which yokai won | Narrator |\n| Every run that reaches the boss | The merchant drops his disguise at the Tanuki's node | Narrator |\n| Win 1 | Why the Tanuki collects techniques | Narrator and the Tanuki |\n| Win 2 | The Tanuki points out that Ryo's talismans are cages too | The Tanuki |\n| Win 3 (ending) | Ryo binds the Tanuki and releases every yokai, his own included: \"I said I'd set you free.\" | Ryo |"
+          },
+          {
+            "id": "01-vibe/Tone.md#Voice: the narrator",
+            "score": 11.013,
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "The narrator is quiet and observant, in present tense. In the GDD's sample cards the wake-up card addresses the player as \"you\" (\"You wake at the province's edge.\") and the win card names Ryo (\"Ryo has no answer yet.\"). The narrator describes what is seen and lets the cost stay unspoken or half spoken."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Wake-up cards",
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Story.md#Card schedule",
+        "01-vibe/Tone.md#Voice: the narrator",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Story.md#Talismans"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "You wake at the province's edge. {yokai} has already gone back to what it was doing, and one talisman stays faintly inked."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-kappa-row-6",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Kappa at row 6 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "You wake at the province's edge. {yokai} has already gone back to what it was doing, and one talisman stays faintly inked.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Wake-up cards; 01-vibe/Story.md#Elder intro cards; 01-vibe/Story.md#Card schedule; 01-vibe/Tone.md#Voice: the narrator"
+      }
+    },
+    {
+      "id": "elder-intro-nine-tailed-kitsune",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Nine-Tailed Kitsune",
+      "brief": "Write the one-line intro card shown on the map node of the Nine-Tailed Kitsune, before the duel starts.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "One-line intro card for the Nine-Tailed Kitsune that teaches its elder twist before the duel.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 26.583
+              },
+              {
+                "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+                "score": 15.956
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Kitsune",
+                "score": 14.287
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Elders",
+                "score": 13.252
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 26.583,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+            "score": 15.956,
+            "source": "GDD §2.1, §3.1, §3.7, §5.1; AM1; assets/specs/style.md",
+            "text": "Each elder's twist appears as an icon on its map node, a one-line intro card and a short callout the first time a player meets it. The fight HUD keeps a one-line reminder, for example \"Elder twist: specials used twice are reflected\"."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Kitsune",
+            "score": 14.287,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Kitsune is the zoner. It offers Foxfire, Fox Mirage and the Kitsune modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Throws foxfire at mid range while advancing |\n| Patient temperament | Holds full screen and anti-airs jumps |\n| Habit to punish | Often jumps after a knockdown |\n| Elder | Nine-Tailed Kitsune |\n| Elder twist | Reflects any special used twice in a row |\n| Habit the twist breaks | Repeating one special, so the player learns to mix specials |\n| Elder offers | The cancel rule Fox Step |"
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Elders",
+            "score": 13.252,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "Rows 5 and 8 always hold elders. Each elder adds one rule twist that breaks a common habit, so a strong build never wins on autopilot (P5). The twist appears as an icon on the map node, a one-line intro card and a short callout the first time the player meets it (Y3). The row-5 elder pays 50 coins; the row-8 elder pays a rare ability instead."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Art-and-Audio.md#Elder twists on screen",
+        "02-mechanics/Yokai.md#Kitsune",
+        "02-mechanics/Yokai.md#Elders",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Characters.md#Kitsune"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "The Nine-Tailed Kitsune mirrors any special you repeat, so throw the same one twice and it comes straight back at you."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-nine-tailed-kitsune",
+        "status": "proposed",
+        "trigger": "Intro card on the Nine-Tailed Kitsune's map node, rows 5 and 8 (Y3)",
+        "title": "Nine-Tailed Kitsune",
+        "text": "The Nine-Tailed Kitsune mirrors any special you repeat, so throw the same one twice and it comes straight back at you.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Elder intro cards; 01-vibe/Art-and-Audio.md#Elder twists on screen; 02-mechanics/Yokai.md#Kitsune; 02-mechanics/Yokai.md#Elders"
+      }
+    },
+    {
+      "id": "elder-intro-elder-oni",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Elder Oni",
+      "brief": "Write the one-line intro card shown on the map node of the Elder Oni, before the duel starts.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "One-line intro card for the Elder Oni that teaches its elder twist before the duel.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 24.968
+              },
+              {
+                "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+                "score": 19.086
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Oni",
+                "score": 16.554
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Elders",
+                "score": 16.549
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 24.968,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+            "score": 19.086,
+            "source": "GDD §2.1, §3.1, §3.7, §5.1; AM1; assets/specs/style.md",
+            "text": "Each elder's twist appears as an icon on its map node, a one-line intro card and a short callout the first time a player meets it. The fight HUD keeps a one-line reminder, for example \"Elder twist: specials used twice are reflected\"."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Oni",
+            "score": 16.554,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Oni is the rushdown yokai. Its relentless pressure teaches the player to block. It offers Iron-Club Charge, Oni Quake and the Oni modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Dashes in constantly |\n| Patient temperament | Walks in and punishes whiffs with its charge |\n| Habit to punish | Dashes in after blocking a projectile |\n| Elder | Elder Oni |\n| Elder twist | Armour on every special |\n| Habit the twist breaks | Mashing jabs to interrupt it stops working |\n| Elder offers | The cancel rule Oni Chain |"
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Elders",
+            "score": 16.549,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "Rows 5 and 8 always hold elders. Each elder adds one rule twist that breaks a common habit, so a strong build never wins on autopilot (P5). The twist appears as an icon on the map node, a one-line intro card and a short callout the first time the player meets it (Y3). The row-5 elder pays 50 coins; the row-8 elder pays a rare ability instead."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Art-and-Audio.md#Elder twists on screen",
+        "02-mechanics/Yokai.md#Oni",
+        "02-mechanics/Yokai.md#Elders",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "01-vibe/Characters.md#Oni"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "The Elder Oni shrugs off every blow with armour on all its specials, so mashing jabs to interrupt it will get you flattened."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-elder-oni",
+        "status": "proposed",
+        "trigger": "Intro card on the Elder Oni's map node, rows 5 and 8 (Y3)",
+        "title": "Elder Oni",
+        "text": "The Elder Oni shrugs off every blow with armour on all its specials, so mashing jabs to interrupt it will get you flattened.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Elder intro cards; 01-vibe/Art-and-Audio.md#Elder twists on screen; 02-mechanics/Yokai.md#Oni; 02-mechanics/Yokai.md#Elders"
+      }
+    },
+    {
+      "id": "elder-intro-elder-kappa",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Elder Kappa",
+      "brief": "Write the one-line intro card shown on the map node of the Elder Kappa, before the duel starts.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "One-line intro card for the Elder Kappa that teaches its elder twist before the duel.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "01-vibe/Story.md#Elder intro cards",
+                "score": 25.095
+              },
+              {
+                "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+                "score": 19.086
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Elders",
+                "score": 16.549
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Oni",
+                "score": 13.19
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "01-vibe/Story.md#Elder intro cards",
+            "score": 25.095,
+            "source": "GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2",
+            "text": "Each elder's twist is shown three ways: an icon on its map node, a one-line intro card, and a short callout the first time the player meets it (Y3). The intro card is one sentence that lets the player work out the twist before the duel starts.\n\n| Elder | Row | Twist the intro card must teach |\n|---|---|---|\n| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |\n| Elder Oni | 5 or 8 | Armour on every special |\n| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+          },
+          {
+            "id": "01-vibe/Art-and-Audio.md#Elder twists on screen",
+            "score": 19.086,
+            "source": "GDD §2.1, §3.1, §3.7, §5.1; AM1; assets/specs/style.md",
+            "text": "Each elder's twist appears as an icon on its map node, a one-line intro card and a short callout the first time a player meets it. The fight HUD keeps a one-line reminder, for example \"Elder twist: specials used twice are reflected\"."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Elders",
+            "score": 16.549,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "Rows 5 and 8 always hold elders. Each elder adds one rule twist that breaks a common habit, so a strong build never wins on autopilot (P5). The twist appears as an icon on the map node, a one-line intro card and a short callout the first time the player meets it (Y3). The row-5 elder pays 50 coins; the row-8 elder pays a rare ability instead."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Oni",
+            "score": 13.19,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Oni is the rushdown yokai. Its relentless pressure teaches the player to block. It offers Iron-Club Charge, Oni Quake and the Oni modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Dashes in constantly |\n| Patient temperament | Walks in and punishes whiffs with its charge |\n| Habit to punish | Dashes in after blocking a projectile |\n| Elder | Elder Oni |\n| Elder twist | Armour on every special |\n| Habit the twist breaks | Mashing jabs to interrupt it stops working |\n| Elder offers | The cancel rule Oni Chain |"
+          }
+        ]
+      },
+      "critic_evidence": [
+        "01-vibe/Story.md#Elder intro cards",
+        "01-vibe/Art-and-Audio.md#Elder twists on screen",
+        "02-mechanics/Yokai.md#Elders",
+        "02-mechanics/Yokai.md#Oni",
+        "01-vibe/Tone.md#The tone line",
+        "01-vibe/Tone.md#Do and don't examples",
+        "01-vibe/Tone.md#Card form",
+        "02-mechanics/Yokai.md#Kappa",
+        "01-vibe/Characters.md#Kappa"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "The Elder Kappa's grip is unbreakable, so once its throw lands there is no escaping it, and you must avoid being grabbed at all."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-elder-kappa",
+        "status": "proposed",
+        "trigger": "Intro card on the Elder Kappa's map node, rows 5 and 8 (Y3)",
+        "title": "Elder Kappa",
+        "text": "The Elder Kappa's grip is unbreakable, so once its throw lands there is no escaping it, and you must avoid being grabbed at all.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 01-vibe/Story.md#Elder intro cards; 01-vibe/Art-and-Audio.md#Elder twists on screen; 02-mechanics/Yokai.md#Elders; 02-mechanics/Yokai.md#Oni"
+      }
+    },
+    {
+      "id": "onis-hide-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Oni's Hide",
+      "brief": "Write the reward card text for the modifier Oni's Hide, offered by the Oni.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Reward card text for the Oni modifier Oni's Hide.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "02-mechanics/Abilities.md#The reward screen",
+                "score": 17.152
+              },
+              {
+                "id": "02-mechanics/Abilities.md#Oni modifiers",
+                "score": 11.229
+              },
+              {
+                "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+                "score": 9.983
+              },
+              {
+                "id": "01-vibe/Tone.md#Reward card voice",
+                "score": 8.901
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Abilities.md#The reward screen",
+            "score": 17.152,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "Three cards slide up after each win. Each card shows the yokai's crest, the ability's name, its source and rarity, one plain-language line, and a tag: NEW, UPGRADE or MODIFIER. Plain language comes first; frame data sits behind a toggle (A12).\n\n| Card in the GDD mockup | Line under the name | Plain text | Tag |\n|---|---|---|---|\n| Foxfire | Kitsune · common | \"Launch a slow fox flame.\" | NEW · Lv 1 |\n| Rising Talisman | Upgrade · starter | \"Lv 1 → Lv 2: recovers 4 frames faster.\" | UPGRADE |\n| Oni's Hide | Oni · modifier | \"Your uppercut can't be interrupted early on.\" | MODIFIER |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#Oni modifiers",
+            "score": 11.229,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "A modifier attaches to one special and changes how it plays without new animation (A10). The Oni offers these five.\n\n| Modifier | Effect on the special it is attached to | Locked |\n|---|---|---|\n| Oni's Hide | Armour on frames 1–5 | no |\n| Iron Will | Can't be interrupted by projectiles | no |\n| Rage Ember | +15% damage while Ryo is below 30% health | ◆ |\n| Club Momentum | Pushes the opponent 50% further toward the corner | ◆ |\n| Brute Recovery | 4 fewer recovery frames on block | ◆ |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+            "score": 9.983,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "If the balance gate cuts modifiers from 14 to 8, the six unlocked ones stay (Will-o'-wisp, Fox's Patience, Oni's Hide, Iron Will, Slippery Skin, River Pull) and the locked ones drop to 2."
+          },
+          {
+            "id": "01-vibe/Tone.md#Reward card voice",
+            "score": 8.901,
+            "source": "GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers",
+            "text": "Reward cards are plain language first, with frame data behind a toggle (A12).\n\n- `plain` is one sentence, at most 140 characters, that says what changes when the player fights. It may open with a short folklore image, then states the effect in ordinary words.\n- `frames` is the exact number from the ability table, with no flavour.\n- A plain line never promises more than the table gives.\n\n| Ability | plain | frames |\n|---|---|---|\n| Foxfire | \"Launch a slow fox flame that drifts across the screen.\" | \"15 / 4 / 30 frames, 70 damage, slow projectile\" |\n| Will-o'-wisp | \"Wisp-light lends your projectile wings: it flies faster across the screen.\" | \"Projectile speed +30% (x1.3, rounded to nearest)\" |\n| Fox's Patience | \"The fox waits and learns: this special builds more spirit meter when the foe blocks it.\" | \"Meter gain on block +25% (C5 default 3 becomes 4, rounded to nearest)\" |\n| Oni's Hide (GDD mockup, attached to Rising Talisman) | \"Your uppercut can't be interrupted early on.\" | not written yet |"
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Abilities.md#The reward screen",
+        "02-mechanics/Abilities.md#Oni modifiers",
+        "02-mechanics/Abilities.md#Balance-gate cuts",
+        "01-vibe/Tone.md#Reward card voice"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "Thick oni skin shrugs off blows: the special it's attached to can't be interrupted during its first 5 frames.",
+            "frames": "Armour on frames 1–5"
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "Oni's Hide",
+        "source": "oni",
+        "status": "proposed",
+        "card": {
+          "plain": "Thick oni skin shrugs off blows: the special it's attached to can't be interrupted during its first 5 frames.",
+          "frames": "Armour on frames 1–5"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 02-mechanics/Abilities.md#The reward screen; 02-mechanics/Abilities.md#Oni modifiers; 02-mechanics/Abilities.md#Balance-gate cuts; 01-vibe/Tone.md#Reward card voice"
+      }
+    },
+    {
+      "id": "iron-will-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Iron Will",
+      "brief": "Write the reward card text for the modifier Iron Will, offered by the Oni.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Reward card text for the Oni modifier Iron Will.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "02-mechanics/Abilities.md#The reward screen",
+                "score": 12.543
+              },
+              {
+                "id": "02-mechanics/Abilities.md#Oni modifiers",
+                "score": 7.913
+              },
+              {
+                "id": "01-vibe/Characters.md#Oni",
+                "score": 7.638
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Oni",
+                "score": 7.351
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Abilities.md#The reward screen",
+            "score": 12.543,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "Three cards slide up after each win. Each card shows the yokai's crest, the ability's name, its source and rarity, one plain-language line, and a tag: NEW, UPGRADE or MODIFIER. Plain language comes first; frame data sits behind a toggle (A12).\n\n| Card in the GDD mockup | Line under the name | Plain text | Tag |\n|---|---|---|---|\n| Foxfire | Kitsune · common | \"Launch a slow fox flame.\" | NEW · Lv 1 |\n| Rising Talisman | Upgrade · starter | \"Lv 1 → Lv 2: recovers 4 frames faster.\" | UPGRADE |\n| Oni's Hide | Oni · modifier | \"Your uppercut can't be interrupted early on.\" | MODIFIER |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#Oni modifiers",
+            "score": 7.913,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "A modifier attaches to one special and changes how it plays without new animation (A10). The Oni offers these five.\n\n| Modifier | Effect on the special it is attached to | Locked |\n|---|---|---|\n| Oni's Hide | Armour on frames 1–5 | no |\n| Iron Will | Can't be interrupted by projectiles | no |\n| Rage Ember | +15% damage while Ryo is below 30% health | ◆ |\n| Club Momentum | Pushes the opponent 50% further toward the corner | ◆ |\n| Brute Recovery | 4 fewer recovery frames on block | ◆ |"
+          },
+          {
+            "id": "01-vibe/Characters.md#Oni",
+            "score": 7.638,
+            "source": "GDD §2.2, §5.1; docs/design/characters/",
+            "text": "The rushdown yokai of the snowbound mountain shrine gate. Proud and blunt, it dashes in and swings an iron club. Its hit sparks are oni red.\n\nFolklore reference: oni carry the kanabō, an iron club; the saying \"an oni with an iron club\" means strength made stronger.\n\nReference images: none yet."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Oni",
+            "score": 7.351,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Oni is the rushdown yokai. Its relentless pressure teaches the player to block. It offers Iron-Club Charge, Oni Quake and the Oni modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Dashes in constantly |\n| Patient temperament | Walks in and punishes whiffs with its charge |\n| Habit to punish | Dashes in after blocking a projectile |\n| Elder | Elder Oni |\n| Elder twist | Armour on every special |\n| Habit the twist breaks | Mashing jabs to interrupt it stops working |\n| Elder offers | The cancel rule Oni Chain |"
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Abilities.md#The reward screen",
+        "02-mechanics/Abilities.md#Oni modifiers",
+        "01-vibe/Characters.md#Oni",
+        "02-mechanics/Yokai.md#Oni",
+        "01-vibe/Tone.md#Reward card voice"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "Your special can't be interrupted by projectiles. Strength made stronger, like an oni with an iron club.",
+            "frames": "MODIFIER (Oni · Iron Will): the attached special can't be interrupted by projectiles."
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "form",
+              "check": "one sentence",
+              "quote": "Your special can't be interrupted by projectiles. Strength made stronger, like an oni with an iron club.",
+              "problem": "'plain' must be exactly one sentence.",
+              "evidence": "",
+              "fix": "Make it one sentence."
+            }
+          ],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "Your special can't be interrupted by projectiles. Strength made stronger, like an oni with an iron club.",
+              "problem": "The plain line is two sentences, and the folklore image trails the effect instead of opening the line.",
+              "evidence": "01-vibe/Tone.md#Reward card voice: `plain` is one sentence, at most 140 characters, that says what changes when the player fights. It may open with a short folklore image, then states the effect in ordinary words.",
+              "fix": "Merge into one sentence that opens with the image and ends on the effect, e.g. \"Like an oni handed an iron club, your special can't be interrupted by projectiles.\""
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "plain": "Like an oni handed an iron club, your special can't be interrupted by projectiles.",
+            "frames": "MODIFIER (Oni · Iron Will): the attached special can't be interrupted by projectiles."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "modifier": "Iron Will",
+        "source": "oni",
+        "status": "proposed",
+        "card": {
+          "plain": "Like an oni handed an iron club, your special can't be interrupted by projectiles.",
+          "frames": "MODIFIER (Oni · Iron Will): the attached special can't be interrupted by projectiles."
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 02-mechanics/Abilities.md#The reward screen; 02-mechanics/Abilities.md#Oni modifiers; 01-vibe/Characters.md#Oni; 02-mechanics/Yokai.md#Oni"
+      }
+    },
+    {
+      "id": "slippery-skin-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Slippery Skin",
+      "brief": "Write the reward card text for the modifier Slippery Skin, offered by the Kappa.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Reward card text for the Kappa modifier Slippery Skin.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "02-mechanics/Abilities.md#Kappa modifiers",
+                "score": 12.935
+              },
+              {
+                "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+                "score": 10.892
+              },
+              {
+                "id": "02-mechanics/Abilities.md#The reward screen",
+                "score": 10.408
+              },
+              {
+                "id": "02-mechanics/Run-Loop.md#Winning and losing",
+                "score": 5.693
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Abilities.md#Kappa modifiers",
+            "score": 12.935,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "A modifier attaches to one special and changes how it plays without new animation (A10). The Kappa offers these four.\n\n| Modifier | Effect on the special it is attached to | Locked |\n|---|---|---|\n| Slippery Skin | Throw-invulnerable during startup | no |\n| River Pull | Pulls the opponent one step closer on hit | no |\n| Cucumber Gift | Heals 2% of max health on hit | ◆ |\n| Sumo Stance | Hold the button to charge for +20% damage | ◆ |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+            "score": 10.892,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "If the balance gate cuts modifiers from 14 to 8, the six unlocked ones stay (Will-o'-wisp, Fox's Patience, Oni's Hide, Iron Will, Slippery Skin, River Pull) and the locked ones drop to 2."
+          },
+          {
+            "id": "02-mechanics/Abilities.md#The reward screen",
+            "score": 10.408,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "Three cards slide up after each win. Each card shows the yokai's crest, the ability's name, its source and rarity, one plain-language line, and a tag: NEW, UPGRADE or MODIFIER. Plain language comes first; frame data sits behind a toggle (A12).\n\n| Card in the GDD mockup | Line under the name | Plain text | Tag |\n|---|---|---|---|\n| Foxfire | Kitsune · common | \"Launch a slow fox flame.\" | NEW · Lv 1 |\n| Rising Talisman | Upgrade · starter | \"Lv 1 → Lv 2: recovers 4 frames faster.\" | UPGRADE |\n| Oni's Hide | Oni · modifier | \"Your uppercut can't be interrupted early on.\" | MODIFIER |"
+          },
+          {
+            "id": "02-mechanics/Run-Loop.md#Winning and losing",
+            "score": 5.693,
+            "source": "GDD §1.2, §1.5, §6.1",
+            "text": "| Outcome | What happens |\n|---|---|\n| Win a duel | The yokai is bound, 50 health is restored, three reward cards are offered |\n| Health reaches 0 | The run ends and the moveset is lost, apart from the carry-over |\n| Beat the Tanuki | The run is won and a win story card shows |\n\nA first-time player should finish a run in 25–40 minutes (R9)."
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Abilities.md#Kappa modifiers",
+        "02-mechanics/Abilities.md#Balance-gate cuts",
+        "02-mechanics/Abilities.md#The reward screen",
+        "02-mechanics/Run-Loop.md#Winning and losing",
+        "01-vibe/Tone.md#Reward card voice"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "Your chosen special can't be grabbed or thrown while it's starting up.",
+            "frames": "Attached special: throw-invulnerable during startup frames. Kappa modifier. Unlocked from the start."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "Slippery Skin",
+        "source": "kappa",
+        "status": "proposed",
+        "card": {
+          "plain": "Your chosen special can't be grabbed or thrown while it's starting up.",
+          "frames": "Attached special: throw-invulnerable during startup frames. Kappa modifier. Unlocked from the start."
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 02-mechanics/Abilities.md#Kappa modifiers; 02-mechanics/Abilities.md#Balance-gate cuts; 02-mechanics/Abilities.md#The reward screen; 02-mechanics/Run-Loop.md#Winning and losing"
+      }
+    },
+    {
+      "id": "river-pull-card",
+      "type": "modifier-card",
+      "label": "Reward card text: River Pull",
+      "brief": "Write the reward card text for the modifier River Pull, offered by the Kappa.",
+      "retrieval": {
+        "mode": "v1",
+        "queries": [
+          {
+            "label": "request",
+            "query": "Reward card text for the Kappa modifier River Pull.",
+            "scope": "whole vault",
+            "k": 4,
+            "hits": [
+              {
+                "id": "02-mechanics/Abilities.md#Kappa modifiers",
+                "score": 13.281
+              },
+              {
+                "id": "02-mechanics/Abilities.md#The reward screen",
+                "score": 10.408
+              },
+              {
+                "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+                "score": 9.509
+              },
+              {
+                "id": "02-mechanics/Yokai.md#Kappa",
+                "score": 7.199
+              }
+            ]
+          }
+        ],
+        "chunks": [
+          {
+            "id": "02-mechanics/Abilities.md#Kappa modifiers",
+            "score": 13.281,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "A modifier attaches to one special and changes how it plays without new animation (A10). The Kappa offers these four.\n\n| Modifier | Effect on the special it is attached to | Locked |\n|---|---|---|\n| Slippery Skin | Throw-invulnerable during startup | no |\n| River Pull | Pulls the opponent one step closer on hit | no |\n| Cucumber Gift | Heals 2% of max health on hit | ◆ |\n| Sumo Stance | Hold the button to charge for +20% damage | ◆ |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#The reward screen",
+            "score": 10.408,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "Three cards slide up after each win. Each card shows the yokai's crest, the ability's name, its source and rarity, one plain-language line, and a tag: NEW, UPGRADE or MODIFIER. Plain language comes first; frame data sits behind a toggle (A12).\n\n| Card in the GDD mockup | Line under the name | Plain text | Tag |\n|---|---|---|---|\n| Foxfire | Kitsune · common | \"Launch a slow fox flame.\" | NEW · Lv 1 |\n| Rising Talisman | Upgrade · starter | \"Lv 1 → Lv 2: recovers 4 frames faster.\" | UPGRADE |\n| Oni's Hide | Oni · modifier | \"Your uppercut can't be interrupted early on.\" | MODIFIER |"
+          },
+          {
+            "id": "02-mechanics/Abilities.md#Balance-gate cuts",
+            "score": 9.509,
+            "source": "GDD §3.5, §4.1–§4.5, §10.2",
+            "text": "If the balance gate cuts modifiers from 14 to 8, the six unlocked ones stay (Will-o'-wisp, Fox's Patience, Oni's Hide, Iron Will, Slippery Skin, River Pull) and the locked ones drop to 2."
+          },
+          {
+            "id": "02-mechanics/Yokai.md#Kappa",
+            "score": 7.199,
+            "source": "GDD §1.3, §5.1, §5.2",
+            "text": "The Kappa is the grappler. It offers River Grab, Shell Spin and the Kappa modifiers.\n\n| | |\n|---|---|\n| Aggressive temperament | Walks straight into throw range |\n| Patient temperament | Blocks, then throws after two blocked hits |\n| Habit to punish | Throws after blocking two hits in a row |\n| Elder | Elder Kappa |\n| Elder twist | Its throws can't be broken |\n| Habit the twist breaks | Relying on the throw break, so the player has to stay out of throw range |\n| Elder offers | The cancel rule Undertow |"
+          }
+        ]
+      },
+      "critic_evidence": [
+        "02-mechanics/Abilities.md#Kappa modifiers",
+        "02-mechanics/Abilities.md#The reward screen",
+        "02-mechanics/Abilities.md#Balance-gate cuts",
+        "02-mechanics/Yokai.md#Kappa",
+        "01-vibe/Tone.md#Reward card voice"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "Your special pulls the opponent one step closer when it hits.",
+            "frames": "Modifier on one special: on hit, pulls opponent one step closer. Kappa. Unlocked."
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "River Pull",
+        "source": "kappa",
+        "status": "proposed",
+        "card": {
+          "plain": "Your special pulls the opponent one step closer when it hits.",
+          "frames": "Modifier on one special: on hit, pulls opponent one step closer. Kappa. Unlocked."
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run v1-single-query) from vault chunks: 02-mechanics/Abilities.md#Kappa modifiers; 02-mechanics/Abilities.md#The reward screen; 02-mechanics/Abilities.md#Balance-gate cuts; 02-mechanics/Yokai.md#Kappa"
+      }
+    }
+  ]
+}
