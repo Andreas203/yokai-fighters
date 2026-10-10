@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/Kit/KitCard.cs" id="1"]
+[ext_resource type="Texture2D" path="res://ui/kit/brush_stroke.tres" id="2"]
+[ext_resource type="Material" path="res://ui/kit/ink_stroke_material.tres" id="3"]
+
+[node name="KitCard" type="PanelContainer"]
+custom_minimum_size = Vector2(380, 260)
+focus_mode = 2
+theme_type_variation = &"PaperCard"
+script = ExtResource("1")
+
+[node name="Stroke" type="TextureRect" parent="."]
+visible = false
+top_level = true
+modulate = Color(0.71, 0.2, 0.169, 1)
+material = ExtResource("3")
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2")
+expand_mode = 1
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Box"]
+layout_mode = 2
+theme_type_variation = &"SubheadingLabel"
+text = "Card title"
+
+[node name="Body" type="Label" parent="Box"]
+custom_minimum_size = Vector2(300, 90)
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"CaptionLabel"
+text = "One plain line of card text."
+autowrap_mode = 3

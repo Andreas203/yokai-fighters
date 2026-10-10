@@ -1,0 +1,19 @@
+[gd_resource type="StyleBox" script_class="PaperStyleBox" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/Kit/PaperStyleBox.cs" id="1"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/paper-panel.png" id="2"]
+
+; Small card: tighter tear, smaller shadow and margins, no inner red line.
+[resource]
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
+script = ExtResource("1")
+InnerLine = Color(0.71, 0.2, 0.169, 0)
+OutlineWidth = 3.0
+ShadowOffset = Vector2(5, 7)
+TearAmplitude = 3.0
+TearStep = 14.0
+Seed = 19
+Grain = ExtResource("2")
