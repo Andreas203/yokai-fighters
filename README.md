@@ -31,6 +31,9 @@ You play Ryo, an apprentice exorcist who binds yokai instead of destroying them,
 | [`Yokai_Fighters_GDD_Extended.pdf`](Yokai_Fighters_GDD_Extended.pdf) | Full game design document, the source of truth |
 | [`Yokai_Fighters_GDD_Short.pdf`](Yokai_Fighters_GDD_Short.pdf) | 5-page readable summary |
 | [`docs/design/rules.md`](docs/design/rules.md) | The GDD's rules and numbers with citable IDs (`C4`, `T2`, `A8`…) |
+| [`vault/`](vault/Home.md) | The design as linked notes, one topic per note, for people and for the agents |
+| [`tools/content_pipeline/`](tools/content_pipeline/) | Drafts card text from the vault: retrieval, a generator, and a critic that checks each draft against the vault |
+| [`docs/crew/vertical-slice-run-log.md`](docs/crew/vertical-slice-run-log.md) | The crew's run that built the Ryo vs Kitsune vertical slice, step by step |
 | [`docs/agent-crew.html`](docs/agent-crew.html) | Interactive map of the agent crew (open in a browser) |
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for Claude Code and the crew |
 

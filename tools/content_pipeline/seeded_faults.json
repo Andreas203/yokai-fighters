@@ -1,0 +1,24 @@
+[
+  {
+    "item": "wake-up-oni-early",
+    "fault": "Tone drift (horror, gloating yokai) and a lore break (a row 2-3 loss leaves no inked talisman).",
+    "draft": {
+      "text": "{yokai} brings the club down until the snow runs red, and laughs over what is left of you. You wake screaming at the province's edge, your talismans blank, all but one."
+    }
+  },
+  {
+    "item": "elder-intro-elder-oni",
+    "fault": "Lore break: the Elder Oni's twist is armour on every special, not an unblockable club.",
+    "draft": {
+      "text": "No guard in the province has ever stopped the Elder Oni's club, so do not try to block it."
+    }
+  },
+  {
+    "item": "onis-hide-card",
+    "fault": "Lore break: wrong frame window and an invented damage bonus.",
+    "draft": {
+      "plain": "The oni's hide shrugs off every blow for the whole move and hits harder too.",
+      "frames": "Armour on frames 1-12, +10% damage"
+    }
+  }
+]
