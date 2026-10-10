@@ -4,12 +4,13 @@ The crew that builds Yokai Fighters. Development tools only — none of them shi
 
 **`CLAUDE.md` is the project's source of truth** for the design, the pipeline and the non-negotiables. This file is only the roster: who exists, where their instructions live, and which model they run on.
 
-The crew exists in two places, from the same role definitions in `.claude/agents/<slug>.md`:
+The crew exists in three places, from the same role definitions in `.claude/agents/<slug>.md`:
 
 - **Claude Code subagents** — read straight from `.claude/agents/<slug>.md` inside a session; `/produce` dispatches them.
+- **Codex agents** — generated copies in `.codex/agents/<slug>.toml` and `.agents/skills/`. Never edit them: change the `.claude/` source and run `python tools/sync_codex.py`. CI (`codex-sync`) fails a PR whose copies are stale.
 - **Paperclip agents** — hired into the Paperclip company "yokai-fighters", each carrying a managed `AGENTS.md` bundle derived from the same file plus the shared operating contract below.
 
-`.claude/agents/<slug>.md` is the single source for every role. Nothing here duplicates it.
+`.claude/agents/<slug>.md` (and `.claude/skills/`) is the single source for every role. Nothing here duplicates it by hand. A sample Paperclip bundle is kept in `docs/reference/paperclip-agents-bundle.md` for reference.
 
 ## Roster
 

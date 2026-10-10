@@ -4,3 +4,4 @@ __pycache__/
 build/
 .claude/worktrees/
 .mcp.json
+.codex/config.toml
