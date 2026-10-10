@@ -1,0 +1,14 @@
+[gd_resource type="StyleBox" script_class="PaperStyleBox" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/Kit/PaperStyleBox.cs" id="1"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/paper-panel.png" id="2"]
+
+; Wide sheet. To drop in a generated torn-edge texture: replace this resource in talisman_theme.tres (PaperSheet and
+; PaperDialog "panel") with a StyleBoxTexture whose texture margins cover the torn border.
+[resource]
+content_margin_left = 64.0
+content_margin_top = 48.0
+content_margin_right = 64.0
+content_margin_bottom = 48.0
+script = ExtResource("1")
+Grain = ExtResource("2")

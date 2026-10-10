@@ -239,6 +239,24 @@ MOCKUPS with placeholder art; not wired into the boot (YOK-48 still boots `fight
 
 `MoveListSource.Build(run, movesDir)` builds the move list from `data/moves` (names, `MoveLoader` frame data) and `RunState` (slots, levels, `SpecialData.Build(level)`); base-kit plain lines are placeholder UI copy (`PlainCopy`). `MenuSettings` = in-memory sound/scheme state (creates Music/SFX buses; nothing saved, fight scheme not touched). `MenuInput` = shared keys (Esc / pad B back, Esc / pad Start pause, Tab / pad Y frame data, Q / pad X scheme, Q-E / LB-RB tabs). Theme gained a `Button` disabled style (grey). Tests: `tests/MenuMockupTests.cs`.
 
+### Screen kit (`game/scenes/ui/kit/`, `game/scripts/Ui/Kit/`, `game/ui/kit/`, namespace `YokaiFighters.Ui.Kit`, YOK-ui-screen-kit)
+Shared pieces for the rebuilt screens (concepts in `docs/design/screens/`). Open `scenes/ui/kit/kit_gallery.tscn` (keys 1 / 2 switch pages): every component in normal / focused / disabled / pressed. Capture: `tests/kit_capture.tscn` (`-- out=<dir>`, run at `--resolution 1920x1080` and `1280x720`; also runs `KitGallery.Audit`, exit 1 on a problem) writes `docs/screenshots/current/kit/gallery_{a,b}_{1080p,720p}.png`. Tests: `tests/KitScreenTests.cs`.
+
+| Piece | Scene / resource | Script |
+|---|---|---|
+| Paper look | theme variations `PaperSheet`, `PaperCard`, `PaperDialog` (panel style = `ui/kit/paper_sheet_style.tres` / `paper_card_style.tres`) | `PaperStyleBox.cs` (StyleBox: shadow, seeded torn edge, ink outline, tiled `paper-panel.png` grain, inner red line). **To use a generated torn-edge texture: point those theme styles at a StyleBoxTexture.** |
+| Sheet / card container | `paper_sheet.tscn` (`Panel/Content` VBox for screen controls, ornament slots `CornerTL` / `CornerBR`; `Card` export = small variant) | `PaperSheet.cs` |
+| Brush stroke | `ui/kit/brush_stroke.tres` (crop of `brush-bar.png`) + `ink_stroke_material.tres` / `ink_to_alpha.gdshader` (ink darkness becomes alpha, `modulate` is the colour; `use_texture_alpha` for a real alpha brush) | none |
+| Menu row, red button, ghost button | `menu_row.tscn`, `red_button.tscn`, `ghost_button.tscn` (variations `MenuRow`, `RedButton`, `GhostButton`; child `Stroke`) | `KitBrushButton.cs` (`Kind`, `Preview` pins a `KitState`; real focus / hover / press / disabled otherwise) |
+| Selectable card | `kit_card.tscn` (`Title`, `Body`; red stroke tab under + persimmon frame when focused or `Selected`; `CardDisabled`; `Activated` signal) | `KitCard.cs` |
+| Key-chip footer | `key_chip_footer.tscn` | `KeyChipFooter.cs` (`SetHints(new KeyHint("confirm", "Confirm"), ...)`, `Pinned`, `OnPaper`), `InputGlyphs.cs` (`Last` device from key / mouse = keyboard, pad button or stick > 0.5 = pad; `Glyph(action, device)` table; `Changed` event) |
+| Heading | `kit_heading.tscn` (`Text`, `UnderlineWidth`) | `KitHeading.cs` |
+| Confirm dialog | `paper_dialog.tscn` (`Open(title, body, confirm, cancel)`, signals `Confirmed` / `Cancelled`, Esc / pad B cancels, focus stays on its two buttons, `ShowDim`) | `PaperDialog.cs` (uses `MenuInput`) |
+| Corner ornament slot | `corner_ornament.tscn` (`Corner`, `Art` texture drawn for top-left and mirrored; placeholder lines + red dot when empty) | `CornerOrnament.cs` |
+| Backdrop | `kit_backdrop.tscn` (indigo-to-ink night gradient, `Art` slot, `Dim` 0..1) | `KitBackdrop.cs` |
+
+Theme (`game/ui/talisman_theme.tres`): palette is the concept palette (indigo #2D3A5E, ink #1D1B21, rice #F1E8D4, pine #34483B, shrine red #B5332B, persimmon #D8632C). Default font is a `SystemFont` bold serif (Georgia, Palatino, Noto Serif, DejaVu Serif, Times New Roman, serif); `HeadingLabel` / `HeadingLabelPaper` use the same font emboldened and slanted (brush stand-in). Label variations added: `BodyLabel` 34, `CaptionLabel` 26, `EyebrowLabel` 26, `SubheadingLabel` 52, `FooterLabel` / `FooterLabelInk` 30; chips `KeyChip` + `KeyChipLabel`. Minimum kit text is 26 px on the 1920x1080 canvas (17 px at 720p). Layout rules for kit scenes: put a `custom_minimum_size` width on wrapping labels (a fresh layout pass measures an autowrap label at width 0).
+
 ### Stage, camera and fighters (YOK-39)
 `fight.tscn` instances these too, so the whole fight shows in the editor's 3D view: `Stage`, `CameraRig`, `Fighters/P1`, `Fighters/P2`, next to the UI children. Code only moves them from the sim (camera position, fighter position/facing, animation frames, tail sway); everything placed or styled is in the scenes.
 

@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/Kit/KitBrushButton.cs" id="1"]
+[ext_resource type="Texture2D" path="res://ui/kit/brush_stroke.tres" id="2"]
+[ext_resource type="Material" path="res://ui/kit/ink_stroke_material.tres" id="3"]
+
+[node name="MenuRow" type="Button"]
+custom_minimum_size = Vector2(620, 88)
+theme_type_variation = &"MenuRow"
+text = "Menu row"
+alignment = 0
+script = ExtResource("1")
+Kind = 0
+
+[node name="Stroke" type="TextureRect" parent="."]
+visible = false
+show_behind_parent = true
+material = ExtResource("3")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -36.0
+offset_top = -6.0
+offset_right = 36.0
+offset_bottom = 6.0
+mouse_filter = 2
+texture = ExtResource("2")
+expand_mode = 1
