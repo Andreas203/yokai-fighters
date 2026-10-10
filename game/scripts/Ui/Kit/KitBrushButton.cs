@@ -20,6 +20,7 @@ public partial class KitBrushButton : Button
 	private KitButtonKind _kind = KitButtonKind.MenuRow;
 	private KitState _preview = KitState.Auto;
 	private TextureRect? _stroke;
+	[Export] public Texture2D? StrokeArt { get => GetNodeOrNull<TextureRect>("Stroke")?.Texture; set { if (GetNodeOrNull<TextureRect>("Stroke") is { } stroke) stroke.Texture = value; } }
 	private (KitState, KitState) _applied = (KitState.Auto, KitState.Auto);
 
 	[Export] public KitButtonKind Kind { get => _kind; set { _kind = value; Refresh(); } }

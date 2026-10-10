@@ -14,8 +14,8 @@ subpixel_positioning = 1
 ; Brush-style heading stand-in: the same serif, emboldened and slanted. Replace with a brush font when one is approved.
 [sub_resource type="FontVariation" id="font_heading"]
 base_font = SubResource("font_serif")
-variation_embolden = 0.55
-variation_transform = Transform2D(1, 0, -0.22, 1, 0, 0)
+variation_embolden = 0.2
+variation_transform = Transform2D(1, 0, 0.12, 1, 0, 0)
 
 [sub_resource type="StyleBoxEmpty" id="k_row"]
 content_margin_left = 40.0

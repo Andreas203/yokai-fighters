@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/Ui/Kit/KitBackdrop.cs" id="1"]
 
+[ext_resource type="Texture2D" path="res://assets/generated/ui/night-backdrop.png" id="art"]
+
 [sub_resource type="Gradient" id="night"]
 offsets = PackedFloat32Array(0, 0.55, 1)
 colors = PackedColorArray(0.176, 0.227, 0.369, 1, 0.14, 0.17, 0.29, 1, 0.114, 0.106, 0.129, 1)
@@ -21,6 +23,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1")
+Art = ExtResource("art")
 
 [node name="Night" type="TextureRect" parent="."]
 layout_mode = 1

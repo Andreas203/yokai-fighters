@@ -4,6 +4,6 @@
 
 [resource]
 shader = ExtResource("1")
-shader_parameter/use_texture_alpha = false
+shader_parameter/use_texture_alpha = true
 shader_parameter/ink_low = 0.42
 shader_parameter/ink_high = 0.78

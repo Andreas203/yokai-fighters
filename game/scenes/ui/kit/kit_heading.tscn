@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/Ui/Kit/KitHeading.cs" id="1"]
-[ext_resource type="Texture2D" path="res://ui/kit/brush_stroke.tres" id="2"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="2"]
 [ext_resource type="Material" path="res://ui/kit/ink_stroke_material.tres" id="3"]
 
 [node name="KitHeading" type="VBoxContainer"]
@@ -14,8 +14,8 @@ theme_type_variation = &"HeadingLabel"
 text = "Heading"
 
 [node name="Underline" type="TextureRect" parent="."]
-modulate = Color(0.71, 0.2, 0.169, 1)
-custom_minimum_size = Vector2(420, 22)
+modulate = Color(0.114, 0.106, 0.129, 1)
+custom_minimum_size = Vector2(420, 12)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 2

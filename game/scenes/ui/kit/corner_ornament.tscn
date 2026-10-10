@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/Ui/Kit/CornerOrnament.cs" id="1"]
 
+[ext_resource type="Texture2D" path="res://assets/generated/ui/blossom-corner.png" id="art"]
+
 [node name="CornerOrnament" type="Control"]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 3
@@ -10,3 +12,4 @@ offset_right = 120.0
 offset_bottom = 120.0
 mouse_filter = 2
 script = ExtResource("1")
+Art = ExtResource("art")

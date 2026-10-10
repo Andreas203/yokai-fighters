@@ -1,7 +1,7 @@
 [gd_resource type="AtlasTexture" load_steps=2 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/generated/ui/brush-bar.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/red-brush.png" id="1"]
 
 [resource]
 atlas = ExtResource("1")
-region = Rect2(90, 335, 850, 350)
+region = Rect2(0, 0, 960, 200)
