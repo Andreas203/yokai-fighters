@@ -4,17 +4,114 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yokai Fighters</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
-  li { margin: .5rem 0; }
-</style>
+<meta name="description" content="A single-player 2.5D roguelite fighting game. Bind yokai, draft their powers, and face the Tanuki, who copies your best move.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site/nav.css">
+<link rel="stylesheet" href="site/site.css">
 </head>
 <body>
-<h1>Yokai Fighters</h1>
-<ul>
-  <li><a href="agent-crew.html">The agent crew</a></li>
-  <li><a href="design/characters/ryo/sheet.html">Ryo character sketch</a></li>
-  <li><a href="design/characters/kitsune/sheet.html">Kitsune character sketch</a></li>
-</ul>
+<nav class="site-nav" aria-label="Site">
+  <a class="brand" href="index.html"><i>妖</i>Yokai Fighters</a>
+  <div class="links">
+    <a href="index.html" aria-current="page">Home</a>
+    <a href="story.html">Story</a>
+    <a href="characters.html">Characters</a>
+    <a href="concept-art.html">Concept art</a>
+    <a href="agent-crew.html">Agent crew</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">A 2.5D roguelite fighting game · PC · Godot 4</p>
+    <h1>Yokai Fighters<span class="seal" aria-hidden="true">妖</span></h1>
+    <p class="lede">Ryo is an apprentice exorcist who does not destroy spirits. He binds them, apologises, and borrows their strength. The yokai you choose to fight decide the fighter you become, and at the end of the road a shapeshifter is waiting to copy your favourite move.</p>
+    <div class="cta">
+      <a class="btn" href="story.html">Read the story</a>
+      <a class="btn ghost" href="characters.html">Meet the cast</a>
+      <a class="btn ghost" href="concept-art.html">See the art</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <p class="eyebrow">The pitch</p>
+    <h2>Bind a yokai. Keep its power. Pay the debt.</h2>
+    <div class="prose">
+      <p>Each run crosses a province of eight rows, one fight per row. Win a duel and the yokai is sealed into a paper talisman. You draft one of three abilities from its power, and your fighter takes shape from the spirits you chose to hunt. Chase the Kitsune and you finish a zoner. Chase the Kappa and you finish a grappler.</p>
+      <p>The run ends at the Tanuki, a cheerful trickster who copies the special you have invested in most. You can see it coming all run. The question is whether you can out-think your own best move.</p>
+    </div>
+    <figure class="quote">
+      “Forgive me, Kitsune. I’ll set your spirit free.”
+      <small>Ryo, at every binding</small>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Background</p>
+    <h2>A province folded into an illusion</h2>
+    <div class="prose">
+      <p>It is the end of autumn in rural Japan, and the Tanuki has folded the whole province into an illusion. The yokai inside it are real spirits, trapped and made to fight again each time the loop closes. When Ryo falls, he wakes at the province’s edge and walks in again.</p>
+      <p>The tone is mischievous folklore with a melancholy edge, never horror. Yokai are tricksters and lonely spirits, not monsters. A yokai that wins does not hurt Ryo. It leaves, tails swaying, between the lanterns. The mood is dusk, paper screens and things about to end.</p>
+    </div>
+    <p><a href="story.html">Follow the story outline →</a></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Design pillars</p>
+    <h2>Six promises the game has to keep</h2>
+    <div class="grid g3">
+      <div class="card"><span class="num">01</span><h3>Every upgrade changes how you fight</h3><p>Piercing Foxfire cuts through the Kitsune’s own projectiles. It changes the matchup, not just a damage number.</p></div>
+      <div class="card"><span class="num">02</span><h3>Your fighter is yours</h3><p>Watch one fight and you can tell which yokai the player hunted.</p></div>
+      <div class="card"><span class="num">03</span><h3>Every choice costs something</h3><p>A replaced move loses its levels. A dojo makes you choose between healing and training.</p></div>
+      <div class="card"><span class="num">04</span><h3>Easy to start, deep to master</h3><p>Kihon is a simple scheme for newcomers. Kata rewards precision for fighting-game fans.</p></div>
+      <div class="card"><span class="num">05</span><h3>The game answers your habits</h3><p>The Nine-Tailed Kitsune reflects any special you use twice in a row.</p></div>
+      <div class="card"><span class="num">06</span><h3>Readable, fair fights</h3><p>Yokai react only to what is on screen. A loss should trace back to a decision you made.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">A run</p>
+    <h2>Eight rows, one boss</h2>
+    <div class="rows" role="img" aria-label="Eight rows: duels on rows 1, 2, 3, 5, 6 and 8, rest stops on rows 4 and 7, then the Tanuki">
+      <div>1<small>apprentice</small></div><div>2<small>duel</small></div><div>3<small>duel</small></div>
+      <div class="hot">4<small>merchant</small></div><div>5<small>elder</small></div><div>6<small>duel</small></div>
+      <div class="hot">7<small>merchant or dojo</small></div><div>8<small>elder</small></div>
+    </div>
+    <div class="rows" style="grid-template-columns: 1fr"><div class="boss">After row 8 · the Tanuki<small>copies your highest-level special</small></div></div>
+    <p class="prose">Health carries between duels, so every fight is a spend. A first-time player should finish a run in 25 to 40 minutes. Lose, and your moveset is lost, bar one talisman that stays faintly inked if you got far enough.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Explore</p>
+    <h2>Inside the project</h2>
+    <div class="grid g2">
+      <a class="card link" href="story.html"><h3>Story outline</h3><p>The illusion loop, the merchant’s disguise and the cards that tell it.</p><span class="more">Read →</span></a>
+      <a class="card link" href="characters.html"><h3>Characters</h3><p>Ryo, Master Sōen, the Tanuki, and the three yokai Ryo hunts.</p><span class="more">Meet them →</span></a>
+      <a class="card link" href="concept-art.html"><h3>Concept art</h3><p>Reference sketches, the look of the world, and the game as it runs today.</p><span class="more">Browse →</span></a>
+      <a class="card link" href="agent-crew.html"><h3>The agent crew</h3><p>How the game is built: a crew of AI agents, with a designer approving every spend and every merge.</p><span class="more">See the crew →</span></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Yokai Fighters · a five-week capstone build. Everything shown is work in progress, not final art.</span>
+    <a href="https://github.com/Andreas203/yokai-fighters">Source on GitHub</a>
+  </div>
+</footer>
 </body>
 </html>
