@@ -231,7 +231,7 @@ MOCKUPS with placeholder art; not wired into the boot (YOK-48 still boots `fight
 
 | Scene | Holds | Script |
 |---|---|---|
-| `ui/title_menu.tscn` | Start, Continue (disabled + unfocusable without a saved run), Practice, Settings, Quit; detail card follows focus; instances the settings sheet | `Menus/TitleMenu.cs` (`SetSavedRun(SavedRunSummary?)`, one event per entry) |
+| `ui/title_menu.tscn` | Dusk backdrop, three hanging yokai masks (`MaskKitsune`, `MaskOni`, `MaskKappa`; never the Tanuki), logo on the sky, paper `Card` with Start, Continue (disabled + unfocusable without a saved run), Practice, Settings, Quit; detail card follows focus; instances the settings sheet | `Menus/TitleMenu.cs` (`SetSavedRun(SavedRunSummary?)`, one event per entry; focus lights a mask: Start = Kitsune, Continue = Oni, Practice = Kappa), `Ui/YokaiMask.cs` (Godot-drawn placeholder mask + sway + name plaque; loads `res://assets/generated/ui/title/mask-<yokai>.png` when present, or set `Art`), `Ui/TitleBackdrop.cs` (indigo gradient, moon, ridges, mist) |
 | `ui/pause_menu.tscn` | Run strip, Resume, Move list, Settings, Restart run, Quit to title, confirm box; instances the two sheets below | `Menus/PauseMenu.cs` (`Bind(run, row, rows, opponent, movesDir)`, `Open/Close` pause the tree, `Resume`) |
 | `ui/move_list_panel.tscn` | Base kit rows (built in code), 4 instances of `move_slot_card.tscn`, scheme and frame-data toggles | `Menus/MoveListPanel.cs`, `MoveSlotCard.cs`, `LevelPips.cs` |
 | `ui/settings_panel.tscn` | Sound tab (3 `InkSlider`s, mute, Preview cues) and Controls tab (Kata / Kihon, one-line K1/K2 text, bindings tables) | `Menus/SettingsPanel.cs` |

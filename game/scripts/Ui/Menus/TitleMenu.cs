@@ -10,7 +10,7 @@ public sealed record SavedRunSummary(int Row, int Rows, int Health, int MaxHealt
 /// <summary>
 /// YOK-58 MOCKUP title menu (<c>scenes/ui/title_menu.tscn</c>): Start (new run), Continue (greyed and skipped by
 /// focus navigation while there is no saved run), Practice, Settings, Quit. Up/Down/stick move focus and wrap,
-/// Enter / Space / pad A confirm, mouse works. A card on the right describes the focused entry (and the saved run
+/// Enter / Space / pad A confirm, mouse works. Three hanging yokai masks (Kitsune, Oni, Kappa; never the Tanuki) sway, and the focused entry lights one. A card on the right describes the focused entry (and the saved run
 /// for Continue). Raises one event per entry; routing, save and the real boot are other tickets (YOK-48 still boots to fight.tscn).
 /// M4: no post-game mode is offered here; the story flag is separate from the run.
 /// </summary>
@@ -27,6 +27,7 @@ public partial class TitleMenu : Control
 	public Label DetailBodyLabel { get; private set; } = null!;
 
 	private Label _extra = null!;
+	private YokaiMask? _kitsune, _oni, _kappa;
 	private Button[] _all = null!;
 	private SavedRunSummary? _saved;
 	private SettingsPanel? _settings;
@@ -44,6 +45,9 @@ public partial class TitleMenu : Control
 		DetailHeadingLabel = UiFind.Get<Label>(this, "DetailHeading");
 		DetailBodyLabel = UiFind.Get<Label>(this, "DetailBody");
 		_extra = UiFind.Get<Label>(this, "DetailExtra");
+		_kitsune = UiFind.Get<YokaiMask>(this, "MaskKitsune");
+		_oni = UiFind.Get<YokaiMask>(this, "MaskOni");
+		_kappa = UiFind.Get<YokaiMask>(this, "MaskKappa");
 		_all = new[] { StartButton, ContinueButton, PracticeButton, SettingsButton, QuitButton };
 		StartButton.Pressed += () => StartRequested?.Invoke();
 		ContinueButton.Pressed += () => ContinueRequested?.Invoke();
@@ -92,6 +96,13 @@ public partial class TitleMenu : Control
 			_ when f == QuitButton => ("QUIT", "Leave the game.", ""),
 			_ => ("NEW RUN", "Begin a new run: eight duels, one Tanuki.", "Choose Kata or Kihon first."),
 		};
+		// The focused entry lights one mask: Start = Kitsune, Continue = Oni, Practice = Kappa; Settings / Quit light none.
+		if (_kitsune != null)
+		{
+			_kitsune.Lit = f == StartButton || f == null;
+			_oni!.Lit = f == ContinueButton;
+			_kappa!.Lit = f == PracticeButton;
+		}
 		DetailHeadingLabel.Text = head; DetailBodyLabel.Text = body; _extra.Text = extra;
 	}
 
