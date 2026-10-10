@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/story_card.tscn" id="3_story"]
 [ext_resource type="PackedScene" path="res://scenes/ui/reward_screen.tscn" id="4_reward"]
 [ext_resource type="PackedScene" path="res://scenes/ui/demo_complete.tscn" id="5_complete"]
-[ext_resource type="PackedScene" path="res://scenes/ui/start_screen.tscn" id="6_start"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_menu.tscn" id="7_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/stage/bamboo_grove.tscn" id="9_stage"]
@@ -38,8 +37,6 @@ layer = 5
 [node name="Rewards" parent="Flow" instance=ExtResource("4_reward")]
 
 [node name="Complete" parent="Flow" instance=ExtResource("5_complete")]
-
-[node name="Title" parent="Flow" instance=ExtResource("6_start")]
 
 [node name="DebugMenuLayer" type="CanvasLayer" parent="."]
 layer = 20

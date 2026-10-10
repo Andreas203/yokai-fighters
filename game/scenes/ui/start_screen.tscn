@@ -455,6 +455,24 @@ offset_bottom = 906
 theme_override_font_sizes/font_size = 46
 text = "Start Game"
 
+[node name="Kata" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 200
+offset_top = 826
+offset_right = 500
+offset_bottom = 896
+theme_override_font_sizes/font_size = 34
+text = "Kata"
+
+[node name="Kihon" type="Button" parent="Panel"]
+layout_mode = 1
+offset_left = 1120
+offset_top = 826
+offset_right = 1420
+offset_bottom = 896
+theme_override_font_sizes/font_size = 34
+text = "Kihon"
+
 [node name="StartHint" type="Label" parent="Panel"]
 layout_mode = 1
 offset_left = 0
@@ -462,7 +480,7 @@ offset_top = 914
 offset_right = 1620
 offset_bottom = 952
 theme_override_font_sizes/font_size = 26
-text = "Enter / Space / A  start"
+text = "Q / X  switch Kata / Kihon      Enter / Space / A  start      Esc / B  back"
 horizontal_alignment = 1
 
 [node name="DebugKeys" type="Label" parent="Panel"]
