@@ -28,11 +28,11 @@ This is the crew's real run on the capstone, building the Ryo vs Kitsune vertica
 | Step | PR | Output | Credits |
 |---|---|---|---|
 | Gate spec | #17 | `assets/specs/clips/yok-31-retarget-gate.md`: takes, what gets measured, GO/NO-GO criteria | 0 |
-| Gate takes | #22, #24 | Heavy and grab on both rigs, measured from the GLBs with numpy FK: frames at 60 ticks, root motion, foot slide, sleeve stretch, tail clearance, plus stills. Three library grabs failed; the shove was substituted under rule F5. Designer call: GO for both (`docs/assets/retarget_gate.md`) | 18 |
+| Gate takes | #22, #24 | Heavy and grab on both rigs, measured from the GLBs with numpy FK: frames at 60 ticks, root motion, foot slide, sleeve stretch, tail clearance, plus stills. Three library grabs failed; the shove was substituted under rule F5. Designer call: GO for both (`assets/specs/clips/retarget_gate.md`) | 18 |
 | Clip specs | #27, #28 | 34 takes picked from Meshy's library previews, shared across rigs (F6) | 0 |
 | Clip takes (approved, 123 cap) | #33, #34 | 41 takes run and measured. 35 usable, written as `data/clips/*.json` (frames_total, hit_start, hit_end, trim, speed). 6 proposed for retake. GLBs stripped to animation-only, 2 MB in git instead of 175 MB | 123 |
 | Retakes (approved, 18 cap) | #41 | 6 retakes: heavy kick and get-up usable; light kick failed again, so the F5 substitute was proposed | 18 |
-| Free re-timing (trim + speed only) | #41 | Movesmith's first frame data showed the clips ran long. Using only trim and playback speed, clip-matcher moved 15 clips onto the GDD timings, e.g. Ryo's light punch from 4/2/19 to **4/2/7**, and Foxfire to one shared 15/4/30 cast for both rigs (`data/clips/`, stills in `docs/assets/clips/`) | 0 |
+| Free re-timing (trim + speed only) | #41 | Movesmith's first frame data showed the clips ran long. Using only trim and playback speed, clip-matcher moved 15 clips onto the GDD timings, e.g. Ryo's light punch from 4/2/19 to **4/2/7**, and Foxfire to one shared 15/4/30 cast for both rigs (`data/clips/`, stills in `assets/specs/clips/stills/`) | 0 |
 
 - **Consumed by:** movesmith, which reads `data/clips/*.json` and derives frame data from them (rule F2: clip first).
 
@@ -42,7 +42,7 @@ This is the crew's real run on the capstone, building the Ryo vs Kitsune vertica
 | Reward content | #37 | `data/modifiers/will-o-wisp.json`, `fox-patience.json`; Lv 2 proposals for Spirit Wave and Rising Talisman, which the designer then decided (rule E21); card text |
 | First frame data | #38, #39 | Both fighters' moves written from the clips. It **flagged** recoveries 2–4× the GDD values, which led to the re-timing pass above, and found an engine bug that loaded every fighter's moves into both kits. That became its own ticket |
 | Re-derived frame data | #38, #39 | Every move re-derived from the re-timed clips. All of Ryo's and the Kitsune's normals now match the GDD's C8 table (`data/moves/`); the only remaining deviation is the clip-derived heavy kick, 11/4/23 against C8's 12/4/22 |
-| Hitbox alignment | #48 | Once the rigged models were playing in the game, the hitbox overlay showed boxes floating above limbs. Movesmith probed every bone on every frame and re-placed all 34 moves' hitboxes and hurtboxes on the bodies, without touching timing (`docs/screenshots/hitbox-alignment/`, before and after) |
+| Hitbox alignment | #48 | Once the rigged models were playing in the game, the hitbox overlay showed boxes floating above limbs. Movesmith probed every bone on every frame and re-placed all 34 moves' hitboxes and hurtboxes on the bodies, without touching timing (`docs/screenshots/review/YOK-33-hitbox-alignment/`, before and after) |
 
 - **Consumed by:** rules-lawyer.
 

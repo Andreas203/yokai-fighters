@@ -105,11 +105,11 @@ The outputs are in the project itself, where the game and the next agent read th
 |---|---|---|
 | References | asset-smith | The chosen stylised references: [Ryo E](../../docs/design/characters/ryo/references/ryo-ref-e.png), [Kitsune D](../../docs/design/characters/kitsune/references/kitsune-ref-d.png) |
 | Models and stage | asset-smith | The approved job list [`assets/specs/yok-29-job-list.md`](../../assets/specs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](../../game/assets/generated/characters/); the [stage backdrop](../../game/assets/generated/stage/bamboo-grove/backdrop.png) |
-| Retarget gate | clip-matcher | The gate report [`docs/assets/retarget_gate.md`](../../docs/assets/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](../../docs/assets/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](../../docs/assets/retarget-gate/ryo-grab-2.png)) |
-| Clips | clip-matcher | [`data/clips/`](../../data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](../../data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](../../data/clips/kitsune-foxfire.json); stills in [`docs/assets/clips/`](../../docs/assets/clips/) |
+| Retarget gate | clip-matcher | The gate report [`assets/specs/clips/retarget_gate.md`](../../assets/specs/clips/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](../../assets/specs/clips/stills/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](../../assets/specs/clips/stills/retarget-gate/ryo-grab-2.png)) |
+| Clips | clip-matcher | [`data/clips/`](../../data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](../../data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](../../data/clips/kitsune-foxfire.json); stills in [`assets/specs/clips/stills/`](../../assets/specs/clips/stills/) |
 | Reward content | movesmith | Modifier files that passed rules-lawyer: [`will-o-wisp.json`](../../data/modifiers/will-o-wisp.json), [`fox-patience.json`](../../data/modifiers/fox-patience.json) |
 | Frame data | movesmith | [`data/moves/`](../../data/moves/), derived from the re-timed clips: [Ryo's light punch](../../data/moves/ryo-light-punch.json) (4/2/7 = C8), the [heavy kick](../../data/moves/ryo-heavy-kick.json), the shared [Foxfire](../../data/moves/foxfire.json) |
-| Hitbox alignment | movesmith → rules-lawyer | [`docs/screenshots/hitbox-alignment/`](../../docs/screenshots/hitbox-alignment/), before and after: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
+| Hitbox alignment | movesmith → rules-lawyer | [`docs/screenshots/review/YOK-33-hitbox-alignment/`](../../docs/screenshots/review/YOK-33-hitbox-alignment/), before and after: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
 
 Failure handling also ran:
 - Three library grabs failed measurement, so clip-matcher applied the F5 substitute.
@@ -121,11 +121,11 @@ Failure handling also ran:
 
 The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grove at dusk. It uses the rigged models, measured clips, frame data and hitboxes this crew produced, plus the two reward modifiers:
 
-1. **Start screen** with the controls ([screenshot](../../docs/screens/yok-39-editable-ui/start.png)).
-2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([screenshot](../../docs/screenshots/bamboo-grove/fight.png)).
-3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([screenshot](../../docs/screenshots/YOK-53/ryo-heavy-kick-active.png)).
-4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([screenshot](../../docs/screens/yok-39-editable-ui/reward_binding.png), [screenshot](../../docs/screens/yok-39-editable-ui/reward_cards.png)).
-5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([screenshot](../../docs/screens/yok-39-editable-ui/demo_complete.png)).
+1. **Start screen** with the controls ([screenshot](../../docs/screenshots/current/start.png)).
+2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([screenshot](../../docs/screenshots/current/stage/fight.png)).
+3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([screenshot](../../docs/screenshots/current/fighters/ryo-heavy-kick-active.png)).
+4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([screenshot](../../docs/screenshots/current/reward_binding.png), [screenshot](../../docs/screenshots/current/reward_cards.png)).
+5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([screenshot](../../docs/screenshots/current/demo_complete.png)).
 
 **Play it on Windows, no install needed:**
 1. Download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB).

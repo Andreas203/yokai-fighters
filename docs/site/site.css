@@ -37,7 +37,7 @@ p { margin: 0 0 1em; }
 
 /* Hero */
 .hero { position: relative; color: #f1e8d4; background: #12162a; border-top: 0 !important; overflow: hidden; padding-block: clamp(56px, 12vw, 140px); }
-.hero::before { content: ""; position: absolute; inset: 0; background: url('../screenshots/bamboo-grove/fight.png') center 80% / cover; opacity: .55; }
+.hero::before { content: ""; position: absolute; inset: 0; background: url('../screenshots/current/stage/fight.png') center 80% / cover; opacity: .55; }
 .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18,22,42,.92) 0%, rgba(18,22,42,.55) 55%, rgba(18,22,42,.25) 100%); }
 .hero .wrap { position: relative; z-index: 1; }
 .hero .eyebrow { color: #c9c6d6; }

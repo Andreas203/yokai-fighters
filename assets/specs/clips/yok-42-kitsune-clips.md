@@ -1,7 +1,7 @@
 # YOK-42: Kitsune demo clips (Foxfire + normals), Foxfire level preset, bamboo-grove dusk stage preset
 
 Status: **TAKE 1 RUN AND MEASURED (2026-10-06): 18 takes, 54 credits, no retakes. See `## Takes`.** The spec below is unchanged except where the takes log says otherwise.
-Context: YOK-39 demo, retarget gate closed (`docs/assets/retarget_gate.md`): Kitsune GO, wide-sleeve flare on big arm swings accepted; hakama and hair held up. Strikes are open-handed (no finger bones). Rules: F2, F5 (cap 3 takes per move), F6 (in place, one preset shared by every rig), C4 (generic grab, no paired throw), A5/V8 (data-only level presets), V5 (foxfire-orange sparks), V9 (stage). The demo ships silent: no sound cues.
+Context: YOK-39 demo, retarget gate closed (`assets/specs/clips/retarget_gate.md`): Kitsune GO, wide-sleeve flare on big arm swings accepted; hakama and hair held up. Strikes are open-handed (no finger bones). Rules: F2, F5 (cap 3 takes per move), F6 (in place, one preset shared by every rig), C4 (generic grab, no paired throw), A5/V8 (data-only level presets), V5 (foxfire-orange sparks), V9 (stage). The demo ships silent: no sound cues.
 
 Kitsune rig: `01a10e47-91f6-709b-bd34-8884f8cbabbb`. Ryo rig: `01a10e47-857e-73a0-9f7a-cd74795198fb`.
 
@@ -87,7 +87,7 @@ The stage assets are generated per `assets/specs/bamboo-grove-dusk.md` (YOK-29/3
 
 Take 1, 2026-10-06. Designer-approved this session: Kitsune rig `01a10e47-91f6-709b-bd34-8884f8cbabbb` only, 18 takes x 3 = **54 credits**, first take only, no retakes. Spent **54**. Balance at the check before the run 941; after the run 818, which includes the Ryo agent's parallel YOK-32 spend (69), so mine is 941 - 54 = 887 before theirs. Three rows were added to the 15 first-pass rows: guarded walk forward 689, guarded walk back 688, one guard idle (250 `Idle_10`; no Ryo id was pushed yet, so chosen from the public table's previews: a looping fighting stance, arms close to the body, 89-frame preview. If YOK-32 picks another idle, the Kitsune idle is the one to keep in sync).
 
-GLBs: `game/assets/generated/clips/kitsune/kitsune-<name>.glb` are animation-only copies (skeleton, skin and animation kept, the mesh replaced by one invisible triangle, no textures; made by `tools/strip_clip.py`; poses verified identical to the full files in Godot 4.6.3, max joint-matrix difference 0). 18 files, 2 MB in total. The full 4.6 MB files are not committed: re-download them for free from the task ids below with `meshy_download_model` (task_type animation). Stills: `docs/assets/clips/kitsune/<name>.png` (front on the top row, side below, with the 9-capsule proxy tail fan on the hips; seven to eight raw ticks per sheet across the usable window). Measured with `tools/measure_clip.py` (numpy, FK plus linear-blend skinning, 60 ticks) and Godot 4.6.3 stills.
+GLBs: `game/assets/generated/clips/kitsune/kitsune-<name>.glb` are animation-only copies (skeleton, skin and animation kept, the mesh replaced by one invisible triangle, no textures; made by `tools/strip_clip.py`; poses verified identical to the full files in Godot 4.6.3, max joint-matrix difference 0). 18 files, 2 MB in total. The full 4.6 MB files are not committed: re-download them for free from the task ids below with `meshy_download_model` (task_type animation). Stills: `assets/specs/clips/stills/kitsune/<name>.png` (front on the top row, side below, with the 9-capsule proxy tail fan on the hips; seven to eight raw ticks per sheet across the usable window). Measured with `tools/measure_clip.py` (numpy, FK plus linear-blend skinning, 60 ticks) and Godot 4.6.3 stills.
 
 ### Verdicts
 
@@ -139,7 +139,7 @@ Total if all four are approved: 12 credits (take 2 of 3 for each move, F5). If a
 4. Ryo's picks: no `YOK-32-ryo-clips` branch exists on origin yet, so the flags above show which Kitsune picks should be adopted by Ryo: rows 3-12 and 14-18 all use the same preset id.
 
 ## Retake run (YOK-32-clip-retakes, 2026-10-06): take 2 of 3, designer-approved, Kitsune rig, 3 credits each
-Stills: `docs/assets/clips/kitsune/hk-take2.png`, `lk-take2.png`, `getup-take2.png`.
+Stills: `assets/specs/clips/stills/kitsune/hk-take2.png`, `lk-take2.png`, `getup-take2.png`.
 
 | Move | Preset | Task id | Verdict | Data |
 |---|---|---|---|---|

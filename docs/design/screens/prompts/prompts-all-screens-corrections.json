@@ -1,0 +1,16 @@
+{
+  "mode": "built-in image_gen",
+  "corrections": [
+    {
+      "name": "reward",
+      "path": "/Users/whash/.codex/generated_images/01a127d2-6feb-7851-a0af-b98d024d1885/exec-b89cf2bc-3bdf-4248-9870-4df07f871357.png",
+      "prompt": "Edit only the rightmost Will-o'-wisp card: add the exact missing instruction \"Pick the special to carry it\" below \"Your projectiles fly 30% faster.\" inside that card, using matching legible serif type. Make room by slightly reducing the illustration in that card if necessary. Preserve all other text, layout, colors, illustrations, selection borders, UI and scenery unchanged. No other changes."
+    },
+    {
+      "name": "modifier-target",
+      "path": "/Users/whash/.codex/generated_images/01a127d2-6feb-7851-a0af-b98d024d1885/exec-b6aae06c-8722-4bc1-a9ab-b891eb380e12.png",
+      "prompt": "Edit only the small talisman icon inside slot B, Rising Talisman: replace the kanji-like writing with a simple abstract spiral emblem with no letters or real kanji. Preserve the greyed disabled state. Preserve every other detail, all English text, cards, layout, colors, scenery and UI unchanged."
+    }
+  ],
+  "pauseConfirm": "Use case: ui-mockup. Edit this existing pause menu to show a centered confirmation modal OVER the existing pause UI. Keep the existing left PAUSED menu, right current-run and ability panels, and empty bamboo stage visibly present underneath a dark translucent dimming layer. Add a centered torn rice-paper dialog occupying about 45% width, with brush heading \"Restart run?\", bold serif message \"Your current run will be lost.\", and two buttons \"Restart\" (red brush stroke) and \"Cancel\" (ink outline). Preserve surrounding pause menu structure. No characters, no real kanji: any talisman icon marks should be abstract spiral symbols. Match the existing indigo, ink, rice-paper and shrine-red colors exactly. One 16:9 full bleed image, no collage, no device frame."
+}

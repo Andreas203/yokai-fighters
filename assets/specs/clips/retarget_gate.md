@@ -62,7 +62,7 @@ GLBs: `game/assets/generated/clips/{ryo,kitsune}-{heavy,grab}.glb`. Walks stay i
 
 **H1 Ryo heavy: PASS (needs a head-trim).** A real wind-up: the strike hand drops to its lowest point at about tick 26 (hips drop 3 cm and rotate), whips up and forward (peak 3.7 m/s at tick 33) and reaches full extension at tick 42, then returns to guard by tick 62. Raw, the contact is at tick 38-42, outside the 8-14 window. Trimming the first 28 ticks (Movesmith's decision, not a hand-keyed edit) gives 35 ticks with contact visible at ticks 38-42 (startup 10, active 4, recovery 21), which matches the design 10/4/20 almost exactly. Cost of the trim: the clip starts mid-wind-up, so the visible anticipation is about 10 ticks of the hand dropping/accelerating, which is short. Planted-foot shift is 3.1 cm left (limit 3 cm, 1 mm over, WARN-minor). Do not strip the pelvis sway (stripping would make the feet shift 6-10 cm): net travel is only 0.5 cm, so keep the clip as is. Fingers: the Meshy rig has no finger bones, so the "fist" is an open mitt; the strike reads as a palm/hand swing, not a punch. This is true for every clip on this rig.
 
-**H2 Kitsune heavy: WARN.** Same timing as H1. Stills (ticks 24-42) show the right haori sleeve flaring open into a large dark-red inside-out cuff across the chest and under the mask (visible interior at ticks 34-42 front view), and the left sleeve folding into the haori. Sleeve edges stretched over 2x: 434 (Ryo's whole sleeve+cuff: 50), max 11.7x, and 368 sleeve vertices inside the torso core (+194 over bind). The hakama stays coherent in the wide stance (no tear or pinch at the front pleats). Hair clears the hakama (3.4 cm min vs 4.4 bind). Hip twist is large (yaw to -43 deg, pitch +29, roll -21), which is the stress case for the tail mounts. Reads as sleeve clipping at the contact frames, so not a clean pass; needs a designer look at `docs/assets/retarget-gate/kitsune-heavy.png`.
+**H2 Kitsune heavy: WARN.** Same timing as H1. Stills (ticks 24-42) show the right haori sleeve flaring open into a large dark-red inside-out cuff across the chest and under the mask (visible interior at ticks 34-42 front view), and the left sleeve folding into the haori. Sleeve edges stretched over 2x: 434 (Ryo's whole sleeve+cuff: 50), max 11.7x, and 368 sleeve vertices inside the torso core (+194 over bind). The hakama stays coherent in the wide stance (no tear or pinch at the front pleats). Hair clears the hakama (3.4 cm min vs 4.4 bind). Hip twist is large (yaw to -43 deg, pitch +29, roll -21), which is the stress case for the tail mounts. Reads as sleeve clipping at the contact frames, so not a clean pass; needs a designer look at `assets/specs/clips/stills/retarget-gate/kitsune-heavy.png`.
 
 **T1/T2 grab: FAIL, both rigs.** `Grip_and_Throw_Down` is not a forward grab. It is a one-armed gesture: the right arm goes out to the side then overhead (hand up at ticks 54-190), holds for about 2.3 s, then swings down hard (peak hand speed 5.8 m/s at tick 209) and rests. Total 4.7 s (283 ticks) against a 30-tick target. There is no forward reach and no hands-closed moment by tick 6. Not usable even with a trim: the only fast part (ticks 198-222) is a downward swing, not a grab. Root drift 11 cm and 17 cm planted-foot shift on the right foot if the sway is stripped. The retarget itself behaves: Ryo has no meaningful clipping (17 arm verts, 3.4x max stretch); Kitsune's hair touches her hakama (3 mm at tick 132 while she leans) and sleeve stretch is again 6x Ryo's. Wrong preset, not a retarget failure.
 
@@ -110,7 +110,7 @@ Designer decisions recorded: Ryo GO for walk and heavy. Kitsune's heavy sleeve f
 | Edges stretched > 2x (max) | 150 (5.7x, toe and upper leg) vs Ryo walk 55 | 164 (5.4x, upper legs) |
 | Arm verts inside torso core (bind 0) | 0 | 47 (tick 106) |
 | Leg vs other-leg axis min (bind 9.4 cm) | 2.7 cm (stride) | 8.4 cm |
-| Stills | `docs/assets/retarget-gate/ryo-grab-2.png` ticks 0, 14, 24, 30, 36, 42, 60 | `docs/assets/retarget-gate/ryo-grab-3.png` ticks 0, 30, 54, 90, 114, 204 |
+| Stills | `assets/specs/clips/stills/retarget-gate/ryo-grab-2.png` ticks 0, 14, 24, 30, 36, 42, 60 | `assets/specs/clips/stills/retarget-gate/ryo-grab-3.png` ticks 0, 30, 54, 90, 114, 204 |
 
 **T3 FAIL.** The closer one: the first ~45 ticks are a quick two-handed reach and read in the stills as a palm push at ticks 36-42, with no coat clipping and arms clear of the torso. But it is a 4.7 s slow-walking push, contact is 16-22 ticks into the reach, and the useful part includes a lunge step whose root travel cannot be stripped without a 33 cm foot slide. Marginal even as an F5 "shove" substitute.
 
@@ -135,14 +135,14 @@ Rendered headless-free in Godot 4.7.2 (Forward+, AMD 7900 XT): runtime `GLTFDocu
 
 | File | Ticks |
 |---|---|
-| `docs/assets/retarget-gate/ryo-walk.png` | 0, 12, 28, 44 |
-| `docs/assets/retarget-gate/kitsune-walk.png` | 0, 12, 28, 44 |
-| `docs/assets/retarget-gate/ryo-heavy.png` | 0, 24, 34, 42, 56 |
-| `docs/assets/retarget-gate/kitsune-heavy.png` | 0, 24, 34, 42, 56 |
-| `docs/assets/retarget-gate/ryo-grab.png` | 0, 54, 120, 204, 216, 250 |
-| `docs/assets/retarget-gate/kitsune-grab.png` | 0, 54, 120, 204, 216, 250 |
-| `docs/assets/retarget-gate/ryo-grab-2.png` (take 2, 259) | 0, 14, 24, 30, 36, 42, 60 |
-| `docs/assets/retarget-gate/ryo-grab-3.png` (take 2, 421) | 0, 30, 54, 90, 114, 204 |
+| `assets/specs/clips/stills/retarget-gate/ryo-walk.png` | 0, 12, 28, 44 |
+| `assets/specs/clips/stills/retarget-gate/kitsune-walk.png` | 0, 12, 28, 44 |
+| `assets/specs/clips/stills/retarget-gate/ryo-heavy.png` | 0, 24, 34, 42, 56 |
+| `assets/specs/clips/stills/retarget-gate/kitsune-heavy.png` | 0, 24, 34, 42, 56 |
+| `assets/specs/clips/stills/retarget-gate/ryo-grab.png` | 0, 54, 120, 204, 216, 250 |
+| `assets/specs/clips/stills/retarget-gate/kitsune-grab.png` | 0, 54, 120, 204, 216, 250 |
+| `assets/specs/clips/stills/retarget-gate/ryo-grab-2.png` (take 2, 259) | 0, 14, 24, 30, 36, 42, 60 |
+| `assets/specs/clips/stills/retarget-gate/ryo-grab-3.png` (take 2, 421) | 0, 30, 54, 90, 114, 204 |
 
 ## Method limits
 - Clipping figures are proxies on a single merged mesh (no per-part segmentation): "arm verts inside torso core" uses a capsule from hips to neck at 60% of the 30th-percentile bind radius; stretched edges compare skinned to bind edge length. The stills are the real verdict.
