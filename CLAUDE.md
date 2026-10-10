@@ -49,7 +49,7 @@ Harness results → Sparring Partner → Producer tickets the tuning
 |---|---|---|
 | `production/playtests/` | Outside playtest notes | designer |
 | `assets/specs/` | Generation specs and acceptance results for models, stages, textures | asset-smith |
-| `assets/specs/clips/` | Per-move clip specs (Meshy preset or prompt) and take verdicts | clip-matcher |
+| `assets/specs/clips/` | Per-move clip specs (Meshy preset or prompt), take verdicts, the retarget gate report and measured stills (`stills/`) | clip-matcher |
 | `assets/shortlists/` | Sound and music pack comparisons | sound-scout |
 | `data/clips/`, `data/presets/`, `data/sound/` | Clip matches, level presets, sound cues | clip-matcher |
 | `data/moves/`, `data/modifiers/`, `data/cancels/`, `data/trials/`, `data/cards/` | Ability content | movesmith |
@@ -58,6 +58,9 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `game/` | Godot project | gameplay-programmer, ui-designer |
 | `harness/results/`, `harness/reports/` | Raw bot runs, balance reports | gameplay-programmer, sparring-partner |
 | `docs/codebase-map.md` | Maintained map of the code, to keep agent context small | gameplay-programmer |
+| `docs/design/screens/` | Target concept for every screen, with the prompts that made them | designer |
+| `docs/screenshots/current/` | Latest capture of each screen, the stage and the fighters; a new capture overwrites the old | ui-designer, gameplay-programmer |
+| `docs/screenshots/review/` | Old ticket screenshots waiting for the designer to keep or delete | designer |
 | `vault/` | The design as linked notes, one topic per note; the retrieval store for the content pipeline | designer |
 | `tools/content_pipeline/` | Drafts card text from the vault (retrieval, generator, critic); output is `proposed` and still goes through the Rules Lawyer | designer |
 

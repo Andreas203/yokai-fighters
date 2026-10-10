@@ -1,6 +1,6 @@
 # YOK-31 Retarget gate: walk, heavy, throw on Ryo and Kitsune
 
-Ticket: YOK-31 (G4, F2, F5, F6, AM1). Status: **TAKE 1 RUN AND MEASURED (12 credits). See `docs/assets/retarget_gate.md`.**
+Ticket: YOK-31 (G4, F2, F5, F6, AM1). Status: **TAKE 1 RUN AND MEASURED (12 credits). See `assets/specs/clips/retarget_gate.md`.**
 Stacked on YOK-30 (rigs). Demo ships silent: no sound cues. Balance at spec time: 1137 credits.
 
 ## Question
@@ -69,7 +69,7 @@ Grab take 2, 2026-10-06, designer-approved up to 12 credits; spent 6, balance 94
 | T3 | Ryo | `01a10e69-98a9-7088-a761-e49d556113e6` | 259 `Step_Forward_and_Push` | 3 | FAIL (285 ticks, 1.07 m travel, contact 16-22 ticks into the reach) |
 | T4 | Ryo | `01a10e6c-8bc6-7482-a91a-2fcc991b9195` | 421 `Over_Shoulder_Throw` | 3 | FAIL (261 ticks, blocking form, no grab) |
 
-Full measurements, stills and the GO / NO-GO recommendation: `docs/assets/retarget_gate.md`. Take count for T01: takes 1 and 2 used (2 of 3). Substitute options in the gate doc.
+Full measurements, stills and the GO / NO-GO recommendation: `assets/specs/clips/retarget_gate.md`. Take count for T01: takes 1 and 2 used (2 of 3). Substitute options in the gate doc.
 
 ## Output when run
 Per take: task id, credits spent, GLB path, a measurements table for items 1-7, PASS/FAIL per rig, and GO/NO-GO per character. `data/clips/<move-id>.json` is written only for passing takes.

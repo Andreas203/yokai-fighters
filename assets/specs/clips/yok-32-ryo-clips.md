@@ -1,7 +1,7 @@
 # YOK-32 Ryo clip picks for the YOK-39 demo (spec step, nothing run)
 
 Ticket YOK-32. Rules: F2, F5, F6, C2-C8, E4, E10, E11, V8. **Status: RUN (23 takes, 69 credits, designer-approved; see Takes). Balance after: 818.**
-Rig: Ryo `01a10e47-857e-73a0-9f7a-cd74795198fb`. Retarget gate closed, Ryo GO (`docs/assets/retarget_gate.md`). Open-handed strikes (no finger bones). Demo ships silent: no sound cues in this pass.
+Rig: Ryo `01a10e47-857e-73a0-9f7a-cd74795198fb`. Retarget gate closed, Ryo GO (`assets/specs/clips/retarget_gate.md`). Open-handed strikes (no finger bones). Demo ships silent: no sound cues in this pass.
 
 ## How the ids were found (and how much to trust them)
 The MCP cannot list the library, so ids come from Meshy's public table (docs.meshy.ai/en/api/animation-library, fetched 2026-10-06, 656 rows). Each preset also has a public preview GIF at `cdn.meshy.ai/webapp-assets/feature-demo/animation/preview/biped/<Name>.gif`. I pulled the GIFs for every candidate and read the **duration and key poses** from them (free). This is the check that was missing for take 389. Sanity check: the GIFs for 194 (1.04 s) and 259 (4.6 s) match what we measured after generation (63 and 285 ticks). Previews are low-res and front-on, so every "contact" tick below is an **estimate (plus or minus 5 ticks)**, confirmed only at measurement. Ticks are 60/s. "Contact" = the visible hit pose (full extension / release).
@@ -89,7 +89,7 @@ Colours are palette proposals from V1 for the designer to adjust. Lv 3 (Great Wa
 ## Takes
 Run 2026-10-06 on the Ryo rig `01a10e47-857e-73a0-9f7a-cd74795198fb`, designer-approved: 23 takes x 3 = **69 credits**, first take only, no retakes. Balance before 941 (shared with the Kitsune run of 54), after 818, so this run spent exactly 69. Full GLBs (4.3 MB each, 95 MB for 23) are not committed. The committed `game/assets/generated/clips/ryo/ryo-<move>.glb` are **animation-only** copies (skeleton, skin and animation kept, mesh replaced by one hidden triangle, no textures; 70-120 KB each). Sampled Godot 4.7.2 poses of the stripped and the full file are identical. The full files can be re-downloaded from the task ids below with `meshy_download_model` (no credits).
 
-Measured as in the YOK-31 gate: skeleton FK and linear-blend skinning at every 60-fps tick (clips come as 30 fps keys), stills rendered in Godot 4.7.2 (camera follows the hips, tick in each label) under `docs/assets/clips/ryo/ryo-<move>.png`. "Raw ticks" count 60 per second from the clip start. Hits are the visible contact or release window; frames are 1-based after the trim (`data/clips/ryo-*.json`).
+Measured as in the YOK-31 gate: skeleton FK and linear-blend skinning at every 60-fps tick (clips come as 30 fps keys), stills rendered in Godot 4.7.2 (camera follows the hips, tick in each label) under `assets/specs/clips/stills/ryo/ryo-<move>.png`. "Raw ticks" count 60 per second from the clip start. Hits are the visible contact or release window; frames are 1-based after the trim (`data/clips/ryo-*.json`).
 
 | Move | Preset | Task id | Credits | Raw ticks | Trim / speed | Frames | Hit | Verdict |
 |---|---|---|---|---|---|---|---|---|
@@ -148,7 +148,7 @@ Ryo's clothes are fitted (no hakama or sleeve flare), so cloth issues do not app
 | Others (192, 210, 209, 139, 146, 174, 171, 190, 136) | PASS/WARN as in the table; 190 flips and 136 steps 55 cm | No retake needed on Ryo; see her notes for cloth-specific WARNs |
 
 ## Retake run (YOK-32-clip-retakes, 2026-10-06): take 2 of 3, designer-approved 6 takes = 18 credits (3 per rig), balance 818 to 800
-Full GLBs are not committed (re-download free from the task ids). Stills (front on top, side below): `docs/assets/clips/ryo/ryo-hk-take2.png`, `ryo-lk-take2.png`, `ryo-get-up-take2.png`. Measured as before (60 ticks, FK plus skinning, Godot 4.7.2).
+Full GLBs are not committed (re-download free from the task ids). Stills (front on top, side below): `assets/specs/clips/stills/ryo/ryo-hk-take2.png`, `ryo-lk-take2.png`, `ryo-get-up-take2.png`. Measured as before (60 ticks, FK plus skinning, Godot 4.7.2).
 
 | Move | Preset | Task id | Credits | Verdict | Data |
 |---|---|---|---|---|---|

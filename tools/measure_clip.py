@@ -7,7 +7,7 @@ Resamples the clip to 60 ticks (linear / slerp), runs FK and linear-blend skinni
 and reports: ticks, root drift/sway, planted-foot shift, max joint rotation per tick,
 end-effector reach/speed (hands, feet), stretched edges (sleeve vs hakama), arm vertices
 inside the torso core, hair-to-hakama distance and a proxy tail fan (9 capsules on Hips).
-Method limits are the same as docs/assets/retarget_gate.md: proxies, not the real verdict;
+Method limits are the same as assets/specs/clips/retarget_gate.md: proxies, not the real verdict;
 rendered stills are the verdict.
 """
 import json, struct, sys
