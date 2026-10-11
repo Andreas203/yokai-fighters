@@ -38,8 +38,8 @@ public partial class GameFlow : Node
 	public string MapFile { get; set; } = FileMapSource.DefaultFile;
 	/// <summary>YOK-77: the run in progress, from Start Game until the title is shown again. Null on the menus and in a direct fight.</summary>
 	public RunSession? Session { get; private set; }
-	/// <summary>The map screen (<c>Menus/Map</c> in boot.tscn; the debug list until YOK-78's screen replaces it).</summary>
-	public IMapScreen MapScreen { get; private set; } = null!;
+	/// <summary>YOK-78's map screen (<c>Menus/Map</c> in boot.tscn = <c>scenes/ui/map_screen.tscn</c>), shown on <see cref="Screen.Map"/>.</summary>
+	public MapScreen Map { get; private set; } = null!;
 	/// <summary>Pins every run's seed (tests, harness); null = a new random seed per run.</summary>
 	public uint? FixedRunSeed { get; set; }
 	private bool _freshRun;
@@ -78,12 +78,9 @@ public partial class GameFlow : Node
 		Title = GetNode<TitleMenu>("Menus/Title");
 		ControlSelect = GetNode<StartScreen>("Menus/ControlSelect");
 		ControlSelect.Close();
-		var map = GetNode("Menus/Map");
-		MapScreen = map as IMapScreen ?? throw new InvalidOperationException("boot.tscn: Menus/Map must implement IMapScreen");
-		MapScreen.HideMap();
-		// The seam is two Godot signals, connected by name so the screen needs no reference to this class.
-		map.Connect(IMapScreen.NodeChosenSignal, Callable.From<string>(id => ChooseNode(id)));
-		if (map.HasSignal(IMapScreen.TitleRequestedSignal)) map.Connect(IMapScreen.TitleRequestedSignal, Callable.From(() => { ReturnToTitle(); }));
+		Map = GetNode<MapScreen>("Menus/Map");
+		Map.Visible = false; // hidden = it reads no input
+		Map.NodeChosen += id => ChooseNode(id); // the screen's view (SessionMapView) has already entered the node
 
 		Title.StartRequested += () => Router.Select(TitleEntry.Start);
 		Title.ContinueRequested += () => Router.Select(TitleEntry.Continue);
@@ -134,16 +131,21 @@ public partial class GameFlow : Node
 	public bool ReturnToTitle() => Router.ReturnToTitle();
 
 	/// <summary>
-	/// YOK-77, the map screen's one call: the player confirmed <paramref name="nodeId"/>. Enters it on the run and
-	/// starts its scene; a pick the map does not allow is refused with the reason and changes nothing.
+	/// YOK-77: the player confirmed <paramref name="nodeId"/> on the map: its scene starts. The map screen's
+	/// <c>NodeChosen</c> lands here with the node already entered (its view's <c>Select</c> is
+	/// <see cref="RunSession.Enter"/>); called directly (tests, a harness) it enters the node first. Either way the
+	/// node is entered once; a pick the map does not allow is refused with the reason and changes nothing.
 	/// </summary>
 	public MapResult ChooseNode(string nodeId)
 	{
 		if (Router.Current != Screen.Map || Session is null) return MapResult.Fail("the map is not showing");
-		var step = Session.Enter(nodeId);
-		if (!step.Ok) { GD.PushWarning($"GameFlow: node '{nodeId}' refused: {step.Error}"); return step; }
+		if (Session.Node?.NodeId != nodeId)
+		{
+			var step = Session.Enter(nodeId);
+			if (!step.Ok) { GD.PushWarning($"GameFlow: node '{nodeId}' refused: {step.Error}"); return step; }
+		}
 		Router.EnterNode();
-		return step;
+		return MapResult.Done;
 	}
 
 	/// <summary>A new run from inside a fight (Restart on the lose screen, the end card or the pause menu): back to the map on a fresh session.</summary>
@@ -181,14 +183,15 @@ public partial class GameFlow : Node
 	{
 		if (from == Screen.Settings) Title.CloseSettings();
 		if (from == Screen.Fight) EndFight();
-		if (from == Screen.Map) MapScreen.HideMap();
+		if (from == Screen.Map) Map.Visible = false;
 		switch (to)
 		{
 			case Screen.Map:
 				Title.Visible = false;
 				ControlSelect.Close();
 				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
-				MapScreen.ShowMap(Session!);
+				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
+				Map.Visible = true;
 				break;
 			case Screen.Title:
 				Session = null; // no save yet (YOK-73): leaving for the title drops the run

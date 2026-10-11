@@ -117,6 +117,7 @@ public partial class RewardScreen : Control
 	{
 		if (!Showing) return;
 		bool handled = true;
+		Viewport viewport = GetViewport(); // YOK-77: a pick can take this screen's scene out of the tree (back to the map)
 		switch (e)
 		{
 			case InputEventKey { Pressed: true, Echo: false } k:
@@ -148,7 +149,7 @@ public partial class RewardScreen : Control
 				_stickHeld = false; handled = false; break;
 			default: handled = false; break;
 		}
-		if (handled) GetViewport().SetInputAsHandled();
+		if (handled) viewport.SetInputAsHandled();
 	}
 
 	// Mouse: the cards are Controls, so hover and click arrive as their signals.

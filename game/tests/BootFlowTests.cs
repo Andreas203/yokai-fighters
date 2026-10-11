@@ -33,10 +33,17 @@ public static class BootFlowTests
 		Assert.True(r.Back(), "back from control select");
 		Assert.Equal(Screen.Title, r.Current, "back on the title");
 		r.Select(TitleEntry.Start);
+		Assert.True(!r.EnterNode() && !r.ReturnToMap(), "no node and no map before a run starts");
 		Assert.True(r.Confirm(), "Start Game");
+		Assert.Equal(Screen.Map, r.Current, "YOK-77: a new run opens on its map");
+		Assert.True(!r.Back() && !r.Confirm() && !r.Select(TitleEntry.Start) && !r.ReturnToMap(), "menu actions do nothing on the map");
+		Assert.True(r.EnterNode(), "a node was picked");
 		Assert.Equal(Screen.Fight, r.Current, "in the fight");
-		Assert.True(!r.Back() && !r.Confirm() && !r.Select(TitleEntry.Start), "menu actions do nothing during a fight");
-		Assert.Equal("Title>ControlSelect|ControlSelect>Title|Title>ControlSelect|ControlSelect>Fight", string.Join("|", seen), "transitions");
+		Assert.True(!r.Back() && !r.Confirm() && !r.Select(TitleEntry.Start) && !r.EnterNode(), "menu actions do nothing during a fight");
+		Assert.True(r.ReturnToMap(), "the node is done");
+		Assert.Equal(Screen.Map, r.Current, "back on the map");
+		Assert.True(r.ReturnToTitle(), "the map can be left for the title");
+		Assert.Equal("Title>ControlSelect|ControlSelect>Title|Title>ControlSelect|ControlSelect>Map|Map>Fight|Fight>Map|Map>Title", string.Join("|", seen), "transitions");
 	}
 
 	[Test]
@@ -99,6 +106,8 @@ public static class BootFlowTests
 		Assert.True(r.ChooseScheme(ControlScheme.Kata) && r.ChooseScheme(ControlScheme.Kata), "choose Kata (twice)");
 		Assert.Equal(1, changes, "one change");
 		r.Confirm();
+		Assert.True(!r.ChooseScheme(ControlScheme.Kihon), "nor on the run's map");
+		r.EnterNode();
 		Assert.Equal(ControlScheme.Kata, r.Scheme, "carried into the fight");
 		Assert.True(!r.ChooseScheme(ControlScheme.Kihon) && r.Scheme == ControlScheme.Kata, "menus cannot change the scheme mid-fight");
 		Assert.True(r.ReturnToTitle(), "return to title");
@@ -147,6 +156,14 @@ public static class BootFlowTests
 	}
 
 	static void Press(Button b) => b.EmitSignal(BaseButton.SignalName.Pressed);
+
+	/// <summary>YOK-77: Start Game on control select opens the run's map; the first node on it starts the fight.</summary>
+	static void StartGame(GameFlow flow)
+	{
+		Press(flow.ControlSelect.Start);
+		Assert.Equal(Screen.Map, flow.Router.Current, "Start Game opens the map");
+		Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "first node entered");
+	}
 
 	[Test]
 	public static void MainScene_IsTheBootScene()
@@ -203,7 +220,7 @@ public static class BootFlowTests
 		Assert.True(flow.ControlSelect.Visible && !flow.Title.Visible && flow.Fight == null, "control select shown, still no fight");
 		Press(flow.ControlSelect.KataButton);
 		Assert.Equal(ControlScheme.Kata, flow.Router.Scheme, "router holds the choice");
-		Press(flow.ControlSelect.Start);
+		StartGame(flow);
 		Assert.Equal(Screen.Fight, flow.Router.Current, "fight");
 		FightScene fight = flow.Fight!;
 		Assert.True(fight.IsInsideTree() && !flow.ControlSelect.Visible && !flow.Title.Visible, "fight scene in the tree, menus hidden");
@@ -217,9 +234,11 @@ public static class BootFlowTests
 			fight.Step(new FighterInput(bits), FighterInput.None);
 		Assert.True(fight.Match.P1.ActiveSpecial != null && fight.Match.P1.ActivePrecision, "236+P = slot A special with precision");
 
+		var firstRun = flow.Session;
 		fight.RestartRun();
-		Assert.Equal(ControlScheme.Kata, fight.SchemeOf(0), "kept across Restart (a new match)");
-		Assert.Equal(Screen.Fight, flow.Router.Current, "Restart stays in the fight");
+		Assert.True(flow.Router.Current == Screen.Map && flow.Fight == null && !ReferenceEquals(firstRun, flow.Session), "YOK-77: Restart = a new run, back on its map");
+		Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "first node of the new run");
+		Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "the scheme is kept across Restart");
 	});
 
 	[Test]
@@ -229,7 +248,7 @@ public static class BootFlowTests
 		flow.Router.Back(); // Esc / pad B on control select
 		Assert.True(flow.Router.Current == Screen.Title && flow.Title.Visible && !flow.ControlSelect.Visible, "back to the title");
 		Press(flow.Title.StartButton);
-		Press(flow.ControlSelect.Start);
+		StartGame(flow);
 		Assert.Equal(ControlScheme.Kihon, flow.Fight!.SchemeOf(0), "Kihon unless chosen otherwise (E18)");
 		flow.Fight.Step(new FighterInput(InputBits.Special), FighterInput.None);
 		Assert.True(flow.Fight.Match.P1.ActiveSpecial != null && !flow.Fight.Match.P1.ActivePrecision, "Special + neutral = slot A, no precision (K2)");
@@ -244,7 +263,7 @@ public static class BootFlowTests
 		Assert.Equal(ControlScheme.Kata, flow.Router.Scheme, "the settings choice reaches the router");
 		Press(flow.Title.StartButton);
 		Assert.True(flow.ControlSelect.KataButton.Text.StartsWith("●"), "control select opens on it");
-		Press(flow.ControlSelect.Start);
+		StartGame(flow);
 		Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "and the fight uses it");
 		MenuSettings.SetScheme(ControlScheme.Kihon); // a menu value changing during the fight
 		Assert.Equal(ControlScheme.Kata, flow.Fight.SchemeOf(0), "does not reach into the running fight");
@@ -255,7 +274,7 @@ public static class BootFlowTests
 	{
 		Assert.True(!flow.ReturnToTitle(), "nothing to leave on the title");
 		Press(flow.Title.StartButton);
-		Press(flow.ControlSelect.Start);
+		StartGame(flow);
 		FightScene first = flow.Fight!;
 		for (int i = 0; i < 20; i++) first.Step(FighterInput.None, FighterInput.None);
 		Assert.True(first.RequestTitle(), "the fight scene's own hook (what pause will call)");
@@ -264,7 +283,7 @@ public static class BootFlowTests
 		Assert.True(flow.Title.Visible && !flow.Title.StartButton.Disabled, "title is back");
 		Assert.True(!flow.GetTree().Paused, "tree not left paused");
 		Press(flow.Title.StartButton);
-		Press(flow.ControlSelect.Start);
+		StartGame(flow);
 		Assert.True(flow.Fight != null && flow.Fight != first, "a new fight scene");
 		Assert.True(flow.Fight!.Match.Tick == 0 && flow.Fight.Duel == 1 && flow.Fight.Match.P1.Health == 1000, "a fresh run from tick 0");
 		Assert.True(flow.ReturnToTitle(), "GameFlow.ReturnToTitle works too");
@@ -313,7 +332,7 @@ public static class BootFlowTests
 			Press(flow.Title.SettingsButton);
 			flow.Router.Back();
 			Press(flow.Title.StartButton);
-			Press(flow.ControlSelect.Start);
+			StartGame(flow);
 			viaMenus = Play(flow.Fight!);
 		});
 		var saved = FightScene.Sources;

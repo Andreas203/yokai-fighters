@@ -99,10 +99,10 @@ public sealed class ScreenRouter
 		return true;
 	}
 
-	/// <summary>Kata or Kihon for the next fight (control select, or the settings sheet). Refused once the fight is on.</summary>
+	/// <summary>Kata or Kihon for the next run (control select, or the settings sheet). Refused once the run is on (map or fight).</summary>
 	public bool ChooseScheme(ControlScheme scheme)
 	{
-		if (Current == Screen.Fight) return false;
+		if (Current is Screen.Fight or Screen.Map) return false;
 		if (scheme == Scheme) return true;
 		Scheme = scheme;
 		SchemeChanged?.Invoke(scheme);

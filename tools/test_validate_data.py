@@ -249,6 +249,42 @@ class ValidateDataTest(unittest.TestCase):
         code, out = self._map(other_layout)
         self.assertEqual(code, 0, out)
 
+    def _node_scenes(self, edit, with_map=True):
+        """data/map/node-scenes.json with one edit, validated from a temp data/map/ folder next to the default map."""
+        import json, shutil, tempfile
+        doc = json.loads((ROOT / "data" / "map" / "node-scenes.json").read_text(encoding="utf-8"))
+        edit(doc)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "data" / "map" / "node-scenes.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            if with_map:
+                shutil.copy(ROOT / "data" / "map" / "default-map.json", path.parent)
+            return run(path)
+
+    def test_node_scenes_validate_and_cover_the_maps(self):
+        self.assertEqual(self._node_scenes(lambda d: None)[0], 0)
+
+        def per_node(d):
+            d["nodes"]["boss-tanuki"] = {"scene": "res://scenes/tanuki_den.tscn", "tier": "tanuki"}
+            d["opponents"]["oni"] = {"fighter": "oni", "profile": "oni-patient"}
+        code, out = self._node_scenes(per_node)
+        self.assertEqual(code, 0, out)
+
+        cases = [
+            (lambda d: d["types"]["duel"].update(tier="legend"), "tier 'legend' is not defined in 'tiers' (Y4)"),
+            (lambda d: d["opponents"]["apprentice"].update(tier="novice"), "tier 'novice' is not defined"),
+            (lambda d: d["types"].pop("dojo"), "node type 'dojo' is used by default-map.json but has no entry"),
+            (lambda d: d["types"]["duel"].pop("tier"), "'tier' is a required property"),
+            (lambda d: d["types"]["duel"].update(scene="scenes/fight.tscn"), "does not match"),
+            (lambda d: d.pop("fallback_fighter"), "'fallback_fighter' is a required property"),
+        ]
+        for edit, expect in cases:
+            code, out = self._node_scenes(edit)
+            self.assertEqual(code, 1, out)
+            self.assertIn(expect, out)
+        self.assertEqual(self._node_scenes(lambda d: d["types"].pop("dojo"), with_map=False)[0], 0)
+
     def test_explicit_invalid_folder_is_checked(self):
         code, out = run(SAMPLES / "invalid")
         self.assertEqual(code, 1)
