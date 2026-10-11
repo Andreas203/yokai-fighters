@@ -51,8 +51,47 @@ public partial class FightHud : CanvasLayer
 		_burstLetter = UiFind.Get<Label>(this, "BurstLetter");
 		_portrait = UiFind.Get<TextureRect>(this, "P2Portrait");
 		_temperament = UiFind.Get<Label>(this, "Temperament");
+		_copyTalisman = UiFind.Get<CopyTalisman>(this, "CopyTalisman");
+		_twistStrip = UiFind.Get<Control>(this, "TwistStrip");
+		_twistKicker = UiFind.Get<Label>(this, "Kicker");
+		_twistText = UiFind.Get<Label>(this, "TwistText");
 		_banner.Text = "";
 		_ready = true;
+	}
+
+	/// <summary>Placeholder until the twist data lands (YOK-90); the strip shows for every elder fight.</summary>
+	public const string TwistPlaceholder = "This elder fights with a twist.";
+
+	private CopyTalisman _copyTalisman = null!;
+	private Control _twistStrip = null!;
+	private Label _twistKicker = null!, _twistText = null!;
+	private IHudRunView? _runView;
+
+	/// <summary>Copy target, lock and node kind (YOK-74). Defaults to the hosting <see cref="FightScene"/>'s session; null session = no target.</summary>
+	public IHudRunView? RunView { get => _runView ?? (GetParent() is FightScene f ? new SessionHudRunView(f.Session) : null); set => _runView = value; }
+
+	public CopyTalisman CopyTarget => _copyTalisman;
+	public bool TwistStripVisible => _twistStrip.Visible;
+	public string TwistKicker => _twistKicker.Text;
+	public string TwistLine => _twistText.Text;
+
+	private void ShowRun()
+	{
+		var run = RunView;
+		_copyTalisman.Apply(run?.Copy, run?.CopyLocked ?? false);
+		bool tanuki = run?.InTanukiFight ?? false;
+		_twistStrip.Visible = tanuki || (run?.ElderFight ?? false);
+		if (tanuki)
+		{
+			var copy = run!.Copy;
+			_twistKicker.Text = "THE TANUKI COPIES";
+			_twistText.Text = copy is null ? "" : $"{copy.Data.Name} at Lv {copy.MoveLevel}, no modifiers"; // T4
+		}
+		else
+		{
+			_twistKicker.Text = "ELDER TWIST";
+			_twistText.Text = TwistPlaceholder;
+		}
 	}
 
 	/// <summary>The lose screen's story card, already filled with the run's names (S4). Null title keeps the current one.</summary>
@@ -81,6 +120,7 @@ public partial class FightHud : CanvasLayer
 			label.AddThemeFontSizeOverride("font_size", size);
 		}
 		if (View != null) ShowMeter(View);
+		ShowRun();
 		bool ryoLost = m.Phase == MatchPhase.Over && m.Winner != 0;
 		_banner.Text = m.Phase switch
 		{
