@@ -37,6 +37,9 @@ public sealed class RunSession
 	public NodeContext? Node => Entered?.Context;
 	/// <summary>The reward offer of the node just won, until the node is completed. Null when it gives none.</summary>
 	public RewardDraft? Draft { get; private set; }
+	Dojo? _dojo;
+	/// <summary>YOK-84, R7: the dojo stop Ryo is at (its rest and its one choice); null off a dojo node or once the run is over.</summary>
+	public Dojo? Dojo => IsOver ? null : _dojo;
 	public RunEnd? Ended { get; private set; }
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
@@ -59,6 +62,7 @@ public sealed class RunSession
 		Seed = seed;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
+		if (Entered?.Context.Type == Sim.Dojo.NodeType) _dojo = new Dojo(Run, Entered.Context.NodeId); // its choice: Dojo.Restore
 	}
 
 	/// <summary>A new run on <paramref name="graph"/>: the starters at Lv 1, full health (A1, C1), no node picked.</summary>
@@ -75,6 +79,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
+		_dojo = Entered.Context.Type == Sim.Dojo.NodeType ? new Dojo(Run, nodeId) : null; // R7
 		NodeEntered?.Invoke(Entered.Context);
 		return step;
 	}
@@ -104,6 +109,7 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = null;
 		Draft = null;
+		_dojo = null;
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
@@ -127,6 +133,8 @@ public sealed class RunSession
 		h = Fnv.Mix(h, unchecked((int)(r >> 32)));
 		h = Fnv.Mix(h, unchecked((int)Seed));
 		h = Fnv.Mix(h, Ended is null ? 0 : 1 + (int)Ended.Outcome);
+		// R7: a dojo choice already made is run state; a run with none keeps the hash it had before YOK-84.
+		if (_dojo is { Choice: not DojoChoice.None } dojo) h = Fnv.Mix(h, (int)dojo.Choice);
 		return h;
 	}
 }
