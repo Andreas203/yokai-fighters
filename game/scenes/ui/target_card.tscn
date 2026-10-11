@@ -1,68 +1,93 @@
 [gd_scene format=3]
-
-[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="1_talisman_theme"]
-[ext_resource type="Script" path="res://scripts/Ui/TargetCard.cs" id="2_TargetCard"]
-[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="3_TalismanPanel"]
-[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="4_SealStamp"]
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="seal"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/selection-frame.png" id="selection"]
+[ext_resource type="Script" path="res://scripts/Ui/TargetCard.cs" id="script"]
 
 [node name="TargetCard" type="Control"]
-layout_mode = 1
 offset_left = 0
 offset_top = 0
-offset_right = 400
-offset_bottom = 470
-theme = ExtResource("1_talisman_theme")
-custom_minimum_size = Vector2(400, 470)
-script = ExtResource("2_TargetCard")
+offset_right = 350
+offset_bottom = 460
+mouse_filter = 0
+theme = ExtResource("theme")
+custom_minimum_size = Vector2(350, 460)
+script = ExtResource("script")
 
-[node name="Body" type="Control" parent="."]
-layout_mode = 1
+[node name="Body" type="Panel" parent="."]
 offset_left = 0
 offset_top = 0
-offset_right = 400
-offset_bottom = 440
+offset_right = 350
+offset_bottom = 446
 mouse_filter = 2
-script = ExtResource("3_TalismanPanel")
-Highlight = true
-Border = Color(0.85, 0.4, 0.15, 1)
+theme_type_variation = &"PaperCard"
+
+[node name="Selection" type="NinePatchRect" parent="Body"]
+offset_left = 0
+offset_top = 0
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+texture = ExtResource("selection")
+patch_margin_left = 32
+patch_margin_top = 32
+patch_margin_right = 32
+patch_margin_bottom = 32
+draw_center = false
 
 [node name="Crest" type="Control" parent="Body"]
-layout_mode = 1
-offset_left = 156
-offset_top = 46
-offset_right = 244
-offset_bottom = 134
+offset_left = 24
+offset_top = 24
+offset_right = 92
+offset_bottom = 92
 mouse_filter = 2
-script = ExtResource("4_SealStamp")
-Glyph = "A"
+script = ExtResource("seal")
+
+[node name="Illustration" type="TextureRect" parent="Body"]
+offset_left = 60
+offset_top = 98
+offset_right = 290
+offset_bottom = 238
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Fallback" type="Control" parent="Body"]
+offset_left = 125
+offset_top = 116
+offset_right = 225
+offset_bottom = 216
+mouse_filter = 2
+script = ExtResource("seal")
 
 [node name="Name" type="Label" parent="Body"]
-layout_mode = 1
-offset_left = 0
-offset_top = 152
-offset_right = 400
-offset_bottom = 202
-theme_override_font_sizes/font_size = 36
-text = "Spirit Wave"
+offset_left = 24
+offset_top = 245
+offset_right = 326
+offset_bottom = 325
+mouse_filter = 2
+theme_override_font_sizes/font_size = 32
+autowrap_mode = 3
 horizontal_alignment = 1
 
 [node name="Level" type="Label" parent="Body"]
-layout_mode = 1
-offset_left = 0
-offset_top = 202
-offset_right = 400
-offset_bottom = 242
-theme_override_font_sizes/font_size = 28
-text = "Lv 1"
+offset_left = 24
+offset_top = 324
+offset_right = 326
+offset_bottom = 358
+mouse_filter = 2
+theme_override_font_sizes/font_size = 26
+autowrap_mode = 3
 horizontal_alignment = 1
 
 [node name="Note" type="Label" parent="Body"]
-layout_mode = 1
 offset_left = 24
-offset_top = 272
-offset_right = 376
-offset_bottom = 340
+offset_top = 360
+offset_right = 326
+offset_bottom = 432
+mouse_filter = 2
 theme_override_font_sizes/font_size = 26
-text = "No modifier yet"
-horizontal_alignment = 1
 autowrap_mode = 3
+horizontal_alignment = 1
