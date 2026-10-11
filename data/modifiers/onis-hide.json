@@ -1,0 +1,37 @@
+{
+  "kind": "modifier",
+  "id": "onis-hide",
+  "name": "Oni's Hide",
+  "status": "proposed",
+  "source": "oni",
+  "rarity": "common",
+  "locked": false,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "properties.armour",
+      "op": "set",
+      "value": {
+        "frames": [
+          1,
+          5
+        ]
+      }
+    }
+  ],
+  "card": {
+    "plain": "A thick oni hide lets the opening of the move shrug off a hit.",
+    "frames": "Armour on frames 1-5"
+  },
+  "notes": "Armour = absorbs a hit without being interrupted. How many hits is the programmer's reading of 'armour'; open question. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

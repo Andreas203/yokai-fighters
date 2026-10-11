@@ -1,0 +1,33 @@
+{
+  "kind": "modifier",
+  "id": "club-momentum",
+  "name": "Club Momentum",
+  "status": "proposed",
+  "source": "oni",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20",
+    "E5"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "pushback",
+      "op": "mul_pct",
+      "value": 150
+    }
+  ],
+  "card": {
+    "plain": "The blow drives the opponent much further toward the corner.",
+    "frames": "Pushback +50% (E5 default 40 on hit, 50 on block)"
+  },
+  "notes": "Applies to the move's pushback, or the E5 default when its data gives none. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}
