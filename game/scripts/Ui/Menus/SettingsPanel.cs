@@ -37,6 +37,19 @@ public partial class SettingsPanel : Control
 	private static readonly string[] Names = { "Master", "Music", "Sfx" };
 	private bool _syncing;
 	private Button _back = null!;
+ private ScrollContainer _bindings = null!;
+ // The generated plate's torn perimeter stays outside this design-canvas inset.
+ public Rect2 SheetSafeArea
+ {
+  get
+  {
+   var panel = UiFind.Get<Control>(this, "Panel");
+   return panel.GetGlobalTransform() * new Rect2(Vector2.One * 100, panel.Size - Vector2.One * 200);
+  }
+ }
+ private TextureRect _activeTab = null!;
+ private ColorRect _rowBand = null!;
+ private Label _rowArrow = null!;
 
 	public InkSlider SliderOf(int i) => _sliders[i];
 	public Button MuteButton => _mute;
@@ -60,7 +73,27 @@ public partial class SettingsPanel : Control
 		_kata = UiFind.Get<Button>(this, "Kata");
 		_kihon = UiFind.Get<Button>(this, "Kihon");
 		_schemeLine = UiFind.Get<Label>(this, "SchemeLine");
-		_tabSound.Pressed += () => ShowTab(SettingsTab.Sound);
+		_bindings = UiFind.Get<ScrollContainer>(this, "BindingsScroll");
+  _bindings.GuiInput += e => {
+   int direction = e.IsActionPressed("ui_down") ? 1 : e.IsActionPressed("ui_up") ? -1 : 0;
+   if (direction == 0) return;
+   var bar = _bindings.GetVScrollBar();
+   if (direction < 0 && _bindings.ScrollVertical == 0) _kihon.GrabFocus();
+   else if (direction > 0 && _bindings.ScrollVertical >= bar.MaxValue - bar.Page) _back.GrabFocus();
+   else _bindings.ScrollVertical += direction * 60;
+   _bindings.AcceptEvent();
+  };
+  foreach (var tab in new[] { _tabSound, _tabControls })
+   foreach (string state in new[] { "normal", "hover", "pressed", "focus" })
+    tab.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
+  _activeTab = new TextureRect { Texture = GD.Load<Texture2D>("res://assets/generated/ui/red-brush.png"), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, MouseFilter = MouseFilterEnum.Ignore };
+  UiFind.Get<Control>(this, "Panel").AddChild(_activeTab);
+  _rowBand = new ColorRect { Color = new Color(0.847f, 0.388f, 0.173f, 0.12f), MouseFilter = MouseFilterEnum.Ignore, Visible = false };
+  _soundPage.AddChild(_rowBand); _soundPage.MoveChild(_rowBand, 0);
+  _rowArrow = new Label { Text = "▶", MouseFilter = MouseFilterEnum.Ignore, Visible = false };
+  _rowArrow.AddThemeColorOverride("font_color", FightHud.Seal);
+  _soundPage.AddChild(_rowArrow);
+  _tabSound.Pressed += () => ShowTab(SettingsTab.Sound);
 		_tabControls.Pressed += () => ShowTab(SettingsTab.Controls);
 		_mute.Pressed += () => MenuSettings.SetMuted(!MenuSettings.Muted);
 		_kata.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kata);
@@ -78,7 +111,11 @@ public partial class SettingsPanel : Control
 			_players[i] = new AudioStreamPlayer { Bus = buses[i], Stream = MenuSettings.MakeCue(cues[i]) };
 			AddChild(_players[i]);
 			_sliders[i].ValueChanged += v => { if (_syncing) return; SetLevel(idx, (int)v); };
-			_previews[i].Pressed += () => _players[idx].Play();
+			_sliders[i].FocusEntered += () => HighlightRow(idx);
+   _previews[i].FocusEntered += () => HighlightRow(idx);
+   _sliders[i].FocusExited += () => { _rowBand.Hide(); _rowArrow.Hide(); };
+   _previews[i].FocusExited += () => { _rowBand.Hide(); _rowArrow.Hide(); };
+   _previews[i].Pressed += () => _players[idx].Play();
 		}
 		_ = musicBus; _ = sfxBus;
 		MenuSettings.Changed += Refresh;
@@ -90,7 +127,13 @@ public partial class SettingsPanel : Control
 		VisibilityChanged += () => { if (Visible) FocusFirst(); };
 	}
 
-	private static void SetLevel(int i, int v)
+	private void HighlightRow(int i)
+ {
+  _rowBand.Position = new Vector2(0, 10 + i * 120); _rowBand.Size = new Vector2(1360, 86); _rowBand.Show();
+  _rowArrow.Position = new Vector2(12, 30 + i * 120); _rowArrow.Show();
+ }
+
+ private static void SetLevel(int i, int v)
 	{
 		switch (i) { case 0: MenuSettings.SetMaster(v); break; case 1: MenuSettings.SetMusic(v); break; default: MenuSettings.SetSfx(v); break; }
 	}
@@ -98,6 +141,9 @@ public partial class SettingsPanel : Control
 	public void ShowTab(SettingsTab tab)
 	{
 		Tab = tab;
+  _activeTab.Position = new Vector2(tab == SettingsTab.Sound ? 100 : 400, 280);
+  _activeTab.Size = new Vector2(tab == SettingsTab.Sound ? 260 : 300, 10);
+  UiFind.Get<Label>(this, "Hint").Text = tab == SettingsTab.Sound ? "Adjust the volume." : "Focus the bindings, then use Up / Down to scroll.";
 		_soundPage.Visible = tab == SettingsTab.Sound;
 		_controlsPage.Visible = tab == SettingsTab.Controls;
 		_tabSound.ThemeTypeVariation = "GhostButton";
@@ -154,9 +200,10 @@ public partial class SettingsPanel : Control
 			MenuInput.Neighbours(_sliders[i], up, down, null, _previews[i]);
 			MenuInput.Neighbours(_previews[i], upP, downP, _sliders[i], null);
 		}
-		MenuInput.Neighbours(_mute, _sliders[2], _back, null, _back);
-		MenuInput.Neighbours(_kata, _tabControls, _back, null, _kihon);
-		MenuInput.Neighbours(_kihon, _tabControls, _back, _kata, null);
+		MenuInput.Neighbours(_bindings, _kihon, _back, null, null);
+  MenuInput.Neighbours(_mute, _sliders[2], _back, null, _back);
+		MenuInput.Neighbours(_kata, _tabControls, _bindings, null, _kihon);
+		MenuInput.Neighbours(_kihon, _tabControls, _bindings, _kata, null);
 	}
 
 	private void WireRing()
@@ -168,7 +215,7 @@ public partial class SettingsPanel : Control
 		if (Tab == SettingsTab.Sound)
 			MenuInput.Ring(_tabSound, _tabControls, _sliders[0], _previews[0], _sliders[1], _previews[1], _sliders[2], _previews[2], _mute, _back);
 		else
-			MenuInput.Ring(_tabSound, _tabControls, _kata, _kihon, _back);
+			MenuInput.Ring(_tabSound, _tabControls, _kata, _kihon, _bindings, _back);
 	}
 
 	/// <summary>Keyboard and pad tables from the live bindings, the same rows as the boot start screen, with the Special / EX rows for the chosen scheme.</summary>
@@ -183,9 +230,9 @@ public partial class SettingsPanel : Control
 			foreach (Node c in grid.GetChildren()) { grid.RemoveChild(c); c.QueueFree(); }
 			foreach (var (a, b) in rows)
 			{
-				var la = new Label { Text = a, ThemeTypeVariation = "PineLabel", CustomMinimumSize = new Vector2(215, 28) };
-				var lb = new Label { Text = b, CustomMinimumSize = new Vector2(470, 28) };
-				la.AddThemeFontSizeOverride("font_size", 24); lb.AddThemeFontSizeOverride("font_size", 24);
+				var la = new Label { Text = a, ThemeTypeVariation = "PineLabel", CustomMinimumSize = new Vector2(310, 42) };
+				var lb = new Label { Text = b, CustomMinimumSize = new Vector2(900, 42) };
+				la.AddThemeFontSizeOverride("font_size", 28); lb.AddThemeFontSizeOverride("font_size", 28);
 				grid.AddChild(la); grid.AddChild(lb);
 			}
 		}
