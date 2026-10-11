@@ -8,7 +8,7 @@ namespace YokaiFighters.Flow;
 /// YOK-77: the map screen's <see cref="IMapView"/> for a run in the flow. Nodes and routes are YOK-78's
 /// <see cref="RunMapView"/> over the session's map; the one difference is <see cref="Select"/>, which enters the node
 /// through <see cref="RunSession.Enter"/> so the node is entered exactly once, its scene and
-/// <see cref="NodeContext"/> are resolved, and <see cref="RunSession.NodeEntered"/> (the T1 hook) fires.
+/// <see cref="NodeContext"/> are resolved, and <see cref="RunSession.NodeEntered"/> fires (T1: for the Tanuki's node, <see cref="RunSession.LockedCopy"/> is set by then).
 /// </summary>
 public sealed class SessionMapView : IMapView
 {
