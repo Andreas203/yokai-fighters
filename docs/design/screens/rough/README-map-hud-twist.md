@@ -13,9 +13,25 @@ Green numbered dots on the PNGs match the numbered lists below. Palette and fram
 
 ---
 
+## Scroll theme (revision 2)
+
+Designer feedback: lean into the scroll theme for the menu-type screens. This is a change of framing only; layout, content, states and the element inventory are unchanged. Vocabulary shared with the rest-stop set (YOK-100): wooden rods with knobs that stick out past the paper, pine-green cloth bands with the paper inset, offset paper-edge lines for a rolled end, a cord looped over a peg for hanging scrolls, a red seal stamp for something fixed. The ROUGH PROTOTYPE strip now sits above the scroll, off the paper.
+
+- **Map** is a **handscroll** unrolled left to right: rod and knobs at both screen edges, cloth bands top and bottom, rows painted on the paper. Thin offset paper-edge lines at both ends hint at the rolled ends; the right one sits behind the Tanuki node. No row or node is hidden. The copy-target chip, status, focus panel, legend and prompt strip are plain bordered paper slips on the same sheet (no second scroll needed). To fit the rods the column pitch went from 206 to 200 px and the lower panels moved up about 24 px; node sizes and text sizes are unchanged. Node cards on paper: "later" nodes stay dark indigo, "passed over" nodes became light grey with a dashed border (they were dark-on-dark before), and the open route lines are gold instead of paper-white so they read on the paper.
+- **Elder-twist card** is a **hanging scroll**: cord and peg, top and bottom rods with knobs, cloth bands, paper inset. The twist seal is now a red stamp (slightly rotated) because the twist is a fixed rule. The two other twists use the same template at full text size (they are now side by side, not stacked and shrunk). The in-fight callout thumbnail stays a thin paper strip, not a scroll.
+- **HUD (`hud-copy-target.png`, `hud-copy-target-states.png`) deliberately left untouched.** It is not a menu, and the panels, talisman and plane guard are the proven legibility layout. A hanging cord on a 120 x 170 talisman adds clutter next to the top-centre health panels, and the tie-cord-and-seal idea for "locked" would fight the existing red stamp on state E. Revisit only if the Astra pass wants it.
+- Elements left plain on the scrolls: all text blocks, the node cards, chips and the key-cap prompt strip (nothing decorative behind text).
+
+New questions:
+14. Map scroll ends: should the unrolled scroll ever scroll or roll as the run progresses (a purely visual effect, no hidden rows), or stay static?
+15. Cloth colour: pine green matches the rest-stop set; the elder card could use indigo to mark danger. Keep one colour for the kit?
+16. Should the map's walked route read as ink brushed on the paper (needs art) rather than the flat persimmon line drawn here?
+
+---
+
 ## 1. Map (`map.png`)
 
-Shown state: Ryo has finished the row-4 merchant; row-5 elders are reachable and Nine-Tails is the focused node. Layout extends the build (`map_midrun.png`): rows run left to right, nodes are paper cards, routes are lines. New against the build: elder twist seals shown by type, the copy-target talisman, health and coins, a focused-node detail panel, a legend.
+Shown state: Ryo has finished the row-4 merchant; row-5 elders are reachable and Nine-Tails is the focused node. Layout extends the build (`map_midrun.png`): rows run left to right, nodes are cards, routes are lines, all painted on a handscroll (revision 2). New against the build: elder twist seals shown by type, the copy-target talisman, health and coins, a focused-node detail panel, a legend.
 
 | # | Element | Shows | Rule | Binds to |
 |---|---|---|---|---|
@@ -78,15 +94,15 @@ Layout rules worth keeping: panels end at x 880 and start at x 1040 so the 120 p
 
 ## 3. Elder-twist card (`elder-twist-card.png`)
 
-Closest relative is `story-card.png` (paper card, one big line, ENTER Continue, seal bottom-right). Shows all three Y3 pieces: (a) the map-node icon (section 1), (b) the one-line intro card, (c) the first-meeting callout.
+Closest relative is `story-card.png` (one big line, ENTER Continue, seal bottom-right), now drawn as a hanging scroll. Shows all three Y3 pieces: (a) the map-node icon (section 1), (b) the one-line intro card, (c) the first-meeting callout.
 
 | # | Element | Shows | Rule | Binds to |
 |---|---|---|---|---|
-| 1 | Card | Rice-paper card centred on the dimmed night plate | V1, Y3 | scene |
+| 1 | Hanging scroll | Rice-paper scroll with cord, rods and cloth bands over the dimmed night plate | V1, Y3 | scene |
 | 2 | Portrait placeholder | Elder portrait (Astra); Kitsune keeps the full face mask | designer note | elder yokai id |
 | 3 | Kicker + title | "ELDER TWIST, ROW 5", "Nine-Tailed Kitsune" | Y3, R1 | `MapNodeData` row, elder name |
 | 4 | The one line | "Nine-Tails reflects any special you use twice in a row." | Y3, Y2 | profile elder twist text (or story data, see questions) |
-| 5 | Twist seal | Same seal as on the map node, large | Y3 | `Elder` icon id |
+| 5 | Twist seal | Same seal as on the map node, as a red stamp | Y3 | `Elder` icon id |
 | 6 | Continue | ENTER / A Continue | n/a | input |
 | 7 | First-meeting callout | In the fight, a paper banner between HUD and gameplay plane: "ELDER TWIST, NEW. Nine-Tails reflects specials used twice in a row." Fades after about 3 s, then only the standing reminder strip remains | Y3 | first-meeting flag |
 | 8 | Other twists | Same template: Elder Oni "...specials have armour: jabs won't stop them", Elder Kappa "...throws can't be broken." | Y2, Y3 | profiles |
@@ -99,7 +115,7 @@ Map, ENTER on an elder node, intro card (first time only), ENTER, fight starts a
 ---
 
 ## Gaps found in the code (not for me to fix; Producer to ticket for `gameplay-programmer`)
-- I found no copy-target getter in `docs/codebase-map.md` or the sim (T2 and T3: highest-level special in a slot, tie rule, locked from T1). The HUD chip, map chip, toast and state E/F all need a read-only `CopyTarget` (move id, level, locked flag, copy-strength level per T4).
+- Copy target (corrected in revision 2; the first version of this note was wrong). `CopyRule.Target(RunState)` already exists on `main` (`game/scripts/Sim/Run/CopyRule.cs`, PR #89): it returns a `CopyTarget(Slot, Data, Level)` by T2 and T3, pure and read-only. The T1 lock (`CopyLocked`, `LockedCopy` on `RunSession`) is not on `main`; it is on the `YOK-82-copy-lock` branch (PR #91 per the coordinator; I confirmed the members exist on that branch, not the PR number). No UI code reads either yet. What YOK-74 still lacks is the read path from the HUD (and map chip) to them: a view over `RunSession` (live `CopyRule.Target` before the lock, `LockedCopy` after) plus a level-changed / target-changed signal for states C and D. T4 copy strength (`HighestUnevolvedLevel`) is also in `CopyRule`.
 - No documented coins in `RunState` for the map status line (R8).
 - No "first meeting" flag for twists (see questions).
 

@@ -4,214 +4,210 @@
 <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity=".45"/></filter>
 </defs>
-<rect x="0" y="0" width="1920" height="1080" rx="0" fill="url(#bg)" stroke="none" stroke-width="0" />
-<circle cx="1500" cy="262" r="52" fill="#c9bf9f" opacity=".3"/>
-<rect x="40" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="180" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="320" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="460" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="600" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="740" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="880" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1020" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1160" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1300" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1440" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1580" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1720" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<rect x="1860" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<text x="1900" y="1070" font-size="15" fill="#6f7aa0" text-anchor="end" font-weight="normal" font-style="italic" >BACKDROP: kit night plate (bamboo, moon, torii) goes here</text>
-<text x="80" y="92" font-size="54" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >Choose your path</text>
-<line x1="213.0" y1="540" x2="263.0" y2="330" stroke="#6d7499" stroke-width="3" />
-<line x1="213.0" y1="540" x2="263.0" y2="540" stroke="#d9622b" stroke-width="7" />
-<line x1="213.0" y1="540" x2="263.0" y2="750" stroke="#6d7499" stroke-width="3" />
-<line x1="419.0" y1="330" x2="469.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="419.0" y1="540" x2="469.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="419.0" y1="540" x2="469.0" y2="645" stroke="#d9622b" stroke-width="7" />
-<line x1="419.0" y1="750" x2="469.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="625.0" y1="435" x2="675.0" y2="540" stroke="#6d7499" stroke-width="3" />
-<line x1="625.0" y1="645" x2="675.0" y2="540" stroke="#d9622b" stroke-width="7" />
-<line x1="831.0" y1="540" x2="881.0" y2="435" stroke="#efe4cc" stroke-width="6" />
-<line x1="831.0" y1="540" x2="881.0" y2="645" stroke="#efe4cc" stroke-width="6" />
-<line x1="1037.0" y1="435" x2="1087.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1037.0" y1="435" x2="1087.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1037.0" y1="645" x2="1087.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1037.0" y1="645" x2="1087.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1243.0" y1="435" x2="1293.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1243.0" y1="435" x2="1293.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1243.0" y1="645" x2="1293.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1243.0" y1="645" x2="1293.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1449.0" y1="435" x2="1499.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1449.0" y1="435" x2="1499.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1449.0" y1="645" x2="1499.0" y2="435" stroke="#6d7499" stroke-width="3" />
-<line x1="1449.0" y1="645" x2="1499.0" y2="645" stroke="#6d7499" stroke-width="3" />
-<line x1="1655.0" y1="435" x2="1705.0" y2="540" stroke="#6d7499" stroke-width="3" />
-<line x1="1655.0" y1="645" x2="1705.0" y2="540" stroke="#6d7499" stroke-width="3" />
-<text x="135" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 1</text>
-<text x="341" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 2</text>
-<text x="547" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 3</text>
-<text x="753" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 4</text>
-<text x="959" y="190" font-size="19" fill="#ff9a8a" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 5  ·  ELDER</text>
-<text x="1165" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 6</text>
-<text x="1371" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 7</text>
-<text x="1577" y="190" font-size="19" fill="#ff9a8a" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 8  ·  ELDER</text>
-<text x="1783" y="190" font-size="19" fill="#aab3d6" text-anchor="middle" font-weight="bold" font-style="normal" >AFTER ROW 8</text>
-<rect x="57.0" y="481.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
-<text x="66.0" y="504.0" font-size="15" fill="#d7d3c8" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="135" y="548" font-size="22" fill="#d7d3c8" text-anchor="middle" font-weight="bold" font-style="normal" >Apprentice</text>
-<rect x="169.0" y="489.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="186.0" y="511.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="135" y="587.0" font-size="14" fill="#d7d3c8" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
-<rect x="263.0" y="271.0" width="156" height="118" rx="6" fill="#182041" stroke="#3b4570" stroke-width="2" stroke-dasharray="7 5"/>
-<text x="272.0" y="294.0" font-size="15" fill="#6b7090" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="341" y="338" font-size="22" fill="#6b7090" text-anchor="middle" font-weight="bold" font-style="normal" >Kitsune</text>
-<rect x="375.0" y="279.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="392.0" y="301.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="341" y="377.0" font-size="14" fill="#6b7090" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
-<rect x="263.0" y="481.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
-<text x="272.0" y="504.0" font-size="15" fill="#d7d3c8" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="341" y="548" font-size="22" fill="#d7d3c8" text-anchor="middle" font-weight="bold" font-style="normal" >Oni</text>
-<rect x="375.0" y="489.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="392.0" y="511.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="341" y="587.0" font-size="14" fill="#d7d3c8" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
-<rect x="263.0" y="691.0" width="156" height="118" rx="6" fill="#182041" stroke="#3b4570" stroke-width="2" stroke-dasharray="7 5"/>
-<text x="272.0" y="714.0" font-size="15" fill="#6b7090" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="341" y="758" font-size="22" fill="#6b7090" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
-<rect x="375.0" y="699.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="392.0" y="721.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="341" y="797.0" font-size="14" fill="#6b7090" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
-<rect x="469.0" y="376.0" width="156" height="118" rx="6" fill="#182041" stroke="#3b4570" stroke-width="2" stroke-dasharray="7 5"/>
-<text x="478.0" y="399.0" font-size="15" fill="#6b7090" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="547" y="443" font-size="22" fill="#6b7090" text-anchor="middle" font-weight="bold" font-style="normal" >Oni</text>
-<rect x="581.0" y="384.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="598.0" y="406.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="547" y="482.0" font-size="14" fill="#6b7090" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
-<rect x="469.0" y="586.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
-<text x="478.0" y="609.0" font-size="15" fill="#d7d3c8" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="547" y="653" font-size="22" fill="#d7d3c8" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
-<rect x="581.0" y="594.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="598.0" y="616.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="547" y="692.0" font-size="14" fill="#d7d3c8" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
-<rect x="675.0" y="481.0" width="156" height="118" rx="6" fill="#efe4cc" stroke="#d9622b" stroke-width="6" />
-<text x="684.0" y="504.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >M  Merchant</text>
-<text x="753" y="548" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Merchant</text>
-<text x="753" y="587.0" font-size="14" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >YOU ARE HERE</text>
-<rect x="881.0" y="376.0" width="156" height="118" rx="6" fill="#efe4cc" stroke="#1f2a4a" stroke-width="4" />
-<text x="890.0" y="399.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
-<text x="959" y="443" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Oni</text>
-<circle cx="1033.0" cy="382.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
-<path d="M1033.0,371.55 L1041.8825,376.2525 V383.045 Q1041.36,389.8375 1033.0,392.45 Q1024.64,389.8375 1024.1175,383.045 V376.2525 Z" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linejoin="round"/>
-<text x="959" y="482.0" font-size="14" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >reachable</text>
-<g filter="url(#glow)"><rect x="873.0" y="578.0" width="172" height="134" rx="8" fill="#f2c14e" stroke="none" stroke-width="0" />
-</g><rect x="881.0" y="586.0" width="156" height="118" rx="6" fill="#efe4cc" stroke="#f2c14e" stroke-width="7" />
-<text x="890.0" y="609.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
-<text x="959" y="653" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Nine-Tails</text>
-<circle cx="1033.0" cy="592.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
-<path d="M1022.55,588.3425 H1043.45 M1039.27,584.1625 L1043.45,588.3425 L1039.27,592.5225 M1043.45,596.7025 H1022.55 M1026.73,592.5225 L1022.55,596.7025 L1026.73,600.8825" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="959" y="692.0" font-size="14" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >reachable · selected</text>
-<rect x="1087.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f4c7c" stroke-width="2" />
-<text x="1096.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="1165" y="443" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Kitsune</text>
-<rect x="1199.0" y="384.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="1216.0" y="406.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="1165" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1087.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f4c7c" stroke-width="2" />
-<text x="1096.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
-<text x="1165" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
-<rect x="1199.0" y="594.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="1216.0" y="616.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
-<text x="1165" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1293.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f6b52" stroke-width="2" />
-<text x="1302.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >M  Merchant</text>
-<text x="1371" y="443" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Merchant</text>
-<text x="1371" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1293.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#8a6a3a" stroke-width="2" />
-<text x="1302.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >J  Dojo</text>
-<text x="1371" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Dojo</text>
-<text x="1371" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1499.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#7a3a48" stroke-width="2" />
-<text x="1508.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
-<text x="1577" y="443" font-size="20" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Kappa</text>
-<circle cx="1651.0" cy="382.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
-<g fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linecap="round"><rect x="1640.55" y="378.3425" width="12.0175" height="7.315" rx="3.6575"/><rect x="1649.4325" y="378.3425" width="12.0175" height="7.315" rx="3.6575"/></g>
-<text x="1577" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1499.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#7a3a48" stroke-width="2" />
-<text x="1508.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
-<text x="1577" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Oni</text>
-<circle cx="1651.0" cy="592.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
-<path d="M1651.0,581.55 L1659.8825,586.2525 V593.045 Q1659.36,599.8375 1651.0,602.45 Q1642.64,599.8375 1642.1175,593.045 V586.2525 Z" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linejoin="round"/>
-<text x="1577" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
-<rect x="1698.0" y="465.0" width="170" height="150" rx="6" fill="#1f2a4a" stroke="#b3262a" stroke-width="5" />
-<text x="1707.0" y="488.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >B  Boss</text>
-<text x="1783" y="548" font-size="22" fill="#e9dfc4" text-anchor="middle" font-weight="bold" font-style="normal" >The Tanuki</text>
-<rect x="1751" y="494" width="64" height="42" rx="3" fill="none" stroke="#8f87a8" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="1783" y="520" font-size="12" fill="#8f87a8" text-anchor="middle" font-weight="normal" font-style="italic" >mark</text>
-<text x="1783" y="580" font-size="15" fill="#cfc6e0" text-anchor="middle" font-weight="normal" font-style="italic" >waits at the end</text>
-<text x="1783" y="602" font-size="14" fill="#e9a6a0" text-anchor="middle" font-weight="normal" font-style="normal" >copies your best move</text>
-<polygon points="851.0,629 873.0,645 851.0,661" fill="#f2c14e"/>
-<polygon points="700,38 707,52 695,67 709,81 697,95 706,109 692,124 704,138 1161,138 1173,124 1164,109 1178,95 1166,81 1170,67 1163,52 1175,38" fill="#efe4cc" filter="url(#sh)"/>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#26335a" stroke="none" stroke-width="0" />
+<text x="1900" y="1070" font-size="15" fill="#6f7aa0" text-anchor="end" font-weight="normal" font-style="italic" >BACKDROP: kit night plate behind the scroll</text>
+<rect x="46" y="80" width="1828" height="930" rx="0" fill="#f1e8d0" stroke="none" stroke-width="0" filter="url(#sh)"/>
+<line x1="1856" y1="86" x2="1856" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="1860" y1="86" x2="1860" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="1864" y1="86" x2="1864" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="1868" y1="86" x2="1868" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="52" y1="86" x2="52" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="56" y1="86" x2="56" y2="1004" stroke="#bfae86" stroke-width="2"/><line x1="60" y1="86" x2="60" y2="1004" stroke="#bfae86" stroke-width="2"/><rect x="46" y="50" width="1828" height="32" rx="0" fill="#3d5a45" stroke="none" stroke-width="0" />
+<rect x="46" y="1008" width="1828" height="32" rx="0" fill="#3d5a45" stroke="none" stroke-width="0" />
+<rect x="14" y="60" width="30" height="970" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="23.0" y="66" width="5" height="958" rx="0" fill="#7a5636" stroke="none" stroke-width="0" opacity=".7"/>
+<rect x="9" y="48" width="40" height="14" rx="7" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="9" y="1028" width="40" height="14" rx="7" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1876" y="60" width="30" height="970" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1885.0" y="66" width="5" height="958" rx="0" fill="#7a5636" stroke="none" stroke-width="0" opacity=".7"/>
+<rect x="1871" y="48" width="40" height="14" rx="7" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1871" y="1028" width="40" height="14" rx="7" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<text x="130" y="132" font-size="54" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Choose your path</text>
+<line x1="228.0" y1="540" x2="272.0" y2="330" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="228.0" y1="540" x2="272.0" y2="540" stroke="#d9622b" stroke-width="7" />
+<line x1="228.0" y1="540" x2="272.0" y2="750" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="428.0" y1="330" x2="472.0" y2="435" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="428.0" y1="540" x2="472.0" y2="435" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="428.0" y1="540" x2="472.0" y2="645" stroke="#d9622b" stroke-width="7" />
+<line x1="428.0" y1="750" x2="472.0" y2="645" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="628.0" y1="435" x2="672.0" y2="540" stroke="#a9aec4" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="628.0" y1="645" x2="672.0" y2="540" stroke="#d9622b" stroke-width="7" />
+<line x1="828.0" y1="540" x2="872.0" y2="435" stroke="#f2c14e" stroke-width="7" />
+<line x1="828.0" y1="540" x2="872.0" y2="645" stroke="#f2c14e" stroke-width="7" />
+<line x1="1028.0" y1="435" x2="1072.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1028.0" y1="435" x2="1072.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1028.0" y1="645" x2="1072.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1028.0" y1="645" x2="1072.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1228.0" y1="435" x2="1272.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1228.0" y1="435" x2="1272.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1228.0" y1="645" x2="1272.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1228.0" y1="645" x2="1272.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1428.0" y1="435" x2="1472.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1428.0" y1="435" x2="1472.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1428.0" y1="645" x2="1472.0" y2="435" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1428.0" y1="645" x2="1472.0" y2="645" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1628.0" y1="435" x2="1672.0" y2="540" stroke="#7a7f9c" stroke-width="3" />
+<line x1="1628.0" y1="645" x2="1672.0" y2="540" stroke="#7a7f9c" stroke-width="3" />
+<text x="150" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 1</text>
+<text x="350" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 2</text>
+<text x="550" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 3</text>
+<text x="750" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 4</text>
+<text x="950" y="214" font-size="19" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 5  ·  ELDER</text>
+<text x="1150" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 6</text>
+<text x="1350" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 7</text>
+<text x="1550" y="214" font-size="19" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >ROW 8  ·  ELDER</text>
+<text x="1750" y="214" font-size="19" fill="#3a4468" text-anchor="middle" font-weight="bold" font-style="normal" >AFTER ROW 8</text>
+<rect x="72.0" y="481.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
+<text x="81.0" y="504.0" font-size="15" fill="#e6e2d6" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="150" y="548" font-size="22" fill="#e6e2d6" text-anchor="middle" font-weight="bold" font-style="normal" >Apprentice</text>
+<rect x="184.0" y="489.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="201.0" y="511.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="150" y="587.0" font-size="14" fill="#e6e2d6" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
+<rect x="272.0" y="271.0" width="156" height="118" rx="6" fill="#d9d3c0" stroke="#7a7f9c" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="281.0" y="294.0" font-size="15" fill="#4a4f68" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="350" y="338" font-size="22" fill="#4a4f68" text-anchor="middle" font-weight="bold" font-style="normal" >Kitsune</text>
+<rect x="384.0" y="279.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="401.0" y="301.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="350" y="377.0" font-size="14" fill="#4a4f68" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
+<rect x="272.0" y="481.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
+<text x="281.0" y="504.0" font-size="15" fill="#e6e2d6" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="350" y="548" font-size="22" fill="#e6e2d6" text-anchor="middle" font-weight="bold" font-style="normal" >Oni</text>
+<rect x="384.0" y="489.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="401.0" y="511.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="350" y="587.0" font-size="14" fill="#e6e2d6" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
+<rect x="272.0" y="691.0" width="156" height="118" rx="6" fill="#d9d3c0" stroke="#7a7f9c" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="281.0" y="714.0" font-size="15" fill="#4a4f68" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="350" y="758" font-size="22" fill="#4a4f68" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
+<rect x="384.0" y="699.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="401.0" y="721.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="350" y="797.0" font-size="14" fill="#4a4f68" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
+<rect x="472.0" y="376.0" width="156" height="118" rx="6" fill="#d9d3c0" stroke="#7a7f9c" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="481.0" y="399.0" font-size="15" fill="#4a4f68" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="550" y="443" font-size="22" fill="#4a4f68" text-anchor="middle" font-weight="bold" font-style="normal" >Oni</text>
+<rect x="584.0" y="384.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="601.0" y="406.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="550" y="482.0" font-size="14" fill="#4a4f68" text-anchor="middle" font-weight="normal" font-style="normal" >passed over</text>
+<rect x="472.0" y="586.0" width="156" height="118" rx="6" fill="#66656c" stroke="#8a8890" stroke-width="2" />
+<text x="481.0" y="609.0" font-size="15" fill="#e6e2d6" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="550" y="653" font-size="22" fill="#e6e2d6" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
+<rect x="584.0" y="594.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="601.0" y="616.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="550" y="692.0" font-size="14" fill="#e6e2d6" text-anchor="middle" font-weight="normal" font-style="normal" >cleared</text>
+<rect x="672.0" y="481.0" width="156" height="118" rx="6" fill="#fbf6e6" stroke="#d9622b" stroke-width="6" />
+<text x="681.0" y="504.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >M  Merchant</text>
+<text x="750" y="548" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Merchant</text>
+<text x="750" y="587.0" font-size="14" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >YOU ARE HERE</text>
+<rect x="872.0" y="376.0" width="156" height="118" rx="6" fill="#fbf6e6" stroke="#1f2a4a" stroke-width="4" />
+<text x="881.0" y="399.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
+<text x="950" y="443" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Oni</text>
+<circle cx="1024.0" cy="382.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
+<path d="M1024.0,371.55 L1032.8825,376.2525 V383.045 Q1032.36,389.8375 1024.0,392.45 Q1015.64,389.8375 1015.1175,383.045 V376.2525 Z" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linejoin="round"/>
+<text x="950" y="482.0" font-size="14" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >reachable</text>
+<g filter="url(#glow)"><rect x="864.0" y="578.0" width="172" height="134" rx="8" fill="#f2c14e" stroke="none" stroke-width="0" />
+</g><rect x="872.0" y="586.0" width="156" height="118" rx="6" fill="#fbf6e6" stroke="#f2c14e" stroke-width="7" />
+<text x="881.0" y="609.0" font-size="15" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
+<text x="950" y="653" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Nine-Tails</text>
+<circle cx="1024.0" cy="592.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
+<path d="M1013.55,588.3425 H1034.45 M1030.27,584.1625 L1034.45,588.3425 L1030.27,592.5225 M1034.45,596.7025 H1013.55 M1017.7299999999999,592.5225 L1013.55,596.7025 L1017.7299999999999,600.8825" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="950" y="692.0" font-size="14" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >reachable · selected</text>
+<rect x="1072.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f4c7c" stroke-width="2" />
+<text x="1081.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="1150" y="443" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Kitsune</text>
+<rect x="1184.0" y="384.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1201.0" y="406.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="1150" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1072.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f4c7c" stroke-width="2" />
+<text x="1081.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >D  Duel</text>
+<text x="1150" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Kappa</text>
+<rect x="1184.0" y="594.0" width="34" height="34" rx="3" fill="none" stroke="#888" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1201.0" y="616.0" font-size="11" fill="#888" text-anchor="middle" font-weight="normal" font-style="italic" >face</text>
+<text x="1150" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1272.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#3f6b52" stroke-width="2" />
+<text x="1281.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >M  Merchant</text>
+<text x="1350" y="443" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Merchant</text>
+<text x="1350" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1272.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#8a6a3a" stroke-width="2" />
+<text x="1281.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >J  Dojo</text>
+<text x="1350" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Dojo</text>
+<text x="1350" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1472.0" y="376.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#7a3a48" stroke-width="2" />
+<text x="1481.0" y="399.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
+<text x="1550" y="443" font-size="20" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Kappa</text>
+<circle cx="1624.0" cy="382.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
+<g fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linecap="round"><rect x="1613.55" y="378.3425" width="12.0175" height="7.315" rx="3.6575"/><rect x="1622.4325" y="378.3425" width="12.0175" height="7.315" rx="3.6575"/></g>
+<text x="1550" y="482.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1472.0" y="586.0" width="156" height="118" rx="6" fill="#2b3a63" stroke="#7a3a48" stroke-width="2" />
+<text x="1481.0" y="609.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >E  Elder duel</text>
+<text x="1550" y="653" font-size="22" fill="#aeb6d8" text-anchor="middle" font-weight="bold" font-style="normal" >Elder Oni</text>
+<circle cx="1624.0" cy="592.0" r="19" fill="#b3262a" stroke="#f6ead0" stroke-width="1.9"/>
+<path d="M1624.0,581.55 L1632.8825,586.2525 V593.045 Q1632.36,599.8375 1624.0,602.45 Q1615.64,599.8375 1615.1175,593.045 V586.2525 Z" fill="none" stroke="#f6ead0" stroke-width="2.1" stroke-linejoin="round"/>
+<text x="1550" y="692.0" font-size="14" fill="#aeb6d8" text-anchor="middle" font-weight="normal" font-style="normal" ></text>
+<rect x="1665.0" y="465.0" width="170" height="150" rx="6" fill="#1f2a4a" stroke="#b3262a" stroke-width="5" />
+<text x="1674.0" y="488.0" font-size="15" fill="#98a2cc" text-anchor="start" font-weight="bold" font-style="normal" >B  Boss</text>
+<text x="1750" y="548" font-size="22" fill="#e9dfc4" text-anchor="middle" font-weight="bold" font-style="normal" >The Tanuki</text>
+<rect x="1718" y="494" width="64" height="42" rx="3" fill="none" stroke="#8f87a8" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1750" y="520" font-size="12" fill="#8f87a8" text-anchor="middle" font-weight="normal" font-style="italic" >mark</text>
+<text x="1750" y="580" font-size="15" fill="#cfc6e0" text-anchor="middle" font-weight="normal" font-style="italic" >waits at the end</text>
+<text x="1750" y="602" font-size="14" fill="#e9a6a0" text-anchor="middle" font-weight="normal" font-style="normal" >copies your best move</text>
+<polygon points="842.0,629 864.0,645 842.0,661" fill="#f2c14e" stroke="#1b1b24" stroke-width="1.5"/>
+<g transform="translate(0,58)"><rect x="700" y="38" width="470" height="100" rx="4" fill="#fbf6e6" stroke="#bfae86" stroke-width="2" />
 <g filter="url(#glow)"><rect x="716" y="48" width="440" height="80" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".55"/>
-</g><rect x="716" y="48" width="440" height="80" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" />
+</g><rect x="716" y="48" width="440" height="80" rx="4" fill="#fbf6e6" stroke="#d9622b" stroke-width="3" />
 <rect x="728" y="58" width="60" height="60" rx="3" fill="none" stroke="#666" stroke-width="1.5" stroke-dasharray="4 3"/>
 <text x="758" y="93" font-size="13" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
 <text x="802" y="78" font-size="16" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="2">COPY TARGET</text>
 <text x="802" y="108" font-size="30" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Foxfire  ·  Lv 2</text>
-<polygon points="1250,38 1257,52 1245,67 1259,81 1247,95 1256,109 1242,124 1254,138 1841,138 1853,124 1844,109 1858,95 1846,81 1850,67 1843,52 1855,38" fill="#efe4cc" filter="url(#sh)"/>
+<rect x="1250" y="38" width="600" height="100" rx="4" fill="#fbf6e6" stroke="#bfae86" stroke-width="2" />
 <text x="1275" y="76" font-size="28" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >RYO  ·  840 / 1000</text>
 <rect x="1275" y="88" width="300" height="18" rx="0" fill="#c9bd9f" stroke="#222" stroke-width="2" />
 <rect x="1275" y="88" width="252" height="18" rx="0" fill="#b3262a" stroke="none" stroke-width="0" />
 <text x="1830" y="76" font-size="26" fill="#1b1b24" text-anchor="end" font-weight="bold" font-style="normal" >75 coins</text>
 <text x="1830" y="110" font-size="18" fill="#555" text-anchor="end" font-weight="normal" font-style="normal" >row 4 of 8 done</text>
-<polygon points="90,850 97,871 85,893 99,914 87,936 96,957 82,979 94,1000 981,1000 993,979 984,957 998,936 986,914 990,893 983,871 995,850" fill="#efe4cc" filter="url(#sh)"/>
-<circle cx="140" cy="905" r="26" fill="#b3262a" stroke="#f6ead0" stroke-width="2.6"/>
-<path d="M125.7,899.995 H154.3 M148.58,894.275 L154.3,899.995 L148.58,905.715 M154.3,911.435 H125.7 M131.42000000000002,905.715 L125.7,911.435 L131.42000000000002,917.155" fill="none" stroke="#f6ead0" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="185" y="892" font-size="27" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >NINE-TAILS  ·  Elder duel  ·  row 5</text>
-<text x="185" y="926" font-size="22" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" >Twist: reflects any special used twice in a row.</text>
-<text x="185" y="958" font-size="20" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >Pays 50 coins + bind 1 of 3 abilities (rares can appear).</text>
-<text x="185" y="984" font-size="20" fill="#555" text-anchor="start" font-weight="normal" font-style="italic" >Habit to punish: often jumps after a knockdown.</text>
-<polygon points="1020,850 1027,871 1015,893 1029,914 1017,936 1026,957 1012,979 1024,1000 1831,1000 1843,979 1834,957 1848,936 1836,914 1840,893 1833,871 1845,850" fill="#1f2a4a" filter="url(#sh)"/>
-<text x="1042" y="882" font-size="16" fill="#aab3d6" text-anchor="start" font-weight="bold" font-style="normal" >LEGEND (state · type · twist)</text>
-<rect x="1042" y="896" width="22" height="22" rx="3" fill="#66656c" stroke="#8a8890" stroke-width="3" />
-<text x="1070" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >cleared</text>
-<rect x="1155" y="896" width="22" height="22" rx="3" fill="#efe4cc" stroke="#d9622b" stroke-width="3" />
-<text x="1183" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >here</text>
-<rect x="1241" y="896" width="22" height="22" rx="3" fill="#efe4cc" stroke="#1f2a4a" stroke-width="3" />
-<text x="1269" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >reachable</text>
-<rect x="1372" y="896" width="22" height="22" rx="3" fill="#efe4cc" stroke="#f2c14e" stroke-width="3" />
-<text x="1400" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >selected</text>
-<rect x="1494" y="896" width="22" height="22" rx="3" fill="#2b3a63" stroke="#3f4c7c" stroke-width="3" />
-<text x="1522" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >later</text>
-<rect x="1589" y="896" width="22" height="22" rx="3" fill="#182041" stroke="#3b4570" stroke-width="3" stroke-dasharray="5 4"/>
-<text x="1617" y="914" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >passed over</text>
-<circle cx="1062" cy="958" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
-<path d="M1052.1,954.535 H1071.9 M1067.94,950.575 L1071.9,954.535 L1067.94,958.495 M1071.9,962.455 H1052.1 M1056.06,958.495 L1052.1,962.455 L1056.06,966.415" fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="1088" y="964" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >reflects 2nd-in-a-row special</text>
-<circle cx="1352" cy="958" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
-<path d="M1352,948.1 L1360.415,952.555 V958.99 Q1359.92,965.425 1352,967.9 Q1344.08,965.425 1343.585,958.99 V952.555 Z" fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linejoin="round"/>
-<text x="1378" y="964" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >armour on specials</text>
-<circle cx="1588" cy="958" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
-<g fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linecap="round"><rect x="1578.1" y="954.535" width="11.385" height="6.93" rx="3.465"/><rect x="1586.515" y="954.535" width="11.385" height="6.93" rx="3.465"/></g>
-<text x="1614" y="964" font-size="16" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >throws unbreakable</text>
-<text x="1042" y="988" font-size="14" fill="#8d97c2" text-anchor="start" font-weight="normal" font-style="italic" >D duel · E elder · M merchant · J dojo · B boss.   Dashed box = portrait placeholder (Astra).</text>
-<rect x="470" y="1022" width="210" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
-<text x="575.0" y="1049" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ARROWS / D-PAD</text>
-<text x="690" y="1050" font-size="24" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >Choose route</text>
-<rect x="896" y="1022" width="150" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
-<text x="971.0" y="1049" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ENTER / A</text>
-<text x="1056" y="1050" font-size="24" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >Go</text>
-<rect x="1132" y="1022" width="150" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
-<text x="1207.0" y="1049" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ESC / START</text>
-<text x="1292" y="1050" font-size="24" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >Pause</text>
-<circle cx="55" cy="60" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="55" y="66" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >1</text>
-<circle cx="690" cy="55" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="690" y="61" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >2</text>
-<circle cx="1240" cy="55" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1240" y="61" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >3</text>
-<circle cx="40" cy="190" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="40" y="196" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >4</text>
-<circle cx="257.0" cy="271.0" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="257.0" y="277.0" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >5</text>
-<circle cx="1059.0" cy="636.0" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1059.0" y="642.0" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >6</text>
-<circle cx="1878" cy="460" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1878" y="466" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >7</text>
-<circle cx="80" cy="860" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="80" y="866" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >8</text>
-<circle cx="1010" cy="860" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1010" y="866" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >9</text>
-<circle cx="440" cy="1040" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="440" y="1046" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >10</text>
+</g><rect x="90" y="826" width="900" height="134" rx="4" fill="#fbf6e6" stroke="#bfae86" stroke-width="2" />
+<circle cx="140" cy="880" r="26" fill="#b3262a" stroke="#f6ead0" stroke-width="2.6"/>
+<path d="M125.7,874.995 H154.3 M148.58,869.275 L154.3,874.995 L148.58,880.715 M154.3,886.435 H125.7 M131.42000000000002,880.715 L125.7,886.435 L131.42000000000002,892.155" fill="none" stroke="#f6ead0" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="185" y="860" font-size="27" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >NINE-TAILS  ·  Elder duel  ·  row 5</text>
+<text x="185" y="892" font-size="22" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" >Twist: reflects any special used twice in a row.</text>
+<text x="185" y="924" font-size="20" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >Pays 50 coins + bind 1 of 3 abilities (rares can appear).</text>
+<text x="185" y="950" font-size="20" fill="#555" text-anchor="start" font-weight="normal" font-style="italic" >Habit to punish: often jumps after a knockdown.</text>
+<rect x="1020" y="826" width="810" height="134" rx="4" fill="#fbf6e6" stroke="#bfae86" stroke-width="2" />
+<text x="1042" y="850" font-size="16" fill="#3a4468" text-anchor="start" font-weight="bold" font-style="normal" >LEGEND (state · type · twist)</text>
+<rect x="1042" y="862" width="22" height="22" rx="3" fill="#66656c" stroke="#8a8890" stroke-width="3" />
+<text x="1070" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >cleared</text>
+<rect x="1155" y="862" width="22" height="22" rx="3" fill="#fbf6e6" stroke="#d9622b" stroke-width="3" />
+<text x="1183" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >here</text>
+<rect x="1241" y="862" width="22" height="22" rx="3" fill="#fbf6e6" stroke="#1f2a4a" stroke-width="3" />
+<text x="1269" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >reachable</text>
+<rect x="1372" y="862" width="22" height="22" rx="3" fill="#fbf6e6" stroke="#f2c14e" stroke-width="3" />
+<text x="1400" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >selected</text>
+<rect x="1494" y="862" width="22" height="22" rx="3" fill="#2b3a63" stroke="#3f4c7c" stroke-width="3" />
+<text x="1522" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >later</text>
+<rect x="1589" y="862" width="22" height="22" rx="3" fill="#d9d3c0" stroke="#7a7f9c" stroke-width="3" stroke-dasharray="5 4"/>
+<text x="1617" y="880" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >passed over</text>
+<circle cx="1062" cy="916" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
+<path d="M1052.1,912.535 H1071.9 M1067.94,908.575 L1071.9,912.535 L1067.94,916.495 M1071.9,920.455 H1052.1 M1056.06,916.495 L1052.1,920.455 L1056.06,924.415" fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1088" y="922" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >reflects 2nd-in-a-row special</text>
+<circle cx="1352" cy="916" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
+<path d="M1352,906.1 L1360.415,910.555 V916.99 Q1359.92,923.425 1352,925.9 Q1344.08,923.425 1343.585,916.99 V910.555 Z" fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linejoin="round"/>
+<text x="1378" y="922" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >armour on specials</text>
+<circle cx="1588" cy="916" r="18" fill="#b3262a" stroke="#f6ead0" stroke-width="1.8"/>
+<g fill="none" stroke="#f6ead0" stroke-width="2.0" stroke-linecap="round"><rect x="1578.1" y="912.535" width="11.385" height="6.93" rx="3.465"/><rect x="1586.515" y="912.535" width="11.385" height="6.93" rx="3.465"/></g>
+<text x="1614" y="922" font-size="16" fill="#1b1b24" text-anchor="start" font-weight="normal" font-style="normal" >throws unbreakable</text>
+<text x="1042" y="950" font-size="14" fill="#555" text-anchor="start" font-weight="normal" font-style="italic" >D duel · E elder · M merchant · J dojo · B boss.  Dashed box = portrait placeholder (Astra).</text>
+<rect x="470" y="966" width="210" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
+<text x="575.0" y="993" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ARROWS / D-PAD</text>
+<text x="690" y="994" font-size="24" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Choose route</text>
+<rect x="896" y="966" width="150" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
+<text x="971.0" y="993" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ENTER / A</text>
+<text x="1056" y="994" font-size="24" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Go</text>
+<rect x="1132" y="966" width="150" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
+<text x="1207.0" y="993" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ESC / START</text>
+<text x="1292" y="994" font-size="24" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Pause</text>
+<circle cx="100" cy="100" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="100" y="106" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >1</text>
+<circle cx="690" cy="110" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="690" y="116" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >2</text>
+<circle cx="1240" cy="110" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1240" y="116" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >3</text>
+<circle cx="62" cy="214" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="62" y="220" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >4</text>
+<circle cx="266.0" cy="271.0" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="266.0" y="277.0" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >5</text>
+<circle cx="1050.0" cy="636.0" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1050.0" y="642.0" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >6</text>
+<circle cx="1845" cy="460" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1845" y="466" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >7</text>
+<circle cx="80" cy="836" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="80" y="842" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >8</text>
+<circle cx="1010" cy="836" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1010" y="842" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >9</text>
+<circle cx="440" cy="980" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="440" y="986" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >10</text>
 <rect x="0" y="0" width="1920" height="26" rx="0" fill="#000" stroke="none" stroke-width="0" opacity=".6"/>
 <text x="960" y="19" font-size="15" fill="#ffd24a" text-anchor="middle" font-weight="bold" font-style="normal" >ROUGH PROTOTYPE · awaiting Astra pass · greybox, not final art</text>
 </svg>

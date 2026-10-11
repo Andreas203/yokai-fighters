@@ -20,24 +20,31 @@
 <rect x="1580" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
 <rect x="1720" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
 <rect x="1860" y="0" width="22" height="1080" rx="0" fill="#18243f" stroke="none" stroke-width="0" opacity=".55"/>
-<text x="1900" y="1070" font-size="15" fill="#6f7aa0" text-anchor="end" font-weight="normal" font-style="italic" >BACKDROP: kit night plate, dimmed behind the card</text>
+<text x="1900" y="1070" font-size="15" fill="#6f7aa0" text-anchor="end" font-weight="normal" font-style="italic" >BACKDROP: kit night plate, dimmed behind the scrolls</text>
 <rect x="0" y="0" width="1920" height="1080" rx="0" fill="#000" stroke="none" stroke-width="0" opacity=".25"/>
-<polygon points="300,70 307,136 295,201 309,267 297,333 306,399 292,464 304,530 1611,530 1623,464 1614,399 1628,333 1616,267 1620,201 1613,136 1625,70" fill="#efe4cc" filter="url(#sh)"/>
-<rect x="345" y="115" width="250" height="370" rx="3" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="6 5"/>
-<text x="470" y="290" font-size="20" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >ELDER NINE-TAILS</text>
-<text x="470" y="318" font-size="18" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait placeholder</text>
-<text x="470" y="346" font-size="16" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >(full face mask stays on)</text>
-<text x="650" y="160" font-size="24" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="3">ELDER TWIST  ·  ROW 5</text>
-<text x="650" y="235" font-size="62" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Nine-Tailed Kitsune</text>
-<line x1="650" y1="262" x2="1450" y2="262" stroke="#1b1b24" stroke-width="3" opacity=".6"/>
-<text x="650" y="335" font-size="32" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Nine-Tails reflects any special you use twice in a row.</text>
+<line x1="590.4" y1="100" x2="960.0" y2="66" stroke="#2b2118" stroke-width="3"/><line x1="1329.6" y1="100" x2="960.0" y2="66" stroke="#2b2118" stroke-width="3"/><circle cx="960.0" cy="66" r="9" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2"/><rect x="300" y="100" width="1320" height="430" rx="0" fill="#3d5a45" stroke="none" stroke-width="0" filter="url(#sh)"/>
+<rect x="312" y="134" width="1296" height="362" rx="0" fill="#f1e8d0" stroke="none" stroke-width="0" />
+<line x1="314" y1="138" x2="314" y2="492" stroke="#bfae86" stroke-width="1.5"/><line x1="317" y1="138" x2="317" y2="492" stroke="#bfae86" stroke-width="1.5"/><line x1="320" y1="138" x2="320" y2="492" stroke="#bfae86" stroke-width="1.5"/><rect x="296" y="92" width="1328" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="287" y="89" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1621" y="89" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="296" y="524" width="1328" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="287" y="521" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1621" y="521" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="345" y="148" width="250" height="336" rx="3" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="470" y="300" font-size="20" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >ELDER NINE-TAILS</text>
+<text x="470" y="328" font-size="18" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait placeholder</text>
+<text x="470" y="356" font-size="16" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >(full face mask stays on)</text>
+<text x="650" y="180" font-size="24" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="3">ELDER TWIST  ·  ROW 5</text>
+<text x="650" y="250" font-size="62" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Nine-Tailed Kitsune</text>
+<line x1="650" y1="274" x2="1450" y2="274" stroke="#1b1b24" stroke-width="3" opacity=".6"/>
+<text x="650" y="345" font-size="32" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Nine-Tails reflects any special you use twice in a row.</text>
 <rect x="650" y="420" width="170" height="38" rx="5" fill="#efe4cc" stroke="#1b1b24" stroke-width="2" />
 <text x="735.0" y="447" font-size="22" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ENTER / A</text>
 <text x="834" y="449" font-size="26" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Continue</text>
-<rect x="1440" y="350" width="130" height="130" rx="4" fill="#b3262a" stroke="none" stroke-width="0" />
-<circle cx="1505" cy="415" r="48" fill="#b3262a" stroke="#f6ead0" stroke-width="4.8"/>
-<path d="M1478.6,405.76 H1531.4 M1520.8400000000001,395.2 L1531.4,405.76 L1520.8400000000001,416.32 M1531.4,426.88 H1478.6 M1489.1599999999999,416.32 L1478.6,426.88 L1489.1599999999999,437.44" fill="none" stroke="#f6ead0" stroke-width="5.3" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="1505" y="505" font-size="14" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >twist seal</text>
+<g transform="rotate(-4 1500 410)"><rect x="1450" y="365" width="100" height="100" rx="4" fill="#b3262a" stroke="#7a1418" stroke-width="3" />
+<circle cx="1500" cy="415" r="38" fill="#b3262a" stroke="#f6ead0" stroke-width="3.8"/>
+<path d="M1479.1,407.685 H1520.9 M1512.5400000000002,399.325 L1520.9,407.685 L1512.5400000000002,416.045 M1520.9,424.405 H1479.1 M1487.4599999999998,416.045 L1479.1,424.405 L1487.4599999999998,432.765" fill="none" stroke="#f6ead0" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g><text x="1500" y="488" font-size="14" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >twist seal (red stamp)</text>
 <text x="120" y="585" font-size="22" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >CALLOUT · first meeting, shown in the fight (scaled 42%)</text>
 <g transform="translate(120,600) scale(0.4167)"><rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0f1730" stroke="none" stroke-width="0" />
 <rect x="0" y="520" width="1920" height="360" rx="0" fill="none" stroke="#7be3a4" stroke-width="3" stroke-dasharray="14 10"/>
@@ -69,33 +76,49 @@
 </g>
 <rect x="120" y="600" width="800" height="450" rx="0" fill="none" stroke="#aab3d6" stroke-width="2" />
 <text x="120" y="1068" font-size="16" fill="#aab3d6" text-anchor="start" font-weight="normal" font-style="italic" >Fades after ~3 s to the standing reminder strip (bottom right). Sits between HUD and gameplay plane.</text>
-<text x="980" y="585" font-size="22" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >SAME CARD TEMPLATE · the other two twists (scaled 46%)</text>
-<g transform="translate(990,605) scale(0.46)"><polygon points="0,0 7,66 -5,131 9,197 -3,263 6,329 -8,394 4,460 1311,460 1323,394 1314,329 1328,263 1316,197 1320,131 1313,66 1325,0" fill="#efe4cc" filter="url(#sh)"/>
-<rect x="45" y="45" width="250" height="370" rx="3" fill="none" stroke="#555" stroke-width="3" stroke-dasharray="6 5"/>
-<text x="170" y="240" font-size="24" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait</text>
-<text x="350" y="90" font-size="24" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="3">ELDER TWIST  ·  ROW 5 / 8</text>
-<text x="350" y="165" font-size="62" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Oni</text>
-<text x="350" y="265" font-size="31" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Oni's specials have armour: jabs won't stop them.</text>
-<circle cx="1230" cy="340" r="60" fill="#b3262a" stroke="#f6ead0" stroke-width="6.0"/>
-<path d="M1230,307.0 L1258.05,321.85 V343.3 Q1256.4,364.75 1230,373.0 Q1203.6,364.75 1201.95,343.3 V321.85 Z" fill="none" stroke="#f6ead0" stroke-width="6.7" stroke-linejoin="round"/>
-</g>
-<g transform="translate(990,825) scale(0.46)"><polygon points="0,0 7,66 -5,131 9,197 -3,263 6,329 -8,394 4,460 1311,460 1323,394 1314,329 1328,263 1316,197 1320,131 1313,66 1325,0" fill="#efe4cc" filter="url(#sh)"/>
-<rect x="45" y="45" width="250" height="370" rx="3" fill="none" stroke="#555" stroke-width="3" stroke-dasharray="6 5"/>
-<text x="170" y="240" font-size="24" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait</text>
-<text x="350" y="90" font-size="24" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="3">ELDER TWIST  ·  ROW 8</text>
-<text x="350" y="165" font-size="62" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Kappa</text>
-<text x="350" y="265" font-size="31" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Kappa's throws can't be broken.</text>
-<circle cx="1230" cy="340" r="60" fill="#b3262a" stroke="#f6ead0" stroke-width="6.0"/>
-<g fill="none" stroke="#f6ead0" stroke-width="6.7" stroke-linecap="round"><rect x="1197.0" y="328.45" width="37.949999999999996" height="23.099999999999998" rx="11.549999999999999"/><rect x="1225.05" y="328.45" width="37.949999999999996" height="23.099999999999998" rx="11.549999999999999"/></g>
-</g>
-<circle cx="300" cy="80" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="300" y="86" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >1</text>
-<circle cx="335" cy="115" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="335" y="121" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >2</text>
-<circle cx="650" cy="130" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="650" y="136" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >3</text>
-<circle cx="630" cy="312" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="630" y="318" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >4</text>
-<circle cx="1470" cy="350" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1470" y="356" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >5</text>
-<circle cx="640" cy="430" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="640" y="436" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >6</text>
+<text x="960" y="585" font-size="22" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >SAME HANGING-SCROLL TEMPLATE · the other two twists</text>
+<line x1="1056.8" y1="650" x2="1180.0" y2="616" stroke="#2b2118" stroke-width="3"/><line x1="1303.2" y1="650" x2="1180.0" y2="616" stroke="#2b2118" stroke-width="3"/><circle cx="1180.0" cy="616" r="9" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2"/><rect x="960" y="650" width="440" height="370" rx="0" fill="#3d5a45" stroke="none" stroke-width="0" filter="url(#sh)"/>
+<rect x="972" y="684" width="416" height="302" rx="0" fill="#f1e8d0" stroke="none" stroke-width="0" />
+<line x1="974" y1="688" x2="974" y2="982" stroke="#bfae86" stroke-width="1.5"/><line x1="977" y1="688" x2="977" y2="982" stroke="#bfae86" stroke-width="1.5"/><line x1="980" y1="688" x2="980" y2="982" stroke="#bfae86" stroke-width="1.5"/><rect x="956" y="642" width="448" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="947" y="639" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1401" y="639" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="956" y="1014" width="448" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="947" y="1011" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1401" y="1011" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="994" y="700" width="110" height="150" rx="3" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="1049" y="780" font-size="16" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait</text>
+<text x="1120" y="728" font-size="15" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="2">ELDER TWIST  ·  ROW 5 / 8</text>
+<text x="1120" y="780" font-size="40" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Oni</text>
+<line x1="1120" y1="798" x2="1366" y2="798" stroke="#1b1b24" stroke-width="2" opacity=".6"/><text x="994" y="890" font-size="22" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Oni's specials have armour:</text>
+<text x="994" y="920" font-size="22" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >jabs won't stop them.</text>
+<g transform="rotate(-4 1322 944)"><rect x="1290" y="912" width="64" height="64" rx="3" fill="#b3262a" stroke="#7a1418" stroke-width="2" />
+<circle cx="1322" cy="944" r="25" fill="#b3262a" stroke="#f6ead0" stroke-width="2.5"/>
+<path d="M1322,930.25 L1333.6875,936.4375 V945.375 Q1333.0,954.3125 1322,957.75 Q1311.0,954.3125 1310.3125,945.375 V936.4375 Z" fill="none" stroke="#f6ead0" stroke-width="2.8" stroke-linejoin="round"/>
+</g><line x1="1526.8" y1="650" x2="1650.0" y2="616" stroke="#2b2118" stroke-width="3"/><line x1="1773.2" y1="650" x2="1650.0" y2="616" stroke="#2b2118" stroke-width="3"/><circle cx="1650.0" cy="616" r="9" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2"/><rect x="1430" y="650" width="440" height="370" rx="0" fill="#3d5a45" stroke="none" stroke-width="0" filter="url(#sh)"/>
+<rect x="1442" y="684" width="416" height="302" rx="0" fill="#f1e8d0" stroke="none" stroke-width="0" />
+<line x1="1444" y1="688" x2="1444" y2="982" stroke="#bfae86" stroke-width="1.5"/><line x1="1447" y1="688" x2="1447" y2="982" stroke="#bfae86" stroke-width="1.5"/><line x1="1450" y1="688" x2="1450" y2="982" stroke="#bfae86" stroke-width="1.5"/><rect x="1426" y="642" width="448" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1417" y="639" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1871" y="639" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1426" y="1014" width="448" height="14" rx="5" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1417" y="1011" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1871" y="1011" width="12" height="20" rx="6" fill="#5b3d27" stroke="#3f2a1a" stroke-width="2" />
+<rect x="1464" y="700" width="110" height="150" rx="3" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="1519" y="780" font-size="16" fill="#555" text-anchor="middle" font-weight="normal" font-style="italic" >portrait</text>
+<text x="1590" y="728" font-size="15" fill="#b3262a" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="2">ELDER TWIST  ·  ROW 8</text>
+<text x="1590" y="780" font-size="40" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Kappa</text>
+<line x1="1590" y1="798" x2="1836" y2="798" stroke="#1b1b24" stroke-width="2" opacity=".6"/><text x="1464" y="890" font-size="22" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >Elder Kappa's throws</text>
+<text x="1464" y="920" font-size="22" fill="#1b1b24" text-anchor="start" font-weight="bold" font-style="normal" >can't be broken.</text>
+<g transform="rotate(-4 1792 944)"><rect x="1760" y="912" width="64" height="64" rx="3" fill="#b3262a" stroke="#7a1418" stroke-width="2" />
+<circle cx="1792" cy="944" r="25" fill="#b3262a" stroke="#f6ead0" stroke-width="2.5"/>
+<g fill="none" stroke="#f6ead0" stroke-width="2.8" stroke-linecap="round"><rect x="1778.25" y="939.1875" width="15.8125" height="9.625" rx="4.8125"/><rect x="1789.9375" y="939.1875" width="15.8125" height="9.625" rx="4.8125"/></g>
+</g><circle cx="300" cy="110" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="300" y="116" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >1</text>
+<circle cx="335" cy="148" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="335" y="154" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >2</text>
+<circle cx="625" cy="170" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="625" y="176" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >3</text>
+<circle cx="625" cy="335" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="625" y="341" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >4</text>
+<circle cx="1425" cy="380" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="1425" y="386" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >5</text>
+<circle cx="640" cy="450" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="640" y="456" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >6</text>
 <circle cx="110" cy="595" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="110" y="601" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >7</text>
-<circle cx="975" cy="600" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="975" y="606" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >8</text>
+<circle cx="930" cy="585" r="15" fill="#2fa36b" stroke="#fff" stroke-width="2"/><text x="930" y="591" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold" font-style="normal" >8</text>
 <rect x="0" y="0" width="1920" height="26" rx="0" fill="#000" stroke="none" stroke-width="0" opacity=".6"/>
 <text x="960" y="19" font-size="15" fill="#ffd24a" text-anchor="middle" font-weight="bold" font-style="normal" >ROUGH PROTOTYPE · awaiting Astra pass · greybox, not final art</text>
 </svg>
