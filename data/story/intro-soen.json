@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "intro-soen",
+  "status": "proposed",
+  "trigger": "First run only, before row 1",
+  "text": "\"Every spirit you bind is a debt, Ryo,\" Master Sōen says, pouring tea she does not drink. \"Name the debt, and you may carry it.\"",
+  "placeholders": [],
+  "speaker": "Master Sōen",
+  "rules": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "notes": "Sets up the rule the ending pays off. Gate: first run only (story flag, M4)."
+}
