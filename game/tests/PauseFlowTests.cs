@@ -399,9 +399,9 @@ public static class PauseFlowTests
 			Assert.Equal(new PauseFighterSummary("Kitsune", p2, max2), v.Opponent, "the opponent's health");
 			Assert.Equal("Duel 1 of 2 · vs Kitsune", v.Position, "position in the run");
 			Assert.Equal("A|B|C|D", string.Join("|", v.Slots.Select(x => x.Slot)), "four slots in order");
-			Assert.Equal(new PauseSlotSummary("A", a.Data.Name, 2, mod.Name), v.Slots[0], "slot A: level 2 with its modifier");
-			Assert.Equal(new PauseSlotSummary("B", b.Data.Name, 1, ""), v.Slots[1], "slot B: level 1, no modifier");
-			Assert.Equal(new PauseSlotSummary(drafted.Slot.ToString(), drafted.Name, 1, ""), v.Slots[drafted.Slot - SpecialSlot.A], "the drafted special in its own slot");
+			Assert.Equal(new PauseSlotSummary("A", a.Data.Name, 2, mod.Name, a.Data.Id), v.Slots[0], "slot A: level 2 with its modifier");
+			Assert.Equal(new PauseSlotSummary("B", b.Data.Name, 1, "", b.Data.Id), v.Slots[1], "slot B: level 1, no modifier");
+			Assert.Equal(new PauseSlotSummary(drafted.Slot.ToString(), drafted.Name, 1, "", drafted.Id), v.Slots[drafted.Slot - SpecialSlot.A], "the drafted special in its own slot");
 			Assert.Equal(1, v.Slots.Count(x => x == new PauseSlotSummary(x.Slot, "Empty", 0, "")), "one slot still empty");
 
 			// The page shows exactly those values, set when the pause opens.
