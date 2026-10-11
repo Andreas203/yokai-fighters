@@ -84,13 +84,15 @@ public sealed partial class Match
 		EquippedSpecial? eq = slot == SpecialSlot.None ? null : f.Specials[(int)slot];
 		if (eq is null) return false;
 		if (eq.Move.Projectile is { } pd && ProjectileCount(i) >= pd.MaxActive) return false;
-		MoveData m = eq.Move;
-		bool isEx = ex && eq.ExMove != null && TrySpendMeter(i, eq.Data.ExCost);
-		if (isEx) m = eq.ExMove!;
+		StartConditions held = StartConditionsNow(f, slot, eq.Move.StartMask);
+		bool isEx = ex && eq.ExMove != null && TrySpendMeter(i, eq.ExCost);
+		MoveData m = (isEx ? eq.ExMove! : eq.Move).ForStart(held);
 
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
 		f.ActiveMove = precision ? WithPrecision(m) : m;
+		f.ActiveConditions = held;
+		f.SpecialUses[(int)slot]++;
 		f.MoveSlot = -1;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -105,7 +107,24 @@ public sealed partial class Match
 	}
 
 	/// <summary>K1: a Kata motion input deals +PrecisionBonusPct damage (projectile hits included).</summary>
-	private MoveData WithPrecision(MoveData m) => m with { Damage = m.Damage * (100 + Config.PrecisionBonusPct) / 100 };
+	private MoveData WithPrecision(MoveData m) =>
+		m.WithOutcomes(x => x with { Damage = x.Damage * (100 + Config.PrecisionBonusPct) / 100 });
+
+	/// <summary>
+	/// YOK-103: the start conditions a modifier's <c>when</c> reads, as they stand on the tick the special starts
+	/// (only the bits in <paramref name="wanted"/>; the rest are never computed). First use = no start of this slot yet
+	/// this round; health below 30% = Health x 100 &lt; MaxHealth x 30 (Rage Ember, Ryo's health: only Ryo carries
+	/// modifiers, T4); holding up = the parsed direction is 7, 8 or 9 this tick.
+	/// </summary>
+	private static StartConditions StartConditionsNow(Fighter f, SpecialSlot slot, StartConditions wanted)
+	{
+		var held = StartConditions.None;
+		if (wanted.HasFlag(StartConditions.FirstUseEachRound) && f.SpecialUses[(int)slot] == 0) held |= StartConditions.FirstUseEachRound;
+		if (wanted.HasFlag(StartConditions.OwnerHealthBelow30Pct) && (long)f.Health * 100 < (long)f.MaxHealth * 30)
+			held |= StartConditions.OwnerHealthBelow30Pct;
+		if (wanted.HasFlag(StartConditions.HoldingUp) && f.Input.Direction >= 7) held |= StartConditions.HoldingUp;
+		return held;
+	}
 
 	/// <summary>
 	/// EX leniency: a second punch (or kick) pressed while the special is still within its first
@@ -120,8 +139,9 @@ public sealed partial class Match
 		if (eq?.ExMove is null) return false;
 		InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;
 		if ((now & ~f.SpecialButtons) == 0 || !ExPair(f.SpecialButtons | now)) return false;
-		if (!TrySpendMeter(i, eq.Data.ExCost)) return false;
-		f.ActiveMove = f.ActivePrecision ? WithPrecision(eq.ExMove) : eq.ExMove;
+		if (!TrySpendMeter(i, eq.ExCost)) return false;
+		MoveData exMove = eq.ExMove.ForStart(f.ActiveConditions); // same start conditions as the plain start (YOK-103)
+		f.ActiveMove = f.ActivePrecision ? WithPrecision(exMove) : exMove;
 		f.ActiveEx = true;
 		f.SpecialButtons |= now;
 		f.Input.TryConsume(out _); // the second press re-parsed as the same special; it's used up here
@@ -153,7 +173,8 @@ public sealed partial class Match
 				CancelFrom.Specials => f.ActiveSpecial != SpecialSlot.None,
 				CancelFrom.HeavyNormals => m.IsNormal && m.Button is InputBits.HeavyPunch or InputBits.HeavyKick,
 				CancelFrom.Normals => m.IsNormal,
-				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected,
+				// YOK-103 (Undertow): a throw counts once it has landed, not while the opponent can still break it.
+				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
 				_ => false,
 			};
 			if (!from) continue;
@@ -185,6 +206,7 @@ public sealed partial class Match
 			var p = Projectiles[k];
 			p.Age++;
 			p.X += p.Dir * p.Data.Speed * SimConfig.Scale;
+			if (p.Move.ProjectileAngleUp) p.Y += Effects.MulPct(p.Data.Speed, Config.ProjectileAngleUpRisePct) * SimConfig.Scale; // YOK-103
 			var (x0, _, x1, _) = p.WorldBox();
 			ProjectileEventKind? gone = p.Data.Lifetime > 0 && p.Age >= p.Data.Lifetime ? ProjectileEventKind.Expired
 				: x1 <= cx - half || x0 >= cx + half ? ProjectileEventKind.OffScreen : null;

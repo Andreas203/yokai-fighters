@@ -16,14 +16,20 @@ public sealed class EquippedSpecial
 	public MoveData? ExMove { get; }
 	/// <summary>YOK-47: the attached modifier (A2: at most one), already applied to Move and ExMove.</summary>
 	public ModifierData? Modifier { get; }
+	/// <summary>YOK-103: the EX cost with the modifier (Ninefold Spark halves it), else the data's <c>ex.meter_cost</c>.</summary>
+	public int ExCost { get; }
+	/// <summary>The fight defaults the modifier was built against (kept so a level-up rebuilds the same way).</summary>
+	public SimConfig? Defaults { get; }
 
 	public EquippedSpecial(SpecialData data, int level, ModifierData? modifier = null, SimConfig? defaults = null)
 	{
 		Data = data;
 		Level = level;
 		Modifier = modifier;
+		Defaults = defaults;
 		Move = data.Build(level, false, modifier, defaults);
 		ExMove = data.HasEx ? data.Build(level, true, modifier, defaults) : null;
+		ExCost = modifier?.ExCostFor(data.ExCost) ?? data.ExCost;
 	}
 }
 
@@ -55,6 +61,13 @@ public sealed partial class Fighter
 	/// <summary>X3: targets already cancelled into this combo (bits 1-4 slots A-D, bit 5 dash); cleared when Idle.</summary>
 	public int CancelUsed;
 
+	/// <summary>YOK-103: start conditions held when the current special started (which build plays, kept for the EX upgrade).</summary>
+	public StartConditions ActiveConditions;
+	/// <summary>YOK-103: hits the current move's armour has taken (properties.armour hits).</summary>
+	public int ArmourHitsTaken;
+	/// <summary>YOK-103: specials started this round per slot (first_use_each_round); cleared by Reset (a new round).</summary>
+	public readonly int[] SpecialUses = new int[5];
+
 	public const int MaxCancelRules = 2;
 
 	public void Equip(SpecialSlot slot, SpecialData data, int level = 1, ModifierData? modifier = null, SimConfig? defaults = null)
@@ -77,7 +90,7 @@ public sealed partial class Fighter
 	{
 		var s = Specials[(int)slot] ?? throw new InvalidOperationException($"slot {slot} is empty");
 		int level = Math.Min(3, s.Level + 1);
-		Specials[(int)slot] = new EquippedSpecial(s.Data, level, s.Modifier);
+		Specials[(int)slot] = new EquippedSpecial(s.Data, level, s.Modifier, s.Defaults);
 		return level;
 	}
 
@@ -93,6 +106,7 @@ public sealed partial class Fighter
 	{
 		ResetSpecialMoveState();
 		CancelUsed = 0;
+		Array.Clear(SpecialUses);
 	}
 
 	/// <summary>Clears what belongs to the move being played (on every state change).</summary>
@@ -104,6 +118,8 @@ public sealed partial class Fighter
 		ActivePrecision = false;
 		SpecialButtons = InputBits.None;
 		MoveBlocked = false;
+		ActiveConditions = StartConditions.None;
+		ArmourHitsTaken = 0;
 	}
 
 	internal ulong HashSpecialState(ulong h)
@@ -111,6 +127,8 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (int)ActiveSpecial | (ActiveEx ? 16 : 0) | (ActivePrecision ? 32 : 0) | (MoveBlocked ? 64 : 0));
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
+		h = Fnv.Mix(h, (int)ActiveConditions | ArmourHitsTaken << 8);
+		foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
 		for (int i = 1; i < Specials.Length; i++)
 		{
 			h = Fnv.Mix(h, Specials[i]?.Level ?? 0);

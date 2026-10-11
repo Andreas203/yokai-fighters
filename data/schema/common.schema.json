@@ -66,25 +66,84 @@
         "rect": { "$ref": "#/$defs/rect" }
       }
     },
-    "condition": {
-      "description": "When an effect applies. Every condition is game state the fight can see, never a button press (P6).",
-      "enum": ["always", "on_hit", "on_block", "on_whiff", "on_counterhit", "first_use_each_round", "ryo_health_below_30pct", "holding_up", "holding_charge"]
+    "modifierCondition": {
+      "description": "When a modifier's effect applies (YOK-103: exactly what ModifierLoader.Conditions reads). on_hit / on_block: from the move's connect on. first_use_each_round, ryo_health_below_30pct, holding_up: read once, on the tick the special starts.",
+      "enum": ["always", "on_hit", "on_block", "first_use_each_round", "ryo_health_below_30pct", "holding_up"]
+    },
+    "effectTarget": {
+      "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
+      "type": "string",
+      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln))$"
+    },
+    "effectShape": {
+      "description": "YOK-103: the op and value each kind of target takes, as the loader checks them (Effects.Check).",
+      "allOf": [
+        {
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health)|ex\\.meter_cost)$" } } },
+          "then": { "properties": { "value": { "type": "integer" } } }
+        },
+        {
+          "if": { "required": ["target"], "properties": { "target": { "const": "pushback" } } },
+          "then": { "properties": { "op": { "enum": ["add", "mul_pct"] }, "value": { "type": "integer" } } }
+        },
+        {
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)$" } } },
+          "then": { "properties": { "op": { "const": "set" }, "value": { "type": "boolean" } } }
+        },
+        {
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(properties\\.)?armour$" } } },
+          "then": {
+            "properties": {
+              "op": { "const": "set" },
+              "value": {
+                "type": "object",
+                "required": ["frames"],
+                "additionalProperties": false,
+                "properties": {
+                  "frames": { "$ref": "#/$defs/frameRange" },
+                  "hits": { "type": "integer", "minimum": 1, "description": "Hits taken per use; omitted = 1." }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(properties\\.)?throw_invuln$" } } },
+          "then": { "properties": { "op": { "const": "set" }, "value": { "const": "startup" } } }
+        }
+      ]
     },
     "effect": {
-      "description": "One data-only change to a move (A4, A5, A10). Integer values: frames, units, or percent for mul_pct (130 = x1.3).",
+      "description": "One data-only change to a move at a level or in its EX version (A4, A5). Integer values: frames, units, or percent for mul_pct (130 = x1.3, rounded to nearest, E20). Never conditional: 'when' is a modifier's.",
       "type": "object",
       "required": ["target", "op", "value"],
       "additionalProperties": false,
       "properties": {
-        "target": {
-          "description": "Dotted path into frame data, e.g. 'recovery', 'damage', 'projectile.speed', 'meter_gain.on_block', 'properties.armour'.",
-          "type": "string",
-          "pattern": "^[a-z_]+(\\.[a-z_]+)*$"
-        },
+        "target": { "$ref": "#/$defs/effectTarget" },
         "op": { "enum": ["add", "mul_pct", "set"] },
         "value": { "type": ["integer", "boolean", "object", "string"] },
-        "when": { "$ref": "#/$defs/condition" }
-      }
+        "when": { "const": "always" }
+      },
+      "$ref": "#/$defs/effectShape"
+    },
+    "modifierEffect": {
+      "description": "One data-only change a modifier makes (A10): an effect that may carry a condition, or 'ex.meter_cost' (the special's EX cost, never conditional).",
+      "type": "object",
+      "required": ["target", "op", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "target": { "anyOf": [{ "$ref": "#/$defs/effectTarget" }, { "const": "ex.meter_cost" }] },
+        "op": { "enum": ["add", "mul_pct", "set"] },
+        "value": { "type": ["integer", "boolean", "object", "string"] },
+        "when": { "$ref": "#/$defs/modifierCondition" }
+      },
+      "allOf": [
+        { "$ref": "#/$defs/effectShape" },
+        {
+          "if": { "required": ["target"], "properties": { "target": { "const": "ex.meter_cost" } } },
+          "then": { "properties": { "when": { "const": "always" } } }
+        }
+      ]
     }
   }
 }

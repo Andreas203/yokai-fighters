@@ -1,0 +1,33 @@
+{
+  "kind": "modifier",
+  "id": "brute-recovery",
+  "name": "Brute Recovery",
+  "status": "proposed",
+  "source": "oni",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "recovery",
+      "op": "add",
+      "value": -4,
+      "when": "on_block"
+    }
+  ],
+  "card": {
+    "plain": "Recover faster when the opponent blocks it.",
+    "frames": "-4 recovery frames on block"
+  },
+  "notes": "Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

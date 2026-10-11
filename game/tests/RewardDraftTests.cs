@@ -106,7 +106,10 @@ public static class RewardDraftTests
 		Bad("{\"kind\":\"special\",\"id\":\"x\",\"effects\":[{\"target\":\"damage\",\"op\":\"add\",\"value\":1}]}", "wrong kind");
 		Bad("{\"kind\":\"modifier\",\"id\":\"x\",\"effects\":[]}", "no effects");
 		// An effect the sim can't run fails when the pool builds it, not mid-run.
-		var bad = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.nonsense\",\"op\":\"add\",\"value\":1}]}");
+		// YOK-103: a target outside the loader's vocabulary fails at parse.
+		Bad("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.nonsense\",\"op\":\"add\",\"value\":1}]}", "unknown target");
+		// A known target the special doesn't have (Rising Talisman fires no projectile) fails at the pool.
+		var bad = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.speed\",\"op\":\"add\",\"value\":1}]}");
 		try { new AbilityPool(Pool().Specials, new[] { bad }); }
 		catch (FormatException) { return; }
 		throw new AssertFailed("pool accepted an effect on a missing field");

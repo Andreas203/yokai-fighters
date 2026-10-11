@@ -355,13 +355,17 @@ public sealed partial class Match
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
+		m = m.Outcome(blocked); // YOK-103: a modifier's on_hit / on_block effects hold from the connect on
 		if (projectile is null)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
+			if (att.ActiveMove != null) att.ActiveMove = att.ActiveMove.Outcome(blocked); // e.g. recovery on block
 		}
 
-		bool counter = !blocked && defenderWasAttacking;           // C7
+		MoveData? defMove = def.CurrentMove;
+		bool counter = !blocked && defenderWasAttacking && defMove?.CounterhitImmune != true; // C7
+		bool absorbed = !blocked && Absorbs(def, defMove, projectile != null);                // YOK-103: armour
 		int push, damage = 0;
 		if (blocked)
 		{
@@ -372,25 +376,51 @@ public sealed partial class Match
 		{
 			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
 			def.PendingDamage += damage;
-			if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
+			if (absorbed) { } // the hit lands, the move plays on
+			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
+			if (m.HealPctMaxHealth > 0) // YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max
+				att.Health = Math.Min(att.MaxHealth, att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
 		}
 		def.Guarding = false;
 		def.Crouching = false;
-		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
+		if (!absorbed) def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
 		int dir = projectile?.Dir ?? att.Facing, want = push * SimConfig.Scale;
 		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
-		int got = Math.Abs(target - def.X);
-		def.X = target;
-		if (projectile is null) att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+		if (!blocked && m.PullOnHit > 0)
+		{
+			// YOK-103 (River Pull): instead of the push, the defender comes PullOnHit steps toward the attacker;
+			// push boxes (ResolvePositions) stop it at the attacker's body. No corner hand-off.
+			def.X = Math.Clamp(def.X - dir * m.PullOnHit * Config.PullStepUnits * SimConfig.Scale, lo, hi);
+		}
+		else
+		{
+			int target = Math.Clamp(def.X + dir * want, lo, hi);
+			int got = Math.Abs(target - def.X);
+			def.X = target;
+			if (projectile is null) att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+		}
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
 		return blocked;
+	}
+
+	/// <summary>
+	/// YOK-103: does the defender's move take this hit without being interrupted? <c>projectile_interrupt_immune</c>
+	/// (Iron Will) against any projectile hit; <c>armour</c> (Oni's Hide) inside its frames while it has hits left.
+	/// The damage (and a counterhit's bonus, C7) still lands; hitstun, knockdown and the cancel of the move don't.
+	/// </summary>
+	private static bool Absorbs(Fighter def, MoveData? defMove, bool projectile)
+	{
+		if (defMove is null) return false;
+		if (projectile && defMove.ProjectileInterruptImmune) return true;
+		if (defMove.Armour is not { } a || !a.Covers(def.MoveFrame) || def.ArmourHitsTaken >= a.Hits) return false;
+		def.ArmourHitsTaken++;
+		return true;
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>

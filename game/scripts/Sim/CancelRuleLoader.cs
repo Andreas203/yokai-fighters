@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Nodes;
 
 namespace YokaiFighters.Sim;
@@ -35,9 +36,21 @@ public static class CancelRuleLoader
 				case "hit": hit = true; break;
 				case "block": block = true; break;
 				case "whiff": whiff = true; break;
+				case var o: throw new FormatException($"{id}: path.on '{o}' is unknown"); // YOK-103: as the schema
 			}
+		if (!hit && !block && !whiff) throw new FormatException($"{id}: path.on must list hit, block or whiff");
+		// X3 is not optional: the fight always limits each target to once per combo (Fighter.CancelUsed).
+		if (root["once_per_combo"] is not JsonValue once || !once.TryGetValue(out bool opc) || !opc)
+			throw new FormatException($"{id}: once_per_combo must be true (X3)");
 		return new CancelRule(id, from, into, hit, block, whiff);
 	}
+
+	/// <summary>Every kind "cancel_rule" *.json in the folder, sorted by file name; other kinds are skipped.</summary>
+	public static CancelRule[] LoadDirectory(string dir) =>
+		Directory.Exists(dir)
+			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
+				.Where(f => MoveLoader.KindOf(f) == "cancel_rule").Select(LoadFile).ToArray()
+			: Array.Empty<CancelRule>();
 
 	public static CancelRule LoadFile(string path) =>
 		Parse(File.ReadAllText(path), Path.GetFileNameWithoutExtension(path));
