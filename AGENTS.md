@@ -26,10 +26,12 @@ The crew exists in three places, from the same role definitions in `.claude/agen
 | Content | Sparring Partner | [`sparring-partner`](.claude/agents/sparring-partner.md) | `researcher` | unset → Opus 5 |
 | Engineering | Gameplay Programmer | [`gameplay-programmer`](.claude/agents/gameplay-programmer.md) | `engineer` | unset → Opus 5 |
 | Engineering | UI Designer | [`ui-designer`](.claude/agents/ui-designer.md) | `designer` | unset → Opus 5 |
+| Engineering | Code Critic | [`code-critic`](.claude/agents/code-critic.md) | `qa` | not hired yet |
+| Engineering | Test Breaker | [`test-breaker`](.claude/agents/test-breaker.md) | `qa` | not hired yet |
 
 The **Paperclip model** column is the hired agent's `adapterConfig.model`. Where it is unset the `claude_local` adapter falls back to `claude-opus-5`, so those seven all run on Opus 5 today regardless of what their role file asks for. Setting one needs the `agents:configure` permission, which only the board holds.
 
-This is separate from the `model:` frontmatter in `.claude/agents/<slug>.md` (`sonnet` for everyone except `gameplay-programmer` and `sparring-partner`, which ask for `opus`). That frontmatter governs the **Claude Code subagent** only — it does not reach the hired Paperclip agent.
+This is separate from the `model:` frontmatter in `.claude/agents/<slug>.md` (`sonnet` for everyone except `gameplay-programmer`, `sparring-partner` and `code-critic`, which ask for `opus`). That frontmatter governs the **Claude Code subagent** only — it does not reach the hired Paperclip agent.
 
 Everyone reports to the Producer. Paperclip's `role` field is a fixed enum (`ceo`, `cto`, `cmo`, `cfo`, `security`, `engineer`, `designer`, `pm`, `qa`, `devops`, `researcher`, `general`), so each crew role maps to its nearest option; the real role is the job title and the instruction bundle.
 
@@ -47,7 +49,7 @@ Each hired agent's `AGENTS.md` is its role definition plus a fixed operating con
 
 - The **designer** (the human) owns open questions, purchases, generation jobs, cut gates and every code merge. No agent decides those.
 - Agents never push to `main` and never merge. Branches and PR titles are `YOK-<number>-<brief-name>`.
-- Content merges only after schema, the Rules Lawyer gate and harness checks. Code merges only after designer approval.
+- Content merges only after schema, the Rules Lawyer gate and harness checks. Code merges only after designer approval, and reaches the designer only after the Code Critic and Test Breaker gates.
 - Timer heartbeats are off for the whole crew; agents wake on demand when the Producer assigns them an issue.
 - Each agent holds only the `paperclip` skill, for reading and updating its own issues.
 

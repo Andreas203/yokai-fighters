@@ -14,7 +14,7 @@ Development tools only — none of them ship in the game. Defined in `.claude/ag
 
 | Team | Agent | Role |
 |---|---|---|
-| Lead | `producer` | Tickets outstanding work and plans which workflow runs it |
+| Lead | `producer` | Measures the gap between the design and the code, tickets it in priority order and plans which workflow runs it |
 | Assets | `asset-smith` | Generation specs and acceptance checks for models, rigs, stages, UI and VFX textures |
 | Assets | `clip-matcher` | Specs each move's clip and measures the generated take, then level presets and frame-timed sound |
 | Assets | `sound-scout` | Shortlists sound-effect and music packs |
@@ -24,6 +24,8 @@ Development tools only — none of them ship in the game. Defined in `.claude/ag
 | Content | `sparring-partner` | Reads whole-run bot results; recommends minimal tuning |
 | Engineering | `gameplay-programmer` | C# systems, fight AI, test bot and harness via the Godot MCP |
 | Engineering | `ui-designer` | Every screen and the HUD via the Godot MCP |
+| Engineering | `code-critic` | Gate: assumes a code branch is wrong and tries to prove it against the written rules; read-only |
+| Engineering | `test-breaker` | Gate: writes probe tests that try to break a code branch; writes probes only |
 
 Run a production pass with `/produce` (see `.claude/skills/produce/SKILL.md`): the producer plans, then the main session dispatches tickets through their workflow.
 
@@ -38,11 +40,14 @@ Clip Matcher spec → designer approves take → Clip Matcher runs via Meshy MCP
                                                           ▼                                  │
                                                     Harness checks → data merges        ◄────┘
 Sound Scout shortlist → designer buys → Clip Matcher sound cues
-Gameplay Programmer / UI Designer → own branch, build-and-test loop → designer review → merge
+Gameplay Programmer / UI Designer → own branch, build-and-test loop → Code Critic → Test Breaker → designer review → merge
+                                             ▲                              │ fail: back with file, line, rule or probe
+                                             └──────────────────────────────┘
+Goal agent (tools/goal_agent): rules.md + GDD → scan → gaps → priority → writes the top gap → same two gates → designer review
 Harness results → Sparring Partner → Producer tickets the tuning
 ```
 - Data merges after schema, Rules Lawyer and harness checks.
-- Code merges **only** after designer approval. Agents never push to `main` or merge.
+- Code merges **only** after designer approval. Agents never push to `main` or merge. The two code gates do not replace that review: they decide what is worth the designer's time.
 
 ## Repo layout (created as work lands)
 | Path | Contents | Owner |
@@ -63,6 +68,7 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `docs/screenshots/review/` | Old ticket screenshots waiting for the designer to keep or delete | designer |
 | `vault/` | The design as linked notes, one topic per note; the retrieval store for the content pipeline | designer |
 | `tools/content_pipeline/` | Drafts card text from the vault (retrieval, generator, critic); output is `proposed` and still goes through the Rules Lawyer | designer |
+| `tools/goal_agent/` | Goal-oriented coding agent: reads rules.md and the GDD, scans the code, ranks the gaps (`features.json`, `priority.py`) and writes the top one through build, test, Code Critic and Test Breaker gates. `gaps` is the producer's gap report. Works on a branch, never commits | designer |
 
 ## Tickets, branches and PRs
 - Tickets live in **Linear**: team `Yokai-fighters` (key `YOK`), project "Yokai Fighters: 5-Week Capstone Build", grouped under Epics A–F.

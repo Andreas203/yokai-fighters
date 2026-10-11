@@ -1,0 +1,94 @@
+[
+  {
+    "feature": "copy-target",
+    "accepted": true,
+    "attempts": [
+      {
+        "attempt": 1,
+        "files": [
+          "game/scripts/Sim/Run/CopyRule.cs",
+          "game/scripts/Sim/Run/RunState.cs",
+          "game/tests/CopyRuleTests.cs"
+        ],
+        "blocking": [
+          "[code-critic] game/scripts/Sim/Run/RunState.cs:91 (state): The level-up order decides the T3 result but is not in StateHash() and cannot be restored. Run 1 is NewRun, LevelUp(A), LevelUp(B); run 2 is NewRun, LevelUp(B), LevelUp(A). Both have the same health, slots, levels and modifiers, so the same StateHash(), yet CopyRule.Target returns Rising Talisman for one and Spirit Wave for the other (the change's own test TieGoesToTheMostRecentlyLevelled shows this). A hash comparison cannot detect this divergence. A run rebuilt from its hashed fields (slots and levels) can also silently get a different copy target, because there is no way to set _levelledAt or _levelUps. → Mix each slot's LevelledOrder into StateHash() only when _levelUps > 0, the same way the map is guarded, so runs without a level-up keep their hash. Re-record any golden that contains a level-up. Add an explicit way to restore the per-slot order so a restored run does not depend on replaying picks in the original sequence."
+        ],
+        "advisory": [
+          "[code-critic, advisory] game/scripts/Sim/Run/CopyRule.cs:25 (T4): The copy is always built with a null SimConfig, while Ryo's move is built with the match's config (RunState.ApplyTo passes config to f.Equip). In a match with a non-default SimConfig, the copy and Ryo's own move at the same level could then differ by more than the modifier and evolution, which is all T4 allows. I cannot see what Data.Build does with config, so this is unproven. The same line also exposes an EX build of the copy, which T4 does not cover. → Give Build a SimConfig? config parameter and pass it through as the fourth argument, keeping the modifier null. Drop the ex parameter until T0 decides whether the Tanuki uses EX.",
+          "[code-critic, advisory] game/tests/CopyRuleTests.cs:34 (tests): T2's clause \"throws included\" has no test. If a later change adds a move-kind filter to CopyRule.Target, a Lv 2 throw special in slot B beside a Lv 1 Spirit Wave would stop being the target and no test would fail. → Add a test that builds a throw special through SpecialLoader.Parse, levels it above the others and asserts it is the target.",
+          "[test-breaker, advisory] author tests (tests): CopyRuleTests.ReplacedSpecialNoLongerCounts: its final assertion (all Lv 1, slot A is the target) would also pass with no replacement tracking at all, since the target is slot A in either case; only the LevelledOrder == 0 assertion exercises the feature.\nCopyRuleTests.FullTieGoesToTheLowerSlot: the \"high\" case equips D and C at Lv 1 (Make's maxLevel only limits the data), not Lv 2 as the comment implies. It still tests the slot tie-break, but it passes with the T3 recency logic removed.\nOtherwise none."
+        ]
+      },
+      {
+        "attempt": 2,
+        "files": [
+          "game/scripts/Sim/Run/CopyRule.cs",
+          "game/scripts/Sim/Run/RunState.cs",
+          "game/tests/CopyRuleTests.cs"
+        ],
+        "blocking": [
+          "[code-critic] game/scripts/Sim/Run/RunState.cs:64 (T3): RestoreLevelledOrder stores the caller's raw values as stamps, and its contract and test (`RestoreLevelledOrder(5, 3, 0, 0)`) accept any positive magnitude. LevelUp then computes `latest + 1` from them. State: Spirit Wave (A) Lv 2, Rising Talisman (B) Lv 2, Foxfire (C) Lv 1, then `RestoreLevelledOrder(int.MaxValue, 1, 0, 0)` (accepted: positive, distinct, both slots levelled), then `LevelUp(SpecialSlot.C)`. `latest + 1` wraps to int.MinValue, so C's stamp is negative. `LevelledOrder(C)` returns 1 and `LevelledOrder(A)` returns 2, so `CopyRule.Target` picks A although C levelled most recently, which T3 forbids. B and C also share rank 1 in the hash. If the project compiles with overflow checks, LevelUp instead throws after `_slots[(int)slot] = s with { Level = s.Level + 1 }` has already run, leaving a Lv 2 special with stamp 0. The values come from a save file, which is exactly what this method is meant to validate. → Normalise on restore: after validation, store each slot's rank among the non-zero inputs (1..4) rather than the raw value, so stamps never exceed 4 plus the number of later level-ups. Add a test with a huge restored value followed by a LevelUp."
+        ],
+        "advisory": [
+          "[code-critic, advisory] game/scripts/Sim/Run/RunState.cs:175 (state): The hash changes for every run that contains any level-up, including runs where the order carries no information. Input: `NewRun(pool)` then `LevelUp(SpecialSlot.A)`. Orders are always \"1,0,0,0\", fully implied by the levels already hashed, yet four extra ints are mixed in. Any recorded replay or golden hash of a run with a single level-up, and no Tanuki, no longer matches. The writer says they could not see whether such a recording exists. → Mix the order only when it is not implied by the levels, that is when two or more slots have a non-zero LevelledOrder. Single-level-up runs then keep their pre-feature hash. Otherwise confirm no golden hashes with level-ups exist and re-record them in this change.",
+          "[code-critic, advisory] game/scripts/Sim/Run/CopyRule.cs:25 (T4): The copy is always built with a null config, while Ryo's version goes through `f.Equip((SpecialSlot)i, s.Data, s.Level, s.Modifier, config)` with the match's SimConfig. For a run fought under a non-default SimConfig, anything `SpecialData.Build` derives from the config applies to Ryo's move and not to the copy. The copy then differs from Ryo's by more than modifier and evolution, which is all T4 allows. The caller cannot pass the config in. I could not see `SpecialData.Build`, so I cannot name the affected field. → Change the signature to `Build(bool ex = false, SimConfig? config = null)` and forward config to `Data.Build`, keeping the modifier null.",
+          "[code-critic, advisory] game/tests/CopyRuleTests.cs:48 (tests): T2's \"throws included\" clause has no test. Every special in the tests is built from the Spirit Wave projectile fixture. A later filter on move kind in `CopyRule.Target` or in `RunState.Owned` (for example, skipping specials with no hitbox or projectile) would pass the whole suite while breaking T2 for a run whose highest-level special is a throw. → Add a throw-special fixture, or build one through `SpecialLoader.Parse`, level it above the others, and assert it is the target."
+        ]
+      },
+      {
+        "attempt": 3,
+        "files": [
+          "game/scripts/Sim/Run/CopyRule.cs",
+          "game/scripts/Sim/Run/RunState.cs",
+          "game/tests/CopyRuleTests.cs"
+        ],
+        "blocking": [],
+        "advisory": [
+          "[code-critic, advisory] game/scripts/Sim/Run/RunState.cs:189 (state): Every existing run with a level-up gets a new StateHash(), including runs where the order carries no information. Example: NewRun then LevelUp(B) only, with no Tanuki in the run. The order vector 0,1,0,0 is fully implied by the levels already hashed, yet four extra ints are mixed in and any recorded hash of that run breaks. The order can only decide T3 between slotted specials at the same level above 1, because a lower special must level to tie and then becomes the most recent anyway. The current hash also separates states that can never behave differently: A Lv 3 and B Lv 2 hash differently for 'A,B,A' and 'A,A,B'. → Mix the order only when at least two slotted specials share a level above 1, and then only the relative order within each equal-level group. Otherwise re-record the affected goldens in this change and say so.",
+          "[code-critic, advisory] game/tests/CopyRuleTests.cs:325 (tests): `before` is taken before `run.Equip(pool.Special(\"test-foxfire\")!)` puts Foxfire in slot C. The hash therefore differs from `before` even if RestoreLevelledOrder(5, 3, 0, 0) changed nothing, or if the order were not hashed at all. The assertion cannot fail for the reason it names. The rejected-restore check above it compares only Orders(), never the hash. → Take a fresh hash after the Foxfire Equip. Assert it is unchanged after each rejected restore, and that it differs after the accepted restore.",
+          "[code-critic, advisory] game/tests/CopyRuleTests.cs:48 (T2): T2's clause 'throws included' has no test. Every special in the tests is a Spirit Wave-shaped projectile, Rising Talisman or Foxfire. If a later change filters by move kind (say, skipping specials with no hitbox or projectile), a Lv 2 throw special in slot D with Lv 1 specials elsewhere would stop being the target and no test would fail. → Add a throw-kind special through SpecialLoader.Parse, level it above the others, and assert CopyRule.Target returns it.",
+          "[code-critic, advisory] game/scripts/Sim/Run/CopyRule.cs:25 (T4): The copy is always built with a null config, while Ryo's move is built with the match's SimConfig (`f.Equip((SpecialSlot)i, s.Data, s.Level, s.Modifier, config)` in RunState.ApplyTo). SpecialData.Build is not shown, so I cannot confirm what it reads from the config. If it reads anything, a match with a non-default SimConfig gives a copy whose numbers differ from Ryo's move at the same level for a reason other than modifier or evolution. T0 has no way to pass the config through this API. → Give Build a `SimConfig? config = null` parameter and forward it. Keep the modifier argument fixed at null."
+        ]
+      }
+    ],
+    "disputed": {},
+    "advisory": [
+      "[code-critic, advisory] game/scripts/Sim/Run/RunState.cs:189 (state): Every existing run with a level-up gets a new StateHash(), including runs where the order carries no information. Example: NewRun then LevelUp(B) only, with no Tanuki in the run. The order vector 0,1,0,0 is fully implied by the levels already hashed, yet four extra ints are mixed in and any recorded hash of that run breaks. The order can only decide T3 between slotted specials at the same level above 1, because a lower special must level to tie and then becomes the most recent anyway. The current hash also separates states that can never behave differently: A Lv 3 and B Lv 2 hash differently for 'A,B,A' and 'A,A,B'. → Mix the order only when at least two slotted specials share a level above 1, and then only the relative order within each equal-level group. Otherwise re-record the affected goldens in this change and say so.",
+      "[code-critic, advisory] game/tests/CopyRuleTests.cs:325 (tests): `before` is taken before `run.Equip(pool.Special(\"test-foxfire\")!)` puts Foxfire in slot C. The hash therefore differs from `before` even if RestoreLevelledOrder(5, 3, 0, 0) changed nothing, or if the order were not hashed at all. The assertion cannot fail for the reason it names. The rejected-restore check above it compares only Orders(), never the hash. → Take a fresh hash after the Foxfire Equip. Assert it is unchanged after each rejected restore, and that it differs after the accepted restore.",
+      "[code-critic, advisory] game/tests/CopyRuleTests.cs:48 (T2): T2's clause 'throws included' has no test. Every special in the tests is a Spirit Wave-shaped projectile, Rising Talisman or Foxfire. If a later change filters by move kind (say, skipping specials with no hitbox or projectile), a Lv 2 throw special in slot D with Lv 1 specials elsewhere would stop being the target and no test would fail. → Add a throw-kind special through SpecialLoader.Parse, level it above the others, and assert CopyRule.Target returns it.",
+      "[code-critic, advisory] game/scripts/Sim/Run/CopyRule.cs:25 (T4): The copy is always built with a null config, while Ryo's move is built with the match's SimConfig (`f.Equip((SpecialSlot)i, s.Data, s.Level, s.Modifier, config)` in RunState.ApplyTo). SpecialData.Build is not shown, so I cannot confirm what it reads from the config. If it reads anything, a match with a non-default SimConfig gives a copy whose numbers differ from Ryo's move at the same level for a reason other than modifier or evolution. T0 has no way to pass the config through this API. → Give Build a `SimConfig? config = null` parameter and forward it. Keep the modifier argument fixed at null."
+    ],
+    "files": [
+      "game/scripts/Sim/Run/CopyRule.cs",
+      "game/scripts/Sim/Run/RunState.cs",
+      "game/tests/CopyRuleTests.cs"
+    ],
+    "notes": "Nothing here has been compiled or run; I have no tools in this step.\n\nWhat changed since the rejected attempt:\n\n- **Level-up stamps are now always stored as ranks (0..4).** `RestoreLevelledOrder` validates the saved values, then keeps only their relative order, so a huge value from a save file can no longer overflow the next `LevelUp`.\n- **`LevelUp` and a replacing `Equip` re-compact the ranks too.** The `+1` in `LevelUp` therefore never sees a value above 4, however long the run.\n- **New test `RestoredHugeValuesAreStoredAsRanks`.** It restores `int.MaxValue`, levels another special, and checks the order, the target and that the hash equals a run that never restored.\n\nStill true from before:\n\n- **The level-up order is in `RunState.StateHash()`**, mixed in only when at least one special in a slot has levelled. A run with no level-up keeps its old hash.\n- **Any recorded golden hash of a run with a level-up must be re-recorded.** I could not see whether one exists; the visible tests only compare hashes with each other.\n\nReadings I chose where the rules are silent:\n\n1. **T3 \"most recently levelled\"** counts only a gained level: `LevelUp`, or drafting a special Ryo already owns. Starters and a newly drafted Lv 1 special have never levelled, so an all-Lv 1 run resolves to the lower slot (Spirit Wave in A).\n2. **T4 \"never his evolution\"**: I took Lv 3 to consist only of the evolution changes (A4). A copy of a Lv 3 special reports `Level` 3 but builds its move at Lv 2; `CopyTarget.MoveLevel` exposes this.\n3. **EX**: T4 does not mention it. `CopyTarget.Build(ex: true)` builds the EX version at the copy's level with no modifier; whether the Tanuki ever uses EX is left to T0.\n4. **No special in any slot**: `Target` returns null. T5 (the merchant won't release the last special) is not enforced here.\n\nThings a later feature must know:\n\n- **No sell operation exists yet.** `LevelledOrder` returns 0 for an empty slot and `Equip` resets the rank when it replaces a slot. A future merchant sell only has to clear the slot.\n- **`Fighter.HashSpecialState` is unchanged.** The order lives only in the run state.\n- **\"Throws included\" has no test.** The rule has no filter on move kind, so a throw special in a slot is eligible by construction. I had no fixture known to be a throw special.\n- **The tests build extra specials from the Spirit Wave fixture.** Slot D, a second slot C move and a Lv 3 evolution go through `SpecialLoader.Parse` with that fixture's Lv 1 frame data. They assume `recovery` is a top-level integer there, as the existing \"recovery 30 → 26\" test implies.",
+    "map_entry": "`game/scripts/Sim/Run/CopyRule.cs`: `CopyRule.Target(RunState)` answers T2-T4 from the run alone and returns a `CopyTarget(Slot, Data, Level)` or null when no slot holds a special. It picks the highest-level special in a slot with no filter on move kind (T2), then the most recently levelled, then the lower slot (T3). `CopyTarget.Build(ex)` is the copy's move: Ryo's level capped at `CopyRule.HighestUnevolvedLevel` (2, so never the Lv 3 evolution) and never a modifier (T4). `RunState` records each level-up (`LevelUp`, and `Equip` of an owned special) and exposes `LevelledOrder(slot)`, a rank among the specials now in a slot (higher = more recent, 0 = never levelled or empty); replacing a slot resets it, and the ranks are stored compact (0..4) after every change. `RestoreLevelledOrder(a, b, c, d)` puts a saved order back, keeping only the relative order of the values. `StateHash` mixes the four ranks in only when some special in a slot has levelled, so other runs keep their old hash. It locks nothing (T1) and builds no fighter (T0).",
+    "score": {
+      "total": 95,
+      "parts": [
+        [
+          "never cut",
+          40,
+          "G1 lists \"copy rule\""
+        ],
+        [
+          "schedule",
+          30,
+          "G5 puts \"copy rule\" in week 2; now week 2: due this week or late"
+        ],
+        [
+          "unblocks",
+          30,
+          "7 unbuilt feature(s) wait on it: copy-lock, copy-target-hud, merchant-shop, rest-stop-screen, tanuki-fighter, tanuki-pressure, whole-run-harness"
+        ],
+        [
+          "size",
+          -5,
+          "size 1 of 3"
+        ]
+      ]
+    }
+  }
+]

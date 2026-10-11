@@ -1,0 +1,266 @@
+{
+  "about": "The features the design requires, each tied to rule IDs in docs/design/rules.md and to the evidence the scan looks for. Priority is not stored here: it is computed from G1, G2, G3 and G5 through each feature's `terms` and `milestone`, which must name words those rules use. `build` marks a feature the goal agent may write itself; without it the gap goes to its owner through the producer.",
+  "not_tracked": {
+    "P1": "pillar: a tie-breaker for judgment calls, not a system",
+    "P2": "pillar", "P3": "pillar", "P4": "pillar", "P5": "pillar",
+    "F2": "process: clip first, then frame data (Clip Matcher, Movesmith)",
+    "F5": "process: no hand-keyed animation",
+    "F6": "process: how assets are generated and sourced",
+    "M2": "pacing target, read from harness results by Sparring Partner",
+    "S1": "tone, judged by the Rules Lawyer on story text",
+    "V1": "art direction, checked by Asset Smith's acceptance",
+    "V9": "stages and music: generated and sourced assets",
+    "G1": "scope: read by the agent to rank work, not a feature",
+    "G2": "scope", "G3": "scope", "G4": "scope: week-1 retarget gate", "G5": "scope: schedule"
+  },
+  "features": [
+    {
+      "id": "fight-loop", "title": "Deterministic 60-tick fight loop, one round, KO slow-down",
+      "rules": ["C1", "E2", "E3", "V4"], "gdd": "3.2", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": [],
+      "evidence": [{"symbol": "class Match\\b", "in": "game/scripts/Sim/*"}, {"symbol": "class FixedStepClock\\b", "in": "game/scripts/Sim/*"}, {"test": "^FightLoopTests\\."}]
+    },
+    {
+      "id": "ryo-kit", "title": "Ryo's normals, movement, blocking and jump-ins from move data",
+      "rules": ["C2", "C3", "C8", "F1", "E5", "E6", "E10", "E11", "E19"], "gdd": "3.2", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["fight-loop"],
+      "evidence": [{"symbol": "class MoveLoader\\b", "in": "game/scripts/Sim/*"}, {"test": "^RyoKitTests\\."}, {"test": "^MoveSystemTests\\."}, {"test": "^AirNormalTests\\."}]
+    },
+    {
+      "id": "throws", "title": "Generic throws with a break window",
+      "rules": ["C4", "E4", "E12", "E15"], "gdd": "3.2", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["ryo-kit"],
+      "evidence": [{"symbol": "ResolveThrows", "in": "game/scripts/Sim/*"}, {"test": "^ThrowTests\\."}]
+    },
+    {
+      "id": "meter-burst-hitstop", "title": "Meter, burst, counterhit, hitstop and screen shake",
+      "rules": ["C5", "C6", "C7", "E13", "E14", "V2", "V3"], "gdd": "3.7", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["ryo-kit"],
+      "evidence": [{"symbol": "TryBurst", "in": "game/scripts/Sim/*"}, {"symbol": "class ScreenShake\\b", "in": "game/scripts/Fight/*"}, {"test": "^MeterBurstHitstopTests\\."}]
+    },
+    {
+      "id": "wake-up", "title": "Knockdown wake-up window",
+      "rules": ["E24"], "gdd": "3.2", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["throws"],
+      "evidence": [{"symbol": "WakeUpFrames", "in": "game/scripts/Sim/*"}, {"test": "^WakeUpTests\\."}]
+    },
+    {
+      "id": "kata", "title": "Kata: six buttons and motion inputs",
+      "rules": ["K1", "E7", "E8"], "gdd": "3.3", "terms": ["Kata"], "milestone": "both schemes",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["fight-loop"],
+      "evidence": [{"symbol": "class KataParser\\b", "in": "game/scripts/Sim/Input/*"}, {"test": "^InputParserTests\\."}]
+    },
+    {
+      "id": "kihon", "title": "Kihon: the Special button, same combat code as Kata",
+      "rules": ["K2", "K3", "K4", "E9", "E18"], "gdd": "3.3", "terms": ["Kihon"], "milestone": "both schemes",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["kata"],
+      "evidence": [{"symbol": "class KihonParser\\b", "in": "game/scripts/Sim/Input/*"}, {"test": "^KihonTests\\."}]
+    },
+    {
+      "id": "frame-stepped-models", "title": "Models stepped by exact frames; gameplay on a flat plane under a steady camera",
+      "rules": ["F3", "F4", "E1", "V7"], "gdd": "3.1", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["fight-loop"],
+      "evidence": [{"symbol": "class FighterPresenter\\b", "in": "game/scripts/Fight/Presentation/*"}, {"symbol": "class FightCamera\\b", "in": "game/scripts/Sim/*"}, {"test": "^ModelPresentationTests\\."}, {"test": "^CameraTests\\."}]
+    },
+    {
+      "id": "specials-levels", "title": "Special slots, levels, evolutions, EX and projectiles from data",
+      "rules": ["A1", "A3", "A4", "A5", "A6", "E16", "E17", "E21"], "gdd": "4.1", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["ryo-kit", "meter-burst-hitstop"],
+      "evidence": [{"symbol": "class SpecialData\\b", "in": "game/scripts/Sim/*"}, {"test": "^SpecialTests\\."}]
+    },
+    {
+      "id": "cancel-hook", "title": "Cancel rules: held rules, once per combo",
+      "rules": ["X1", "X2", "X3"], "gdd": "3.5", "terms": ["combat core"], "milestone": "combat core",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["specials-levels"],
+      "evidence": [{"symbol": "TryCancel", "in": "game/scripts/Sim/*"}, {"symbol": "class CancelRuleLoader\\b", "in": "game/scripts/Sim/*"}, {"test": "^SpecialTests\\..*Cancel"}]
+    },
+    {
+      "id": "reward-draft", "title": "Run state and the three-card reward draft",
+      "rules": ["A2", "A7", "A8", "A9", "A10", "A12", "E20"], "gdd": "4.5", "terms": ["33 abilities"], "milestone": "33 abilities",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["specials-levels"],
+      "evidence": [{"symbol": "class RunState\\b", "in": "game/scripts/Sim/Run/*"}, {"symbol": "class RewardDraft\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^RewardDraftTests\\."}]
+    },
+    {
+      "id": "profile-ai", "title": "Behaviour-profile fight AI that sees only the screen",
+      "rules": ["P6", "Y1", "Y4", "E22"], "gdd": "5.1", "terms": ["AI framework"], "milestone": "AI framework",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["specials-levels"],
+      "evidence": [{"symbol": "class ProfileAi\\b", "in": "game/scripts/Ai/*"}, {"symbol": "(class|record|struct) AiView\\b", "in": "game/scripts/Ai/*"}, {"test": "^AiTests\\."}]
+    },
+    {
+      "id": "run-map", "title": "The run map: rows, nodes, routes",
+      "rules": ["R1", "R2"], "gdd": "6.1", "terms": ["map"], "milestone": "map",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["reward-draft"],
+      "evidence": [{"symbol": "class RunMap\\b", "in": "game/scripts/Sim/Run/*"}, {"file": "data/map/default-map.json"}, {"test": "^RunMapTests\\."}]
+    },
+    {
+      "id": "run-flow", "title": "One run: map, node, fight, binding heal, back to the map",
+      "rules": ["R3", "E23"], "gdd": "6.2", "terms": ["map"], "milestone": "map",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["run-map", "profile-ai"],
+      "evidence": [{"symbol": "class RunSession\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^RunFlowTests\\."}]
+    },
+    {
+      "id": "story-card-engine", "title": "Story cards loaded from data with the run's names filled in",
+      "rules": ["S2", "S4"], "gdd": "2.3", "terms": ["story cards"], "milestone": "story cards",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": [],
+      "evidence": [{"symbol": "class StoryLibrary\\b", "in": "game/scripts/Story/*"}, {"test": "^StoryTests\\."}]
+    },
+
+    {
+      "id": "copy-target", "title": "The Tanuki's copy target: which of Ryo's specials it copies, and at what strength",
+      "rules": ["T2", "T3", "T4"], "gdd": "5.3", "terms": ["copy rule"], "milestone": "copy rule",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["reward-draft"],
+      "evidence": [{"symbol": "class CopyRule\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^CopyRuleTests\\.", "min": 5}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/CopyRule.cs", "game/scripts/Sim/Run/RunState.cs", "game/tests/CopyRuleTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/SpecialData.cs", "game/scripts/Sim/Fighter.Specials.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RewardDraftTests.cs"],
+        "brief": "Answer one question from the run state alone, at any moment of a run: which special would the Tanuki copy right now, and what does its copy consist of. Nothing here locks the target (T1 is the next feature) or builds the Tanuki's fighter (T0). T3's first tie-break needs to know which special gained a level most recently, which the run does not record today."
+      }
+    },
+    {
+      "id": "copy-lock", "title": "The copy target locks when Ryo enters the Tanuki's node",
+      "rules": ["T1"], "gdd": "5.3", "terms": ["copy rule"], "milestone": "copy rule",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["copy-target", "run-flow"],
+      "evidence": [{"symbol": "LockedCopy", "in": "game/scripts/Sim/Run/RunSession.cs"}, {"test": "^CopyLockTests\\.", "min": 3}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/RunSession.cs", "game/tests/CopyLockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/tests/RunFlowTests.cs"],
+        "brief": "The run session fixes the Tanuki's copy at the moment Ryo enters the boss node and keeps it for the rest of the run, whatever happens to Ryo's slots afterwards. Before that moment nothing is locked. RunSession already marks the place with its T1 hook."
+      }
+    },
+    {
+      "id": "tanuki-fighter", "title": "The Tanuki fights with Ryo's normals, his starters and the one copied special",
+      "rules": ["T0"], "gdd": "5.3", "terms": ["copy rule"], "milestone": "copy rule",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["copy-lock"],
+      "evidence": [{"symbol": "class TanukiKit\\b", "in": "game/scripts/Sim/*"}, {"test": "^TanukiKitTests\\."}]
+    },
+    {
+      "id": "copy-target-hud", "title": "The copy target's talisman glows in the fight HUD",
+      "rules": ["T6"], "gdd": "3.6", "terms": ["copy rule"], "milestone": "screens/HUD",
+      "kind": "ui", "owner": "ui-designer", "size": 2, "needs": ["copy-target"],
+      "evidence": [{"symbol": "CopyTarget", "in": "game/scripts/Fight/FightHud.cs"}, {"test": "^FightHudTests\\..*Copy"}]
+    },
+    {
+      "id": "coins", "title": "Coins earned per duel",
+      "rules": ["R8"], "gdd": "6.4", "terms": ["coins"], "milestone": "merchant",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
+      "evidence": [{"symbol": "\\bCoins\\b", "in": "game/scripts/Sim/Run/RunState.cs"}, {"test": "^CoinTests\\.", "min": 3}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/tests/CoinTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/RunMap.cs", "game/tests/RunFlowTests.cs"],
+        "brief": "Ryo's coins are part of the run state and are paid when a duel is won. Spending them is the merchant's shop, a later feature: give it a way to spend that refuses what Ryo cannot afford. The rare ability the row-8 elder pays instead of coins is already the elder's reward draft."
+      }
+    },
+    {
+      "id": "merchant-heal", "title": "The merchant's free heal",
+      "rules": ["R6"], "gdd": "6.3", "terms": ["merchant"], "milestone": "merchant",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
+      "evidence": [{"symbol": "class Merchant\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^MerchantTests\\.", "min": 3}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/Merchant.cs", "game/tests/MerchantTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "brief": "Only the first half of R6: at a merchant stop Ryo may take the free heal, once, as his one choice at that stop. Shopping is a later feature that will share the same stop, so the choice must be recorded in a way the shop can also use. Sim only: merchant nodes are stand-in fights in data/map/node-scenes.json today and the rest-stop screen belongs to ui-designer, so do not change how nodes resolve to scenes."
+      }
+    },
+    {
+      "id": "merchant-shop", "title": "The merchant's shop: buy commons, release a binding, never Ryo's last special",
+      "rules": ["R6", "T5"], "gdd": "6.3", "terms": ["merchant"], "milestone": "merchant",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["merchant-heal", "coins", "copy-target"],
+      "evidence": [{"symbol": "class MerchantShop\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^MerchantShopTests\\."}]
+    },
+    {
+      "id": "dojo-rest", "title": "The dojo's rest",
+      "rules": ["R7"], "gdd": "6.3", "terms": ["dojo rest"], "milestone": "dojo",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
+      "evidence": [{"symbol": "class Dojo\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^DojoTests\\.", "min": 3}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/Dojo.cs", "game/tests/DojoTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "brief": "Only the rest half of R7: at a dojo stop Ryo may rest, once, as his one choice at that stop. The training trial is a later feature that will share the same stop. Sim only: do not change how nodes resolve to scenes."
+      }
+    },
+    {
+      "id": "dojo-trials", "title": "Dojo training trials",
+      "rules": ["R7"], "gdd": "6.3", "terms": ["dojo trials"], "milestone": "dojo",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["dojo-rest"],
+      "evidence": [{"symbol": "class Trial\\w*\\b", "in": "game/scripts/Sim/Run/*"}, {"file": "data/trials/*.json"}]
+    },
+    {
+      "id": "rest-stop-screen", "title": "Rest-stop screen with the Tanuki forecast",
+      "rules": ["T6", "R6", "R7"], "gdd": "8", "terms": ["merchant"], "milestone": "merchant",
+      "kind": "ui", "owner": "ui-designer", "size": 3, "needs": ["copy-target", "merchant-heal", "dojo-rest"],
+      "evidence": [{"symbol": "class RestStop\\w*\\b", "in": "game/scripts/Ui/*"}, {"symbol": "Forecast", "in": "game/scripts/Ui/*"}]
+    },
+    {
+      "id": "unlocks", "title": "Unlocks awarded by the depth a run reached",
+      "rules": ["M1"], "gdd": "7", "terms": ["meta-unlock layer"], "milestone": "unlocks",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
+      "evidence": [{"symbol": "class Unlocks\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^UnlockTests\\.", "min": 3}],
+      "build": {
+        "files": ["game/scripts/Sim/Run/Unlocks.cs", "game/tests/UnlockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RunFlowTests.cs"],
+        "brief": "From how a run ended, how many abilities unlock, and which ones given a fixed order of locked ability ids. Saving the result between runs is a later feature."
+      }
+    },
+    {
+      "id": "carry-over", "title": "The best special carries to the next run at Lv 2",
+      "rules": ["M3"], "gdd": "7", "terms": ["carry-over"], "milestone": "unlocks",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["run-flow", "save"],
+      "evidence": [{"symbol": "CarryOver", "in": "game/scripts/Sim/Run/*"}, {"test": "CarryOver"}]
+    },
+    {
+      "id": "save", "title": "Save file: run in progress, unlocks, and story progress on its own flag",
+      "rules": ["M4"], "gdd": "7", "terms": ["integration"], "milestone": "integration",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["run-flow"],
+      "evidence": [{"symbol": "class (RunSave|SaveStore|SaveData)\\b", "in": "game/scripts/*"}, {"test": "^SaveTests\\."}]
+    },
+    {
+      "id": "elder-twists", "title": "Elder twists, with their map icon, intro card and callout",
+      "rules": ["Y3"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["profile-ai", "run-flow"],
+      "evidence": [{"symbol": "class ElderTwist\\w*\\b", "in": "game/scripts/*"}, {"test": "Twist"}]
+    },
+    {
+      "id": "tanuki-pressure", "title": "Each Tanuki win makes yokai faster and more aggressive",
+      "rules": ["Y5"], "gdd": "5.2", "terms": ["integration"], "milestone": "integration",
+      "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["save", "tanuki-fighter"],
+      "evidence": [{"symbol": "TanukiWins", "in": "game/scripts/*"}]
+    },
+    {
+      "id": "apprentice-tutorial", "title": "The guided apprentice fight",
+      "rules": ["Y6"], "gdd": "5.2", "terms": ["integration"], "milestone": "integration",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["run-flow"],
+      "evidence": [{"symbol": "class \\w*Tutorial\\w*\\b", "in": "game/scripts/*"}]
+    },
+    {
+      "id": "whole-run-harness", "title": "Whole-run harness: a newcomer Kihon bot plays 200 first runs",
+      "rules": ["R4", "R5", "R9"], "gdd": "6.2", "terms": ["harness"], "milestone": "whole-run harness",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["merchant-heal", "dojo-rest", "coins", "tanuki-fighter"],
+      "evidence": [{"symbol": "class (RunBot|RunHarness|WholeRunHarness)\\b", "in": "game/scripts/*"}, {"test": "^RunHarnessTests\\."}]
+    },
+    {
+      "id": "hit-feedback", "title": "Hit sparks, frame-timed impact sound and level presets",
+      "rules": ["V5", "V6", "V8"], "gdd": "3.7", "terms": ["colour-only presets"], "milestone": "polish",
+      "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["frame-stepped-models"],
+      "evidence": [{"symbol": "class HitSpark\\w*\\b", "in": "game/scripts/*"}, {"file": "data/presets/*.json"}, {"file": "data/sound/*.json"}]
+    },
+
+    {
+      "id": "abilities-33", "title": "The 33 abilities as data: specials, 14 modifiers, 3 cancel rules",
+      "rules": ["A11", "X4"], "gdd": "10.2", "terms": ["33 abilities"], "milestone": "33 abilities",
+      "kind": "content", "owner": "movesmith", "size": 3, "needs": [],
+      "evidence": [{"file": "data/modifiers/*.json", "min": 14}, {"file": "data/cancels/*.json", "min": 3}]
+    },
+    {
+      "id": "profiles-7", "title": "The 7 behaviour profiles",
+      "rules": ["Y2"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "kind": "content", "owner": "habit-writer", "size": 3, "needs": [],
+      "evidence": [{"file": "data/profiles/*.json", "min": 7}]
+    },
+    {
+      "id": "story-card-schedule", "title": "Every card on the story schedule",
+      "rules": ["S3"], "gdd": "2.3", "terms": ["story cards"], "milestone": "story cards",
+      "kind": "content", "owner": "habit-writer", "size": 2, "needs": [],
+      "evidence": [{"file": "data/story/*.json", "min": 9}]
+    }
+  ]
+}

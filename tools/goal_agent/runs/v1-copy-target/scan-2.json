@@ -1,0 +1,4235 @@
+{
+ "files": {
+  "data/clips/kitsune-block-high.json": {},
+  "data/clips/kitsune-block-low.json": {},
+  "data/clips/kitsune-crouch.json": {},
+  "data/clips/kitsune-foxfire.json": {},
+  "data/clips/kitsune-get-up.json": {},
+  "data/clips/kitsune-heavy-kick.json": {},
+  "data/clips/kitsune-heavy-punch.json": {},
+  "data/clips/kitsune-hit-high.json": {},
+  "data/clips/kitsune-hit-low.json": {},
+  "data/clips/kitsune-idle.json": {},
+  "data/clips/kitsune-jump.json": {},
+  "data/clips/kitsune-knockdown.json": {},
+  "data/clips/kitsune-light-punch.json": {},
+  "data/clips/kitsune-medium-kick.json": {},
+  "data/clips/kitsune-medium-punch.json": {},
+  "data/clips/kitsune-throw.json": {},
+  "data/clips/kitsune-walk-fwd.json": {},
+  "data/clips/kitsune-walk-guard-back.json": {},
+  "data/clips/kitsune-walk-guard-fwd.json": {},
+  "data/clips/ryo-block-high.json": {},
+  "data/clips/ryo-block-low.json": {},
+  "data/clips/ryo-crouch.json": {},
+  "data/clips/ryo-dash-back.json": {},
+  "data/clips/ryo-foxfire-cast.json": {},
+  "data/clips/ryo-generic-throw.json": {},
+  "data/clips/ryo-get-up.json": {},
+  "data/clips/ryo-heavy-kick.json": {},
+  "data/clips/ryo-heavy-punch.json": {},
+  "data/clips/ryo-hit-high.json": {},
+  "data/clips/ryo-hit-low.json": {},
+  "data/clips/ryo-idle-guard.json": {},
+  "data/clips/ryo-jump-back.json": {},
+  "data/clips/ryo-jump-kick.json": {},
+  "data/clips/ryo-jump-punch.json": {},
+  "data/clips/ryo-jump.json": {},
+  "data/clips/ryo-knockdown.json": {},
+  "data/clips/ryo-light-kick.json": {},
+  "data/clips/ryo-light-punch.json": {},
+  "data/clips/ryo-medium-kick.json": {},
+  "data/clips/ryo-medium-punch.json": {},
+  "data/clips/ryo-rising-talisman-strike.json": {},
+  "data/clips/ryo-spirit-wave-cast.json": {},
+  "data/clips/ryo-walk-fwd.json": {},
+  "data/clips/ryo-walk-guard-back.json": {},
+  "data/clips/ryo-walk-guard-fwd.json": {},
+  "data/map/default-map.json": {},
+  "data/map/demo-map.json": {},
+  "data/map/node-scenes.json": {},
+  "data/modifiers/fox-patience.json": {},
+  "data/modifiers/will-o-wisp.json": {},
+  "data/moves/foxfire.json": {},
+  "data/moves/kitsune-heavy-kick.json": {},
+  "data/moves/kitsune-heavy-punch.json": {},
+  "data/moves/kitsune-light-punch.json": {},
+  "data/moves/kitsune-medium-kick.json": {},
+  "data/moves/kitsune-medium-punch.json": {},
+  "data/moves/kitsune-throw.json": {},
+  "data/moves/rising-talisman.json": {},
+  "data/moves/ryo-air-kick.json": {},
+  "data/moves/ryo-air-punch.json": {},
+  "data/moves/ryo-generic-throw.json": {},
+  "data/moves/ryo-heavy-kick.json": {},
+  "data/moves/ryo-heavy-punch.json": {},
+  "data/moves/ryo-light-kick.json": {},
+  "data/moves/ryo-light-punch.json": {},
+  "data/moves/ryo-medium-kick.json": {},
+  "data/moves/ryo-medium-punch.json": {},
+  "data/moves/spirit-wave.json": {},
+  "data/profiles/kitsune-aggressive.json": {},
+  "data/profiles/kitsune-patient.json": {},
+  "data/samples/fox-step.json": {},
+  "data/samples/invalid/broken-normal.json": {},
+  "data/samples/invalid/broken-story-card.json": {},
+  "data/samples/invalid/broken-wave.json": {},
+  "data/samples/invalid/oni-reads-buttons.json": {},
+  "data/samples/kitsune-patient.json": {},
+  "data/samples/ryo-spirit-wave.json": {},
+  "data/samples/sample-light-punch-clip.json": {},
+  "data/samples/sample-light-punch.json": {},
+  "data/samples/sample-story-card.json": {},
+  "data/samples/spirit-wave.json": {},
+  "data/samples/will-o-wisp.json": {},
+  "data/schema/cancel-rule.schema.json": {},
+  "data/schema/clip.schema.json": {},
+  "data/schema/common.schema.json": {},
+  "data/schema/frame-data.schema.json": {},
+  "data/schema/modifier.schema.json": {},
+  "data/schema/node-scenes.schema.json": {},
+  "data/schema/normal.schema.json": {},
+  "data/schema/profile.schema.json": {},
+  "data/schema/run-map.schema.json": {},
+  "data/schema/special.schema.json": {},
+  "data/schema/story-card.schema.json": {},
+  "data/schema/throw.schema.json": {},
+  "data/story/binding-line.json": {},
+  "data/story/demo-complete.json": {},
+  "data/story/lose-screen.json": {},
+  "game/scripts/Ai/AiHarness.cs": {
+   "lines": 168,
+   "members": [
+    "AntiAirResponse",
+    "Decisions",
+    "DecisionsCsv",
+    "FinalHash",
+    "HabitNo",
+    "JumpEvery",
+    "MeanResponse",
+    "P1Wins",
+    "Profile",
+    "RandomInput",
+    "ReactionFrames",
+    "Run",
+    "Script",
+    "Seed",
+    "SummaryJson",
+    "ThrowReach",
+    "Thrower",
+    "Trace",
+    "WakeJumpsPunished"
+   ],
+   "owner": "AiHarness",
+   "tests": [],
+   "types": [
+    "AiHarness",
+    "P1Script",
+    "Result"
+   ]
+  },
+  "game/scripts/Ai/AiLoadout.cs": {
+   "lines": 38,
+   "members": [
+    "From",
+    "ThrowButtons",
+    "ThrowFrames",
+    "TryGet"
+   ],
+   "owner": "AiLoadout",
+   "tests": [],
+   "types": [
+    "AiLoadout"
+   ]
+  },
+  "game/scripts/Ai/AiView.cs": {
+   "lines": 53,
+   "members": [
+    "Attacking",
+    "Capture",
+    "Fighter",
+    "Recovering",
+    "Threatening",
+    "WakeUpFrames"
+   ],
+   "owner": "AiView",
+   "tests": [],
+   "types": [
+    "AiView",
+    "FighterView",
+    "ProjectileView"
+   ]
+  },
+  "game/scripts/Ai/BehaviourProfile.cs": {
+   "lines": 148,
+   "members": [
+    "ActionName",
+    "AggressionBias",
+    "Behaviours",
+    "Id",
+    "IsEvent",
+    "LoadDirectory",
+    "LoadFile",
+    "ObservationName",
+    "Observations",
+    "Offensive",
+    "Parse",
+    "ParseAction",
+    "PreferredRange",
+    "ReactionFrames",
+    "ReactionTier",
+    "TellCoverPct",
+    "Temperament",
+    "ToString",
+    "Yokai"
+   ],
+   "owner": "ActionKind",
+   "tests": [],
+   "types": [
+    "ActionKind",
+    "AiAction",
+    "Behaviour",
+    "BehaviourProfile",
+    "Habit",
+    "Observation"
+   ]
+  },
+  "game/scripts/Ai/ProfileAi.cs": {
+   "lines": 238,
+   "members": [
+    "CloseRange",
+    "Done",
+    "Emit",
+    "Habit",
+    "Log",
+    "Next",
+    "Profile",
+    "RangeOf",
+    "ReactionFrames",
+    "Self",
+    "SpacingWeight",
+    "WalkTicks"
+   ],
+   "owner": "AiDecision",
+   "tests": [],
+   "types": [
+    "AiDecision",
+    "Plan",
+    "ProfileAi"
+   ]
+  },
+  "game/scripts/ContentPaths.cs": {
+   "lines": 41,
+   "members": [
+    "Current",
+    "Data",
+    "DataDir",
+    "FixturesDir",
+    "Resolve"
+   ],
+   "owner": "ContentPaths",
+   "tests": [],
+   "types": [
+    "ContentPaths",
+    "Layout"
+   ]
+  },
+  "game/scripts/Fight/DebugBoxes.cs": {
+   "lines": 118,
+   "members": [
+    "Filter",
+    "For",
+    "Label",
+    "Paused",
+    "RequestStep",
+    "Resume",
+    "ThrowBoxes",
+    "TogglePause"
+   ],
+   "owner": "DebugBox",
+   "tests": [],
+   "types": [
+    "DebugBox",
+    "DebugBoxKind",
+    "DebugBoxes",
+    "FrameStepper"
+   ]
+  },
+  "game/scripts/Fight/DebugOverlay.cs": {
+   "lines": 101,
+   "members": [
+    "HandleKey",
+    "Scene",
+    "ShowBoxes",
+    "Stepper",
+    "ToggleKey",
+    "_Process",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "DebugOverlay",
+   "tests": [],
+   "types": [
+    "DebugOverlay"
+   ]
+  },
+  "game/scripts/Fight/DemoCompleteScreen.cs": {
+   "lines": 45,
+   "members": [
+    "BodyText",
+    "PlaceholderTitle",
+    "Restart",
+    "RestartRequested",
+    "SetText",
+    "Show",
+    "TitleText",
+    "_Ready"
+   ],
+   "owner": "DemoCompleteScreen",
+   "tests": [],
+   "types": [
+    "DemoCompleteScreen"
+   ]
+  },
+  "game/scripts/Fight/DemoDebugMenu.cs": {
+   "lines": 48,
+   "members": [
+    "Bind",
+    "Close",
+    "Open",
+    "Scene",
+    "_Ready"
+   ],
+   "owner": "DemoDebugMenu",
+   "tests": [],
+   "types": [
+    "DemoDebugMenu"
+   ]
+  },
+  "game/scripts/Fight/FightHud.cs": {
+   "lines": 135,
+   "members": [
+    "HealthText",
+    "LoseText",
+    "LoseTitle",
+    "Paper",
+    "PortraitPath",
+    "Refresh",
+    "RestartRequested",
+    "SetLoseText",
+    "ShowOpponent",
+    "View",
+    "_Ready"
+   ],
+   "owner": "FightHud",
+   "tests": [],
+   "types": [
+    "FightHud"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Ai.cs": {
+   "lines": 96,
+   "members": [
+    "AiSeed",
+    "FixtureProfilesDir",
+    "LoadProfiles",
+    "P2Ai",
+    "P2AiEnabled",
+    "Profiles",
+    "RebuildAi",
+    "StepWithAi",
+    "SwapTemperament",
+    "SwapTemperamentKey",
+    "ToggleP2Ai"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Flow.cs": {
+   "lines": 325,
+   "members": [
+    "ArmSuppressForTest",
+    "BindingCard",
+    "CompleteScreen",
+    "DebugMenu",
+    "DebugMenuKey",
+    "DemoMapFile",
+    "DemoRun",
+    "Draft",
+    "Duel",
+    "DuelRecordings",
+    "Duels",
+    "FixedRunSeed",
+    "FlowPaused",
+    "NewSession",
+    "Node",
+    "OwnsSession",
+    "PlayerScheme",
+    "Pool",
+    "RequestTitle",
+    "RestartRun",
+    "Rewards",
+    "RunRestartRequested",
+    "RunSeed",
+    "RunWonTitle",
+    "Session",
+    "SetTemperament",
+    "Stage",
+    "SuppressedInputForTest",
+    "Temperament",
+    "TitleRequested",
+    "ToggleDebugMenu"
+   ],
+   "owner": "DemoStage",
+   "tests": [],
+   "types": [
+    "DemoStage",
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Models.cs": {
+   "lines": 101,
+   "members": [
+    "Catalog",
+    "ModelOf",
+    "ModelToggleKey",
+    "MoveClips",
+    "PresenterOf",
+    "ShowModels"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Pause.cs": {
+   "lines": 119,
+   "members": [
+    "BuildPauseSummary",
+    "CanPause",
+    "HeldBitsSource",
+    "PauseEnabled",
+    "PauseMaskable",
+    "PauseMenu",
+    "Paused",
+    "ResumeMask",
+    "TryPause",
+    "_UnhandledInput"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Replay.cs": {
+   "lines": 50,
+   "members": [
+    "Recorder",
+    "ReplayDir",
+    "SaveReplay",
+    "SaveReplayKey",
+    "StartRecording"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.Stage.cs": {
+   "lines": 55,
+   "members": [
+    "CameraDistance",
+    "GroveScene",
+    "StageDir",
+    "StageKind",
+    "StageRoot",
+    "UsePlaceholderStage"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/FightScene.cs": {
+   "lines": 304,
+   "members": [
+    "BodyHeight",
+    "Camera",
+    "CameraFovDegrees",
+    "CameraHeight",
+    "CameraRig",
+    "DefaultScheme",
+    "EquipStarters",
+    "ExternalDrive",
+    "FixtureAirNormalsDir",
+    "FixtureNormalsDir",
+    "FixtureSources",
+    "FixtureSpecialsDir",
+    "FixtureThrowsDir",
+    "LoadAbilityPool",
+    "LoadKit",
+    "LoadMoves",
+    "LoadSpecials",
+    "LoadStory",
+    "Match",
+    "NewMatch",
+    "Opponent",
+    "ResetFight",
+    "Run",
+    "SchemeOf",
+    "SetScheme",
+    "Shake",
+    "Sources",
+    "Step",
+    "Stepper",
+    "StoryDir",
+    "ToMeters",
+    "ToggleScheme",
+    "UnitsPerMeter",
+    "_Process",
+    "_Ready"
+   ],
+   "owner": "FightScene",
+   "tests": [],
+   "types": [
+    "FightScene"
+   ]
+  },
+  "game/scripts/Fight/IHudView.cs": {
+   "lines": 34,
+   "members": [
+    "BurstAvailable",
+    "Meter",
+    "MeterMax"
+   ],
+   "owner": "IHudView",
+   "tests": [],
+   "types": [
+    "IHudView",
+    "MatchHudView"
+   ]
+  },
+  "game/scripts/Fight/InputDevices.cs": {
+   "lines": 81,
+   "members": [
+    "FromKeys",
+    "FromPad",
+    "P1Keys",
+    "P2Keys",
+    "Read",
+    "StickDeadzone",
+    "TriggerThreshold"
+   ],
+   "owner": "InputDevices",
+   "tests": [],
+   "types": [
+    "InputDevices",
+    "KeyLayout"
+   ]
+  },
+  "game/scripts/Fight/LoseScreen.cs": {
+   "lines": 46,
+   "members": [
+    "Open",
+    "PlaceholderTitle",
+    "Restart",
+    "RestartRequested",
+    "SetText",
+    "Text",
+    "Title",
+    "_Ready"
+   ],
+   "owner": "LoseScreen",
+   "tests": [],
+   "types": [
+    "LoseScreen"
+   ]
+  },
+  "game/scripts/Fight/Presentation/BambooGroveStage.cs": {
+   "lines": 64,
+   "members": [
+    "AssetsPresent",
+    "BackdropArt",
+    "ClearBandHalfX",
+    "DefaultDir",
+    "FrontLimit",
+    "GroundArt",
+    "Kind",
+    "LocalBounds",
+    "PropMaxZ",
+    "PropOutlineMetres"
+   ],
+   "owner": "BambooGroveStage",
+   "tests": [],
+   "types": [
+    "BambooGroveStage"
+   ]
+  },
+  "game/scripts/Fight/Presentation/ClipCatalog.cs": {
+   "lines": 149,
+   "members": [
+    "Clips",
+    "ComputedFrames",
+    "Has",
+    "Load",
+    "LoadMoveClips",
+    "Problems",
+    "RawTickAt",
+    "RawTicksPerSecond",
+    "ResolveFile",
+    "TimeAt",
+    "YawOffsetDeg"
+   ],
+   "owner": "ClipCatalog",
+   "tests": [],
+   "types": [
+    "ClipCatalog",
+    "ClipInfo"
+   ]
+  },
+  "game/scripts/Fight/Presentation/FightStage.cs": {
+   "lines": 14,
+   "members": [
+    "Kind"
+   ],
+   "owner": "FightStage",
+   "tests": [],
+   "types": [
+    "FightStage"
+   ]
+  },
+  "game/scripts/Fight/Presentation/FighterAnimSet.cs": {
+   "lines": 113,
+   "members": [
+    "AirClips",
+    "BurstFrame",
+    "ClipFor",
+    "ClipOverrides",
+    "Clips",
+    "Fighter",
+    "For",
+    "JumpFrameOffset",
+    "Kitsune",
+    "LandingFrame",
+    "ModelPath",
+    "MoveClip",
+    "Ryo",
+    "ScenePath"
+   ],
+   "owner": "FighterAnimSet",
+   "tests": [],
+   "types": [
+    "FighterAnimSet",
+    "PoseKind"
+   ]
+  },
+  "game/scripts/Fight/Presentation/FighterModel.cs": {
+   "lines": 193,
+   "members": [
+    "AnimSet",
+    "Apply",
+    "Create",
+    "Fighter",
+    "Has",
+    "LibraryName",
+    "Mirror",
+    "MirrorName",
+    "Player",
+    "Setup",
+    "Skeleton",
+    "TailCount",
+    "TailSwayDeg",
+    "TailSwayPeriod"
+   ],
+   "owner": "FighterModel",
+   "tests": [],
+   "types": [
+    "FighterModel"
+   ]
+  },
+  "game/scripts/Fight/Presentation/FighterPresenter.cs": {
+   "lines": 204,
+   "members": [
+    "Blending",
+    "CrouchBlend",
+    "DefaultBlend",
+    "GetUpBlend",
+    "HitBlend",
+    "Observe",
+    "Reset",
+    "Sample",
+    "Set",
+    "WakeRollBlend"
+   ],
+   "owner": "FighterPresenter",
+   "tests": [],
+   "types": [
+    "FighterPresenter",
+    "PoseSample"
+   ]
+  },
+  "game/scripts/Fight/Presentation/ToonLook.cs": {
+   "lines": 92,
+   "members": [
+    "Apply",
+    "ApplyNow",
+    "DefaultOutlineMetres",
+    "Outline",
+    "OutlineMetres",
+    "Target",
+    "Toon",
+    "ToonPath",
+    "_Ready"
+   ],
+   "owner": "ToonLook",
+   "tests": [],
+   "types": [
+    "ToonLook"
+   ]
+  },
+  "game/scripts/Fight/ScreenShake.cs": {
+   "lines": 48,
+   "members": [
+    "Active",
+    "Advance",
+    "OnImpact",
+    "Start",
+    "Stop"
+   ],
+   "owner": "ScreenShake",
+   "tests": [],
+   "types": [
+    "ScreenShake"
+   ]
+  },
+  "game/scripts/Fight/StartScreen.cs": {
+   "lines": 200,
+   "members": [
+    "BackRequested",
+    "Close",
+    "KataButton",
+    "KataDescription",
+    "KeyLabel",
+    "KihonButton",
+    "OnStart",
+    "Open",
+    "PadLabel",
+    "ReferenceVisible",
+    "Rows",
+    "Scheme",
+    "SetReferenceVisible",
+    "ShowDebugKeys",
+    "Start",
+    "Started",
+    "_ExitTree",
+    "_Ready",
+    "_UnhandledInput",
+    "readonly"
+   ],
+   "owner": "Row",
+   "tests": [],
+   "types": [
+    "Row",
+    "StartScreen"
+   ]
+  },
+  "game/scripts/Flow/GameFlow.cs": {
+   "lines": 248,
+   "members": [
+    "ChooseNode",
+    "ConfigureFight",
+    "ControlSelect",
+    "DirectFight",
+    "DirectFightArg",
+    "DirectFightFromArgs",
+    "Fight",
+    "FightScenePath",
+    "FixedRunSeed",
+    "Map",
+    "MapFile",
+    "NodeScene",
+    "QuitAction",
+    "RestartRun",
+    "ReturnToTitle",
+    "Router",
+    "Session",
+    "SettingsFile",
+    "SettingsLoaded",
+    "Title",
+    "UserSettingsPath",
+    "_EnterTree",
+    "_ExitTree",
+    "_Ready"
+   ],
+   "owner": "GameFlow",
+   "tests": [],
+   "types": [
+    "GameFlow"
+   ]
+  },
+  "game/scripts/Flow/ScreenRouter.cs": {
+   "lines": 160,
+   "members": [
+    "Activated",
+    "Back",
+    "Changed",
+    "ChooseScheme",
+    "Confirm",
+    "Current",
+    "Disable",
+    "Enable",
+    "EnterNode",
+    "Entries",
+    "Entry",
+    "EntryChanged",
+    "NoPracticeReason",
+    "NoSaveReason",
+    "Quit",
+    "QuitRequested",
+    "ReturnToMap",
+    "ReturnToTitle",
+    "Scheme",
+    "SchemeChanged",
+    "Select",
+    "StartFightDirect"
+   ],
+   "owner": "Screen",
+   "tests": [],
+   "types": [
+    "Screen",
+    "ScreenRouter",
+    "TitleEntry",
+    "TitleEntryState"
+   ]
+  },
+  "game/scripts/Flow/SessionMapView.cs": {
+   "lines": 38,
+   "members": [
+    "Nodes",
+    "Routes",
+    "Select"
+   ],
+   "owner": "INodeScene",
+   "tests": [],
+   "types": [
+    "INodeScene",
+    "SessionMapView"
+   ]
+  },
+  "game/scripts/Main.cs": {
+   "lines": 14,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "Main",
+   "tests": [],
+   "types": [
+    "Main"
+   ]
+  },
+  "game/scripts/Replay/ReplayRecorder.cs": {
+   "lines": 91,
+   "members": [
+    "AiOf",
+    "Begin",
+    "Finish",
+    "Full",
+    "MaxSteps",
+    "OnAi",
+    "OnScheme",
+    "Record",
+    "Recording",
+    "ResultOf"
+   ],
+   "owner": "ReplayRecorder",
+   "tests": [],
+   "types": [
+    "ReplayRecorder"
+   ]
+  },
+  "game/scripts/Replay/ReplayRecording.cs": {
+   "lines": 215,
+   "members": [
+    "Ai",
+    "CancelRules",
+    "ConfigFp",
+    "Events",
+    "ExFp",
+    "Fighters",
+    "FinalHash",
+    "FormatVersion",
+    "Fp",
+    "From",
+    "FromBytes",
+    "Hashes",
+    "Header",
+    "Id",
+    "Into",
+    "Kind",
+    "Level",
+    "Load",
+    "MatchTick",
+    "Modifier",
+    "MoveFp",
+    "Moves",
+    "Of",
+    "OnBlock",
+    "OnHit",
+    "OnWhiff",
+    "P1",
+    "P1Health",
+    "P1MaxHealth",
+    "P1StartHealth",
+    "P2",
+    "P2Health",
+    "P2MaxHealth",
+    "P2StartHealth",
+    "Phase",
+    "Player",
+    "ProfileFp",
+    "ProfileId",
+    "ReactionFrames",
+    "Result",
+    "RunHash",
+    "Save",
+    "Scheme",
+    "Seed",
+    "Slot",
+    "Specials",
+    "Steps",
+    "Temperament",
+    "Tick",
+    "ToBytes",
+    "Version",
+    "Winner"
+   ],
+   "owner": "AiSetup",
+   "tests": [],
+   "types": [
+    "AiSetup",
+    "CancelEntry",
+    "FighterSetup",
+    "Fingerprint",
+    "KitEntry",
+    "ReplayEvent",
+    "ReplayHeader",
+    "ReplayRecording",
+    "ReplayResult",
+    "SpecialEntry"
+   ]
+  },
+  "game/scripts/Replay/Replayer.cs": {
+   "lines": 206,
+   "members": [
+    "AddTree",
+    "AiStepsChecked",
+    "Build",
+    "Error",
+    "FirstAiMismatchStep",
+    "FirstDivergentStep",
+    "FromRepo",
+    "Modifiers",
+    "Moves",
+    "Ok",
+    "Profiles",
+    "Result",
+    "Run",
+    "Specials",
+    "StepsRun",
+    "ToString"
+   ],
+   "owner": "ReplayCatalog",
+   "tests": [],
+   "types": [
+    "ReplayCatalog",
+    "ReplayReport",
+    "ReplaySetupException",
+    "Replayer"
+   ]
+  },
+  "game/scripts/Settings/SettingsData.cs": {
+   "lines": 48,
+   "members": [
+    "ClampLevel",
+    "Defaults",
+    "Effects",
+    "IsMute",
+    "Master",
+    "MinLevel",
+    "Music",
+    "Muted",
+    "Scheme",
+    "SilentDb",
+    "ToDb"
+   ],
+   "owner": "AudioLevels",
+   "tests": [],
+   "types": [
+    "AudioLevels",
+    "SettingsData"
+   ]
+  },
+  "game/scripts/Settings/SettingsStore.cs": {
+   "lines": 173,
+   "members": [
+    "CurrentVersion",
+    "FileName",
+    "LastSaveError",
+    "Load",
+    "Parse",
+    "Path",
+    "Save",
+    "Serialize"
+   ],
+   "owner": "SettingsLoad",
+   "tests": [],
+   "types": [
+    "SettingsLoad",
+    "SettingsLoadStatus",
+    "SettingsStore"
+   ]
+  },
+  "game/scripts/Sim/CancelRuleLoader.cs": {
+   "lines": 45,
+   "members": [
+    "LoadFile",
+    "Parse"
+   ],
+   "owner": "CancelRuleLoader",
+   "tests": [],
+   "types": [
+    "CancelRuleLoader"
+   ]
+  },
+  "game/scripts/Sim/FightCamera.cs": {
+   "lines": 55,
+   "members": [
+    "BothInView",
+    "CenterX",
+    "Limit",
+    "ModelReach",
+    "VisibleHalfWidth"
+   ],
+   "owner": "FightCamera",
+   "tests": [],
+   "types": [
+    "FightCamera"
+   ]
+  },
+  "game/scripts/Sim/Fighter.Meter.cs": {
+   "lines": 38,
+   "members": [
+    "BurstUsed",
+    "GainMeter",
+    "Invulnerable",
+    "Meter",
+    "TrySpendMeter"
+   ],
+   "owner": "Fighter",
+   "tests": [],
+   "types": [
+    "Fighter"
+   ]
+  },
+  "game/scripts/Sim/Fighter.Specials.cs": {
+   "lines": 122,
+   "members": [
+    "ActiveEx",
+    "ActiveMove",
+    "ActivePrecision",
+    "ActiveSpecial",
+    "AttachModifier",
+    "CancelRules",
+    "CancelUsed",
+    "Data",
+    "Equip",
+    "ExMove",
+    "HoldCancelRule",
+    "Level",
+    "LevelUp",
+    "MaxCancelRules",
+    "Modifier",
+    "Move",
+    "MoveBlocked",
+    "SpecialButtons",
+    "Specials",
+    "Unequip"
+   ],
+   "owner": "CancelFrom",
+   "tests": [],
+   "types": [
+    "CancelFrom",
+    "CancelInto",
+    "CancelRule",
+    "EquippedSpecial",
+    "Fighter"
+   ]
+  },
+  "game/scripts/Sim/Fighter.cs": {
+   "lines": 190,
+   "members": [
+    "Actionable",
+    "AirAttackUsed",
+    "AirFrame",
+    "Airborne",
+    "Crouching",
+    "CurrentMove",
+    "DashDir",
+    "DashFrame",
+    "Facing",
+    "Guarding",
+    "Hash",
+    "Health",
+    "Input",
+    "IsDown",
+    "JumpDir",
+    "KnockedOut",
+    "MaxHealth",
+    "Mix",
+    "MixString",
+    "MoveConnected",
+    "MoveFrame",
+    "MoveSlot",
+    "Moves",
+    "Next",
+    "NextUInt",
+    "Offset",
+    "Pressed",
+    "PrevBits",
+    "Reset",
+    "State",
+    "StunLeft",
+    "WalkDir",
+    "X",
+    "Y"
+   ],
+   "owner": "Fighter",
+   "tests": [],
+   "types": [
+    "Fighter",
+    "FighterState",
+    "FighterStates",
+    "Fnv",
+    "SimRng"
+   ]
+  },
+  "game/scripts/Sim/FighterInput.cs": {
+   "lines": 57,
+   "members": [
+    "Attack",
+    "Has",
+    "IsSpecialRequest",
+    "None",
+    "Special",
+    "SpecialRequestBase",
+    "With"
+   ],
+   "owner": "FighterInput",
+   "tests": [],
+   "types": [
+    "FighterInput",
+    "InputBits"
+   ]
+  },
+  "game/scripts/Sim/FixedStepClock.cs": {
+   "lines": 45,
+   "members": [
+    "Advance",
+    "MaxCatchUp",
+    "MicrosPerSecond",
+    "Restart",
+    "TicksDropped",
+    "TicksRun"
+   ],
+   "owner": "FixedStepClock",
+   "tests": [],
+   "types": [
+    "FixedStepClock"
+   ]
+  },
+  "game/scripts/Sim/Input/ControlScheme.cs": {
+   "lines": 8,
+   "members": [],
+   "owner": "ControlScheme",
+   "tests": [],
+   "types": [
+    "ControlScheme"
+   ]
+  },
+  "game/scripts/Sim/Input/InputBuffer.cs": {
+   "lines": 49,
+   "members": [
+    "At",
+    "Capacity",
+    "Clear",
+    "Count",
+    "Dir",
+    "HeldTicks",
+    "PressedAt",
+    "Push"
+   ],
+   "owner": "InputBuffer",
+   "tests": [],
+   "types": [
+    "InputBuffer"
+   ]
+  },
+  "game/scripts/Sim/Input/InputCommand.cs": {
+   "lines": 32,
+   "members": [
+    "None"
+   ],
+   "owner": "CommandKind",
+   "tests": [],
+   "types": [
+    "CommandKind",
+    "ICommandParser",
+    "InputCommand",
+    "SpecialSlot"
+   ]
+  },
+  "game/scripts/Sim/Input/InputConfig.cs": {
+   "lines": 49,
+   "members": [
+    "ButtonPriority",
+    "ChargeGrace",
+    "ChargeTicks",
+    "CommandBuffer",
+    "DashWindow",
+    "Default",
+    "HistoryTicks",
+    "MotionPriority",
+    "MotionWindow"
+   ],
+   "owner": "InputConfig",
+   "tests": [],
+   "types": [
+    "InputConfig"
+   ]
+  },
+  "game/scripts/Sim/Input/InputReader.cs": {
+   "lines": 96,
+   "members": [
+    "Buffer",
+    "Config",
+    "Dash",
+    "Direction",
+    "Latest",
+    "Parser",
+    "Pending",
+    "Reset",
+    "Scheme",
+    "TryConsume",
+    "Update"
+   ],
+   "owner": "InputReader",
+   "tests": [],
+   "types": [
+    "InputReader"
+   ]
+  },
+  "game/scripts/Sim/Input/KataParser.cs": {
+   "lines": 55,
+   "members": [
+    "BestMotion",
+    "Parse",
+    "PickButton",
+    "SlotOf"
+   ],
+   "owner": "KataParser",
+   "tests": [],
+   "types": [
+    "KataParser"
+   ]
+  },
+  "game/scripts/Sim/Input/KihonParser.cs": {
+   "lines": 52,
+   "members": [
+    "Parse",
+    "SlotOf"
+   ],
+   "owner": "KihonParser",
+   "tests": [],
+   "types": [
+    "KihonParser"
+   ]
+  },
+  "game/scripts/Sim/Input/MotionParser.cs": {
+   "lines": 96,
+   "members": [
+    "FinalStepAge",
+    "Matches",
+    "Steps"
+   ],
+   "owner": "Motion",
+   "tests": [],
+   "types": [
+    "Motion",
+    "MotionParser"
+   ]
+  },
+  "game/scripts/Sim/Input/Numpad.cs": {
+   "lines": 38,
+   "members": [
+    "From",
+    "IsBack",
+    "IsDown",
+    "IsForward",
+    "IsUp",
+    "ToBits"
+   ],
+   "owner": "Numpad",
+   "tests": [],
+   "types": [
+    "Numpad"
+   ]
+  },
+  "game/scripts/Sim/Kit.cs": {
+   "lines": 113,
+   "members": [
+    "At",
+    "Equip",
+    "EquipSpecials",
+    "Fighter",
+    "FixturesOnly",
+    "Load",
+    "LoadSpecials",
+    "Moves",
+    "Notes",
+    "Repo",
+    "Ryo",
+    "Specials"
+   ],
+   "owner": "Kit",
+   "tests": [],
+   "types": [
+    "Kit",
+    "KitSources",
+    "MoveKind"
+   ]
+  },
+  "game/scripts/Sim/Match.Air.cs": {
+   "lines": 26,
+   "members": [
+    "CanAirAttack"
+   ],
+   "owner": "Match",
+   "tests": [],
+   "types": [
+    "Match"
+   ]
+  },
+  "game/scripts/Sim/Match.Meter.cs": {
+   "lines": 115,
+   "members": [
+    "BurstButtons",
+    "BurstFired",
+    "BurstPressed",
+    "HitstopLeft",
+    "Impact",
+    "TrySpendEx",
+    "TrySpendMeter"
+   ],
+   "owner": "ImpactEvent",
+   "tests": [],
+   "types": [
+    "ImpactEvent",
+    "Match"
+   ]
+  },
+  "game/scripts/Sim/Match.Specials.cs": {
+   "lines": 280,
+   "members": [
+    "AbsorbsLeft",
+    "Age",
+    "Data",
+    "Dir",
+    "ExPair",
+    "HitsLeft",
+    "Kicks",
+    "Move",
+    "Owner",
+    "ProjectileChanged",
+    "ProjectileCount",
+    "Projectiles",
+    "Punches",
+    "Serial",
+    "SpecialStarted",
+    "TryCancel",
+    "TryStartSpecial"
+   ],
+   "owner": "Match",
+   "tests": [],
+   "types": [
+    "Match",
+    "Projectile",
+    "ProjectileEvent",
+    "ProjectileEventKind",
+    "SpecialEvent"
+   ]
+  },
+  "game/scripts/Sim/Match.cs": {
+   "lines": 491,
+   "members": [
+    "BodyHurtbox",
+    "Config",
+    "Fighters",
+    "FindNormal",
+    "Hit",
+    "KnockOut",
+    "KoFrame",
+    "P1",
+    "P2",
+    "Phase",
+    "QueueDamage",
+    "Reset",
+    "RoundOver",
+    "StateHash",
+    "Step",
+    "Tick",
+    "Winner",
+    "WorldFrame"
+   ],
+   "owner": "HitEvent",
+   "tests": [],
+   "types": [
+    "HitEvent",
+    "Match",
+    "MatchPhase"
+   ]
+  },
+  "game/scripts/Sim/MatchThrows.cs": {
+   "lines": 186,
+   "members": [
+    "FindThrow",
+    "Throw",
+    "ThrowPressed",
+    "Throwable"
+   ],
+   "owner": "Match",
+   "tests": [],
+   "types": [
+    "Match",
+    "ThrowEvent",
+    "ThrowOutcome"
+   ]
+  },
+  "game/scripts/Sim/MoveData.Air.cs": {
+   "lines": 14,
+   "members": [
+    "Air",
+    "LandingRecovery"
+   ],
+   "owner": "MoveData",
+   "tests": [],
+   "types": [
+    "MoveData"
+   ]
+  },
+  "game/scripts/Sim/MoveData.Impact.cs": {
+   "lines": 58,
+   "members": [
+    "Ex",
+    "MeterOnBlock",
+    "MeterOnHit",
+    "ReadImpact",
+    "Strength",
+    "StrengthOfButton"
+   ],
+   "owner": "HitStrength",
+   "tests": [],
+   "types": [
+    "HitStrength",
+    "MoveData"
+   ]
+  },
+  "game/scripts/Sim/MoveData.Specials.cs": {
+   "lines": 114,
+   "members": [
+    "CancelWindows",
+    "Covers",
+    "Invuln",
+    "InvulnAt",
+    "Projectile"
+   ],
+   "owner": "CancelWindow",
+   "tests": [],
+   "types": [
+    "CancelWindow",
+    "InvulnAgainst",
+    "InvulnWindow",
+    "MoveData",
+    "ProjectileData"
+   ]
+  },
+  "game/scripts/Sim/MoveData.cs": {
+   "lines": 78,
+   "members": [
+    "Active",
+    "AdvantageOnBlock",
+    "AdvantageOnHit",
+    "BlockPushback",
+    "Blockstun",
+    "BreakPushback",
+    "BreakWindow",
+    "Button",
+    "Buttons",
+    "Covers",
+    "Damage",
+    "DirectionMask",
+    "FirstActive",
+    "HitPushback",
+    "Hitboxes",
+    "Hitstun",
+    "Hurtboxes",
+    "Id",
+    "IsActive",
+    "IsNormal",
+    "IsThrow",
+    "Knockdown",
+    "LastActive",
+    "Low",
+    "NormalMatch",
+    "Recovery",
+    "Source",
+    "Startup",
+    "ThrowButtons",
+    "ThrowMatch",
+    "Throwboxes",
+    "TotalFrames"
+   ],
+   "owner": "Box",
+   "tests": [],
+   "types": [
+    "Box",
+    "MoveData",
+    "TimedBox"
+   ]
+  },
+  "game/scripts/Sim/MoveLoader.cs": {
+   "lines": 194,
+   "members": [
+    "KindOf",
+    "LoadDirectory",
+    "LoadFile",
+    "Parse"
+   ],
+   "owner": "MoveLoader",
+   "tests": [],
+   "types": [
+    "MoveLoader"
+   ]
+  },
+  "game/scripts/Sim/Run/AbilityPool.cs": {
+   "lines": 81,
+   "members": [
+    "Load",
+    "LoadFixtures",
+    "LoadRepo",
+    "Modifier",
+    "Modifiers",
+    "Notes",
+    "Special",
+    "Specials",
+    "Starters"
+   ],
+   "owner": "AbilityPool",
+   "tests": [],
+   "types": [
+    "AbilityPool"
+   ]
+  },
+  "game/scripts/Sim/Run/CopyRule.cs": {
+   "lines": 64,
+   "members": [
+    "Build",
+    "HighestUnevolvedLevel",
+    "MoveLevel",
+    "Target"
+   ],
+   "owner": "CopyRule",
+   "tests": [],
+   "types": [
+    "CopyRule",
+    "CopyTarget"
+   ]
+  },
+  "game/scripts/Sim/Run/MapGraph.cs": {
+   "lines": 172,
+   "members": [
+    "EndNodes",
+    "Find",
+    "Fingerprint",
+    "Has",
+    "HasRoute",
+    "Id",
+    "Name",
+    "Next",
+    "Node",
+    "Nodes",
+    "NodesInRow",
+    "Payload",
+    "PayloadInt",
+    "PayloadString",
+    "Previous",
+    "Routes",
+    "Rows",
+    "StartNodes"
+   ],
+   "owner": "MapGraph",
+   "tests": [],
+   "types": [
+    "MapGraph",
+    "MapNodeData",
+    "MapRoute"
+   ]
+  },
+  "game/scripts/Sim/Run/MapLoader.cs": {
+   "lines": 115,
+   "members": [
+    "Default",
+    "DefaultFile",
+    "Load",
+    "LoadFile",
+    "Parse",
+    "Path",
+    "SchemaVersion",
+    "Types"
+   ],
+   "owner": "FileMapSource",
+   "tests": [],
+   "types": [
+    "FileMapSource",
+    "IMapSource",
+    "MapLoader"
+   ]
+  },
+  "game/scripts/Sim/Run/ModifierData.cs": {
+   "lines": 64,
+   "members": [
+    "AppliesTo",
+    "CardFrames",
+    "CardPlain",
+    "Effects",
+    "Id",
+    "LoadDirectory",
+    "LoadFile",
+    "Locked",
+    "Name",
+    "Parse",
+    "Rarity",
+    "Requires",
+    "Source"
+   ],
+   "owner": "ModifierData",
+   "tests": [],
+   "types": [
+    "ModifierData",
+    "ModifierLoader"
+   ]
+  },
+  "game/scripts/Sim/Run/NodeScenes.cs": {
+   "lines": 174,
+   "members": [
+    "Default",
+    "DefaultFile",
+    "DefaultScene",
+    "FallbackFighter",
+    "Kind",
+    "LoadFile",
+    "Parse",
+    "Resolve",
+    "SchemaVersion"
+   ],
+   "owner": "Entry",
+   "tests": [],
+   "types": [
+    "Entry",
+    "INodeSceneResolver",
+    "NodeContext",
+    "NodeScene",
+    "NodeSceneTable"
+   ]
+  },
+  "game/scripts/Sim/Run/NodeTypes.cs": {
+   "lines": 71,
+   "members": [
+    "Check",
+    "Default",
+    "Duel",
+    "Find",
+    "Register",
+    "Types"
+   ],
+   "owner": "INodeType",
+   "tests": [],
+   "types": [
+    "INodeType",
+    "INodeTypeRegistry",
+    "NodeType",
+    "NodeTypeRegistry"
+   ]
+  },
+  "game/scripts/Sim/Run/RewardDraft.cs": {
+   "lines": 204,
+   "members": [
+    "Build",
+    "Describe",
+    "FrameDiff",
+    "FrameSummary",
+    "Offer",
+    "Pick",
+    "Picked"
+   ],
+   "owner": "RewardDraft",
+   "tests": [],
+   "types": [
+    "RewardDraft"
+   ]
+  },
+  "game/scripts/Sim/Run/RewardTypes.cs": {
+   "lines": 62,
+   "members": [
+    "Fail",
+    "NeedsTarget"
+   ],
+   "owner": "CardKind",
+   "tests": [],
+   "types": [
+    "CardKind",
+    "CardTarget",
+    "CardView",
+    "IRewardDraft",
+    "PickResult",
+    "RewardOffer"
+   ]
+  },
+  "game/scripts/Sim/Run/RunMap.cs": {
+   "lines": 158,
+   "members": [
+    "CanSelect",
+    "Complete",
+    "Current",
+    "CurrentNode",
+    "Done",
+    "Fail",
+    "Graph",
+    "InNode",
+    "IsFinished",
+    "IsVisited",
+    "NodeCompleted",
+    "NodeEntered",
+    "R1Problems",
+    "Reachable",
+    "Restore",
+    "Select",
+    "Snapshot",
+    "StateHash",
+    "Visited"
+   ],
+   "owner": "MapResult",
+   "tests": [],
+   "types": [
+    "MapResult",
+    "MapRules",
+    "RunMap",
+    "RunMapSnapshot"
+   ]
+  },
+  "game/scripts/Sim/Run/RunSession.cs": {
+   "lines": 133,
+   "members": [
+    "CompleteNode",
+    "Draft",
+    "Ended",
+    "Enter",
+    "Entered",
+    "IsOver",
+    "LoseFight",
+    "Map",
+    "Node",
+    "NodeCompleted",
+    "NodeEntered",
+    "Pool",
+    "Reachable",
+    "Run",
+    "RunEnded",
+    "Scenes",
+    "Seed",
+    "Start",
+    "StateHash",
+    "Step",
+    "Steps",
+    "WinFight",
+    "Won"
+   ],
+   "owner": "RunEnd",
+   "tests": [],
+   "types": [
+    "RunEnd",
+    "RunOutcome",
+    "RunSession"
+   ]
+  },
+  "game/scripts/Sim/Run/RunState.cs": {
+   "lines": 200,
+   "members": [
+    "AfterDuel",
+    "ApplyTo",
+    "Attach",
+    "BindHeal",
+    "CanAttach",
+    "CanLevelUp",
+    "Equip",
+    "Health",
+    "LevelUp",
+    "LevelledOrder",
+    "Map",
+    "MatchConfig",
+    "MaxHealth",
+    "NewRun",
+    "Owns",
+    "RestoreLevelledOrder",
+    "SetHealth",
+    "SetMap",
+    "StartMap",
+    "StateHash"
+   ],
+   "owner": "OwnedSpecial",
+   "tests": [],
+   "types": [
+    "OwnedSpecial",
+    "RunState"
+   ]
+  },
+  "game/scripts/Sim/SimConfig.Air.cs": {
+   "lines": 12,
+   "members": [
+    "AirLandingRecovery"
+   ],
+   "owner": "SimConfig",
+   "tests": [],
+   "types": [
+    "SimConfig"
+   ]
+  },
+  "game/scripts/Sim/SimConfig.Meter.cs": {
+   "lines": 46,
+   "members": [
+    "BurstFrames",
+    "BurstPressWindow",
+    "BurstPushback",
+    "CounterHitstop",
+    "ExCost",
+    "Hitstop",
+    "HitstopEnabled",
+    "HitstopHeavy",
+    "HitstopLight",
+    "HitstopMedium",
+    "MeterBar",
+    "MeterBars",
+    "MeterMax",
+    "MeterOnBlock",
+    "MeterOnHit",
+    "MeterOnTaken",
+    "ShakeFrames"
+   ],
+   "owner": "SimConfig",
+   "tests": [],
+   "types": [
+    "SimConfig"
+   ]
+  },
+  "game/scripts/Sim/SimConfig.Specials.cs": {
+   "lines": 16,
+   "members": [
+    "ExPressWindow",
+    "PrecisionBonusPct"
+   ],
+   "owner": "SimConfig",
+   "tests": [],
+   "types": [
+    "SimConfig"
+   ]
+  },
+  "game/scripts/Sim/SimConfig.cs": {
+   "lines": 112,
+   "members": [
+    "AirHurtbox",
+    "BackDashDistance",
+    "BlockPushback",
+    "BodyWidth",
+    "CounterHitDamagePct",
+    "CounterHitHitstun",
+    "CrouchHurtbox",
+    "DashDistance",
+    "DashFrames",
+    "DashStep",
+    "DebugStrikeDamage",
+    "Default",
+    "HitPushback",
+    "IdleHurtbox",
+    "JumpFrames",
+    "JumpHeight",
+    "JumpSpeedX",
+    "JumpY",
+    "KnockdownFrames",
+    "KoSlowDivisor",
+    "KoSlowFrames",
+    "MaxSeparation",
+    "ModelBackReach",
+    "ModelFrontReach",
+    "P1MaxHealth",
+    "P1StartHealth",
+    "P2MaxHealth",
+    "P2StartHealth",
+    "Scale",
+    "StageHalfWidth",
+    "StartOffset",
+    "ThrowPressWindow",
+    "TicksPerSecond",
+    "ViewWidth",
+    "WakeUpFrames",
+    "WalkSpeed"
+   ],
+   "owner": "SimConfig",
+   "tests": [],
+   "types": [
+    "SimConfig"
+   ]
+  },
+  "game/scripts/Sim/SpecialData.cs": {
+   "lines": 230,
+   "members": [
+    "Apply",
+    "Build",
+    "CardFrames",
+    "CardPlain",
+    "EvolutionFrames",
+    "EvolutionName",
+    "EvolutionPlain",
+    "ExCost",
+    "FillDefaults",
+    "HasEx",
+    "HasProperty",
+    "Id",
+    "Level1Json",
+    "Level2Step",
+    "LoadDirectory",
+    "LoadFile",
+    "Locked",
+    "MaxLevel",
+    "MulPct",
+    "Name",
+    "Parse",
+    "Rarity",
+    "Slot",
+    "Source",
+    "Starter"
+   ],
+   "owner": "Effects",
+   "tests": [],
+   "types": [
+    "Effects",
+    "SpecialData",
+    "SpecialLoader"
+   ]
+  },
+  "game/scripts/Story/StoryLibrary.cs": {
+   "lines": 90,
+   "members": [
+    "BindingLine",
+    "BindingLineId",
+    "Cards",
+    "DisplayName",
+    "FillText",
+    "FillTitle",
+    "Has",
+    "LoadDirectory",
+    "LoadFile",
+    "Parse"
+   ],
+   "owner": "StoryCardData",
+   "tests": [],
+   "types": [
+    "StoryCardData",
+    "StoryLibrary"
+   ]
+  },
+  "game/scripts/Ui/BrushStroke.cs": {
+   "lines": 20,
+   "members": [
+    "Ink",
+    "Thickness",
+    "_Draw",
+    "_Notification"
+   ],
+   "owner": "BrushStroke",
+   "tests": [],
+   "types": [
+    "BrushStroke"
+   ]
+  },
+  "game/scripts/Ui/DraftRewardSource.cs": {
+   "lines": 75,
+   "members": [
+    "BindingLine",
+    "LastResult",
+    "Offer",
+    "Pick"
+   ],
+   "owner": "DraftRewardSource",
+   "tests": [],
+   "types": [
+    "DraftRewardSource"
+   ]
+  },
+  "game/scripts/Ui/IMapView.cs": {
+   "lines": 97,
+   "members": [
+    "Add",
+    "Complete",
+    "Current",
+    "Grid",
+    "Nodes",
+    "Open",
+    "Route",
+    "Routes",
+    "Select",
+    "Selected"
+   ],
+   "owner": "IMapView",
+   "tests": [],
+   "types": [
+    "IMapView",
+    "MapNodeState",
+    "MapNodeView",
+    "MapRouteView",
+    "StubMapView"
+   ]
+  },
+  "game/scripts/Ui/IRewardSource.cs": {
+   "lines": 54,
+   "members": [
+    "BindingLine",
+    "Offer",
+    "Pick"
+   ],
+   "owner": "CardKind",
+   "tests": [],
+   "types": [
+    "CardKind",
+    "CardView",
+    "IRewardSource",
+    "IStorySource",
+    "RewardOffer",
+    "StubRewardSource",
+    "TargetView"
+   ]
+  },
+  "game/scripts/Ui/Kit/CornerOrnament.cs": {
+   "lines": 39,
+   "members": [
+    "Art",
+    "Corner",
+    "_Draw",
+    "_Notification",
+    "_Ready"
+   ],
+   "owner": "CornerOrnament",
+   "tests": [],
+   "types": [
+    "CornerOrnament",
+    "OrnamentCorner"
+   ]
+  },
+  "game/scripts/Ui/Kit/InputGlyphs.cs": {
+   "lines": 63,
+   "members": [
+    "Changed",
+    "Glyph",
+    "Last",
+    "Observe",
+    "Set",
+    "StickDeadzone"
+   ],
+   "owner": "InputDevice",
+   "tests": [],
+   "types": [
+    "InputDevice",
+    "InputGlyphs"
+   ]
+  },
+  "game/scripts/Ui/Kit/KeyChipFooter.cs": {
+   "lines": 61,
+   "members": [
+    "ChipTexts",
+    "Device",
+    "OnPaper",
+    "Pinned",
+    "SetHints",
+    "_EnterTree",
+    "_ExitTree",
+    "_Input",
+    "_Ready"
+   ],
+   "owner": "FooterDevice",
+   "tests": [],
+   "types": [
+    "FooterDevice",
+    "KeyChipFooter",
+    "KeyHint"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitBackdrop.cs": {
+   "lines": 25,
+   "members": [
+    "Art",
+    "Dim",
+    "_Ready"
+   ],
+   "owner": "KitBackdrop",
+   "tests": [],
+   "types": [
+    "KitBackdrop"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitBrushButton.cs": {
+   "lines": 78,
+   "members": [
+    "Effective",
+    "Kind",
+    "Preview",
+    "Refresh",
+    "StrokeArt",
+    "StrokeOff",
+    "StrokePressed",
+    "StrokeRed",
+    "StrokeRedFocus",
+    "StrokeVisible",
+    "_Notification",
+    "_Ready"
+   ],
+   "owner": "KitBrushButton",
+   "tests": [],
+   "types": [
+    "KitBrushButton",
+    "KitButtonKind"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitCard.cs": {
+   "lines": 84,
+   "members": [
+    "ActivatedEventHandler",
+    "CardDisabled",
+    "Effective",
+    "Preview",
+    "Refresh",
+    "Selected",
+    "SelectionArt",
+    "StrokeVisible",
+    "_GuiInput",
+    "_Notification",
+    "_Ready"
+   ],
+   "owner": "KitCard",
+   "tests": [],
+   "types": [
+    "KitCard"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitGallery.Proofs.cs": {
+   "lines": 79,
+   "members": [],
+   "owner": "KitGallery",
+   "tests": [],
+   "types": [
+    "KitGallery"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitGallery.cs": {
+   "lines": 227,
+   "members": [
+    "Audit",
+    "Design",
+    "ForceLayout",
+    "MinPx720",
+    "Page",
+    "PageCount",
+    "PageRoot",
+    "ShowPage",
+    "_Ready",
+    "_UnhandledKeyInput"
+   ],
+   "owner": "KitGallery",
+   "tests": [],
+   "types": [
+    "KitGallery"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitHeading.cs": {
+   "lines": 24,
+   "members": [
+    "Text",
+    "UnderlineArt",
+    "UnderlineWidth",
+    "_Ready"
+   ],
+   "owner": "KitHeading",
+   "tests": [],
+   "types": [
+    "KitHeading"
+   ]
+  },
+  "game/scripts/Ui/Kit/KitState.cs": {
+   "lines": 5,
+   "members": [],
+   "owner": "KitState",
+   "tests": [],
+   "types": [
+    "KitState"
+   ]
+  },
+  "game/scripts/Ui/Kit/PaperDialog.cs": {
+   "lines": 58,
+   "members": [
+    "CancelButton",
+    "CancelledEventHandler",
+    "ConfirmButton",
+    "ConfirmedEventHandler",
+    "Open",
+    "ShowDim",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "PaperDialog",
+   "tests": [],
+   "types": [
+    "PaperDialog"
+   ]
+  },
+  "game/scripts/Ui/Kit/PaperSheet.cs": {
+   "lines": 39,
+   "members": [
+    "Card",
+    "Content",
+    "Ornaments",
+    "_GetMinimumSize",
+    "_Ready"
+   ],
+   "owner": "PaperSheet",
+   "tests": [],
+   "types": [
+    "PaperSheet"
+   ]
+  },
+  "game/scripts/Ui/Kit/PaperStyleBox.cs": {
+   "lines": 114,
+   "members": [
+    "Grain",
+    "GrainOpacity",
+    "GrainRegion",
+    "GrainScale",
+    "Ink",
+    "InnerLine",
+    "InnerLineInset",
+    "InnerLineWidth",
+    "Noise",
+    "OutlineWidth",
+    "Paper",
+    "Seed",
+    "ShadowColor",
+    "ShadowOffset",
+    "TearAmplitude",
+    "TearStep",
+    "TornOutline",
+    "_Draw"
+   ],
+   "owner": "PaperStyleBox",
+   "tests": [],
+   "types": [
+    "PaperStyleBox"
+   ]
+  },
+  "game/scripts/Ui/MapLayout.cs": {
+   "lines": 41,
+   "members": [
+    "Compute",
+    "MaxNode",
+    "MinNode"
+   ],
+   "owner": "MapLayout",
+   "tests": [],
+   "types": [
+    "MapLayout",
+    "MapLayoutResult"
+   ]
+  },
+  "game/scripts/Ui/MapNode.cs": {
+   "lines": 73,
+   "members": [
+    "Bind",
+    "CursorOn",
+    "ElderShown",
+    "Hovered",
+    "NodeId",
+    "State",
+    "TypeText",
+    "YokaiText",
+    "_Ready"
+   ],
+   "owner": "MapNode",
+   "tests": [],
+   "types": [
+    "MapNode"
+   ]
+  },
+  "game/scripts/Ui/MapNodeStyle.cs": {
+   "lines": 16,
+   "members": [
+    "Color",
+    "Icon",
+    "IconTexture",
+    "Label",
+    "Type"
+   ],
+   "owner": "MapNodeStyle",
+   "tests": [],
+   "types": [
+    "MapNodeStyle"
+   ]
+  },
+  "game/scripts/Ui/MapNodeStyles.cs": {
+   "lines": 28,
+   "members": [
+    "Fallback",
+    "Look",
+    "Styles"
+   ],
+   "owner": "MapNodeLook",
+   "tests": [],
+   "types": [
+    "MapNodeLook",
+    "MapNodeStyles"
+   ]
+  },
+  "game/scripts/Ui/MapRoutes.cs": {
+   "lines": 29,
+   "members": [
+    "SetLines",
+    "_Draw"
+   ],
+   "owner": "MapRoutes",
+   "tests": [],
+   "types": [
+    "MapRoutes",
+    "RouteKind"
+   ]
+  },
+  "game/scripts/Ui/MapScreen.cs": {
+   "lines": 148,
+   "members": [
+    "Board",
+    "Confirm",
+    "CursorId",
+    "Locked",
+    "Move",
+    "NodeChosenEventHandler",
+    "NodeFor",
+    "NodeScene",
+    "Nodes",
+    "ReachableIds",
+    "RectOf",
+    "Refresh",
+    "Routes",
+    "SetView",
+    "Styles",
+    "View",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "MapScreen",
+   "tests": [],
+   "types": [
+    "MapScreen"
+   ]
+  },
+  "game/scripts/Ui/Menus/InkSlider.cs": {
+   "lines": 41,
+   "members": [
+    "_Draw",
+    "_Ready"
+   ],
+   "owner": "InkSlider",
+   "tests": [],
+   "types": [
+    "InkSlider"
+   ]
+  },
+  "game/scripts/Ui/Menus/LevelPips.cs": {
+   "lines": 28,
+   "members": [
+    "Level",
+    "Max",
+    "_Draw",
+    "_Notification"
+   ],
+   "owner": "LevelPips",
+   "tests": [],
+   "types": [
+    "LevelPips"
+   ]
+  },
+  "game/scripts/Ui/Menus/MenuInput.cs": {
+   "lines": 90,
+   "members": [
+    "Active",
+    "Back",
+    "Engage",
+    "EnsurePadConfirm",
+    "FrameData",
+    "Neighbours",
+    "Pause",
+    "Release",
+    "Ring",
+    "Scheme",
+    "Tab",
+    "WrapVertical"
+   ],
+   "owner": "FocusLock",
+   "tests": [],
+   "types": [
+    "FocusLock",
+    "MenuInput"
+   ]
+  },
+  "game/scripts/Ui/Menus/MenuMockups.cs": {
+   "lines": 137,
+   "members": [
+    "Current",
+    "Pause",
+    "Run",
+    "Show",
+    "StripVisible",
+    "Title",
+    "WithFight",
+    "_ExitTree",
+    "_Process",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "MenuMockups",
+   "tests": [],
+   "types": [
+    "MenuMockups",
+    "MockScreen"
+   ]
+  },
+  "game/scripts/Ui/Menus/MenuSettings.cs": {
+   "lines": 136,
+   "members": [
+    "Attach",
+    "Changed",
+    "Current",
+    "Detach",
+    "MakeCue",
+    "Master",
+    "MasterBus",
+    "Music",
+    "Muted",
+    "Reset",
+    "Scheme",
+    "SetMaster",
+    "SetMusic",
+    "SetMuted",
+    "SetScheme",
+    "SetSfx",
+    "Sfx",
+    "Store"
+   ],
+   "owner": "Cue",
+   "tests": [],
+   "types": [
+    "Cue",
+    "MenuSettings"
+   ]
+  },
+  "game/scripts/Ui/Menus/MoveListPanel.cs": {
+   "lines": 140,
+   "members": [
+    "BackRequested",
+    "BaseRowCount",
+    "Bind",
+    "FrameDataVisible",
+    "FramesShownOn",
+    "InputOf",
+    "SlotCards",
+    "ToggleFrameData",
+    "ToggleScheme",
+    "View",
+    "_Input",
+    "_Ready"
+   ],
+   "owner": "MoveListPanel",
+   "tests": [],
+   "types": [
+    "MoveListPanel"
+   ]
+  },
+  "game/scripts/Ui/Menus/MoveListSource.cs": {
+   "lines": 147,
+   "members": [
+    "AirPunchId",
+    "Build",
+    "FrameLine",
+    "GroupBreaksAfter",
+    "InputFor",
+    "NormalIds",
+    "Plain",
+    "ThrowId",
+    "WalkSeconds"
+   ],
+   "owner": "MoveListSource",
+   "tests": [],
+   "types": [
+    "MoveListSource",
+    "MoveListView",
+    "MoveRow",
+    "SlotRow"
+   ]
+  },
+  "game/scripts/Ui/Menus/MoveSlotCard.cs": {
+   "lines": 38,
+   "members": [
+    "Bind",
+    "Grey"
+   ],
+   "owner": "MoveSlotCard",
+   "tests": [],
+   "types": [
+    "MoveSlotCard"
+   ]
+  },
+  "game/scripts/Ui/Menus/PauseMenu.cs": {
+   "lines": 188,
+   "members": [
+    "Bind",
+    "Close",
+    "ConfirmBox",
+    "FreezeTree",
+    "IsOpen",
+    "MoveList",
+    "MoveListButton",
+    "Open",
+    "OpenMoveList",
+    "OpenSettings",
+    "QuitButton",
+    "RestartButton",
+    "Resume",
+    "ResumeButton",
+    "SetRunSummary",
+    "Settings",
+    "SettingsButton",
+    "SettingsRequested",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "PauseFighterSummary",
+   "tests": [],
+   "types": [
+    "PauseFighterSummary",
+    "PauseMenu",
+    "PauseRunSummary",
+    "PauseSlotSummary"
+   ]
+  },
+  "game/scripts/Ui/Menus/SettingsPanel.cs": {
+   "lines": 251,
+   "members": [
+    "BackRequested",
+    "KataButton",
+    "KataLine",
+    "KihonButton",
+    "KihonLine",
+    "MuteButton",
+    "PlayerOf",
+    "PreviewOf",
+    "SchemeLineLabel",
+    "SheetSafeArea",
+    "ShowTab",
+    "SliderOf",
+    "Tab",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "SettingsPanel",
+   "tests": [],
+   "types": [
+    "SettingsPanel",
+    "SettingsTab"
+   ]
+  },
+  "game/scripts/Ui/Menus/TitleMenu.cs": {
+   "lines": 168,
+   "members": [
+    "ButtonOf",
+    "CloseSettings",
+    "ContinueButton",
+    "DetailBodyLabel",
+    "DetailHeadingLabel",
+    "DisabledReason",
+    "HasSavedRun",
+    "Open",
+    "OpenSettings",
+    "PracticeButton",
+    "QuitButton",
+    "QuitRequested",
+    "SetEntry",
+    "SetSavedRun",
+    "Settings",
+    "SettingsBackRequested",
+    "SettingsButton",
+    "StartButton",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "SavedRunSummary",
+   "tests": [],
+   "types": [
+    "SavedRunSummary",
+    "TitleMenu"
+   ]
+  },
+  "game/scripts/Ui/Paint.cs": {
+   "lines": 35,
+   "members": [
+    "Brush",
+    "Seal",
+    "Talisman"
+   ],
+   "owner": "Paint",
+   "tests": [],
+   "types": [
+    "Paint"
+   ]
+  },
+  "game/scripts/Ui/PauseMoveArt.cs": {
+   "lines": 15,
+   "members": [
+    "ForId"
+   ],
+   "owner": "PauseMoveArt",
+   "tests": [],
+   "types": [
+    "PauseMoveArt"
+   ]
+  },
+  "game/scripts/Ui/RewardArt.cs": {
+   "lines": 14,
+   "members": [
+    "ForId"
+   ],
+   "owner": "RewardArt",
+   "tests": [],
+   "types": [
+    "RewardArt"
+   ]
+  },
+  "game/scripts/Ui/RewardCard.cs": {
+   "lines": 81,
+   "members": [
+    "Bind",
+    "BodyHeight",
+    "BodyHeightWithFrames",
+    "Clicked",
+    "Indigo",
+    "RaiseWhenSelected",
+    "SetState",
+    "_Ready"
+   ],
+   "owner": "RewardCard",
+   "tests": [],
+   "types": [
+    "RewardCard"
+   ]
+  },
+  "game/scripts/Ui/RewardScreen.cs": {
+   "lines": 191,
+   "members": [
+    "Back",
+    "CardCursor",
+    "Confirm",
+    "Dismiss",
+    "FrameDataVisible",
+    "Move",
+    "Picked",
+    "Present",
+    "Showing",
+    "Step",
+    "TargetCursor",
+    "ToggleFrameData",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "RewardScreen",
+   "tests": [],
+   "types": [
+    "RewardScreen",
+    "RewardStep"
+   ]
+  },
+  "game/scripts/Ui/RunMapView.cs": {
+   "lines": 45,
+   "members": [
+    "Nodes",
+    "Routes",
+    "Select"
+   ],
+   "owner": "RunMapView",
+   "tests": [],
+   "types": [
+    "RunMapView"
+   ]
+  },
+  "game/scripts/Ui/SealStamp.cs": {
+   "lines": 20,
+   "members": [
+    "Fill",
+    "Glyph",
+    "_Draw",
+    "_Notification"
+   ],
+   "owner": "SealStamp",
+   "tests": [],
+   "types": [
+    "SealStamp"
+   ]
+  },
+  "game/scripts/Ui/StoryCard.cs": {
+   "lines": 75,
+   "members": [
+    "Continue",
+    "Dismiss",
+    "Display",
+    "Finished",
+    "Showing",
+    "Text",
+    "_Ready",
+    "_UnhandledInput"
+   ],
+   "owner": "StoryCard",
+   "tests": [],
+   "types": [
+    "StoryCard"
+   ]
+  },
+  "game/scripts/Ui/TalismanPanel.cs": {
+   "lines": 30,
+   "members": [
+    "Border",
+    "Highlight",
+    "Paper",
+    "_Draw",
+    "_Notification"
+   ],
+   "owner": "TalismanPanel",
+   "tests": [],
+   "types": [
+    "TalismanPanel"
+   ]
+  },
+  "game/scripts/Ui/TargetCard.cs": {
+   "lines": 69,
+   "members": [
+    "Bind",
+    "Clicked",
+    "Grey",
+    "RaiseWhenSelected",
+    "SetSelected",
+    "_Ready"
+   ],
+   "owner": "TargetCard",
+   "tests": [],
+   "types": [
+    "TargetCard"
+   ]
+  },
+  "game/scripts/Ui/TitleBackdrop.cs": {
+   "lines": 54,
+   "members": [
+    "_Draw",
+    "_Notification"
+   ],
+   "owner": "TitleBackdrop",
+   "tests": [],
+   "types": [
+    "TitleBackdrop"
+   ]
+  },
+  "game/scripts/Ui/UiFind.cs": {
+   "lines": 11,
+   "members": [],
+   "owner": "UiFind",
+   "tests": [],
+   "types": [
+    "UiFind"
+   ]
+  },
+  "game/scripts/Ui/YokaiMask.cs": {
+   "lines": 197,
+   "members": [
+    "Art",
+    "ArtDir",
+    "ArtPath",
+    "CordLength",
+    "Glow",
+    "Lit",
+    "Phase",
+    "SwayDegrees",
+    "UsesGeneratedArt",
+    "Yokai",
+    "_Draw",
+    "_Notification",
+    "_Process",
+    "_Ready"
+   ],
+   "owner": "YokaiMask",
+   "tests": [],
+   "types": [
+    "YokaiMask"
+   ]
+  },
+  "game/tests/AiHarnessMain.cs": {
+   "lines": 55,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "AiHarnessMain",
+   "tests": [],
+   "types": [
+    "AiHarnessMain"
+   ]
+  },
+  "game/tests/AiTests.cs": {
+   "lines": 222,
+   "members": [
+    "Ai_IsDeterministic",
+    "Ai_NeverSeesInputBeforeItShows",
+    "FixtureProfiles_MovesExistInFixtureKit",
+    "Habit_IsGenericTriggerActionChance",
+    "Habit_WakeUpJumpIsVisibleAndRepeatable",
+    "Profiles_LoadFromData",
+    "Reaction_FramesFromDataSetResponseTime",
+    "Scene_P2IsAiByDefaultAndSwaps",
+    "Temperaments_PlayDifferently",
+    "View_HasNoInputOrMatchAccess"
+   ],
+   "owner": "AiTests",
+   "tests": [
+    "AiTests.Profiles_LoadFromData",
+    "AiTests.FixtureProfiles_MovesExistInFixtureKit",
+    "AiTests.View_HasNoInputOrMatchAccess",
+    "AiTests.Ai_NeverSeesInputBeforeItShows",
+    "AiTests.Reaction_FramesFromDataSetResponseTime",
+    "AiTests.Habit_WakeUpJumpIsVisibleAndRepeatable",
+    "AiTests.Habit_IsGenericTriggerActionChance",
+    "AiTests.Ai_IsDeterministic",
+    "AiTests.Temperaments_PlayDifferently",
+    "AiTests.Scene_P2IsAiByDefaultAndSwaps"
+   ],
+   "types": [
+    "AiTests"
+   ]
+  },
+  "game/tests/AirNormalTests.cs": {
+   "lines": 302,
+   "members": [
+    "Air_Deterministic_RandomRawInputs",
+    "Air_EveryButtonGivesAnAirNormal",
+    "Air_ExplicitSlotOnlyWhileAirborne",
+    "Air_HitsAndIsBlockedStandingOrCrouching_WithHitstopAndMeter",
+    "Air_OnePerJump",
+    "Air_PressInAJumpGivesTheAirNormal_ArcCarriesOn",
+    "Air_TouchdownEndsTheMove_LandingRecovery",
+    "Fixtures_LoadAsAirNormals",
+    "Ground_ButtonGivesGroundNormal_UpPlusButtonToo",
+    "Landing_IsThrowable_NotGuarding",
+    "Loader_ButtonsList",
+    "Loader_RejectsLandingRecoveryWithoutAir",
+    "Overlay_DrawsTheAirNormalsBoxesOnTheArc"
+   ],
+   "owner": "AirNormalTests",
+   "tests": [
+    "AirNormalTests.Fixtures_LoadAsAirNormals",
+    "AirNormalTests.Loader_RejectsLandingRecoveryWithoutAir",
+    "AirNormalTests.Ground_ButtonGivesGroundNormal_UpPlusButtonToo",
+    "AirNormalTests.Air_PressInAJumpGivesTheAirNormal_ArcCarriesOn",
+    "AirNormalTests.Air_EveryButtonGivesAnAirNormal",
+    "AirNormalTests.Loader_ButtonsList",
+    "AirNormalTests.Air_ExplicitSlotOnlyWhileAirborne",
+    "AirNormalTests.Air_OnePerJump",
+    "AirNormalTests.Air_TouchdownEndsTheMove_LandingRecovery",
+    "AirNormalTests.Air_HitsAndIsBlockedStandingOrCrouching_WithHitstopAndMeter",
+    "AirNormalTests.Landing_IsThrowable_NotGuarding",
+    "AirNormalTests.Overlay_DrawsTheAirNormalsBoxesOnTheArc",
+    "AirNormalTests.Air_Deterministic_RandomRawInputs"
+   ],
+   "types": [
+    "AirNormalTests"
+   ]
+  },
+  "game/tests/BoneProbe.cs": {
+   "lines": 52,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "BoneProbe",
+   "tests": [],
+   "types": [
+    "BoneProbe"
+   ]
+  },
+  "game/tests/BootFlowTests.cs": {
+   "lines": 347,
+   "members": [
+    "Boot_ShowsTitle_NoFightInTheTree",
+    "DirectFightArg_Parses",
+    "DirectFight_SkipsTheMenus",
+    "MainScene_IsTheBootScene",
+    "MenuPath_DoesNotPerturbTheSim",
+    "ReturnToTitle_FreesTheFight_AndANewRunStartsClean",
+    "Router_BootsToTitle_StartGoesThroughControlSelectToFight",
+    "Router_ContinueAndPractice_DisabledWithReason_UntilEnabled",
+    "Router_Scheme_DirectFight_ReturnToTitle",
+    "Router_SettingsAndBack_Quit",
+    "SettingsSheetScheme_IsTheControlSelectScheme",
+    "StandaloneFightScene_RequestTitle_IsHarmless",
+    "Start_ControlSelect_DefaultKihon_AndBack",
+    "Start_ControlSelect_Kata_IsCarriedIntoEveryDuel",
+    "Title_Settings_OpensAndBacksOut_Quit_Quits"
+   ],
+   "owner": "BootFlowTests",
+   "tests": [
+    "BootFlowTests.Router_BootsToTitle_StartGoesThroughControlSelectToFight",
+    "BootFlowTests.Router_SettingsAndBack_Quit",
+    "BootFlowTests.Router_ContinueAndPractice_DisabledWithReason_UntilEnabled",
+    "BootFlowTests.Router_Scheme_DirectFight_ReturnToTitle",
+    "BootFlowTests.DirectFightArg_Parses",
+    "BootFlowTests.MainScene_IsTheBootScene",
+    "BootFlowTests.Boot_ShowsTitle_NoFightInTheTree",
+    "BootFlowTests.Title_Settings_OpensAndBacksOut_Quit_Quits",
+    "BootFlowTests.Start_ControlSelect_Kata_IsCarriedIntoEveryDuel",
+    "BootFlowTests.Start_ControlSelect_DefaultKihon_AndBack",
+    "BootFlowTests.SettingsSheetScheme_IsTheControlSelectScheme",
+    "BootFlowTests.ReturnToTitle_FreesTheFight_AndANewRunStartsClean",
+    "BootFlowTests.StandaloneFightScene_RequestTitle_IsHarmless",
+    "BootFlowTests.DirectFight_SkipsTheMenus",
+    "BootFlowTests.MenuPath_DoesNotPerturbTheSim"
+   ],
+   "types": [
+    "BootFlowTests"
+   ]
+  },
+  "game/tests/BootScreenLayoutTests.cs": {
+   "lines": 123,
+   "members": [
+    "BootScreens_RealCopyFitsDesignCanvas",
+    "ControlSelect_ReferenceAndShortcutsThroughRealInput",
+    "TitleReasons_ScrollShowsLiveReasonsWithoutFocus_AndHidesWhenAvailable"
+   ],
+   "owner": "BootScreenLayoutTests",
+   "tests": [
+    "BootScreenLayoutTests.TitleReasons_ScrollShowsLiveReasonsWithoutFocus_AndHidesWhenAvailable",
+    "BootScreenLayoutTests.BootScreens_RealCopyFitsDesignCanvas",
+    "BootScreenLayoutTests.ControlSelect_ReferenceAndShortcutsThroughRealInput"
+   ],
+   "types": [
+    "BootScreenLayoutTests"
+   ]
+  },
+  "game/tests/CameraTests.cs": {
+   "lines": 118,
+   "members": [
+    "Camera_BothCornersByWalking",
+    "Camera_BothModelsInView_5000RandomTicks",
+    "Camera_MaxSeparationFitsBothBackReaches",
+    "Camera_ReachCoversBothCorners_EitherFacing"
+   ],
+   "owner": "CameraTests",
+   "tests": [
+    "CameraTests.Camera_ReachCoversBothCorners_EitherFacing",
+    "CameraTests.Camera_BothCornersByWalking",
+    "CameraTests.Camera_MaxSeparationFitsBothBackReaches",
+    "CameraTests.Camera_BothModelsInView_5000RandomTicks"
+   ],
+   "types": [
+    "CameraTests"
+   ]
+  },
+  "game/tests/ContentPathsTests.cs": {
+   "lines": 63,
+   "members": [
+    "EditorLayoutIsTheRepo",
+    "ReleaseLayoutFindsDataNextToTheExe"
+   ],
+   "owner": "ContentPathsTests",
+   "tests": [
+    "ContentPathsTests.EditorLayoutIsTheRepo",
+    "ContentPathsTests.ReleaseLayoutFindsDataNextToTheExe"
+   ],
+   "types": [
+    "ContentPathsTests"
+   ]
+  },
+  "game/tests/CopyRuleTests.cs": {
+   "lines": 363,
+   "members": [
+    "AskingChangesNothingAndFollowsTheRun",
+    "CopyBelowLevel3UsesRyosLevelExactly",
+    "CopyIsAtRyosLevelWithoutHisModifier",
+    "CopyOfAnEvolvedSpecialHasNoEvolution",
+    "DraftingAnOwnedSpecialCountsAsLevellingIt",
+    "FullTieGoesToTheLowerSlot",
+    "HashDependsOnRelativeOrderOnly",
+    "HigherLevelBeatsAMoreRecentLevelUp",
+    "HighestLevelSpecialIsTheTarget",
+    "LevelUpOrderIsInTheStateHash",
+    "NoSpecialInAnySlotMeansNoTarget",
+    "ReplacedSpecialNoLongerCounts",
+    "ReplacementLevelsFromScratch",
+    "RestoreLevelledOrderRebuildsTheSavedRun",
+    "RestoreLevelledOrderRejectsWhatTheSlotsCantHold",
+    "RestoredHugeValuesAreStoredAsRanks",
+    "TieGoesToTheMostRecentlyLevelled"
+   ],
+   "owner": "CopyRuleTests",
+   "tests": [
+    "CopyRuleTests.HighestLevelSpecialIsTheTarget",
+    "CopyRuleTests.HigherLevelBeatsAMoreRecentLevelUp",
+    "CopyRuleTests.NoSpecialInAnySlotMeansNoTarget",
+    "CopyRuleTests.TieGoesToTheMostRecentlyLevelled",
+    "CopyRuleTests.DraftingAnOwnedSpecialCountsAsLevellingIt",
+    "CopyRuleTests.FullTieGoesToTheLowerSlot",
+    "CopyRuleTests.ReplacedSpecialNoLongerCounts",
+    "CopyRuleTests.ReplacementLevelsFromScratch",
+    "CopyRuleTests.CopyIsAtRyosLevelWithoutHisModifier",
+    "CopyRuleTests.CopyOfAnEvolvedSpecialHasNoEvolution",
+    "CopyRuleTests.CopyBelowLevel3UsesRyosLevelExactly",
+    "CopyRuleTests.AskingChangesNothingAndFollowsTheRun",
+    "CopyRuleTests.LevelUpOrderIsInTheStateHash",
+    "CopyRuleTests.HashDependsOnRelativeOrderOnly",
+    "CopyRuleTests.RestoreLevelledOrderRebuildsTheSavedRun",
+    "CopyRuleTests.RestoreLevelledOrderRejectsWhatTheSlotsCantHold",
+    "CopyRuleTests.RestoredHugeValuesAreStoredAsRanks"
+   ],
+   "types": [
+    "CopyRuleTests"
+   ]
+  },
+  "game/tests/DebugOverlayTests.cs": {
+   "lines": 157,
+   "members": [
+    "Boxes_MatchFixtureDataEveryFrame_BothFacings",
+    "Boxes_MirrorByFacing_HandChecked",
+    "Boxes_NoneHittableWhileKnockedDown",
+    "FrameStep_OneTickPerPressThroughClock",
+    "FrameStep_RequestWhileRunningPausesWithoutStepping",
+    "Scene_OverlayKeysAndFrameStep"
+   ],
+   "owner": "DebugOverlayTests",
+   "tests": [
+    "DebugOverlayTests.Boxes_MatchFixtureDataEveryFrame_BothFacings",
+    "DebugOverlayTests.Boxes_MirrorByFacing_HandChecked",
+    "DebugOverlayTests.Boxes_NoneHittableWhileKnockedDown",
+    "DebugOverlayTests.FrameStep_OneTickPerPressThroughClock",
+    "DebugOverlayTests.FrameStep_RequestWhileRunningPausesWithoutStepping",
+    "DebugOverlayTests.Scene_OverlayKeysAndFrameStep"
+   ],
+   "types": [
+    "DebugOverlayTests"
+   ]
+  },
+  "game/tests/DemoFlowTests.cs": {
+   "lines": 286,
+   "members": [
+    "Boot_IsTheFirstFightOnAFreshRun",
+    "DebugMenu_SwitchesTemperament",
+    "DemoComplete_KeepsThePlaceholderWithoutACard",
+    "DemoComplete_ShowsTheStoryCard",
+    "HealthCarry_CapsAt1000",
+    "Loss_LoseScreen_RestartGivesAFreshRun",
+    "RematchLoss_RestartDropsThePick",
+    "RematchWin_DemoComplete_Restart",
+    "RestartMidDraft_ClosesTheScreens",
+    "RunSeed_NewPerRunUnlessPinned",
+    "Win_BindingRewardRematch_ForEachCardKind"
+   ],
+   "owner": "DemoFlowTests",
+   "tests": [
+    "DemoFlowTests.Boot_IsTheFirstFightOnAFreshRun",
+    "DemoFlowTests.Win_BindingRewardRematch_ForEachCardKind",
+    "DemoFlowTests.HealthCarry_CapsAt1000",
+    "DemoFlowTests.Loss_LoseScreen_RestartGivesAFreshRun",
+    "DemoFlowTests.RematchLoss_RestartDropsThePick",
+    "DemoFlowTests.RematchWin_DemoComplete_Restart",
+    "DemoFlowTests.RestartMidDraft_ClosesTheScreens",
+    "DemoFlowTests.DebugMenu_SwitchesTemperament",
+    "DemoFlowTests.RunSeed_NewPerRunUnlessPinned",
+    "DemoFlowTests.DemoComplete_ShowsTheStoryCard",
+    "DemoFlowTests.DemoComplete_KeepsThePlaceholderWithoutACard"
+   ],
+   "types": [
+    "DemoFlowTests"
+   ]
+  },
+  "game/tests/EditableSceneTests.cs": {
+   "lines": 95,
+   "members": [
+    "CameraRig_FovFromSceneMatchesF4_AndFollowsTheSim",
+    "FightScene_InstancesStageCameraRigAndBothFighterSlots",
+    "FighterScenes_AreManualAndKitsuneHasNinePlacedTails",
+    "KitsuneTails_FollowTheHips"
+   ],
+   "owner": "EditableSceneTests",
+   "tests": [
+    "EditableSceneTests.FightScene_InstancesStageCameraRigAndBothFighterSlots",
+    "EditableSceneTests.CameraRig_FovFromSceneMatchesF4_AndFollowsTheSim",
+    "EditableSceneTests.FighterScenes_AreManualAndKitsuneHasNinePlacedTails",
+    "EditableSceneTests.KitsuneTails_FollowTheHips"
+   ],
+   "types": [
+    "EditableSceneTests"
+   ]
+  },
+  "game/tests/FightHudTests.cs": {
+   "lines": 160,
+   "members": [
+    "FloatingHud_StaysInTopStrip_AndTextScalesTo720",
+    "Health_FullDamagedZero_AndMeter_EmptyPartialFull_BurstReadySpent",
+    "JumpEnvelope_ClearsFloatingHud_AtBothCornersAndMidStage",
+    "OpponentIdentity_PortraitAndLongestNames",
+    "ResultCards_ClearEveryHudControl"
+   ],
+   "owner": "FightHudTests",
+   "tests": [
+    "FightHudTests.Health_FullDamagedZero_AndMeter_EmptyPartialFull_BurstReadySpent",
+    "FightHudTests.OpponentIdentity_PortraitAndLongestNames",
+    "FightHudTests.JumpEnvelope_ClearsFloatingHud_AtBothCornersAndMidStage",
+    "FightHudTests.FloatingHud_StaysInTopStrip_AndTextScalesTo720",
+    "FightHudTests.ResultCards_ClearEveryHudControl"
+   ],
+   "types": [
+    "FightHudTests"
+   ]
+  },
+  "game/tests/FightLoopTests.cs": {
+   "lines": 263,
+   "members": [
+    "Bounds_CornerHoldsAndPushesOpponentOut",
+    "Bounds_ScreenWallsStopWalkingApart",
+    "Clock_HitchDropsTicksInsteadOfSpiralling",
+    "Clock_SixtyTicksPerSecondAtAnyRenderRate",
+    "Determinism_SameInputsSameStateEveryTick",
+    "Facing_AlwaysFaceEachOther_RandomInputs",
+    "Facing_SwitchesWhenSidesSwap",
+    "Ko_DoubleKoIsADraw",
+    "Ko_EndsRoundAfterHalfSpeedSlowdown",
+    "Ko_ResetRestoresInitialState",
+    "Scene_LoseScreenRestartResetsFight",
+    "Scene_RunsKoAndResetHeadless",
+    "Walk_CrossesScreenInAboutTwoAndAHalfSeconds"
+   ],
+   "owner": "FightLoopTests",
+   "tests": [
+    "FightLoopTests.Clock_SixtyTicksPerSecondAtAnyRenderRate",
+    "FightLoopTests.Clock_HitchDropsTicksInsteadOfSpiralling",
+    "FightLoopTests.Facing_AlwaysFaceEachOther_RandomInputs",
+    "FightLoopTests.Facing_SwitchesWhenSidesSwap",
+    "FightLoopTests.Bounds_CornerHoldsAndPushesOpponentOut",
+    "FightLoopTests.Bounds_ScreenWallsStopWalkingApart",
+    "FightLoopTests.Walk_CrossesScreenInAboutTwoAndAHalfSeconds",
+    "FightLoopTests.Ko_EndsRoundAfterHalfSpeedSlowdown",
+    "FightLoopTests.Ko_ResetRestoresInitialState",
+    "FightLoopTests.Ko_DoubleKoIsADraw",
+    "FightLoopTests.Determinism_SameInputsSameStateEveryTick",
+    "FightLoopTests.Scene_RunsKoAndResetHeadless",
+    "FightLoopTests.Scene_LoseScreenRestartResetsFight"
+   ],
+   "types": [
+    "FightLoopTests"
+   ]
+  },
+  "game/tests/FlowCapture.cs": {
+   "lines": 98,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "FlowCapture",
+   "tests": [],
+   "types": [
+    "FlowCapture"
+   ]
+  },
+  "game/tests/HitboxCapture.cs": {
+   "lines": 92,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "HitboxCapture",
+   "tests": [],
+   "types": [
+    "HitboxCapture"
+   ]
+  },
+  "game/tests/HudCapture.cs": {
+   "lines": 38,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "HudCapture",
+   "tests": [],
+   "types": [
+    "HudCapture"
+   ]
+  },
+  "game/tests/InputParserTests.cs": {
+   "lines": 278,
+   "members": [
+    "Buffer_HeldTicksForHoldButtons",
+    "Charge_BackForwardAndDownUp",
+    "CommandBuffer_WaitsThenExpiresAndConsumesOnce",
+    "Determinism_RandomInputsParseIdentically",
+    "Devices_KeyboardAndPadMapToFighterInput",
+    "Facing_MotionsFlipWhenSidesSwitch",
+    "Facing_SwitchMidMotionUsesFacingAtPress",
+    "Lenience_DiagonalsAndRolls",
+    "Motions_EachK1MotionRecognised_BothFacings",
+    "Motions_HeldStepsAndRealisticSpeed",
+    "Numpad_SocdAndRoundTrip",
+    "Priority_ButtonsAndMotions",
+    "Record",
+    "Window_IncompleteOrWrongOrderIsNormal",
+    "Window_MotionAtEdgeAcceptedOneTickLateRejected"
+   ],
+   "owner": "InputParserTests",
+   "tests": [
+    "InputParserTests.Motions_EachK1MotionRecognised_BothFacings",
+    "InputParserTests.Motions_HeldStepsAndRealisticSpeed",
+    "InputParserTests.Window_MotionAtEdgeAcceptedOneTickLateRejected",
+    "InputParserTests.Window_IncompleteOrWrongOrderIsNormal",
+    "InputParserTests.Facing_MotionsFlipWhenSidesSwitch",
+    "InputParserTests.Facing_SwitchMidMotionUsesFacingAtPress",
+    "InputParserTests.Priority_ButtonsAndMotions",
+    "InputParserTests.Lenience_DiagonalsAndRolls",
+    "InputParserTests.Charge_BackForwardAndDownUp",
+    "InputParserTests.Buffer_HeldTicksForHoldButtons",
+    "InputParserTests.CommandBuffer_WaitsThenExpiresAndConsumesOnce",
+    "InputParserTests.Numpad_SocdAndRoundTrip",
+    "InputParserTests.Determinism_RandomInputsParseIdentically",
+    "InputParserTests.Devices_KeyboardAndPadMapToFighterInput"
+   ],
+   "types": [
+    "InputParserTests"
+   ]
+  },
+  "game/tests/KihonTests.cs": {
+   "lines": 413,
+   "members": [
+    "Burst_ThreePunchesWorkInBothSchemes",
+    "Determinism_KihonReplaysExactly",
+    "Ex_SpecialPlusOneButton_TwoTicksLeniency_MeterRules",
+    "FightScene_DefaultsToKihon_F4TogglesP1",
+    "K3_MotionCommandsIdenticalInBothSchemes_ExceptPrecision",
+    "K3_NormalsCombosThrowsIdenticalInBothSchemes_AndSwitchingHasNoOtherEffect",
+    "Match_EmptySlotGivesTheButtonsNormal",
+    "Match_KihonDealsFullDamage_KataGetsPrecision",
+    "Match_KihonMotionFiresItsSlot_SameTickSpecialWins_MotionEx",
+    "Match_SpecialPlusDirectionFiresSlotsAtoD_BothSides",
+    "Parser_KihonAcceptsMotionsAt100_KataIgnoresSpecial",
+    "Parser_SameTickSpecialBeatsMotion",
+    "Parser_SpecialPlusDirectionPicksSlot_BothFacings",
+    "Switching_ChangesParsingOnly_KeepsPendingAndSurvivesReset",
+    "Throw_LpLkWorksInBothSchemes_AndBeatsKihonEx"
+   ],
+   "owner": "KihonTests",
+   "tests": [
+    "KihonTests.Parser_SpecialPlusDirectionPicksSlot_BothFacings",
+    "KihonTests.Parser_KihonAcceptsMotionsAt100_KataIgnoresSpecial",
+    "KihonTests.Parser_SameTickSpecialBeatsMotion",
+    "KihonTests.K3_MotionCommandsIdenticalInBothSchemes_ExceptPrecision",
+    "KihonTests.Match_SpecialPlusDirectionFiresSlotsAtoD_BothSides",
+    "KihonTests.Match_KihonDealsFullDamage_KataGetsPrecision",
+    "KihonTests.Match_KihonMotionFiresItsSlot_SameTickSpecialWins_MotionEx",
+    "KihonTests.Match_EmptySlotGivesTheButtonsNormal",
+    "KihonTests.Ex_SpecialPlusOneButton_TwoTicksLeniency_MeterRules",
+    "KihonTests.Throw_LpLkWorksInBothSchemes_AndBeatsKihonEx",
+    "KihonTests.Burst_ThreePunchesWorkInBothSchemes",
+    "KihonTests.K3_NormalsCombosThrowsIdenticalInBothSchemes_AndSwitchingHasNoOtherEffect",
+    "KihonTests.Switching_ChangesParsingOnly_KeepsPendingAndSurvivesReset",
+    "KihonTests.Determinism_KihonReplaysExactly",
+    "KihonTests.FightScene_DefaultsToKihon_F4TogglesP1"
+   ],
+   "types": [
+    "KihonTests"
+   ]
+  },
+  "game/tests/KitCapture.cs": {
+   "lines": 40,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "KitCapture",
+   "tests": [],
+   "types": [
+    "KitCapture"
+   ]
+  },
+  "game/tests/KitScreenTests.cs": {
+   "lines": 264,
+   "members": [
+    "Backdrop_DimAndArtSlot",
+    "Buttons_PreviewPinsEveryState",
+    "Card_FocusSelectDisableActivate",
+    "Dialog_OpenFocusesConfirm_EscCancels_FocusStaysInside",
+    "Footer_ChipsSwitchWithLastDevice",
+    "Gallery_BothPagesFitTheDesignCanvas_At1080And720",
+    "Gallery_ShowsEveryComponentInEveryState",
+    "Glyphs_EveryMenuActionHasBothTexts",
+    "Glyphs_LastDeviceFollowsInput",
+    "MenuRow_FocusLightsStroke_DisabledIsSkipped",
+    "PaperStyle_TornEdgeIsDeterministicAndInsideRect",
+    "Plates_AreBoundedAndHaveRealAlpha",
+    "Plates_ResourceOverridesAndOrnamentVisibility",
+    "Theme_PaperSheetAndCardUseThePaperStyle"
+   ],
+   "owner": "KitScreenTests",
+   "tests": [
+    "KitScreenTests.Glyphs_LastDeviceFollowsInput",
+    "KitScreenTests.Glyphs_EveryMenuActionHasBothTexts",
+    "KitScreenTests.Footer_ChipsSwitchWithLastDevice",
+    "KitScreenTests.MenuRow_FocusLightsStroke_DisabledIsSkipped",
+    "KitScreenTests.Buttons_PreviewPinsEveryState",
+    "KitScreenTests.Card_FocusSelectDisableActivate",
+    "KitScreenTests.Dialog_OpenFocusesConfirm_EscCancels_FocusStaysInside",
+    "KitScreenTests.PaperStyle_TornEdgeIsDeterministicAndInsideRect",
+    "KitScreenTests.Theme_PaperSheetAndCardUseThePaperStyle",
+    "KitScreenTests.Backdrop_DimAndArtSlot",
+    "KitScreenTests.Gallery_BothPagesFitTheDesignCanvas_At1080And720",
+    "KitScreenTests.Gallery_ShowsEveryComponentInEveryState",
+    "KitScreenTests.Plates_AreBoundedAndHaveRealAlpha",
+    "KitScreenTests.Plates_ResourceOverridesAndOrnamentVisibility"
+   ],
+   "types": [
+    "KitScreenTests"
+   ]
+  },
+  "game/tests/KitTests.cs": {
+   "lines": 110,
+   "members": [
+    "KitsuneLoadsHerOwnFilesAndFallsBackPerKind",
+    "KitsuneWithoutDataGetsHerFixtureSpecialNotRyos",
+    "PoolKeepsDraftablesOfEverySourceAndFallsBackPerYokai",
+    "RyoIgnoresKitsuneFilesAndFallsBackPerKind",
+    "SceneGivesEachFighterItsKit"
+   ],
+   "owner": "KitTests",
+   "tests": [
+    "KitTests.RyoIgnoresKitsuneFilesAndFallsBackPerKind",
+    "KitTests.KitsuneLoadsHerOwnFilesAndFallsBackPerKind",
+    "KitTests.KitsuneWithoutDataGetsHerFixtureSpecialNotRyos",
+    "KitTests.PoolKeepsDraftablesOfEverySourceAndFallsBackPerYokai",
+    "KitTests.SceneGivesEachFighterItsKit"
+   ],
+   "types": [
+    "KitTests"
+   ]
+  },
+  "game/tests/MapCapture.cs": {
+   "lines": 52,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "MapCapture",
+   "tests": [],
+   "types": [
+    "MapCapture"
+   ]
+  },
+  "game/tests/MapScreenTests.cs": {
+   "lines": 173,
+   "members": [
+    "LayoutIsDrivenByRowValuesNotCounts",
+    "NodeStylesAreALookupWithAFallback",
+    "RunMapAdapterShowsTheDefaultMap",
+    "SelectionOnlyAmongReachableAndConfirmFiresOnce",
+    "StubRendersEveryNodeAndRoute",
+    "ThreeAndTwelveRowsLayOutInsideTheBoard",
+    "ViewCanBeHandedInBeforeTheScreenEntersTheTree",
+    "ViewRefusalRaisesNothing"
+   ],
+   "owner": "MapScreenTests",
+   "tests": [
+    "MapScreenTests.StubRendersEveryNodeAndRoute",
+    "MapScreenTests.ViewCanBeHandedInBeforeTheScreenEntersTheTree",
+    "MapScreenTests.SelectionOnlyAmongReachableAndConfirmFiresOnce",
+    "MapScreenTests.ViewRefusalRaisesNothing",
+    "MapScreenTests.ThreeAndTwelveRowsLayOutInsideTheBoard",
+    "MapScreenTests.LayoutIsDrivenByRowValuesNotCounts",
+    "MapScreenTests.RunMapAdapterShowsTheDefaultMap",
+    "MapScreenTests.NodeStylesAreALookupWithAFallback"
+   ],
+   "types": [
+    "MapScreenTests"
+   ]
+  },
+  "game/tests/MenuCapture.cs": {
+   "lines": 44,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "MenuCapture",
+   "tests": [],
+   "types": [
+    "MenuCapture"
+   ]
+  },
+  "game/tests/MenuInputPathTests.cs": {
+   "lines": 315,
+   "members": [
+    "MoveList_BaseKit_HasAirNormals_ThrowBreak_AndEx",
+    "MoveList_Shortcuts_ThroughTheGuiPipeline",
+    "MoveList_SlotFrames_UseTheEquippedModifier",
+    "MoveSlotCard_ShowsModifierName_AndMovesItBehindTheToggle",
+    "Pause_Confirm_IsModalForFocus_RestoresOpener",
+    "Pause_Sheets_AreModalForFocus_RestoreOpener",
+    "Settings_FocusGraph_And_SchemeRows_ByRealInput",
+    "Title_Navigation_SkipsDisabledContinue_AndWraps",
+    "Title_SettingsSheet_IsModalForFocus"
+   ],
+   "owner": "MenuInputPathTests",
+   "tests": [
+    "MenuInputPathTests.Title_Navigation_SkipsDisabledContinue_AndWraps",
+    "MenuInputPathTests.Title_SettingsSheet_IsModalForFocus",
+    "MenuInputPathTests.Pause_Confirm_IsModalForFocus_RestoresOpener",
+    "MenuInputPathTests.Pause_Sheets_AreModalForFocus_RestoreOpener",
+    "MenuInputPathTests.Settings_FocusGraph_And_SchemeRows_ByRealInput",
+    "MenuInputPathTests.MoveList_Shortcuts_ThroughTheGuiPipeline",
+    "MenuInputPathTests.MoveList_BaseKit_HasAirNormals_ThrowBreak_AndEx",
+    "MenuInputPathTests.MoveList_SlotFrames_UseTheEquippedModifier",
+    "MenuInputPathTests.MoveSlotCard_ShowsModifierName_AndMovesItBehindTheToggle"
+   ],
+   "types": [
+    "MenuInputPathTests"
+   ]
+  },
+  "game/tests/MenuMockupTests.cs": {
+   "lines": 234,
+   "members": [
+    "Mockups_EveryScreenOpens",
+    "MoveListPanel_InputsFollowScheme_FramesBehindToggle",
+    "MoveList_BaseKit_HasEveryRowAndRealNames",
+    "MoveList_Specials_SlotsAndLevels",
+    "PauseMenu_FreezesTree_ConfirmGuardsDestructiveEntries",
+    "PauseSummary_UsesPlayerPositionAndAllSlots",
+    "RebuiltMenus_KitFootersPercentagesBackAndReadableCards",
+    "SettingsPanel_Sliders_Mute_SchemeLine",
+    "TitleMenu_ContinueGreyedWithoutSave_FocusSkipsIt",
+    "TitleMenu_UsesShrinePlateAndLiveDisabledRows"
+   ],
+   "owner": "MenuMockupTests",
+   "tests": [
+    "MenuMockupTests.PauseSummary_UsesPlayerPositionAndAllSlots",
+    "MenuMockupTests.RebuiltMenus_KitFootersPercentagesBackAndReadableCards",
+    "MenuMockupTests.MoveList_BaseKit_HasEveryRowAndRealNames",
+    "MenuMockupTests.MoveList_Specials_SlotsAndLevels",
+    "MenuMockupTests.MoveListPanel_InputsFollowScheme_FramesBehindToggle",
+    "MenuMockupTests.SettingsPanel_Sliders_Mute_SchemeLine",
+    "MenuMockupTests.TitleMenu_ContinueGreyedWithoutSave_FocusSkipsIt",
+    "MenuMockupTests.TitleMenu_UsesShrinePlateAndLiveDisabledRows",
+    "MenuMockupTests.PauseMenu_FreezesTree_ConfirmGuardsDestructiveEntries",
+    "MenuMockupTests.Mockups_EveryScreenOpens"
+   ],
+   "types": [
+    "MenuMockupTests"
+   ]
+  },
+  "game/tests/MeterBurstHitstopTests.cs": {
+   "lines": 469,
+   "members": [
+    "Burst_FromHitstopBreaksCombo_TwentyInvulnerableFrames_DrainsMeter",
+    "Burst_OncePerFight_OnlyFromHitstun_NeedsAllThreePunches",
+    "Determinism_MeterBurstHitstopReplayExactly",
+    "Ex_SpendsOneBarOnlyWhenAvailable",
+    "Hitstop_AdvantageStillMatchesDataForEveryNormal",
+    "Hitstop_LightMediumHeavyFromButtons",
+    "Hitstop_OnBlockToo_AndCounterhitAddsFour",
+    "Hitstop_TradeUsesTheLonger_AndConfigCanDisable",
+    "Hud_FightSceneUsesLiveView",
+    "Hud_ShowsLiveMeterAndBurst",
+    "Meter_BlockGivesAttackerThreeAndDefenderNothing",
+    "Meter_CapsAtThreeBars",
+    "Meter_HitGivesAttackerSixAndDefenderThree",
+    "Meter_MoveDataOverridesGain",
+    "Shake_HeavyHitsAndExOnly_SixTicks"
+   ],
+   "owner": "MeterBurstHitstopTests",
+   "tests": [
+    "MeterBurstHitstopTests.Meter_HitGivesAttackerSixAndDefenderThree",
+    "MeterBurstHitstopTests.Meter_BlockGivesAttackerThreeAndDefenderNothing",
+    "MeterBurstHitstopTests.Meter_CapsAtThreeBars",
+    "MeterBurstHitstopTests.Meter_MoveDataOverridesGain",
+    "MeterBurstHitstopTests.Ex_SpendsOneBarOnlyWhenAvailable",
+    "MeterBurstHitstopTests.Hitstop_LightMediumHeavyFromButtons",
+    "MeterBurstHitstopTests.Hitstop_OnBlockToo_AndCounterhitAddsFour",
+    "MeterBurstHitstopTests.Hitstop_AdvantageStillMatchesDataForEveryNormal",
+    "MeterBurstHitstopTests.Hitstop_TradeUsesTheLonger_AndConfigCanDisable",
+    "MeterBurstHitstopTests.Shake_HeavyHitsAndExOnly_SixTicks",
+    "MeterBurstHitstopTests.Burst_FromHitstopBreaksCombo_TwentyInvulnerableFrames_DrainsMeter",
+    "MeterBurstHitstopTests.Burst_OncePerFight_OnlyFromHitstun_NeedsAllThreePunches",
+    "MeterBurstHitstopTests.Determinism_MeterBurstHitstopReplayExactly",
+    "MeterBurstHitstopTests.Hud_ShowsLiveMeterAndBurst",
+    "MeterBurstHitstopTests.Hud_FightSceneUsesLiveView"
+   ],
+   "types": [
+    "MeterBurstHitstopTests"
+   ]
+  },
+  "game/tests/ModelCapture.cs": {
+   "lines": 125,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "ModelCapture",
+   "tests": [],
+   "types": [
+    "ModelCapture"
+   ]
+  },
+  "game/tests/ModelExtentTests.cs": {
+   "lines": 75,
+   "members": [
+    "FleshPad",
+    "ModelReach_FitsTheCameraMargins"
+   ],
+   "owner": "ModelExtentTests",
+   "tests": [
+    "ModelExtentTests.ModelReach_FitsTheCameraMargins"
+   ],
+   "types": [
+    "ModelExtentTests"
+   ]
+  },
+  "game/tests/ModelPresentationTests.cs": {
+   "lines": 288,
+   "members": [
+    "AnimSets_EveryStateAndEveryMoveHasAClip",
+    "Catalog_EveryClipParsesWithAGlbAndAgreesWithFramesTotal",
+    "Catalog_FieldsWinOverNotes_NotesFillWhatIsMissing",
+    "Catalog_StructuredFieldsGiveTheSameFrameMappingAsTheNotes",
+    "Catalog_TrimParsing_RetimedPassWins",
+    "Presenter_AttackShowsTheMoveFrameEveryTick",
+    "Presenter_HitstopFreezesThePoseAndFrameStepAdvancesOne",
+    "Presenter_NewMatchInstanceStartsFresh",
+    "Presenter_PushedFighterDoesNotWalk_PusherDoes",
+    "Presenter_WalkLoopsOnTheTickAndIdleFollowsTheWorldFrame",
+    "Presenter_WalkNeedsBothInputAndMovement",
+    "Scene_FrameStepAdvancesTheAnimationOneTick",
+    "Scene_ModelsSeekExactFramesAndSimIsUntouched"
+   ],
+   "owner": "ModelPresentationTests",
+   "tests": [
+    "ModelPresentationTests.Catalog_EveryClipParsesWithAGlbAndAgreesWithFramesTotal",
+    "ModelPresentationTests.Catalog_TrimParsing_RetimedPassWins",
+    "ModelPresentationTests.Catalog_StructuredFieldsGiveTheSameFrameMappingAsTheNotes",
+    "ModelPresentationTests.Catalog_FieldsWinOverNotes_NotesFillWhatIsMissing",
+    "ModelPresentationTests.AnimSets_EveryStateAndEveryMoveHasAClip",
+    "ModelPresentationTests.Presenter_AttackShowsTheMoveFrameEveryTick",
+    "ModelPresentationTests.Presenter_HitstopFreezesThePoseAndFrameStepAdvancesOne",
+    "ModelPresentationTests.Presenter_WalkLoopsOnTheTickAndIdleFollowsTheWorldFrame",
+    "ModelPresentationTests.Presenter_PushedFighterDoesNotWalk_PusherDoes",
+    "ModelPresentationTests.Presenter_WalkNeedsBothInputAndMovement",
+    "ModelPresentationTests.Presenter_NewMatchInstanceStartsFresh",
+    "ModelPresentationTests.Scene_ModelsSeekExactFramesAndSimIsUntouched",
+    "ModelPresentationTests.Scene_FrameStepAdvancesTheAnimationOneTick"
+   ],
+   "types": [
+    "ModelPresentationTests"
+   ]
+  },
+  "game/tests/MoveSystemTests.cs": {
+   "lines": 306,
+   "members": [
+    "CounterHit_AddsDamageAndHitstun",
+    "Determinism_RandomMovesReplayExactly",
+    "Facing_HeldDuringMoveThenTurns",
+    "FrameAdvantage_OnBlockMatchesData",
+    "FrameAdvantage_OnHitMatchesData",
+    "FrameAdvantage_PlusOnBlockWinsTheNextExchange",
+    "FrameData_ChangingDataChangesBehaviourWithoutCode",
+    "FrameData_MovePlaysExactStartupActiveRecovery",
+    "Invulnerability_FramesWithoutHurtboxCannotBeHit",
+    "Knockdown_DefenderFloorsForConfiguredFramesAndIsUnhittable",
+    "Loader_RejectsWhatTheSimCannotRun",
+    "Low_MustBeBlockedCrouching",
+    "OneHitPerMove_AcrossActiveFrames",
+    "Pushback_SeparatesByDataAndCornerPassesItToAttacker",
+    "Trade_BothHitOnTheSameFrame"
+   ],
+   "owner": "MoveSystemTests",
+   "tests": [
+    "MoveSystemTests.FrameData_MovePlaysExactStartupActiveRecovery",
+    "MoveSystemTests.FrameData_ChangingDataChangesBehaviourWithoutCode",
+    "MoveSystemTests.FrameAdvantage_OnHitMatchesData",
+    "MoveSystemTests.FrameAdvantage_OnBlockMatchesData",
+    "MoveSystemTests.FrameAdvantage_PlusOnBlockWinsTheNextExchange",
+    "MoveSystemTests.Low_MustBeBlockedCrouching",
+    "MoveSystemTests.Knockdown_DefenderFloorsForConfiguredFramesAndIsUnhittable",
+    "MoveSystemTests.Invulnerability_FramesWithoutHurtboxCannotBeHit",
+    "MoveSystemTests.CounterHit_AddsDamageAndHitstun",
+    "MoveSystemTests.Trade_BothHitOnTheSameFrame",
+    "MoveSystemTests.OneHitPerMove_AcrossActiveFrames",
+    "MoveSystemTests.Facing_HeldDuringMoveThenTurns",
+    "MoveSystemTests.Pushback_SeparatesByDataAndCornerPassesItToAttacker",
+    "MoveSystemTests.Loader_RejectsWhatTheSimCannotRun",
+    "MoveSystemTests.Determinism_RandomMovesReplayExactly"
+   ],
+   "types": [
+    "MoveSystemTests"
+   ]
+  },
+  "game/tests/OverlayCapture.cs": {
+   "lines": 42,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "OverlayCapture",
+   "tests": [],
+   "types": [
+    "OverlayCapture"
+   ]
+  },
+  "game/tests/PauseFlowTests.cs": {
+   "lines": 446,
+   "members": [
+    "Entries_Route_AndConfirmGuardsRestart",
+    "ExternalDrive_HasNoPause_UnlessAsked",
+    "LiveClock_EscAndStartOpenAndClose_NoTicksWhilePaused",
+    "NoPause_OverTheScreensBetweenDuels",
+    "PauseResume_HashesEqualAnUnpausedRun",
+    "QuitToTitle_ThroughTheBootFlow_FreesTheFight",
+    "QuitToTitle_WithNoBootFlow_Resumes",
+    "RestartFromPause_MasksEverythingHeld",
+    "Resume_MasksButtonsNotHeldThroughThePause",
+    "Summary_CarriesTheLiveRunState",
+    "Summary_SecondDuel_IsDuel2Of2"
+   ],
+   "owner": "PauseFlowTests",
+   "tests": [
+    "PauseFlowTests.PauseResume_HashesEqualAnUnpausedRun",
+    "PauseFlowTests.LiveClock_EscAndStartOpenAndClose_NoTicksWhilePaused",
+    "PauseFlowTests.Resume_MasksButtonsNotHeldThroughThePause",
+    "PauseFlowTests.RestartFromPause_MasksEverythingHeld",
+    "PauseFlowTests.Entries_Route_AndConfirmGuardsRestart",
+    "PauseFlowTests.QuitToTitle_WithNoBootFlow_Resumes",
+    "PauseFlowTests.QuitToTitle_ThroughTheBootFlow_FreesTheFight",
+    "PauseFlowTests.ExternalDrive_HasNoPause_UnlessAsked",
+    "PauseFlowTests.NoPause_OverTheScreensBetweenDuels",
+    "PauseFlowTests.Summary_CarriesTheLiveRunState",
+    "PauseFlowTests.Summary_SecondDuel_IsDuel2Of2"
+   ],
+   "types": [
+    "PauseFlowTests"
+   ]
+  },
+  "game/tests/PauseLayoutTests.cs": {
+   "lines": 54,
+   "members": [
+    "PauseCards_IdentityFallbackEmptyAndModifierFit"
+   ],
+   "owner": "PauseLayoutTests",
+   "tests": [
+    "PauseLayoutTests.PauseCards_IdentityFallbackEmptyAndModifierFit"
+   ],
+   "types": [
+    "PauseLayoutTests"
+   ]
+  },
+  "game/tests/ReplayMain.cs": {
+   "lines": 58,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "ReplayMain",
+   "tests": [],
+   "types": [
+    "ReplayMain"
+   ]
+  },
+  "game/tests/ReplayTests.cs": {
+   "lines": 246,
+   "members": [
+    "AiVsRandomP1_ReplaysAndAiIsReRun",
+    "ChangedOrMissingData_FailsClearlyAtSetup",
+    "OneTickInputChange_DivergesAtThatTick",
+    "RandomSpecialsThrowsBurstAirNormals_ReplayIdentically",
+    "RematchAfterRewardPick_CarriesRunState",
+    "Scene_RecordsAndF8SavesAReplayableFile",
+    "ScriptedFightToKo_ReplaysIdentically"
+   ],
+   "owner": "ReplayTests",
+   "tests": [
+    "ReplayTests.ScriptedFightToKo_ReplaysIdentically",
+    "ReplayTests.RandomSpecialsThrowsBurstAirNormals_ReplayIdentically",
+    "ReplayTests.AiVsRandomP1_ReplaysAndAiIsReRun",
+    "ReplayTests.RematchAfterRewardPick_CarriesRunState",
+    "ReplayTests.OneTickInputChange_DivergesAtThatTick",
+    "ReplayTests.ChangedOrMissingData_FailsClearlyAtSetup",
+    "ReplayTests.Scene_RecordsAndF8SavesAReplayableFile"
+   ],
+   "types": [
+    "ReplayTests"
+   ]
+  },
+  "game/tests/RewardCapture.cs": {
+   "lines": 41,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "RewardCapture",
+   "tests": [],
+   "types": [
+    "RewardCapture"
+   ]
+  },
+  "game/tests/RewardDraftTests.cs": {
+   "lines": 387,
+   "members": [
+    "AdapterFeedsTheRewardScreen",
+    "DraftAndNextFightAreDeterministic",
+    "FoxsPatienceGivesMoreMeterOnBlock",
+    "HealthCarriesIntoTheNextMatch",
+    "KitsuneOfferIsNewUpgradeModifier",
+    "LevelUpKeepsTheModifierAndNewSpecialReplacesSlot",
+    "LoaderRejectsBadModifiers",
+    "MulPctRoundsToNearest",
+    "NewFoxfireFiresFromSlotCInKataAndKihon",
+    "OneModifierPerSpecial",
+    "OtherYokaiOfferOnlyTheirOwn",
+    "PoolPrefersDataFoldersWhenPresent",
+    "PoolReadsFixturesThroughTheLoaders",
+    "UpgradeChangesFrameDataFromLevel2",
+    "WillOWispMakesTheProjectileFaster"
+   ],
+   "owner": "RewardDraftTests",
+   "tests": [
+    "RewardDraftTests.PoolReadsFixturesThroughTheLoaders",
+    "RewardDraftTests.PoolPrefersDataFoldersWhenPresent",
+    "RewardDraftTests.LoaderRejectsBadModifiers",
+    "RewardDraftTests.KitsuneOfferIsNewUpgradeModifier",
+    "RewardDraftTests.OtherYokaiOfferOnlyTheirOwn",
+    "RewardDraftTests.NewFoxfireFiresFromSlotCInKataAndKihon",
+    "RewardDraftTests.UpgradeChangesFrameDataFromLevel2",
+    "RewardDraftTests.WillOWispMakesTheProjectileFaster",
+    "RewardDraftTests.FoxsPatienceGivesMoreMeterOnBlock",
+    "RewardDraftTests.OneModifierPerSpecial",
+    "RewardDraftTests.LevelUpKeepsTheModifierAndNewSpecialReplacesSlot",
+    "RewardDraftTests.HealthCarriesIntoTheNextMatch",
+    "RewardDraftTests.MulPctRoundsToNearest",
+    "RewardDraftTests.DraftAndNextFightAreDeterministic",
+    "RewardDraftTests.AdapterFeedsTheRewardScreen"
+   ],
+   "types": [
+    "RewardDraftTests"
+   ]
+  },
+  "game/tests/RewardScreenTests.cs": {
+   "lines": 150,
+   "members": [
+    "AllAuthoredCardCopyFitsReservedAreas",
+    "BindingLineTemplate",
+    "FrameDataToggle",
+    "KitArtAndDeviceChipsFollowData",
+    "ModifierNeedsEligibleTarget",
+    "NewCardPickReturnsIndex"
+   ],
+   "owner": "RewardScreenTests",
+   "tests": [
+    "RewardScreenTests.KitArtAndDeviceChipsFollowData",
+    "RewardScreenTests.AllAuthoredCardCopyFitsReservedAreas",
+    "RewardScreenTests.NewCardPickReturnsIndex",
+    "RewardScreenTests.ModifierNeedsEligibleTarget",
+    "RewardScreenTests.FrameDataToggle",
+    "RewardScreenTests.BindingLineTemplate"
+   ],
+   "types": [
+    "RewardScreenTests"
+   ]
+  },
+  "game/tests/RunFlowTests.cs": {
+   "lines": 395,
+   "members": [
+    "Boot_LastNodeWon_ShowsTheEndCard_AndPauseQuitDropsTheRun",
+    "Boot_TitleControlSelectMap_Fight_BackToTheMap_ThenALossAndANewRun",
+    "FightSceneOnItsOwn_WalksTheDemoMap_AsOneConfigurationOfTheFlow",
+    "Session_HealthCarries_LossEndsTheRun_RefusedStepsChangeNothing",
+    "Session_WalksWholeRuns_ThroughEveryNode_Deterministically",
+    "Table_DefaultMap_EveryNodeRunsInTheFightScene_WithItsY4Row",
+    "Table_PerTypePerNodeAndPayloadScenes_AreDataEdits"
+   ],
+   "owner": "RunFlowTests",
+   "tests": [
+    "RunFlowTests.Table_DefaultMap_EveryNodeRunsInTheFightScene_WithItsY4Row",
+    "RunFlowTests.Table_PerTypePerNodeAndPayloadScenes_AreDataEdits",
+    "RunFlowTests.Session_WalksWholeRuns_ThroughEveryNode_Deterministically",
+    "RunFlowTests.Session_HealthCarries_LossEndsTheRun_RefusedStepsChangeNothing",
+    "RunFlowTests.Boot_TitleControlSelectMap_Fight_BackToTheMap_ThenALossAndANewRun",
+    "RunFlowTests.Boot_LastNodeWon_ShowsTheEndCard_AndPauseQuitDropsTheRun",
+    "RunFlowTests.FightSceneOnItsOwn_WalksTheDemoMap_AsOneConfigurationOfTheFlow"
+   ],
+   "types": [
+    "RunFlowTests",
+    "Walk"
+   ]
+  },
+  "game/tests/RunMapTests.cs": {
+   "lines": 444,
+   "members": [
+    "DefaultMapLoadsWithTheR1Shape",
+    "EveryWalkOfTheDefaultMapReachesTheBoss",
+    "FileSourceNamesTheFileItRejects",
+    "HashIsStableAndSeededWalksRepeat",
+    "InvalidSelectChangesNothing",
+    "Load",
+    "LoaderRejectsBadMaps",
+    "NewNodeTypesAndLayoutsNeedNoMapChanges",
+    "ReachableSetsForEveryNode",
+    "RunStateOwnsTheMapAndHashesIt",
+    "SnapshotIsPlainDataAndRestores"
+   ],
+   "owner": "CodeMapSource",
+   "tests": [
+    "RunMapTests.DefaultMapLoadsWithTheR1Shape",
+    "RunMapTests.ReachableSetsForEveryNode",
+    "RunMapTests.InvalidSelectChangesNothing",
+    "RunMapTests.EveryWalkOfTheDefaultMapReachesTheBoss",
+    "RunMapTests.HashIsStableAndSeededWalksRepeat",
+    "RunMapTests.RunStateOwnsTheMapAndHashesIt",
+    "RunMapTests.SnapshotIsPlainDataAndRestores",
+    "RunMapTests.LoaderRejectsBadMaps",
+    "RunMapTests.NewNodeTypesAndLayoutsNeedNoMapChanges",
+    "RunMapTests.FileSourceNamesTheFileItRejects"
+   ],
+   "types": [
+    "CodeMapSource",
+    "RunMapTests"
+   ]
+  },
+  "game/tests/RyoKitTests.cs": {
+   "lines": 372,
+   "members": [
+    "Air_NoBlock_HitFallsAndLands",
+    "Block_LowMustBeCrouchBlocked",
+    "Block_StandingAndCrouching_AllSixNormals",
+    "Crouch_HoldsStill_AndCrouchBlocksWithDownBack",
+    "Dash_ForwardAndBack_18Frames",
+    "Dash_NeedsTwoTapsInsideTheWindow",
+    "Jump_ForwardAndBack_Drift",
+    "Jump_Neutral_40FramesAirtime",
+    "Jump_OverTheOpponent_SwitchesSidesOnLanding",
+    "Kit_Deterministic_RandomRawInputs",
+    "Normals_EachButtonStartsItsNormal_FrameByFrame",
+    "Normals_EachHitsForC8Damage",
+    "Normals_FixturesMatchC8",
+    "Normals_ListedDirectionBeatsAnyDirection",
+    "Normals_PressDuringRecoveryIsBuffered",
+    "Scene_FallsBackToFixtureNormals",
+    "Walk_ForwardAndBack"
+   ],
+   "owner": "RyoKitTests",
+   "tests": [
+    "RyoKitTests.Normals_FixturesMatchC8",
+    "RyoKitTests.Scene_FallsBackToFixtureNormals",
+    "RyoKitTests.Normals_EachButtonStartsItsNormal_FrameByFrame",
+    "RyoKitTests.Normals_EachHitsForC8Damage",
+    "RyoKitTests.Normals_PressDuringRecoveryIsBuffered",
+    "RyoKitTests.Normals_ListedDirectionBeatsAnyDirection",
+    "RyoKitTests.Walk_ForwardAndBack",
+    "RyoKitTests.Dash_ForwardAndBack_18Frames",
+    "RyoKitTests.Dash_NeedsTwoTapsInsideTheWindow",
+    "RyoKitTests.Jump_Neutral_40FramesAirtime",
+    "RyoKitTests.Jump_ForwardAndBack_Drift",
+    "RyoKitTests.Jump_OverTheOpponent_SwitchesSidesOnLanding",
+    "RyoKitTests.Crouch_HoldsStill_AndCrouchBlocksWithDownBack",
+    "RyoKitTests.Block_StandingAndCrouching_AllSixNormals",
+    "RyoKitTests.Block_LowMustBeCrouchBlocked",
+    "RyoKitTests.Air_NoBlock_HitFallsAndLands",
+    "RyoKitTests.Kit_Deterministic_RandomRawInputs"
+   ],
+   "types": [
+    "RyoKitTests"
+   ]
+  },
+  "game/tests/SettingsLayoutTests.cs": {
+   "lines": 40,
+   "members": [
+    "Settings_InteractiveRectsStayInsidePaperSafeArea"
+   ],
+   "owner": "SettingsLayoutTests",
+   "tests": [
+    "SettingsLayoutTests.Settings_InteractiveRectsStayInsidePaperSafeArea"
+   ],
+   "types": [
+    "SettingsLayoutTests"
+   ]
+  },
+  "game/tests/SettingsTests.cs": {
+   "lines": 469,
+   "members": [
+    "AudioLevels_Curve_FullIsZeroDb_ZeroIsMute_Monotonic",
+    "Boot_CorruptFile_StillBootsToTheTitleOnDefaults",
+    "Boot_DirectFightArg_DoesNotOverwriteTheSavedScheme",
+    "Boot_LoadsTheFileBeforeTheTitle_SchemeReachesControlSelectAndTheFight",
+    "Boot_SchemeChosenOnControlSelect_IsSaved_AndIsTheNextLaunchDefault",
+    "BusLayout_HasMasterMusicEffects",
+    "Isolation_InstancedBootAndStandaloneFight_NeverTouchTheUserFile",
+    "Isolation_SimAiAndReplayCode_DoNotReferenceSettings",
+    "Levels_DriveTheBuses_MuteAtZero",
+    "MenuSettings_Attach_BadFiles_NeverThrow_AndASaveFailureKeepsTheSession",
+    "MenuSettings_Attach_LoadsAndAppliesTheFile_ThenSavesEachChange",
+    "Store_CorruptFile_IsDefaults_AndTheNextSaveRepairsIt",
+    "Store_MissingFile_IsDefaults_AndLoadWritesNothing",
+    "Store_NewerVersion_KeepsTheFieldsThisBuildKnows",
+    "Store_OlderVersion_KeepsValidFields_AndIsRewrittenAsCurrent",
+    "Store_PartialFile_KeepsValidFields_DefaultsTheRest",
+    "Store_RoundTrip",
+    "Store_SaveThatCannotWrite_ReturnsFalse_NoThrow"
+   ],
+   "owner": "SettingsTests",
+   "tests": [
+    "SettingsTests.Store_RoundTrip",
+    "SettingsTests.Store_MissingFile_IsDefaults_AndLoadWritesNothing",
+    "SettingsTests.Store_CorruptFile_IsDefaults_AndTheNextSaveRepairsIt",
+    "SettingsTests.Store_OlderVersion_KeepsValidFields_AndIsRewrittenAsCurrent",
+    "SettingsTests.Store_NewerVersion_KeepsTheFieldsThisBuildKnows",
+    "SettingsTests.Store_PartialFile_KeepsValidFields_DefaultsTheRest",
+    "SettingsTests.Store_SaveThatCannotWrite_ReturnsFalse_NoThrow",
+    "SettingsTests.AudioLevels_Curve_FullIsZeroDb_ZeroIsMute_Monotonic",
+    "SettingsTests.BusLayout_HasMasterMusicEffects",
+    "SettingsTests.Levels_DriveTheBuses_MuteAtZero",
+    "SettingsTests.MenuSettings_Attach_LoadsAndAppliesTheFile_ThenSavesEachChange",
+    "SettingsTests.MenuSettings_Attach_BadFiles_NeverThrow_AndASaveFailureKeepsTheSession",
+    "SettingsTests.Boot_LoadsTheFileBeforeTheTitle_SchemeReachesControlSelectAndTheFight",
+    "SettingsTests.Boot_SchemeChosenOnControlSelect_IsSaved_AndIsTheNextLaunchDefault",
+    "SettingsTests.Boot_CorruptFile_StillBootsToTheTitleOnDefaults",
+    "SettingsTests.Boot_DirectFightArg_DoesNotOverwriteTheSavedScheme",
+    "SettingsTests.Isolation_InstancedBootAndStandaloneFight_NeverTouchTheUserFile",
+    "SettingsTests.Isolation_SimAiAndReplayCode_DoNotReferenceSettings"
+   ],
+   "types": [
+    "SettingsTests"
+   ]
+  },
+  "game/tests/SpecialTests.cs": {
+   "lines": 509,
+   "members": [
+    "CancelsNeedAHeldRuleAndItsWindow",
+    "Count",
+    "DeterministicWithRandomSpecials",
+    "DirectRequestFiresSlotWithoutPrecision",
+    "EmptySlotGivesTheNormalOrNothing",
+    "ExInputLeniencyAndThrowPriority",
+    "ExSpendsABarAndHitsTwice",
+    "ExWithoutMeterFallsBackCleanly",
+    "FightSceneEquipsStarters",
+    "GreatWaveAbsorbsOneProjectile",
+    "Impacts",
+    "KataMotionsFireSlotsInBothFacings",
+    "KataPrecisionAppliesToProjectileDamage",
+    "Level2DamageLandsInTheFight",
+    "LevelUpSwitchesDataWithNoCodeChange",
+    "LoaderRejectsWhatTheSimCannotRun",
+    "OneProjectilePerOwner",
+    "OverlayDrawsProjectileHitboxes",
+    "ProjectileDespawnsOffScreenOrAfterLifetime",
+    "ProjectileIsBlockedStandingAndCrouching",
+    "ProjectileSpawnsTravelsAndHits",
+    "ProjectilesClash",
+    "Specials",
+    "StartersFillSlotsAAndBAtLevel1"
+   ],
+   "owner": "Log",
+   "tests": [
+    "SpecialTests.StartersFillSlotsAAndBAtLevel1",
+    "SpecialTests.KataMotionsFireSlotsInBothFacings",
+    "SpecialTests.DirectRequestFiresSlotWithoutPrecision",
+    "SpecialTests.EmptySlotGivesTheNormalOrNothing",
+    "SpecialTests.LevelUpSwitchesDataWithNoCodeChange",
+    "SpecialTests.Level2DamageLandsInTheFight",
+    "SpecialTests.ProjectileSpawnsTravelsAndHits",
+    "SpecialTests.ProjectileIsBlockedStandingAndCrouching",
+    "SpecialTests.KataPrecisionAppliesToProjectileDamage",
+    "SpecialTests.ProjectilesClash",
+    "SpecialTests.GreatWaveAbsorbsOneProjectile",
+    "SpecialTests.OneProjectilePerOwner",
+    "SpecialTests.ProjectileDespawnsOffScreenOrAfterLifetime",
+    "SpecialTests.ExSpendsABarAndHitsTwice",
+    "SpecialTests.ExWithoutMeterFallsBackCleanly",
+    "SpecialTests.ExInputLeniencyAndThrowPriority",
+    "SpecialTests.CancelsNeedAHeldRuleAndItsWindow",
+    "SpecialTests.OverlayDrawsProjectileHitboxes",
+    "SpecialTests.FightSceneEquipsStarters",
+    "SpecialTests.LoaderRejectsWhatTheSimCannotRun",
+    "SpecialTests.DeterministicWithRandomSpecials"
+   ],
+   "types": [
+    "Log",
+    "SpecialTests"
+   ]
+  },
+  "game/tests/StageCapture.cs": {
+   "lines": 52,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "StageCapture",
+   "tests": [],
+   "types": [
+    "StageCapture"
+   ]
+  },
+  "game/tests/StageTests.cs": {
+   "lines": 138,
+   "members": [
+    "Stage_ClearBandBehindTheFight_LanternsDeep",
+    "Stage_CoversCameraRangeAtBothCorners",
+    "Stage_FallsBackToPlaceholder",
+    "Stage_PropLayoutIsDeterministic",
+    "Stage_PropsStayBehindGameplayPlane",
+    "Stage_SceneLoadsBambooGrove"
+   ],
+   "owner": "StageTests",
+   "tests": [
+    "StageTests.Stage_SceneLoadsBambooGrove",
+    "StageTests.Stage_PropsStayBehindGameplayPlane",
+    "StageTests.Stage_ClearBandBehindTheFight_LanternsDeep",
+    "StageTests.Stage_CoversCameraRangeAtBothCorners",
+    "StageTests.Stage_PropLayoutIsDeterministic",
+    "StageTests.Stage_FallsBackToPlaceholder"
+   ],
+   "types": [
+    "StageTests"
+   ]
+  },
+  "game/tests/StartCapture.cs": {
+   "lines": 23,
+   "members": [
+    "_Ready"
+   ],
+   "owner": "StartCapture",
+   "tests": [],
+   "types": [
+    "StartCapture"
+   ]
+  },
+  "game/tests/StartScreenTests.cs": {
+   "lines": 111,
+   "members": [
+    "ControlSelect_ChoiceRedrawsControls_AndStartsOnce",
+    "ControlsText_MatchesInputDevices",
+    "Entry_DoesNotLeakHeldInput",
+    "FightScene_HasNoStartScreen_AndTicksAtOnce",
+    "Restart_StaysInTheFight"
+   ],
+   "owner": "StartScreenTests",
+   "tests": [
+    "StartScreenTests.FightScene_HasNoStartScreen_AndTicksAtOnce",
+    "StartScreenTests.Entry_DoesNotLeakHeldInput",
+    "StartScreenTests.Restart_StaysInTheFight",
+    "StartScreenTests.ControlSelect_ChoiceRedrawsControls_AndStartsOnce",
+    "StartScreenTests.ControlsText_MatchesInputDevices"
+   ],
+   "types": [
+    "StartScreenTests"
+   ]
+  },
+  "game/tests/StoryScreenTests.cs": {
+   "lines": 117,
+   "members": [
+    "Results_RealCopyFitsWithRestartAndStageVisible",
+    "Story_RealCopyFitsAndAllDismissInputsSurvive"
+   ],
+   "owner": "StoryScreenTests",
+   "tests": [
+    "StoryScreenTests.Story_RealCopyFitsAndAllDismissInputsSurvive",
+    "StoryScreenTests.Results_RealCopyFitsWithRestartAndStageVisible"
+   ],
+   "types": [
+    "StoryScreenTests"
+   ]
+  },
+  "game/tests/StoryTests.cs": {
+   "lines": 69,
+   "members": [
+    "FightScene_LoseScreenShowsTheStoryCard",
+    "Loader_FillsPlaceholdersAndRejectsBadCards",
+    "RealCards_BindingLineAndLoseScreen"
+   ],
+   "owner": "StoryTests",
+   "tests": [
+    "StoryTests.Loader_FillsPlaceholdersAndRejectsBadCards",
+    "StoryTests.RealCards_BindingLineAndLoseScreen",
+    "StoryTests.FightScene_LoseScreenShowsTheStoryCard"
+   ],
+   "types": [
+    "StoryTests"
+   ]
+  },
+  "game/tests/TestRunner.cs": {
+   "lines": 59,
+   "members": [
+    "True",
+    "_Ready"
+   ],
+   "owner": "Assert",
+   "tests": [],
+   "types": [
+    "Assert",
+    "AssertFailed",
+    "TestAttribute",
+    "TestRunner"
+   ]
+  },
+  "game/tests/ThrowTests.cs": {
+   "lines": 511,
+   "members": [
+    "Bursts",
+    "Has",
+    "Impacts",
+    "Parse",
+    "Scene_LoadsFixtureThrow",
+    "Throw_BreaksOnlyInsideTheWindow",
+    "Throw_CanKO",
+    "Throw_CancelsOnlyANormalStillInStartup",
+    "Throw_CannotGrabABurstingFighter",
+    "Throw_CannotGrab_Airborne_Hitstun_Blockstun_Knockdown",
+    "Throw_DebugOverlayShowsThrowboxes",
+    "Throw_Deterministic_RandomInputs",
+    "Throw_FixtureMatchesC4",
+    "Throw_GrabsOnFrame6_LandsAfterWindow_KnockdownIs40",
+    "Throw_IgnoresStandingAndCrouchingBlock",
+    "Throw_KnockdownCannotBeHit_OrThrownAgain",
+    "Throw_LandBuildsMeter_HeavyHitstopAndShake",
+    "Throw_LoaderRejectsBadThrows",
+    "Throw_LpLkWithinThreeTicks_BothOrders_FourIsAMiss",
+    "Throw_OneButtonDoesNotBreak",
+    "Throw_ReadFromRawInput_SameForAnyScheme",
+    "Throw_ThrownFighterBreaks_NeverBursts_HitstunBurstWins",
+    "Throw_VsStrike",
+    "Throw_VsThrow_SameFrameClashes_LaterOneIsGrabbed",
+    "Throw_Whiffs_OutOfRange"
+   ],
+   "owner": "Log",
+   "tests": [
+    "ThrowTests.Throw_FixtureMatchesC4",
+    "ThrowTests.Throw_LoaderRejectsBadThrows",
+    "ThrowTests.Throw_GrabsOnFrame6_LandsAfterWindow_KnockdownIs40",
+    "ThrowTests.Throw_KnockdownCannotBeHit_OrThrownAgain",
+    "ThrowTests.Throw_Whiffs_OutOfRange",
+    "ThrowTests.Throw_IgnoresStandingAndCrouchingBlock",
+    "ThrowTests.Throw_CannotGrab_Airborne_Hitstun_Blockstun_Knockdown",
+    "ThrowTests.Throw_BreaksOnlyInsideTheWindow",
+    "ThrowTests.Throw_OneButtonDoesNotBreak",
+    "ThrowTests.Throw_VsThrow_SameFrameClashes_LaterOneIsGrabbed",
+    "ThrowTests.Throw_VsStrike",
+    "ThrowTests.Throw_CanKO",
+    "ThrowTests.Throw_LpLkWithinThreeTicks_BothOrders_FourIsAMiss",
+    "ThrowTests.Throw_CancelsOnlyANormalStillInStartup",
+    "ThrowTests.Throw_ReadFromRawInput_SameForAnyScheme",
+    "ThrowTests.Throw_LandBuildsMeter_HeavyHitstopAndShake",
+    "ThrowTests.Throw_CannotGrabABurstingFighter",
+    "ThrowTests.Throw_ThrownFighterBreaks_NeverBursts_HitstunBurstWins",
+    "ThrowTests.Throw_DebugOverlayShowsThrowboxes",
+    "ThrowTests.Throw_Deterministic_RandomInputs",
+    "ThrowTests.Scene_LoadsFixtureThrow"
+   ],
+   "types": [
+    "Log",
+    "NoCommandParser",
+    "ThrowTests"
+   ]
+  },
+  "game/tests/WakeUpTests.cs": {
+   "lines": 163,
+   "members": [
+    "Presenter_WakeUpRollsFromTheKnockdownIntoTheGetUp",
+    "WakeUpFrames_ZeroIsTheOldTiming",
+    "WakeUp_Deterministic",
+    "WakeUp_FollowsThe40FrameKnockdown_ThenActionable",
+    "WakeUp_HeldJumpComesOutOnTheFirstActionableFrame",
+    "WakeUp_NotActionableAndInvulnerable_EveryFrame",
+    "WakeUp_StrikesAndThrowsDontConnect"
+   ],
+   "owner": "WakeUpTests",
+   "tests": [
+    "WakeUpTests.WakeUp_FollowsThe40FrameKnockdown_ThenActionable",
+    "WakeUpTests.WakeUp_NotActionableAndInvulnerable_EveryFrame",
+    "WakeUpTests.WakeUp_StrikesAndThrowsDontConnect",
+    "WakeUpTests.WakeUp_HeldJumpComesOutOnTheFirstActionableFrame",
+    "WakeUpTests.WakeUpFrames_ZeroIsTheOldTiming",
+    "WakeUpTests.WakeUp_Deterministic",
+    "WakeUpTests.Presenter_WakeUpRollsFromTheKnockdownIntoTheGetUp"
+   ],
+   "types": [
+    "WakeUpTests"
+   ]
+  },
+  "game/tests/ai_harness.tscn": {},
+  "game/tests/bone_probe.tscn": {},
+  "game/tests/fixtures/moves/test-dodge.json": {},
+  "game/tests/fixtures/moves/test-jab.json": {},
+  "game/tests/fixtures/moves/test-sweep.json": {},
+  "game/tests/fixtures/profiles/test-kitsune-aggressive.json": {},
+  "game/tests/fixtures/profiles/test-kitsune-patient.json": {},
+  "game/tests/fixtures/rewards/test-fox-patience.json": {},
+  "game/tests/fixtures/rewards/test-foxfire.json": {},
+  "game/tests/fixtures/rewards/test-will-o-wisp.json": {},
+  "game/tests/fixtures/ryo-air-normals/test-ryo-air-kick.json": {},
+  "game/tests/fixtures/ryo-air-normals/test-ryo-air-punch.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-heavy-kick.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-heavy-punch.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-light-kick.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-light-punch.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-medium-kick.json": {},
+  "game/tests/fixtures/ryo-normals/test-ryo-medium-punch.json": {},
+  "game/tests/fixtures/specials/test-rising-talisman.json": {},
+  "game/tests/fixtures/specials/test-spirit-wave.json": {},
+  "game/tests/fixtures/throws/test-ryo-throw.json": {},
+  "game/tests/flow_capture.tscn": {},
+  "game/tests/hitbox_capture.tscn": {},
+  "game/tests/hud_capture.tscn": {},
+  "game/tests/kit_capture.tscn": {},
+  "game/tests/map_capture.tscn": {},
+  "game/tests/menu_capture.tscn": {},
+  "game/tests/model_capture.tscn": {},
+  "game/tests/overlay_capture.tscn": {},
+  "game/tests/replay.tscn": {},
+  "game/tests/reward_capture.tscn": {},
+  "game/tests/stage_capture.tscn": {},
+  "game/tests/start_capture.tscn": {},
+  "game/tests/test_runner.tscn": {}
+ },
+ "summary": {
+  "cs_files": 186,
+  "data_files": 97,
+  "files": 317,
+  "tests": 380,
+  "types": 323
+ }
+}
