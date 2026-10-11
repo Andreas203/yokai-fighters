@@ -18,8 +18,10 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// <see cref="WinFight"/> (R3 heal, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
 /// <see cref="LoseFight"/>. The run is won when the completed node has no route out, lost on the first lost fight.
 /// <para>
-/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/> and
-/// <see cref="Ended"/> (a later save / Continue, YOK-73, writes those). The object must outlive scene changes:
+/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/>,
+/// <see cref="Ended"/> and, while a dojo node is entered, its <see cref="Sim.Dojo.Choice"/> (a later save /
+/// Continue, YOK-73, writes those; a session rebuilt inside a dojo opens the stop unspent until the saved
+/// choice is put back with <c>Dojo.Restore</c>, R7). The object must outlive scene changes:
 /// the boot flow holds it, never a node's scene.
 /// </para>
 /// </summary>
@@ -40,6 +42,8 @@ public sealed class RunSession
 	Dojo? _dojo;
 	/// <summary>YOK-84, R7: the dojo stop Ryo is at (its rest and its one choice); null off a dojo node or once the run is over.</summary>
 	public Dojo? Dojo => IsOver ? null : _dojo;
+	/// <summary>R7: a stop takes a choice only while it is the entered node's stop and the run is not over (a kept reference is refused).</summary>
+	bool IsOpenDojo(Dojo stop) => !IsOver && ReferenceEquals(stop, _dojo);
 	public RunEnd? Ended { get; private set; }
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
@@ -62,7 +66,7 @@ public sealed class RunSession
 		Seed = seed;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
-		if (Entered?.Context.Type == Sim.Dojo.NodeType) _dojo = new Dojo(Run, Entered.Context.NodeId); // its choice: Dojo.Restore
+		if (Entered?.Context.Type == NodeTypeRegistry.Dojo) _dojo = new Dojo(Run, Entered.Context.NodeId, IsOpenDojo); // its saved choice: Dojo.Restore
 	}
 
 	/// <summary>A new run on <paramref name="graph"/>: the starters at Lv 1, full health (A1, C1), no node picked.</summary>
@@ -79,7 +83,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
-		_dojo = Entered.Context.Type == Sim.Dojo.NodeType ? new Dojo(Run, nodeId) : null; // R7
+		_dojo = Entered.Context.Type == NodeTypeRegistry.Dojo ? new Dojo(Run, nodeId, IsOpenDojo) : null; // R7
 		NodeEntered?.Invoke(Entered.Context);
 		return step;
 	}
@@ -134,7 +138,7 @@ public sealed class RunSession
 		h = Fnv.Mix(h, unchecked((int)Seed));
 		h = Fnv.Mix(h, Ended is null ? 0 : 1 + (int)Ended.Outcome);
 		// R7: a dojo choice already made is run state; a run with none keeps the hash it had before YOK-84.
-		if (_dojo is { Choice: not DojoChoice.None } dojo) h = Fnv.Mix(h, (int)dojo.Choice);
+		if (_dojo is { Choice: not DojoChoice.None } dojo) h = Fnv.Mix(Fnv.Mix(h, Sim.Dojo.HashTag), (int)dojo.Choice);
 		return h;
 	}
 }

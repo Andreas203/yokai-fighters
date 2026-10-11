@@ -104,7 +104,115 @@ public static class DojoTests
 		Assert.Equal(500, s.Run.Health, "health is healed once: 200 + 300");
 		Assert.Equal(300, s.Dojo!.Healed, "the first rest's figure stands");
 		Assert.Equal(hash, s.StateHash(), "a refused rest changes nothing");
-		Assert.True(ReferenceEquals(s.Dojo, s.Dojo) && !s.Dojo!.CanRest, "the session keeps the one stop: asking again gives no fresh choice");
+		Assert.True(!s.Dojo!.CanRest, "the choice is spent");
+	}
+
+	/// <summary>A refused call on a kept stop: not Ok, and health and the session's hash exactly as before.</summary>
+	static void RefusesUnchanged(RunSession s, Dojo kept, string when)
+	{
+		int health = s.Run.Health;
+		ulong hash = s.StateHash();
+		Assert.True(!kept.IsOpen && !kept.CanRest, $"{when}: the kept stop is closed");
+		var r = kept.Rest();
+		Assert.True(!r.Ok && r.Error!.Contains("R7"), $"{when}: the rest is refused, naming the rule");
+		Assert.True(Throws<InvalidOperationException>(() => kept.Restore(DojoChoice.Rest)), $"{when}: a restore is refused too");
+		Assert.Equal(health, s.Run.Health, $"{when}: health unchanged");
+		Assert.Equal(hash, s.StateHash(), $"{when}: state hash unchanged");
+		Assert.True(kept.Choice == DojoChoice.None && kept.Healed == 0, $"{when}: the stop itself is unchanged");
+	}
+
+	[Test]
+	public static void StaleStop_KeptPastTheNode_RefusesOnTheMap()
+	{
+		var s = AtDojo(400);
+		var kept = s.Dojo!;
+		Assert.True(s.WinFight(400) is null && s.CompleteNode().Ok, "the dojo node is left unrested");
+		RefusesUnchanged(s, kept, "back on the map");
+		Assert.Equal(400, s.Run.Health, "no heal off the stop");
+	}
+
+	[Test]
+	public static void StaleStop_KeptIntoTheNextNode_Refuses()
+	{
+		var s = AtDojo(400);
+		var kept = s.Dojo!;
+		s.WinFight(400);
+		s.CompleteNode();
+		Assert.True(s.Enter("r8-elder-kappa").Ok, "row 8 entered");
+		RefusesUnchanged(s, kept, "inside the row-8 elder");
+		Assert.Equal(400, s.Run.Health, "no heal inside another node");
+	}
+
+	[Test]
+	public static void StaleStop_KeptPastALostFight_Refuses()
+	{
+		var s = AtDojo(250);
+		var kept = s.Dojo!;
+		Assert.True(s.LoseFight().Ok && s.IsOver, "the run ends at the dojo");
+		RefusesUnchanged(s, kept, "run over");
+		Assert.Equal(250, s.Run.Health, "no heal on an ended run");
+	}
+
+	[Test]
+	public static void Rest_AfterTheStandInFight_StillCountsOnce()
+	{
+		var s = AtDojo(900);
+		Assert.True(s.WinFight(401) is null, "the stand-in fight is won first");
+		Assert.True(s.Dojo!.Rest().Ok, "resting after the fight, before leaving, is the stop's choice");
+		Assert.Equal(701, s.Run.Health, "R7: 401 + 300");
+		Assert.True(!s.Dojo!.Rest().Ok && s.Run.Health == 701, "once");
+		var over = AtDojo(701);
+		over.Dojo!.Rest();
+		Assert.True(over.Run.Health == RunState.MaxHealth && over.Dojo!.Healed == 299, "701 + 300 is capped: 299 given back");
+	}
+
+	[Test]
+	public static void Restore_CannotTakeAChoiceBack()
+	{
+		var s = AtDojo(100);
+		s.Dojo!.Rest();
+		ulong hash = s.StateHash();
+		Assert.True(Throws<InvalidOperationException>(() => s.Dojo!.Restore(DojoChoice.None)), "a made choice can't be restored away (R7)");
+		Assert.True(Throws<InvalidOperationException>(() => s.Dojo!.Restore(DojoChoice.Rest)), "nor restored over");
+		Assert.True(!s.Dojo!.Rest().Ok && s.Run.Health == 400 && s.Dojo!.Healed == 300, "the stop stays spent: 100 + 300, once");
+		Assert.Equal(hash, s.StateHash(), "nothing changed");
+
+		var loaded = AtDojo(400);
+		loaded.Dojo!.Restore(DojoChoice.Rest);
+		Assert.True(Throws<InvalidOperationException>(() => loaded.Dojo!.Restore(DojoChoice.None)) && !loaded.Dojo!.CanRest, "a restored choice can't be taken back either");
+	}
+
+	[Test]
+	public static void RebuiltSession_InsideTheDojo_TakesTheSavedChoiceThroughRestore()
+	{
+		var played = AtDojo(400);
+		var old = played.Dojo!;
+		old.Rest();
+		// a later Continue: a new session over the same run state, still inside the dojo node
+		var rebuilt = new RunSession(played.Run, played.Pool, played.Scenes, played.Seed);
+		Assert.True(rebuilt.Node!.NodeId == DojoNode && rebuilt.Dojo is { NodeId: DojoNode }, "the rebuilt session is at the dojo stop");
+		Assert.True(rebuilt.Dojo!.Choice == DojoChoice.None, "the choice is saved state: it is not there until restored");
+		rebuilt.Dojo!.Restore(old.Choice);
+		Assert.True(!rebuilt.Dojo!.Rest().Ok && rebuilt.Run.Health == 700, "restored: no second rest (R7)");
+		Assert.Equal(played.StateHash(), rebuilt.StateHash(), "the rebuilt session is the played one");
+	}
+
+	[Test]
+	public static void UnrestedRun_HashesAsBeforeTheDojoExisted()
+	{
+		// the session hash of main: run state, seed, ended; a stop with no choice adds nothing to it
+		var s = AtDojo(400);
+		ulong r = s.Run.StateHash();
+		ulong h = Fnv.Mix(Fnv.Offset, unchecked((int)r));
+		h = Fnv.Mix(h, unchecked((int)(r >> 32)));
+		h = Fnv.Mix(h, unchecked((int)s.Seed));
+		h = Fnv.Mix(h, 0);
+		Assert.Equal(h, s.StateHash(), "at the dojo, unrested: the hash recorded runs already have");
+		s.WinFight(400);
+		s.CompleteNode();
+		r = s.Run.StateHash();
+		h = Fnv.Mix(Fnv.Mix(Fnv.Mix(Fnv.Mix(Fnv.Offset, unchecked((int)r)), unchecked((int)(r >> 32))), unchecked((int)s.Seed)), 0);
+		Assert.Equal(h, s.StateHash(), "after leaving unrested: the same");
 	}
 
 	[Test]
@@ -155,6 +263,7 @@ public static class DojoTests
 		var dojo = s.Dojo!;
 		Assert.True(s.LoseFight().Ok && s.IsOver, "Ryo loses the stand-in fight at the dojo");
 		Assert.True(s.Dojo is null, "a finished run offers no dojo stop");
+		Assert.True(!dojo.Rest().Ok, "and the stop held from before refuses the rest");
 		Assert.Equal(DojoChoice.None, dojo.Choice, "and nothing was chosen");
 		Assert.Equal(250, s.Run.Health, "health as it was");
 	}
@@ -197,6 +306,7 @@ public static class DojoTests
 		open.Dojo!.Restore(DojoChoice.None);
 		Assert.True(open.Dojo!.CanRest, "a stop saved before the choice is still open");
 		Assert.True(Throws<ArgumentException>(() => open.Dojo!.Restore((DojoChoice)7)) && open.Dojo!.CanRest, "an unknown choice is refused and changes nothing");
+		Assert.True(open.Dojo!.Rest().Ok && open.Run.Health == 700, "and the open stop still rests");
 	}
 
 	[Test]
