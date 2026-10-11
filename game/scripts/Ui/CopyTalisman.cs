@@ -21,6 +21,23 @@ public partial class CopyTalisman : Control
 	private bool _first = true;
 	private Tween? _pulse, _toastTween;
 
+	/// <summary>Glow rings, seal and shadow stay inside this reach (px) of the control rect; the HUD strip ends at y=138.</summary>
+	public const float GlowReach = 10f;
+	public const int NameSize = 26, NameSizeMin = 20;
+	private static readonly Vector2 ShadowOffset = new(6, 8);
+
+	/// <summary>Everything this control can draw (rect, glow, seal, shadow), in parent coordinates. The pulse is a brightness flash, so it never grows past this.</summary>
+	public Rect2 DrawnBounds => new Rect2(Position, Size).Grow(GlowReach).Merge(new Rect2(Position + ShadowOffset, Size));
+
+	/// <summary>Forget what was shown (a new run or session): the next <see cref="Apply"/> is a first show, with no pulse or toast.</summary>
+	public void Reset()
+	{
+		_pulse?.Kill(); _toastTween?.Kill();
+		Modulate = Colors.White;
+		_shown = null; _first = true; LastEvent = "";
+		if (_toast != null) { _toast.Text = ""; _toast.Modulate = Colors.Transparent; }
+	}
+
 	public CopyTalismanState State { get; private set; } = CopyTalismanState.None;
 	/// <summary>"" / "levelled" / "changed": what the last <see cref="Apply"/> animated.</summary>
 	public string LastEvent { get; private set; } = "";
@@ -38,7 +55,6 @@ public partial class CopyTalisman : Control
 		_level = UiFind.Get<Label>(this, "Level");
 		_toast = UiFind.Get<Label>(GetParent(), "Toast"); // a HUD sibling: it sits in the bottom band, clear of the jump envelope
 		_toast.Modulate = Colors.Transparent;
-		PivotOffset = Size / 2;
 		Redisplay(null, false);
 	}
 
@@ -48,9 +64,10 @@ public partial class CopyTalisman : Control
 		bool sameMove = _shown is not null && target is not null && _shown.Data.Id == target.Data.Id;
 		if (!_first && !locked && target is not null && _shown is not null)
 		{
-			if (sameMove && target.Level > _shown.Level) { LastEvent = "levelled"; Pulse(); }
+			if (sameMove && target.Level > _shown.Level) { LastEvent = "levelled"; ClearToast(); Pulse(); }
 			else if (!sameMove) { LastEvent = "changed"; Announce($"Copy target: {target.Data.Name}, Lv {target.Level}"); }
 		}
+		if (locked) ClearToast();
 		if (_first || State != StateFor(target, locked) || _shown?.Data.Id != target?.Data.Id || _shown?.Level != target?.Level) Redisplay(target, locked);
 		_first = false;
 	}
@@ -73,24 +90,32 @@ public partial class CopyTalisman : Control
 		QueueRedraw();
 	}
 
-	/// <summary>Long names ("RISING TALISMAN") wrap to two lines at the same slot size; shrink only until the longest word fits.</summary>
+	/// <summary>
+	/// Names wrap at spaces and hyphens, two lines at most, at <see cref="NameSize"/> (the 720p floor). Only if a single
+	/// word is still wider than the slot does it shrink, never below <see cref="NameSizeMin"/>.
+	/// </summary>
 	private void FitName()
 	{
 		var font = _name.GetThemeFont("font");
-		int size = 20;
-		float limit = _name.Size.X;
-		foreach (string w in _name.Text.Split(' '))
-			while (size > 18 && font.GetStringSize(w, fontSize: size).X > limit) size--;
+		int size = NameSize;
+		foreach (string w in _name.Text.Replace("-", "- ").Split(' ', System.StringSplitOptions.RemoveEmptyEntries))
+			while (size > NameSizeMin && font.GetStringSize(w.TrimEnd(), fontSize: size).X > _name.Size.X) size--;
 		_name.AddThemeFontSizeOverride("font_size", size);
+	}
+
+	private void ClearToast()
+	{
+		_toastTween?.Kill();
+		_toast.Text = "";
+		_toast.Modulate = Colors.Transparent;
 	}
 
 	private void Pulse()
 	{
 		_pulse?.Kill();
-		Scale = Vector2.One;
+		Modulate = new Color(1.6f, 1.45f, 1.2f);
 		_pulse = CreateTween();
-		_pulse.TweenProperty(this, "scale", new Vector2(1.18f, 1.18f), 0.12f);
-		_pulse.TweenProperty(this, "scale", Vector2.One, 0.28f);
+		_pulse.TweenProperty(this, "modulate", Colors.White, 0.4);
 	}
 
 	private void Announce(string text)
@@ -108,8 +133,8 @@ public partial class CopyTalisman : Control
 		var r = new Rect2(Vector2.Zero, Size);
 		bool none = State == CopyTalismanState.None;
 		if (!none) // persimmon glow, steady (T6)
-			for (int i = 4; i >= 1; i--) DrawRect(r.Grow(i * 4), new Color(FightHud.Persimmon, 0.16f), false, 4f);
-		DrawRect(new Rect2(r.Position + new Vector2(6, 8), r.Size), new Color(0, 0, 0, 0.35f));
+			for (int i = 2; i >= 1; i--) DrawRect(r.Grow(i * 4), new Color(FightHud.Persimmon, 0.2f), false, 4f); // reaches GlowReach
+		DrawRect(new Rect2(r.Position + ShadowOffset, r.Size), new Color(0, 0, 0, 0.35f));
 		DrawRect(r, none ? new Color(0.6f, 0.58f, 0.5f) : FightHud.Paper);
 		DrawRect(r, none ? new Color(0.35f, 0.34f, 0.3f) : FightHud.Ink, false, 5f);
 		DrawRect(r.Grow(-8), FightHud.Seal, false, 2f);

@@ -68,7 +68,25 @@ public partial class FightHud : CanvasLayer
 	private IHudRunView? _runView;
 
 	/// <summary>Copy target, lock and node kind (YOK-74). Defaults to the hosting <see cref="FightScene"/>'s session; null session = no target.</summary>
-	public IHudRunView? RunView { get => _runView ?? (GetParent() is FightScene f ? new SessionHudRunView(f.Session) : null); set => _runView = value; }
+	public IHudRunView? RunView
+	{
+		get
+		{
+			if (_runView != null) return _runView;
+			if (GetParent() is not FightScene f) return null;
+			if (_sessionView == null || !ReferenceEquals(_viewSession, f.Session))
+			{
+				if (_sessionView != null) _copyTalisman.Reset(); // a restart or a new run: its first target is not a "change"
+				_viewSession = f.Session;
+				_sessionView = new SessionHudRunView(f.Session);
+			}
+			return _sessionView;
+		}
+		set { _runView = value; _copyTalisman?.Reset(); }
+	}
+
+	private RunSession? _viewSession;
+	private SessionHudRunView? _sessionView;
 
 	public CopyTalisman CopyTarget => _copyTalisman;
 	public bool TwistStripVisible => _twistStrip.Visible;
@@ -79,13 +97,13 @@ public partial class FightHud : CanvasLayer
 	{
 		var run = RunView;
 		_copyTalisman.Apply(run?.Copy, run?.CopyLocked ?? false);
-		bool tanuki = run?.InTanukiFight ?? false;
-		_twistStrip.Visible = tanuki || (run?.ElderFight ?? false);
+		var copy = run?.Copy;
+		bool tanuki = (run?.InTanukiFight ?? false) && copy != null; // nothing locked = nothing to say (the strip stays hidden)
+		_twistStrip.Visible = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
 		if (tanuki)
 		{
-			var copy = run!.Copy;
 			_twistKicker.Text = "THE TANUKI COPIES";
-			_twistText.Text = copy is null ? "" : $"{copy.Data.Name} at Lv {copy.MoveLevel}, no modifiers"; // T4
+			_twistText.Text = $"{copy!.Data.Name} at Lv {copy.MoveLevel}, no modifiers"; // T4
 		}
 		else
 		{

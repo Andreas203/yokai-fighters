@@ -38,15 +38,17 @@ public partial class CopyHudCapture : Node
 		await Snap($"{dir}/hud_copy_none_{tag}.png");
 		view.Copy = CopyRule.Target(run); view.ElderFight = true; Tick();
 		await Snap($"{dir}/hud_copy_defined_elder_{tag}.png");
-		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick();
+		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick(); await Wait(0.3);
 		await Snap($"{dir}/hud_copy_changed_{tag}.png");
-		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick();
-		view.CopyLocked = true; view.ElderFight = false; Tick();
+		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick(); await Wait(0.9);
+		view.CopyLocked = true; view.ElderFight = false; Tick(); await Wait(0.3);
 		await Snap($"{dir}/hud_copy_locked_{tag}.png");
-		view.InTanukiFight = true; Tick();
+		view.InTanukiFight = true; Tick(); await Wait(0.3);
 		await Snap($"{dir}/hud_copy_tanuki_{tag}.png");
 		GetTree().Quit();
 	}
+
+	private async System.Threading.Tasks.Task Wait(double seconds) => await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);
 
 	private async System.Threading.Tasks.Task Snap(string path)
 	{
