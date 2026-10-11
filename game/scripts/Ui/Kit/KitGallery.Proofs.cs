@@ -87,7 +87,6 @@ public partial class KitGallery
 		Copy(page, "KITSUNE · 600 / 1000", "BodyLabel", new Vector2(1120, 90), new Vector2(510, 48));
 		page.AddChild(new ProgressBar { Position = new Vector2(1120, 148), Size = new Vector2(520, 32), Value = 60, ShowPercentage = false, ThemeTypeVariation = "HealthBarEnemy" });
 		Art(page, "fox-mask", new Vector2(1650, 30), new Vector2(215, 240));
-		Copy(page, "HUD study · live values and meters", "FooterLabel", new Vector2(60, 322), new Vector2(900, 48));
 		var samples = Sheet(new Vector2(60, 410), new Vector2(1800, 540)); samples.Ornaments = false; page.AddChild(samples);
 		Copy(page, "Shared plates", "SubheadingLabel", new Vector2(120, 445), new Vector2(800, 70));
 		Art(page, "rice-sheet", new Vector2(120, 550), new Vector2(350, 240));
