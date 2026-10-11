@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Godot;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
@@ -60,7 +61,10 @@ public partial class MenuMockups : Node
 		Title.ContinueRequested += () => Say("Continue: would resume the saved run (not wired)");
 		Title.PracticeRequested += () => Say("Practice: would open the dojo scene (not wired)");
 		Title.QuitRequested += () => Say("Quit: would close the game (not wired)");
-		Pause.Bind(Run, 3, 8, "Kitsune", ContentPaths.Data("moves"));
+		Pause.Bind(Run, 1, 2, "Kitsune", ContentPaths.Data("moves"));
+		Pause.SetRunSummary(new(new("RYO", Run.Health, RunState.MaxHealth), new("Kitsune", 640, 1000),
+			"Duel 1 of 2 · vs Kitsune", MoveListSource.Build(Run, ContentPaths.Data("moves")).Slots
+			.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Empty ? 0 : x.Level, x.ModifierName)).ToArray()));
 		Pause.ResumeRequested += () => Say("Resume: fight continues");
 		Pause.RestartRequested += () => Say("Restart run: would start a new run (not wired)");
 		Pause.QuitToTitleRequested += () => Show(MockScreen.Title);
