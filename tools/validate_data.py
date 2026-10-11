@@ -47,6 +47,7 @@ KIND_SCHEMA = {
     "story_card": "story-card.schema.json",
     "run_map": "run-map.schema.json",
     "node_scenes": "node-scenes.schema.json",
+    "trial": "trial.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -57,7 +58,10 @@ DIR_KIND = {
     "clips": ("clip",),
     "story": ("story_card",),
     "map": ("run_map", "node_scenes"),
+    "trials": ("trial",),
 }
+# Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
+TRIAL_KATA_ONLY = ("motion", "precision", "kata")
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
 
@@ -240,6 +244,27 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     return errs
 
 
+def check_trial(doc: dict) -> list[tuple[str, str]]:
+    """YOK-105 (R7): Kihon-completable steps, one step lands the trial's own special, distance min <= max."""
+    errs: list[tuple[str, str]] = []
+    goal = doc.get("goal")
+    steps = goal.get("steps") if isinstance(goal, dict) else None
+    steps = steps if isinstance(steps, list) else []
+    for i, st in enumerate(steps):
+        if not isinstance(st, dict):
+            continue
+        for key in TRIAL_KATA_ONLY:
+            if key in st:
+                errs.append((f"goal.steps.{i}.{key}", f"'{key}' needs a Kata input; trials must be Kihon-completable (R7, K2)"))
+        d = st.get("distance")
+        if isinstance(d, dict) and is_int(d.get("min")) and is_int(d.get("max")) and d["min"] > d["max"]:
+            errs.append((f"goal.steps.{i}.distance", f"min {d['min']} is greater than max {d['max']}"))
+    special = doc.get("special")
+    if isinstance(special, str) and steps and not any(isinstance(st, dict) and st.get("move") == special for st in steps):
+        errs.append(("goal.steps", f"no step names the trial's special '{special}' as its move (R7: the trial is for that special)"))
+    return errs
+
+
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
@@ -307,6 +332,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
         errs.extend(check_node_scenes(doc, path))
+    elif kind == "trial":
+        errs.extend(check_trial(doc))
     elif kind == "clip":
         hs, he, ft = doc.get("hit_start"), doc.get("hit_end"), doc.get("frames_total")
         if (hs is None) != (he is None):
