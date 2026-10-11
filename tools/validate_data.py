@@ -46,6 +46,7 @@ KIND_SCHEMA = {
     "clip": "clip.schema.json",
     "story_card": "story-card.schema.json",
     "run_map": "run-map.schema.json",
+    "node_scenes": "node-scenes.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -55,7 +56,7 @@ DIR_KIND = {
     "profiles": ("profile",),
     "clips": ("clip",),
     "story": ("story_card",),
-    "map": ("run_map",),
+    "map": ("run_map", "node_scenes"),
 }
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
@@ -214,6 +215,31 @@ def check_run_map(doc: dict) -> list[tuple[str, str]]:
     return errs
 
 
+def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
+    """YOK-77: every tier named is defined, and every node type used by a run map in the same folder has an
+    entry (the game's resolver refuses a node whose type has no Y4 tier)."""
+    errs: list[tuple[str, str]] = []
+    tiers = doc.get("tiers") if isinstance(doc.get("tiers"), dict) else {}
+    types = doc.get("types") if isinstance(doc.get("types"), dict) else {}
+    for section in ("types", "nodes", "opponents"):
+        entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
+        for name, entry in entries.items():
+            tier = entry.get("tier") if isinstance(entry, dict) else None
+            if isinstance(tier, str) and tier not in tiers:
+                errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
+    for other in sorted(path.parent.glob("*.json")):
+        try:
+            m = json.loads(other.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(m, dict) or m.get("kind") != "run_map":
+            continue
+        used = {n.get("type") for n in m.get("nodes") or [] if isinstance(n, dict) and isinstance(n.get("type"), str)}
+        for t in sorted(used - set(types)):
+            errs.append(("types", f"node type '{t}' is used by {other.name} but has no entry"))
+    return errs
+
+
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
@@ -279,6 +305,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
+    elif kind == "node_scenes":
+        errs.extend(check_node_scenes(doc, path))
     elif kind == "clip":
         hs, he, ft = doc.get("hit_start"), doc.get("hit_end"), doc.get("frames_total")
         if (hs is None) != (he is None):

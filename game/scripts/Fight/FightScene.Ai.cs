@@ -23,31 +23,41 @@ public partial class FightScene
 	private int _profileIndex;
 	private bool _swapHeld, _toggleHeld;
 
-	/// <summary>Kitsune profiles from data/profiles/, else the test fixtures. Aggressive first.</summary>
-	public static BehaviourProfile[] LoadProfiles()
+	/// <summary>A yokai's profiles from data/profiles/ (default Kitsune), else the Kitsune test fixtures. Aggressive first.</summary>
+	public static BehaviourProfile[] LoadProfiles(string yokai = "kitsune")
 	{
 		var all = BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles"));
-		var kitsune = Array.FindAll(all, p => p.Yokai == "kitsune");
-		if (kitsune.Length == 0)
+		var own = Array.FindAll(all, p => p.Yokai == yokai);
+		if (own.Length == 0)
 		{
-			GD.Print("FightScene: data/profiles/ has no kitsune profile, using TEST FIXTURE profiles");
-			kitsune = BehaviourProfile.LoadDirectory(ProjectSettings.GlobalizePath(FixtureProfilesDir));
+			GD.Print($"FightScene: data/profiles/ has no {yokai} profile, using TEST FIXTURE profiles");
+			own = BehaviourProfile.LoadDirectory(ProjectSettings.GlobalizePath(FixtureProfilesDir));
 		}
-		Array.Sort(kitsune, (a, b) => string.CompareOrdinal(a.Temperament, b.Temperament));
-		return kitsune;
+		Array.Sort(own, (a, b) => string.CompareOrdinal(a.Temperament, b.Temperament));
+		return own;
 	}
 
 	private void SetUpAi()
 	{
-		Profiles = LoadProfiles();
+		LoadNodeProfiles();
 		RebuildAi();
+	}
+
+	/// <summary>YOK-77: the node's fighter's profiles, starting on the node's profile when it names one.</summary>
+	private void LoadNodeProfiles()
+	{
+		Profiles = LoadProfiles(Opponent);
+		if (Node?.Profile is not { } id) return;
+		int i = Array.FindIndex(Profiles, p => p.Id == id);
+		if (i >= 0) _profileIndex = i;
+		else GD.PushWarning($"FightScene: node '{Node.NodeId}' names profile '{id}', which {Opponent} does not have; using {Profiles[_profileIndex % Profiles.Length].Id}");
 	}
 
 	/// <summary>New AI over the current match (fight start, reset, temperament swap): empty delay buffer.</summary>
 	public void RebuildAi()
 	{
 		P2Ai = P2AiEnabled && Profiles.Length > 0
-			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed)
+			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed, Node?.ReactionFrames) // Y4: the node's row
 			: null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
 	}

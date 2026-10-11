@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/node-scenes.schema.json",
+  "title": "Node scenes",
+  "description": "data/map/node-scenes.json (YOK-77): which scene runs each map node and what it is handed (opponent, Y4 tier, whether a win binds). Each setting is looked up from the most specific place to the least: the node's payload.scene, 'nodes', 'types', then the defaults. Type, node and yokai ids are open on purpose: a new node type, a per-node scene or a yokai getting its own kit is an edit to this file.",
+  "type": "object",
+  "required": ["kind", "id", "schema_version", "default_scene", "fallback_fighter", "tiers", "types"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "node_scenes" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "schema_version": { "description": "Bumped when the meaning of a field changes; the loader rejects versions it does not know.", "const": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "default_scene": { "description": "Scene for a node whose type and id name none.", "$ref": "#/$defs/scene" },
+    "fallback_fighter": { "description": "Kit that fights for a yokai with no 'fighter' under 'opponents' (logged when used).", "$ref": "common.schema.json#/$defs/id" },
+    "tiers": {
+      "description": "Y4 rows: reaction delay in frames per tier.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["reaction_frames"],
+        "additionalProperties": false,
+        "properties": { "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 } }
+      }
+    },
+    "types": {
+      "description": "Per node type (the map's 'type' ids). Each needs a tier.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/entry", "required": ["tier"] }
+    },
+    "nodes": {
+      "description": "Per node id overrides; they win over 'types'.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/entry" }
+    },
+    "opponents": {
+      "description": "Per yokai id: the kit that fights as it, and optionally its own tier and profile.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fighter": { "description": "Fighter (kit) id in data/moves/. Leave out while the yokai has no kit: the fallback fights.", "$ref": "common.schema.json#/$defs/id" },
+          "tier": { "$ref": "common.schema.json#/$defs/id" },
+          "profile": { "$ref": "common.schema.json#/$defs/id" }
+        }
+      }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  },
+  "$defs": {
+    "scene": { "description": "A Godot scene path.", "type": "string", "pattern": "^res://.+\\.tscn$" },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scene": { "$ref": "#/$defs/scene" },
+        "opponent": { "description": "Stand-in yokai for a node that names none (merchant, dojo until their behaviour is built).", "$ref": "common.schema.json#/$defs/id" },
+        "tier": { "description": "Y4 row; a key of 'tiers'.", "$ref": "common.schema.json#/$defs/id" },
+        "profile": { "description": "Behaviour profile id for the opponent; without it the fighter's first profile plays.", "$ref": "common.schema.json#/$defs/id" },
+        "binds": { "description": "Winning binds the yokai: R3 heal, A7 draft and the binding card. Default false.", "type": "boolean" }
+      }
+    }
+  }
+}

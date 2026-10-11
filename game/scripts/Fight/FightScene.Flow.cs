@@ -8,7 +8,12 @@ using YokaiFighters.Ui;
 namespace YokaiFighters.Fight;
 
 /// <summary>Where the YOK-39 demo is: in a duel, or on one of the screens between and after duels.</summary>
-public enum DemoStage { Fighting, Binding, Reward, Complete, Lost }
+public enum DemoStage
+{
+	Fighting, Binding, Reward, Complete, Lost,
+	/// <summary>YOK-77: the node is completed and the run goes on; the boot flow is taking this scene away for the map.</summary>
+	Left,
+}
 
 /// <summary>
 /// YOK-48 demo flow (YOK-39 vertical slice): the scene starts in Ryo vs Kitsune on a fresh run (C1, 1,000 health;
@@ -19,12 +24,47 @@ public enum DemoStage { Fighting, Binding, Reward, Complete, Lost }
 /// complete" card, loss = lose screen; every Restart starts the first fight again. Each duel gets its own recording
 /// (YOK-49), stamped with the run. Debug builds: <b>F9</b> opens the debug menu (Kitsune temperament, restart run),
 /// pausing the fight; <c>--temperament=patient</c> on the command line picks one before the first fight.
+/// <para>
+/// YOK-77: the scene plays one node of a <see cref="RunSession"/> and only calls it (<c>WinFight</c>,
+/// <c>CompleteNode</c>, <c>LoseFight</c>). The opponent, its Y4 reaction row and whether a win binds come from the
+/// node's <see cref="NodeContext"/>. Hosted (the boot flow set <see cref="Session"/>): after the node the flow
+/// returns to the map, and Restart asks the host for a new run. On its own (tests, captures, the harness, the
+/// editor, <c>--fight</c>): it starts a session on <c>data/map/demo-map.json</c>, the two-duel demo above, and
+/// walks it by itself, so the demo is one map of the same flow.
+/// </para>
 /// </summary>
 public partial class FightScene
 {
 	public const Key DebugMenuKey = Key.F9;
-	/// <summary>Duels in the demo: the first fight and the rematch.</summary>
-	public const int DemoDuels = 2;
+	/// <summary>The map the scene walks by itself when no session was handed to it.</summary>
+	public const string DemoMapFile = "demo-map.json";
+	/// <summary>Placeholder end card for a won run (the Tanuki fight and its win card are not built).</summary>
+	public const string RunWonTitle = "Run complete", RunWonText = "Placeholder end card: the run's last node is cleared.";
+
+	/// <summary>
+	/// YOK-77: the run this scene plays a node of. Set it before the scene enters the tree with a node already
+	/// entered (the boot flow); left null, the scene starts its own on <see cref="DemoMapFile"/>.
+	/// </summary>
+	public RunSession? Session { get; set; }
+	/// <summary>True when the scene made its own session: it then picks the next node and restarts by itself.</summary>
+	public bool OwnsSession { get; private set; }
+	/// <summary>The node being fought (opponent, Y4 row, binds).</summary>
+	public NodeContext Node { get; private set; } = null!;
+	/// <summary>Hosted only: Restart was pressed (lose screen, end card, pause, debug menu); the host starts a new run.</summary>
+	public event Action? RunRestartRequested;
+	/// <summary>Fights in a whole walk of the run's map (2 for the demo).</summary>
+	public int Duels => Session!.Steps;
+
+	/// <summary>A session on a map file in data/map/ with the node-scene table next to it. <paramref name="run"/>: an existing run to walk it with (given the map if it has none).</summary>
+	public static RunSession NewSession(string mapFile, uint seed, AbilityPool? pool = null, RunState? run = null)
+	{
+		pool ??= LoadAbilityPool();
+		string dir = ContentPaths.Data("map");
+		var graph = new FileMapSource(System.IO.Path.Combine(dir, mapFile)).Load();
+		run ??= RunState.NewRun(pool);
+		if (run.Map is null || run.Map.IsFinished) run.StartMap(graph);
+		return new RunSession(run, pool, NodeSceneTable.Default(dir), seed);
+	}
 
 	/// <summary>Seed for the reward draft (duel n uses RunSeed + n), so one run offers the same cards on replay.
 	/// A fresh run picks a new seed unless <see cref="FixedRunSeed"/> is set (tests, harness).</summary>
@@ -51,10 +91,10 @@ public partial class FightScene
 	}
 	/// <summary>Buttons held when the fight was entered (Start Game) or a Restart was pressed: ignored as P1 input until released, so Space does not fire a Special.</summary>
 	private InputBits _suppress;
-	/// <summary>1 = the first fight, 2 = the rematch.</summary>
+	/// <summary>Which fight of the walk this is: 1 = the first node (the demo: 1 = the first fight, 2 = the rematch).</summary>
 	public int Duel { get; private set; } = 1;
-	/// <summary>The run this scene plays (fresh at boot and on every Restart; <see cref="Run"/> if a caller set one).</summary>
-	public RunState DemoRun { get; private set; } = null!;
+	/// <summary>The run this scene plays: the session's (on its own: fresh at boot and on every Restart; <see cref="Run"/> if a caller set one).</summary>
+	public RunState DemoRun => Session!.Run;
 	public AbilityPool Pool { get; private set; } = null!;
 	/// <summary>The current reward offer (from the beaten yokai), while the binding and reward screens show.</summary>
 	public DraftRewardSource? Draft { get; private set; }
@@ -71,16 +111,39 @@ public partial class FightScene
 	/// <summary>Called first in _Ready: the run, and the first fight built from it.</summary>
 	private void SetUpRun()
 	{
-		Pool = LoadAbilityPool();
-		DemoRun = Run ?? RunState.NewRun(Pool);
-		PickRunSeed();
+		if (Session is { } hosted) { Pool = hosted.Pool; RunSeed = hosted.Seed; }
+		else
+		{
+			Pool = LoadAbilityPool();
+			PickRunSeed();
+			OwnsSession = true;
+			Session = NewSession(DemoMapFile, RunSeed, Pool, Run);
+		}
+		BeginNode();
 		Match = NewDuel();
+	}
+
+	/// <summary>Takes the session's entered node (on its own: enters the next one first): opponent, fight number, the log of stand-ins.</summary>
+	private void BeginNode()
+	{
+		if (Session!.Node is null)
+		{
+			if (!OwnsSession) throw new InvalidOperationException("FightScene: the run session has no entered node (RunSession.Enter before adding the scene)");
+			var step = Session.Enter(Session.Reachable()[0]);
+			if (!step.Ok) throw new InvalidOperationException($"FightScene: {step.Error}");
+		}
+		Node = Session.Node!;
+		Opponent = Node.Fighter;
+		Duel = Session.Step;
+		GD.Print($"FightScene: node '{Node.NodeId}' ({Node.Type}, row {Node.Row}): vs {Node.Fighter}, Y4 {Node.Tier} {Node.ReactionFrames}f{(Node.StandIn ? " [stand-in]" : "")}");
+		foreach (string note in Node.Notes) GD.Print("FightScene: " + note);
+		if (Profiles.Length > 0) LoadNodeProfiles(); // a later node of a self-walked run (the first one loads in SetUpAi)
 	}
 
 	/// <summary>The next duel of <see cref="DemoRun"/>, with P1 on the scheme chosen for this run.</summary>
 	private Match NewDuel()
 	{
-		Match m = NewMatch(DemoRun);
+		Match m = NewMatch(DemoRun); // P2 = Opponent, set from the node in BeginNode
 		if (PlayerScheme is { } scheme) m.P1.Input.Scheme = scheme;
 		return m;
 	}
@@ -88,6 +151,7 @@ public partial class FightScene
 	/// <summary>Fills the demo-complete screen from data/story/demo-complete.json; keeps the placeholder (and warns) if missing or bad.</summary>
 	private void ApplyDemoCompleteCard()
 	{
+		if (!OwnsSession) { CompleteScreen.SetText(RunWonTitle, RunWonText); return; } // a real run: placeholder until the win card exists
 		try
 		{
 			var (title, text) = LoadStory().DemoComplete(Story.StoryLibrary.DisplayName(Opponent));
@@ -107,7 +171,7 @@ public partial class FightScene
 		BindingCard = GetNode<StoryCard>("Flow/BindingCard");
 		BindingCard.Finished += ShowRewards;
 		Rewards = GetNode<RewardScreen>("Flow/Rewards");
-		Rewards.Picked += (_, _) => StartRematch();
+		Rewards.Picked += (_, _) => FinishNode();
 		CompleteScreen = GetNode<DemoCompleteScreen>("Flow/Complete");
 		CompleteScreen.RestartRequested += RestartRun;
 		ApplyDemoCompleteCard();
@@ -169,10 +233,18 @@ public partial class FightScene
 	{
 		if (Stage != DemoStage.Fighting || Match.Phase != MatchPhase.Over) return;
 		if (Recorder is { } rec) { DuelRecordings.Add(rec.Finish(Match)); Recorder = null; }
-		if (Match.Winner != 0) { Stage = DemoStage.Lost; return; } // the HUD shows the lose screen (double KO counts as a loss)
-		DemoRun.AfterDuel(Match.P1.Health); // R3: health left + 50, capped at 1,000
-		if (Duel >= DemoDuels) { Stage = DemoStage.Complete; CompleteScreen.Show(); return; }
-		Draft = new DraftRewardSource(RewardDraft.Build(DemoRun, Pool, Opponent, RunSeed + (uint)Duel), DemoRun);
+		var session = Session!;
+		if (session.IsOver) // debug R replayed a duel of a run that already ended: show the result, the run stays ended
+		{
+			Stage = Match.Winner != 0 ? DemoStage.Lost : DemoStage.Complete;
+			if (Stage == DemoStage.Complete) CompleteScreen.Show();
+			return;
+		}
+		if (Match.Winner != 0) { Stage = DemoStage.Lost; session.LoseFight(); return; } // the run ends; the HUD shows the lose screen (double KO counts as a loss)
+		// R3 (health left + 50, capped at 1,000) and the A7 offer when the node binds; null = nothing to pick (last node, stand-in stop).
+		var offer = session.Draft ?? session.WinFight(Match.P1.Health);
+		if (offer is null) { FinishNode(); return; }
+		Draft = new DraftRewardSource(offer, DemoRun);
 		string line;
 		try { line = Draft.BindingLine(Story.StoryLibrary.DisplayName(Opponent)); }
 		catch (Exception e) when (e is System.IO.IOException or FormatException or System.Text.Json.JsonException
@@ -194,25 +266,35 @@ public partial class FightScene
 		Rewards.Present(Draft);
 	}
 
-	/// <summary>The pick is already on the run (DraftRewardSource.Pick); the rematch takes it and the carried health.</summary>
-	private void StartRematch()
+	/// <summary>
+	/// The node is done (any pick is already on the run, DraftRewardSource.Pick). Last node: the end card. Hosted:
+	/// the boot flow hears <see cref="RunSession.NodeCompleted"/> and shows the map. On its own: straight into the
+	/// next node with the pick and the carried health.
+	/// </summary>
+	private void FinishNode()
 	{
 		Draft = null;
-		Duel++;
+		var done = Session!.CompleteNode();
+		if (!done.Ok) { GD.PushError($"FightScene: node '{Node.NodeId}' not completed: {done.Error}"); return; }
+		if (Session.Ended is { Won: true }) { Stage = DemoStage.Complete; CompleteScreen.Show(); return; }
+		if (!OwnsSession) { Stage = DemoStage.Left; return; }
+		BeginNode();
 		Stage = DemoStage.Fighting;
 		ReplaceMatch(NewDuel());
 	}
 
-	/// <summary>Restart from any end screen (and the debug menu): a fresh run, back to the first fight.</summary>
+	/// <summary>Restart from any end screen (and the debug menu): a fresh run. Hosted: the host starts it (back to the map). On its own: back to the first fight.</summary>
 	public void RestartRun()
 	{
 		if (Paused) PauseMenu!.Close(); // a restart from anywhere leaves no menu up
 		HideFlowScreens();
-		DemoRun = RunState.NewRun(Pool);
+		if (!OwnsSession && RunRestartRequested is { } host) { host(); return; }
 		PickRunSeed();
+		OwnsSession = true;
+		Session = NewSession(DemoMapFile, RunSeed, Pool);
+		BeginNode();
 		_suppress = HeldBits(); // the Space/A that pressed Restart must not fire a Special
 		Draft = null;
-		Duel = 1;
 		Stage = DemoStage.Fighting;
 		DuelRecordings.Clear();
 		ReplaceMatch(NewDuel());

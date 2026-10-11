@@ -85,7 +85,7 @@ public partial class FightScene
 				: new(slot.ToString(), "Empty", 0, ""));
 		return new PauseRunSummary(
 			Health(Story.StoryLibrary.DisplayName(Kit.Ryo).ToUpperInvariant(), Match.P1), Health(foe, Match.P2),
-			$"Duel {Duel} of {DemoDuels} · vs {foe}", slots);
+			$"Duel {Duel} of {Duels} · vs {foe}", slots);
 
 		static PauseFighterSummary Health(string name, Fighter f) => new(name, Math.Max(0, f.Health), f.MaxHealth);
 	}
