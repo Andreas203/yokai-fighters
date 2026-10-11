@@ -1,6 +1,16 @@
 [gd_scene format=3]
-
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/menu_row.tscn" id="row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/ghost_button.tscn" id="ghost"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/corner_ornament.tscn" id="corner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/paper_dialog.tscn" id="dialog"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/fox-mask.png" id="mask"]
+
+
+
 [ext_resource type="Script" path="res://scripts/Ui/Menus/SettingsPanel.cs" id="r1"]
 [ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
 [ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
@@ -18,27 +28,23 @@ theme = ExtResource("theme")
 mouse_filter = 0
 script = ExtResource("r1")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Backdrop" parent="." instance=ExtResource("back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.13, 0.14, 0.25, 0.96)
 
-[node name="Panel" type="Control" parent="."]
-script = ExtResource("r2")
+[node name="Panel" type="Panel" parent="."]
+theme_type_variation = &"PaperSheet"
 layout_mode = 1
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -650
-offset_top = -470
-offset_right = 650
-offset_bottom = 470
+offset_left = -780
+offset_top = -390
+offset_right = 780
+offset_bottom = 405
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -46,59 +52,51 @@ mouse_filter = 2
 [node name="Title" type="Label" parent="Panel"]
 layout_mode = 1
 offset_left = 50
-offset_top = 14
+offset_top = 0
 offset_right = 700
-offset_bottom = 100
+offset_bottom = 136
 text = "Settings"
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 100
 
-[node name="TitleRule" type="Control" parent="Panel"]
-script = ExtResource("r3")
+[node name="TitleRule" type="TextureRect" parent="Panel"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
 offset_left = 50
-offset_top = 92
-offset_right = 400
-offset_bottom = 116
+offset_top = 134
+offset_right = 1340
+offset_bottom = 144
 mouse_filter = 2
-Thickness = 8
-Ink = Color(0.72, 0.16, 0.14, 1)
 
-[node name="Seal" type="Control" parent="Panel"]
-script = ExtResource("r4")
-layout_mode = 1
-offset_left = 1180
-offset_top = 34
-offset_right = 1252
-offset_bottom = 106
-mouse_filter = 2
-Glyph = "YF"
 
-[node name="TabSound" type="Button" parent="Panel"]
+[node name="TabSound" parent="Panel" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 50
-offset_top = 126
+offset_top = 155
 offset_right = 370
-offset_bottom = 190
+offset_bottom = 220
 text = "Sound"
 theme_override_font_sizes/font_size = 34
-theme_type_variation = &"ToggleButtonOn"
+theme_type_variation = &"GhostButton"
 
-[node name="TabControls" type="Button" parent="Panel"]
+[node name="TabControls" parent="Panel" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 390
-offset_top = 126
+offset_top = 155
 offset_right = 710
-offset_bottom = 190
+offset_bottom = 220
 text = "Controls"
 theme_override_font_sizes/font_size = 34
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
 [node name="SoundPage" type="Control" parent="Panel"]
 layout_mode = 1
 offset_left = 0
-offset_top = 214
-offset_right = 1300
-offset_bottom = 820
+offset_top = 244
+offset_right = 1560
+offset_bottom = 744
 mouse_filter = 2
 
 [node name="MasterLabel" type="Label" parent="Panel/SoundPage"]
@@ -107,16 +105,16 @@ offset_left = 50
 offset_top = 24
 offset_right = 340
 offset_bottom = 88
-text = "Master volume"
-theme_override_font_sizes/font_size = 34
+text = "Master"
+theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
 
 [node name="MasterSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 360
+offset_left = 330
 offset_top = 24
-offset_right = 900
+offset_right = 1170
 offset_bottom = 88
 max_value = 100.0
 step = 5.0
@@ -125,9 +123,9 @@ size_flags_vertical = 1
 
 [node name="MasterValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 920
+offset_left = 1180
 offset_top = 24
-offset_right = 1020
+offset_right = 1300
 offset_bottom = 88
 text = "80"
 theme_override_font_sizes/font_size = 38
@@ -135,15 +133,16 @@ theme_type_variation = &"SealLabel"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="MasterPreview" type="Button" parent="Panel/SoundPage"]
+[node name="MasterPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1050
+offset_left = 1330
 offset_top = 24
-offset_right = 1250
+offset_right = 1500
 offset_bottom = 88
 text = "Preview"
 theme_override_font_sizes/font_size = 28
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
 [node name="MusicLabel" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
@@ -152,15 +151,15 @@ offset_top = 136
 offset_right = 340
 offset_bottom = 200
 text = "Music"
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
 
 [node name="MusicSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 360
+offset_left = 330
 offset_top = 136
-offset_right = 900
+offset_right = 1170
 offset_bottom = 200
 max_value = 100.0
 step = 5.0
@@ -169,9 +168,9 @@ size_flags_vertical = 1
 
 [node name="MusicValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 920
+offset_left = 1180
 offset_top = 136
-offset_right = 1020
+offset_right = 1300
 offset_bottom = 200
 text = "80"
 theme_override_font_sizes/font_size = 38
@@ -179,15 +178,16 @@ theme_type_variation = &"SealLabel"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="MusicPreview" type="Button" parent="Panel/SoundPage"]
+[node name="MusicPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1050
+offset_left = 1330
 offset_top = 136
-offset_right = 1250
+offset_right = 1500
 offset_bottom = 200
 text = "Preview"
 theme_override_font_sizes/font_size = 28
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
 [node name="SfxLabel" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
@@ -195,16 +195,16 @@ offset_left = 50
 offset_top = 248
 offset_right = 340
 offset_bottom = 312
-text = "Sound effects"
-theme_override_font_sizes/font_size = 34
+text = "Effects"
+theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
 
 [node name="SfxSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 360
+offset_left = 330
 offset_top = 248
-offset_right = 900
+offset_right = 1170
 offset_bottom = 312
 max_value = 100.0
 step = 5.0
@@ -213,9 +213,9 @@ size_flags_vertical = 1
 
 [node name="SfxValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 920
+offset_left = 1180
 offset_top = 248
-offset_right = 1020
+offset_right = 1300
 offset_bottom = 312
 text = "80"
 theme_override_font_sizes/font_size = 38
@@ -223,33 +223,35 @@ theme_type_variation = &"SealLabel"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="SfxPreview" type="Button" parent="Panel/SoundPage"]
+[node name="SfxPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1050
+offset_left = 1330
 offset_top = 248
-offset_right = 1250
+offset_right = 1500
 offset_bottom = 312
 text = "Preview"
 theme_override_font_sizes/font_size = 28
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
-[node name="Mute" type="Button" parent="Panel/SoundPage"]
+[node name="Mute" parent="Panel/SoundPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 50
-offset_top = 372
+offset_top = 346
 offset_right = 560
-offset_bottom = 444
+offset_bottom = 410
 text = "Mute all: off"
 theme_override_font_sizes/font_size = 32
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
 [node name="SoundNote" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 470
+offset_top = 430
 offset_right = 1250
-offset_bottom = 540
-text = "Preview plays a placeholder cue. The sourced sound pack replaces it."
+offset_bottom = 480
+text = "Adjust the volume."
 theme_override_font_sizes/font_size = 24
 theme_type_variation = &"FadedLabel"
 autowrap_mode = 3
@@ -257,9 +259,9 @@ autowrap_mode = 3
 [node name="ControlsPage" type="Control" parent="Panel"]
 layout_mode = 1
 offset_left = 0
-offset_top = 214
-offset_right = 1300
-offset_bottom = 820
+offset_top = 244
+offset_right = 1560
+offset_bottom = 744
 mouse_filter = 2
 visible = false
 
@@ -268,46 +270,48 @@ layout_mode = 1
 offset_left = 50
 offset_top = 0
 offset_right = 700
-offset_bottom = 40
+offset_bottom = 29
 text = "CONTROL SCHEME"
 theme_override_font_sizes/font_size = 28
 theme_type_variation = &"SealLabel"
 
-[node name="Kata" type="Button" parent="Panel/ControlsPage"]
+[node name="Kata" parent="Panel/ControlsPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 50
-offset_top = 46
+offset_top = 34
 offset_right = 430
-offset_bottom = 122
+offset_bottom = 89
 text = "Kata"
 theme_override_font_sizes/font_size = 38
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
-[node name="Kihon" type="Button" parent="Panel/ControlsPage"]
+[node name="Kihon" parent="Panel/ControlsPage" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 450
-offset_top = 46
+offset_top = 34
 offset_right = 830
-offset_bottom = 122
+offset_bottom = 89
 text = "Kihon"
 theme_override_font_sizes/font_size = 38
-theme_type_variation = &"ToggleButtonOn"
+theme_type_variation = &"GhostButton"
 
 [node name="SchemeLine" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 132
-offset_right = 1250
-offset_bottom = 172
+offset_top = 96
+offset_right = 1500
+offset_bottom = 126
 text = ""
 theme_override_font_sizes/font_size = 27
 
 [node name="SchemeNote" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 172
-offset_right = 1250
-offset_bottom = 206
+offset_top = 126
+offset_right = 1500
+offset_bottom = 150
 text = "Combos, cancels, throws and burst work the same in both."
 theme_override_font_sizes/font_size = 22
 theme_type_variation = &"PineLabel"
@@ -315,29 +319,29 @@ theme_type_variation = &"PineLabel"
 [node name="KeyboardHeading" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 222
+offset_top = 162
 offset_right = 640
-offset_bottom = 258
+offset_bottom = 188
 text = "KEYBOARD  (view only)"
 theme_override_font_sizes/font_size = 26
 theme_type_variation = &"SealLabel"
 
-[node name="KeyboardRule" type="Control" parent="Panel/ControlsPage"]
-script = ExtResource("r3")
+[node name="KeyboardRule" type="TextureRect" parent="Panel/ControlsPage"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
 offset_left = 50
-offset_top = 252
+offset_top = 184
 offset_right = 610
-offset_bottom = 274
+offset_bottom = 200
 mouse_filter = 2
-Thickness = 4
 
 [node name="KeyboardGrid" type="GridContainer" parent="Panel/ControlsPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 280
+offset_top = 204
 offset_right = 620
-offset_bottom = 620
+offset_bottom = 453
 mouse_filter = 2
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
@@ -345,42 +349,60 @@ columns = 2
 
 [node name="PadHeading" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
-offset_left = 680
-offset_top = 222
-offset_right = 1250
-offset_bottom = 258
+offset_left = 800
+offset_top = 162
+offset_right = 1500
+offset_bottom = 188
 text = "GAMEPAD  (view only)"
 theme_override_font_sizes/font_size = 26
 theme_type_variation = &"SealLabel"
 
-[node name="PadRule" type="Control" parent="Panel/ControlsPage"]
-script = ExtResource("r3")
+[node name="PadRule" type="TextureRect" parent="Panel/ControlsPage"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
-offset_left = 680
-offset_top = 252
-offset_right = 1250
-offset_bottom = 274
+offset_left = 800
+offset_top = 184
+offset_right = 1500
+offset_bottom = 200
 mouse_filter = 2
-Thickness = 4
 
 [node name="PadGrid" type="GridContainer" parent="Panel/ControlsPage"]
 layout_mode = 1
-offset_left = 680
-offset_top = 280
-offset_right = 1250
-offset_bottom = 620
+offset_left = 800
+offset_top = 204
+offset_right = 1500
+offset_bottom = 453
 mouse_filter = 2
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 columns = 2
 
-[node name="Hint" type="Label" parent="Panel"]
-layout_mode = 1
-offset_left = 0
-offset_top = 876
-offset_right = 1300
-offset_bottom = 914
-text = "Esc / B  back          Q / E  or  LB / RB  switch tab"
-theme_override_font_sizes/font_size = 28
-theme_type_variation = &"PersimmonLabel"
-horizontal_alignment = 1
+
+[node name="Mask" type="TextureRect" parent="Panel"]
+layout_mode = 0
+offset_left = 1350
+offset_top = -35
+offset_right = 1550
+offset_bottom = 220
+texture = ExtResource("mask")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Back" parent="Panel" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 0
+offset_left = 1310
+offset_top = 730
+offset_right = 1500
+offset_bottom = 790
+text = "Back"
+theme_override_font_sizes/font_size = 34
+
+[node name="Footer" parent="." instance=ExtResource("footer")]
+layout_mode = 0
+offset_left = 660
+offset_top = 980
+offset_right = 1790
+offset_bottom = 1040

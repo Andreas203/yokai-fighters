@@ -1,6 +1,16 @@
 [gd_scene format=3]
-
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/menu_row.tscn" id="row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/ghost_button.tscn" id="ghost"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/corner_ornament.tscn" id="corner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/paper_dialog.tscn" id="dialog"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/fox-mask.png" id="mask"]
+
+
+
 [ext_resource type="Script" path="res://scripts/Ui/Menus/MoveListPanel.cs" id="r1"]
 [ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
 [ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
@@ -16,18 +26,14 @@ theme = ExtResource("theme")
 mouse_filter = 0
 script = ExtResource("r1")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Backdrop" parent="." instance=ExtResource("back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.13, 0.14, 0.25, 0.96)
 
-[node name="Panel" type="Control" parent="."]
-script = ExtResource("r2")
+[node name="Panel" type="Panel" parent="."]
+theme_type_variation = &"PaperSheet"
 layout_mode = 1
 anchor_left = 0.5
 anchor_top = 0.5
@@ -50,16 +56,15 @@ offset_bottom = 100
 text = "Move list"
 theme_override_font_sizes/font_size = 64
 
-[node name="TitleRule" type="Control" parent="Panel"]
-script = ExtResource("r3")
+[node name="TitleRule" type="TextureRect" parent="Panel"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
 offset_left = 50
 offset_top = 92
 offset_right = 430
 offset_bottom = 116
 mouse_filter = 2
-Thickness = 8
-Ink = Color(0.72, 0.16, 0.14, 1)
 
 [node name="Subtitle" type="Label" parent="Panel"]
 layout_mode = 1
@@ -71,7 +76,8 @@ text = "Ryo, base kit and the specials you carry"
 theme_override_font_sizes/font_size = 26
 theme_type_variation = &"PineLabel"
 
-[node name="SchemeToggle" type="Button" parent="Panel"]
+[node name="SchemeToggle" parent="Panel" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 880
 offset_top = 22
@@ -79,9 +85,10 @@ offset_right = 1250
 offset_bottom = 82
 text = "Inputs: Kihon  (Q / X)"
 theme_override_font_sizes/font_size = 24
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
-[node name="FrameToggle" type="Button" parent="Panel"]
+[node name="FrameToggle" parent="Panel" instance=ExtResource("ghost")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 1270
 offset_top = 22
@@ -89,7 +96,7 @@ offset_right = 1650
 offset_bottom = 82
 text = "Frame data: off  (Tab / Y)"
 theme_override_font_sizes/font_size = 24
-theme_type_variation = &"ToggleButton"
+theme_type_variation = &"GhostButton"
 
 [node name="BaseHeading" type="Label" parent="Panel"]
 layout_mode = 1
@@ -101,24 +108,30 @@ text = "BASE KIT"
 theme_override_font_sizes/font_size = 30
 theme_type_variation = &"SealLabel"
 
-[node name="BaseRule" type="Control" parent="Panel"]
-script = ExtResource("r3")
+[node name="BaseRule" type="TextureRect" parent="Panel"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
 offset_left = 50
 offset_top = 198
 offset_right = 1050
 offset_bottom = 222
 mouse_filter = 2
-Thickness = 5
 
-[node name="BaseRows" type="VBoxContainer" parent="Panel"]
-layout_mode = 1
+[node name="BaseRowsScroll" type="ScrollContainer" parent="Panel"]
+layout_mode = 0
 offset_left = 50
-offset_top = 222
+offset_top = 226
 offset_right = 1050
-offset_bottom = 948
-theme_override_constants/separation = 0
-mouse_filter = 2
+offset_bottom = 930
+horizontal_scroll_mode = 0
+focus_mode = 2
+follow_focus = true
+
+[node name="BaseRows" type="VBoxContainer" parent="Panel/BaseRowsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
 
 [node name="SpecialsHeading" type="Label" parent="Panel"]
 layout_mode = 1
@@ -130,24 +143,30 @@ text = "SPECIALS"
 theme_override_font_sizes/font_size = 30
 theme_type_variation = &"SealLabel"
 
-[node name="SpecialsRule" type="Control" parent="Panel"]
-script = ExtResource("r3")
+[node name="SpecialsRule" type="TextureRect" parent="Panel"]
+texture = ExtResource("line")
+expand_mode = 1
 layout_mode = 1
 offset_left = 1090
 offset_top = 198
 offset_right = 1650
 offset_bottom = 222
 mouse_filter = 2
-Thickness = 5
 
-[node name="SpecialCards" type="VBoxContainer" parent="Panel"]
-layout_mode = 1
+[node name="SpecialCardsScroll" type="ScrollContainer" parent="Panel"]
+layout_mode = 0
 offset_left = 1090
 offset_top = 226
 offset_right = 1650
-offset_bottom = 946
-theme_override_constants/separation = 4
-mouse_filter = 2
+offset_bottom = 930
+horizontal_scroll_mode = 0
+focus_mode = 2
+follow_focus = true
+
+[node name="SpecialCards" type="VBoxContainer" parent="Panel/SpecialCardsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
 
 [node name="Legend" type="Label" parent="Panel"]
 layout_mode = 1
@@ -160,13 +179,11 @@ horizontal_alignment = 2
 theme_override_font_sizes/font_size = 20
 theme_type_variation = &"FadedLabel"
 
-[node name="Hint" type="Label" parent="Panel"]
-layout_mode = 1
-offset_left = 50
-offset_top = 952
-offset_right = 1650
-offset_bottom = 988
-text = "Esc / B  back          Tab / Y  frame data          Q / X  switch Kata / Kihon"
-theme_override_font_sizes/font_size = 26
-theme_type_variation = &"PersimmonLabel"
-horizontal_alignment = 1
+
+[node name="Footer" parent="Panel" instance=ExtResource("footer")]
+layout_mode = 0
+offset_left = 80
+offset_top = 947
+offset_right = 1630
+offset_bottom = 995
+OnPaper = true

@@ -20,15 +20,20 @@ public partial class RewardCard : Control
 
 	public event Action<RewardCard>? Hovered, Clicked;
 
-	private TalismanPanel _body = null!;
-	private SealStamp _crest = null!;
+	private Panel _body = null!;
+	private SealStamp _crest = null!, _fallback = null!;
+	private TextureRect _illustration = null!;
+	private NinePatchRect _selection = null!;
 	private Label _name = null!, _source = null!, _tag = null!, _plain = null!, _prompt = null!, _frames = null!;
 	private Control _tagPanel = null!, _frameBox = null!;
 
 	public override void _Ready()
 	{
-		_body = UiFind.Get<TalismanPanel>(this, "Body");
+		_body = UiFind.Get<Panel>(this, "Body");
 		_crest = UiFind.Get<SealStamp>(this, "Crest");
+		_fallback = UiFind.Get<SealStamp>(this, "Fallback");
+		_illustration = UiFind.Get<TextureRect>(this, "Illustration");
+		_selection = UiFind.Get<NinePatchRect>(this, "Selection");
 		_name = UiFind.Get<Label>(this, "Name");
 		_source = UiFind.Get<Label>(this, "Source");
 		_tag = UiFind.Get<Label>(this, "Tag");
@@ -47,8 +52,12 @@ public partial class RewardCard : Control
 
 	public void Bind(CardView c)
 	{
-		_crest.Glyph = c.Name[..1].ToUpperInvariant();
-		_crest.Fill = c.Kind == CardKind.Modifier ? Indigo : FightHud.Seal;
+		_crest.Glyph = string.IsNullOrEmpty(c.Name) ? "?" : c.Name[..1].ToUpperInvariant();
+		_fallback.Glyph = _crest.Glyph;
+		_illustration.Texture = RewardArt.ForId(c.Id);
+		_crest.Fill = c.Kind switch { CardKind.Modifier => Color.FromHtml("2D3A5E"), CardKind.Upgrade => Color.FromHtml("34483B"), _ => Color.FromHtml("B5332B") };
+		_fallback.Fill = _crest.Fill;
+		_tagPanel.SelfModulate = _crest.Fill;
 		_name.Text = c.Name;
 		_source.Text = c.Source;
 		_tag.Text = c.Tag;
@@ -63,9 +72,9 @@ public partial class RewardCard : Control
 	{
 		_body.Position = new Vector2(0f, selected ? 0f : RaiseWhenSelected);
 		_body.Size = new Vector2(Size.X, frameData ? BodyHeightWithFrames : BodyHeight);
-		_body.Paper = selected ? FightHud.Paper.Lightened(0.08f) : FightHud.Paper.Darkened(0.06f);
-		_body.Border = selected ? FightHud.Persimmon : FightHud.Ink;
-		_body.Highlight = selected;
+		_selection.Visible = selected;
+		_illustration.Visible = !frameData && _illustration.Texture != null;
+		_fallback.Visible = !frameData && _illustration.Texture == null;
 		_frameBox.Visible = frameData;
 	}
 }

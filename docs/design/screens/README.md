@@ -8,6 +8,7 @@ The target look for every screen: one 16:9 concept per screen (1672 x 941). The 
 | `control-select.png` | Kata / Kihon choice before the first fight | `start_screen.tscn`, different layout |
 | `hud.png` | Fight HUD | `hud.tscn` |
 | `pause.png` | Pause menu | Mockup only (`pause_menu.tscn`) |
+| `pause-no-characters.png` | Earlier pause concept without the fight behind it or the move icons; superseded by `pause.png` | n/a |
 | `pause-confirm.png` | Restart confirmation over the pause menu | Mockup only |
 | `settings.png` | Settings, sound tab | Mockup only (`settings_panel.tscn`) |
 | `reward.png` | Three reward cards | `reward_screen.tscn`, `reward_card.tscn` |

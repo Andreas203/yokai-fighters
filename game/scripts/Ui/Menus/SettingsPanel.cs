@@ -1,4 +1,5 @@
 using System;
+using YokaiFighters.Ui.Kit;
 using System.Linq;
 using Godot;
 using YokaiFighters.Fight;
@@ -9,11 +10,12 @@ namespace YokaiFighters.Ui;
 public enum SettingsTab { Sound, Controls }
 
 /// <summary>
-/// YOK-58 MOCKUP settings sheet (<c>scenes/ui/settings_panel.tscn</c>), opened from the title and the pause menu.
+/// Settings sheet (<c>scenes/ui/settings_panel.tscn</c>), opened from the title and the pause menu.
 /// SOUND: master, music and effects sliders (Left/Right on focus, steps of 5), a mute toggle and a Preview cue per
 /// slider (placeholder synthesised sound). CONTROLS: Kata / Kihon toggle with its one-line explanation (K1, K2;
 /// P4: Kihon is easier, not stronger) and read-only keyboard and pad bindings built from the live layouts
-/// (<see cref="StartScreen.Rows"/>). Values live in <see cref="MenuSettings"/>; nothing is saved yet.
+/// (<see cref="StartScreen.Rows"/>). Values live in <see cref="MenuSettings"/>, which saves each change when the boot
+/// flow has attached the player's settings file; the sheet is the same wherever it is opened from.
 /// </summary>
 public partial class SettingsPanel : Control
 {
@@ -34,6 +36,7 @@ public partial class SettingsPanel : Control
 	private Label _schemeLine = null!;
 	private static readonly string[] Names = { "Master", "Music", "Sfx" };
 	private bool _syncing;
+	private Button _back = null!;
 
 	public InkSlider SliderOf(int i) => _sliders[i];
 	public Button MuteButton => _mute;
@@ -46,6 +49,9 @@ public partial class SettingsPanel : Control
 	public override void _Ready()
 	{
 		MenuInput.EnsurePadConfirm();
+		_back = UiFind.Get<Button>(this, "Back");
+		_back.Pressed += () => BackRequested?.Invoke();
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new("choose", "Adjust"), new("tab", "Tab"), new("back", "Back"));
 		_soundPage = UiFind.Get<Control>(this, "SoundPage");
 		_controlsPage = UiFind.Get<Control>(this, "ControlsPage");
 		_tabSound = UiFind.Get<Button>(this, "TabSound");
@@ -61,7 +67,7 @@ public partial class SettingsPanel : Control
 		_kihon.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kihon);
 
 		var (musicBus, sfxBus) = MenuSettings.EnsureBuses();
-		string[] buses = { "Master", MenuSettings.MusicBus, MenuSettings.SfxBus };
+		string[] buses = { MenuSettings.MasterBus,MenuSettings.MusicBus, MenuSettings.SfxBus };
 		var cues = new[] { MenuSettings.Cue.Bell, MenuSettings.Cue.Pad, MenuSettings.Cue.Hit };
 		for (int i = 0; i < 3; i++)
 		{
@@ -94,8 +100,10 @@ public partial class SettingsPanel : Control
 		Tab = tab;
 		_soundPage.Visible = tab == SettingsTab.Sound;
 		_controlsPage.Visible = tab == SettingsTab.Controls;
-		_tabSound.ThemeTypeVariation = tab == SettingsTab.Sound ? "ToggleButtonOn" : "ToggleButton";
-		_tabControls.ThemeTypeVariation = tab == SettingsTab.Controls ? "ToggleButtonOn" : "ToggleButton";
+		_tabSound.ThemeTypeVariation = "GhostButton";
+		_tabControls.ThemeTypeVariation = "GhostButton";
+		_tabSound.AddThemeColorOverride("font_color", tab == SettingsTab.Sound ? KitBrushButton.StrokeRed : FightHud.Ink);
+		_tabControls.AddThemeColorOverride("font_color", tab == SettingsTab.Controls ? KitBrushButton.StrokeRed : FightHud.Ink);
 		WireRing();
 		Refresh();
 		if (Visible) FocusFirst();
@@ -114,14 +122,16 @@ public partial class SettingsPanel : Control
 		for (int i = 0; i < 3; i++)
 		{
 			_sliders[i].Value = vals[i];
-			_values[i].Text = MenuSettings.Muted ? "mute" : vals[i].ToString();
+			_values[i].Text = MenuSettings.Muted ? "mute" : vals[i] + "%";
 		}
 		_syncing = false;
 		_mute.Text = MenuSettings.Muted ? "Mute all: ON" : "Mute all: off";
-		_mute.ThemeTypeVariation = MenuSettings.Muted ? "ToggleButtonOn" : "ToggleButton";
+		_mute.ThemeTypeVariation = "GhostButton";
 		bool kata = MenuSettings.Scheme == ControlScheme.Kata;
-		_kata.ThemeTypeVariation = kata ? "ToggleButtonOn" : "ToggleButton";
-		_kihon.ThemeTypeVariation = kata ? "ToggleButton" : "ToggleButtonOn";
+		_kata.ThemeTypeVariation = "GhostButton";
+		_kihon.ThemeTypeVariation = "GhostButton";
+		_kata.AddThemeColorOverride("font_color", kata ? KitBrushButton.StrokeRed : FightHud.Ink);
+		_kihon.AddThemeColorOverride("font_color", kata ? FightHud.Ink : KitBrushButton.StrokeRed);
 		_schemeLine.Text = kata ? KataLine : KihonLine;
 		if (_shownScheme != MenuSettings.Scheme) FillBindings(); // Special / EX rows are scheme-specific (E16 / E18)
 	}
@@ -144,20 +154,21 @@ public partial class SettingsPanel : Control
 			MenuInput.Neighbours(_sliders[i], up, down, null, _previews[i]);
 			MenuInput.Neighbours(_previews[i], upP, downP, _sliders[i], null);
 		}
-		MenuInput.Neighbours(_mute, _sliders[2], null, null, null);
-		MenuInput.Neighbours(_kata, _tabControls, null, null, _kihon);
-		MenuInput.Neighbours(_kihon, _tabControls, null, _kata, null);
+		MenuInput.Neighbours(_mute, _sliders[2], _back, null, _back);
+		MenuInput.Neighbours(_kata, _tabControls, _back, null, _kihon);
+		MenuInput.Neighbours(_kihon, _tabControls, _back, _kata, null);
 	}
 
 	private void WireRing()
 	{
+		MenuInput.Neighbours(_back, Tab == SettingsTab.Sound ? _mute : _kihon, _tabSound, null, null);
 		Control first = Tab == SettingsTab.Sound ? _sliders[0] : _kata;
 		_tabSound.FocusNeighborBottom = _tabSound.GetPathTo(first);
 		_tabControls.FocusNeighborBottom = _tabControls.GetPathTo(first);
 		if (Tab == SettingsTab.Sound)
-			MenuInput.Ring(_tabSound, _tabControls, _sliders[0], _previews[0], _sliders[1], _previews[1], _sliders[2], _previews[2], _mute);
+			MenuInput.Ring(_tabSound, _tabControls, _sliders[0], _previews[0], _sliders[1], _previews[1], _sliders[2], _previews[2], _mute, _back);
 		else
-			MenuInput.Ring(_tabSound, _tabControls, _kata, _kihon);
+			MenuInput.Ring(_tabSound, _tabControls, _kata, _kihon, _back);
 	}
 
 	/// <summary>Keyboard and pad tables from the live bindings, the same rows as the boot start screen, with the Special / EX rows for the chosen scheme.</summary>
@@ -172,8 +183,8 @@ public partial class SettingsPanel : Control
 			foreach (Node c in grid.GetChildren()) { grid.RemoveChild(c); c.QueueFree(); }
 			foreach (var (a, b) in rows)
 			{
-				var la = new Label { Text = a, ThemeTypeVariation = "PineLabel", CustomMinimumSize = new Vector2(215, 34), ClipText = true };
-				var lb = new Label { Text = b, CustomMinimumSize = new Vector2(355, 34), ClipText = true };
+				var la = new Label { Text = a, ThemeTypeVariation = "PineLabel", CustomMinimumSize = new Vector2(215, 28) };
+				var lb = new Label { Text = b, CustomMinimumSize = new Vector2(470, 28) };
 				la.AddThemeFontSizeOverride("font_size", 24); lb.AddThemeFontSizeOverride("font_size", 24);
 				grid.AddChild(la); grid.AddChild(lb);
 			}

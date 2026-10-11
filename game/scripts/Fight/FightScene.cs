@@ -52,7 +52,7 @@ public partial class FightScene : Node3D
 
 	/// <summary>
 	/// YOK-23 (minimum of YOK-25): the scheme every player starts a fight with. The demo plays on Kihon (K2,
-	/// never cut, K4); a title-screen choice can set it before the fight scene loads.
+	/// never cut, K4). The player's control-select choice is per scene: <see cref="PlayerScheme"/>.
 	/// </summary>
 	public static ControlScheme DefaultScheme { get; set; } = ControlScheme.Kihon;
 
@@ -174,6 +174,7 @@ public partial class FightScene : Node3D
 		SetUpAi(); // YOK-27
 		StartRecording(); // YOK-49
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
+		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
 		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
 		Render();
@@ -181,6 +182,7 @@ public partial class FightScene : Node3D
 
 	public override void _Process(double delta)
 	{
+		if (Paused) { PausedFrame(); return; } // YOK-pause-flow-wiring: frozen, whoever drives the scene
 		if (ExternalDrive) return;
 
 		bool resetDown = OS.IsDebugBuild() && Input.IsPhysicalKeyPressed(Key.R); // debug only: players can't skip the reward (YOK-48)
@@ -190,7 +192,7 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
-		if (FlowPaused || Stage == DemoStage.Title) { _clock.Restart(); Render(); return; } // YOK-39: no ticks before Start
+		if (FlowPaused) { _clock.Restart(); Render(); return; }
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
 		for (int i = 0; i < due; i++) { Shake.Advance(); StepSim(P1Live(), P2Input()); /* YOK-27: P2 AI by default; YOK-49 records */ }
@@ -198,10 +200,10 @@ public partial class FightScene : Node3D
 		Render();
 	}
 
-	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw.</summary>
+	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw. Does nothing while paused.</summary>
 	public void Step(FighterInput p1, FighterInput p2)
 	{
-		if (Stage == DemoStage.Title) return; // YOK-39: the sim waits for Start Game
+		if (Paused) return;
 		Shake.Advance();
 		StepSim(p1, p2);
 		CheckDuelOver(); // YOK-48

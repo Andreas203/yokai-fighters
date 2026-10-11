@@ -265,7 +265,6 @@ public static class ModelPresentationTests
 	public static void Scene_FrameStepAdvancesTheAnimationOneTick(Node runner)
 	{
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
-		scene.StartScreenOverride = false; // YOK-39
 		runner.AddChild(scene); // live clock path
 		var overlay = scene.GetNodeOrNull<DebugOverlay>("DebugOverlay");
 		if (overlay == null) { scene.QueueFree(); return; }

@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Flow/GameFlow.cs" id="1_flow"]
+[ext_resource type="PackedScene" path="res://scenes/ui/title_menu.tscn" id="2_title"]
+[ext_resource type="PackedScene" path="res://scenes/ui/start_screen.tscn" id="3_controls"]
+
+[node name="Boot" type="Node"]
+script = ExtResource("1_flow")
+
+[node name="Menus" type="CanvasLayer" parent="."]
+layer = 30
+
+[node name="Title" parent="Menus" instance=ExtResource("2_title")]
+
+[node name="ControlSelect" parent="Menus" instance=ExtResource("3_controls")]
+visible = false

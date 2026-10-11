@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Yokai Fighters"
-run/main_scene="res://scenes/fight.tscn"
+run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [display]
