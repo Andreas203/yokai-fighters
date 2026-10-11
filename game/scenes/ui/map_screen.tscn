@@ -1,0 +1,52 @@
+[gd_scene format=3]
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/MapScreen.cs" id="script"]
+[ext_resource type="Script" path="res://scripts/Ui/MapRoutes.cs" id="routes"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/map_node.tscn" id="node"]
+[ext_resource type="Resource" path="res://ui/map_node_styles.tres" id="styles"]
+
+[node name="MapScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("theme")
+script = ExtResource("script")
+Styles = ExtResource("styles")
+NodeScene = ExtResource("node")
+
+[node name="Backdrop" parent="." instance=ExtResource("backdrop")]
+Dim = 0.6
+
+[node name="Title" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 80.0
+offset_top = 40.0
+offset_right = 1840.0
+offset_bottom = 150.0
+theme_override_font_sizes/font_size = 80
+text = "Choose your path"
+theme_type_variation = &"HeadingLabelPaper"
+
+[node name="Board" type="Control" parent="."]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 170.0
+offset_right = -80.0
+offset_bottom = -130.0
+
+[node name="Routes" type="Control" parent="Board"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("routes")
+
+[node name="Hint" parent="." instance=ExtResource("footer")]
+mouse_filter = 2
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+offset_bottom = -40.0
