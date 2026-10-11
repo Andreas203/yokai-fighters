@@ -18,10 +18,12 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// <see cref="WinFight"/> (R3 heal, R8 coins, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
 /// <see cref="LoseFight"/>. The run is won when the completed node has no route out, lost on the first lost fight.
 /// <para>
-/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/> and
-/// <see cref="Ended"/> (a later save / Continue, YOK-73, writes those) and, once Ryo has entered the Tanuki's
-/// node, the copy lock (<see cref="CopyLocked"/>, <see cref="LockedCopy"/>, T1). The object must outlive scene
-/// changes: the boot flow holds it, never a node's scene.
+/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/>,
+/// <see cref="Ended"/>, once Ryo has entered the Tanuki's node the copy lock (<see cref="CopyLocked"/>,
+/// <see cref="LockedCopy"/>, T1), and, while Ryo stands at a merchant, that stop's <see cref="Merchant.Choice"/>
+/// (R6; the constructor's and <see cref="Restore"/>'s <c>merchantChoice</c> puts it back). A later save / Continue
+/// (YOK-73) writes those; one that drops the merchant choice hands the stop's heal out twice. The object must
+/// outlive scene changes: the boot flow holds it, never a node's scene.
 /// </para>
 /// </summary>
 public sealed class RunSession
@@ -38,6 +40,8 @@ public sealed class RunSession
 	public NodeContext? Node => Entered?.Context;
 	/// <summary>The reward offer of the node just won, until the node is completed. Null when it gives none.</summary>
 	public RewardDraft? Draft { get; private set; }
+	/// <summary>YOK-83: the merchant stop Ryo is at (R6: its one choice, heal or shop); null on any other node.</summary>
+	public Merchant? Merchant { get; private set; }
 	public RunEnd? Ended { get; private set; }
 	/// <summary>R8: the coins the entered node's won fight paid; 0 before the win, on the map and for a node that pays none.</summary>
 	public int CoinsWon { get; private set; }
@@ -74,11 +78,12 @@ public sealed class RunSession
 	/// A session on <paramref name="run"/> and its map. Refused (ArgumentException) for a walk that has already
 	/// entered the Tanuki's node: its copy was locked at that entry (T1) and can't be worked out from the slots
 	/// as they stand now, so such a walk is put back with <see cref="Restore"/> and its saved lock.
+	/// <paramref name="merchantChoice"/> puts back a saved merchant stop's choice (R6).
 	/// </summary>
-	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed)
-		: this(run, pool, scenes, seed, false, null) { }
+	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, MerchantChoice merchantChoice = MerchantChoice.None)
+		: this(run, pool, scenes, seed, false, null, merchantChoice) { }
 
-	RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy)
+	RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy, MerchantChoice merchantChoice)
 	{
 		Run = run;
 		Map = run.Map ?? throw new ArgumentException("the run has no map (RunState.StartMap)", nameof(run));
@@ -105,6 +110,9 @@ public sealed class RunSession
 		LockedCopy = lockedCopy;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
+		Merchant = MerchantAt(Node);
+		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
+			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
 	}
 
 	/// <summary>
@@ -114,8 +122,9 @@ public sealed class RunSession
 	/// the walk disagree (locked before the walk entered the Tanuki's node, or not locked after it, T1), or the
 	/// copy can't be a target: a special that is not this pool's, in a slot not its own, at a level it lacks.
 	/// </summary>
-	public static RunSession Restore(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy) =>
-		new(run, pool, scenes, seed, copyLocked, lockedCopy);
+	public static RunSession Restore(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy,
+		MerchantChoice merchantChoice = MerchantChoice.None) =>
+		new(run, pool, scenes, seed, copyLocked, lockedCopy, merchantChoice);
 
 	/// <summary>T1: is this the Tanuki's node? Decided by the node's type from the map data, never by a yokai or node id.</summary>
 	public static bool IsCopyLockNode(NodeContext node) => node.Type == NodeTypeRegistry.Boss;
@@ -155,6 +164,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
+		Merchant = MerchantAt(Node);
 		(CoinsWon, _paid) = (0, false);
 		LockCopyOnEntering(Entered.Context); // T1, before the event so listeners see the lock
 		NodeEntered?.Invoke(Entered.Context);
@@ -193,12 +203,16 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = null;
 		Draft = null;
+		Merchant = null;
 		(CoinsWon, _paid) = (0, false);
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
 		return step;
 	}
+
+	Merchant? MerchantAt(NodeContext? node) =>
+		node is { Type: NodeTypeRegistry.Merchant } ? new Merchant(this, node.NodeId) : null;
 
 	/// <summary>Ryo lost the entered node's fight: the run ends there.</summary>
 	public MapResult LoseFight()
@@ -226,6 +240,8 @@ public sealed class RunSession
 			h = Fnv.MixString(h, LockedCopy?.Data.Id ?? "");
 			h = Fnv.Mix(h, LockedCopy?.Level ?? 0);
 		}
+		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
+		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(Fnv.MixString(h, "merchant"), (int)m.Choice);
 		return h;
 	}
 }
