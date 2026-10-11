@@ -40,38 +40,15 @@ public partial class KitGallery
 	}
 	private Control BuildRewardProof()
 	{
-		var page = new Control { Name = "RewardProof" };
-		var sheet = Sheet(new Vector2(174, 150), new Vector2(1550, 800)); sheet.Ornaments = false; page.AddChild(sheet);
-		var heading = Scene("kit_heading").Instantiate<KitHeading>(); heading.Text = "Reward"; heading.UnderlineWidth = 1390;
-		heading.Position = new Vector2(220, 158); page.AddChild(heading);
-		Copy(page, "Kitsune yields three talismans", "BodyLabel", new Vector2(835, 245), new Vector2(720, 50));
-		string[] names = { "Foxfire", "Spirit Wave", "Will-o’-wisp" };
-		string[] sources = { "Kitsune special", "Your special", "Kitsune modifier" };
-		string[] tags = { "NEW · Lv 1", "UPGRADE · Lv 1 to 2", "MODIFIER" };
-		string[] art = { "reward-foxfire", "reward-spirit-wave", "reward-will-o-wisp" };
-		string[] body = { "A slow, drifting flame.\nIt leaves fading copies\nbehind it.", "Your wave hits harder\nand recovers faster.", "Your projectiles fly\n30% faster.\nPick the special to carry it." };
-		for (int i = 0; i < 3; i++)
+		var screen = GD.Load<PackedScene>("res://scenes/ui/reward_screen.tscn").Instantiate<RewardScreen>();
+		screen.Name = "RewardProof";
+		screen.Ready += () =>
 		{
-			var card = Scene("kit_card").Instantiate<KitCard>();
-			card.Position = new Vector2(284 + i * 449, 345); card.Size = new Vector2(420, 535);
-			card.Preview = i == 0 ? KitState.Focused : KitState.Normal;
-			var box = card.GetNode<VBoxContainer>("Box");
-			card.GetNode<Label>("Box/Title").Text = names[i];
-			card.GetNode<Label>("Box/Title").AddThemeFontSizeOverride("font_size", 42);
-			var description = card.GetNode<Label>("Box/Body"); description.Text = body[i]; description.AddThemeFontSizeOverride("font_size", 30);
-			var source = Text(sources[i], "CaptionLabel"); box.AddChild(source); box.MoveChild(source, 1);
-			var tag = Btn("red_button", tags[i], KitState.Normal); tag.CustomMinimumSize = new Vector2(0, 48);
-			tag.AddThemeFontSizeOverride("font_size", 26); tag.FocusMode = FocusModeEnum.None; tag.MouseFilter = MouseFilterEnum.Ignore;
-			box.AddChild(tag); box.MoveChild(tag, 2);
-			var illustration = new TextureRect { Texture = Plate(art[i]), CustomMinimumSize = new Vector2(0, 208), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, MouseFilter = MouseFilterEnum.Ignore };
-			box.AddChild(illustration); box.MoveChild(illustration, 3);
-			page.AddChild(card);
-		}
-		Art(page, "fox-mask", new Vector2(1530, 158), new Vector2(270, 250));
-		Footer(page, new Vector2(290, 975), new KeyHint("frames", "Frame data: off"));
-		Footer(page, new Vector2(1210, 975), new KeyHint("choose", "Choose"), new KeyHint("confirm", "Take"));
-		return page;
+			var pool = Fight.FightScene.LoadAbilityPool();
+			var run = Sim.RunState.NewRun(pool);
+			screen.Present(new DraftRewardSource(Sim.RewardDraft.Build(run, pool, "kitsune", 1), run));
+		};
+		return screen;
 	}
 	private Control BuildPlatesPage()
 	{

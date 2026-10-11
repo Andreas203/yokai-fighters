@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using YokaiFighters.Fight;
+using YokaiFighters.Ui.Kit;
 
 namespace YokaiFighters.Ui;
 
@@ -47,6 +48,8 @@ public partial class RewardScreen : Control
 		_hintTarget = UiFind.Get<Control>(this, "HintTarget");
 		_toggle = UiFind.Get<Button>(this, "FrameToggle");
 		_toggle.Pressed += ToggleFrameData;
+		UiFind.Get<KeyChipFooter>(this, "HintCards").SetHints(new("choose", "Choose"), new("confirm", "Take"));
+		UiFind.Get<KeyChipFooter>(this, "HintTarget").SetHints(new("choose", "Choose"), new("confirm", "Attach"), new("back", "Back"));
 		foreach (Node n in _cardsBox.GetChildren())
 			if (n is RewardCard c) { _cards.Add(c); c.Hovered += OnCardHover; c.Clicked += OnCardClick; }
 		foreach (Node n in _targetsBox.GetChildren())
@@ -159,7 +162,11 @@ public partial class RewardScreen : Control
 	{
 		if (!Showing || Offer == null || _title == null) return;
 		bool cards = Step == RewardStep.Cards;
-		_title.Text = cards ? $"{Offer.Yokai} yields three talismans" : $"Where does {Offer.Cards[CardCursor].Name} go?";
+		_title.Text = cards ? $"{Offer.Yokai} yields {Offer.Cards.Count} talismans" : $"Where does {Offer.Cards[CardCursor].Name} go?";
+		UiFind.Get<Label>(this, "RewardHeading").Visible = cards;
+		_title.Position = cards ? new Vector2(735, 213) : new Vector2(235, 180);
+		_title.Size = cards ? new Vector2(830, 80) : new Vector2(1320, 110);
+		_title.AddThemeFontSizeOverride("font_size", cards ? 36 : 52);
 		_cardsBox.Visible = cards; _hintCards.Visible = cards; _toggle.Visible = cards;
 		_targetsBox.Visible = !cards; _hintTarget.Visible = !cards; _targetHeading.Visible = !cards;
 		for (int i = 0; i < _cards.Count; i++)
@@ -177,7 +184,6 @@ public partial class RewardScreen : Control
 				_targets[i].SetSelected(i == TargetCursor);
 			}
 		}
-		_toggle.Text = FrameDataVisible ? "Frame data: ON  (Tab / Y)" : "Frame data: off  (Tab / Y)";
-		_toggle.ThemeTypeVariation = FrameDataVisible ? "ToggleButtonOn" : "ToggleButton";
+		UiFind.Get<KeyChipFooter>(this, "FrameHint").SetHints(new KeyHint("frames", FrameDataVisible ? "Frame data: ON" : "Frame data: off"));
 	}
 }
