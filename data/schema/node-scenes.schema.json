@@ -68,6 +68,7 @@
         "additionalProperties": false,
         "properties": {
           "fighter": { "description": "Fighter (kit) id in data/moves/. Leave out while the yokai has no kit: the fallback fights.", "$ref": "common.schema.json#/$defs/id" },
+          "kit": { "description": "How the opponent's kit is built. Left out = the fighter's own files in data/moves/. copy_of_ryo = Ryo's normals, throw and starters plus the special copied at the T1 lock (T0), on Ryo's model and clips; 'fighter' is then only the name profiles and the HUD use.", "enum": ["copy_of_ryo"] },
           "tier": { "$ref": "common.schema.json#/$defs/id" },
           "profile": { "$ref": "common.schema.json#/$defs/id" }
         }

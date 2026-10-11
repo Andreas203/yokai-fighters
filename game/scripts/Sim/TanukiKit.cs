@@ -12,8 +12,11 @@ namespace YokaiFighters.Sim;
 /// </summary>
 public sealed class TanukiKit
 {
-	/// <summary>The fighter id the node table gives the Tanuki (data/map/node-scenes.json <c>opponents.tanuki</c>).</summary>
-	public const string Fighter = "tanuki";
+	/// <summary>
+	/// The kit kind an opponent names in data/map/node-scenes.json (<c>opponents.&lt;yokai&gt;.kit</c>): which opponent
+	/// fights with this kit is data, never a fighter or yokai id in code.
+	/// </summary>
+	public const string KitId = "copy_of_ryo";
 
 	/// <summary>Ryo's normals, throw and air normals, the same objects as his kit (T0: no moves of its own).</summary>
 	public MoveData[] Moves { get; }

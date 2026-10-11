@@ -25,6 +25,8 @@ public sealed record NodeContext(
 {
 	/// <summary>YOK-85, R8: coins a won fight on this node pays (0 = none). Not positional, so older callers still build.</summary>
 	public int Coins { get; init; }
+	/// <summary>YOK-94: how the opponent's kit is built, from the opponent's <c>kit</c> in the table; null = the fighter's own files (<c>Kit.Load</c>); <see cref="TanukiKit.KitId"/> = Ryo's kit + the locked copy (T0).</summary>
+	public string? Kit { get; init; }
 }
 
 /// <summary>The scene a node runs in (a <c>res://</c> path) and what it is handed.</summary>
@@ -59,7 +61,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	public const string Kind = "node_scenes";
 	public const int SchemaVersion = 1;
 
-	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds, int? Coins = null);
+	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds, int? Coins = null, string? Kit = null);
 
 	readonly Dictionary<string, Entry> _types, _nodes, _opponents;
 	readonly Dictionary<string, int> _tiers;
@@ -153,6 +155,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			byNode?.Profile ?? foe?.Profile, tier, _tiers[tier], byNode?.Binds ?? byType?.Binds ?? false, standIn,
 			node.Payload, notes)
 		{
+			Kit = foe?.Kit,
 			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
 		};
 		return new NodeScene(scene, ctx);
@@ -172,7 +175,8 @@ public sealed class NodeSceneTable : INodeSceneResolver
 				binds = flag;
 			}
 			map[name] = new Entry(Text(e, "scene", where), Text(e, "opponent", where), Text(e, "fighter", where),
-				Text(e, "tier", where), Text(e, "profile", where), binds, Coins(e, where));
+				Text(e, "tier", where), Text(e, "profile", where), binds, Coins(e, where), Text(e, "kit", where));
+			if (map[name].Kit is { } kit && kit != TanukiKit.KitId) throw new FormatException($"node scenes: {where}.kit '{kit}' is not a kit this build knows ('{TanukiKit.KitId}')");
 		}
 		return map;
 	}

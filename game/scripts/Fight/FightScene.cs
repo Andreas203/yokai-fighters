@@ -99,7 +99,7 @@ public partial class FightScene : Node3D
 		var cfg = run?.MatchConfig();
 		var ryo = LoadKit(Kit.Ryo);
 		Match m;
-		if (Opponent == TanukiKit.Fighter) // YOK-94, T0: Ryo's kit + the copy locked on entering the boss node (T1)
+		if (session?.Node?.Kit == TanukiKit.KitId) // YOK-94, T0: the node's opponent fights with Ryo's kit + the copy locked on entering the boss node (T1)
 		{
 			var tanuki = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(session?.CopyLocked ?? false, session?.LockedCopy, run, ryo.Specials));
 			foreach (var n in tanuki.Notes) GD.Print("FightScene: " + n);

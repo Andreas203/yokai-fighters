@@ -77,6 +77,52 @@ public static class ReplayTests
 		return t % 20 == 0 ? new FighterInput(InputBits.HeavyPunch) : FighterInput.None;
 	}
 
+	/// <summary>YOK-94: the Tanuki (Ryo's fixture kit + a copy of Spirit Wave Lv 1) driven by data/profiles/tanuki-boss.json, P1 idle.</summary>
+	static ReplayRecording TanukiFight(out int copiedUses)
+	{
+		var src = FightScene.FixtureSources;
+		var ryo = Kit.Load(Kit.Ryo, src);
+		var kit = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(false, null, null, ryo.Specials));
+		var m = new Match(null, ryo.Moves, kit.Moves);
+		ryo.Equip(m.P1);
+		kit.Equip(m.P2);
+		int uses = 0;
+		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Slot == kit.CopiedSlot) uses++; };
+		var profile = BehaviourProfile.LoadFile(Path.Combine(RepoRoot, "data", "profiles", "tanuki-boss.json"));
+		var rec = Play(m, (_, _) => FighterInput.None, null, 1800, new ProfileAi(profile, 1, AiLoadout.From(m.P2), 94), 94);
+		copiedUses = uses;
+		return rec;
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_ReplaysIdentically()
+	{
+		var rec = TanukiFight(out int uses);
+		Assert.True(uses > 0, "the recorded Tanuki used special:copied");
+		Assert.Equal((int)SpecialSlot.A, rec.Header.Fighters[1].CopiedSlot, "the copied slot is in the recording");
+		Assert.Equal(0, rec.Header.Fighters[0].CopiedSlot, "Ryo has none");
+		AssertReplays(rec, "tanuki fight");
+
+		// The slot is what makes it replay: without it special:copied presses nothing and the AI check reports it.
+		var stripped = ReplayRecording.FromBytes(rec.ToBytes());
+		stripped.Header.Fighters[1].CopiedSlot = 0;
+		Assert.True(!Replayer.Run(stripped, Catalog).Ok, "a Tanuki recording with the slot taken out is reported, not passed");
+		var bad = ReplayRecording.FromBytes(rec.ToBytes());
+		bad.Header.Fighters[1].CopiedSlot = (int)SpecialSlot.D;
+		Assert.True(!Replayer.Run(bad, Catalog).Ok, "a copied slot holding no special is refused");
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_RecordingWithoutTheFieldStillReplays()
+	{
+		// A fight with no copy writes its header as recordings did before YOK-94: no CopiedSlot at all.
+		var rec = Play(FightScene.NewMatch(), Bully, (_, _) => FighterInput.None, 6000);
+		string header = System.Text.Json.JsonSerializer.Serialize(rec.Header);
+		Assert.True(!header.Contains("CopiedSlot"), "no copy: the field is not written (the pre-YOK-94 header)");
+		Assert.Equal(0, ReplayRecording.FromBytes(rec.ToBytes()).Header.Fighters[1].CopiedSlot, "a header without the field reads as no copy");
+		AssertReplays(rec, "recording without a copied slot");
+	}
+
 	[Test]
 	public static void ScriptedFightToKo_ReplaysIdentically()
 	{

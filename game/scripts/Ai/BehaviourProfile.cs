@@ -20,9 +20,7 @@ public enum ActionKind { WalkForward, WalkBack, DashForward, DashBack, Jump, Blo
 /// <summary>A profile action: generic, or a move id ("special:foxfire", "normal:heavy-punch").</summary>
 public readonly record struct AiAction(ActionKind Kind, string? MoveId = null)
 {
-	/// <summary>YOK-94: <c>special:copied</c>, the Tanuki's copied special (resolved by the AI loadout).</summary>
-	public bool IsCopiedSpecial => Kind == ActionKind.Special && MoveId == BehaviourProfile.CopiedSpecial;
-	public bool Offensive =>Kind is ActionKind.WalkForward or ActionKind.DashForward or ActionKind.Jump
+	public bool Offensive => Kind is ActionKind.WalkForward or ActionKind.DashForward or ActionKind.Jump
 		or ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
 	public override string ToString() => MoveId is null ? BehaviourProfile.ActionName(Kind) : $"{BehaviourProfile.ActionName(Kind)}:{MoveId}";
 }

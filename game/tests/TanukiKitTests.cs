@@ -21,6 +21,8 @@ public static class TanukiKitTests
 	static Kit Ryo() => Kit.Load(Kit.Ryo, Fixtures);
 	static SpecialData Foxfire(AbilityPool pool) => pool.Special("test-foxfire") ?? throw new AssertFailed("fixture Foxfire missing");
 
+	static bool IsCopied(AiAction a) => a.Kind == ActionKind.Special && a.MoveId == BehaviourProfile.CopiedSpecial;
+
 	/// <summary>A Lv 1-2 special for <paramref name="slot"/> made from the Spirit Wave fixture's frame data.</summary>
 	static SpecialData Make(AbilityPool pool, string id, string slot)
 	{
@@ -165,8 +167,8 @@ public static class TanukiKitTests
 	public static void CopiedTokenResolvesToTheCopySlot_AndLiteralIdsStillWork()
 	{
 		var a = BehaviourProfile.ParseAction("special:copied");
-		Assert.True(a.Kind == ActionKind.Special && a.IsCopiedSpecial && a.ToString() == "special:copied", "parses as the copied special");
-		Assert.True(!BehaviourProfile.ParseAction("special:test-foxfire").IsCopiedSpecial, "a literal id is not the token");
+		Assert.True(a.Kind == ActionKind.Special && IsCopied(a) && a.ToString() == "special:copied", "parses as the copied special");
+		Assert.True(!IsCopied(BehaviourProfile.ParseAction("special:test-foxfire")), "a literal id is not the token");
 
 		var pool = Pool();
 		var run = RunState.NewRun(pool);
@@ -189,8 +191,8 @@ public static class TanukiKitTests
 	public static void TanukiProfileUsesTheCopyAndEveryActionResolves()
 	{
 		var p = BehaviourProfile.LoadFile(Path.Combine(RepoRoot, "data", "profiles", "tanuki-boss.json"));
-		Assert.True(p.Yokai == "tanuki" && p.Behaviours.Any(b => b.Do.IsCopiedSpecial), "tanuki-boss uses special:copied");
-		Assert.True(!p.Behaviours.Any(b => b.Do.Kind == ActionKind.Special && !b.Do.IsCopiedSpecial), "and names no special id of its own");
+		Assert.True(p.Yokai == "tanuki" && p.Behaviours.Any(b => IsCopied(b.Do)), "tanuki-boss uses special:copied");
+		Assert.True(!p.Behaviours.Any(b => b.Do.Kind == ActionKind.Special && !IsCopied(b.Do)), "and names no special id of its own");
 
 		var src = KitSources.Repo(RepoRoot);
 		var run = RunState.NewRun(AbilityPool.Load(src, Path.Combine(RepoRoot, "data", "modifiers")));
@@ -235,7 +237,7 @@ public static class TanukiKitTests
 		var session = RunSession.Start(Pool(), graph, table, 94);
 		session.Run.LevelUp(SpecialSlot.A); // before the lock: Spirit Wave Lv 2 is the target
 		Assert.True(session.Enter("boss-tanuki").Ok && session.CopyLocked, "T1: locked on entering the boss node");
-		Assert.True(session.Node!.Fighter == TanukiKit.Fighter && !session.Node.StandIn, "node-scenes.json: the Tanuki fights as itself");
+		Assert.True(session.Node!.Fighter == "tanuki" && session.Node.Kit == TanukiKit.KitId && !session.Node.StandIn, "node-scenes.json: the Tanuki fights as itself");
 
 		string savedOpp = FightScene.Opponent;
 		var savedSrc = FightScene.Sources;
