@@ -181,6 +181,37 @@ public sealed class RunState
 	/// <summary>Merchant / dojo heals and other run events (clamped 0..1,000).</summary>
 	public void SetHealth(int health) => Health = Math.Clamp(health, 0, MaxHealth);
 
+	/// <summary>
+	/// YOK-85, R8: Ryo's coins this run. A won duel pays them (<see cref="RunSession.WinFight"/>, the amount from
+	/// the node-scene table); the merchant's shop (R6) spends them through <see cref="TrySpend"/>.
+	/// </summary>
+	public int Coins { get; private set; }
+
+	/// <summary>Pays Ryo <paramref name="amount"/> coins (0 or more). The purse stops at <see cref="int.MaxValue"/> rather than wrap.</summary>
+	public void AddCoins(int amount)
+	{
+		if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount), amount, "coins paid can't be negative");
+		Coins = amount > int.MaxValue - Coins ? int.MaxValue : Coins + amount;
+	}
+
+	/// <summary>Ryo has at least <paramref name="cost"/> coins. A negative cost is never affordable.</summary>
+	public bool CanAfford(int cost) => cost >= 0 && cost <= Coins;
+
+	/// <summary>Takes <paramref name="cost"/> coins and returns true; when Ryo cannot afford it (or the cost is negative) nothing changes and it returns false.</summary>
+	public bool TrySpend(int cost)
+	{
+		if (!CanAfford(cost)) return false;
+		Coins -= cost;
+		return true;
+	}
+
+	/// <summary>Puts back the purse of a saved run (0 or more).</summary>
+	public void RestoreCoins(int coins)
+	{
+		if (coins < 0) throw new ArgumentOutOfRangeException(nameof(coins), coins, "coins can't be negative");
+		Coins = coins;
+	}
+
 	/// <summary>The next fight's config: Ryo (P1) starts with the carried health.</summary>
 	public SimConfig MatchConfig(SimConfig? baseConfig = null) =>
 		(baseConfig ?? SimConfig.Default) with { P1MaxHealth = MaxHealth, P1StartHealth = Health };
@@ -216,6 +247,7 @@ public sealed class RunState
 			h = Fnv.Mix(h, unchecked((int)m));
 			h = Fnv.Mix(h, unchecked((int)(m >> 32)));
 		}
+		if (Coins != 0) h = Fnv.Mix(Fnv.MixString(h, "coins"), Coins); // R8: a run with an empty purse keeps the hash it had before YOK-85
 		return h;
 	}
 }

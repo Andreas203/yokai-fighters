@@ -48,7 +48,7 @@ public static class StoryScreenTests
 			screen.Finished += () => finished++;
 			foreach (var card in FightScene.LoadStory().Cards)
 			{
-				var text = card.FillText("Kitsune");
+				var text = card.FillText("Kitsune", "Foxfire");
 				screen.Display(text);
 				CheckLayout(screen, "Text", text);
 				screen.Dismiss();

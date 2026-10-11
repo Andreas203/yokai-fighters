@@ -1,0 +1,62 @@
+{
+  "kind": "profile",
+  "id": "kappa-aggressive",
+  "status": "proposed",
+  "yokai": "kappa",
+  "temperament": "aggressive",
+  "reaction": {
+    "tier": "yokai",
+    "frames": 22
+  },
+  "aggression_bias": 75,
+  "preferred_range": "close",
+  "habit": {
+    "id": "throws-after-two-blocked-hits",
+    "description": "After blocking two hits in a row the Kappa grabs. Stop at one hit, or jump or back off after the second block, and the throw whiffs.",
+    "when": "blocked_two_hits_in_row",
+    "do": "throw",
+    "chance_pct": 70
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    {
+      "when": "at_full_screen",
+      "do": "walk_forward",
+      "weight": 60
+    },
+    {
+      "when": "at_mid_range",
+      "do": "walk_forward",
+      "weight": 70
+    },
+    {
+      "when": "at_mid_range",
+      "do": "dash_forward",
+      "weight": 20
+    },
+    {
+      "when": "at_close_range",
+      "do": "throw",
+      "weight": 45
+    },
+    {
+      "when": "opponent_attacking",
+      "do": "block",
+      "weight": 30
+    },
+    {
+      "when": "opponent_jumping",
+      "do": "block",
+      "weight": 20
+    }
+  ],
+  "rules": [
+    "Y1",
+    "Y2",
+    "Y4",
+    "Y5",
+    "P6",
+    "E22"
+  ],
+  "notes": "Kappa aggressive (Y2): walks straight into throw range. Kappa uses only generic actions (its throw is the generic throw, C4); data/moves/ has no kappa-* normals or clips yet, so it has no strikes of its own. When they land, add pokes. No ids invented."
+}

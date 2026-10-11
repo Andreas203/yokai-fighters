@@ -32,8 +32,29 @@
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/entry", "required": ["tier"] }
     },
+    "rows": {
+      "description": "R8: per map row, per node type, what replaces the type's 'coins' on that row (the row-8 elder pays a rare ability instead of coins). 'nodes' still wins.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "types": {
+            "type": "object",
+            "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+            "additionalProperties": {
+              "type": "object",
+              "required": ["coins"],
+              "additionalProperties": false,
+              "properties": { "coins": { "$ref": "#/$defs/coins" } }
+            }
+          }
+        }
+      }
+    },
     "nodes": {
-      "description": "Per node id overrides; they win over 'types'.",
+      "description": "Per node id overrides; they win over 'types' and 'rows'.",
       "type": "object",
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
       "additionalProperties": { "$ref": "#/$defs/entry" }
@@ -55,6 +76,7 @@
     "notes": { "$ref": "common.schema.json#/$defs/notes" }
   },
   "$defs": {
+    "coins": { "description": "R8: coins a won fight on the node pays. Default 0.", "type": "integer", "minimum": 0, "maximum": 9999 },
     "scene": { "description": "A Godot scene path.", "type": "string", "pattern": "^res://.+\\.tscn$" },
     "entry": {
       "type": "object",
@@ -64,7 +86,8 @@
         "opponent": { "description": "Stand-in yokai for a node that names none (merchant, dojo until their behaviour is built).", "$ref": "common.schema.json#/$defs/id" },
         "tier": { "description": "Y4 row; a key of 'tiers'.", "$ref": "common.schema.json#/$defs/id" },
         "profile": { "description": "Behaviour profile id for the opponent; without it the fighter's first profile plays.", "$ref": "common.schema.json#/$defs/id" },
-        "binds": { "description": "Winning binds the yokai: R3 heal, A7 draft and the binding card. Default false.", "type": "boolean" }
+        "binds": { "description": "Winning binds the yokai: R3 heal, A7 draft and the binding card. Default false.", "type": "boolean" },
+        "coins": { "$ref": "#/$defs/coins" }
       }
     }
   }

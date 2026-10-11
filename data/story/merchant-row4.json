@@ -1,0 +1,18 @@
+{
+  "kind": "story_card",
+  "id": "merchant-row4",
+  "status": "proposed",
+  "trigger": "Row 4, merchant still disguised",
+  "text": "That {move} of yours... I'd love one.",
+  "placeholders": [
+    "move"
+  ],
+  "speaker": "Merchant",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "notes": "Verbatim per S3; {move} = current copy target (T2). Merchant is cheerful, generous, quietly hungry."
+}

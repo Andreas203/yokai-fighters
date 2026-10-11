@@ -21,7 +21,11 @@ namespace YokaiFighters.Sim;
 public sealed record NodeContext(
 	string NodeId, string Type, int Row, string? Yokai, bool Elder,
 	string Fighter, string? Profile, string Tier, int ReactionFrames, bool Binds, bool StandIn,
-	IReadOnlyDictionary<string, JsonElement> Payload, IReadOnlyList<string> Notes);
+	IReadOnlyDictionary<string, JsonElement> Payload, IReadOnlyList<string> Notes)
+{
+	/// <summary>YOK-85, R8: coins a won fight on this node pays (0 = none). Not positional, so older callers still build.</summary>
+	public int Coins { get; init; }
+}
 
 /// <summary>The scene a node runs in (a <c>res://</c> path) and what it is handed.</summary>
 public sealed record NodeScene(string Scene, NodeContext Context);
@@ -44,7 +48,8 @@ public interface INodeSceneResolver
 /// <item>opponent: the node's yokai → <c>nodes[id].opponent</c> → <c>types[type].opponent</c> (the stand-in for a
 /// node with no yokai); its kit is <c>opponents[yokai].fighter</c>, else <c>fallback_fighter</c> with a note;</item>
 /// <item>tier (Y4): <c>nodes[id]</c> → <c>opponents[yokai]</c> → <c>types[type]</c>; frames from <c>tiers</c>;</item>
-/// <item>profile: <c>nodes[id]</c> → <c>opponents[yokai]</c>; binds: <c>nodes[id]</c> → <c>types[type]</c> → false.</item>
+/// <item>profile: <c>nodes[id]</c> → <c>opponents[yokai]</c>; binds: <c>nodes[id]</c> → <c>types[type]</c> → false;</item>
+/// <item>coins (R8): <c>nodes[id]</c> → <c>rows[row].types[type]</c> → <c>types[type]</c> → 0.</item>
 /// </list>
 /// So a new scene for a type or one node, a yokai getting its own kit, or a different stand-in is a data edit.
 /// </summary>
@@ -54,10 +59,11 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	public const string Kind = "node_scenes";
 	public const int SchemaVersion = 1;
 
-	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds);
+	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds, int? Coins = null);
 
 	readonly Dictionary<string, Entry> _types, _nodes, _opponents;
 	readonly Dictionary<string, int> _tiers;
+	readonly Dictionary<(int Row, string Type), int> _rowCoins = new(); // R8: what a row pays instead of its type's amount
 
 	public string DefaultScene { get; }
 	public string FallbackFighter { get; }
@@ -106,6 +112,17 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			.Concat(table._opponents.Select(p => ($"opponent '{p.Key}'", p.Value))))
 			if (e.Tier is { } tier && !tiers.ContainsKey(tier))
 				throw new FormatException($"node scenes: {where} names tier '{tier}', which 'tiers' does not define");
+		foreach (var (name, node) in Section(o, "rows"))
+		{
+			if (!int.TryParse(name, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int row) || row < 1)
+				throw new FormatException($"node scenes: rows.{name}: a row is a whole number of 1 or more");
+			if (node is not JsonObject r) throw new FormatException($"node scenes: rows.{name} must be an object");
+			foreach (var (type, entry) in Section(r, "types"))
+			{
+				if (entry is not JsonObject e) throw new FormatException($"node scenes: rows.{name}.types.{type} must be an object");
+				if (Coins(e, $"rows.{name}.types.{type}") is { } coins) table._rowCoins[(row, type)] = coins;
+			}
+		}
 		return table;
 	}
 
@@ -134,7 +151,10 @@ public sealed class NodeSceneTable : INodeSceneResolver
 
 		var ctx = new NodeContext(node.Id, node.Type, node.Row, node.Yokai, node.Elder, fighter,
 			byNode?.Profile ?? foe?.Profile, tier, _tiers[tier], byNode?.Binds ?? byType?.Binds ?? false, standIn,
-			node.Payload, notes);
+			node.Payload, notes)
+		{
+			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
+		};
 		return new NodeScene(scene, ctx);
 	}
 
@@ -152,9 +172,17 @@ public sealed class NodeSceneTable : INodeSceneResolver
 				binds = flag;
 			}
 			map[name] = new Entry(Text(e, "scene", where), Text(e, "opponent", where), Text(e, "fighter", where),
-				Text(e, "tier", where), Text(e, "profile", where), binds);
+				Text(e, "tier", where), Text(e, "profile", where), binds, Coins(e, where));
 		}
 		return map;
+	}
+
+	/// <summary>R8: an entry's <c>coins</c>, a whole number of 0 or more; null when it names none.</summary>
+	static int? Coins(JsonObject e, string where)
+	{
+		if (e["coins"] is not { } c) return null;
+		if (c is JsonValue v && v.GetValueKind() == JsonValueKind.Number && v.TryGetValue(out int coins) && coins >= 0) return coins;
+		throw new FormatException($"node scenes: {where}.coins must be a whole number of 0 or more (R8)");
 	}
 
 	static IEnumerable<KeyValuePair<string, JsonNode?>> Section(JsonObject root, string name) => root[name] switch
