@@ -1,12 +1,13 @@
 using System;
 using Godot;
+using YokaiFighters.Ui.Kit;
 using YokaiFighters.Ui;
 
 namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-48: the "demo complete" card after the won rematch (<c>scenes/ui/demo_complete.tscn</c>), in the HUD's
-/// talisman style (placeholder UI copy, not a story card). Restart raises <see cref="RestartRequested"/> (the flow
+/// talisman style. Restart raises <see cref="RestartRequested"/> (the flow
 /// starts a fresh run). Layout is in the scene; the text comes from data/story/demo-complete.json via <see cref="SetText"/>.
 /// </summary>
 public partial class DemoCompleteScreen : Control
@@ -30,6 +31,7 @@ public partial class DemoCompleteScreen : Control
 
 	public override void _Ready()
 	{
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Restart"));
 		_title = UiFind.Get<Label>(this, "Title");
 		_sub = UiFind.Get<Label>(this, "Sub");
 		Restart = UiFind.Get<Button>(this, "Restart");
