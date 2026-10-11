@@ -4,6 +4,7 @@ using System.Linq;
 using Godot;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
+using YokaiFighters.Ui.Kit;
 
 namespace YokaiFighters.Fight;
 
@@ -12,7 +13,7 @@ namespace YokaiFighters.Fight;
 /// instances it, the fight scene no longer does): title, subtitle, Kata / Kihon choice, Start Game and the chosen
 /// scheme's controls, keyboard and pad side by side. The choice is <see cref="MenuSettings.Scheme"/> (shared with the
 /// settings sheet); Left / Right or a click picks, Q / pad X flips it, Esc / pad B raises <see cref="BackRequested"/>.
-/// A UI ticket restyles this to docs/design/screens/control-select.png. The layout, fonts and fixed copy live in
+/// Two wide scheme cards follow control-select.png; the live controls tables are behind a reference toggle. The layout, fonts and fixed copy live in
 /// <c>scenes/ui/start_screen.tscn</c>; this script renders the controls table into the scene's two grids and
 /// handles Start. Start = Enter / Space / pad A (the focused button) or a click; it raises <see cref="Started"/> once.
 /// Keyboard text is read from <see cref="InputDevices.P1Keys"/>; the pad table <see cref="PadMap"/> is pinned to
@@ -30,6 +31,10 @@ public partial class StartScreen : Control
 	public static ControlScheme Scheme => MenuSettings.Scheme;
 	private Label _specialsLine = null!, _normalNote = null!;
 	private string _kihonSpecials = "";
+	private Control _reference = null!;
+	private Button _referenceToggle = null!;
+	public bool ReferenceVisible => _reference.Visible;
+	public const string KataDescription = "Motions: +10% precision bonus on motion-input specials.";
 
 	public Button Start { get; private set; } = null!;
 	private Control? _debugKeys;
@@ -105,11 +110,18 @@ public partial class StartScreen : Control
 		KihonButton.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kihon);
 		Start = UiFind.Get<Button>(this, "Start");
 		Start.Pressed += OnStart;
-		// Kata - Start - Kihon on one row; up / down stay put, nothing else on the screen takes focus.
-		MenuInput.Neighbours(KataButton, null, null, KihonButton, Start);
-		MenuInput.Neighbours(Start, null, null, KataButton, KihonButton);
-		MenuInput.Neighbours(KihonButton, null, null, Start, KataButton);
-		MenuInput.Ring(KataButton, Start, KihonButton);
+		_reference = UiFind.Get<Control>(this, "Reference");
+		_referenceToggle = UiFind.Get<Button>(this, "ReferenceToggle");
+		_referenceToggle.Pressed += () => SetReferenceVisible(!ReferenceVisible);
+		UiFind.Get<Label>(this, "KataDescription").Text = KataDescription;
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(
+			new KeyHint("scheme", "Scheme"), new KeyHint("back", "Back"), new KeyHint("confirm", "Select"));
+		// Retain left/right scheme navigation; vertical/Tab navigation also reaches the reference toggle.
+		MenuInput.Ring(KataButton, Start, KihonButton, _referenceToggle);
+		MenuInput.Neighbours(KataButton, _referenceToggle, KihonButton, KihonButton, Start);
+		MenuInput.Neighbours(KihonButton, KataButton, Start, Start, KataButton);
+		MenuInput.Neighbours(Start, KihonButton, _referenceToggle, KataButton, KihonButton);
+		MenuInput.Neighbours(_referenceToggle, Start, KataButton, Start, KataButton);
 		MenuSettings.Changed += ShowScheme;
 		ShowScheme();
 		if (IsVisibleInTree()) Start.GrabFocus();
@@ -123,10 +135,12 @@ public partial class StartScreen : Control
 		bool kata = Scheme == ControlScheme.Kata;
 		KataButton.Text = (kata ? "● " : "○ ") + "Kata";
 		KihonButton.Text = (kata ? "○ " : "● ") + "Kihon";
+		KataButton.GetNode<Control>("Selected").Visible = kata;
+		KihonButton.GetNode<Control>("Selected").Visible = !kata;
 		var rows = Rows(Scheme);
 		FillGrid(UiFind.Get<GridContainer>(this, "KeyboardGrid"), rows.Select(r => (r.Action, r.Keyboard)).ToList());
 		FillGrid(UiFind.Get<GridContainer>(this, "PadGrid"), rows.Select(r => (r.Action, r.Pad)).ToList());
-		_specialsLine.Text = kata ? SettingsPanel.KataLine : _kihonSpecials;
+		_specialsLine.Text = kata ? KataDescription : _kihonSpecials;
 		_normalNote.Visible = !kata; // "an attack before Special" is a Kihon note
 	}
 
@@ -163,7 +177,15 @@ public partial class StartScreen : Control
 		}
 	}
 
-	public void Open() { Visible = true; Start.GrabFocus(); }
+	public void SetReferenceVisible(bool visible)
+	{
+		_reference.Visible = visible;
+		KataButton.Visible = KihonButton.Visible = !visible;
+		_referenceToggle.Text = visible ? "Hide controls" : "Controls reference";
+		_referenceToggle.GrabFocus();
+	}
+
+	public void Open() { Visible = true; SetReferenceVisible(false); Start.GrabFocus(); }
 
 	public void Close() => Visible = false;
 

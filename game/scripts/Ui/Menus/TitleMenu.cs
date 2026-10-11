@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Godot;
 using YokaiFighters.Flow;
+using YokaiFighters.Ui.Kit;
 
 namespace YokaiFighters.Ui;
 
@@ -10,13 +11,8 @@ namespace YokaiFighters.Ui;
 public sealed record SavedRunSummary(int Row, int Rows, int Health, int MaxHealth, string Specials);
 
 /// <summary>
-/// YOK-58 MOCKUP title menu (<c>scenes/ui/title_menu.tscn</c>): Start (new run), Continue (greyed and skipped by
-/// focus navigation while there is no saved run), Practice, Settings, Quit. Up/Down/stick move focus and wrap,
-/// Enter / Space / pad A confirm, mouse works. Three hanging yokai masks (Kitsune, Oni, Kappa; never the Tanuki) sway, and the focused entry lights one. A card on the right describes the focused entry (and the saved run
-/// for Continue). Raises one event per entry; <see cref="GameFlow"/> routes them at boot (the mockup host just logs them).
-/// An entry with no backing system yet is switched off with <see cref="SetEntry"/>: greyed, skipped by focus, its reason
-/// in the tooltip and on the detail card while the mouse is over it (<see cref="DisabledReason"/>).
-/// M4: no post-game mode is offered here; the story flag is separate from the run.
+/// Concept-layout title with live kit rows and router-owned availability. Public detail labels are retained
+/// hidden for compatibility; disabled reasons are visible below the menu and in row tooltips.
 /// </summary>
 public partial class TitleMenu : Control
 {
@@ -34,7 +30,7 @@ public partial class TitleMenu : Control
 	public Label DetailBodyLabel { get; private set; } = null!;
 
 	private Label _extra = null!;
-	private YokaiMask? _kitsune, _oni, _kappa;
+	private Label _availability = null!;
 	private Button[] _all = null!;
 	private SavedRunSummary? _saved;
 	private SettingsPanel? _settings;
@@ -56,9 +52,8 @@ public partial class TitleMenu : Control
 		DetailHeadingLabel = UiFind.Get<Label>(this, "DetailHeading");
 		DetailBodyLabel = UiFind.Get<Label>(this, "DetailBody");
 		_extra = UiFind.Get<Label>(this, "DetailExtra");
-		_kitsune = UiFind.Get<YokaiMask>(this, "MaskKitsune");
-		_oni = UiFind.Get<YokaiMask>(this, "MaskOni");
-		_kappa = UiFind.Get<YokaiMask>(this, "MaskKappa");
+		_availability = UiFind.Get<Label>(this, "Availability");
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Confirm"));
 		_all = new[] { StartButton, ContinueButton, PracticeButton, SettingsButton, QuitButton };
 		StartButton.Pressed += () => StartRequested?.Invoke();
 		ContinueButton.Pressed += () => ContinueRequested?.Invoke();
@@ -122,9 +117,12 @@ public partial class TitleMenu : Control
 			b.Disabled = why != "";
 			b.FocusMode = b.Disabled ? FocusModeEnum.None : FocusModeEnum.All;
 			b.TooltipText = why;
+			(b as KitBrushButton)?.Refresh();
 		}
 		if (focused is { Disabled: true }) _all.FirstOrDefault(b => !b.Disabled)?.GrabFocus(); // never leave focus on a greyed entry
 		if (locked) _focusLock.Engage(_all);
+		_availability.Text = string.Join("\n", Enum.GetValues<TitleEntry>()
+			.Where(e => DisabledReason(e) != "").Select(e => $"{e}: {DisabledReason(e)}"));
 		Describe();
 	}
 
@@ -155,13 +153,6 @@ public partial class TitleMenu : Control
 			_ when f == QuitButton => ("QUIT", "Leave the game.", ""),
 			_ => ("NEW RUN", "Begin a new run: eight duels, one Tanuki.", "Choose Kata or Kihon first."),
 		};
-		// The focused entry lights one mask: Start = Kitsune, Continue = Oni, Practice = Kappa; Settings / Quit light none.
-		if (_kitsune != null)
-		{
-			_kitsune.Lit = f == StartButton || f == null;
-			_oni!.Lit = f == ContinueButton;
-			_kappa!.Lit = f == PracticeButton;
-		}
 		DetailHeadingLabel.Text = head; DetailBodyLabel.Text = body; _extra.Text = extra;
 	}
 
