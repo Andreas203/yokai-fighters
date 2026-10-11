@@ -223,6 +223,9 @@ public sealed class RunSession
 	/// <summary>
 	/// R6: the yokai bound this run, in walk order, once each: the fighter of every completed node that binds (R3).
 	/// That is the yokai whose own abilities its draft offered (A8), so the merchant's shop never sells them.
+	/// While a node is a stand-in (its yokai fights with another fighter's kit) both names count: the yokai the map
+	/// names was bound, and the stand-in's abilities were the ones offered. Names are compared as written: an
+	/// elder's yokai id (<c>elder-oni</c>) is not mapped to its yokai (open question for the designer).
 	/// Worked out from the walk, so it needs no saved state of its own.
 	/// </summary>
 	public IReadOnlyList<string> BoundYokai()
@@ -231,7 +234,9 @@ public sealed class RunSession
 		foreach (string id in Map.Visited)
 		{
 			var ctx = Scenes.Resolve(Map.Graph.Node(id)).Context;
-			if (ctx.Binds && !bound.Contains(ctx.Fighter)) bound.Add(ctx.Fighter);
+			if (!ctx.Binds) continue;
+			if (!bound.Contains(ctx.Fighter)) bound.Add(ctx.Fighter);
+			if (ctx.StandIn && ctx.Yokai is { } yokai && !bound.Contains(yokai)) bound.Add(yokai);
 		}
 		return bound;
 	}

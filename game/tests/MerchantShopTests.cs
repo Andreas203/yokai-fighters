@@ -12,7 +12,9 @@ namespace YokaiFighters.Tests;
 /// YOK-95: the merchant's shop (R6, T5 with T2, M3, M5), sim only. The fixture pool plus a few made-up specials
 /// (clones of the fixture Foxfire with another id, source, rarity, slot or lock) so the shelf has something to
 /// sell and something it must never sell. Runs are put at the row-4 merchant of the default map with a walk of
-/// r1-apprentice, r2-kitsune, r3-oni (every node there fights as the Kitsune stand-in, so the Kitsune is bound).
+/// r1-apprentice, r2-kitsune, r3-oni. On today's node-scene table the Oni is a stand-in that fights with the
+/// Kitsune's kit, so the walk exercises the stand-in rule of <see cref="RunSession.BoundYokai"/>: the Kitsune (the
+/// fighter) and the Oni (the yokai the map names) are both bound; the Kappa is not.
 /// The save round trips (purchase saved at node completion, M5 quit in the shop, version 2 files) are in
 /// MerchantShopSaveTests.cs, the same class.
 /// </summary>
@@ -46,12 +48,13 @@ public static partial class MerchantShopTests
 		return SpecialLoader.Parse(node.ToJsonString(), id);
 	}
 
-	/// <summary>Fixture pool + oni common (D), oni rare (D), kappa common (C), kappa locked common (D), kitsune common (D).</summary>
+	/// <summary>Fixture pool + kappa commons (D, C), oni common (D), oni rare (D), kappa locked common (D), kitsune common (D).</summary>
 	static AbilityPool ShopPool()
 	{
 		var fx = FightScene.LoadAbilityPool();
 		var extra = new[]
 		{
+			Clone("test-kappa-spin", "kappa", "common", "D"),
 			Clone("test-oni-charge", "oni", "common", "D"),
 			Clone("test-oni-quake", "oni", "rare", "D"),
 			Clone("test-kappa-grab", "kappa", "common", "C"),
@@ -67,7 +70,15 @@ public static partial class MerchantShopTests
 	/// A session whose walk has completed r1-r3 with <paramref name="slots"/> and <paramref name="coins"/>, standing on
 	/// the map before the merchant; <paramref name="enter"/> = also enter <c>r4-merchant</c>.
 	/// </summary>
-	static RunSession At(AbilityPool pool, int coins, bool enter, params (SpecialSlot Slot, string Id, int Level)[] slots)
+	static RunSession At(AbilityPool pool, int coins, bool enter, params (SpecialSlot Slot, string Id, int Level)[] slots) =>
+		At(pool, coins, enter ? Merchant4 : null, Walk, MerchantChoice.None, slots);
+
+	/// <summary>
+	/// The general form: <paramref name="walk"/> completed, then <paramref name="enter"/> entered through
+	/// <see cref="RunSession.Enter"/>; or, with a <paramref name="restored"/> choice, a session put back while Ryo
+	/// stands at <paramref name="enter"/> with that choice already made (R6).
+	/// </summary>
+	static RunSession At(AbilityPool pool, int coins, string? enter, string[] walk, MerchantChoice restored, params (SpecialSlot Slot, string Id, int Level)[] slots)
 	{
 		var graph = DefaultMap();
 		var run = RunState.Restore(600, slots.Select(x => (x.Slot, new OwnedSpecial(S(pool, x.Id), x.Level, null))));
@@ -76,9 +87,10 @@ public static partial class MerchantShopTests
 		foreach (var x in slots.OrderBy(x => x.Slot)) if (x.Level > 1) order[(int)x.Slot] = ++rank;
 		run.RestoreLevelledOrder(order[1], order[2], order[3], order[4]);
 		run.RestoreCoins(coins);
-		run.SetMap(RunMap.Restore(graph, new RunMapSnapshot(graph.Id, Walk, Walk[^1])));
-		var s = new RunSession(run, pool, Table(), 7);
-		if (enter) Assert.True(s.Enter(Merchant4).Ok, "enter the merchant");
+		bool inNode = restored != MerchantChoice.None;
+		run.SetMap(RunMap.Restore(graph, new RunMapSnapshot(graph.Id, walk, inNode ? enter : walk[^1])));
+		var s = new RunSession(run, pool, Table(), 7, restored);
+		if (enter is not null && !inNode) Assert.True(s.Enter(enter).Ok, $"enter {enter}");
 		return s;
 	}
 
@@ -100,14 +112,18 @@ public static partial class MerchantShopTests
 	{
 		var pool = ShopPool();
 		var s = At(pool, 75, true, StartersAnd());
-		Assert.Equal("kitsune", string.Join(",", s.BoundYokai()), "the stand-in Kitsune is the one yokai bound on this walk");
+		var oniNode = Table().Resolve(DefaultMap().Node("r3-oni")).Context;
+		Assert.True(oniNode is { StandIn: true, Fighter: "kitsune", Yokai: "oni", Binds: true }, "this walk exercises the stand-in: the Oni node fights with the Kitsune's kit");
+		var bound = s.BoundYokai();
+		Assert.True(bound.Contains("kitsune") && bound.Contains("oni") && !bound.Contains("kappa"), "stand-in: the fighter and the yokai the map names are both bound: " + string.Join(",", bound));
+		Assert.Equal(bound.Count, bound.Distinct().Count(), "once each");
 		var shelf = s.Merchant!.Shop.Shelf.Select(x => x.Id).ToArray();
-		Assert.Equal("test-oni-charge,test-kappa-grab", string.Join(",", shelf), "R6: unbound commons, in pool order (file-name order for a loaded pool)");
+		Assert.Equal("test-kappa-spin,test-kappa-grab", string.Join(",", shelf), "R6: unbound commons, in pool order (file-name order for a loaded pool); the beaten Oni's common is not sold");
 		// The same rule from the run alone: nothing bound, owning the oni common.
-		var run = RunState.Restore(600, new[] { (SpecialSlot.D, new OwnedSpecial(S(pool, "test-oni-charge"), 1, null)) });
+		var run = RunState.Restore(600, new[] { (SpecialSlot.D, new OwnedSpecial(S(pool, "test-kappa-spin"), 1, null)) });
 		var open = MerchantShop.ShelfFor(run, pool, Array.Empty<string>()).Select(x => x.Id).ToArray();
 		Assert.True(open.Contains("test-foxfire") && open.Contains("test-kitsune-mirage") && open.Contains("test-kappa-grab"), "unbound kitsune commons are sold");
-		Assert.True(!open.Contains("test-oni-charge"), "an owned special is not sold again");
+		Assert.True(!open.Contains("test-kappa-spin"), "an owned special is not sold again");
 		foreach (var id in open)
 		{
 			var d = S(pool, id);
@@ -122,10 +138,10 @@ public static partial class MerchantShopTests
 	{
 		var s = At(ShopPool(), 75, true, StartersAnd());
 		var shop = Shopping(s);
-		Assert.True(shop.Buy("test-oni-charge").Ok, "bought");
+		Assert.True(shop.Buy("test-kappa-spin").Ok, "bought");
 		Assert.Equal(25, s.Run.Coins, "75 - 50");
-		Assert.True(s.Run[SpecialSlot.D] is { Level: 1, Borrowed: true, Modifier: null } d && d.Data.Id == "test-oni-charge", "A3 Lv 1, R6 borrowed ink, slot D");
-		Assert.True(!shop.Shelf.Any(x => x.Id == "test-oni-charge"), "no longer on the shelf");
+		Assert.True(s.Run[SpecialSlot.D] is { Level: 1, Borrowed: true, Modifier: null } d && d.Data.Id == "test-kappa-spin", "A3 Lv 1, R6 borrowed ink, slot D");
+		Assert.True(!shop.Shelf.Any(x => x.Id == "test-kappa-spin"), "no longer on the shelf");
 		Assert.True(!s.Run.CarryOverCandidates.Any(o => o.Special.Borrowed) && s.Run.CarryOverCandidates.Count() == 2, "M3/R6: borrowed ink never carries over");
 		Assert.True(s.Run.Owned.Count() == 3, "it is Ryo's to fight with this run");
 	});
@@ -136,16 +152,16 @@ public static partial class MerchantShopTests
 		var s = At(ShopPool(), 49, true, StartersAnd((SpecialSlot.C, "test-foxfire", 1)));
 		var shop = s.Merchant!.Shop;
 		ulong before = s.StateHash();
-		Assert.True(!shop.Buy("test-oni-charge").Ok && !shop.CanBuy("test-oni-charge"), "R6: refused before the shop is chosen");
+		Assert.True(!shop.Buy("test-kappa-spin").Ok && !shop.CanBuy("test-kappa-spin"), "R6: refused before the shop is chosen");
 		Assert.True(s.StateHash() == before, "unchanged");
 		Shopping(s);
 		before = s.StateHash();
-		var poor = shop.Buy("test-oni-charge");
+		var poor = shop.Buy("test-kappa-spin");
 		Assert.True(!poor.Ok && poor.Error!.Contains("50 coins"), "49 coins: refused");
 		Assert.True(s.StateHash() == before && s.Run.Coins == 49 && s.Run[SpecialSlot.D] is null, "insufficient coins: state unchanged");
 		s.Run.AddCoins(100);
 		before = s.StateHash();
-		foreach (var id in new[] { "test-oni-quake", "test-kappa-sealed", "test-kitsune-mirage", "test-spirit-wave", "test-foxfire", "test-fox-patience", "nope" })
+		foreach (var id in new[] { "test-oni-charge", "test-oni-quake", "test-kappa-sealed", "test-kitsune-mirage", "test-spirit-wave", "test-foxfire", "test-fox-patience", "nope" })
 			Assert.True(!shop.Buy(id).Ok, $"{id}: not on the shelf");
 		var full = shop.Buy("test-kappa-grab");
 		Assert.True(!full.Ok && full.Error!.Contains("release it first"), "slot C holds Foxfire: R6 frees a slot by release");
@@ -158,7 +174,7 @@ public static partial class MerchantShopTests
 		var healed = At(ShopPool(), 200, true, StartersAnd());
 		Assert.True(healed.Merchant!.TakeHeal().Ok, "heal taken");
 		var shop = healed.Merchant.Shop;
-		Assert.True(!shop.Open && !shop.Buy("test-oni-charge").Ok && !shop.Release(SpecialSlot.A).Ok, "R6: no shop after the heal");
+		Assert.True(!shop.Open && !shop.Buy("test-kappa-spin").Ok && !shop.Release(SpecialSlot.A).Ok, "R6: no shop after the heal");
 		Assert.True(!healed.Merchant.Choose(MerchantChoice.Shop).Ok, "and the shop can't be chosen");
 
 		var shopped = At(ShopPool(), 200, true, StartersAnd());
@@ -166,7 +182,7 @@ public static partial class MerchantShopTests
 		int health = shopped.Run.Health;
 		Assert.True(!shopped.Merchant!.TakeHeal().Ok && shopped.Run.Health == health, "R6: Choose(Shop) closes the heal");
 		ulong chosen = shopped.StateHash();
-		Assert.True(shopped.Merchant.Shop.Buy("test-oni-charge").Ok, "buy");
+		Assert.True(shopped.Merchant.Shop.Buy("test-kappa-spin").Ok, "buy");
 		Assert.True(shopped.StateHash() != chosen, "a purchase is in the state hash");
 		Assert.True(!shopped.Merchant.TakeHeal().Ok, "still no heal after buying");
 	});
@@ -215,7 +231,7 @@ public static partial class MerchantShopTests
 		s.WinFight(800); // the merchant node's stand-in fight (no bind, no coins)
 		Assert.True(s.CompleteNode().Ok, "leave the stop");
 		ulong after = s.StateHash();
-		Assert.True(!shop.Open && !shop.Buy("test-oni-charge").Ok, "a kept shop reference refuses once Ryo has left");
+		Assert.True(!shop.Open && !shop.Buy("test-kappa-spin").Ok, "a kept shop reference refuses once Ryo has left");
 		Assert.True(s.StateHash() == after && s.Merchant is null, "unchanged");
 	});
 
@@ -223,11 +239,74 @@ public static partial class MerchantShopTests
 	public static void Borrowed_IsRunState() => OnFixtures(() =>
 	{
 		var pool = ShopPool();
-		RunState Make(bool borrowed) => RunState.Restore(600, new[] { (SpecialSlot.D, new OwnedSpecial(S(pool, "test-oni-charge"), 1, null, borrowed)) });
+		RunState Make(bool borrowed) => RunState.Restore(600, new[] { (SpecialSlot.D, new OwnedSpecial(S(pool, "test-kappa-spin"), 1, null, borrowed)) });
 		Assert.True(Make(true).StateHash() != Make(false).StateHash(), "the borrowed flag alone changes the hash");
 		Assert.True(Throws(() => RunState.Restore(600, new[] { (SpecialSlot.A, new OwnedSpecial(S(pool, "test-spirit-wave"), 1, null, true)) })), "a starter is never borrowed");
 		var run = Make(true);
 		Assert.Equal(0, run.CarryOverCandidates.Count(), "M3: nothing borrowed carries over");
+	});
+
+	[Test]
+	public static void Borrowed_StaysBorrowedWhenLevelled_AndNeverCarriesOver() => OnFixtures(() =>
+	{
+		var pool = ShopPool();
+		var s = At(pool, 60, true, StartersAnd());
+		Assert.True(Shopping(s).Buy("test-kappa-spin").Ok, "bought");
+		Assert.Equal(2, s.Run.LevelUp(SpecialSlot.D), "levelled by hand");
+		Assert.True(s.Run[SpecialSlot.D] is { Level: 2, Borrowed: true }, "still borrowed ink at Lv 2");
+		Assert.Equal(SpecialSlot.D, s.Run.Equip(S(pool, "test-kappa-spin")), "drafting it later levels it (A3)");
+		Assert.True(s.Run[SpecialSlot.D] is { Level: 3, Borrowed: true }, "still borrowed ink at Lv 3");
+		Assert.True(s.Run.CarryOverCandidates.Select(o => o.Slot).SequenceEqual(new[] { SpecialSlot.A, SpecialSlot.B }), "M3/R6: the Lv 3 borrowed special is not a carry-over candidate");
+		Assert.Equal("test-kappa-spin", CopyRule.Target(s.Run)!.Data.Id, "T2: it is in a slot, so it is the copy target");
+	});
+
+	[Test]
+	public static void Release_ABorrowedSpecial_AndT5WhenOnlyBorrowedInkIsLeft() => OnFixtures(() =>
+	{
+		// Releasing what was bought: 40 more coins, the slot is free and the special is back on the shelf.
+		var s = At(ShopPool(), 90, true, StartersAnd());
+		var shop = Shopping(s);
+		Assert.True(shop.Buy("test-kappa-spin").Ok && shop.Release(SpecialSlot.D).Ok, "bought, then released");
+		Assert.True(s.Run.Coins == 0 && s.Run[SpecialSlot.D] is null && shop.Shelf.Any(x => x.Id == "test-kappa-spin"), "90 - 50 - 40, slot D free, sold again");
+
+		// One bound special (C) and one borrowed (D): the bound one may go, then the borrowed one is Ryo's last (T5).
+		var last = At(ShopPool(), 500, true, (SpecialSlot.C, "test-foxfire", 1));
+		var shop2 = Shopping(last);
+		Assert.True(shop2.Buy("test-kappa-spin").Ok, "borrowed into D");
+		Assert.True(shop2.Release(SpecialSlot.C).Ok, "the last non-borrowed special can be released while a borrowed one remains");
+		ulong before = last.StateHash();
+		var refused = shop2.Release(SpecialSlot.D);
+		Assert.True(!refused.Ok && refused.Error!.Contains("T5"), "T5: the borrowed special is now Ryo's last");
+		Assert.True(last.StateHash() == before && last.Run.Coins == 410 && CopyRule.Target(last.Run)!.Data.Id == "test-kappa-spin", "unchanged; the copy target stays defined");
+		Assert.Equal(0, last.Run.CarryOverCandidates.Count(), "and nothing here would carry over (M3)");
+	});
+
+	[Test]
+	public static void RestoredChoice_ShopStaysOpen_HealKeepsTheShopClosed() => OnFixtures(() =>
+	{
+		var shopped = At(ShopPool(), 100, Merchant4, Walk, MerchantChoice.Shop, StartersAnd());
+		Assert.True(shopped.Merchant is { Choice: MerchantChoice.Shop, CanHeal: false } && shopped.Merchant.Shop.Open, "a restored Shop choice: shop open, heal closed");
+		Assert.True(!shopped.Merchant!.TakeHeal().Ok, "R6: no heal");
+		Assert.True(shopped.Merchant.Shop.Buy("test-kappa-spin").Ok && shopped.Run.Coins == 50, "and it sells");
+
+		var healed = At(ShopPool(), 100, Merchant4, Walk, MerchantChoice.Heal, StartersAnd());
+		ulong before = healed.StateHash();
+		Assert.True(healed.Merchant is { Choice: MerchantChoice.Heal } && !healed.Merchant.Shop.Open, "a restored Heal choice: shop closed");
+		Assert.True(!healed.Merchant!.Shop.Buy("test-kappa-spin").Ok && !healed.Merchant.Choose(MerchantChoice.Shop).Ok && healed.StateHash() == before, "R6: nothing sold, nothing changed");
+	});
+
+	[Test]
+	public static void Row7Merchant_ShopsTheSame_WithTheWalksBindings() => OnFixtures(() =>
+	{
+		var walk = new[] { "r1-apprentice", "r2-kitsune", "r3-oni", "r4-merchant", "r5-nine-tails", "r6-kitsune" };
+		var s = At(ShopPool(), 90, "r7-merchant", walk, MerchantChoice.None, StartersAnd());
+		Assert.True(s.Merchant is { NodeId: "r7-merchant", Choice: MerchantChoice.None }, "a new stop with its own choice");
+		var bound = s.BoundYokai();
+		Assert.True(bound.Contains("kitsune") && bound.Contains("oni") && !bound.Contains("kappa") && !bound.Contains("merchant"), "bindings of the whole walk; a merchant binds nothing: " + string.Join(",", bound));
+		var shop = Shopping(s);
+		Assert.Equal("test-kappa-spin,test-kappa-grab", string.Join(",", shop.Shelf.Select(x => x.Id)), "R6 shelf at row 7");
+		Assert.True(shop.Buy("test-kappa-spin").Ok && shop.Release(SpecialSlot.D).Ok && s.Run.Coins == 0, "50 to buy, 40 to release");
+		Assert.True(!shop.Release(SpecialSlot.A).Ok && !s.Merchant!.TakeHeal().Ok, "starters stay, heal closed");
 	});
 
 	static bool Throws(Action a)

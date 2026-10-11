@@ -18,7 +18,7 @@ public static partial class MerchantShopTests
 		RunSave? completed = null;
 		s.NodeCompleted += _ => completed = RunSave.Capture(s);
 		var shop = Shopping(s);
-		Assert.True(shop.Buy("test-oni-charge").Ok, "buy");
+		Assert.True(shop.Buy("test-kappa-spin").Ok, "buy");
 		s.WinFight(700);
 		Assert.True(s.CompleteNode().Ok, "complete the merchant node");
 		string text = SaveStore.Serialize(SaveData.Empty.WithRun(completed));
@@ -40,7 +40,7 @@ public static partial class MerchantShopTests
 		Assert.True(s.Enter(Merchant4).Ok, "enter");
 		ulong entry = s.StateHash();
 		var shop = Shopping(s);
-		Assert.True(shop.Release(SpecialSlot.C).Ok && shop.Buy("test-oni-charge").Ok, "release then buy");
+		Assert.True(shop.Release(SpecialSlot.C).Ok && shop.Buy("test-kappa-spin").Ok, "release then buy");
 		Assert.True(s.Run.Coins == 10, "100 - 40 - 50");
 		// Quit here: Continue loads the entry save (M5).
 		var back = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(entered))).Data.Run!.Restore(pool, DefaultMap(), Table());
@@ -61,6 +61,16 @@ public static partial class MerchantShopTests
 		Assert.Equal(SaveLoadStatus.OlderVersion, load.Status, "version 2 is older");
 		Assert.True(load.Data.Run!.Slots.All(x => !x.Borrowed), "missing borrowed = false");
 		Assert.True(load.Data.Run.Restore(pool, DefaultMap(), Table()).StateHash() == s.StateHash(), "and restores the same run");
+
+		// A borrowed starter is not a state the shop can reach (R6, A1): the file parses, the run is refused on restore.
+		int at = v3.IndexOf("\"borrowed\": false", System.StringComparison.Ordinal);
+		string starter = v3.Remove(at, "\"borrowed\": false".Length).Insert(at, "\"borrowed\": true");
+		var starterLoad = SaveStore.Parse(starter);
+		Assert.True(starterLoad.Data.Run is { } sr && sr.Slots[0] is { Slot: "A", Borrowed: true }, "the file itself is readable");
+		bool refused = false;
+		try { starterLoad.Data.Run!.Restore(pool, DefaultMap(), Table()); }
+		catch (System.FormatException e) { refused = e.Message.Contains("starter"); }
+		Assert.True(refused, "a borrowed starter is refused by RunSave.Restore");
 
 		string bad = v3.Replace("\"borrowed\": false", "\"borrowed\": \"yes\"");
 		var badLoad = SaveStore.Parse(bad);
