@@ -1,0 +1,18 @@
+{
+  "kind": "story_card",
+  "id": "lose-mid",
+  "status": "proposed",
+  "trigger": "Later loss (not the first), Ryo knocked out on rows 4-6",
+  "text": "{yokai} bows, a little too politely, and the lanterns blow out one by one. Ryo wakes with his talismans blank and his pride very much not.",
+  "placeholders": [
+    "yokai"
+  ],
+  "speaker": "narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "notes": "Proposed row band 4-6. {yokai} = winning yokai."
+}
