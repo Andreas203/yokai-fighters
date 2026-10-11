@@ -150,6 +150,16 @@ def write_outputs(results: list[dict], out_dir: Path) -> dict:
     return {"ran": True, "ok": proc.returncode == 0, "files": len(story_files), "report": proc.stdout.strip()[-1500:]}
 
 
+def recorded_validation(trace_path: Path, results: list[dict]) -> dict | None:
+    """The schema check a run recorded, if this replay rebuilt the same pieces and the check ran then."""
+    if not trace_path.exists():
+        return None
+    trace = json.loads(trace_path.read_text(encoding="utf-8"))
+    recorded = trace.get("validation", {})
+    same = [r["final"] for r in trace.get("results", [])] == [r["final"] for r in results]
+    return recorded if same and recorded.get("ran") else None
+
+
 # ---------- trace rendering ----------
 
 def _cell(text: str) -> str:
@@ -239,6 +249,11 @@ def cmd_generate(args, index, chunks, move_names):
         results.append(run_item(llm, index, move_names, type_id, item, args, seeded_draft=seeded))
 
     validation = write_outputs(results, run_dir / "output")
+    kept = False
+    if args.replay and not validation.get("ran"):
+        recorded = recorded_validation(run_dir / "trace.json", results)
+        if recorded:
+            skipped, validation, kept = validation.get("reason", ""), recorded, True
     meta = {"run": args.run, "command": args.command, "retrieval": args.retrieval, "gen_model": args.gen_model,
             "critic_model": args.critic_model, "chunks": len(chunks), "notes": len({c.note for c in chunks})}
     (run_dir / "trace.json").write_text(json.dumps({"meta": meta, "validation": validation, "results": results},
@@ -249,7 +264,10 @@ def cmd_generate(args, index, chunks, move_names):
     corrected = sum(r["corrected"] for r in results)
     print(f"\n{passed}/{len(results)} passed ({corrected} after correction); "
           f"{llm.live_calls} live model call(s), {llm.replayed_calls} replayed.")
-    if validation.get("ran"):
+    if kept:
+        print(f"Schema check not re-run ({skipped}); kept the recorded result: "
+              f"{validation['files']} story cards, {'all valid' if validation['ok'] else 'ERRORS'}")
+    elif validation.get("ran"):
         print(f"Schema check on {validation['files']} story cards: {'all valid' if validation['ok'] else 'ERRORS'}")
     print(f"Trace: {run_dir / 'trace.md'}")
     return 0 if passed == len(results) and validation.get("ok", True) else 1
