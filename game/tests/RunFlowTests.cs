@@ -59,8 +59,8 @@ public static class RunFlowTests
 			Assert.Equal(frames[tier], ctx.ReactionFrames, $"{node.Id}: Y4 reaction frames");
 			Assert.Equal(node.Type is "duel" or "elder", ctx.Binds, $"{node.Id}: only duels and elders bind (R3, A7)");
 			Assert.True(ctx.NodeId == node.Id && ctx.Type == node.Type && ctx.Row == node.Row && ctx.Yokai == node.Yokai && ctx.Elder == node.Elder, $"{node.Id}: the node's own data is carried");
-			Assert.Equal("kitsune", ctx.Fighter, $"{node.Id}: the only kit today");
-			Assert.Equal(node.Yokai != "kitsune", ctx.StandIn, $"{node.Id}: stand-in unless the node is a Kitsune");
+			Assert.Equal(node.Yokai == "tanuki" ? "tanuki" : "kitsune", ctx.Fighter, $"{node.Id}: the Kitsune's kit, the Tanuki's (YOK-94, T0) on the boss node");
+			Assert.Equal(node.Yokai is not ("kitsune" or "tanuki"), ctx.StandIn, $"{node.Id}: stand-in unless the node is a Kitsune or the Tanuki (YOK-94)");
 			Assert.Equal(ctx.StandIn, ctx.Notes.Count > 0, $"{node.Id}: a stand-in is always explained for the log");
 		}
 	}

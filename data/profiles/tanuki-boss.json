@@ -30,6 +30,16 @@
       "weight": 40
     },
     {
+      "when": "at_mid_range",
+      "do": "special:copied",
+      "weight": 30
+    },
+    {
+      "when": "at_full_screen",
+      "do": "special:copied",
+      "weight": 20
+    },
+    {
       "when": "at_close_range",
       "do": "normal:ryo-medium-punch",
       "weight": 30
@@ -77,5 +87,5 @@
     "T2",
     "T4"
   ],
-  "notes": "Tanuki (T0): Ryo's normals and generic throw only. PROVISIONAL: the one copied special (T2-T4) has no profile token because its id is chosen at the T1 lock point and the schema/loader accept only a literal special:<id>. Pressure with the copy (P5) needs a data-driven token such as special:copied, a gameplay-programmer change; no id invented. Habit is a required schema field and the GDD names none for the Tanuki: designer to confirm. Y5 raises aggression_bias at runtime."
+  "notes": "Tanuki (T0): Ryo's normals, generic throw and starters, plus the one copied special (T2-T4) through special:copied, which resolves to the special locked at T1 (YOK-94); no special id is named here. Habit is a required schema field and the GDD names none for the Tanuki: designer to confirm. Y5 raises aggression_bias at runtime."
 }

@@ -20,7 +20,9 @@ public enum ActionKind { WalkForward, WalkBack, DashForward, DashBack, Jump, Blo
 /// <summary>A profile action: generic, or a move id ("special:foxfire", "normal:heavy-punch").</summary>
 public readonly record struct AiAction(ActionKind Kind, string? MoveId = null)
 {
-	public bool Offensive => Kind is ActionKind.WalkForward or ActionKind.DashForward or ActionKind.Jump
+	/// <summary>YOK-94: <c>special:copied</c>, the Tanuki's copied special (resolved by the AI loadout).</summary>
+	public bool IsCopiedSpecial => Kind == ActionKind.Special && MoveId == BehaviourProfile.CopiedSpecial;
+	public bool Offensive =>Kind is ActionKind.WalkForward or ActionKind.DashForward or ActionKind.Jump
 		or ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
 	public override string ToString() => MoveId is null ? BehaviourProfile.ActionName(Kind) : $"{BehaviourProfile.ActionName(Kind)}:{MoveId}";
 }
@@ -79,6 +81,15 @@ public sealed record BehaviourProfile
 		return o.ToString();
 	}
 
+	/// <summary>
+	/// YOK-94, T0: <c>special:copied</c> names the Tanuki's copied special, whose id is known only at the copy lock
+	/// (T1). It parses like any special id and resolves in <see cref="AiLoadout"/> to the fighter's
+	/// <see cref="YokaiFighters.Sim.Fighter.CopiedSlot"/>; a literal <c>special:&lt;id&gt;</c> is unchanged. Reserved:
+	/// no special may have this id (tools/validate_data.py).
+	/// </summary>
+	public const string CopiedSpecial = "copied";
+
+	/// <summary>Parses "walk_forward", "normal:&lt;id&gt;", "special:&lt;id&gt;" or "special:copied" (<see cref="CopiedSpecial"/>).</summary>
 	public static AiAction ParseAction(string s)
 	{
 		int colon = s.IndexOf(':');
