@@ -1,5 +1,28 @@
 # Screen kit plates — YOK-astra-screen-kit
 
+## Pause feedback — diamond move icons (2026-10-11)
+
+Designer approved four built-in imagegen jobs. Saved under `game/assets/generated/ui/`: `pause-icon-spirit-wave.png`, `pause-icon-rising-talisman.png`, `pause-icon-foxfire.png`, `pause-icon-fallback.png`. Each source is 1254×1254, resized with Godot Image Lanczos to 256×256, preserving alpha; no nine-slice. All four were visually inspected: text-free, no characters, blank talisman, transparent exterior. The sibling manifest `game/ui/pause_move_art.tres` maps move IDs to textures, with a generic pine energy-ring fallback. Icons also supply faint right-hand motifs. Existing paper-card and blossom plates are reused; no fonts added.
+
+Exact executed prompts:
+
+### spirit-wave
+
+Create one standalone square game UI diamond move icon, tight framing with small transparent padding, genuine transparent alpha outside diamond. Thin rough ink #1D1B21 diamond border, flat matte ukiyo-e cel ink-brush illustration, rice paper #F1E8D4 motif. Bold readable silhouette at 90px. No lettering, numbers, real kanji, watermark, people, weapons, masks, Tanuki or scenery. Palette only indigo #2D3A5E, ink #1D1B21, rice #F1E8D4, pine #34483B, shrine red #B5332B, persimmon #D8632C. Indigo diamond containing a curling rice-white spirit wave.
+
+### rising-talisman
+
+Create one standalone square game UI diamond move icon, tight framing with small transparent padding, genuine transparent alpha outside diamond. Thin rough ink #1D1B21 diamond border, flat matte ukiyo-e cel ink-brush illustration, rice paper #F1E8D4 motif. Bold readable silhouette at 90px. No lettering, numbers, real kanji, watermark, people, weapons, masks, Tanuki or scenery. Palette only indigo #2D3A5E, ink #1D1B21, rice #F1E8D4, pine #34483B, shrine red #B5332B, persimmon #D8632C. Persimmon diamond containing one blank rice-paper rectangular talisman rising with two sweeping trails. Talisman is completely unmarked.
+
+### foxfire
+
+Create one standalone square game UI diamond move icon, tight framing with small transparent padding, genuine transparent alpha outside diamond. Thin rough ink #1D1B21 diamond border, flat matte ukiyo-e cel ink-brush illustration, rice paper #F1E8D4 motif. Bold readable silhouette at 90px. No lettering, numbers, real kanji, watermark, people, weapons, masks, Tanuki or scenery. Palette only indigo #2D3A5E, ink #1D1B21, rice #F1E8D4, pine #34483B, shrine red #B5332B, persimmon #D8632C. Shrine-red diamond containing a rice-white three-tongued supernatural flame.
+
+### fallback
+
+Create one standalone square game UI diamond move icon, tight framing with small transparent padding, genuine transparent alpha outside diamond. Thin rough ink #1D1B21 diamond border, flat matte ukiyo-e cel ink-brush illustration, rice paper #F1E8D4 motif. Bold readable silhouette at 90px. No lettering, numbers, real kanji, watermark, people, weapons, masks, Tanuki or scenery. Palette only indigo #2D3A5E, ink #1D1B21, rice #F1E8D4, pine #34483B, shrine red #B5332B, persimmon #D8632C. Pine diamond containing a rice-white abstract swirling energy ring, neutral generic special ability.
+
+
 Designer authorization: this run explicitly approves built-in image generation and cropping the screen concepts. Built-in imagegen was used, not Meshy or an API fallback. Every reference below is in `docs/design/screens/` unless stated otherwise. All plates are under `game/assets/generated/ui/`. No existing asset was removed. `red-seal.png` is not used by this kit.
 
 The only lettering exception is `title-wordmark.png`, containing **YOKAI FIGHTERS**. Everything else is text-free. The three reward illustration crops contain paper and illustration only; their names, source labels, tags, descriptions, and values remain live controls. They are presentation examples, not changes to move data.

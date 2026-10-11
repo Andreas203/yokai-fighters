@@ -81,7 +81,7 @@ public partial class FightScene
 		var slots = new List<PauseSlotSummary>();
 		foreach (var slot in new[] { SpecialSlot.A, SpecialSlot.B, SpecialSlot.C, SpecialSlot.D })
 			slots.Add(DemoRun[slot] is { } owned
-				? new(slot.ToString(), owned.Data.Name, owned.Level, owned.Modifier?.Name ?? "")
+				? new(slot.ToString(), owned.Data.Name, owned.Level, owned.Modifier?.Name ?? "", owned.Data.Id)
 				: new(slot.ToString(), "Empty", 0, ""));
 		return new PauseRunSummary(
 			Health(Story.StoryLibrary.DisplayName(Kit.Ryo).ToUpperInvariant(), Match.P1), Health(foe, Match.P2),

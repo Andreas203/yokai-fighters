@@ -64,7 +64,7 @@ public partial class MenuMockups : Node
 		Pause.Bind(Run, 1, 2, "Kitsune", ContentPaths.Data("moves"));
 		Pause.SetRunSummary(new(new("RYO", Run.Health, RunState.MaxHealth), new("Kitsune", 640, 1000),
 			"Duel 1 of 2 · vs Kitsune", MoveListSource.Build(Run, ContentPaths.Data("moves")).Slots
-			.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Empty ? 0 : x.Level, x.ModifierName)).ToArray()));
+			.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Empty ? 0 : x.Level, x.ModifierName, Run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray()));
 		Pause.ResumeRequested += () => Say("Resume: fight continues");
 		Pause.RestartRequested += () => Say("Restart run: would start a new run (not wired)");
 		Pause.QuitToTitleRequested += () => Show(MockScreen.Title);
