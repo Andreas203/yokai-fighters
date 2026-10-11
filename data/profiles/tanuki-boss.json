@@ -1,0 +1,81 @@
+{
+  "kind": "profile",
+  "id": "tanuki-boss",
+  "status": "proposed",
+  "yokai": "tanuki",
+  "temperament": "boss",
+  "reaction": {
+    "tier": "tanuki",
+    "frames": 15
+  },
+  "aggression_bias": 60,
+  "preferred_range": "mid",
+  "habit": {
+    "id": "throws-at-a-turtle",
+    "description": "When the player keeps blocking, the Tanuki grabs. Mix in a throw break or step out instead of holding guard.",
+    "when": "opponent_blocking",
+    "do": "throw",
+    "chance_pct": 60
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    {
+      "when": "at_mid_range",
+      "do": "walk_forward",
+      "weight": 40
+    },
+    {
+      "when": "at_full_screen",
+      "do": "dash_forward",
+      "weight": 40
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:ryo-medium-punch",
+      "weight": 30
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:ryo-light-kick",
+      "weight": 25
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:ryo-heavy-punch",
+      "weight": 15
+    },
+    {
+      "when": "at_close_range",
+      "do": "throw",
+      "weight": 15
+    },
+    {
+      "when": "opponent_jumping",
+      "do": "normal:ryo-heavy-punch",
+      "weight": 50
+    },
+    {
+      "when": "opponent_whiffed",
+      "do": "normal:ryo-heavy-kick",
+      "weight": 50
+    },
+    {
+      "when": "opponent_attacking",
+      "do": "block",
+      "weight": 30
+    }
+  ],
+  "rules": [
+    "Y1",
+    "Y2",
+    "Y4",
+    "Y5",
+    "P6",
+    "E22",
+    "P5",
+    "T0",
+    "T2",
+    "T4"
+  ],
+  "notes": "Tanuki (T0): Ryo's normals and generic throw only. PROVISIONAL: the one copied special (T2-T4) has no profile token because its id is chosen at the T1 lock point and the schema/loader accept only a literal special:<id>. Pressure with the copy (P5) needs a data-driven token such as special:copied, a gameplay-programmer change; no id invented. Habit is a required schema field and the GDD names none for the Tanuki: designer to confirm. Y5 raises aggression_bias at runtime."
+}

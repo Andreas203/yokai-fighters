@@ -1,0 +1,67 @@
+{
+  "kind": "profile",
+  "id": "oni-patient",
+  "status": "proposed",
+  "yokai": "oni",
+  "temperament": "patient",
+  "reaction": {
+    "tier": "yokai",
+    "frames": 22
+  },
+  "aggression_bias": 30,
+  "preferred_range": "mid",
+  "habit": {
+    "id": "dashes-in-after-blocked-projectile",
+    "description": "After blocking a projectile the Oni dashes straight in. Throw a second projectile or meet the dash with a throw or anti-air before it arrives.",
+    "when": "blocked_projectile",
+    "do": "dash_forward",
+    "chance_pct": 70
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    {
+      "when": "at_full_screen",
+      "do": "walk_forward",
+      "weight": 50
+    },
+    {
+      "when": "at_mid_range",
+      "do": "walk_forward",
+      "weight": 35
+    },
+    {
+      "when": "opponent_whiffed",
+      "do": "dash_forward",
+      "weight": 70
+    },
+    {
+      "when": "opponent_in_recovery",
+      "do": "dash_forward",
+      "weight": 30
+    },
+    {
+      "when": "at_close_range",
+      "do": "throw",
+      "weight": 20
+    },
+    {
+      "when": "opponent_attacking",
+      "do": "block",
+      "weight": 60
+    },
+    {
+      "when": "opponent_jumping",
+      "do": "block",
+      "weight": 30
+    }
+  ],
+  "rules": [
+    "Y1",
+    "Y2",
+    "Y4",
+    "Y5",
+    "P6",
+    "E22"
+  ],
+  "notes": "Oni patient (Y2): walks in, punishes whiffs. The whiff punish is a dash_forward stand-in for the Iron-Club Charge. PROVISIONAL: data/moves/ has no Oni normals or Iron-Club Charge yet (clips blocked on concept art), so this uses only generic actions (walk, dash, jump, block, throw) and cannot strike at close range. When oni-* normals and special:iron-club-charge land, add close-range pokes and swap the whiff punish to the charge. No ids invented."
+}
