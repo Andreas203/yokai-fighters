@@ -338,6 +338,7 @@ public static class SettingsTests
 			Press(flow.Title.StartButton);
 			Assert.True(flow.ControlSelect.KataButton.Text.StartsWith("●") && !flow.ControlSelect.KihonButton.Text.StartsWith("●"), "control select opens on the saved scheme");
 			Press(flow.ControlSelect.Start);
+			flow.ChooseNode(flow.Session!.Reachable()[0]); // YOK-77: the map comes first
 			Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "and the fight uses it");
 			Assert.Equal(ControlScheme.Kata, new SettingsStore(path).Load().Data.Scheme, "file unchanged by starting");
 		});
@@ -355,6 +356,7 @@ public static class SettingsTests
 			Press(flow.ControlSelect.KataButton);
 			Assert.Equal(ControlScheme.Kata, new SettingsStore(path).Load().Data.Scheme, "the control-select choice is saved");
 			Press(flow.ControlSelect.Start);
+			flow.ChooseNode(flow.Session!.Reachable()[0]); // YOK-77: the map comes first
 			Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "fight uses it");
 		});
 		WithBoot(runner, path, flow => // the next launch
@@ -425,6 +427,7 @@ public static class SettingsTests
 			Press(flow.Title.StartButton);
 			Press(flow.ControlSelect.KataButton);
 			Press(flow.ControlSelect.Start);
+			flow.ChooseNode(flow.Session!.Reachable()[0]); // YOK-77: the map comes first
 			Assert.True(flow.Fight != null, "fight started");
 		});
 

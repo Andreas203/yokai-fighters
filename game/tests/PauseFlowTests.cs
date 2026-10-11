@@ -350,10 +350,10 @@ public static class PauseFlowTests
 		WithScene(runner, s =>
 		{
 			s.DemoRun.SetHealth(RunState.MaxHealth);
-			for (int duel = 1; duel <= FightScene.DemoDuels; duel++)
+			for (int duel = 1; duel <= s.Duels; duel++)
 			{
 				for (int t = 0; t < 600 && s.Match.Phase != MatchPhase.Over; t++) s.Step(Strike(t), Idle);
-				if (duel == FightScene.DemoDuels) break;
+				if (duel == s.Duels) break;
 				s.BindingCard.Continue();
 				s.Rewards.Confirm();
 				if (s.Rewards.Step == RewardStep.Target) s.Rewards.Confirm();

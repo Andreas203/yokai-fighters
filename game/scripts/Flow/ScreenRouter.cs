@@ -5,7 +5,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Flow;
 
 /// <summary>The top-level screens of the game. Boot enters <see cref="Title"/>.</summary>
-public enum Screen { Title, ControlSelect, Settings, Fight }
+public enum Screen { Title, ControlSelect, Settings, Fight, Map }
 
 /// <summary>The title menu's entries, top to bottom (docs/design/screens/title.png).</summary>
 public enum TitleEntry { Start, Continue, Practice, Settings, Quit }
@@ -14,7 +14,8 @@ public enum TitleEntry { Start, Continue, Practice, Settings, Quit }
 public readonly record struct TitleEntryState(TitleEntry Entry, bool Enabled, string Reason);
 
 /// <summary>
-/// The top-level screen state of the game: Title → ControlSelect → Fight, Title ↔ Settings, Fight → Title, plus Quit.
+/// The top-level screen state of the game: Title → ControlSelect → Map ⇄ Fight (YOK-77: a run is map, node, map...),
+/// Title ↔ Settings, Map or Fight → Title, plus Quit.
 /// Pure C# (no Godot), so every transition is tested headless; <see cref="GameFlow"/> is the thin node that shows and
 /// hides scenes when <see cref="Changed"/> fires. It never touches the sim: the fight scene only exists while
 /// <see cref="Current"/> is <see cref="Screen.Fight"/>.
@@ -98,21 +99,37 @@ public sealed class ScreenRouter
 		return true;
 	}
 
-	/// <summary>Kata or Kihon for the next fight (control select, or the settings sheet). Refused once the fight is on.</summary>
+	/// <summary>Kata or Kihon for the next run (control select, or the settings sheet). Refused once the run is on (map or fight).</summary>
 	public bool ChooseScheme(ControlScheme scheme)
 	{
-		if (Current == Screen.Fight) return false;
+		if (Current is Screen.Fight or Screen.Map) return false;
 		if (scheme == Scheme) return true;
 		Scheme = scheme;
 		SchemeChanged?.Invoke(scheme);
 		return true;
 	}
 
-	/// <summary>Start Game on control select: the fight begins with <see cref="Scheme"/>.</summary>
+	/// <summary>Start Game on control select: a new run opens on its map, to be played with <see cref="Scheme"/>.</summary>
 	public bool Confirm()
 	{
 		if (Current != Screen.ControlSelect) return false;
+		Go(Screen.Map);
+		return true;
+	}
+
+	/// <summary>YOK-77: a node was picked on the map: its scene (the fight) runs.</summary>
+	public bool EnterNode()
+	{
+		if (Current != Screen.Map) return false;
 		Go(Screen.Fight);
+		return true;
+	}
+
+	/// <summary>YOK-77: the node is done (or a new run was asked for from the fight): back to the map.</summary>
+	public bool ReturnToMap()
+	{
+		if (Current != Screen.Fight) return false;
+		Go(Screen.Map);
 		return true;
 	}
 
@@ -125,10 +142,10 @@ public sealed class ScreenRouter
 		return true;
 	}
 
-	/// <summary>Leave the fight for the title (pause menu "Quit to title", later). False when not in a fight.</summary>
+	/// <summary>Leave the fight or the map for the title (pause menu "Quit to title"). False anywhere else.</summary>
 	public bool ReturnToTitle()
 	{
-		if (Current != Screen.Fight) return false;
+		if (Current is not (Screen.Fight or Screen.Map)) return false;
 		Go(Screen.Title);
 		return true;
 	}

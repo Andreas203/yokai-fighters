@@ -8,8 +8,10 @@ using YokaiFighters.Ui;
 namespace YokaiFighters.Flow;
 
 /// <summary>
-/// The game's boot scene (<c>scenes/boot.tscn</c>, the project's main scene): title → control select → fight, with
-/// Settings and Quit routed. All decisions are <see cref="ScreenRouter"/>'s; this node only shows and hides the menu
+/// The game's boot scene (<c>scenes/boot.tscn</c>, the project's main scene): title → control select → map ⇄ fight,
+/// with Settings and Quit routed. YOK-77: this node holds the <see cref="RunSession"/>, so the run outlives every
+/// node's scene: pick on the map (<see cref="ChooseNode"/>) → the scene the session's resolver names runs the node
+/// → <see cref="RunSession.NodeCompleted"/> brings the map back, until the run ends on the fight's own end screens. All decisions are <see cref="ScreenRouter"/>'s; this node only shows and hides the menu
 /// scenes and creates or frees the fight scene when the router changes screen.
 /// <para>
 /// The sim is untouched by menus because the fight scene (<c>scenes/fight.tscn</c>) does not exist until the router
@@ -29,6 +31,18 @@ public partial class GameFlow : Node
 	public StartScreen ControlSelect { get; private set; } = null!;
 	/// <summary>The running fight; null on every other screen.</summary>
 	public FightScene? Fight { get; private set; }
+	/// <summary>The scene running the entered node (today always <see cref="Fight"/>); null off a node.</summary>
+	public Node? NodeScene { get; private set; }
+
+	/// <summary>The map every new run walks (in data/map/).</summary>
+	public string MapFile { get; set; } = FileMapSource.DefaultFile;
+	/// <summary>YOK-77: the run in progress, from Start Game until the title is shown again. Null on the menus and in a direct fight.</summary>
+	public RunSession? Session { get; private set; }
+	/// <summary>YOK-78's map screen (<c>Menus/Map</c> in boot.tscn = <c>scenes/ui/map_screen.tscn</c>), shown on <see cref="Screen.Map"/>.</summary>
+	public MapScreen Map { get; private set; } = null!;
+	/// <summary>Pins every run's seed (tests, harness); null = a new random seed per run.</summary>
+	public uint? FixedRunSeed { get; set; }
+	private bool _freshRun;
 
 	/// <summary>Quit: the tree by default; tests replace it.</summary>
 	public Action? QuitAction { get; set; }
@@ -64,6 +78,9 @@ public partial class GameFlow : Node
 		Title = GetNode<TitleMenu>("Menus/Title");
 		ControlSelect = GetNode<StartScreen>("Menus/ControlSelect");
 		ControlSelect.Close();
+		Map = GetNode<MapScreen>("Menus/Map");
+		Map.Visible = false; // hidden = it reads no input
+		Map.NodeChosen += id => ChooseNode(id); // the screen's view (SessionMapView) has already entered the node
 
 		Title.StartRequested += () => Router.Select(TitleEntry.Start);
 		Title.ContinueRequested += () => Router.Select(TitleEntry.Continue);
@@ -110,16 +127,74 @@ public partial class GameFlow : Node
 		return null;
 	}
 
-	/// <summary>Leave the fight for the title (the pause menu's "Quit to title"). False when no fight is running.</summary>
+	/// <summary>Leave the fight or the map for the title (the pause menu's "Quit to title"); the run is dropped. False on the menus.</summary>
 	public bool ReturnToTitle() => Router.ReturnToTitle();
+
+	/// <summary>
+	/// YOK-77: the player confirmed <paramref name="nodeId"/> on the map: its scene starts. The map screen's
+	/// <c>NodeChosen</c> lands here with the node already entered (its view's <c>Select</c> is
+	/// <see cref="RunSession.Enter"/>); called directly (tests, a harness) it enters the node first. Either way the
+	/// node is entered once; a pick the map does not allow is refused with the reason and changes nothing.
+	/// </summary>
+	public MapResult ChooseNode(string nodeId)
+	{
+		if (Router.Current != Screen.Map || Session is null) return MapResult.Fail("the map is not showing");
+		if (Session.Node?.NodeId != nodeId)
+		{
+			var step = Session.Enter(nodeId);
+			if (!step.Ok) { GD.PushWarning($"GameFlow: node '{nodeId}' refused: {step.Error}"); return step; }
+		}
+		Router.EnterNode();
+		return MapResult.Done;
+	}
+
+	/// <summary>A new run from inside a fight (Restart on the lose screen, the end card or the pause menu): back to the map on a fresh session.</summary>
+	public bool RestartRun()
+	{
+		if (Router.Current != Screen.Fight) return false;
+		_freshRun = true;
+		return Router.ReturnToMap();
+	}
+
+	/// <summary>Starts the run the map will show. False (with the error logged) when the map data cannot be loaded.</summary>
+	private bool StartRun()
+	{
+		_freshRun = false;
+		try { Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next()); }
+		catch (Exception e) when (e is FormatException or System.IO.IOException)
+		{
+			GD.PushError($"GameFlow: no run: {e.Message}");
+			Session = null;
+			return false;
+		}
+		var session = Session;
+		GD.Print($"GameFlow: new run on map '{session.Map.Graph.Id}', seed {session.Seed}");
+		session.NodeEntered += n => GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
+		session.NodeCompleted += n =>
+		{
+			GD.Print($"GameFlow: completed '{n.NodeId}', health {session.Run.Health}");
+			if (session == Session && !session.IsOver) Router.ReturnToMap(); // the last node stays on its end card
+		};
+		session.RunEnded += end => GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
+		return true;
+	}
 
 	private void OnScreenChanged(Screen from, Screen to)
 	{
 		if (from == Screen.Settings) Title.CloseSettings();
 		if (from == Screen.Fight) EndFight();
+		if (from == Screen.Map) Map.Visible = false;
 		switch (to)
 		{
+			case Screen.Map:
+				Title.Visible = false;
+				ControlSelect.Close();
+				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
+				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
+				Map.Visible = true;
+				break;
 			case Screen.Title:
+				Session = null; // no save yet (YOK-73): leaving for the title drops the run
 				ControlSelect.Close();
 				Title.Open();
 				break;
@@ -138,21 +213,35 @@ public partial class GameFlow : Node
 		}
 	}
 
+	/// <summary>
+	/// The entered node's scene, from the session's resolver (data/map/node-scenes.json); with no session (the
+	/// direct-fight bypass) the fight scene on its own, which walks the demo map by itself.
+	/// </summary>
 	private void BeginFight()
 	{
-		var fight = GD.Load<PackedScene>(FightScenePath).Instantiate<FightScene>();
-		fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
-		fight.TitleRequested += () => Router.ReturnToTitle();
-		ConfigureFight?.Invoke(fight);
-		Fight = fight;
-		AddChild(fight);
-		MoveChild(fight, 0); // under the menu layer
+		string path = Session?.Entered?.Scene ?? FightScenePath;
+		Node scene = GD.Load<PackedScene>(path).Instantiate();
+		if (scene is FightScene fight)
+		{
+			fight.Session = Session; // null = the bypass
+			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
+			fight.TitleRequested += () => Router.ReturnToTitle();
+			fight.RunRestartRequested += () => RestartRun();
+			ConfigureFight?.Invoke(fight);
+			Fight = fight;
+		}
+		else if (scene is INodeScene other) other.BindRun(Session!, Router.Scheme);
+		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
+		NodeScene = scene;
+		AddChild(scene);
+		MoveChild(scene, 0); // under the menu layer
 	}
 
 	private void EndFight()
 	{
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run
-		if (Fight is { } fight && IsInstanceValid(fight)) { RemoveChild(fight); fight.QueueFree(); }
+		if (NodeScene is { } scene && IsInstanceValid(scene)) { RemoveChild(scene); scene.QueueFree(); }
 		Fight = null;
+		NodeScene = null;
 	}
 }

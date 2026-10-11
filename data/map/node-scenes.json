@@ -1,0 +1,28 @@
+{
+  "kind": "node_scenes",
+  "id": "node-scenes",
+  "schema_version": 1,
+  "status": "proposed",
+  "rules": ["R2", "R3", "A7", "Y4"],
+  "default_scene": "res://scenes/fight.tscn",
+  "fallback_fighter": "kitsune",
+  "tiers": {
+    "apprentice": { "reaction_frames": 30 },
+    "yokai": { "reaction_frames": 22 },
+    "elder": { "reaction_frames": 18 },
+    "tanuki": { "reaction_frames": 15 }
+  },
+  "types": {
+    "duel": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": true },
+    "elder": { "scene": "res://scenes/fight.tscn", "tier": "elder", "binds": true },
+    "boss": { "scene": "res://scenes/fight.tscn", "tier": "tanuki", "binds": false },
+    "merchant": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" },
+    "dojo": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" }
+  },
+  "opponents": {
+    "kitsune": { "fighter": "kitsune" },
+    "apprentice": { "tier": "apprentice" }
+  },
+  "nodes": {},
+  "notes": "YOK-77 first pass, awaiting the designer. Every node type runs in the fight scene for now; a scene of its own for a type ('types') or for one node ('nodes', or the node's payload.scene in the map file) is an edit here. Stand-ins, both open questions: (1) merchant and dojo have no behaviour yet, so entering one is a fight against 'opponent' with no heal and no draft; (2) only the Kitsune has a kit, so every yokai not listed with a 'fighter' under 'opponents' fights as 'fallback_fighter' (logged). Giving the Oni its kit later = add an 'oni' entry with 'fighter': 'oni'. Tiers are Y4's reaction delays; the apprentice's half damage and the per-tier damage targets are not applied here."
+}

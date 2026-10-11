@@ -119,7 +119,7 @@ public partial class FightHud : CanvasLayer
 		_ => $"res://assets/generated/ui/{opponent}-portrait.png",
 	};
 
-	private void ShowOpponent(string id)
+	public void ShowOpponent(string id)
 	{
 		if (_opponentId == id) return;
 		_opponentId = id;

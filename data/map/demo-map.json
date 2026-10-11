@@ -1,0 +1,16 @@
+{
+  "kind": "run_map",
+  "id": "demo-map",
+  "schema_version": 1,
+  "name": "Two-duel demo",
+  "status": "final",
+  "rules": ["R2", "R3", "A7"],
+  "nodes": [
+    {"id": "demo-kitsune", "row": 1, "type": "duel", "yokai": "kitsune", "label": "Kitsune"},
+    {"id": "demo-rematch", "row": 2, "type": "duel", "yokai": "kitsune", "label": "Kitsune rematch"}
+  ],
+  "routes": [
+    {"from": "demo-kitsune", "to": "demo-rematch"}
+  ],
+  "notes": "YOK-77: the YOK-39 / YOK-48 demo (first fight, draft, rematch) as a map of the run flow. The fight scene walks it by itself when it is opened without a run session: tests, captures, the harness, the editor and the --fight debug bypass."
+}
