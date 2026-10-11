@@ -15,7 +15,7 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// YOK-77: one run from the first node to its end (pure C#, deterministic, no Godot). Owns the
 /// <see cref="RunState"/> (health C1, slots) and its <see cref="RunMap"/>; scenes only call it:
 /// <see cref="Enter"/> a reachable node → the scene named by <see cref="Entered"/> runs it →
-/// <see cref="WinFight"/> (R3 heal, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
+/// <see cref="WinFight"/> (R3 heal, R8 coins, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
 /// <see cref="LoseFight"/>. The run is won when the completed node has no route out, lost on the first lost fight.
 /// <para>
 /// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/> and
@@ -38,6 +38,9 @@ public sealed class RunSession
 	/// <summary>The reward offer of the node just won, until the node is completed. Null when it gives none.</summary>
 	public RewardDraft? Draft { get; private set; }
 	public RunEnd? Ended { get; private set; }
+	/// <summary>R8: the coins the entered node's won fight paid; 0 before the win, on the map and for a node that pays none.</summary>
+	public int CoinsWon { get; private set; }
+	bool _paid; // R8: a node pays once, however often its win is reported
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
 	public int Step => Map.Visited.Count + (Map.InNode ? 1 : 0);
@@ -75,13 +78,15 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
+		(CoinsWon, _paid) = (0, false);
 		NodeEntered?.Invoke(Entered.Context);
 		return step;
 	}
 
 	/// <summary>
 	/// Ryo won the entered node's fight with <paramref name="healthLeft"/>. Health carries (C1); a node that binds
-	/// heals 50 (R3) and, unless it is the last node, offers its cards (A7). Returns the offer, or null for none.
+	/// heals 50 (R3) and, unless it is the last node, offers its cards (A7). The node's coins are paid once (R8).
+	/// Returns the offer, or null for none.
 	/// </summary>
 	public RewardDraft? WinFight(int healthLeft)
 	{
@@ -89,6 +94,12 @@ public sealed class RunSession
 		if (IsOver) throw new InvalidOperationException("the run is over");
 		if (Draft is not null) throw new InvalidOperationException($"node '{node.NodeId}' is already won");
 		Run.AfterDuel(healthLeft, node.Binds);
+		if (!_paid)
+		{
+			_paid = true;
+			CoinsWon = node.Coins;
+			Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
+		}
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
 			Draft = RewardDraft.Build(Run, Pool, node.Fighter, Seed + (uint)Step, node.Elder);
 		return Draft;
@@ -104,6 +115,7 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = null;
 		Draft = null;
+		(CoinsWon, _paid) = (0, false);
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
