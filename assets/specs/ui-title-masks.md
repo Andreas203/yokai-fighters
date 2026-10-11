@@ -1,6 +1,6 @@
 # Title screen yokai masks - spec
 
-Ticket: YOK-58. Status: PROPOSED, awaiting designer approval of jobs and credits. No Meshy job has been run.
+Ticket: YOK-58. Status: PROPOSED, awaiting designer approval of jobs and credits. No Meshy job has been run. NOTE: the M1-M3 approval below is stale: the prompts change in the extension at the end of this file, so the designer must re-confirm before anything runs.
 
 Designer request: "make the title screen more interesting with yokai masks". Flat, front-facing paper-talisman masks, one per roster yokai, cut to alpha for the title screen.
 
@@ -57,3 +57,63 @@ Designer approved M1-M3 (9 credits), skipped M4. Not run yet: the Meshy MCP tool
 
 ## Acceptance
 Pending (no outputs yet).
+
+---
+
+# Extension (screen-art pass, no ticket): shrine stage plate and mask changes
+
+Status: PROPOSED, 2026-10-10. **No Meshy job has been run and no generating tool was called.** Target: `docs/design/screens/title.png`.
+
+## M1-M3 need the designer to re-confirm before running
+The earlier approval of M1-M3 (9 credits) was for the prompts above, and it was never run. This extension **changes those prompts** (cords, tassels, bell, horn and dish detail), so the old approval should not be treated as covering them. Nothing runs until the designer confirms the revised M1-M3 below (still 3 credits each, 9 per take, worst case 27). M4 (Tanuki) stays skipped, and no Tanuki appears anywhere in the title art.
+
+## Mask changes the concept implies
+The concept masks hang on wooden stands, with cords and tassels, and are shaded with a slight three-quarter depth. We keep the flat, front-facing, ink-outlined talisman look (V1), so **only the attachments change**. In the prompt base, replace "no strings, no stand" with "a knotted cord loop and a hanging tassel on each side of the face, the cords and tassels are part of the mask, no stand, no wall, no body" and drop "hanging cord" from the negative prompt (keep "stand" out).
+
+| Mask | Revised mask-line additions (append to the line above) | Why |
+|---|---|---|
+| M1 Kitsune | Two shrine red #B5332B knotted cord loops at the lower cheeks, each with a hanging red tassel and one small brass #B08A48 bell. Eye slits dark, nose small and black. | The concept's tassels and bells; also lets M1 double as the corner ornament on the HUD, Controls, Reward, Modifier target and Defeat screens (`ui-hud-ornaments.md`). Full mask, face never shown. |
+| M2 Oni | Horns and tusks in bone-ivory (rice paper with ink shading), thick dark hair fringe behind the brow, yellow #F2A23A eyes, red-brown tassel on one side. | The concept's ivory horns and dark hair. |
+| M3 Kappa | Round dish with a shallow pool of water (flat pale blue-grey ring, no gloss), leaf-like fringe of teal hair around the face, yellow beak, a teal tassel on a rope loop. | The concept's dish with water, leaf fringe and beak. Water uses indigo and rice paper, no gloss. |
+
+Output size: ask for the highest resolution `nano-banana` returns; the masks display at about 500 px tall on the title, 220 px as the corner ornament.
+
+## New job: shrine stage plate
+| # | Asset | Tool and settings | Output | Credits/take |
+|---|---|---|---|---|
+| S1 | Title plate: shrine stage with sun and empty mask stands | `meshy_text_to_image`, `ai_model: nano-banana-pro`, aspect 16:9, highest resolution | `game/assets/generated/ui/title/plate-shrine.png` | 9 |
+
+Prompt: style block from `assets/specs/style.md`, then:
+
+> Wide 16:9 key-art plate on warm rice paper #F1E8D4. Left 45%: calm and mostly empty paper with a large flat persimmon #D8632C sun disc behind soft ink-wash cloud bands at the upper left, a misty ink-wash cliff with a small distant pagoda and layered pines in pine #34483B and indigo #2D3A5E at the lower left, plenty of empty paper where a title and menu will sit. Right 55%: a shrine mask stand scene, two vermilion #B5332B torii pillars framing the top and right, a thick twisted rope with a hanging zigzag paper streamer at the top, bamboo leaves and indigo night-blue sky with soft clouds behind, a dark wooden low table in front with a red cloth draped over it carrying a rice-paper circular three-comma swirl emblem (abstract, no letters), and three EMPTY dark wooden mask stands standing in a row on the table (left, centre taller, right), nothing on them. No masks, no characters, no animals, no text, no lettering, no logo.
+
+Avoid: the shared negative plus "readable text, real kanji or letters, masks, faces, characters, Tanuki, fox, logo, title lettering, 3D render, gloss, photographic".
+
+Engine composes: M1 centred slightly taller on the centre stand, M2 on the left, M3 on the right (stand positions measured on import; the plate is generated before the masks so the masks can be scaled to the stands). The sun disc and any cloud decoration live in the plate, so the live menu text sits over calm paper. Menu highlight is K3 from `ui-screen-kit.md`.
+
+### Acceptance (S1, added to the list above)
+1. Left 45% really is calm paper (menu legibility at 1080p); sun, cliff and pagoda low contrast.
+2. Three stands visible, empty, evenly spaced, centre one taller or higher; masks can overlay without overlap with the red cloth emblem.
+3. No text, no real kanji, emblem is an abstract three-comma swirl; no Tanuki, no creature.
+4. Flat cel, ink-brush edges, palette within tolerance, matte (the concept's painterly cloud noise is not a target).
+5. Licence UNKNOWN, designer to confirm.
+
+Fallback after 3 failed takes: B1 backdrop (`backdrop-dusk.png`, 3 credits, still optional above) with the K1 paper panel on the left and a Godot-drawn table and three stand rectangles.
+
+### Credits (extension)
+S1 first pass 9, worst case 27. Revised M1-M3 first pass 9, worst case 27 (same cost as before, new approval).
+
+## Open decision for the designer: title logo lettering
+The concept's "YOKAI FIGHTERS" is brush lettering with a red second line, and the other concepts use the same brush face for headings (REWARD, CONTROLS, PAUSED, WHERE DOES WILL-O'-WISP GO?). **This is not a generation job**: baked lettering would break the no-text rule, misspell, and could not be localised or edited. Options for the designer:
+1. A licensed or open-licence brush-style font used as a Godot font for all headings (cheapest, editable, consistent); the title adds a K3/K4 stroke or an outline for the red line.
+2. A one-off logo image made outside the generator (designer or a commissioned artist), imported as a texture.
+3. A plain bold serif for the logo (matches the body text), no brush at all.
+Which, and who sources the font and checks its licence? Until then ui-designer uses the bold serif body font as a placeholder.
+
+## Takes (extension)
+None. Nothing run, 0 credits spent.
+
+| Job | Task id | Credits (est/actual) |
+|---|---|---|
+| S1 plate | not run | 9/0 |
+| M1-M3 revised | not run (re-confirm) | 9/0 |
