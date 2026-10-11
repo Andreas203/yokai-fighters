@@ -37,9 +37,10 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 1,
+/// { "version": 2,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
-///                   "visited": ["r1"], "current": null, "health": 950,
+///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
+///                   "copy_locked": false, "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1 } ] },
 ///   "unlocks": ["ability-id"],
 ///   "story": { "seen": ["intro"] } }
@@ -61,7 +62,8 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// </summary>
 public sealed class SaveStore
 {
-	public const int CurrentVersion = 1;
+	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
+	public const int CurrentVersion = 2;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -164,11 +166,18 @@ public sealed class SaveStore
 			else if (!run.TryGetProperty("health", out JsonElement h) || h.ValueKind != JsonValueKind.Number || !h.TryGetInt32(out health)) why = "health missing or not a whole number";
 			else if (StringArray(run, "visited") is not { } visited) why = "visited missing or not a list of node ids";
 			else if (Slots(run, out string? slotProblem) is not { } slots) why = slotProblem;
+			// Optional (missing = default), but a value of the wrong kind is damage, not absence: the run is dropped.
+			else if (OptionalInt(run, "coins", out int coins) is { } coinProblem) why = coinProblem;
+			else if (OptionalBool(run, "copy_locked", out bool? copyLocked) is { } lockProblem) why = lockProblem;
+			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
 					MapFile = Text(run, "map_file"),
 					MapFingerprint = Text(run, "map_fingerprint"),
+					Coins = coins,
+					CopyLocked = copyLocked,
+					LockedCopy = copy,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -218,6 +227,32 @@ public sealed class SaveStore
 		return ids;
 	}
 
+	private static string? OptionalInt(JsonElement obj, string name, out int value)
+	{
+		value = 0;
+		if (!obj.TryGetProperty(name, out JsonElement e)) return null;
+		return e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out value) ? null : $"{name} is not a whole number";
+	}
+
+	private static string? OptionalBool(JsonElement obj, string name, out bool? value)
+	{
+		value = null;
+		if (!obj.TryGetProperty(name, out JsonElement e)) return null;
+		if (e.ValueKind is JsonValueKind.True or JsonValueKind.False) { value = e.GetBoolean(); return null; }
+		return $"{name} is not true/false";
+	}
+
+	private static string? OptionalCopy(JsonElement run, out LockedCopySave? copy)
+	{
+		copy = null;
+		if (!run.TryGetProperty("locked_copy", out JsonElement e) || e.ValueKind == JsonValueKind.Null) return null;
+		if (e.ValueKind != JsonValueKind.Object || Text(e, "slot") is not { } slot || Text(e, "special") is not { } special
+			|| !e.TryGetProperty("level", out JsonElement l) || l.ValueKind != JsonValueKind.Number || !l.TryGetInt32(out int level))
+			return "locked_copy needs slot, special and level";
+		copy = new LockedCopySave(slot, special, level);
+		return null;
+	}
+
 	private static string? Text(JsonElement obj, string name) =>
 		obj.TryGetProperty(name, out JsonElement e) && e.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(e.GetString()) ? e.GetString() : null;
 
@@ -256,6 +291,17 @@ public sealed class SaveStore
 				w.WriteEndArray();
 				if (run.Current is null) w.WriteNull("current"); else w.WriteString("current", run.Current);
 				w.WriteNumber("health", run.Health);
+				w.WriteNumber("coins", run.Coins);
+				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
+				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
+				else
+				{
+					w.WriteStartObject("locked_copy");
+					w.WriteString("slot", copy.Slot);
+					w.WriteString("special", copy.Special);
+					w.WriteNumber("level", copy.Level);
+					w.WriteEndObject();
+				}
 				w.WriteStartArray("slots");
 				foreach (SlotSave s in run.Slots)
 				{

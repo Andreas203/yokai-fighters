@@ -64,13 +64,16 @@ public static class SaveTests
 	static string Slots(RunSession s) =>
 		string.Join(",", s.Run.Owned.Select(o => $"{o.Slot}:{o.Special.Data.Id}:{o.Special.Level}:{o.Special.Modifier?.Id}:{s.Run.LevelledOrder(o.Slot)}"));
 
+	/// <summary>The current version's field as the file writes it.</summary>
+	static string Current => "\"version\": " + SaveStore.CurrentVersion;
+
 	static readonly SaveData Sample = new SaveData
 	{
 		Run = new RunSave(4000000000u, "default-map", new[] { "r1-apprentice", "r2-oni" }, "r3-kappa", 730, new[]
 		{
 			new SlotSave("A", "spirit-wave", 2, "some-modifier", 1),
 			new SlotSave("C", "foxfire", 1, null, 0),
-		}) { MapFile = "default-map.json", MapFingerprint = "00ff00ff00ff00ff" },
+		}) { MapFile = "default-map.json", MapFingerprint = "00ff00ff00ff00ff", Coins = 75, CopyLocked = false },
 		Unlocks = new[] { "zeta", "alpha" },
 		Story = new StoryProgress(new[] { StoryProgress.Reveal, StoryProgress.Intro }),
 	};
@@ -91,12 +94,13 @@ public static class SaveTests
 		Assert.True(run.Visited.SequenceEqual(new[] { "r1-apprentice", "r2-oni" }), "visited in order");
 		Assert.True(run.Slots.SequenceEqual(Sample.Run!.Slots), "slots back");
 		Assert.True(run.MapFile == "default-map.json" && run.MapFingerprint == "00ff00ff00ff00ff", "map file and fingerprint back");
+		Assert.True(run.Coins == 75 && run.CopyLocked == false && run.LockedCopy == null, "coins and the copy lock back");
 		Assert.True(load.Data.Unlocks.SequenceEqual(new[] { "zeta", "alpha" }), "unlocks keep their award order (M1)");
 		Assert.True(load.Data.Story.Seen.SequenceEqual(new[] { "intro", "reveal" }), "story flags back");
 		string text = File.ReadAllText(path);
 		Assert.Equal(text, SaveStore.Serialize(load.Data), "what was read writes the same bytes");
 		Assert.Equal(text, SaveStore.Serialize(Sample), "the same data always writes the same text (no time stamp)");
-		Assert.True(text.Contains("\"version\": 1") && text.Contains("\"seed\": 4000000000"), "versioned, readable file: " + text);
+		Assert.True(text.Contains("\"version\": " + SaveStore.CurrentVersion + ",") && text.Contains("\"seed\": 4000000000"), "versioned, readable file: " + text);
 		Assert.True(store.Save(SaveData.Empty) && new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data.Run: null }, "overwrites; an empty save has no run");
 	});
 
@@ -134,12 +138,12 @@ public static class SaveTests
 	public static void Store_Versions_OlderIsRead_NewerKeepsKnownFields_AndIsBackedUp() => WithTempFile(path =>
 	{
 		string current = SaveStore.Serialize(Sample);
-		SaveLoad older = SaveStore.Parse(current.Replace("\"version\": 1,", ""));
+		SaveLoad older = SaveStore.Parse(current.Replace(Current + ",", ""));
 		Assert.Equal(SaveLoadStatus.OlderVersion, older.Status, "no version = older");
 		Assert.Equal(current, SaveStore.Serialize(older.Data), "an older file's fields are all kept and rewritten as the current version");
-		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse(current.Replace("\"version\": 1", "\"version\": 0")).Status, "version 0");
+		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse(current.Replace(Current, "\"version\": 0")).Status, "version 0");
 
-		string newer = current.Replace("\"version\": 1", "\"version\": 7, \"from_the_future\": { \"x\": [1] }");
+		string newer = current.Replace(Current, "\"version\": 7, \"from_the_future\": { \"x\": [1] }");
 		File.WriteAllText(path, newer);
 		var store = new SaveStore(path);
 		SaveLoad load = store.Load();
@@ -155,18 +159,19 @@ public static class SaveTests
 	{
 		// Other tickets add run fields (coins, a copy lock, a used heal): a file with them loads here, a file without them loads there.
 		string extra = """
-			{ "version": 1, "coins": 75,
+			{ "version": 2, "coins": 75,
 			  "run": { "seed": 9, "map": "default-map", "visited": [], "health": 1000, "coins": 50, "copy_lock": { "slot": "A" },
-			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "borrowed": true } ] },
+			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "borrowed": true } ], "merchant": "heal" },
 			  "unlocks": [], "story": { "seen": [], "tanuki": 2 }, "carry": { "special": "foxfire" } }
 			""";
 		SaveLoad load = SaveStore.Parse(extra);
 		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "unknown fields are not a problem: " + string.Join("; ", load.Problems));
 		var run = load.Data.Run!;
 		Assert.True(run.Seed == 9 && run.Current == null && run.MapFile == null && run.MapFingerprint == null, "optional run fields default when missing");
+		Assert.True(run.Coins == 50 && run.CopyLocked == null && run.LockedCopy == null, "coins read; no copy lock in the file = not said (null)");
 		Assert.True(run.Slots.Single() == new SlotSave("A", "spirit-wave", 1, null, 0), "optional slot fields default when missing");
 
-		SaveLoad bare = SaveStore.Parse("{ \"version\": 1 }");
+		SaveLoad bare = SaveStore.Parse("{ " + Current + " }");
 		Assert.Equal(SaveLoadStatus.Partial, bare.Status, "sections missing");
 		Assert.True(bare.Data.Run == null && bare.Data.Unlocks.Count == 0 && bare.Data.Story.Seen.Count == 0, "every missing section is its default");
 	}
@@ -238,7 +243,7 @@ public static class SaveTests
 		Assert.True(noUnlocks.Status == SaveLoadStatus.Partial && noUnlocks.Data.Unlocks.Count == 0 && noUnlocks.Data.Story == d.Story, "broken unlocks: story progress is kept");
 		SaveLoad noStory = SaveStore.Parse(text.Replace("\"story\": {", "\"story\": null, \"x\": {"));
 		Assert.True(noStory.Status == SaveLoadStatus.Partial && noStory.Data.Story.Seen.Count == 0 && noStory.Data.Unlocks.SequenceEqual(d.Unlocks), "broken story: unlocks are kept");
-		SaveLoad junk = SaveStore.Parse("{ \"version\": 1, \"unlocks\": [\"a\", 4, \"\", \"a\", \"b\"], \"story\": { \"seen\": [\"x\", null, \"intro\", \"x\"] } }");
+		SaveLoad junk = SaveStore.Parse("{ " + Current + ", \"unlocks\": [\"a\", 4, \"\", \"a\", \"b\"], \"story\": { \"seen\": [\"x\", null, \"intro\", \"x\"] } }");
 		Assert.True(junk.Data.Unlocks.SequenceEqual(new[] { "a", "b" }) && junk.Data.Story.Seen.SequenceEqual(new[] { "intro", "x" }), "bad entries are skipped, the rest kept");
 		Assert.Equal(SaveLoadStatus.Partial, junk.Status, "and reported");
 	}
@@ -260,7 +265,7 @@ public static class SaveTests
 		ulong atStart = live.StateHash();
 		RunSession fresh = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(live)))).Data.Run!.Restore(FightScene.LoadAbilityPool(), DefaultMap(), Table());
 		Assert.True(fresh.StateHash() == atStart && fresh.Step == 0 && fresh.Reachable().SequenceEqual(live.Reachable()), "a run saved before its first node restores with the same hash");
-		bool anyLevelled = false, anyModifier = false;
+		bool anyLevelled = false, anyModifier = false, anyCoins = false, savedInBoss = false;
 		for (int i = 0; i < hashes.Count - 1; i++)
 		{
 			PlayNode(live, health[i]);
@@ -273,6 +278,8 @@ public static class SaveTests
 			Assert.Equal(hashes[i], back.StateHash(), $"node {i + 1}: the restored run has the live run's hash");
 			Assert.True(back.Seed == 1234 && back.Run.Health == live.Run.Health && back.Step == live.Step && back.Node == null, $"node {i + 1}: seed, health, step");
 			Assert.Equal(Slots(live), Slots(back), $"node {i + 1}: slots, levels, modifiers and T3 order");
+			Assert.True(back.Run.Coins == live.Run.Coins && back.CopyLocked == live.CopyLocked, $"node {i + 1}: the purse (R8) and the lock (T1)");
+			anyCoins |= back.Run.Coins > 0;
 			Assert.True(back.Reachable().SequenceEqual(live.Reachable()), $"node {i + 1}: the same routes are open");
 			Assert.Equal(text, SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(back, FileMapSource.DefaultFile))), $"node {i + 1}: saving the restored run writes the same file");
 			anyLevelled |= back.Run.Owned.Any(o => o.Special.Level > 1);
@@ -283,12 +290,16 @@ public static class SaveTests
 			inside.Enter(inside.Reachable()[0]);
 			var again = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(inside)))).Data.Run!.Restore(FightScene.LoadAbilityPool(), DefaultMap(), Table());
 			Assert.True(again.Node?.NodeId == inside.Node!.NodeId && again.Entered!.Scene == inside.Entered!.Scene && again.StateHash() == inside.StateHash(), $"node {i + 1}: restored inside the next node");
+			Assert.True(again.CopyLocked == inside.CopyLocked && Same(again.LockedCopy, inside.LockedCopy) && again.Run.Coins == inside.Run.Coins, $"node {i + 1}: lock and purse inside the node");
+			savedInBoss |= inside.CopyLocked;
 
 			live = back; // carry on from the restored run: the rest must match the reference exactly (same drafts from the seed)
 		}
 		PlayNode(live, health[hashes.Count - 1]);
 		Assert.True(live.Ended is { Won: true } && live.StateHash() == hashes[^1], "a run restored after every node ends exactly like the one played straight through");
 		Assert.True(anyLevelled || anyModifier, "the walk covered a levelled special or a modifier");
+		Assert.True(anyCoins && savedInBoss, "the walk covered a non-empty purse and a save inside the Tanuki's node (copy locked)");
+		Throws<InvalidOperationException>(() => RunSave.Capture(live), "after the Tanuki's node the run is over: nothing to save");
 	});
 
 	[Test]
@@ -342,8 +353,9 @@ public static class SaveTests
 		while (!walked.IsOver) { all.Add(walked.Reachable()[0]); PlayNode(walked, 600); }
 		Assert.True(all.Count == walked.Steps && all[^1] == "boss-tanuki", "walked to the boss node");
 		Throws<FormatException>(() => (good with { Visited = all.ToArray(), Current = all[^1] }).Restore(pool, DefaultMap(), Table()), "a finished walk");
-		var atBoss = (good with { Visited = all.Take(all.Count - 1).ToArray(), Current = all[^1] }).Restore(pool, DefaultMap(), Table());
+		var atBoss = (good with { Visited = all.Take(all.Count - 1).ToArray(), Current = all[^1], CopyLocked = null }).Restore(pool, DefaultMap(), Table());
 		Assert.True(atBoss.Node?.NodeId == "boss-tanuki" && !atBoss.IsOver, "inside the last node is still a run in progress");
+		Assert.True(atBoss.CopyLocked && atBoss.LockedCopy == CopyRule.Target(atBoss.Run), "no lock in the file: worked out from the slots it entered with (T1)");
 
 		// A missing or impossible T3 order is repaired (lower slot = more recent), never a reason to lose the run.
 		var levelled = RunState.NewRun(pool, DefaultMap());
@@ -600,7 +612,7 @@ public static class SaveTests
 	public static void Store_AnyLoadThatLostSomething_IsBackedUp_AndBackupsAreNeverReplaced() => WithTempFile(path =>
 	{
 		string bak = path + SaveStore.BackupSuffix;
-		string partial = "{\"version\":1,\"run\":null,\"unlocks\":{\"0\":\"oni-quake\"},\"story\":{\"seen\":[\"intro\"]}}";
+		string partial = "{\"version\":" + SaveStore.CurrentVersion + ",\"run\":null,\"unlocks\":{\"0\":\"oni-quake\"},\"story\":{\"seen\":[\"intro\"]}}";
 		File.WriteAllText(path, partial);
 		var store = new SaveStore(path);
 		SaveLoad load = store.Load();
@@ -615,14 +627,14 @@ public static class SaveTests
 		Assert.True(store.Save(Sample), "saved");
 		Assert.Equal(partial, File.ReadAllText(bak), "the earlier backup is untouched");
 		Assert.Equal("", File.ReadAllText(bak + ".1"), "the new one is numbered");
-		string older = SaveStore.Serialize(Sample).Replace("\"version\": 1,", "").Replace("\"unlocks\": [", "\"unlocks\": 5, \"x\": [");
+		string older = SaveStore.Serialize(Sample).Replace(Current + ",", "").Replace("\"unlocks\": [", "\"unlocks\": 5, \"x\": [");
 		File.WriteAllText(path, older);
 		store = new SaveStore(path);
 		Assert.Equal(SaveLoadStatus.OlderVersion, store.Load().Status, "an older file with a broken section");
 		Assert.True(store.Save(Sample) && File.ReadAllText(bak + ".2") == older, "is backed up too, under the next name");
 
 		// Nothing lost, nothing backed up: a clean older file, a current file, and a second load of a good file.
-		foreach (string clean in new[] { SaveStore.Serialize(Sample).Replace("\"version\": 1,", ""), SaveStore.Serialize(Sample) })
+		foreach (string clean in new[] { SaveStore.Serialize(Sample).Replace(Current + ",", ""), SaveStore.Serialize(Sample) })
 		{
 			File.WriteAllText(path, clean);
 			store = new SaveStore(path);
@@ -652,8 +664,8 @@ public static class SaveTests
 			foreach (string old in Directory.GetFiles(Path.GetDirectoryName(path)!, "*.bak*")) File.Delete(old);
 			Assert.True(store.Save(SaveData.Empty) && File.ReadAllText(path + SaveStore.BackupSuffix) == text, $"version {version}: backed up before the first write");
 		}
-		Assert.Equal(SaveLoadStatus.NewerVersion, SaveStore.Parse("{ \"version\": 1, \"version\": 9" + body).Status, "a repeated version: the last one counts");
-		Assert.Equal(SaveLoadStatus.Loaded, SaveStore.Parse("\uFEFF{ \"version\": 1" + body).Status, "a byte-order mark is not corruption");
+		Assert.Equal(SaveLoadStatus.NewerVersion, SaveStore.Parse("{ " + Current + ", \"version\": 9" + body).Status, "a repeated version: the last one counts");
+		Assert.Equal(SaveLoadStatus.Loaded, SaveStore.Parse("\uFEFF{ " + Current + body).Status, "a byte-order mark is not corruption");
 		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse("{ \"version\": 0" + body).Status, "version 0 is older");
 	});
 
@@ -762,5 +774,144 @@ public static class SaveTests
 			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data.Run: null }, "the pending removal is written once the disk allows it");
 			Assert.True(flow.Title.ContinueButton.Disabled, "Continue stays off");
 		});
+	});
+
+	// ---- YOK-87 after YOK-82/83/84/85: coins, the copy lock, merchant and dojo choices ----
+
+	/// <summary>Same copy by value (each restore loads its own ability pool, so the special objects differ).</summary>
+	static bool Same(CopyTarget? a, CopyTarget? b) => a is null ? b is null : b is not null && a.Slot == b.Slot && a.Data.Id == b.Data.Id && a.Level == b.Level;
+
+	/// <summary>Walks the default map to the Tanuki's node (entered, not fought) with the first route.</summary>
+	static RunSession ToTheBoss(uint seed)
+	{
+		var s = NewSession(seed);
+		while (s.Reachable()[0] != "boss-tanuki") PlayNode(s, 700);
+		Assert.True(s.Enter("boss-tanuki").Ok && s.CopyLocked, "entered the Tanuki's node: locked (T1)");
+		return s;
+	}
+
+	[Test]
+	public static void Coins_AreSaved_NegativeIsNotARun() => WithFixtures(() =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		var s = NewSession(31);
+		PlayNode(s, 800);
+		PlayNode(s, 800);
+		Assert.True(s.Run.Coins > 0, "duels paid coins (R8)");
+		RunSave saved = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)))).Data.Run!;
+		Assert.Equal(s.Run.Coins, saved.Coins, "coins in the file");
+		Assert.True(saved.Restore(pool, DefaultMap(), Table()) is var back && back.Run.Coins == s.Run.Coins && back.StateHash() == s.StateHash(), "the purse comes back, same hash");
+		Throws<FormatException>(() => (saved with { Coins = -1 }).Restore(pool, DefaultMap(), Table()), "a negative purse");
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(saved));
+		Assert.True(SaveStore.Parse(text.Replace("\"coins\": " + saved.Coins, "\"coins\": \"lots\"")) is { Status: SaveLoadStatus.Partial, Data.Run: null }, "coins of the wrong kind: the run is dropped, not zeroed");
+		Assert.True(SaveStore.Parse(text.Replace("\"coins\": " + saved.Coins + ",", "")).Data.Run!.Coins == 0, "no coins field: an empty purse");
+	});
+
+	[Test]
+	public static void CopyLock_SavedInsideTheTanukisNode_ComesBackAsLocked_AndAWrongLockIsNotARun() => WithFixtures(() =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		var s = ToTheBoss(41);
+		RunSave saved = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)))).Data.Run!;
+		Assert.True(saved.CopyLocked == true && saved.LockedCopy is { } c && c.Special == s.LockedCopy!.Data.Id && c.Slot == s.LockedCopy.Slot.ToString() && c.Level == s.LockedCopy.Level, "the lock in the file");
+		var back = saved.Restore(pool, DefaultMap(), Table());
+		Assert.True(back.CopyLocked && Same(back.LockedCopy, s.LockedCopy) && back.StateHash() == s.StateHash() && back.Node?.NodeId == "boss-tanuki", "restored inside the Tanuki's node, locked, same hash");
+
+		// The lock is the saved one, not worked out again: a later level-up in the file would not move it.
+		var other = s.Run.Owned.First(o => o.Slot != s.LockedCopy!.Slot).Slot.ToString();
+		Assert.True((saved with { LockedCopy = saved.LockedCopy! with { Slot = other } }) is var moved, "a lock in another slot");
+		Throws<FormatException>(() => moved.Restore(pool, DefaultMap(), Table()), "a copy outside its own slot (T2)");
+		Throws<FormatException>(() => (saved with { LockedCopy = saved.LockedCopy! with { Special = "no-such-special" } }).Restore(pool, DefaultMap(), Table()), "an unknown copy");
+		Throws<FormatException>(() => (saved with { LockedCopy = saved.LockedCopy! with { Level = 9 } }).Restore(pool, DefaultMap(), Table()), "a level the copy lacks (T4)");
+		Throws<FormatException>(() => (saved with { LockedCopy = saved.LockedCopy! with { Slot = "E" } }).Restore(pool, DefaultMap(), Table()), "not a slot");
+		Throws<FormatException>(() => (saved with { CopyLocked = false, LockedCopy = null }).Restore(pool, DefaultMap(), Table()), "unlocked inside the Tanuki's node (T1)");
+		Throws<FormatException>(() => (saved with { CopyLocked = false }).Restore(pool, DefaultMap(), Table()), "a copy while unlocked");
+		Throws<FormatException>(() => (saved with { CopyLocked = null }).Restore(pool, DefaultMap(), Table()), "a copy with no lock flag");
+		Assert.True((saved with { LockedCopy = null }).Restore(pool, DefaultMap(), Table()) is { CopyLocked: true, LockedCopy: null }, "a lock that found no special is still a lock");
+
+		var early = NewSession(41);
+		PlayNode(early, 800);
+		RunSave before = RunSave.Capture(early);
+		Assert.True(before.CopyLocked == false && before.LockedCopy == null, "before the Tanuki's node: not locked");
+		Throws<FormatException>(() => (before with { CopyLocked = true }).Restore(pool, DefaultMap(), Table()), "locked before the Tanuki's node (T1)");
+		Throws<FormatException>(() => (before with { CopyLocked = true, LockedCopy = saved.LockedCopy }).Restore(pool, DefaultMap(), Table()), "a copy before the Tanuki's node (T1)");
+	});
+
+	[Test]
+	public static void Version1_Files_StillLoad_NoCoins_LockWorkedOutOnlyWhenExact() => WithFixtures(() =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		static string AsVersion1(RunSave r)
+		{
+			string text = SaveStore.Serialize(SaveData.Empty.WithRun(r with { Coins = 0, CopyLocked = null, LockedCopy = null }));
+			text = System.Text.RegularExpressions.Regex.Replace(text.Replace(Current, "\"version\": 1"), "\\s*\"(coins|locked_copy)\": (0|null),", "");
+			Assert.True(!text.Contains("coins") && !text.Contains("copy_locked") && !text.Contains("locked_copy"), "a version-1 file has none of the new fields: " + text);
+			return text;
+		}
+
+		// Before the lock point: coins are 0 (version 1 had none), no lock.
+		var s = NewSession(51);
+		PlayNode(s, 800);
+		SaveLoad v1 = SaveStore.Parse(AsVersion1(RunSave.Capture(s)));
+		Assert.True(v1.Status == SaveLoadStatus.OlderVersion && !SaveStore.LostSomething(v1), "older, fully read: no backup owed");
+		var back = v1.Data.Run!.Restore(pool, DefaultMap(), Table());
+		Assert.True(back.Run.Coins == 0 && !back.CopyLocked && Slots(back) == Slots(s), "no coins, not locked, the same slots");
+		Assert.Equal(SaveStore.CurrentVersion, SaveStore.Parse(SaveStore.Serialize(v1.Data)).Status == SaveLoadStatus.Loaded ? SaveStore.CurrentVersion : -1, "rewritten as the current version");
+
+		// Saved on entering the Tanuki's node: the lock is worked out from the slots it entered with.
+		var boss = ToTheBoss(52);
+		var notes = new List<string>();
+		var locked = SaveStore.Parse(AsVersion1(RunSave.Capture(boss))).Data.Run!.Restore(pool, DefaultMap(), Table(), notes);
+		Assert.True(locked.CopyLocked && Same(locked.LockedCopy, boss.LockedCopy), "the same lock as at entry (T1)");
+		Assert.True(notes.Count == 1 && notes[0].Contains("worked out"), "and that is noted");
+
+		// Not exact: the level-up order had to be repaired, so the T3 tie-break is a guess: refused, not guessed.
+		var guess = SaveStore.Parse(AsVersion1(RunSave.Capture(boss))).Data.Run!;
+		bool anyLevelled = guess.Slots.Any(x => x.Level > 1);
+		if (anyLevelled)
+			Throws<FormatException>(() => (guess with { Slots = guess.Slots.Select(x => x with { Levelled = 0 }).ToArray() }).Restore(pool, DefaultMap(), Table()), "lock not in the file and the T3 order repaired");
+	});
+
+	[Test]
+	public static void MerchantAndDojoChoices_AreNoneAtEverySavePoint() => WithFixtures(() =>
+	{
+		// The flow saves on NodeEntered and NodeCompleted only. A stop's choice is made after entering and is gone
+		// once the node completes, so the file never needs it (R6, R7). Walk both row-7 routes and spend every choice.
+		var seenTypes = new HashSet<string>();
+		foreach (bool lastRoute in new[] { false, true })
+		{
+			var s = NewSession(lastRoute ? 61u : 62u);
+			int points = 0;
+			void AtSavePoint(NodeContext n)
+			{
+				points++;
+				Assert.True(s.Merchant is null or { Choice: MerchantChoice.None }, $"{n.NodeId}: no merchant choice at a save point");
+				Assert.True(s.Dojo is null or { Choice: DojoChoice.None }, $"{n.NodeId}: no dojo choice at a save point");
+				if (!s.IsOver && s.Draft is null)
+				{
+					var text = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)));
+					Assert.True(SaveStore.Parse(text).Data.Run!.Restore(FightScene.LoadAbilityPool(), DefaultMap(), Table()).StateHash() == s.StateHash(), $"{n.NodeId}: the save point restores exactly");
+				}
+			}
+			s.NodeEntered += AtSavePoint;
+			s.NodeCompleted += AtSavePoint;
+			while (!s.IsOver)
+			{
+				var reach = s.Reachable();
+				Assert.True(s.Enter(lastRoute ? reach[^1] : reach[0]).Ok, "entered");
+				var node = s.Node!;
+				seenTypes.Add(node.Type);
+				if (s.Merchant is { } m) Assert.True(m.TakeHeal().Ok && m.Choice == MerchantChoice.Heal, $"{node.NodeId}: heal taken (R6)");
+				if (s.Dojo is { } d) Assert.True(d.Rest().Ok && d.Choice == DojoChoice.Rest, $"{node.NodeId}: rest taken (R7)");
+				if (s.Merchant is null && s.Dojo is null && s.WinFight(700) is { } draft)
+				{
+					var card = draft.Offer.Cards[0];
+					draft.Pick(0, card.Targets.Count > 0 ? card.Targets[0].Slot : null);
+				}
+				Assert.True(s.CompleteNode().Ok, $"{node.NodeId}: completed");
+			}
+			Assert.True(points == 2 * s.Steps, "a save point on every entry and every completion");
+		}
+		Assert.True(seenTypes.Contains(NodeTypeRegistry.Merchant) && seenTypes.Contains(NodeTypeRegistry.Dojo), "both a merchant and a dojo were visited: " + string.Join(",", seenTypes));
 	});
 }

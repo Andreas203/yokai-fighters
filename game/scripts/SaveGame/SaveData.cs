@@ -6,6 +6,9 @@ using YokaiFighters.Sim;
 
 namespace YokaiFighters.SaveGame;
 
+/// <summary>T1: the Tanuki's locked copy as saved: slot, special id and level (a <see cref="CopyTarget"/> by id).</summary>
+public sealed record LockedCopySave(string Slot, string Special, int Level);
+
 /// <summary>One slot of the saved run: the special by id, its level (A3), its modifier by id (A2) and its T3 level-up rank.</summary>
 public sealed record SlotSave(string Slot, string Special, int Level, string? Modifier, int Levelled);
 
@@ -28,6 +31,15 @@ public sealed record RunSave(
 	public string? MapFile { get; init; }
 	/// <summary><see cref="MapGraph.Fingerprint"/> when saved (hex); null = not checked on restore.</summary>
 	public string? MapFingerprint { get; init; }
+	/// <summary>R8: the purse (version 2; 0 when the file has none). A negative value is not a run.</summary>
+	public int Coins { get; init; }
+	/// <summary>
+	/// T1: whether the copy was locked when saved (version 2). Null = the file does not say (version 1): the lock is
+	/// then worked out on restore when that can be exact, see <see cref="Restore"/>.
+	/// </summary>
+	public bool? CopyLocked { get; init; }
+	/// <summary>T1: the locked copy; null before the lock, or a lock that found no special.</summary>
+	public LockedCopySave? LockedCopy { get; init; }
 
 	public static string Hex(ulong value) => value.ToString("x16", CultureInfo.InvariantCulture);
 
@@ -57,15 +69,34 @@ public sealed record RunSave(
 		{
 			MapFile = mapFile,
 			MapFingerprint = Hex(session.Map.Graph.Fingerprint),
+			Coins = session.Run.Coins,
+			CopyLocked = session.CopyLocked,
+			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
 		};
 	}
+
+	static SpecialSlot ParseSlot(string name) => name switch
+	{
+		"A" => SpecialSlot.A,
+		"B" => SpecialSlot.B,
+		"C" => SpecialSlot.C,
+		"D" => SpecialSlot.D,
+		_ => throw new FormatException($"'{name}' is not a slot (A, B, C or D)"),
+	};
 
 	/// <summary>
 	/// The saved run on this build's data. Throws <see cref="FormatException"/> naming the reason when the file
 	/// describes a run this build cannot hold: another map (id or fingerprint), a special or modifier that is not
 	/// in the pool, a slot, level or modifier the rules do not allow, no special at all (A1, T5), a walk the map
-	/// does not allow, or a walk already at the end of the map (that run is over).
-	/// <paramref name="notes"/> receives anything repaired (only the T3 level-up order can be).
+	/// does not allow, a walk already at the end of the map (that run is over), negative coins, or a copy lock
+	/// that disagrees with the walk or names a copy the run cannot hold (T1).
+	/// <paramref name="notes"/> receives anything repaired (only the T3 level-up order can be) or worked out.
+	/// <para>
+	/// A file without the copy lock (version 1) whose walk is past the lock point: the lock is worked out from the
+	/// restored slots (<see cref="CopyRule.Target"/>) only when the run was saved on entering the Tanuki's node,
+	/// the only save point past the lock where the slots are still those of the entry, and the level-up order
+	/// was read as saved. Otherwise the run is refused: the copy cannot be known exactly.
+	/// </para>
 	/// </summary>
 	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null)
 	{
@@ -79,14 +110,7 @@ public sealed record RunSave(
 		var order = new int[5];
 		foreach (SlotSave s in Slots)
 		{
-			SpecialSlot slot = s.Slot switch
-			{
-				"A" => SpecialSlot.A,
-				"B" => SpecialSlot.B,
-				"C" => SpecialSlot.C,
-				"D" => SpecialSlot.D,
-				_ => throw new FormatException($"'{s.Slot}' is not a slot (A, B, C or D)"),
-			};
+			SpecialSlot slot = ParseSlot(s.Slot);
 			SpecialData data = pool.Special(s.Special) ?? throw new FormatException($"special '{s.Special}' is not in this build's abilities");
 			ModifierData? modifier = null;
 			if (s.Modifier is { } id) modifier = pool.Modifier(id) ?? throw new FormatException($"modifier '{id}' is not in this build's abilities");
@@ -97,9 +121,15 @@ public sealed record RunSave(
 		// A1: a run starts with its starters; T5: the merchant never releases the last special, so the copy target is always defined.
 		if (owned.Count == 0) throw new FormatException("no slot holds a special: a run always owns at least one (A1, T5)");
 
+		if (Coins < 0) throw new FormatException($"coins {Coins}: a purse can't be negative (R8)");
+		if (CopyLocked is null && LockedCopy is not null) throw new FormatException("a locked copy without the copy lock (T1)");
+		if (CopyLocked == false && LockedCopy is not null) throw new FormatException("a locked copy while the copy is not locked (T1)");
+
 		RunState run;
 		try { run = RunState.Restore(Health, owned); }
 		catch (ArgumentException e) { throw new FormatException(e.Message); }
+		run.RestoreCoins(Coins);
+		bool orderRepaired = false;
 		try { run.RestoreLevelledOrder(order[1], order[2], order[3], order[4]); }
 		catch (ArgumentException e)
 		{
@@ -110,12 +140,45 @@ public sealed record RunSave(
 			for (int i = 1; i <= 4; i++) fallback[i] = run[(SpecialSlot)i] is { Level: > 1 } ? rank-- : 0;
 			run.RestoreLevelledOrder(fallback[1], fallback[2], fallback[3], fallback[4]);
 			notes?.Add($"level-up order not usable ({e.Message}): lower slots taken as more recent");
+			orderRepaired = true;
 		}
 		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current));
 		// A finished walk is a won run: it has ended, there is nothing to pick and nothing to continue.
 		if (map.IsFinished) throw new FormatException($"the saved walk is already at the end of map '{MapId}': that run is over");
 		run.SetMap(map);
-		return new RunSession(run, pool, scenes, Seed);
+
+		// T1: the copy lock. Saved: put back as it was. Not in the file: see the remarks above.
+		bool locked;
+		CopyTarget? copy = null;
+		if (CopyLocked is { } saved)
+		{
+			locked = saved;
+			if (LockedCopy is { } c)
+			{
+				SpecialData data = pool.Special(c.Special) ?? throw new FormatException($"locked copy '{c.Special}' is not in this build's abilities (T1)");
+				copy = new CopyTarget(ParseSlot(c.Slot), data, c.Level);
+			}
+		}
+		else if (!PastLockPoint(map)) locked = false;
+		else if (map.InNode && map.CurrentNode!.Type == NodeTypeRegistry.Boss && !orderRepaired)
+		{
+			locked = true;
+			copy = CopyRule.Target(run); // saved on entering the Tanuki's node: the slots are the ones it locked on
+			notes?.Add($"copy lock not in the file: worked out from the slots at the Tanuki's node ({copy?.Data.Id ?? "no special"})");
+		}
+		else throw new FormatException("the walk is past the Tanuki's node but the file has no copy lock, and it can't be worked out exactly (T1)");
+
+		try { return RunSession.Restore(run, pool, scenes, Seed, locked, copy); }
+		catch (ArgumentException e) { throw new FormatException(e.Message); }
+	}
+
+	/// <summary>T1: has the walk entered a Tanuki's node (the current node or one already visited)?</summary>
+	static bool PastLockPoint(RunMap map)
+	{
+		if (map.Current is { } cur && map.Graph.Node(cur).Type == NodeTypeRegistry.Boss) return true;
+		foreach (string id in map.Visited)
+			if (map.Graph.Node(id).Type == NodeTypeRegistry.Boss) return true;
+		return false;
 	}
 }
 
