@@ -56,3 +56,14 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 
 Rule S3 in `docs/design/rules.md` carries the new wording.
 
+---
+
+## AM3 — Quitting mid-node restarts the node (2026-10-11)
+
+**Decision.** The game saves only at node boundaries (run start, node entered, node completed). Quitting to the title inside a node and choosing Continue puts Ryo back at the start of that node with the health, coins and slots he entered with. A fight in progress restarts; a heal, rest or reward pick taken but not completed with the node is not kept. This is allowed: it is not an exploit to close. The route pick is still committed (R1): Continue always re-enters the same node.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD §6 run structure (save behaviour) | Not specified | As above. Rule M5 in `docs/design/rules.md`. |

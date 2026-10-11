@@ -197,6 +197,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **M2** 12 locked abilities take roughly 4–6 runs.
 - **M3** Best special carried to next run at Lv 2 if the run reached row 6 or further.
 - **M4** Story progress has its own save flag, independent of unlocks. No post-game mode.
+- **M5** The game saves only at node boundaries. Quitting inside a node and choosing Continue restarts that node with the health, coins and slots Ryo entered it with; a fight, heal, rest or pick not completed with the node is not kept. Allowed by design, not an exploit [AM3]. The route pick stays committed (R1).
 
 ## S — Story and tone
 
