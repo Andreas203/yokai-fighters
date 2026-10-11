@@ -209,7 +209,7 @@
     },
     {
       "id": "save", "title": "Save file: run in progress, unlocks, and story progress on its own flag",
-      "rules": ["M4"], "gdd": "7", "terms": ["integration"], "milestone": "integration",
+      "rules": ["M4", "M5"], "gdd": "7", "terms": ["integration"], "milestone": "integration",
       "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["run-flow"],
       "evidence": [{"symbol": "class (RunSave|SaveStore|SaveData)\\b", "in": "game/scripts/*"}, {"test": "^SaveTests\\."}]
     },
