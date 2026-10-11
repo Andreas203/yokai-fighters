@@ -37,14 +37,14 @@
       }
     },
     "dummy": {
-      "description": "What the dummy does. idle/crouch/guard/crouch_guard hold that stance; jump jumps straight up every `every` ticks; attack plays `moves` in order (a string) every `every` ticks.",
+      "description": "What the dummy does. idle/crouch/guard/crouch_guard hold that stance; jump jumps straight up; attack plays `moves` in order (a string). The first jump or string starts on tick 1 of each attempt and the next every `every` ticks after, so `every` may not be longer than setup.attempt_frames (the validator and the loader check it).",
       "type": "object",
       "required": ["action"],
       "additionalProperties": false,
       "properties": {
         "action": { "enum": ["idle", "crouch", "guard", "crouch_guard", "jump", "attack"] },
         "moves": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "$ref": "common.schema.json#/$defs/id" }, "description": "attack only: move ids from the dummy's kit, played as a string." },
-        "every": { "type": "integer", "minimum": 1, "maximum": 600, "description": "jump and attack: ticks between one start and the next." }
+        "every": { "type": "integer", "minimum": 1, "maximum": 600, "description": "jump and attack: ticks from one start to the next (first start = tick 1 of the attempt); at most setup.attempt_frames." }
       },
       "allOf": [
         { "if": { "properties": { "action": { "enum": ["jump", "attack"] } } }, "then": { "required": ["every"] }, "else": { "not": { "required": ["every"] } } },
@@ -52,16 +52,16 @@
       ]
     },
     "step": {
-      "description": "One observation. hit = the player's strike or projectile connects unblocked (Match.Hit); combo = `count` unblocked hits with the dummy never actionable between them; throw = the player's throw lands (Match.Throw, Land); block = the player blocks `count` of the dummy's hits. Kata-only inputs (motion, precision) are not allowed (K1, K2).",
+      "description": "One observation. hit = the player's strike or projectile connects unblocked (Match.Hit); a landed throw also raises Match.Hit but does not count as a hit or toward a combo. combo = `count` unblocked strike/projectile hits with the dummy held between them (its state is Hitstun, Knockdown or Thrown on every tick from one hit to the next; a dummy that recovered and jumped has left the combo). throw = the player's throw lands (Match.Throw, Land). block = the player blocks `count` of the dummy's hits. block and counter need a dummy with action 'attack'. Kata-only inputs (motion, precision) are not allowed (K1, K2).",
       "type": "object",
       "required": ["event"],
       "additionalProperties": false,
       "properties": {
         "event": { "enum": ["hit", "combo", "throw", "block"] },
-        "move": { "$ref": "common.schema.json#/$defs/id", "description": "hit/throw: the move that connects; combo: a move that must be one of the combo's hits. Absent = any." },
+        "move": { "$ref": "common.schema.json#/$defs/id", "description": "hit: the strike or projectile that connects (not a throw); throw: the throw that lands; combo: a move that must be one of the combo's hits. Absent = any." },
         "count": { "type": "integer", "minimum": 1, "maximum": 10, "description": "hit/block: how many (default 1); combo: hits in one combo (2 or more, required)." },
-        "counter": { "type": "boolean", "description": "hit only: must be a counterhit, i.e. the dummy was in a move (C7) - 'punish before it recovers'." },
-        "dummy_state": { "enum": ["airborne", "grounded", "landed"], "description": "hit/throw: the dummy's state when it connects. landed = touched down from a jump within `landed_within` ticks. A throw cannot meet an airborne dummy (C4)." },
+        "counter": { "type": "boolean", "description": "hit only: must be a counterhit (C7), i.e. the dummy was in a move of its own when hit - any frame of it, startup and active included, not only recovery. Needs a dummy with action 'attack'." },
+        "dummy_state": { "enum": ["airborne", "grounded", "landed"], "description": "hit/throw: the dummy's state on the sampled tick. A hit is sampled on the tick it connects. A throw is sampled on the tick its GRAB connects (the land comes break_window + 1 ticks later, with the dummy held on the ground), so 'throw it as it lands' is dummy_state landed on the grab. landed = not airborne on the sampled tick and airborne on one of the `landed_within` ticks before it. A throw cannot grab an airborne dummy (C4)." },
         "landed_within": { "type": "integer", "minimum": 1, "maximum": 60, "description": "Required with dummy_state 'landed', not allowed otherwise." },
         "distance": {
           "type": "object",
@@ -71,7 +71,7 @@
             "min": { "type": "integer", "minimum": 0, "maximum": 1520 },
             "max": { "type": "integer", "minimum": 0, "maximum": 1520 }
           },
-          "description": "hit/throw: distance between the fighters' centres when it connects, gameplay units."
+          "description": "hit/throw: distance between the fighters' centres on the sampled tick (hit: when it connects; throw: when the grab connects, before the land's slide), gameplay units."
         },
         "motion": { "not": {}, "description": "Kata only (K1): a trial must be Kihon-completable (R7, K2)." },
         "precision": { "not": {}, "description": "Kata only (K1): the motion-input precision bonus cannot be asked for (R7, K2)." },
