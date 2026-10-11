@@ -16,7 +16,7 @@ public static class MenuMockupTests
 	// ---- move list content (data, not copy) ----
 
 	[Test]
-	public static void PauseSummary_UsesBothFightersPositionAndAllSlots(Node host)
+	public static void PauseSummary_UsesPlayerPositionAndAllSlots(Node host)
 	{
 		var p = GD.Load<PackedScene>("res://scenes/ui/pause_menu.tscn").Instantiate<PauseMenu>();
 		host.AddChild(p); p.FreezeTree = false;
@@ -25,10 +25,11 @@ public static class MenuMockupTests
 			view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Empty ? 0 : x.Level, x.Slot == "A" ? "Will-o'-Wisp" : "")).ToArray()));
 		Assert.Equal("Duel 2 of 2", UiFind.Get<Label>(p, "RunSub").Text, "caller owns position");
 		Assert.Equal(321.0, UiFind.Get<ProgressBar>(p, "RunBar").Value, "player health");
-		Assert.Equal(456.0, UiFind.Get<ProgressBar>(p, "OpponentBar").Value, "opponent health");
+		Assert.Equal("321 / 1000", UiFind.Get<Label>(p, "RunHealth").Text, "separate health");
+		Assert.Equal("32%", UiFind.Get<Label>(p, "RunPercent").Text, "rounded live percentage");
 		var slots = UiFind.Get<VBoxContainer>(p, "Slots");
 		Assert.Equal(4, slots.GetChildCount(), "all four slots including empty");
-		Assert.True(slots.GetChild(0).GetChild<Label>(0).Text.Contains("Will-o'-Wisp"), "modifier rendered");
+		Assert.True(UiFind.Get<Label>(slots.GetChild(0), "Modifier").Text.Contains("Will-o'-Wisp"), "modifier rendered");
 		int moves = 0, settings = 0;
 		p.MoveListRequested += () => moves++; p.SettingsRequested += () => settings++;
 		p.Open(); p.MoveListButton.EmitSignal(BaseButton.SignalName.Pressed);

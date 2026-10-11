@@ -42,19 +42,19 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -780
-offset_top = -390
+offset_top = -500
 offset_right = 780
-offset_bottom = 405
+offset_bottom = 440
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
 [node name="Title" type="Label" parent="Panel"]
 layout_mode = 1
-offset_left = 50
-offset_top = 0
-offset_right = 700
-offset_bottom = 136
+offset_left = 100
+offset_top = 65
+offset_right = 1200
+offset_bottom = 180
 text = "Settings"
 theme_override_font_sizes/font_size = 100
 
@@ -62,49 +62,49 @@ theme_override_font_sizes/font_size = 100
 texture = ExtResource("line")
 expand_mode = 1
 layout_mode = 1
-offset_left = 50
-offset_top = 134
-offset_right = 1340
-offset_bottom = 144
+offset_left = 100
+offset_top = 186
+offset_right = 1460
+offset_bottom = 196
 mouse_filter = 2
 
 
-[node name="TabSound" parent="Panel" instance=ExtResource("ghost")]
+[node name="TabSound" type="Button" parent="Panel"]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 50
-offset_top = 155
-offset_right = 370
-offset_bottom = 220
+offset_left = 100
+offset_top = 210
+offset_right = 360
+offset_bottom = 276
 text = "Sound"
 theme_override_font_sizes/font_size = 34
 theme_type_variation = &"GhostButton"
 
-[node name="TabControls" parent="Panel" instance=ExtResource("ghost")]
+[node name="TabControls" type="Button" parent="Panel"]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 390
-offset_top = 155
-offset_right = 710
-offset_bottom = 220
+offset_left = 400
+offset_top = 210
+offset_right = 700
+offset_bottom = 276
 text = "Controls"
 theme_override_font_sizes/font_size = 34
 theme_type_variation = &"GhostButton"
 
 [node name="SoundPage" type="Control" parent="Panel"]
 layout_mode = 1
-offset_left = 0
-offset_top = 244
-offset_right = 1560
-offset_bottom = 744
+offset_left = 100
+offset_top = 310
+offset_right = 1460
+offset_bottom = 770
 mouse_filter = 2
 
 [node name="MasterLabel" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 24
-offset_right = 340
-offset_bottom = 88
+offset_top = 20
+offset_right = 290
+offset_bottom = 86
 text = "Master"
 theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
@@ -112,10 +112,10 @@ vertical_alignment = 1
 [node name="MasterSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 330
-offset_top = 24
-offset_right = 1170
-offset_bottom = 88
+offset_left = 290
+offset_top = 20
+offset_right = 950
+offset_bottom = 86
 max_value = 100.0
 step = 5.0
 value = 80.0
@@ -123,10 +123,10 @@ size_flags_vertical = 1
 
 [node name="MasterValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 1180
-offset_top = 24
-offset_right = 1300
-offset_bottom = 88
+offset_left = 970
+offset_top = 20
+offset_right = 1100
+offset_bottom = 86
 text = "80"
 theme_override_font_sizes/font_size = 38
 theme_type_variation = &"SealLabel"
@@ -136,10 +136,10 @@ vertical_alignment = 1
 [node name="MasterPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1330
-offset_top = 24
-offset_right = 1500
-offset_bottom = 88
+offset_left = 1130
+offset_top = 20
+offset_right = 1360
+offset_bottom = 86
 text = "Preview"
 theme_override_font_sizes/font_size = 28
 theme_type_variation = &"GhostButton"
@@ -147,9 +147,9 @@ theme_type_variation = &"GhostButton"
 [node name="MusicLabel" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 136
-offset_right = 340
-offset_bottom = 200
+offset_top = 140
+offset_right = 290
+offset_bottom = 206
 text = "Music"
 theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
@@ -157,10 +157,10 @@ vertical_alignment = 1
 [node name="MusicSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 330
-offset_top = 136
-offset_right = 1170
-offset_bottom = 200
+offset_left = 290
+offset_top = 140
+offset_right = 950
+offset_bottom = 206
 max_value = 100.0
 step = 5.0
 value = 80.0
@@ -168,10 +168,10 @@ size_flags_vertical = 1
 
 [node name="MusicValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 1180
-offset_top = 136
-offset_right = 1300
-offset_bottom = 200
+offset_left = 970
+offset_top = 140
+offset_right = 1100
+offset_bottom = 206
 text = "80"
 theme_override_font_sizes/font_size = 38
 theme_type_variation = &"SealLabel"
@@ -181,10 +181,10 @@ vertical_alignment = 1
 [node name="MusicPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1330
-offset_top = 136
-offset_right = 1500
-offset_bottom = 200
+offset_left = 1130
+offset_top = 140
+offset_right = 1360
+offset_bottom = 206
 text = "Preview"
 theme_override_font_sizes/font_size = 28
 theme_type_variation = &"GhostButton"
@@ -192,9 +192,9 @@ theme_type_variation = &"GhostButton"
 [node name="SfxLabel" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
 offset_left = 50
-offset_top = 248
-offset_right = 340
-offset_bottom = 312
+offset_top = 260
+offset_right = 290
+offset_bottom = 326
 text = "Effects"
 theme_override_font_sizes/font_size = 42
 vertical_alignment = 1
@@ -202,10 +202,10 @@ vertical_alignment = 1
 [node name="SfxSlider" type="HSlider" parent="Panel/SoundPage"]
 script = ExtResource("r5")
 layout_mode = 1
-offset_left = 330
-offset_top = 248
-offset_right = 1170
-offset_bottom = 312
+offset_left = 290
+offset_top = 260
+offset_right = 950
+offset_bottom = 326
 max_value = 100.0
 step = 5.0
 value = 80.0
@@ -213,10 +213,10 @@ size_flags_vertical = 1
 
 [node name="SfxValue" type="Label" parent="Panel/SoundPage"]
 layout_mode = 1
-offset_left = 1180
-offset_top = 248
-offset_right = 1300
-offset_bottom = 312
+offset_left = 970
+offset_top = 260
+offset_right = 1100
+offset_bottom = 326
 text = "80"
 theme_override_font_sizes/font_size = 38
 theme_type_variation = &"SealLabel"
@@ -226,10 +226,10 @@ vertical_alignment = 1
 [node name="SfxPreview" parent="Panel/SoundPage" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 1330
-offset_top = 248
-offset_right = 1500
-offset_bottom = 312
+offset_left = 1130
+offset_top = 260
+offset_right = 1360
+offset_bottom = 326
 text = "Preview"
 theme_override_font_sizes/font_size = 28
 theme_type_variation = &"GhostButton"
@@ -238,19 +238,20 @@ theme_type_variation = &"GhostButton"
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
 offset_left = 50
-offset_top = 346
-offset_right = 560
-offset_bottom = 410
+offset_top = 385
+offset_right = 410
+offset_bottom = 449
 text = "Mute all: off"
 theme_override_font_sizes/font_size = 32
 theme_type_variation = &"GhostButton"
 
 [node name="SoundNote" type="Label" parent="Panel/SoundPage"]
+visible = false
 layout_mode = 1
-offset_left = 50
-offset_top = 430
-offset_right = 1250
-offset_bottom = 480
+offset_left = 0
+offset_top = 0
+offset_right = 1
+offset_bottom = 1
 text = "Adjust the volume."
 theme_override_font_sizes/font_size = 24
 theme_type_variation = &"FadedLabel"
@@ -258,19 +259,19 @@ autowrap_mode = 3
 
 [node name="ControlsPage" type="Control" parent="Panel"]
 layout_mode = 1
-offset_left = 0
-offset_top = 244
-offset_right = 1560
-offset_bottom = 744
+offset_left = 100
+offset_top = 290
+offset_right = 1460
+offset_bottom = 760
 mouse_filter = 2
 visible = false
 
 [node name="SchemeHeading" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
-offset_left = 50
+offset_left = 0
 offset_top = 0
-offset_right = 700
-offset_bottom = 29
+offset_right = 1200
+offset_bottom = 36
 text = "CONTROL SCHEME"
 theme_override_font_sizes/font_size = 28
 theme_type_variation = &"SealLabel"
@@ -278,10 +279,10 @@ theme_type_variation = &"SealLabel"
 [node name="Kata" parent="Panel/ControlsPage" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 50
-offset_top = 34
-offset_right = 430
-offset_bottom = 89
+offset_left = 400
+offset_top = 0
+offset_right = 700
+offset_bottom = 66
 text = "Kata"
 theme_override_font_sizes/font_size = 38
 theme_type_variation = &"GhostButton"
@@ -289,102 +290,66 @@ theme_type_variation = &"GhostButton"
 [node name="Kihon" parent="Panel/ControlsPage" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 1
-offset_left = 450
-offset_top = 34
-offset_right = 830
-offset_bottom = 89
+offset_left = 730
+offset_top = 0
+offset_right = 1030
+offset_bottom = 66
 text = "Kihon"
 theme_override_font_sizes/font_size = 38
 theme_type_variation = &"GhostButton"
 
 [node name="SchemeLine" type="Label" parent="Panel/ControlsPage"]
 layout_mode = 1
-offset_left = 50
-offset_top = 96
-offset_right = 1500
-offset_bottom = 126
+offset_left = 0
+offset_top = 74
+offset_right = 1360
+offset_bottom = 114
 text = ""
 theme_override_font_sizes/font_size = 27
 
-[node name="SchemeNote" type="Label" parent="Panel/ControlsPage"]
-layout_mode = 1
-offset_left = 50
-offset_top = 126
-offset_right = 1500
-offset_bottom = 150
+[node name="BindingsScroll" type="ScrollContainer" parent="Panel/ControlsPage"]
+offset_top = 120.0
+offset_right = 1360.0
+offset_bottom = 480.0
+focus_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Tables" type="VBoxContainer" parent="Panel/ControlsPage/BindingsScroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="KeyboardHeading" type="Label" parent="Panel/ControlsPage/BindingsScroll/Tables"]
+text = "KEYBOARD"
+theme_override_font_sizes/font_size = 28
+
+[node name="KeyboardGrid" type="GridContainer" parent="Panel/ControlsPage/BindingsScroll/Tables"]
+columns = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 18
+
+[node name="PadHeading" type="Label" parent="Panel/ControlsPage/BindingsScroll/Tables"]
+text = "GAMEPAD"
+theme_override_font_sizes/font_size = 28
+
+[node name="PadGrid" type="GridContainer" parent="Panel/ControlsPage/BindingsScroll/Tables"]
+columns = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 40
+theme_override_constants/v_separation = 18
+
+[node name="SchemeNote" type="Label" parent="Panel/ControlsPage/BindingsScroll/Tables"]
 text = "Combos, cancels, throws and burst work the same in both."
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 24
 theme_type_variation = &"PineLabel"
-
-[node name="KeyboardHeading" type="Label" parent="Panel/ControlsPage"]
-layout_mode = 1
-offset_left = 50
-offset_top = 162
-offset_right = 640
-offset_bottom = 188
-text = "KEYBOARD  (view only)"
-theme_override_font_sizes/font_size = 26
-theme_type_variation = &"SealLabel"
-
-[node name="KeyboardRule" type="TextureRect" parent="Panel/ControlsPage"]
-texture = ExtResource("line")
-expand_mode = 1
-layout_mode = 1
-offset_left = 50
-offset_top = 184
-offset_right = 610
-offset_bottom = 200
-mouse_filter = 2
-
-[node name="KeyboardGrid" type="GridContainer" parent="Panel/ControlsPage"]
-layout_mode = 1
-offset_left = 50
-offset_top = 204
-offset_right = 620
-offset_bottom = 453
-mouse_filter = 2
-theme_override_constants/h_separation = 0
-theme_override_constants/v_separation = 0
-columns = 2
-
-[node name="PadHeading" type="Label" parent="Panel/ControlsPage"]
-layout_mode = 1
-offset_left = 800
-offset_top = 162
-offset_right = 1500
-offset_bottom = 188
-text = "GAMEPAD  (view only)"
-theme_override_font_sizes/font_size = 26
-theme_type_variation = &"SealLabel"
-
-[node name="PadRule" type="TextureRect" parent="Panel/ControlsPage"]
-texture = ExtResource("line")
-expand_mode = 1
-layout_mode = 1
-offset_left = 800
-offset_top = 184
-offset_right = 1500
-offset_bottom = 200
-mouse_filter = 2
-
-[node name="PadGrid" type="GridContainer" parent="Panel/ControlsPage"]
-layout_mode = 1
-offset_left = 800
-offset_top = 204
-offset_right = 1500
-offset_bottom = 453
-mouse_filter = 2
-theme_override_constants/h_separation = 0
-theme_override_constants/v_separation = 0
-columns = 2
-
 
 [node name="Mask" type="TextureRect" parent="Panel"]
 layout_mode = 0
-offset_left = 1350
-offset_top = -35
-offset_right = 1550
-offset_bottom = 220
+offset_left = 1270
+offset_top = 60
+offset_right = 1440
+offset_bottom = 230
 texture = ExtResource("mask")
 expand_mode = 1
 stretch_mode = 5
@@ -393,16 +358,24 @@ mouse_filter = 2
 [node name="Back" parent="Panel" instance=ExtResource("ghost")]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 0
-offset_left = 1310
-offset_top = 730
-offset_right = 1500
-offset_bottom = 790
+offset_left = 1240
+offset_top = 776
+offset_right = 1460
+offset_bottom = 840
 text = "Back"
 theme_override_font_sizes/font_size = 34
 
 [node name="Footer" parent="." instance=ExtResource("footer")]
 layout_mode = 0
 offset_left = 660
-offset_top = 980
+offset_top = 1000
 offset_right = 1790
-offset_bottom = 1040
+offset_bottom = 1060
+
+[node name="Hint" type="Label" parent="Panel"]
+offset_left = 100.0
+offset_top = 794.0
+offset_right = 1200.0
+offset_bottom = 836.0
+text = "Adjust the volume."
+theme_override_font_sizes/font_size = 26

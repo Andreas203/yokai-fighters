@@ -367,7 +367,7 @@ public static class PauseFlowTests
 	// ---- summary ----
 
 	static string[] SlotLines(PauseMenu m) => UiFind.Get<VBoxContainer>(m, "Slots").GetChildren()
-		.Where(c => !c.IsQueuedForDeletion()).Select(c => c.GetChild<Label>(0).Text).ToArray();
+		.Where(c => !c.IsQueuedForDeletion()).Select(c => UiFind.Get<Label>(c, "MoveName").Text + (UiFind.Get<Label>(c, "Modifier").Visible ? "\n" + UiFind.Get<Label>(c, "Modifier").Text : "")).ToArray();
 
 	[Test]
 	public static void Summary_CarriesTheLiveRunState(Node runner)
@@ -399,24 +399,22 @@ public static class PauseFlowTests
 			Assert.Equal(new PauseFighterSummary("Kitsune", p2, max2), v.Opponent, "the opponent's health");
 			Assert.Equal("Duel 1 of 2 · vs Kitsune", v.Position, "position in the run");
 			Assert.Equal("A|B|C|D", string.Join("|", v.Slots.Select(x => x.Slot)), "four slots in order");
-			Assert.Equal(new PauseSlotSummary("A", a.Data.Name, 2, mod.Name), v.Slots[0], "slot A: level 2 with its modifier");
-			Assert.Equal(new PauseSlotSummary("B", b.Data.Name, 1, ""), v.Slots[1], "slot B: level 1, no modifier");
-			Assert.Equal(new PauseSlotSummary(drafted.Slot.ToString(), drafted.Name, 1, ""), v.Slots[drafted.Slot - SpecialSlot.A], "the drafted special in its own slot");
+			Assert.Equal(new PauseSlotSummary("A", a.Data.Name, 2, mod.Name, a.Data.Id), v.Slots[0], "slot A: level 2 with its modifier");
+			Assert.Equal(new PauseSlotSummary("B", b.Data.Name, 1, "", b.Data.Id), v.Slots[1], "slot B: level 1, no modifier");
+			Assert.Equal(new PauseSlotSummary(drafted.Slot.ToString(), drafted.Name, 1, "", drafted.Id), v.Slots[drafted.Slot - SpecialSlot.A], "the drafted special in its own slot");
 			Assert.Equal(1, v.Slots.Count(x => x == new PauseSlotSummary(x.Slot, "Empty", 0, "")), "one slot still empty");
 
 			// The page shows exactly those values, set when the pause opens.
 			Assert.True(s.TryPause(), "pause");
 			var m = s.PauseMenu!;
-			Assert.Equal($"RYO · {p1} / 1000", UiFind.Get<Label>(m, "RunName").Text, "Ryo's line");
+			Assert.Equal($"{p1} / 1000", UiFind.Get<Label>(m, "RunHealth").Text, "Ryo's line");
 			Assert.Equal((double)p1, UiFind.Get<ProgressBar>(m, "RunBar").Value, "Ryo's bar");
-			Assert.Equal($"Kitsune · {p2} / {max2}", UiFind.Get<Label>(m, "OpponentName").Text, "the opponent's line");
-			var foeBar = UiFind.Get<ProgressBar>(m, "OpponentBar");
-			Assert.True(foeBar.Visible && foeBar.Value == p2 && foeBar.MaxValue == max2, "the opponent's bar");
+			Assert.Equal("RYO", UiFind.Get<Label>(m, "RunName").Text, "separate player heading");
 			Assert.Equal("Duel 1 of 2 · vs Kitsune", UiFind.Get<Label>(m, "RunSub").Text, "position line");
 			string[] lines = SlotLines(m);
 			Assert.Equal(4, lines.Length, "four slot strips");
-			Assert.Equal($"A   {a.Data.Name} · Lv 2\n{mod.Name}", lines[0], "slot A strip");
-			Assert.Equal($"B   {b.Data.Name} · Lv 1", lines[1], "slot B strip");
+			Assert.Equal($"{a.Data.Name} · Lv 2\n{mod.Name}", lines[0], "slot A strip");
+			Assert.Equal($"{b.Data.Name} · Lv 1", lines[1], "slot B strip");
 			Assert.Equal(1, lines.Count(x => x.EndsWith("Empty", StringComparison.Ordinal)), "one empty strip");
 			m.Resume();
 
@@ -425,7 +423,7 @@ public static class PauseFlowTests
 			int later = s.Match.P1.Health;
 			Assert.True(later < p1, "Ryo is hit again");
 			Assert.True(s.TryPause(), "pause again");
-			Assert.Equal($"RYO · {later} / 1000", UiFind.Get<Label>(m, "RunName").Text, "refilled on every open");
+			Assert.Equal($"{later} / 1000", UiFind.Get<Label>(m, "RunHealth").Text, "refilled on every open");
 			Assert.Equal(4, SlotLines(m).Length, "still four strips (the old ones are gone)");
 			m.Resume();
 		}, run: run);
@@ -441,7 +439,7 @@ public static class PauseFlowTests
 		Assert.True(s.Stage == DemoStage.Fighting && s.Duel == 2, "in the rematch");
 		Assert.True(s.TryPause(), "pause in the rematch");
 		Assert.Equal("Duel 2 of 2 · vs Kitsune", UiFind.Get<Label>(s.PauseMenu!, "RunSub").Text, "position");
-		Assert.Equal($"RYO · {s.DemoRun.Health} / 1000", UiFind.Get<Label>(s.PauseMenu!, "RunName").Text, "carried health at tick 0");
+		Assert.Equal($"{s.DemoRun.Health} / 1000", UiFind.Get<Label>(s.PauseMenu!, "RunHealth").Text, "carried health at tick 0");
 		s.PauseMenu!.Resume();
 	});
 }

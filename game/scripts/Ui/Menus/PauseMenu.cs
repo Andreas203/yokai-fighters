@@ -8,14 +8,13 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Ui;
 
 /// <summary>
-/// YOK-58 MOCKUP pause (Start) menu (<c>scenes/ui/pause_menu.tscn</c>): Resume, Move list, Settings, Restart run,
+/// Pause (Start) menu (<c>scenes/ui/pause_menu.tscn</c>): Resume, Move list, Settings, Restart run,
 /// Quit to title. Opening it pauses the scene tree (when <see cref="FreezeTree"/>), so the fight, which advances in
 /// <c>_Process</c>, stops; the menu and its sheets run while paused. Esc / pad Start resumes (or steps back out of a
-/// sheet or the confirm box). Restart and Quit ask first, Cancel is focused. Reads Ryo's health and slots from a
-/// <see cref="RunState"/>; the fight wiring (replacing F2 as the player's pause) is a follow-up ticket.
+/// sheet or the confirm box). Restart and Quit ask first, Cancel is focused. Reads caller-owned health, position and slots; FightScene.Pause supplies the live summary.
 /// </summary>
 public sealed record PauseFighterSummary(string Name, int Health, int MaxHealth);
-public sealed record PauseSlotSummary(string Slot, string Move, int Level, string Modifier);
+public sealed record PauseSlotSummary(string Slot, string Move, int Level, string Modifier, string? MoveId = null);
 /// <summary>Presentation only: the caller supplies position text, both health values and slots A-D.</summary>
 public sealed record PauseRunSummary(PauseFighterSummary Player, PauseFighterSummary Opponent,
  string Position, IReadOnlyList<PauseSlotSummary> Slots);
@@ -90,34 +89,53 @@ public partial class PauseMenu : Control
 		_movesDir = movesDir;
 		var view = MoveListSource.Build(run, movesDir);
 		SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(opponent, 0, 0),
-			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName)).ToArray()));
+			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray()));
 		MoveList.Bind(MoveListSource.Build(run, movesDir));
 	}
 
 	/// <summary>Single presentation seam for fight wiring; no simulation, fixture values or run rules here.</summary>
 	public void SetRunSummary(PauseRunSummary summary)
 	{
-		_runName.Text = $"{summary.Player.Name} · {summary.Player.Health} / {summary.Player.MaxHealth}";
+		_runName.Text = summary.Player.Name;
+		UiFind.Get<Label>(this, "RunHealth").Text = $"{summary.Player.Health} / {summary.Player.MaxHealth}";
+		UiFind.Get<Label>(this, "RunPercent").Text = summary.Player.MaxHealth > 0
+			? $"{Math.Clamp(100.0 * summary.Player.Health / summary.Player.MaxHealth, 0, 100):0}%" : "—";
 		_runBar.MaxValue = Math.Max(1, summary.Player.MaxHealth); _runBar.Value = summary.Player.Health;
 		_runSub.Text = summary.Position;
-		UiFind.Get<Label>(this, "OpponentName").Text = summary.Opponent.MaxHealth > 0
-			? $"{summary.Opponent.Name} · {summary.Opponent.Health} / {summary.Opponent.MaxHealth}" : summary.Opponent.Name;
-		var bar = UiFind.Get<ProgressBar>(this, "OpponentBar");
-		bar.Visible = summary.Opponent.MaxHealth > 0;
-		bar.MaxValue = Math.Max(1, summary.Opponent.MaxHealth); bar.Value = summary.Opponent.Health;
 		var slots = UiFind.Get<VBoxContainer>(this, "Slots");
 		foreach (Node child in slots.GetChildren()) { slots.RemoveChild(child); child.QueueFree(); }
 		foreach (var slot in summary.Slots)
 		{
-			var card = new PanelContainer { ThemeTypeVariation = "PaperSheet", CustomMinimumSize = new(520, 100) };
-			var text = new Label { Text = $"{slot.Slot}   {slot.Move}" + (slot.Level > 0 ? $" · Lv {slot.Level}" : "")
-				+ (string.IsNullOrEmpty(slot.Modifier) ? "" : $"\n{slot.Modifier}"), AutowrapMode = TextServer.AutowrapMode.WordSmart };
-			text.AddThemeFontSizeOverride("font_size", 28);
-			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_sheet_style.tres").Duplicate();
-			paper.ContentMarginLeft = paper.ContentMarginRight = 22;
+			bool empty = slot.Level <= 0;
+			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 116),
+				MouseFilter = MouseFilterEnum.Ignore };
+			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_card_style.tres").Duplicate();
+			paper.ContentMarginLeft = paper.ContentMarginRight = 20;
 			paper.ContentMarginTop = paper.ContentMarginBottom = 12;
 			card.AddThemeStyleboxOverride("panel", paper);
-			card.AddChild(text); slots.AddChild(card);
+			var content = new Control { CustomMinimumSize = new(640, 92), MouseFilter = MouseFilterEnum.Ignore };
+			card.AddChild(content);
+			var texture = PauseMoveArt.ForId(slot.MoveId);
+			// ExpandMode first: with the default mode the texture's own size is the minimum and Size would be clamped up to it.
+			var flourish = new TextureRect { Name = "Flourish", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
+				Position = new(536, 0), Size = new(104, 92),
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Modulate = new Color(1, 1, 1, .12f),
+				Visible = !empty, MouseFilter = MouseFilterEnum.Ignore };
+			content.AddChild(flourish);
+			content.AddChild(new TextureRect { Name = "MoveIcon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
+				Position = new(0, 0), Size = new(92, 92),
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Visible = !empty,
+				MouseFilter = MouseFilterEnum.Ignore });
+			var name = new Label { Name = "MoveName", Text = empty ? $"{slot.Slot}   Empty" : $"{slot.Move} · Lv {slot.Level}",
+				Position = new(112, string.IsNullOrEmpty(slot.Modifier) ? 24 : 6), Size = new(516, 40),
+				AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
+			name.AddThemeFontSizeOverride("font_size", 28);
+			content.AddChild(name);
+			var modifier = new Label { Name = "Modifier", Text = slot.Modifier, Visible = !empty && !string.IsNullOrEmpty(slot.Modifier),
+				Position = new(112, 50), Size = new(516, 36), MouseFilter = MouseFilterEnum.Ignore };
+			modifier.AddThemeFontSizeOverride("font_size", 26);
+			content.AddChild(modifier);
+			slots.AddChild(card);
 		}
 	}
 

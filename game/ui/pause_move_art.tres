@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/generated/ui/pause-icon-spirit-wave.png" id="spirit-wave"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/pause-icon-rising-talisman.png" id="rising-talisman"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/pause-icon-foxfire.png" id="foxfire"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/pause-icon-fallback.png" id="fallback"]
+
+[resource]
+metadata/icons = {
+"spirit-wave": ExtResource("spirit-wave"),
+"rising-talisman": ExtResource("rising-talisman"),
+"foxfire": ExtResource("foxfire")
+}
+metadata/fallback = ExtResource("fallback")
