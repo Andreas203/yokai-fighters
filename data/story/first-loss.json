@@ -3,7 +3,7 @@
   "id": "first-loss",
   "status": "proposed",
   "trigger": "First loss of the story save",
-  "text": "You fall in the tea house, and the paper screens fold shut. Somewhere a cheerful voice says: \"Shame about that {move}. I'd have taken good care of it.\" You wake at the province's edge.",
+  "text": "You fall in the tea house, and the paper screens fold shut. Somewhere a cheerful voice says: \"Shame about that {move}; I'd have taken good care of it.\"",
   "placeholders": [
     "move"
   ],
@@ -14,5 +14,5 @@
     "S3",
     "S4"
   ],
-  "notes": "Adapted from GDD 2.4 sample (Foxfire -> {move}). Dropped 'talismans are blank, all but one' to stay within S2; the carry-over shows it. Tanuki names the move it would have stolen (teaches the copy rule)."
+  "notes": "Adapted from GDD 2.4 sample (Foxfire -> {move}); inner full stop changed to a semicolon so the card is strictly two sentences (S2). Dropped 'You wake at the province's edge' and 'talismans are blank, all but one'; the carry-over shows the latter. The Tanuki names the move it would have stolen (teaches the copy rule) without being identified."
 }
