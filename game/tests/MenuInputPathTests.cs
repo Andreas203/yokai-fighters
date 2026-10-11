@@ -125,7 +125,7 @@ public static class MenuInputPathTests
 		Assert.True(Focus(host) == m.RestartButton, "Down x3 reaches Restart run: " + Focus(host)?.Name);
 		Tap(host, Key.Enter);
 		Assert.True(m.ConfirmBox.Visible, "Enter on Restart opens the confirm box");
-		var no = UiFind.Get<Button>(m, "ConfirmNo"); var yes = UiFind.Get<Button>(m, "ConfirmYes");
+		var no = ((YokaiFighters.Ui.Kit.PaperDialog)m.ConfirmBox).CancelButton!; var yes = ((YokaiFighters.Ui.Kit.PaperDialog)m.ConfirmBox).ConfirmButton!;
 		Assert.True(Focus(host) == no, "Cancel is focused first");
 		Assert.True(new[] { m.ResumeButton, m.MoveListButton, m.SettingsButton, m.RestartButton, m.QuitButton }.All(b => b.FocusMode == Control.FocusModeEnum.None), "the pause buttons underneath cannot take focus while the box is open");
 		for (int round = 0; round < 12; round++)

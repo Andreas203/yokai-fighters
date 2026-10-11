@@ -1,94 +1,70 @@
 [gd_scene format=3]
-
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/menu_row.tscn" id="row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/ghost_button.tscn" id="ghost"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/corner_ornament.tscn" id="corner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/paper_dialog.tscn" id="dialog"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/fox-mask.png" id="mask"]
+
+
+
 [ext_resource type="Script" path="res://scripts/Ui/Menus/MoveSlotCard.cs" id="r1"]
 [ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="r2"]
 [ext_resource type="Script" path="res://scripts/Ui/Menus/LevelPips.cs" id="r3"]
 
-[node name="MoveSlotCard" type="Control"]
-layout_mode = 2
+[node name="MoveSlotCard" type="PanelContainer"]
 theme = ExtResource("theme")
-mouse_filter = 2
+theme_type_variation = &"PaperCard"
 script = ExtResource("r1")
-custom_minimum_size = Vector2(560, 174)
+custom_minimum_size = Vector2(530, 0)
+size_flags_horizontal = 3
 
-[node name="Body" type="Panel" parent="."]
-layout_mode = 1
-offset_left = 0
-offset_top = 0
-offset_right = 560
-offset_bottom = 174
-theme_type_variation = &"FrameBox"
-mouse_filter = 2
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
 
-[node name="Crest" type="Control" parent="."]
+[node name="Top" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Crest" type="Control" parent="Box/Top"]
 script = ExtResource("r2")
-layout_mode = 1
-offset_left = 14
-offset_top = 14
-offset_right = 94
-offset_bottom = 94
+custom_minimum_size = Vector2(48, 48)
 mouse_filter = 2
-Glyph = "A"
 
-[node name="Name" type="Label" parent="."]
-layout_mode = 1
-offset_left = 112
-offset_top = 2
-offset_right = 420
-offset_bottom = 42
-text = "Spirit Wave"
-theme_override_font_sizes/font_size = 31
+[node name="Name" type="Label" parent="Box/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 30
 
-[node name="Pips" type="Control" parent="."]
+[node name="Pips" type="Control" parent="Box"]
 script = ExtResource("r3")
-layout_mode = 1
-offset_left = 424
-offset_top = 12
-offset_right = 544
-offset_bottom = 36
+custom_minimum_size = Vector2(120, 24)
 mouse_filter = 2
-Level = 1
-Max = 3
 
-[node name="Input" type="Label" parent="."]
-layout_mode = 1
-offset_left = 112
-offset_top = 42
-offset_right = 550
-offset_bottom = 68
-text = "Special + neutral"
-theme_override_font_sizes/font_size = 20
-theme_type_variation = &"PineLabel"
-
-[node name="Plain" type="Label" parent="."]
-layout_mode = 1
-offset_left = 112
-offset_top = 68
-offset_right = 550
-offset_bottom = 122
-text = "Throw a wave of spirit ink across the screen."
-theme_override_font_sizes/font_size = 19
+[node name="Input" type="Label" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 3
 autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
 
-[node name="Frames" type="Label" parent="."]
-layout_mode = 1
-offset_left = 112
-offset_top = 124
-offset_right = 550
-offset_bottom = 174
-text = ""
-theme_override_font_sizes/font_size = 17
-theme_type_variation = &"PersimmonLabel"
+[node name="Plain" type="Label" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 3
 autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
 
-[node name="Mod" type="Label" parent="."]
-layout_mode = 1
-offset_left = 112
-offset_top = 122
-offset_right = 550
-offset_bottom = 172
-text = ""
-theme_override_font_sizes/font_size = 17
-theme_type_variation = &"PersimmonLabel"
+[node name="Frames" type="Label" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 3
 autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+
+[node name="Mod" type="Label" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26

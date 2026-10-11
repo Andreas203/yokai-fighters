@@ -60,7 +60,7 @@ public partial class FightScene
 	public DraftRewardSource? Draft { get; private set; }
 	/// <summary>Finished recordings of this run's duels, in order (cleared on Restart).</summary>
 	public List<ReplayRecording> DuelRecordings { get; } = new();
-	public bool FlowPaused => DebugMenu?.Visible == true;
+	public bool FlowPaused => DebugMenu?.Visible == true || Paused;
 
 	public StoryCard BindingCard { get; private set; } = null!;
 	public RewardScreen Rewards { get; private set; } = null!;
@@ -141,7 +141,7 @@ public partial class FightScene
 		else DebugMenu.Open();
 	}
 
-	private static InputBits HeldBits() => InputDevices.Read(0).Bits;
+	private InputBits HeldBits() => HeldBitsSource?.Invoke() ?? InputDevices.Read(0).Bits;
 
 	/// <summary>P1's live input minus anything still held from a screen button (Start, Restart).</summary>
 	private FighterInput P1Live()
@@ -160,7 +160,7 @@ public partial class FightScene
 	{
 		if (DebugMenu == null) return;
 		bool down = Input.IsPhysicalKeyPressed(DebugMenuKey);
-		if (down && !_menuHeld) ToggleDebugMenu();
+		if (down && !_menuHeld && !Paused) ToggleDebugMenu();
 		_menuHeld = down;
 	}
 
@@ -206,6 +206,7 @@ public partial class FightScene
 	/// <summary>Restart from any end screen (and the debug menu): a fresh run, back to the first fight.</summary>
 	public void RestartRun()
 	{
+		if (Paused) PauseMenu!.Close(); // a restart from anywhere leaves no menu up
 		HideFlowScreens();
 		DemoRun = RunState.NewRun(Pool);
 		PickRunSeed();
@@ -229,6 +230,7 @@ public partial class FightScene
 	private void ReplaceMatch(Match m)
 	{
 		Match = m;
+		_lastP1 = InputBits.None;
 		_hud.View = new MatchHudView(m, 0);
 		m.Impact += (_, e) => Shake.OnImpact(e);
 		RebuildAi();

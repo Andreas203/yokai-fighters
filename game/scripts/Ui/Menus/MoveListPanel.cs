@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using YokaiFighters.Ui.Kit;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
 
@@ -34,6 +35,7 @@ public partial class MoveListPanel : Control
 	public override void _Ready()
 	{
 		MenuInput.EnsurePadConfirm();
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new("back", "Back"), new("frames", "Frame data"), new("scheme", "Inputs"));
 		_baseRows = UiFind.Get<VBoxContainer>(this, "BaseRows");
 		_cards = UiFind.Get<VBoxContainer>(this, "SpecialCards");
 		_frameToggle = UiFind.Get<Button>(this, "FrameToggle");
@@ -45,6 +47,12 @@ public partial class MoveListPanel : Control
 		void Link(Button from, Button right, Button left) { from.FocusNeighborRight = from.GetPathTo(right); from.FocusNeighborLeft = from.GetPathTo(left); from.FocusNeighborTop = from.GetPathTo(from); from.FocusNeighborBottom = from.GetPathTo(from); }
 		Link(_schemeToggle, _frameToggle, _schemeToggle);
 		Link(_frameToggle, _frameToggle, _schemeToggle);
+		var baseScroll = UiFind.Get<ScrollContainer>(this, "BaseRowsScroll");
+		var specialScroll = UiFind.Get<ScrollContainer>(this, "SpecialCardsScroll");
+		MenuInput.Neighbours(_schemeToggle, null, baseScroll, null, _frameToggle);
+		MenuInput.Neighbours(_frameToggle, null, specialScroll, _schemeToggle, null);
+		MenuInput.Neighbours(baseScroll, _schemeToggle, null, null, specialScroll);
+		MenuInput.Neighbours(specialScroll, _frameToggle, null, baseScroll, null);
 		_cardScene = GD.Load<PackedScene>("res://scenes/ui/move_slot_card.tscn");
 		MenuSettings.Changed += Refresh;
 		TreeExiting += () => MenuSettings.Changed -= Refresh;
@@ -55,8 +63,8 @@ public partial class MoveListPanel : Control
 	public void Bind(MoveListView view)
 	{
 		View = view;
-		foreach (Node c in _baseRows.GetChildren()) c.QueueFree();
-		foreach (Node c in _cards.GetChildren()) c.QueueFree();
+		foreach (Node c in _baseRows.GetChildren()) { _baseRows.RemoveChild(c); c.QueueFree(); }
+		foreach (Node c in _cards.GetChildren()) { _cards.RemoveChild(c); c.QueueFree(); }
 		_rows.Clear(); _slotCards.Clear();
 		for (int i = 0; i < view.Base.Count; i++)
 		{
@@ -78,18 +86,18 @@ public partial class MoveListPanel : Control
 
 	private Control BuildRow(MoveRow row)
 	{
-		var box = new HBoxContainer { CustomMinimumSize = new Vector2(0, 46), MouseFilter = MouseFilterEnum.Ignore };
+		var box = new HBoxContainer { CustomMinimumSize = new Vector2(0, 80), MouseFilter = MouseFilterEnum.Ignore };
 		box.AddThemeConstantOverride("separation", 0);
-		var name = new Label { Text = row.Name, CustomMinimumSize = new Vector2(190, 0), VerticalAlignment = VerticalAlignment.Center, ThemeTypeVariation = "PineLabel", ClipText = true };
-		name.AddThemeFontSizeOverride("font_size", 24);
-		var input = new Label { Text = row.InputFor(MenuSettings.Scheme == ControlScheme.Kata), CustomMinimumSize = new Vector2(292, 0), VerticalAlignment = VerticalAlignment.Center, ClipText = true };
-		input.AddThemeFontSizeOverride("font_size", 21);
+		var name = new Label { Text = row.Name, CustomMinimumSize = new Vector2(205, 0), VerticalAlignment = VerticalAlignment.Center, ThemeTypeVariation = "PineLabel", AutowrapMode = TextServer.AutowrapMode.WordSmart };
+		name.AddThemeFontSizeOverride("font_size", 26);
+		var input = new Label { Text = row.InputFor(MenuSettings.Scheme == ControlScheme.Kata), CustomMinimumSize = new Vector2(280, 0), VerticalAlignment = VerticalAlignment.Center, AutowrapMode = TextServer.AutowrapMode.WordSmart };
+		input.AddThemeFontSizeOverride("font_size", 26);
 		var right = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(100, 0), Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
 		right.AddThemeConstantOverride("separation", 0);
-		var plain = new Label { Text = row.Plain, ClipText = true, CustomMinimumSize = new Vector2(100, 0) };
-		plain.AddThemeFontSizeOverride("font_size", 18);
-		var frames = new Label { Text = row.Frames, ThemeTypeVariation = "PersimmonLabel", ClipText = true, Visible = false, CustomMinimumSize = new Vector2(100, 0) };
-		frames.AddThemeFontSizeOverride("font_size", 18);
+		var plain = new Label { Text = row.Plain, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(100, 0) };
+		plain.AddThemeFontSizeOverride("font_size", 26);
+		var frames = new Label { Text = row.Frames, ThemeTypeVariation = "PersimmonLabel", AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false, CustomMinimumSize = new Vector2(100, 0) };
+		frames.AddThemeFontSizeOverride("font_size", 26);
 		right.AddChild(plain); right.AddChild(frames);
 		box.AddChild(name); box.AddChild(input); box.AddChild(right);
 		_rows.Add((input, frames, row));
@@ -103,9 +111,9 @@ public partial class MoveListPanel : Control
 	{
 		if (View == null || _frameToggle == null) return;
 		bool kata = MenuSettings.Scheme == ControlScheme.Kata;
-		_frameToggle.Text = FrameDataVisible ? "Frame data: ON  (Tab / Y)" : "Frame data: off  (Tab / Y)";
-		_frameToggle.ThemeTypeVariation = FrameDataVisible ? "ToggleButtonOn" : "ToggleButton";
-		_schemeToggle.Text = kata ? "Inputs: Kata  (Q / X)" : "Inputs: Kihon  (Q / X)";
+		_frameToggle.Text = FrameDataVisible ? "Frame data: ON" : "Frame data: off";
+		_frameToggle.ThemeTypeVariation = "GhostButton";
+		_schemeToggle.Text = kata ? "Inputs: Kata" : "Inputs: Kihon";
 		_subtitle.Text = kata ? "Ryo's kit. Kata: motion specials deal +10% (precision)." : "Ryo's kit. Kihon: Special + direction, 100% damage.";
 		foreach (var (input, frames, row) in _rows) { frames.Visible = FrameDataVisible; frames.GetParent<Control>().GetChild<Label>(0).Visible = !FrameDataVisible; input.Text = row.InputFor(kata); } // frame line replaces the plain line, so rows keep their height
 		for (int i = 0; i < _slotCards.Count; i++) _slotCards[i].Bind(View.Slots[i], kata, FrameDataVisible);
@@ -116,6 +124,12 @@ public partial class MoveListPanel : Control
 	public override void _Input(InputEvent e)
 	{
 		if (!Visible) return;
+		if (GetViewport().GuiGetFocusOwner() is ScrollContainer scroll &&
+			(e.IsActionPressed("ui_down") || e.IsActionPressed("ui_up")))
+		{
+			scroll.ScrollVertical += e.IsActionPressed("ui_down") ? 100 : -100;
+			GetViewport().SetInputAsHandled(); return;
+		}
 		if (MenuInput.Back(e)) BackRequested?.Invoke();
 		else if (MenuInput.FrameData(e)) ToggleFrameData();
 		else if (MenuInput.Scheme(e)) ToggleScheme();

@@ -174,6 +174,7 @@ public partial class FightScene : Node3D
 		SetUpAi(); // YOK-27
 		StartRecording(); // YOK-49
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
+		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
 		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
 		Render();
@@ -181,6 +182,7 @@ public partial class FightScene : Node3D
 
 	public override void _Process(double delta)
 	{
+		if (Paused) { PausedFrame(); return; } // YOK-pause-flow-wiring: frozen, whoever drives the scene
 		if (ExternalDrive) return;
 
 		bool resetDown = OS.IsDebugBuild() && Input.IsPhysicalKeyPressed(Key.R); // debug only: players can't skip the reward (YOK-48)
@@ -198,9 +200,10 @@ public partial class FightScene : Node3D
 		Render();
 	}
 
-	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw.</summary>
+	/// <summary>One sim tick with explicit inputs (ExternalDrive), then redraw. Does nothing while paused.</summary>
 	public void Step(FighterInput p1, FighterInput p2)
 	{
+		if (Paused) return;
 		Shake.Advance();
 		StepSim(p1, p2);
 		CheckDuelOver(); // YOK-48

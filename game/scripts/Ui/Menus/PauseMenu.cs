@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using YokaiFighters.Ui.Kit;
 using Godot;
 using YokaiFighters.Sim;
 
@@ -11,9 +14,15 @@ namespace YokaiFighters.Ui;
 /// sheet or the confirm box). Restart and Quit ask first, Cancel is focused. Reads Ryo's health and slots from a
 /// <see cref="RunState"/>; the fight wiring (replacing F2 as the player's pause) is a follow-up ticket.
 /// </summary>
+public sealed record PauseFighterSummary(string Name, int Health, int MaxHealth);
+public sealed record PauseSlotSummary(string Slot, string Move, int Level, string Modifier);
+/// <summary>Presentation only: the caller supplies position text, both health values and slots A-D.</summary>
+public sealed record PauseRunSummary(PauseFighterSummary Player, PauseFighterSummary Opponent,
+ string Position, IReadOnlyList<PauseSlotSummary> Slots);
+
 public partial class PauseMenu : Control
 {
-	public event Action? ResumeRequested, RestartRequested, QuitToTitleRequested;
+	public event Action? ResumeRequested, RestartRequested, QuitToTitleRequested, MoveListRequested, SettingsRequested;
 
 	/// <summary>Pause the scene tree while open (the real fight). Tests and the capture tool may turn it off.</summary>
 	public bool FreezeTree { get; set; } = true;
@@ -29,7 +38,8 @@ public partial class PauseMenu : Control
 	public Control ConfirmBox { get; private set; } = null!;
 
 	private Button _confirmYes = null!, _confirmNo = null!;
-	private Label _confirmTitle = null!, _confirmText = null!, _runName = null!, _runSub = null!;
+	private Label _runName = null!, _runSub = null!;
+	private PaperDialog _dialog = null!;
 	private ProgressBar _runBar = null!;
 	private Action? _confirmAction;
 	private readonly FocusLock _focusLock = new();
@@ -46,20 +56,20 @@ public partial class PauseMenu : Control
 		RestartButton = UiFind.Get<Button>(this, "Restart");
 		QuitButton = UiFind.Get<Button>(this, "QuitToTitle");
 		ConfirmBox = UiFind.Get<Control>(this, "Confirm");
-		_confirmYes = UiFind.Get<Button>(this, "ConfirmYes");
-		_confirmNo = UiFind.Get<Button>(this, "ConfirmNo");
-		_confirmTitle = UiFind.Get<Label>(this, "ConfirmTitle");
-		_confirmText = UiFind.Get<Label>(this, "ConfirmText");
+		_dialog = (PaperDialog)ConfirmBox;
+		_confirmYes = _dialog.ConfirmButton!;
+		_confirmNo = _dialog.CancelButton!;
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new("confirm", "Confirm"), new("pause", "Resume"));
 		_runName = UiFind.Get<Label>(this, "RunName");
 		_runSub = UiFind.Get<Label>(this, "RunSub");
 		_runBar = UiFind.Get<ProgressBar>(this, "RunBar");
 		ResumeButton.Pressed += Resume;
-		MoveListButton.Pressed += () => ShowSheet(MoveList);
-		SettingsButton.Pressed += () => ShowSheet(Settings);
+		MoveListButton.Pressed += () => { MoveListRequested?.Invoke(); ShowSheet(MoveList); };
+		SettingsButton.Pressed += () => { SettingsRequested?.Invoke(); ShowSheet(Settings); };
 		RestartButton.Pressed += () => Ask(RestartButton, "Restart run?", "This run ends here and a new one begins.", "Restart", () => { Close(); RestartRequested?.Invoke(); });
-		QuitButton.Pressed += () => Ask(QuitButton, "Quit to title?", "You can continue this run from the title screen.", "Quit", () => { Close(); QuitToTitleRequested?.Invoke(); });
-		_confirmNo.Pressed += CloseConfirm;
-		_confirmYes.Pressed += () => { var a = _confirmAction; CloseConfirm(); a?.Invoke(); };
+		QuitButton.Pressed += () => Ask(QuitButton, "Quit to title?", "Leave this run and return to the title screen?", "Quit", () => { Close(); QuitToTitleRequested?.Invoke(); });
+		_dialog.Cancelled += CloseConfirm;
+		_dialog.Confirmed += () => { var a = _confirmAction; CloseConfirm(); a?.Invoke(); };
 		MenuInput.WrapVertical(Mains);
 		// The confirm box is modal for focus: Cancel and the action button only reach each other (the buttons underneath are locked while it is open).
 		MenuInput.Neighbours(_confirmNo, null, null, _confirmYes, _confirmYes);
@@ -78,10 +88,37 @@ public partial class PauseMenu : Control
 	public void Bind(RunState run, int row, int rows, string opponent, string movesDir)
 	{
 		_movesDir = movesDir;
-		_runName.Text = $"RYO  ·  {run.Health} / {RunState.MaxHealth}";
-		_runBar.MaxValue = RunState.MaxHealth; _runBar.Value = run.Health;
-		_runSub.Text = $"Row {row} of {rows}  ·  vs {opponent}";
+		var view = MoveListSource.Build(run, movesDir);
+		SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(opponent, 0, 0),
+			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName)).ToArray()));
 		MoveList.Bind(MoveListSource.Build(run, movesDir));
+	}
+
+	/// <summary>Single presentation seam for fight wiring; no simulation, fixture values or run rules here.</summary>
+	public void SetRunSummary(PauseRunSummary summary)
+	{
+		_runName.Text = $"{summary.Player.Name} · {summary.Player.Health} / {summary.Player.MaxHealth}";
+		_runBar.MaxValue = Math.Max(1, summary.Player.MaxHealth); _runBar.Value = summary.Player.Health;
+		_runSub.Text = summary.Position;
+		UiFind.Get<Label>(this, "OpponentName").Text = summary.Opponent.MaxHealth > 0
+			? $"{summary.Opponent.Name} · {summary.Opponent.Health} / {summary.Opponent.MaxHealth}" : summary.Opponent.Name;
+		var bar = UiFind.Get<ProgressBar>(this, "OpponentBar");
+		bar.Visible = summary.Opponent.MaxHealth > 0;
+		bar.MaxValue = Math.Max(1, summary.Opponent.MaxHealth); bar.Value = summary.Opponent.Health;
+		var slots = UiFind.Get<VBoxContainer>(this, "Slots");
+		foreach (Node child in slots.GetChildren()) { slots.RemoveChild(child); child.QueueFree(); }
+		foreach (var slot in summary.Slots)
+		{
+			var card = new PanelContainer { ThemeTypeVariation = "PaperSheet", CustomMinimumSize = new(520, 100) };
+			var text = new Label { Text = $"{slot.Slot}   {slot.Move}" + (slot.Level > 0 ? $" · Lv {slot.Level}" : "")
+				+ (string.IsNullOrEmpty(slot.Modifier) ? "" : $"\n{slot.Modifier}"), AutowrapMode = TextServer.AutowrapMode.WordSmart };
+			text.AddThemeFontSizeOverride("font_size", 28);
+			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_sheet_style.tres").Duplicate();
+			paper.ContentMarginLeft = paper.ContentMarginRight = 22;
+			paper.ContentMarginTop = paper.ContentMarginBottom = 12;
+			card.AddThemeStyleboxOverride("panel", paper);
+			card.AddChild(text); slots.AddChild(card);
+		}
 	}
 
 	public void Open()
@@ -101,8 +138,8 @@ public partial class PauseMenu : Control
 		if (FreezeTree && IsInsideTree()) GetTree().Paused = false;
 	}
 
-	public void OpenMoveList() => ShowSheet(MoveList);
-	public void OpenSettings(SettingsTab tab = SettingsTab.Sound) { ShowSheet(Settings); Settings.ShowTab(tab); }
+	public void OpenMoveList() { MoveListRequested?.Invoke(); ShowSheet(MoveList); }
+	public void OpenSettings(SettingsTab tab = SettingsTab.Sound) { SettingsRequested?.Invoke(); ShowSheet(Settings); Settings.ShowTab(tab); }
 
 	public void Resume() { Close(); ResumeRequested?.Invoke(); }
 
@@ -114,9 +151,9 @@ public partial class PauseMenu : Control
 	private void Ask(Button from, string title, string text, string yes, Action action)
 	{
 		_askedFrom = from;
-		_confirmTitle.Text = title; _confirmText.Text = text; _confirmYes.Text = yes; _confirmAction = action;
+		_confirmAction = action;
 		_focusLock.Engage(Mains);
-		ConfirmBox.Visible = true;
+		_dialog.Open(title, text, yes);
 		_confirmNo.GrabFocus();
 	}
 

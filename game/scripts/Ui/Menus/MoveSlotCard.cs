@@ -28,7 +28,6 @@ public partial class MoveSlotCard : Control
 		// Frame data swaps in for the description (same space), so a card never outgrows its box: numbers need up to four lines.
 		bool swap = frames && !row.Empty;
 		plain.Visible = !swap;
-		fr.OffsetTop = swap ? 68 : 124; fr.OffsetBottom = swap ? 172 : 174;
 		// The equipped modifier (A2): name and plain effect under the description; with frame data on, its line moves into the frame text.
 		var mod = UiFind.Get<Label>(this, "Mod");
 		mod.Text = row.ModifierName.Length > 0 ? $"Modifier, {row.ModifierName}: {row.ModifierPlain}" : "";

@@ -1,250 +1,212 @@
 [gd_scene format=3]
-
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
-[ext_resource type="Script" path="res://scripts/Ui/Menus/PauseMenu.cs" id="r1"]
-[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="r2"]
-[ext_resource type="Script" path="res://scripts/Ui/BrushStroke.cs" id="r3"]
-[ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="r4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/menu_row.tscn" id="row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/ghost_button.tscn" id="ghost"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/corner_ornament.tscn" id="corner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/paper_dialog.tscn" id="dialog"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/fox-mask.png" id="mask"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/PauseMenu.cs" id="script"]
 
 [node name="PauseMenu" type="Control"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme = ExtResource("theme")
-mouse_filter = 0
-script = ExtResource("r1")
+script = ExtResource("script")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Backdrop" parent="." instance=ExtResource("back")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.13, 0.14, 0.25, 0.8)
 
-[node name="Panel" type="Control" parent="."]
-script = ExtResource("r2")
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -380
-offset_top = -470
-offset_right = 380
-offset_bottom = 470
-grow_horizontal = 2
-grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = -18
+offset_top = -24
+offset_right = 765
+offset_bottom = 1110
+theme_type_variation = &"PaperSheet"
 mouse_filter = 2
+
+[node name="Corner" parent="Panel" instance=ExtResource("corner")]
+layout_mode = 0
+offset_left = 20
+offset_top = 840
+offset_right = 340
+offset_bottom = 1100
+
 
 [node name="TitleText" type="Label" parent="Panel"]
-layout_mode = 1
-offset_left = 0
-offset_top = 10
-offset_right = 760
-offset_bottom = 112
+layout_mode = 0
+offset_left = 72
+offset_top = 62
+offset_right = 735
+offset_bottom = 225
 text = "Paused"
-theme_override_font_sizes/font_size = 80
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 110
+theme_type_variation = &"HeadingLabel"
 
-[node name="TitleRule" type="Control" parent="Panel"]
-script = ExtResource("r3")
-layout_mode = 1
-offset_left = 180
-offset_top = 100
-offset_right = 580
-offset_bottom = 124
-mouse_filter = 2
-Thickness = 8
-Ink = Color(0.72, 0.16, 0.14, 1)
-
-[node name="Seal" type="Control" parent="Panel"]
-script = ExtResource("r4")
-layout_mode = 1
-offset_left = 640
-offset_top = 34
-offset_right = 712
-offset_bottom = 106
-mouse_filter = 2
-Glyph = "II"
-
-[node name="RunStrip" type="Panel" parent="Panel"]
-layout_mode = 1
-offset_left = 60
-offset_top = 142
-offset_right = 700
-offset_bottom = 254
-theme_type_variation = &"FrameBox"
-mouse_filter = 2
-
-[node name="RunName" type="Label" parent="Panel/RunStrip"]
-layout_mode = 1
-offset_left = 20
-offset_top = 4
-offset_right = 620
-offset_bottom = 50
-text = "RYO  ·  720 / 1000"
-theme_override_font_sizes/font_size = 34
-
-[node name="RunBar" type="ProgressBar" parent="Panel/RunStrip"]
-layout_mode = 1
-offset_left = 20
-offset_top = 54
-offset_right = 620
-offset_bottom = 70
-theme_type_variation = &"HealthBar"
-max_value = 1000.0
-value = 720.0
-show_percentage = false
-mouse_filter = 2
-
-[node name="RunSub" type="Label" parent="Panel/RunStrip"]
-layout_mode = 1
-offset_left = 20
-offset_top = 72
-offset_right = 620
-offset_bottom = 106
-text = "Row 3 of 8  ·  vs Kitsune"
-theme_override_font_sizes/font_size = 26
-theme_type_variation = &"PineLabel"
-
-[node name="Menu" type="VBoxContainer" parent="Panel"]
-layout_mode = 1
+[node name="Rule" type="TextureRect" parent="Panel"]
+layout_mode = 0
 offset_left = 80
-offset_top = 276
+offset_top = 230
 offset_right = 680
-offset_bottom = 792
-theme_override_constants/separation = 14
+offset_bottom = 250
+texture = ExtResource("line")
+expand_mode = 1
+mouse_filter = 2
 
-[node name="Resume" type="Button" parent="Panel/Menu"]
-layout_mode = 2
-custom_minimum_size = Vector2(600, 92)
-theme_override_font_sizes/font_size = 42
+[node name="Resume" parent="Panel" instance=ExtResource("row")]
+layout_mode = 0
+offset_left = 110
+offset_top = 335
+offset_right = 675
+offset_bottom = 433
+custom_minimum_size = Vector2(0, 98)
 text = "Resume"
+theme_override_font_sizes/font_size = 52
 
-[node name="MoveList" type="Button" parent="Panel/Menu"]
-layout_mode = 2
-custom_minimum_size = Vector2(600, 92)
-theme_override_font_sizes/font_size = 42
+[node name="MoveList" parent="Panel" instance=ExtResource("row")]
+layout_mode = 0
+offset_left = 110
+offset_top = 447
+offset_right = 675
+offset_bottom = 545
+custom_minimum_size = Vector2(0, 98)
 text = "Move list"
+theme_override_font_sizes/font_size = 52
 
-[node name="Settings" type="Button" parent="Panel/Menu"]
-layout_mode = 2
-custom_minimum_size = Vector2(600, 92)
-theme_override_font_sizes/font_size = 42
+[node name="Settings" parent="Panel" instance=ExtResource("row")]
+layout_mode = 0
+offset_left = 110
+offset_top = 559
+offset_right = 675
+offset_bottom = 657
+custom_minimum_size = Vector2(0, 98)
 text = "Settings"
+theme_override_font_sizes/font_size = 52
 
-[node name="Restart" type="Button" parent="Panel/Menu"]
-layout_mode = 2
-custom_minimum_size = Vector2(600, 92)
-theme_override_font_sizes/font_size = 42
+[node name="Restart" parent="Panel" instance=ExtResource("row")]
+layout_mode = 0
+offset_left = 110
+offset_top = 671
+offset_right = 675
+offset_bottom = 769
+custom_minimum_size = Vector2(0, 98)
 text = "Restart run"
+theme_override_font_sizes/font_size = 52
 
-[node name="QuitToTitle" type="Button" parent="Panel/Menu"]
-layout_mode = 2
-custom_minimum_size = Vector2(600, 92)
-theme_override_font_sizes/font_size = 42
+[node name="QuitToTitle" parent="Panel" instance=ExtResource("row")]
+layout_mode = 0
+offset_left = 110
+offset_top = 783
+offset_right = 675
+offset_bottom = 881
+custom_minimum_size = Vector2(0, 98)
 text = "Quit to title"
+theme_override_font_sizes/font_size = 52
 
-[node name="Hint" type="Label" parent="Panel"]
-layout_mode = 1
-offset_left = 0
-offset_top = 820
-offset_right = 760
-offset_bottom = 860
-text = "Esc / Start  resume"
-theme_override_font_sizes/font_size = 30
-theme_type_variation = &"PersimmonLabel"
-horizontal_alignment = 1
+[node name="RunStrip" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 1360
+offset_top = 80
+offset_right = 1880
+offset_bottom = 475
+theme_type_variation = &"PaperSheet"
 
-[node name="Frozen" type="Label" parent="Panel"]
-layout_mode = 1
-offset_left = 0
-offset_top = 866
-offset_right = 760
-offset_bottom = 900
-text = "The fight is frozen while you are here."
-theme_override_font_sizes/font_size = 22
-theme_type_variation = &"FadedLabel"
-horizontal_alignment = 1
+[node name="Eyebrow" type="Label" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 25
+offset_right = 490
+offset_bottom = 68
+text = "CURRENT RUN"
+theme_override_font_sizes/font_size = 28
 
-[node name="Confirm" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-visible = false
-mouse_filter = 0
 
-[node name="ConfirmDim" type="ColorRect" parent="Confirm"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.13, 0.14, 0.25, 0.7)
-
-[node name="ConfirmPanel" type="Control" parent="Confirm"]
-script = ExtResource("r2")
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -410
-offset_top = -190
-offset_right = 410
-offset_bottom = 190
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Rule" type="TextureRect" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 76
+offset_right = 470
+offset_bottom = 84
+texture = ExtResource("line")
+expand_mode = 1
 mouse_filter = 2
 
-[node name="ConfirmTitle" type="Label" parent="Confirm/ConfirmPanel"]
-layout_mode = 1
-offset_left = 0
-offset_top = 26
-offset_right = 820
-offset_bottom = 86
-text = "Restart run?"
-theme_override_font_sizes/font_size = 50
-theme_type_variation = &"SealLabel"
-horizontal_alignment = 1
+[node name="RunName" type="Label" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 95
+offset_right = 490
+offset_bottom = 155
+text = ""
+theme_override_font_sizes/font_size = 38
 
-[node name="ConfirmText" type="Label" parent="Confirm/ConfirmPanel"]
-layout_mode = 1
-offset_left = 50
-offset_top = 100
-offset_right = 770
-offset_bottom = 230
-text = "This run ends here and a new one begins."
-theme_override_font_sizes/font_size = 30
-horizontal_alignment = 1
+
+[node name="RunBar" type="ProgressBar" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 165
+offset_right = 490
+offset_bottom = 197
+theme_type_variation = &"HealthBar"
+show_percentage = false
+
+[node name="OpponentName" type="Label" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 216
+offset_right = 490
+offset_bottom = 269
+text = ""
+theme_override_font_sizes/font_size = 32
+
+
+[node name="OpponentBar" type="ProgressBar" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 280
+offset_right = 490
+offset_bottom = 304
+theme_type_variation = &"HealthBar"
+show_percentage = false
+
+[node name="RunSub" type="Label" parent="RunStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 325
+offset_right = 490
+offset_bottom = 390
+text = ""
+theme_override_font_sizes/font_size = 28
 autowrap_mode = 3
 
-[node name="ConfirmNo" type="Button" parent="Confirm/ConfirmPanel"]
-layout_mode = 1
-offset_left = 60
-offset_top = 264
-offset_right = 390
-offset_bottom = 344
-text = "Cancel"
-theme_override_font_sizes/font_size = 38
-theme_type_variation = &"ToggleButton"
+[node name="Slots" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 1360
+offset_top = 492
+offset_right = 1880
+offset_bottom = 950
+theme_override_constants/separation = 12
+mouse_filter = 2
 
-[node name="ConfirmYes" type="Button" parent="Confirm/ConfirmPanel"]
+[node name="Footer" parent="." instance=ExtResource("footer")]
+layout_mode = 0
+offset_left = 980
+offset_top = 996
+offset_right = 1880
+offset_bottom = 1050
+
+
+[node name="Confirm" parent="." instance=ExtResource("dialog")]
 layout_mode = 1
-offset_left = 430
-offset_top = 264
-offset_right = 760
-offset_bottom = 344
-text = "Restart"
-theme_override_font_sizes/font_size = 38
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0

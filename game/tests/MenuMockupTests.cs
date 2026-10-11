@@ -16,6 +16,52 @@ public static class MenuMockupTests
 	// ---- move list content (data, not copy) ----
 
 	[Test]
+	public static void PauseSummary_UsesBothFightersPositionAndAllSlots(Node host)
+	{
+		var p = GD.Load<PackedScene>("res://scenes/ui/pause_menu.tscn").Instantiate<PauseMenu>();
+		host.AddChild(p); p.FreezeTree = false;
+		var view = MoveListSource.Build(NewRun(), MovesDir);
+		p.SetRunSummary(new(new("RYO", 321, 1000), new("Kitsune", 456, 1000), "Duel 2 of 2",
+			view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Empty ? 0 : x.Level, x.Slot == "A" ? "Will-o'-Wisp" : "")).ToArray()));
+		Assert.Equal("Duel 2 of 2", UiFind.Get<Label>(p, "RunSub").Text, "caller owns position");
+		Assert.Equal(321.0, UiFind.Get<ProgressBar>(p, "RunBar").Value, "player health");
+		Assert.Equal(456.0, UiFind.Get<ProgressBar>(p, "OpponentBar").Value, "opponent health");
+		var slots = UiFind.Get<VBoxContainer>(p, "Slots");
+		Assert.Equal(4, slots.GetChildCount(), "all four slots including empty");
+		Assert.True(slots.GetChild(0).GetChild<Label>(0).Text.Contains("Will-o'-Wisp"), "modifier rendered");
+		int moves = 0, settings = 0;
+		p.MoveListRequested += () => moves++; p.SettingsRequested += () => settings++;
+		p.Open(); p.MoveListButton.EmitSignal(BaseButton.SignalName.Pressed);
+		p.Close(); p.Open(); p.SettingsButton.EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.Equal((1, 1), (moves, settings), "sheet request interface");
+		p.Close(); p.QueueFree();
+	}
+
+	[Test]
+	public static void RebuiltMenus_KitFootersPercentagesBackAndReadableCards(Node host)
+	{
+		MenuSettings.Reset();
+		var s = GD.Load<PackedScene>("res://scenes/ui/settings_panel.tscn").Instantiate<SettingsPanel>();
+		host.AddChild(s);
+		Assert.Equal("70%", UiFind.Get<Label>(s, "MusicValue").Text, "real default, not concept 60%");
+		var footer = UiFind.Get<YokaiFighters.Ui.Kit.KeyChipFooter>(s, "Footer");
+		footer.Pinned = YokaiFighters.Ui.Kit.FooterDevice.Pad;
+		Assert.Equal("D-PAD|LB / RB|B", string.Join("|", footer.ChipTexts()), "pad hints");
+		int backs = 0; s.BackRequested += () => backs++;
+		UiFind.Get<Button>(s, "Back").EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.Equal(1, backs, "visible back button uses existing event");
+		var p = MakeMoveList(host);
+		foreach (var card in p.SlotCards)
+		{
+			Assert.True(card.IsClass("PanelContainer"), "kit paper container grows to fit copy");
+			Assert.Equal(26, UiFind.Get<Label>(card, "Input").GetThemeFontSize("font_size"), "readable input");
+			Assert.True(UiFind.Get<Label>(card, "Input").AutowrapMode != TextServer.AutowrapMode.Off, "long motions wrap");
+		}
+		Assert.Equal(Control.FocusModeEnum.All, UiFind.Get<ScrollContainer>(p, "SpecialCardsScroll").FocusMode, "pad can reach scroll column");
+		s.QueueFree(); p.QueueFree(); MenuSettings.Reset();
+	}
+
+	[Test]
 	public static void MoveList_BaseKit_HasEveryRowAndRealNames()
 	{
 		var v = MoveListSource.Build(NewRun(), MovesDir);
@@ -151,14 +197,14 @@ public static class MenuMockupTests
 		Assert.True(tree.Paused && m.IsOpen, "opening freezes the tree");
 		m.RestartButton.EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.True(m.ConfirmBox.Visible && restarts == 0, "Restart asks first");
-		UiFind.Get<Button>(m, "ConfirmNo").EmitSignal(BaseButton.SignalName.Pressed);
+		((YokaiFighters.Ui.Kit.PaperDialog)m.ConfirmBox).CancelButton!.EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.True(!m.ConfirmBox.Visible && restarts == 0 && m.IsOpen, "Cancel keeps the run");
 		m.RestartButton.EmitSignal(BaseButton.SignalName.Pressed);
-		UiFind.Get<Button>(m, "ConfirmYes").EmitSignal(BaseButton.SignalName.Pressed);
+		((YokaiFighters.Ui.Kit.PaperDialog)m.ConfirmBox).ConfirmButton!.EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.True(restarts == 1 && !m.IsOpen && !tree.Paused, "confirmed restart closes and unfreezes");
 		m.Open();
 		m.QuitButton.EmitSignal(BaseButton.SignalName.Pressed);
-		UiFind.Get<Button>(m, "ConfirmYes").EmitSignal(BaseButton.SignalName.Pressed);
+		((YokaiFighters.Ui.Kit.PaperDialog)m.ConfirmBox).ConfirmButton!.EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.Equal(1, quits, "quit to title after confirm");
 		m.Open();
 		m.Resume();

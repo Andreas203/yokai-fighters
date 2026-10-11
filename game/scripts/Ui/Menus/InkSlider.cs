@@ -9,8 +9,10 @@ namespace YokaiFighters.Ui;
 /// </summary>
 public partial class InkSlider : HSlider
 {
+	private Texture2D? _brush;
 	public override void _Ready()
 	{
+		_brush = GD.Load<Texture2D>("res://assets/generated/ui/red-brush.png");
 		var empty = new StyleBoxEmpty();
 		foreach (string s in new[] { "slider", "grabber_area", "grabber_area_highlight" }) AddThemeStyleboxOverride(s, empty);
 		var blank = ImageTexture.CreateFromImage(Image.CreateEmpty(1, 1, false, Image.Format.Rgba8));
@@ -26,9 +28,13 @@ public partial class InkSlider : HSlider
 		float h = Size.Y, w = Size.X, pad = h * 0.5f;
 		float frac = (float)((Value - MinValue) / (MaxValue - MinValue));
 		float x = pad + (w - 2 * pad) * frac, cy = h / 2f;
-		DrawRect(new Rect2(pad, cy - 5, w - 2 * pad, 10), FightHud.Ink);
-		DrawRect(new Rect2(pad, cy - 5, Mathf.Max(0, x - pad), 10), FightHud.Seal);
-		Paint.Seal(this, new Vector2(x, cy), h * 0.36f, "");
-		if (HasFocus()) DrawRect(new Rect2(Vector2.Zero, Size), FightHud.Persimmon, false, 4f);
+		if (_brush != null)
+		{
+			DrawTextureRect(_brush, new Rect2(pad, cy - 12, w - 2 * pad, 24), false, FightHud.Ink);
+			if (x > pad) DrawTextureRect(_brush, new Rect2(pad, cy - 12, x - pad, 24), false, FightHud.Seal);
+		}
+		DrawCircle(new Vector2(x, cy), 23, FightHud.Ink);
+		DrawCircle(new Vector2(x, cy), 19, FightHud.Seal);
+		if (HasFocus()) DrawArc(new Vector2(x, cy), 26, 0, Mathf.Tau, 48, FightHud.Persimmon, 3, true);
 	}
 }
