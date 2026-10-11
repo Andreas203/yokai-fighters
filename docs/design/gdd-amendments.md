@@ -67,3 +67,23 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Where | Was | Now |
 |---|---|---|
 | GDD §6 run structure (save behaviour) | Not specified | As above. Rule M5 in `docs/design/rules.md`. |
+
+---
+
+## AM4 — Astra makes the finished art; Claude agents make greybox only (2026-10-11)
+
+**Decision.** **Astra**, a GPT artist agent the designer runs through Codex, makes every finished 2D image: final screen concepts, character concept art, the front/side/back turnarounds that feed Meshy Image-to-3D, stage backdrops, and UI and VFX texture plates. The crew's `astra` agent writes each brief and runs only designer-approved jobs through `codex exec`. Claude agents make rough greybox mockups only (`ui-designer`, drawn in code into `docs/design/screens/rough/`), never finished art and never with an image generator. Meshy keeps the 3D work: Image-to-3D, remesh, retexture, auto-rig and animation. No 3D job runs for a character until Astra's concept art and turnaround for it exist.
+
+**What does not change.** Every generation job, Astra's or Meshy's, runs only after the designer approves it and its cost. The style block, palette and acceptance checks (V1) are the same. Clip first, then frame data (F2). Sound is still sourced.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1, Pipeline, 3D models | "concept turnaround (front, side, back) from Meshy's 2D image models (`meshy_image_to_image` on the character's reference image) → front view into Meshy Image-to-3D" | "concept turnaround (front, side, back) from Astra → front view into Meshy Image-to-3D" |
+| AM1, Pipeline, Stages | "generated painted backdrops (Meshy 2D image models)" | "generated painted backdrops (Astra)" |
+| AM1, Pipeline, UI and VFX textures | "come from Meshy's 2D image models" | "come from Astra" |
+| AM1, Decision | "Every generation job runs through the Meshy MCP." | "3D, rig and animation jobs run through the Meshy MCP; 2D images through Astra (Codex)." |
+| §9 Agents table | — | **New:** **Astra** (artist): "Turns approved mockups and character sheets into finished screens, concept art, turnarounds, backdrops and texture plates." — *Every screen and every yokai looks finished and of one world.* |
+
+Rule F6 in `docs/design/rules.md` carries the new pipeline.

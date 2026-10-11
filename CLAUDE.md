@@ -15,7 +15,8 @@ Development tools only — none of them ship in the game. Defined in `.claude/ag
 | Team | Agent | Role |
 |---|---|---|
 | Lead | `producer` | Measures the gap between the design and the code, tickets it in priority order and plans which workflow runs it |
-| Assets | `asset-smith` | Generation specs and acceptance checks for models, rigs, stages, UI and VFX textures |
+| Assets | `astra` | Briefs and runs Astra (GPT artist agent, via Codex) for finished screens, concept art, turnarounds, backdrops and UI/VFX plates |
+| Assets | `asset-smith` | Meshy specs and acceptance checks for 3D models, rigs and stage props, built from Astra's turnarounds |
 | Assets | `clip-matcher` | Specs each move's clip and measures the generated take, then level presets and frame-timed sound |
 | Assets | `sound-scout` | Shortlists sound-effect and music packs |
 | Content | `movesmith` | Move list, frame data from matched clips, hitboxes, card text, trials |
@@ -31,6 +32,8 @@ Run a production pass with `/produce` (see `.claude/skills/produce/SKILL.md`): t
 
 ## Pipeline
 ```
+ui-designer greybox → Astra brief → designer approves → Astra runs via Codex → finished screen / concept / turnaround
+                                                   │
 Asset Smith spec → designer approves → Asset Smith runs via Meshy MCP → accepts (fighters rigged)
                                                    │
 Clip Matcher spec → designer approves take → Clip Matcher runs via Meshy MCP → measures
@@ -63,7 +66,8 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `game/` | Godot project | gameplay-programmer, ui-designer |
 | `harness/results/`, `harness/reports/` | Raw bot runs, balance reports | gameplay-programmer, sparring-partner |
 | `docs/codebase-map.md` | Maintained map of the code, to keep agent context small | gameplay-programmer |
-| `docs/design/screens/` | Target concept for every screen, with the prompts that made them; `rough/` holds ui-designer's greybox mockups | designer, ui-designer |
+| `docs/design/screens/` | Target concept for every screen, with the prompts that made them; `rough/` holds ui-designer's greybox mockups | designer, astra, ui-designer |
+| `assets/specs/astra/` | Astra briefs, exact prompts and take logs | astra |
 | `docs/screenshots/current/` | Latest capture of each screen, the stage and the fighters; a new capture overwrites the old | ui-designer, gameplay-programmer |
 | `docs/screenshots/review/` | Old ticket screenshots waiting for the designer to keep or delete | designer |
 | `vault/` | The design as linked notes, one topic per note; the retrieval store for the content pipeline | designer |
@@ -78,6 +82,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.
-- Visuals are generated through the Meshy MCP (3D, rigs, clips and 2D images), sound is sourced; agents run only jobs the designer has approved, at the approved credit cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
+- Visuals are generated: finished 2D art through Astra (Codex), 3D, rigs and clips through the Meshy MCP; Claude agents draw greybox mockups only. Sound is sourced; agents run only jobs the designer has approved, at the approved credit cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
 - Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - Cut order if behind: scope gate (end of week 1) → Kata, then meta-unlocks; balance gate (mid week 3) → modifiers 14→8, then dojo trials, then colour-only presets. The designer makes the call.
