@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using YokaiFighters.Ui.Kit;
 using YokaiFighters.Ui;
 
 namespace YokaiFighters.Fight;
@@ -21,6 +22,7 @@ public partial class LoseScreen : Control
 
 	public override void _Ready()
 	{
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Restart"));
 		_title = UiFind.Get<Label>(this, "Title");
 		_text = UiFind.Get<Label>(this, "Sub");
 		Restart = UiFind.Get<Button>(this, "Restart");
