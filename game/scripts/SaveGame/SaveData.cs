@@ -16,9 +16,9 @@ public sealed record SlotSave(string Slot, string Special, int Level, string? Mo
 /// <see cref="RunSession.StateHash"/>) from the ability pool and the map of this build.
 /// <para>
 /// Adding run state later (coins, a locked copy target, a used merchant): add a property with a default here,
-/// read it in <c>SaveStore</c> with that default when the field is missing, and write it. Older files then load
-/// unchanged and no version bump is needed; bump <see cref="SaveStore.CurrentVersion"/> only when the meaning of
-/// an existing field changes.
+/// read it in <c>SaveStore</c> with that default when the field is missing, write it, and raise
+/// <see cref="SaveStore.CurrentVersion"/>. Older files load unchanged through the defaults; the raised version is
+/// what makes an older build back the file up before it writes one without the new field.
 /// </para>
 /// </summary>
 public sealed record RunSave(
@@ -30,6 +30,15 @@ public sealed record RunSave(
 	public string? MapFingerprint { get; init; }
 
 	public static string Hex(ulong value) => value.ToString("x16", CultureInfo.InvariantCulture);
+
+	/// <summary>
+	/// True for a bare <c>.json</c> file name. <see cref="MapFile"/> comes from the save file, so it may only name a
+	/// file inside data/map/: no directory part, no rooted path, no <c>..</c>.
+	/// </summary>
+	public static bool IsMapFileName(string? name) =>
+		!string.IsNullOrWhiteSpace(name) && name == name.Trim() && name.IndexOfAny(new[] { '/', '\\', ':' }) < 0
+		&& System.IO.Path.GetFileName(name) == name && name.Length > ".json".Length
+		&& name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && !name.StartsWith('.');
 
 	/// <summary>
 	/// The session as it stands. Call it only at a node boundary (run started, node entered, node completed):
@@ -54,7 +63,8 @@ public sealed record RunSave(
 	/// <summary>
 	/// The saved run on this build's data. Throws <see cref="FormatException"/> naming the reason when the file
 	/// describes a run this build cannot hold: another map (id or fingerprint), a special or modifier that is not
-	/// in the pool, a slot, level or modifier the rules do not allow, or a walk the map does not allow.
+	/// in the pool, a slot, level or modifier the rules do not allow, no special at all (A1, T5), a walk the map
+	/// does not allow, or a walk already at the end of the map (that run is over).
 	/// <paramref name="notes"/> receives anything repaired (only the T3 level-up order can be).
 	/// </summary>
 	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null)
@@ -69,14 +79,23 @@ public sealed record RunSave(
 		var order = new int[5];
 		foreach (SlotSave s in Slots)
 		{
-			if (!Enum.TryParse(s.Slot, ignoreCase: true, out SpecialSlot slot) || slot is < SpecialSlot.A or > SpecialSlot.D || int.TryParse(s.Slot, out _))
-				throw new FormatException($"'{s.Slot}' is not a slot (A-D)");
+			SpecialSlot slot = s.Slot switch
+			{
+				"A" => SpecialSlot.A,
+				"B" => SpecialSlot.B,
+				"C" => SpecialSlot.C,
+				"D" => SpecialSlot.D,
+				_ => throw new FormatException($"'{s.Slot}' is not a slot (A, B, C or D)"),
+			};
 			SpecialData data = pool.Special(s.Special) ?? throw new FormatException($"special '{s.Special}' is not in this build's abilities");
 			ModifierData? modifier = null;
 			if (s.Modifier is { } id) modifier = pool.Modifier(id) ?? throw new FormatException($"modifier '{id}' is not in this build's abilities");
 			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier)));
 			order[(int)slot] = s.Levelled;
 		}
+
+		// A1: a run starts with its starters; T5: the merchant never releases the last special, so the copy target is always defined.
+		if (owned.Count == 0) throw new FormatException("no slot holds a special: a run always owns at least one (A1, T5)");
 
 		RunState run;
 		try { run = RunState.Restore(Health, owned); }
@@ -92,7 +111,10 @@ public sealed record RunSave(
 			run.RestoreLevelledOrder(fallback[1], fallback[2], fallback[3], fallback[4]);
 			notes?.Add($"level-up order not usable ({e.Message}): lower slots taken as more recent");
 		}
-		run.SetMap(RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current)));
+		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current));
+		// A finished walk is a won run: it has ended, there is nothing to pick and nothing to continue.
+		if (map.IsFinished) throw new FormatException($"the saved walk is already at the end of map '{MapId}': that run is over");
+		run.SetMap(map);
 		return new RunSession(run, pool, scenes, Seed);
 	}
 }

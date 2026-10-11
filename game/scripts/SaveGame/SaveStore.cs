@@ -13,13 +13,16 @@ public enum SaveLoadStatus
 	Loaded,
 	/// <summary>No file: an empty save (a first launch).</summary>
 	Missing,
-	/// <summary>Not JSON, not an object, or unreadable: an empty save. The file is kept as a backup on the next write.</summary>
+	/// <summary>
+	/// Not JSON or not an object: an empty save, and the file is kept as a backup on the next write. Or the file
+	/// could not be opened at all (<see cref="SaveStore.WriteBlocked"/>): an empty save, and nothing is written over it.
+	/// </summary>
 	Corrupt,
-	/// <summary>Readable current-version file with a section that could not be used: that section is empty, the rest kept.</summary>
+	/// <summary>Readable current-version file with a section that could not be used: that section is empty, the rest kept. The file is kept as a backup on the next write.</summary>
 	Partial,
 	/// <summary>Written by an older build (or no version): converted, rewritten as the current version on the next save.</summary>
 	OlderVersion,
-	/// <summary>Written by a newer build: the fields this build knows are kept. The file is kept as a backup on the next write.</summary>
+	/// <summary>Written by a newer build, or with a version this build cannot read: the fields this build knows are kept. The file is kept as a backup on the next write.</summary>
 	NewerVersion,
 }
 
@@ -47,24 +50,40 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// default when missing. Unknown fields are ignored. A format change adds its conversion in <see cref="Parse"/>,
 /// keyed on the version.
 /// </para>
+/// <para>
+/// The store never destroys a file it could not fully read: the first write after any load that lost something
+/// (corrupt, partial, newer or unreadable version, an older version with problems) first copies the file to a
+/// backup name that is not taken (<c>save.json.bak</c>, <c>.bak.1</c>, ...), and after a read the disk refused
+/// nothing is written at all. Because a build cannot see fields a later build added to the same version, a ticket
+/// that adds saved state raises <see cref="CurrentVersion"/>: an older build then loads that file as newer and
+/// backs it up before writing.
+/// </para>
 /// </summary>
 public sealed class SaveStore
 {
 	public const int CurrentVersion = 1;
 	public const string FileName = "save.json";
-	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten.</summary>
+	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
 
 	public string Path { get; }
 	/// <summary>Why the last <see cref="Save"/> failed; null after a good one.</summary>
 	public string? LastSaveError { get; private set; }
 	private bool _backupFirst;
+	private string? _readError;
+	/// <summary>
+	/// True after a <see cref="Load"/> the disk refused (no permission, a sharing violation): the file is probably
+	/// intact, so <see cref="Save"/> writes nothing until a later load can read it.
+	/// </summary>
+	public bool WriteBlocked => _readError is not null;
 
 	public SaveStore(string path) => Path = path ?? throw new ArgumentNullException(nameof(path));
 
 	public SaveLoad Load()
 	{
 		string text;
+		_readError = null;
+		_backupFirst = false;
 		try
 		{
 			if (!File.Exists(Path)) return new SaveLoad(SaveData.Empty, SaveLoadStatus.Missing, Array.Empty<string>());
@@ -72,17 +91,26 @@ public sealed class SaveStore
 		}
 		catch (Exception e) when (e is IOException or UnauthorizedAccessException or NotSupportedException or System.Security.SecurityException)
 		{
+			_readError = e.Message;
 			return new SaveLoad(SaveData.Empty, SaveLoadStatus.Corrupt, new[] { "cannot read: " + e.Message });
 		}
 		SaveLoad load = Parse(text);
-		// Writing over a file from a newer build, or one that would not parse, would destroy what this build could not read.
-		_backupFirst = load.Status is SaveLoadStatus.Corrupt or SaveLoadStatus.NewerVersion;
+		_backupFirst = LostSomething(load);
 		return load;
 	}
+
+	/// <summary>True when the load did not keep everything the file held, so writing over the file would destroy it.</summary>
+	public static bool LostSomething(SaveLoad load) => load.Status switch
+	{
+		SaveLoadStatus.Loaded or SaveLoadStatus.Missing => false,
+		SaveLoadStatus.OlderVersion => load.Problems.Count > 1, // the first line only names the version
+		_ => true,
+	};
 
 	/// <summary>The file's text to save data (what <see cref="Load"/> does after reading).</summary>
 	public static SaveLoad Parse(string text)
 	{
+		if (text.Length > 0 && text[0] == '\uFEFF') text = text[1..]; // a byte-order mark some editors add
 		JsonDocument doc;
 		try { doc = JsonDocument.Parse(text, new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip }); }
 		catch (JsonException e) { return new SaveLoad(SaveData.Empty, SaveLoadStatus.Corrupt, new[] { "not JSON: " + e.Message }); }
@@ -94,7 +122,12 @@ public sealed class SaveStore
 
 			var problems = new List<string>();
 			int version = 0; // a file without a version is older than version 1
-			if (root.TryGetProperty("version", out JsonElement v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n)) version = n;
+			string? unknownVersion = null; // present but not a whole number 0 or above: not a format this build wrote
+			if (root.TryGetProperty("version", out JsonElement v))
+			{
+				if (v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n) && n >= 0) version = n;
+				else unknownVersion = v.GetRawText();
+			}
 
 			// Version 1 is the first format, so there is nothing to convert yet: an older or versionless file is read
 			// with the same field names. A later format change adds its conversion here, keyed on `version`.
@@ -105,10 +138,12 @@ public sealed class SaveStore
 				Story = Story(root, problems),
 			};
 			SaveLoadStatus status =
+				unknownVersion is not null ? SaveLoadStatus.NewerVersion :
 				version < CurrentVersion ? SaveLoadStatus.OlderVersion :
 				version > CurrentVersion ? SaveLoadStatus.NewerVersion :
 				problems.Count > 0 ? SaveLoadStatus.Partial : SaveLoadStatus.Loaded;
-			if (version != CurrentVersion) problems.Insert(0, $"version {version}, this build writes {CurrentVersion}");
+			if (unknownVersion is not null) problems.Insert(0, $"version {unknownVersion} is not one this build can read, this build writes {CurrentVersion}");
+			else if (version != CurrentVersion) problems.Insert(0, $"version {version}, this build writes {CurrentVersion}");
 			return new SaveLoad(data, status, problems);
 		}
 	}
@@ -249,20 +284,30 @@ public sealed class SaveStore
 	}
 
 	/// <summary>
-	/// Writes the file (temp file, then rename). False with <see cref="LastSaveError"/> when the disk refuses; never
-	/// throws. The first write after loading a corrupt or newer-version file first copies it to
-	/// <c>save.json.bak</c>; if that copy cannot be made, nothing is written.
+	/// Writes the file (temp file flushed to disk, then rename). False with <see cref="LastSaveError"/> when the
+	/// disk refuses; never throws. The first write after a load that lost something first copies the file to a free
+	/// backup name; if that copy cannot be made, nothing is written. While <see cref="WriteBlocked"/>, nothing is written.
 	/// </summary>
 	public bool Save(SaveData data)
 	{
+		if (_readError is not null)
+		{
+			LastSaveError = $"the existing file could not be read ({_readError}), so it is left untouched";
+			return false;
+		}
 		string temp = Path + ".tmp";
 		try
 		{
 			string? dir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(Path));
 			if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-			if (_backupFirst && File.Exists(Path)) File.Copy(Path, Path + BackupSuffix, overwrite: true);
+			if (_backupFirst && File.Exists(Path)) File.Copy(Path, FreeBackupPath(), overwrite: false);
 			_backupFirst = false;
-			File.WriteAllText(temp, Serialize(data), new UTF8Encoding(false));
+			byte[] bytes = new UTF8Encoding(false).GetBytes(Serialize(data));
+			using (var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
+			{
+				file.Write(bytes, 0, bytes.Length);
+				file.Flush(flushToDisk: true); // on disk before the rename, so a power cut cannot leave an empty save
+			}
 			File.Move(temp, Path, overwrite: true);
 			LastSaveError = null;
 			return true;
@@ -273,5 +318,13 @@ public sealed class SaveStore
 			try { if (File.Exists(temp)) File.Delete(temp); } catch (Exception) { /* nothing more to do */ }
 			return false;
 		}
+	}
+
+	/// <summary>The first backup name not in use: an earlier backup is never replaced.</summary>
+	private string FreeBackupPath()
+	{
+		string name = Path + BackupSuffix;
+		for (int n = 1; File.Exists(name) || Directory.Exists(name); n++) name = Path + BackupSuffix + "." + n.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		return name;
 	}
 }

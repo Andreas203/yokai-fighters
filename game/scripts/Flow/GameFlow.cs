@@ -77,6 +77,12 @@ public partial class GameFlow : Node
 	public SaveData Saved { get; private set; } = SaveData.Empty;
 
 	public static string UserSavePath => ProjectSettings.GlobalizePath("user://" + SaveStore.FileName);
+	/// <summary>The map file of the run in progress (a continued run keeps the one it was saved with).</summary>
+	private string? _runMapFile;
+	/// <summary>The last write was refused: the file is behind <see cref="Saved"/> (e.g. it still holds an ended run). Retried on the title and on exit.</summary>
+	private bool _writePending;
+	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
+	private string? _saveTrouble;
 
 	/// <summary>Before the menus are ready, so the title and control select first draw with the saved values.</summary>
 	public override void _EnterTree()
@@ -90,6 +96,9 @@ public partial class GameFlow : Node
 			GD.Print($"GameFlow: save {savePath}: {SaveLoaded.Status}");
 			if (SaveLoaded.Status is not (SaveLoadStatus.Loaded or SaveLoadStatus.Missing))
 				GD.PushWarning($"GameFlow: save {savePath}: {SaveLoaded.Status} ({string.Join("; ", SaveLoaded.Problems)})");
+			if (Saves.WriteBlocked) _saveTrouble = "The save file could not be opened. It is left untouched and nothing is saved this session.";
+			else if (SaveLoaded.Status == SaveLoadStatus.Corrupt) _saveTrouble = "The save file could not be read. A copy is kept when the next run is saved.";
+			else if (Saved.Run is null && SaveStore.LostSomething(SaveLoaded)) _saveTrouble = "The saved run could not be read. A copy of the file is kept when the next run is saved.";
 		}
 		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
 		if (path == null) return;
@@ -135,6 +144,7 @@ public partial class GameFlow : Node
 	public override void _ExitTree()
 	{
 		MenuSettings.Changed -= OnSettingsChanged;
+		RetryPendingWrite();
 		if (SettingsLoaded != null) MenuSettings.Detach(); // every change is already on disk
 	}
 
@@ -196,6 +206,7 @@ public partial class GameFlow : Node
 			return false;
 		}
 		GD.Print($"GameFlow: new run on map '{Session.Map.Graph.Id}', seed {Session.Seed}");
+		_runMapFile = MapFile;
 		Adopt(Session);
 		SaveRun(Session); // a new run replaces any saved one
 		return true;
@@ -228,7 +239,7 @@ public partial class GameFlow : Node
 	private void SaveRun(RunSession session)
 	{
 		if (Saves is null || session != Session) return;
-		Write(Saved.WithRun(RunSave.Capture(session, MapFile)));
+		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile)));
 	}
 
 	/// <summary>Replaces the save (and writes it when a file is attached). False when the disk refused; the value is kept either way.</summary>
@@ -236,19 +247,34 @@ public partial class GameFlow : Node
 	{
 		Saved = data;
 		if (Saves is null) return true;
-		if (Saves.Save(data)) return true;
+		if (Saves.Save(data))
+		{
+			_writePending = false;
+			_saveTrouble = null;
+			return true;
+		}
+		_writePending = true; // the file is now behind Saved (it may still hold a run that has ended)
 		GD.PushWarning($"GameFlow: save {Saves.Path} not written: {Saves.LastSaveError}");
 		return false;
+	}
+
+	/// <summary>Writes <see cref="Saved"/> again after a refused write, so an ended run does not stay in the file. Not while the store refuses to write at all.</summary>
+	private void RetryPendingWrite()
+	{
+		if (_writePending && Saves is { WriteBlocked: false }) Write(Saved);
 	}
 
 	/// <summary>The saved run on this build's data, or null with the reason (no run, or one this build cannot hold).</summary>
 	public RunSession? RestoreSavedRun(out string reason)
 	{
-		reason = ScreenRouter.NoSaveReason;
+		reason = _saveTrouble ?? ScreenRouter.NoSaveReason;
 		if (Saves is null || Saved.Run is not { } run) return null;
 		try
 		{
 			string dir = ContentPaths.Data("map");
+			// The name comes from the save file: only a bare file name inside data/map/ is ever opened.
+			if (run.MapFile is { } named && !RunSave.IsMapFileName(named))
+				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
 			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
@@ -256,7 +282,9 @@ public partial class GameFlow : Node
 			reason = "";
 			return session;
 		}
-		catch (Exception e) when (e is FormatException or System.IO.IOException or ArgumentException or InvalidOperationException or System.Collections.Generic.KeyNotFoundException)
+		// The save file is outside input and this runs inside _Ready: whatever it makes the loaders throw (a
+		// missing or unreadable file, a bad walk, an id the data lacks), the run is unrestorable and boot goes on.
+		catch (Exception e)
 		{
 			reason = "The saved run cannot be continued: " + e.Message;
 			return null;
@@ -267,6 +295,7 @@ public partial class GameFlow : Node
 	private void RefreshContinue()
 	{
 		if (Saves is null) return;
+		RetryPendingWrite();
 		if (RestoreSavedRun(out string reason) is { } session)
 		{
 			var map = session.Map;
@@ -294,6 +323,7 @@ public partial class GameFlow : Node
 			return false;
 		Session = session;
 		_freshRun = false;
+		_runMapFile = Saved.Run?.MapFile ?? MapFile;
 		GD.Print($"GameFlow: continued run on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
 		Adopt(session);
 		Router.ContinueRun();

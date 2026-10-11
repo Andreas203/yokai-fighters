@@ -257,6 +257,9 @@ public static class SaveTests
 
 		// The same run, saved to text and restored after every node (and once inside each node).
 		var live = NewSession(1234);
+		ulong atStart = live.StateHash();
+		RunSession fresh = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(live)))).Data.Run!.Restore(FightScene.LoadAbilityPool(), DefaultMap(), Table());
+		Assert.True(fresh.StateHash() == atStart && fresh.Step == 0 && fresh.Reachable().SequenceEqual(live.Reachable()), "a run saved before its first node restores with the same hash");
 		bool anyLevelled = false, anyModifier = false;
 		for (int i = 0; i < hashes.Count - 1; i++)
 		{
@@ -323,11 +326,24 @@ public static class SaveTests
 		Throws<FormatException>(() => With(first with { Modifier = "no-such-modifier" }).Restore(pool, DefaultMap(), Table()), "an unknown modifier");
 		Throws<FormatException>(() => With(first with { Level = 0 }).Restore(pool, DefaultMap(), Table()), "level 0");
 		Throws<FormatException>(() => With(first with { Level = 4 }).Restore(pool, DefaultMap(), Table()), "level 4 (A3)");
-		foreach (string slot in new[] { "E", "None", "0", "1", "" })
+		foreach (string slot in new[] { "E", "None", "0", "1", "", "a", " A", " a ", "A,B", "A " })
 			Throws<FormatException>(() => With(first with { Slot = slot }).Restore(pool, DefaultMap(), Table()), $"slot '{slot}'");
 		string wrong = first.Slot == "A" ? "B" : "A";
 		Throws<FormatException>(() => With(first with { Slot = wrong }).Restore(pool, DefaultMap(), Table()), "a special outside its own slot (A3)");
 		Throws<FormatException>(() => (good with { Slots = good.Slots.Append(first).ToArray() }).Restore(pool, DefaultMap(), Table()), "one slot twice");
+
+		// A1 / T5: a run always owns a special, so a save with none is not a run.
+		Throws<FormatException>(() => (good with { Slots = Array.Empty<SlotSave>() }).Restore(pool, DefaultMap(), Table()), "no special in any slot (A1, T5)");
+		Assert.True(SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(good with { Slots = Array.Empty<SlotSave>() }))).Data.Run is { } empty && empty.Slots.Count == 0, "the file reads, the restore refuses");
+
+		// A walk already at the end of the map is a won run: nothing to pick, so nothing to continue.
+		var walked = NewSession(8);
+		var all = new List<string>();
+		while (!walked.IsOver) { all.Add(walked.Reachable()[0]); PlayNode(walked, 600); }
+		Assert.True(all.Count == walked.Steps && all[^1] == "boss-tanuki", "walked to the boss node");
+		Throws<FormatException>(() => (good with { Visited = all.ToArray(), Current = all[^1] }).Restore(pool, DefaultMap(), Table()), "a finished walk");
+		var atBoss = (good with { Visited = all.Take(all.Count - 1).ToArray(), Current = all[^1] }).Restore(pool, DefaultMap(), Table());
+		Assert.True(atBoss.Node?.NodeId == "boss-tanuki" && !atBoss.IsOver, "inside the last node is still a run in progress");
 
 		// A missing or impossible T3 order is repaired (lower slot = more recent), never a reason to lose the run.
 		var levelled = RunState.NewRun(pool, DefaultMap());
@@ -446,7 +462,7 @@ public static class SaveTests
 
 			// Losing ends the run: nothing is left to continue, story and unlocks stay.
 			flow.Write(flow.Saved.WithStory(StoryProgress.FirstLoss).WithUnlock("some-ability"));
-			Assert.True(flow.Session.LoseFight().Ok, "lost");
+			Assert.True(flow.Session!.LoseFight().Ok, "lost");
 			SaveLoad after = new SaveStore(path).Load();
 			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null, "the ended run is removed from the file");
 			Assert.True(after.Data.Story.Has(StoryProgress.FirstLoss) && after.Data.Unlocks.SequenceEqual(new[] { "some-ability" }), "story progress and unlocks outlive the run");
@@ -540,8 +556,211 @@ public static class SaveTests
 		foreach (string file in Directory.GetFiles(Path.Combine(scripts, "SaveGame"), "*.cs"))
 		{
 			string text = File.ReadAllText(file);
-			Assert.True(!text.Contains("DateTime") && !text.Contains("Stopwatch") && !text.Contains("Random") && !text.Contains("Guid"),
-				$"{Path.GetFileName(file)}: no wall clock and no unseeded randomness in the save (F3)");
+			foreach (string banned in Clocks.Concat(new[] { "Random", "Guid", "using Godot", "Godot." }))
+				Assert.True(!text.Contains(banned), $"{Path.GetFileName(file)}: '{banned}': no wall clock, no unseeded randomness and no engine in the save (F3)");
 		}
+		// The save points live in the boot flow. It is a Godot node and picks a new run's seed with Random.Shared
+		// (a designer decision, YOK-48: the seed is then run state and is what gets saved), so only clocks are barred there.
+		string flowText = File.ReadAllText(Path.Combine(scripts, "Flow", "GameFlow.cs"));
+		foreach (string banned in Clocks)
+			Assert.True(!flowText.Contains(banned), $"GameFlow.cs: '{banned}': no clock decides when or what is saved (F3)");
+		Assert.Equal(1, flowText.Split("Random").Length - 1, "GameFlow.cs: the only randomness is a new run's seed");
 	}
+
+	static readonly string[] Clocks = { "DateTime", "Stopwatch", "GetTicksMsec", "GetTicksUsec", "TickCount", "TimeProvider", "GetUnixTime", "GetTime" };
+
+	// ---- code-critic findings ----
+
+	[Test]
+	public static void Store_AFileTheDiskWillNotOpen_IsNeverWrittenOver() => WithTempFile(path =>
+	{
+		if (OperatingSystem.IsWindows()) return; // no chmod; a sharing violation takes the same path
+		string good = SaveStore.Serialize(SaveData.Empty.WithUnlock("oni-quake").WithUnlock("kappa-dive").WithStory(StoryProgress.Intro).WithStory(StoryProgress.FirstLoss));
+		File.WriteAllText(path, good);
+		File.SetUnixFileMode(path, UnixFileMode.None);
+		try
+		{
+			var store = new SaveStore(path);
+			SaveLoad load = store.Load();
+			Assert.True(load.Status == SaveLoadStatus.Corrupt && load.Data.Unlocks.Count == 0 && load.Problems[0].StartsWith("cannot read"), "an unopenable file loads as empty, with the reason");
+			Assert.True(store.WriteBlocked, "the store knows it could not read the file");
+			Assert.True(!store.Save(Sample) && store.LastSaveError!.Contains("left untouched"), "nothing is written over it: " + store.LastSaveError);
+			Assert.True(!store.Save(SaveData.Empty), "not on a second try either");
+			Assert.True(!File.Exists(path + SaveStore.BackupSuffix) && !File.Exists(path + ".tmp"), "no backup and no temp file: the file itself is the copy");
+			File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+			Assert.Equal(good, File.ReadAllText(path), "the file is intact");
+			SaveLoad again = store.Load();
+			Assert.True(again.Status == SaveLoadStatus.Loaded && again.Data.Unlocks.Count == 2 && again.Data.Story.Seen.Count == 2, "once readable, the unlocks and story are all there (M1, M4)");
+			Assert.True(!store.WriteBlocked && store.Save(again.Data.WithUnlock("third")), "and saving works again");
+		}
+		finally { try { File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { } }
+	});
+
+	[Test]
+	public static void Store_AnyLoadThatLostSomething_IsBackedUp_AndBackupsAreNeverReplaced() => WithTempFile(path =>
+	{
+		string bak = path + SaveStore.BackupSuffix;
+		string partial = "{\"version\":1,\"run\":null,\"unlocks\":{\"0\":\"oni-quake\"},\"story\":{\"seen\":[\"intro\"]}}";
+		File.WriteAllText(path, partial);
+		var store = new SaveStore(path);
+		SaveLoad load = store.Load();
+		Assert.True(load.Status == SaveLoadStatus.Partial && load.Data.Unlocks.Count == 0 && load.Data.Story.Has(StoryProgress.Intro), "unlocks of the wrong shape: partial, story kept");
+		Assert.True(store.Save(load.Data), "saved");
+		Assert.Equal(partial, File.ReadAllText(bak), "the partly read file is kept before it is written over");
+
+		// A later bad file gets its own backup name: the first backup is not replaced.
+		File.WriteAllText(path, "");
+		store = new SaveStore(path);
+		Assert.Equal(SaveLoadStatus.Corrupt, store.Load().Status, "an empty file");
+		Assert.True(store.Save(Sample), "saved");
+		Assert.Equal(partial, File.ReadAllText(bak), "the earlier backup is untouched");
+		Assert.Equal("", File.ReadAllText(bak + ".1"), "the new one is numbered");
+		string older = SaveStore.Serialize(Sample).Replace("\"version\": 1,", "").Replace("\"unlocks\": [", "\"unlocks\": 5, \"x\": [");
+		File.WriteAllText(path, older);
+		store = new SaveStore(path);
+		Assert.Equal(SaveLoadStatus.OlderVersion, store.Load().Status, "an older file with a broken section");
+		Assert.True(store.Save(Sample) && File.ReadAllText(bak + ".2") == older, "is backed up too, under the next name");
+
+		// Nothing lost, nothing backed up: a clean older file, a current file, and a second load of a good file.
+		foreach (string clean in new[] { SaveStore.Serialize(Sample).Replace("\"version\": 1,", ""), SaveStore.Serialize(Sample) })
+		{
+			File.WriteAllText(path, clean);
+			store = new SaveStore(path);
+			Assert.True(!SaveStore.LostSomething(store.Load()) && store.Save(SaveData.Empty), "a fully read file is simply written over");
+			Assert.True(!File.Exists(bak + ".3"), "with no backup");
+		}
+		File.WriteAllText(path, "nope");
+		store = new SaveStore(path);
+		store.Load();
+		File.WriteAllText(path, SaveStore.Serialize(Sample));
+		Assert.True(store.Load().Status == SaveLoadStatus.Loaded && store.Save(Sample) && !File.Exists(bak + ".3"), "a later good load clears the pending backup");
+	});
+
+	[Test]
+	public static void Store_AVersionThisBuildCannotRead_IsNotTakenForAnOlderFile() => WithTempFile(path =>
+	{
+		string body = ", \"run\": null, \"unlocks\": [\"a\"], \"story\": { \"seen\": [] } }";
+		foreach (string version in new[] { "\"1\"", "1.0", "1e0", "2147483648", "-3", "null", "true", "[1]", "1.5" })
+		{
+			string text = "{ \"version\": " + version + body;
+			SaveLoad parsed = SaveStore.Parse(text);
+			Assert.Equal(SaveLoadStatus.NewerVersion, parsed.Status, $"version {version}");
+			Assert.True(parsed.Problems[0].Contains(version) && parsed.Data.Unlocks.SequenceEqual(new[] { "a" }), $"version {version}: named, known fields kept");
+			File.WriteAllText(path, text);
+			var store = new SaveStore(path);
+			store.Load();
+			foreach (string old in Directory.GetFiles(Path.GetDirectoryName(path)!, "*.bak*")) File.Delete(old);
+			Assert.True(store.Save(SaveData.Empty) && File.ReadAllText(path + SaveStore.BackupSuffix) == text, $"version {version}: backed up before the first write");
+		}
+		Assert.Equal(SaveLoadStatus.NewerVersion, SaveStore.Parse("{ \"version\": 1, \"version\": 9" + body).Status, "a repeated version: the last one counts");
+		Assert.Equal(SaveLoadStatus.Loaded, SaveStore.Parse("\uFEFF{ \"version\": 1" + body).Status, "a byte-order mark is not corruption");
+		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse("{ \"version\": 0" + body).Status, "version 0 is older");
+	});
+
+	[Test]
+	public static void MapFile_FromTheSave_IsOnlyEverABareJsonFileName()
+	{
+		foreach (string ok in new[] { "default-map.json", "demo-map.json", "My Map.JSON" })
+			Assert.True(RunSave.IsMapFileName(ok), ok);
+		foreach (string? bad in new[] { null, "", " ", "..", ".", "../moves", "../map/default-map.json", "/etc/hosts", "/etc/hosts.json", "sub/default-map.json", "sub\\default-map.json", "C:\\maps\\a.json", "C:a.json", "default-map", "default-map.txt", ".json", "..json", " default-map.json", "default-map.json " })
+			Assert.True(!RunSave.IsMapFileName(bad), $"'{bad}' must be refused");
+	}
+
+	[Test]
+	public static void Boot_ASaveNamingAnotherPath_GreysContinue_AndTheBootStillFinishes(Node runner) => WithTempFile(path =>
+	{
+		RunSave run = null!;
+		WithFixtures(() => run = RunSave.Capture(NewSession(77), FileMapSource.DefaultFile));
+		string mapDir = Path.GetFullPath(MapDir);
+		foreach (string mapFile in new[] { "..", "../moves", ".", "/etc/hosts", mapDir, Path.Combine(mapDir, "default-map.json"), "../map/default-map.json", "no-such-map.json", "node-scenes.json" })
+		{
+			File.WriteAllText(path, SaveStore.Serialize(Sample with { Run = run with { MapFile = mapFile } }));
+			string before = File.ReadAllText(path);
+			WithBoot(runner, path, flow =>
+			{
+				Assert.True(flow.Saved.Run?.MapFile == mapFile, $"'{mapFile}': the file parses");
+				Assert.True(flow.Title.ContinueButton.Disabled && !flow.Router.Entry(TitleEntry.Continue).Enabled, $"'{mapFile}': Continue is off");
+				string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+				Assert.True(reason.StartsWith("The saved run cannot be continued"), $"'{mapFile}': with a reason: {reason}");
+				Assert.True(!flow.ContinueRun() && flow.Session == null && flow.Router.Current == Screen.Title, $"'{mapFile}': nothing starts");
+				// _Ready ran to its end: Quit is wired, the scheme follows the settings, Start still works.
+				int quits = 0;
+				flow.QuitAction = () => quits++;
+				Press(flow.Title.QuitButton);
+				Assert.Equal(1, quits, $"'{mapFile}': Quit is wired");
+				MenuSettings.SetScheme(ControlScheme.Kata);
+				Assert.Equal(ControlScheme.Kata, flow.Router.Scheme, $"'{mapFile}': the settings still reach the router");
+				Assert.Equal(before, File.ReadAllText(path), $"'{mapFile}': the file is left as it was");
+				Assert.True(flow.ReturnToTitle() == false && flow.Title.ContinueButton.Disabled, "still off");
+				Press(flow.Title.StartButton);
+				Press(flow.ControlSelect.Start);
+				Assert.True(flow.Session != null && flow.Router.Current == Screen.Map, $"'{mapFile}': a new run still starts");
+				Assert.True(flow.ReturnToTitle() && !flow.Title.ContinueButton.Disabled, $"'{mapFile}': and that one can be continued");
+			});
+		}
+		File.WriteAllText(path, SaveStore.Serialize(Sample with { Run = run }));
+		WithBoot(runner, path, flow => Assert.True(!flow.Title.ContinueButton.Disabled, "the same run with its real map file is offered"));
+	});
+
+	[Test]
+	public static void Boot_ASaveNoRunCanReach_IsNotOffered(Node runner) => WithTempFile(path =>
+	{
+		RunSave run = null!;
+		var all = new List<string>();
+		WithFixtures(() =>
+		{
+			run = RunSave.Capture(NewSession(77), FileMapSource.DefaultFile);
+			var walked = NewSession(77);
+			while (!walked.IsOver) { all.Add(walked.Reachable()[0]); PlayNode(walked, 600); }
+		});
+		foreach (var (what, bad) in new[]
+		{
+			("no special", run with { Slots = Array.Empty<SlotSave>() }),
+			("a finished walk", run with { Visited = all.ToArray(), Current = all[^1] }),
+		})
+		{
+			File.WriteAllText(path, SaveStore.Serialize(SaveData.Empty.WithRun(bad)));
+			WithBoot(runner, path, flow =>
+			{
+				Assert.True(flow.Saved.Run != null && flow.Title.ContinueButton.Disabled, $"{what}: Continue is off");
+				Assert.True(flow.Title.DisabledReason(TitleEntry.Continue).StartsWith("The saved run cannot be continued"), $"{what}: {flow.Title.DisabledReason(TitleEntry.Continue)}");
+				Press(flow.Title.ContinueButton);
+				Assert.True(flow.Session == null && flow.Router.Current == Screen.Title, $"{what}: the title stays");
+			});
+		}
+	});
+
+	[Test]
+	public static void Boot_AnUnreadableSaveFile_SaysSo_AndARefusedRunEndWriteIsRetried(Node runner) => WithTempFile(path =>
+	{
+		File.WriteAllText(path, "{ not a save");
+		WithBoot(runner, path, flow =>
+		{
+			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+			Assert.True(flow.Title.ContinueButton.Disabled && reason != ScreenRouter.NoSaveReason && reason.Contains("could not be read"), "a corrupt file is not 'no saved run yet': " + reason);
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			Assert.Equal("{ not a save", File.ReadAllText(path + SaveStore.BackupSuffix), "the corrupt file is kept when the new run is saved");
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered");
+
+			// The disk refuses the write that removes the lost run: the file still holds it.
+			string held = File.ReadAllText(path);
+			string dir = Path.GetDirectoryName(path)!;
+			if (OperatingSystem.IsWindows()) return;
+			File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+			try
+			{
+				Assert.True(flow.Session.LoseFight().Ok, "lost");
+				Assert.True(flow.Saved.Run == null, "the flow knows the run is over");
+				Assert.Equal(held, File.ReadAllText(path), "but the write was refused: the file still holds the run");
+				Assert.True(flow.ReturnToTitle() && flow.Title.ContinueButton.Disabled, "the title does not offer the ended run");
+			}
+			finally { File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
+			Assert.True(new SaveStore(path).Load().Data.Run != null, "still in the file");
+			Press(flow.Title.SettingsButton); // any return to the title retries the write
+			flow.Router.Back();
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data.Run: null }, "the pending removal is written once the disk allows it");
+			Assert.True(flow.Title.ContinueButton.Disabled, "Continue stays off");
+		});
+	});
 }
