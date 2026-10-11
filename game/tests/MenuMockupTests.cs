@@ -123,20 +123,16 @@ public static class MenuMockupTests
 	}
 
 	[Test]
-	public static void TitleMenu_MasksLightWithFocus_FallBackToDrawnArt(Node host)
+	public static void TitleMenu_UsesShrinePlateAndLiveDisabledRows(Node host)
 	{
 		var t = GD.Load<PackedScene>("res://scenes/ui/title_menu.tscn").Instantiate<TitleMenu>();
 		host.AddChild(t);
-		var fox = UiFind.Get<YokaiMask>(t, "MaskKitsune"); var oni = UiFind.Get<YokaiMask>(t, "MaskOni"); var kappa = UiFind.Get<YokaiMask>(t, "MaskKappa");
-		Assert.True(fox.Lit && !oni.Lit && !kappa.Lit, "Start lights the Kitsune mask");
-		t.SetSavedRun(new SavedRunSummary(4, 8, 720, 1000, "Spirit Wave Lv 1"));
-		t.PracticeButton.GrabFocus();
-		Assert.True(kappa.Lit && !fox.Lit && !oni.Lit, "Practice lights the Kappa mask");
-		t.ContinueButton.GrabFocus();
-		Assert.True(oni.Lit && !kappa.Lit, "Continue lights the Oni mask");
-		Assert.True(fox.ArtPath.EndsWith("title/mask-kitsune.png"), "art slot path");
-		Assert.True(fox.UsesGeneratedArt == ResourceLoader.Exists(fox.ArtPath), "generated art is used only when the PNG exists");
-		Assert.True(t.FindChild("MaskTanuki", true, false) == null, "no Tanuki mask on the title (story reveal)");
+		Assert.True(t.GetNode<YokaiFighters.Ui.Kit.KitBackdrop>("Backdrop").Art!.ResourcePath.EndsWith("title-shrine.png"), "three masks are in the shrine plate");
+		Assert.True(t.StartButton is YokaiFighters.Ui.Kit.KitBrushButton { StrokeVisible: true }, "focused Start has live brush selection");
+		t.SetEntry(new(YokaiFighters.Flow.TitleEntry.Practice, false, "Practice mode is not built yet."));
+		Assert.True(UiFind.Get<Label>(t, "Availability").Text.Contains(t.DisabledReason(YokaiFighters.Flow.TitleEntry.Practice)), "reason visible without mouse hover");
+		Assert.True(t.PracticeButton is YokaiFighters.Ui.Kit.KitBrushButton { Effective: YokaiFighters.Ui.Kit.KitState.Disabled }, "kit disabled state");
+		Assert.True(!t.DetailBodyLabel.IsVisibleInTree(), "mockup detail copy is absent from the composition");
 		t.QueueFree();
 	}
 
