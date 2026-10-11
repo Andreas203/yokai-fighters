@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scripts/Fight/FightHud.cs" id="1_FightHud"]
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="2_talisman_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/lose_screen.tscn" id="3_lose_screen"]
-[ext_resource type="StyleBox" path="res://ui/kit/paper_sheet_style.tres" id="paper"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ryo-portrait.png" id="ryo"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/burst-blank.png" id="burst"]
 
@@ -90,30 +89,12 @@ grow_vertical = 2
 theme = ExtResource("2_talisman_theme")
 mouse_filter = 2
 
-[node name="P1Frame" type="Panel" parent="Strip"]
-layout_mode = 0
-offset_left = 0
-offset_top = 42
-offset_right = 918
-offset_bottom = 238
-mouse_filter = 2
-theme_override_styles/panel = ExtResource("paper")
-
-[node name="P2Frame" type="Panel" parent="Strip"]
-layout_mode = 0
-offset_left = 1050
-offset_top = 42
-offset_right = 1920
-offset_bottom = 202
-mouse_filter = 2
-theme_override_styles/panel = ExtResource("paper")
-
 [node name="P1Portrait" type="TextureRect" parent="Strip"]
 layout_mode = 0
-offset_left = 0
-offset_top = 12
-offset_right = 286
-offset_bottom = 238
+offset_left = 12
+offset_top = 8
+offset_right = 180
+offset_bottom = 130
 mouse_filter = 2
 texture = ExtResource("ryo")
 expand_mode = 1
@@ -121,30 +102,33 @@ stretch_mode = 5
 
 [node name="P2Portrait" type="TextureRect" parent="Strip"]
 layout_mode = 0
-offset_left = 1712
-offset_top = 12
-offset_right = 1920
-offset_bottom = 218
+offset_left = 1780
+offset_top = 8
+offset_right = 1908
+offset_bottom = 130
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="P1HealthText" type="Label" parent="Strip"]
 layout_mode = 0
-offset_left = 292
-offset_top = 60
-offset_right = 850
-offset_bottom = 102
+offset_left = 184
+offset_top = 8
+offset_right = 794
+offset_bottom = 50
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 6
 
 [node name="P1Health" type="ProgressBar" parent="Strip"]
 layout_mode = 0
-offset_left = 292
-offset_top = 108
-offset_right = 850
-offset_bottom = 144
+offset_left = 184
+offset_top = 52
+offset_right = 794
+offset_bottom = 82
 mouse_filter = 2
 theme_type_variation = &"HealthBar"
 theme_override_styles/background = SubResource("track")
@@ -154,21 +138,24 @@ show_percentage = false
 
 [node name="P2HealthText" type="Label" parent="Strip"]
 layout_mode = 0
-offset_left = 1100
-offset_top = 60
-offset_right = 1710
-offset_bottom = 102
+offset_left = 1160
+offset_top = 8
+offset_right = 1770
+offset_bottom = 50
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 34
 horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 6
 
 [node name="P2Health" type="ProgressBar" parent="Strip"]
 layout_mode = 0
-offset_left = 1100
-offset_top = 108
-offset_right = 1710
-offset_bottom = 144
+offset_left = 1160
+offset_top = 52
+offset_right = 1770
+offset_bottom = 82
 mouse_filter = 2
 theme_type_variation = &"HealthBarEnemy"
 theme_override_styles/background = SubResource("track")
@@ -179,10 +166,10 @@ fill_mode = 1
 
 [node name="Meter1" type="ProgressBar" parent="Strip"]
 layout_mode = 0
-offset_left = 292
-offset_top = 156
-offset_right = 428
-offset_bottom = 184
+offset_left = 184
+offset_top = 90
+offset_right = 290
+offset_bottom = 114
 mouse_filter = 2
 theme_type_variation = &"MeterBar"
 theme_override_styles/background = SubResource("track")
@@ -192,10 +179,10 @@ show_percentage = false
 
 [node name="Meter2" type="ProgressBar" parent="Strip"]
 layout_mode = 0
-offset_left = 438
-offset_top = 156
-offset_right = 574
-offset_bottom = 184
+offset_left = 298
+offset_top = 90
+offset_right = 404
+offset_bottom = 114
 mouse_filter = 2
 theme_type_variation = &"MeterBar"
 theme_override_styles/background = SubResource("track")
@@ -205,10 +192,10 @@ show_percentage = false
 
 [node name="Meter3" type="ProgressBar" parent="Strip"]
 layout_mode = 0
-offset_left = 584
-offset_top = 156
-offset_right = 720
-offset_bottom = 184
+offset_left = 412
+offset_top = 90
+offset_right = 518
+offset_bottom = 114
 mouse_filter = 2
 theme_type_variation = &"MeterBar"
 theme_override_styles/background = SubResource("track")
@@ -218,20 +205,23 @@ show_percentage = false
 
 [node name="MeterText" type="Label" parent="Strip"]
 layout_mode = 0
-offset_left = 292
-offset_top = 188
-offset_right = 742
-offset_bottom = 226
+offset_left = 530
+offset_top = 87
+offset_right = 800
+offset_bottom = 127
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 6
 
 [node name="BurstSeal" type="Panel" parent="Strip"]
 layout_mode = 0
-offset_left = 770
-offset_top = 148
-offset_right = 850
-offset_bottom = 228
+offset_left = 814
+offset_top = 54
+offset_right = 884
+offset_bottom = 124
 mouse_filter = 2
 theme_type_variation = &"BurstSeal"
 theme_override_styles/panel = SubResource("empty")
@@ -241,8 +231,8 @@ material = SubResource("seal_material")
 layout_mode = 0
 offset_left = 0
 offset_top = 0
-offset_right = 80
-offset_bottom = 80
+offset_right = 70
+offset_bottom = 70
 mouse_filter = 2
 texture = ExtResource("burst")
 expand_mode = 1
@@ -251,25 +241,31 @@ stretch_mode = 5
 [node name="BurstLetter" type="Label" parent="Strip/BurstSeal"]
 layout_mode = 0
 offset_left = 0
-offset_top = 6
-offset_right = 80
-offset_bottom = 70
+offset_top = 0
+offset_right = 70
+offset_bottom = 64
 mouse_filter = 2
 theme_type_variation = &"PaperLabel"
 theme_override_font_sizes/font_size = 44
 text = "B"
 horizontal_alignment = 1
 vertical_alignment = 1
+theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 6
 
 [node name="Temperament" type="Label" parent="Strip"]
 layout_mode = 0
-offset_left = 1100
-offset_top = 149
-offset_right = 1710
-offset_bottom = 188
+offset_left = 1160
+offset_top = 88
+offset_right = 1770
+offset_bottom = 126
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 26
 horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 6
 
 [node name="LoseScreen" parent="." instance=ExtResource("3_lose_screen")]

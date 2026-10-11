@@ -72,7 +72,7 @@ public static class FightHudTests
  }
 
  [Test]
- public static void JumpEnvelope_ClearsPlates_AtBothCornersAndMidStage(Node runner)
+ public static void JumpEnvelope_ClearsFloatingHud_AtBothCornersAndMidStage(Node runner)
  {
   var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
   scene.ExternalDrive = true;
@@ -96,7 +96,7 @@ public static class FightHudTests
        // Skeleton plus 15cm for the visible hair/ears; inspect mesh silhouettes in captures too.
        Vector3 top = skeleton.GlobalTransform * skeleton.GetBoneGlobalPose(bone).Origin + Vector3.Up * 0.15f;
        float y = scene.Camera.UnprojectPosition(top).Y * 1080 / scene.GetViewport().GetVisibleRect().Size.Y;
-       Assert.True(y > 238, $"fighter {i}, corner {x}, jump {t}, bone {bone} clears HUD ({y})");
+       Assert.True(y > 142, $"fighter {i}, corner {x}, jump {t}, bone {bone} clears HUD ({y})");
       }
      }
     }
@@ -106,20 +106,54 @@ public static class FightHudTests
  }
 
  [Test]
- public static void Plates_StayInTopStrip_AndTextScalesTo720(Node runner)
+ public static void FloatingHud_StaysInTopStrip_AndTextScalesTo720(Node runner)
  {
   var hud = Load(runner);
   try
   {
    hud.Refresh(new Match());
+   Assert.True(hud.GetNode("Strip").GetNodeOrNull("P1Frame") == null
+    && hud.GetNode("Strip").GetNodeOrNull("P2Frame") == null, "no paper backing");
    foreach (Node child in hud.GetNode("Strip").GetChildren())
    {
     if (child is not Control c) continue;
-    Assert.True(c.Position.Y >= 0 && c.Position.Y + c.Size.Y <= 238, $"{c.Name} stays in reserved strip");
+    Assert.True(c.Position.Y >= 0 && c.Position.Y + c.Size.Y <= 138, $"{c.Name} stays in reserved strip");
     Assert.True(c.Position.X >= 0 && c.Position.X + c.Size.X <= 1920, $"{c.Name} fits design canvas");
-    if (c is Label label) Assert.True(label.GetThemeFontSize("font_size") * 720f / 1080 >= 17, "readable at 720p");
+    if (c is Label label)
+    {
+     Assert.True(label.GetThemeFontSize("font_size") * 720f / 1080 >= 17, "readable at 720p");
+     Assert.True(label.GetThemeConstant("outline_size") >= 6, "ink outline over the stage");
+    }
    }
   }
   finally { hud.Free(); }
  }
+ [Test]
+ public static void ResultCards_ClearEveryHudControl(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   foreach (string path in new[] { "lose_screen", "demo_complete" })
+   {
+    var card = GD.Load<PackedScene>($"res://scenes/ui/{path}.tscn").Instantiate<Control>();
+    runner.AddChild(card);
+    try
+    {
+     card.Size = new Vector2(1920, 1080);
+     var panel = Find<Control>(card, "Panel");
+     var mask = Find<Control>(card, "Mask");
+     foreach (Node child in hud.GetNode("Strip").GetChildren())
+      if (child is Control c)
+      {
+       Assert.True(!c.GetGlobalRect().Grow(4).Intersects(panel.GetGlobalRect()), $"{path} paper clears {c.Name}");
+       Assert.True(!c.GetGlobalRect().Grow(4).Intersects(mask.GetGlobalRect()), $"{path} mask clears {c.Name}");
+      }
+    }
+    finally { card.Free(); }
+   }
+  }
+  finally { hud.Free(); }
+ }
+
 }

@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/menu_row.tscn" id="row"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/title-shrine.png" id="shrine"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/title-wordmark.png" id="wordmark"]
-[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/title-reason-scroll.png" id="scroll"]
 
 [node name="TitleMenu" type="Control"]
 layout_mode = 1
@@ -63,27 +63,29 @@ layout_mode = 2
 custom_minimum_size = Vector2(500, 78)
 text = "Quit"
 
-[node name="Rule" type="TextureRect" parent="."]
+[node name="ReasonScroll" type="NinePatchRect" parent="."]
 layout_mode = 0
-offset_left = 118.0
-offset_top = 914.0
-offset_right = 408.0
-offset_bottom = 924.0
-texture = ExtResource("line")
-expand_mode = 1
-stretch_mode = 5
+offset_left = 64.0
+offset_top = 854.0
+offset_right = 1444.0
+offset_bottom = 1058.0
+texture = ExtResource("scroll")
+patch_margin_left = 72
+patch_margin_right = 72
 mouse_filter = 2
 
-[node name="Availability" type="Label" parent="."]
+[node name="Availability" type="Label" parent="ReasonScroll"]
 layout_mode = 0
-offset_left = 118.0
-offset_top = 940.0
-offset_right = 680.0
-offset_bottom = 1052.0
+offset_left = 90.0
+offset_top = 34.0
+offset_right = 1290.0
+offset_bottom = 170.0
 text = ""
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_font_sizes/font_size = 28
 autowrap_mode = 3
+vertical_alignment = 1
 
 [node name="Details" type="Control" parent="."]
 visible = false

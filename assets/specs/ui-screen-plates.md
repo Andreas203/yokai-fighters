@@ -26,7 +26,7 @@ Margins are source pixels, left/top/right/bottom. None means ordinary aspect-pre
 | `reward-spirit-wave.png` | Cropped `reward.png`, rectangle (681,474,329,181) | 329×181 | None | Reward proof card illustration |
 | `reward-will-o-wisp.png` | Cropped `reward.png`, rectangle (1067,474,333,184) | 333×184 | None | Reward proof card illustration |
 
-The key chip keeps its StyleBox frame: generating a plate would not improve its simple outline. The HUD uses the shared rice sheet, portrait and blank seal instead of a redundant dedicated paper texture. Kitsune's portrait reuses the full-face mask ornament. Selection uses a nine-slice border with `draw_center=false`, so the generated inner tint cannot obscure card contents.
+The key chip keeps its StyleBox frame: generating a plate would not improve its simple outline. The gallery HUD study uses the shared rice sheet; the live HUD now uses only portraits and the blank seal, with no paper backing. Kitsune's portrait reuses the full-face mask ornament. Selection uses a nine-slice border with `draw_center=false`, so the generated inner tint cannot obscure card contents.
 
 ## Exact executed prompts
 
@@ -85,3 +85,14 @@ Generated source canvases: N/T 1672×941; P 1536×1024; C/S 1024×1536; R/U 2172
 ## Review limits
 
 All 11 concepts and both existing 1080p gallery pages were opened before changes; generated outputs were visually reviewed. Acceptance of final rendered integration requires working windowed Godot captures. The system serif is still a stand-in for the brush headings; OS fallback changes metrics across machines. The designer must choose licensed distributable body and brush fonts in later work. No purchase or font download was made.
+
+
+## Designer-feedback revision — horizontal title reason scroll
+
+Designer explicitly approved generation for this run. Built-in imagegen, one job; no fonts added. New `title-reason-scroll.png`: transparent text-free rolled-end handscroll, saved 960×256. Source 2172×724, alpha-used crop (15,9,2143,705), Godot Image Lanczos resize. Horizontal three-slice margins 72/0/72/0; title NinePatchRect at (64,854), 1380×204. Live 28px ink copy occupies the central paper. All unavailable entry reasons are listed while any exist, so keyboard/pad users need not focus disabled rows; scroll hides when all entries are available. Hover tooltips and existing focus/input semantics remain.
+
+Exact prompt:
+
+Create a standalone game UI plate: one blank horizontal Japanese handscroll unrolled left to right, rolled vertical paper ends at both left and right. Wide landscape 6:1 scroll, tightly framed with small transparent padding. Flat matte ukiyo-e ink-brush cel illustration. Warm pale rice paper #F1E8D4, fine ink #1D1B21 outlines, tiny indigo #2D3A5E end details. Uniform opaque blank centre for live text. Horizontal three-slice safe: rolled ends entirely in outer 12% on each side, straight parallel top/bottom across centre, no perspective, no sag, no centre decoration. Genuine transparent alpha outside the scroll. No lettering, numbers, kanji, symbols, seals, watermark, people, weapons, masks, Tanuki or scenery. Deliver only the text-free scroll plate.
+
+Generated plate visually inspected: blank opaque paper, rolled ends, alpha exterior, no lettering or characters. The scroll replaces the concept’s underline/footer copy with router-owned availability reasons. Integration pixel review remains with the orchestrator. HUD feedback adds no art and removes both rice-paper panels entirely.

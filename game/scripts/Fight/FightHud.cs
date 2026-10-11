@@ -9,7 +9,7 @@ namespace YokaiFighters.Fight;
 /// Fight HUD (<c>scenes/ui/hud.tscn</c>): health bars, Ryo's 3-bar meter and burst seal, the K.O. banner and the
 /// lose screen. The layout, fonts and colours are nodes and theme styles in the scene; this script only pushes
 /// values into them. Reads the Match and an <see cref="IHudView"/> only; never writes sim state. Everything sits in
-/// the top strip so the fighters' gameplay plane stays clear. Layout is in 1920x1080 units (scales with the viewport).
+/// the panel-free top corners so the fighters' gameplay plane stays clear. Layout is in 1920x1080 units (scales with the viewport).
 /// </summary>
 public partial class FightHud : CanvasLayer
 {

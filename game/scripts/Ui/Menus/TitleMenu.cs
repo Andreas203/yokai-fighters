@@ -12,7 +12,7 @@ public sealed record SavedRunSummary(int Row, int Rows, int Health, int MaxHealt
 
 /// <summary>
 /// Concept-layout title with live kit rows and router-owned availability. Public detail labels are retained
-/// hidden for compatibility; disabled reasons are visible below the menu and in row tooltips.
+/// hidden for compatibility; disabled reasons are always listed on a horizontal scroll while any entry is unavailable, and in row tooltips.
 /// </summary>
 public partial class TitleMenu : Control
 {
@@ -31,6 +31,7 @@ public partial class TitleMenu : Control
 
 	private Label _extra = null!;
 	private Label _availability = null!;
+	private Control _reasonScroll = null!;
 	private Button[] _all = null!;
 	private SavedRunSummary? _saved;
 	private SettingsPanel? _settings;
@@ -53,6 +54,7 @@ public partial class TitleMenu : Control
 		DetailBodyLabel = UiFind.Get<Label>(this, "DetailBody");
 		_extra = UiFind.Get<Label>(this, "DetailExtra");
 		_availability = UiFind.Get<Label>(this, "Availability");
+		_reasonScroll = UiFind.Get<Control>(this, "ReasonScroll");
 		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Confirm"));
 		_all = new[] { StartButton, ContinueButton, PracticeButton, SettingsButton, QuitButton };
 		StartButton.Pressed += () => StartRequested?.Invoke();
@@ -123,6 +125,7 @@ public partial class TitleMenu : Control
 		if (locked) _focusLock.Engage(_all);
 		_availability.Text = string.Join("\n", Enum.GetValues<TitleEntry>()
 			.Where(e => DisabledReason(e) != "").Select(e => $"{e}: {DisabledReason(e)}"));
+		_reasonScroll.Visible = _availability.Text.Length > 0;
 		Describe();
 	}
 

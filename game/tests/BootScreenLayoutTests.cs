@@ -42,6 +42,35 @@ public static class BootScreenLayoutTests
 	}
 
 	[Test]
+	public static void TitleReasons_ScrollShowsLiveReasonsWithoutFocus_AndHidesWhenAvailable(Node host)
+	{
+		var title = GD.Load<PackedScene>("res://scenes/ui/title_menu.tscn").Instantiate<TitleMenu>();
+		host.AddChild(title);
+		try
+		{
+			title.SetEntry(new(TitleEntry.Continue, false, ScreenRouter.NoSaveReason));
+			title.SetEntry(new(TitleEntry.Practice, false, ScreenRouter.NoPracticeReason));
+			var scroll = UiFind.Get<NinePatchRect>(title, "ReasonScroll");
+			var reasons = UiFind.Get<Label>(title, "Availability");
+			Assert.True(scroll.Visible && title.StartButton.HasFocus(), "reasons readable without disabled focus");
+			Assert.True(reasons.Text.Contains(ScreenRouter.NoSaveReason) && reasons.Text.Contains(ScreenRouter.NoPracticeReason), "router reasons stay live");
+			Assert.True(scroll.PatchMarginLeft == 72 && scroll.PatchMarginRight == 72
+				&& scroll.PatchMarginTop == 0 && scroll.PatchMarginBottom == 0, "horizontal three-slice preserves rolled ends");
+			Audit(title);
+			Assert.True(scroll.GetGlobalRect().Encloses(reasons.GetGlobalRect()), "copy sits on scroll");
+			Assert.True(!scroll.GetGlobalRect().Intersects(UiFind.Get<Control>(title, "Footer").GetGlobalRect()), "scroll clears confirm footer");
+			title.SetEntry(new(TitleEntry.Continue, false, "A longer caller-owned reason explains why this saved run cannot be continued until the required content is available."));
+			Audit(title);
+			Assert.True(reasons.GetLineCount() >= 3 && reasons.GetMinimumSize().Y <= 136, "long reason wraps inside paper");
+			title.SetSavedRun(new SavedRunSummary(1, 8, 1000, 1000, ""));
+			title.SetEntry(new(TitleEntry.Continue, true, ""));
+			title.SetEntry(new(TitleEntry.Practice, true, ""));
+			Assert.True(!scroll.Visible && reasons.Text == "", "no empty decorative scroll");
+		}
+		finally { title.Free(); }
+	}
+
+	[Test]
 	public static void BootScreens_RealCopyFitsDesignCanvas(Node host)
 	{
 		MenuSettings.Reset();
