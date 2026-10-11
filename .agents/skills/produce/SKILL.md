@@ -8,7 +8,7 @@ description: Run one Yokai Fighters production pass. The producer agent triages 
 You (the main session) are the orchestrator. Subagents cannot call each other, so you carry work between them. Tickets live in Linear (team `YOK`). Arguments, if given, are ticket ids (`YOK-<n>`) or a focus area; otherwise work the producer's dispatch plan.
 
 ## 1. Plan
-Run the `producer` agent with any new context (designer notes, harness reports, playtest notes, the arguments). It creates and updates tickets in Linear and returns an ordered dispatch plan with a branch name per ticket.
+Run the `producer` agent with any new context (designer notes, harness reports, playtest notes, the arguments). It measures the gap between the design and the code (`python tools/goal_agent/run.py gaps --json`), creates and updates tickets in Linear in that order and returns an ordered dispatch plan with a branch name per ticket.
 
 ## 2. Dispatch each ticket by workflow
 Move the Linear ticket to in progress before starting and update its status as it moves. Run independent tickets in parallel; respect blocking relations.
@@ -27,7 +27,12 @@ Every branch and PR title is `YOK-<number>-<brief-name>` for its ticket (e.g. `Y
 
 **sound**: run `sound-scout`, then move the ticket to review — purchases are the designer's call. After purchase, a follow-up ticket goes to `clip-matcher` for sound cues.
 
-**code**: run `gameplay-programmer` or `ui-designer`. They work on their own branch with a closed build-and-test loop. Open a PR titled with the branch name, move the ticket to review and add it to the daily review queue. **Never merge code to main** — designer approval only.
+**code**:
+1. Run `gameplay-programmer` or `ui-designer`. They work on their own branch with a closed build-and-test loop.
+2. Run `code-critic` on the branch, then `test-breaker`. On a FAIL from either, send the findings (and the failing probes) back to the same author and re-run both gates. Stop after 3 failed rounds and mark the Linear ticket blocked, commenting the last findings for the designer. Anything the author disputes by rule ID goes to the designer, not back to the critic.
+3. Open a PR titled with the branch name, with the critics' advisory findings and any disputes in its description, move the ticket to review and add it to the daily review queue. **Never merge code to main** — designer approval only.
+
+A ticket the producer marks as one the goal agent can write may skip step 1: on the ticket's branch, `python tools/goal_agent/run.py build --run <branch-name> --only <feature-id>` writes it and runs the same two gates itself (see `tools/goal_agent/`). Its trace goes in the PR description; step 3 is unchanged.
 
 **balance**: run `sparring-partner` on the latest `harness/results/`, then run `producer` again to ticket its recommendations.
 

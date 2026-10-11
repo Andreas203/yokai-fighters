@@ -1,0 +1,29 @@
+{
+  "about": "Faults put by hand into code the goal agent accepted, to test the critics rather than the writer. Each replaces one line of the accepted feature; `run.py critic-test` applies it, runs the gates, and takes it out again. The critics are shown the whole files, not the edit.",
+  "faults": [
+    {
+      "feature": "copy-target",
+      "file": "game/scripts/Sim/Run/CopyRule.cs",
+      "rule": "T3",
+      "what": "Ties go to the least recently levelled special instead of the most recent",
+      "search": "(s.Level == best.Level && order > bestOrder);",
+      "replace": "(s.Level == best.Level && order < bestOrder);"
+    },
+    {
+      "feature": "copy-target",
+      "file": "game/scripts/Sim/Run/CopyRule.cs",
+      "rule": "T4",
+      "what": "The copy of a Lv 3 special keeps Ryo's evolution",
+      "search": "public const int HighestUnevolvedLevel = 2;",
+      "replace": "public const int HighestUnevolvedLevel = 3;"
+    },
+    {
+      "feature": "copy-target",
+      "file": "game/scripts/Sim/Run/CopyRule.cs",
+      "rule": "T3",
+      "what": "A full tie goes to the higher slot instead of the lower",
+      "search": "|| s.Level > best.Level ",
+      "replace": "|| (s.Level == best.Level && order == bestOrder) || s.Level > best.Level "
+    }
+  ]
+}

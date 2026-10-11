@@ -20,8 +20,9 @@ from pathlib import Path
 
 
 class LLM:
-    def __init__(self, cache_path: Path, replay: bool = False):
+    def __init__(self, cache_path: Path, replay: bool = False, timeout: int = 300):
         self.cache_path = cache_path
+        self.timeout = timeout  # seconds per model call
         self.replay = replay
         self.calls: dict[str, dict] = {}
         if cache_path.exists():
@@ -62,7 +63,7 @@ class LLM:
         for _ in range(2):
             proc = subprocess.run(
                 cmd, input=user, capture_output=True, text=True, encoding="utf-8",
-                cwd=self._workdir, timeout=300,
+                cwd=self._workdir, timeout=self.timeout,
             )
             try:
                 envelope = json.loads(proc.stdout)
