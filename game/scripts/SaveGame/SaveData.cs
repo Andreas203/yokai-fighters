@@ -10,7 +10,11 @@ namespace YokaiFighters.SaveGame;
 public sealed record LockedCopySave(string Slot, string Special, int Level);
 
 /// <summary>One slot of the saved run: the special by id, its level (A3), its modifier by id (A2) and its T3 level-up rank.</summary>
-public sealed record SlotSave(string Slot, string Special, int Level, string? Modifier, int Levelled);
+public sealed record SlotSave(string Slot, string Special, int Level, string? Modifier, int Levelled)
+{
+	/// <summary>R6: bought at the merchant, borrowed ink (version 3; false when the file has none).</summary>
+	public bool Borrowed { get; init; }
+}
 
 /// <summary>
 /// YOK-87: a run in progress as plain data (ids and numbers only), written at a node boundary: the run's seed,
@@ -64,7 +68,7 @@ public sealed record RunSave(
 		var snap = session.Map.Snapshot();
 		var slots = new List<SlotSave>();
 		foreach (var (slot, s) in session.Run.Owned)
-			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)));
+			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)) { Borrowed = s.Borrowed });
 		return new RunSave(session.Seed, snap.MapId, snap.Visited.ToArray(), snap.Current, session.Run.Health, slots)
 		{
 			MapFile = mapFile,
@@ -114,7 +118,7 @@ public sealed record RunSave(
 			SpecialData data = pool.Special(s.Special) ?? throw new FormatException($"special '{s.Special}' is not in this build's abilities");
 			ModifierData? modifier = null;
 			if (s.Modifier is { } id) modifier = pool.Modifier(id) ?? throw new FormatException($"modifier '{id}' is not in this build's abilities");
-			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier)));
+			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier, s.Borrowed)));
 			order[(int)slot] = s.Levelled;
 		}
 

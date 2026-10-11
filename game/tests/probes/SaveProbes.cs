@@ -995,7 +995,7 @@ public static class SaveProbes
 		Assert.True(!SaveStore.LostSomething(load), "nothing lost on reading it");
 		Assert.True(store.Save(load.Data), "saved");
 		string now = File.ReadAllText(path);
-		Assert.True(now.Contains("\"version\": 2") && now.Contains("\"coins\": 0"), "rewritten as the current version: " + now);
+		Assert.True(now.Contains("\"version\": " + SaveStore.CurrentVersion) && now.Contains("\"coins\": 0"), "rewritten as the current version: " + now);
 		Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup, no temp");
 		SaveLoad again = new SaveStore(path).Load();
 		Assert.True(again.Status == SaveLoadStatus.Loaded && again.Data.Unlocks.SequenceEqual(new[] { "u1", "u0" }) && again.Data.Story.Seen.SequenceEqual(new[] { "intro", "win-1" }), "unlocks (order) and story intact (M1, M4)");

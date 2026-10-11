@@ -37,11 +37,11 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 2,
+/// { "version": 3,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
 ///                   "copy_locked": false, "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
-///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1 } ] },
+///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
 ///   "story": { "seen": ["intro"] } }
 /// </code>
@@ -63,7 +63,8 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 public sealed class SaveStore
 {
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
-	public const int CurrentVersion = 2;
+	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
+	public const int CurrentVersion = 3;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -195,7 +196,9 @@ public sealed class SaveStore
 			if (e.ValueKind != JsonValueKind.Object || Text(e, "slot") is not { } slot || Text(e, "special") is not { } special) return null;
 			if (!e.TryGetProperty("level", out JsonElement l) || !Whole(l, out int level)) return null;
 			int levelled = e.TryGetProperty("levelled", out JsonElement o) && Whole(o, out int rank) ? rank : 0;
-			slots.Add(new SlotSave(slot, special, level, Text(e, "modifier"), levelled));
+			// Version 3 (YOK-95, R6): borrowed ink; missing (version 2 and older) = not borrowed.
+			if (OptionalBool(e, "borrowed", out bool? borrowed) is { } borrowedProblem) { problem = $"slots[{slots.Count}]: {borrowedProblem}"; return null; }
+			slots.Add(new SlotSave(slot, special, level, Text(e, "modifier"), levelled) { Borrowed = borrowed ?? false });
 		}
 		problem = null;
 		return slots;
@@ -336,6 +339,7 @@ public sealed class SaveStore
 					w.WriteNumber("level", s.Level);
 					if (s.Modifier is null) w.WriteNull("modifier"); else w.WriteString("modifier", s.Modifier);
 					w.WriteNumber("levelled", s.Levelled);
+					w.WriteBoolean("borrowed", s.Borrowed);
 					w.WriteEndObject();
 				}
 				w.WriteEndArray();

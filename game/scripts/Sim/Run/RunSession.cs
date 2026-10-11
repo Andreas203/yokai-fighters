@@ -220,6 +220,22 @@ public sealed class RunSession
 		return step;
 	}
 
+	/// <summary>
+	/// R6: the yokai bound this run, in walk order, once each: the fighter of every completed node that binds (R3).
+	/// That is the yokai whose own abilities its draft offered (A8), so the merchant's shop never sells them.
+	/// Worked out from the walk, so it needs no saved state of its own.
+	/// </summary>
+	public IReadOnlyList<string> BoundYokai()
+	{
+		var bound = new List<string>();
+		foreach (string id in Map.Visited)
+		{
+			var ctx = Scenes.Resolve(Map.Graph.Node(id)).Context;
+			if (ctx.Binds && !bound.Contains(ctx.Fighter)) bound.Add(ctx.Fighter);
+		}
+		return bound;
+	}
+
 	Merchant? MerchantAt(NodeContext? node) =>
 		node is { Type: NodeTypeRegistry.Merchant } ? new Merchant(this, node.NodeId) : null;
 
