@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using YokaiFighters.Fight;
+using YokaiFighters.SaveGame;
 using YokaiFighters.Settings;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
@@ -62,10 +63,35 @@ public partial class GameFlow : Node
 
 	public static string UserSettingsPath => ProjectSettings.GlobalizePath("user://" + SettingsStore.FileName);
 
+	/// <summary>
+	/// YOK-87: save file for this boot, next to the settings file and under the same rule: null (the default) = the
+	/// player's <see cref="UserSavePath"/> when this node is the running game's main scene, no file at all when it is
+	/// instanced by something else (tests, captures). Tests set a temp path.
+	/// </summary>
+	public string? SaveFile { get; set; }
+	/// <summary>The save file in use; null = nothing is read or written (and Continue stays off).</summary>
+	public SaveStore? Saves { get; private set; }
+	/// <summary>What the save file held at boot; null when none was used.</summary>
+	public SaveLoad? SaveLoaded { get; private set; }
+	/// <summary>The save as last written (or loaded): the run in progress, unlocks, story progress (M4).</summary>
+	public SaveData Saved { get; private set; } = SaveData.Empty;
+
+	public static string UserSavePath => ProjectSettings.GlobalizePath("user://" + SaveStore.FileName);
+
 	/// <summary>Before the menus are ready, so the title and control select first draw with the saved values.</summary>
 	public override void _EnterTree()
 	{
-		string? path = SettingsFile ?? (GetTree().CurrentScene == this ? UserSettingsPath : null);
+		bool mainScene = GetTree().CurrentScene == this;
+		if ((SaveFile ?? (mainScene ? UserSavePath : null)) is { } savePath)
+		{
+			Saves = new SaveStore(savePath);
+			SaveLoaded = Saves.Load();
+			Saved = SaveLoaded.Data;
+			GD.Print($"GameFlow: save {savePath}: {SaveLoaded.Status}");
+			if (SaveLoaded.Status is not (SaveLoadStatus.Loaded or SaveLoadStatus.Missing))
+				GD.PushWarning($"GameFlow: save {savePath}: {SaveLoaded.Status} ({string.Join("; ", SaveLoaded.Problems)})");
+		}
+		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
 		if (path == null) return;
 		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
 		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
@@ -94,6 +120,8 @@ public partial class GameFlow : Node
 		foreach (var entry in Router.Entries) Title.SetEntry(entry);
 		Router.EntryChanged += Title.SetEntry;
 		Router.Changed += OnScreenChanged;
+		Router.Activated += entry => { if (entry == TitleEntry.Continue) ContinueRun(); };
+		RefreshContinue();
 		Router.Quit += () => { if (QuitAction != null) QuitAction(); else GetTree().Quit(); };
 
 		// One scheme value for the whole menu side: the settings sheet and control select both write MenuSettings.
@@ -127,7 +155,7 @@ public partial class GameFlow : Node
 		return null;
 	}
 
-	/// <summary>Leave the fight or the map for the title (the pause menu's "Quit to title"); the run is dropped. False on the menus.</summary>
+	/// <summary>Leave the fight or the map for the title (the pause menu's "Quit to title"); the run waits in the save file for Continue. False on the menus.</summary>
 	public bool ReturnToTitle() => Router.ReturnToTitle();
 
 	/// <summary>
@@ -167,15 +195,109 @@ public partial class GameFlow : Node
 			Session = null;
 			return false;
 		}
-		var session = Session;
-		GD.Print($"GameFlow: new run on map '{session.Map.Graph.Id}', seed {session.Seed}");
-		session.NodeEntered += n => GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
+		GD.Print($"GameFlow: new run on map '{Session.Map.Graph.Id}', seed {Session.Seed}");
+		Adopt(Session);
+		SaveRun(Session); // a new run replaces any saved one
+		return true;
+	}
+
+	/// <summary>
+	/// Follows a session (new or continued). YOK-87 save points, all at node boundaries: the run is written when a
+	/// node is entered and when one is completed, and removed from the file when the run ends (won or lost).
+	/// </summary>
+	private void Adopt(RunSession session)
+	{
+		session.NodeEntered += n =>
+		{
+			GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
+			SaveRun(session);
+		};
 		session.NodeCompleted += n =>
 		{
 			GD.Print($"GameFlow: completed '{n.NodeId}', health {session.Run.Health}");
+			if (!session.IsOver) SaveRun(session);
 			if (session == Session && !session.IsOver) Router.ReturnToMap(); // the last node stays on its end card
 		};
-		session.RunEnded += end => GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
+		session.RunEnded += end =>
+		{
+			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
+			if (session == Session && Saves is not null) Write(Saved.WithRun(null));
+		};
+	}
+
+	private void SaveRun(RunSession session)
+	{
+		if (Saves is null || session != Session) return;
+		Write(Saved.WithRun(RunSave.Capture(session, MapFile)));
+	}
+
+	/// <summary>Replaces the save (and writes it when a file is attached). False when the disk refused; the value is kept either way.</summary>
+	public bool Write(SaveData data)
+	{
+		Saved = data;
+		if (Saves is null) return true;
+		if (Saves.Save(data)) return true;
+		GD.PushWarning($"GameFlow: save {Saves.Path} not written: {Saves.LastSaveError}");
+		return false;
+	}
+
+	/// <summary>The saved run on this build's data, or null with the reason (no run, or one this build cannot hold).</summary>
+	public RunSession? RestoreSavedRun(out string reason)
+	{
+		reason = ScreenRouter.NoSaveReason;
+		if (Saves is null || Saved.Run is not { } run) return null;
+		try
+		{
+			string dir = ContentPaths.Data("map");
+			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
+			var notes = new System.Collections.Generic.List<string>();
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
+			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
+			reason = "";
+			return session;
+		}
+		catch (Exception e) when (e is FormatException or System.IO.IOException or ArgumentException or InvalidOperationException or System.Collections.Generic.KeyNotFoundException)
+		{
+			reason = "The saved run cannot be continued: " + e.Message;
+			return null;
+		}
+	}
+
+	/// <summary>Lights or greys the title's Continue from the save file. Nothing changes without a save file.</summary>
+	private void RefreshContinue()
+	{
+		if (Saves is null) return;
+		if (RestoreSavedRun(out string reason) is { } session)
+		{
+			var map = session.Map;
+			int row = map.InNode ? map.CurrentNode!.Row : Math.Min(session.Steps, map.Visited.Count + 1);
+			var names = new System.Collections.Generic.List<string>();
+			foreach (var (_, s) in session.Run.Owned) names.Add($"{(s.Data.Name.Length > 0 ? s.Data.Name : s.Data.Id)} Lv {s.Level}");
+			Title.SetSavedRun(new SavedRunSummary(row, session.Steps, session.Run.Health, RunState.MaxHealth, string.Join("  ·  ", names)));
+			Router.Enable(TitleEntry.Continue);
+		}
+		else
+		{
+			if (Saved.Run is not null) GD.PushWarning($"GameFlow: {reason}");
+			Title.SetSavedRun(null);
+			Router.Disable(TitleEntry.Continue, reason);
+		}
+	}
+
+	/// <summary>
+	/// YOK-87: Continue on the title: the saved run comes back on its map; a run saved inside a node goes straight
+	/// back into that node, from its start. False (nothing changes) off the title or without a usable saved run.
+	/// </summary>
+	public bool ContinueRun()
+	{
+		if (Router.Current != Screen.Title || RestoreSavedRun(out _) is not { } session)
+			return false;
+		Session = session;
+		_freshRun = false;
+		GD.Print($"GameFlow: continued run on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
+		Adopt(session);
+		Router.ContinueRun();
+		if (session.Map.InNode) Router.EnterNode();
 		return true;
 	}
 
@@ -194,9 +316,10 @@ public partial class GameFlow : Node
 				Map.Visible = true;
 				break;
 			case Screen.Title:
-				Session = null; // no save yet (YOK-73): leaving for the title drops the run
+				Session = null; // the run stays in the save file as of its last node boundary (YOK-87)
 				ControlSelect.Close();
 				Title.Open();
+				RefreshContinue();
 				break;
 			case Screen.Settings:
 				Title.OpenSettings();

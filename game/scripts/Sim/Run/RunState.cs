@@ -114,6 +114,28 @@ public sealed class RunState
 	}
 
 	/// <summary>
+	/// YOK-87: a saved run's health and slots put back as they were (no map, no level-up order: follow with
+	/// <see cref="SetMap"/> and <see cref="RestoreLevelledOrder"/>). Throws, building nothing, when the values are
+	/// not a state a run can reach: health outside 0-1,000, a special outside its own slot (A3), two in one slot,
+	/// a level outside 1..its top level (A3/A4), or a modifier the special does not meet (A2).
+	/// </summary>
+	public static RunState Restore(int health, IEnumerable<(SpecialSlot Slot, OwnedSpecial Special)> slots)
+	{
+		if (health < 0 || health > MaxHealth) throw new ArgumentException($"health {health} is outside 0-{MaxHealth}");
+		var run = new RunState { Health = health };
+		foreach (var (slot, s) in slots)
+		{
+			if (slot is < SpecialSlot.A or > SpecialSlot.D) throw new ArgumentException($"{s.Data.Id}: '{slot}' is not a slot");
+			if (s.Data.Slot != slot) throw new ArgumentException($"{s.Data.Id} belongs in slot {s.Data.Slot}, not {slot}");
+			if (run._slots[(int)slot] is not null) throw new ArgumentException($"slot {slot} is listed twice");
+			if (s.Level < 1 || s.Level > Math.Min(3, s.Data.MaxLevel)) throw new ArgumentException($"{s.Data.Id} has no level {s.Level}");
+			if (s.Modifier is { } m && !m.AppliesTo(s.Data)) throw new ArgumentException($"{m.Id} can't attach to {s.Data.Id}");
+			run._slots[(int)slot] = s;
+		}
+		return run;
+	}
+
+	/// <summary>
 	/// A3: a newly drafted special goes in its own slot at Lv 1; drafting one already owned levels it up.
 	/// A different special in that slot is replaced and its levels and modifier are lost (A6). Returns the slot.
 	/// </summary>
