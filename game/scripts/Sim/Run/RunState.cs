@@ -7,8 +7,8 @@ namespace YokaiFighters.Sim;
 public sealed record OwnedSpecial(SpecialData Data, int Level, ModifierData? Modifier);
 
 /// <summary>
-/// YOK-47: Ryo's run state between duels (pure C#, deterministic): health (C1 carries across the run) and
-/// slots A-D. The next fight reads it through <see cref="MatchConfig"/> and <see cref="ApplyTo"/>.
+/// YOK-47: Ryo's run state between duels (pure C#, deterministic): health (C1 carries across the run),
+/// slots A-D and, since YOK-76, the run map (<see cref="Map"/>). The next fight reads it through <see cref="MatchConfig"/> and <see cref="ApplyTo"/>.
 /// </summary>
 public sealed class RunState
 {
@@ -18,6 +18,15 @@ public sealed class RunState
 	readonly OwnedSpecial?[] _slots = new OwnedSpecial?[5];
 
 	public int Health { get; private set; } = MaxHealth;
+
+	/// <summary>YOK-76: where Ryo is on the run map (null = a run without a map, e.g. the two-duel demo).</summary>
+	public RunMap? Map { get; private set; }
+
+	/// <summary>Starts this run's map from the first row. Health and slots are untouched.</summary>
+	public RunMap StartMap(MapGraph graph) => Map = new RunMap(graph);
+
+	/// <summary>Puts back a walk in progress (<see cref="RunMap.Restore"/>), or removes the map with null.</summary>
+	public void SetMap(RunMap? map) => Map = map;
 
 	public OwnedSpecial? this[SpecialSlot slot] => _slots[(int)slot];
 
@@ -38,9 +47,10 @@ public sealed class RunState
 	}
 
 	/// <summary>A1: a new run = the starters at Lv 1 in their own slots, full health.</summary>
-	public static RunState NewRun(AbilityPool pool)
+	public static RunState NewRun(AbilityPool pool, MapGraph? map = null)
 	{
 		var run = new RunState();
+		if (map is not null) run.StartMap(map);
 		foreach (var s in pool.Starters)
 			if (run._slots[(int)s.Slot] is null) run._slots[(int)s.Slot] = new OwnedSpecial(s, 1, null);
 		return run;
@@ -107,6 +117,12 @@ public sealed class RunState
 			h = Fnv.MixString(h, _slots[i]?.Data.Id ?? "");
 			h = Fnv.Mix(h, _slots[i]?.Level ?? 0);
 			h = Fnv.MixString(h, _slots[i]?.Modifier?.Id ?? "");
+		}
+		if (Map is not null) // a run without a map keeps the hash it had before YOK-76 (recorded replays)
+		{
+			ulong m = Map.StateHash();
+			h = Fnv.Mix(h, unchecked((int)m));
+			h = Fnv.Mix(h, unchecked((int)(m >> 32)));
 		}
 		return h;
 	}

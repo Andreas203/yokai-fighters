@@ -198,6 +198,57 @@ class ValidateDataTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("files in data/moves/ must be kind", out)
 
+    def _map(self, edit):
+        """The default map with one edit, validated from a temp data/map/ folder."""
+        import json, tempfile
+        doc = json.loads((ROOT / "data" / "map" / "default-map.json").read_text(encoding="utf-8"))
+        edit(doc)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "data" / "map" / "default-map.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            return run(path)
+
+    def test_default_run_map_validates(self):
+        code, out = run(ROOT / "data" / "map")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self._map(lambda d: None)[0], 0)
+
+    def test_run_map_graph_checks(self):
+        def node(d, i):
+            return next(n for n in d["nodes"] if n["id"] == i)
+        cases = [
+            (lambda d: d["routes"].append({"from": "r2-oni", "to": "r9-nowhere"}), "routes: route r2-oni -> r9-nowhere: unknown node 'r9-nowhere'"),
+            (lambda d: d["routes"].append({"from": "r3-oni", "to": "r2-oni"}), "goes backwards (row 3 to row 2)"),
+            (lambda d: d["routes"].append({"from": "r2-oni", "to": "r2-kappa"}), "goes sideways"),
+            (lambda d: d["routes"].append({"from": "r2-oni", "to": "r4-merchant"}), "skips a row (row 2 to row 4)"),
+            (lambda d: d["routes"].append(dict(d["routes"][0])), "is listed twice"),
+            (lambda d: d["nodes"].append(dict(node(d, "r2-oni"))), "node id 'r2-oni' is defined twice"),
+            (lambda d: d.update(routes=[r for r in d["routes"] if r["to"] != "r2-kappa"]), "node 'r2-kappa' is unreachable"),
+            (lambda d: d.update(routes=[r for r in d["routes"] if r["from"] != "r2-kitsune"]), "node 'r2-kitsune' is a dead end"),
+            (lambda d: node(d, "r4-merchant").update(type="duel", yokai="oni"), "R1: node 'r4-merchant': row 4 must be merchant, got 'duel'"),
+            (lambda d: node(d, "r5-elder-oni").update(type="duel", elder=False), "R1: node 'r5-elder-oni': row 5 must be elder, got 'duel'"),
+            (lambda d: node(d, "r1-apprentice").update(yokai="kitsune"), "R1: node 'r1-apprentice': row 1 is the apprentice"),
+            (lambda d: node(d, "boss-tanuki").update(yokai="oni"), "R1: row 9 must be exactly one boss node with yokai 'tanuki'"),
+            (lambda d: d.update(nodes=[]), "nodes: [] should be non-empty"),
+            (lambda d: d.update(schema_version=2), "schema_version: 1 was expected"),
+            (lambda d: node(d, "r2-oni").update(colour="red"), "Additional properties are not allowed"),
+        ]
+        for edit, expect in cases:
+            code, out = self._map(edit)
+            self.assertEqual(code, 1, expect)
+            self.assertIn(expect, out)
+
+    def test_run_map_without_r1_is_only_a_graph(self):
+        def other_layout(d):
+            d["rules"] = ["R2"]
+            for n in d["nodes"]:
+                if n["id"] == "r4-merchant":
+                    n.update(type="duel", yokai="oni")
+            d["nodes"][-1]["payload"] = {"scene": "tanuki-den", "anything": [1, 2]}
+        code, out = self._map(other_layout)
+        self.assertEqual(code, 0, out)
+
     def test_explicit_invalid_folder_is_checked(self):
         code, out = run(SAMPLES / "invalid")
         self.assertEqual(code, 1)

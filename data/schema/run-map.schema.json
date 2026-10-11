@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/run-map.schema.json",
+  "title": "Run map",
+  "description": "One run's map (R1, R2) in data/map/<id>.json: nodes joined by routes. The player starts on a node of the lowest row and follows one route per step until a node with no route out. A node's row is data (where it sits), not an index: the game walks routes only. The schema stays open on purpose: 'type' and 'yokai' are free ids (the game's node-type registry decides which types exist) and 'payload' is opaque to the map, so rewards, merchant, dojo and per-node scenes add fields later without a schema break.",
+  "type": "object",
+  "required": ["kind", "id", "schema_version", "nodes", "routes"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "run_map" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "schema_version": { "description": "Bumped when the meaning of a field changes; the loader rejects versions it does not know.", "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": {
+      "description": "Rule IDs this map follows. Listing R1 makes the validator hold the map to R1's row layout; a map that leaves it out is only checked as a graph.",
+      "$ref": "common.schema.json#/$defs/ruleIds"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "row", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "row": { "description": "Which row the node sits in, counted from the start (R1: 1-8, the boss after them).", "type": "integer", "minimum": 1 },
+          "type": { "description": "Node type id, resolved by the game's node-type registry (duel, elder, boss, merchant, dojo today).", "$ref": "common.schema.json#/$defs/id" },
+          "yokai": { "description": "Who waits there (R2): a fighter id such as kitsune, elder-oni, apprentice, tanuki. Required by fight node types.", "$ref": "common.schema.json#/$defs/id" },
+          "elder": { "description": "Shows the elder twist icon on the node (Y3). Default false.", "type": "boolean" },
+          "label": { "description": "Text shown on the node; without it the screen names the yokai or the type.", "type": "string", "minLength": 1, "maxLength": 40 },
+          "payload": { "description": "Free-form fields for the node type's own systems (rewards, shop stock, scene, trial...). The map never reads it.", "type": "object" }
+        }
+      }
+    },
+    "routes": {
+      "description": "Lines between nodes. Each goes from a node to a node in the next row.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "$ref": "common.schema.json#/$defs/id" },
+          "to": { "$ref": "common.schema.json#/$defs/id" }
+        }
+      }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

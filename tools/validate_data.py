@@ -45,6 +45,7 @@ KIND_SCHEMA = {
     "profile": "profile.schema.json",
     "clip": "clip.schema.json",
     "story_card": "story-card.schema.json",
+    "run_map": "run-map.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -54,6 +55,7 @@ DIR_KIND = {
     "profiles": ("profile",),
     "clips": ("clip",),
     "story": ("story_card",),
+    "map": ("run_map",),
 }
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
@@ -149,6 +151,69 @@ def check_frame_data(fd, where, clip, clip_name, errs):
             errs.append((f"{where}.active", f"active window ends on frame {s + (a or 1)}, but clip '{clip_name}' hit_end is {he} (F2)"))
 
 
+def check_run_map(doc: dict) -> list[tuple[str, str]]:
+    """YOK-76: the graph checks of the game's loader (MapGraph), plus R1's row layout when the map lists R1.
+    Node types stay an open id here: the game's node-type registry rejects an unregistered one at load."""
+    errs: list[tuple[str, str]] = []
+    nodes = [n for n in doc.get("nodes") or [] if isinstance(n, dict) and isinstance(n.get("id"), str) and is_int(n.get("row"))]
+    by_id: dict[str, dict] = {}
+    for n in nodes:
+        if n["id"] in by_id:
+            errs.append(("nodes", f"node id '{n['id']}' is defined twice"))
+        else:
+            by_id[n["id"]] = n
+    rows = sorted({n["row"] for n in by_id.values()})
+    nxt: dict[str, list[str]] = {i: [] for i in by_id}
+    for r in doc.get("routes") or []:
+        if not isinstance(r, dict):
+            continue
+        a, b = r.get("from"), r.get("to")
+        missing = [x for x in (a, b) if x not in by_id]
+        for x in missing:
+            errs.append(("routes", f"route {a} -> {b}: unknown node '{x}'"))
+        if missing:
+            continue
+        ra, rb = by_id[a]["row"], by_id[b]["row"]
+        if rb <= ra:
+            errs.append(("routes", f"route {a} -> {b} goes {'sideways' if rb == ra else 'backwards'} (row {ra} to row {rb})"))
+        elif rows[rows.index(ra) + 1] != rb:
+            errs.append(("routes", f"route {a} -> {b} skips a row (row {ra} to row {rb})"))
+        elif b in nxt[a]:
+            errs.append(("routes", f"route {a} -> {b} is listed twice"))
+        else:
+            nxt[a].append(b)
+    if not by_id:
+        return errs
+    reached = {i for i, n in by_id.items() if n["row"] == rows[0]}
+    todo = list(reached)
+    while todo:
+        for b in nxt[todo.pop()]:
+            if b not in reached:
+                reached.add(b)
+                todo.append(b)
+    for i, n in by_id.items():
+        if i not in reached:
+            errs.append(("nodes", f"node '{i}' is unreachable: no route leads to it from a start node"))
+        if not nxt[i] and n["row"] != rows[-1]:
+            errs.append(("nodes", f"node '{i}' is a dead end: no route out before the last row ({rows[-1]})"))
+
+    if "R1" in (doc.get("rules") or []):
+        if rows != list(range(1, 10)):
+            errs.append(("nodes", f"R1: rows must be 1-8 plus the boss in row 9, got {rows}"))
+        allowed = {1: ("duel",), 2: ("duel",), 3: ("duel",), 4: ("merchant",), 5: ("elder",), 6: ("duel",),
+                   7: ("merchant", "dojo"), 8: ("elder",), 9: ("boss",)}
+        for i, n in by_id.items():
+            want = allowed.get(n["row"])
+            if want and n.get("type") not in want:
+                errs.append(("nodes", f"R1: node '{i}': row {n['row']} must be {' or '.join(want)}, got '{n.get('type')}'"))
+            if n["row"] == 1 and n.get("yokai") != "apprentice":
+                errs.append(("nodes", f"R1: node '{i}': row 1 is the apprentice, got '{n.get('yokai')}'"))
+        boss = [n for n in by_id.values() if n["row"] == 9]
+        if len(boss) != 1 or boss[0].get("yokai") != "tanuki":
+            errs.append(("nodes", "R1: row 9 must be exactly one boss node with yokai 'tanuki'"))
+    return errs
+
+
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
@@ -212,6 +277,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
             errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
         for name in sorted(listed - used):
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
+    elif kind == "run_map":
+        errs.extend(check_run_map(doc))
     elif kind == "clip":
         hs, he, ft = doc.get("hit_start"), doc.get("hit_end"), doc.get("frames_total")
         if (hs is None) != (he is None):

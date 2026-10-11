@@ -15,7 +15,7 @@ mkdir -p "$OUT"
 "$GODOT" --headless --path "$REPO/game" --export-release "Windows Desktop" ../build/windows/YokaiFighters.exe
 
 mkdir -p "$OUT/data" "$OUT/fixtures"
-for d in clips modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
+for d in clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
 powershell.exe -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$OUT")\\*' -DestinationPath '$(cygpath -w "$REPO/build")\\YokaiFighters-Demo-Windows.zip' -Force"
