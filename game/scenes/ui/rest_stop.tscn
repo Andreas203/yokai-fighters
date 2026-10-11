@@ -1,0 +1,692 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/RestStopScreen.cs" id="script"]
+[ext_resource type="Script" path="res://scripts/Ui/RestStopScreenDecor.cs" id="decor_script"]
+[ext_resource type="Script" path="res://scripts/Ui/Kit/KitCard.cs" id="card_script"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/selection-frame.png" id="selection"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="rule"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+
+[sub_resource type="StyleBoxEmpty" id="flat_empty"]
+
+[sub_resource type="StyleBoxFlat" id="coin_chip"]
+bg_color = Color(0.973, 0.945, 0.878, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.69, 0.541, 0.282, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="icon_free"]
+bg_color = Color(0.847, 0.388, 0.173, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="icon_second"]
+bg_color = Color(0.114, 0.106, 0.129, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="glow"]
+bg_color = Color(0.949, 0.635, 0.227, 0.45)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.949, 0.635, 0.227, 0.9)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0.949, 0.635, 0.227, 0.55)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="icon_box"]
+bg_color = Color(0.847, 0.388, 0.173, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.114, 0.106, 0.129, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="RestStop" type="Control"]
+mouse_filter = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("theme")
+script = ExtResource("script")
+
+[node name="Backdrop" parent="." instance=ExtResource("backdrop")]
+
+[node name="Decor" type="Control" parent="."]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("decor_script")
+
+[node name="FreeHanger" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 590.0
+offset_top = 295.0
+offset_right = 1240.0
+offset_bottom = 545.0
+
+[node name="SecondHanger" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 590.0
+offset_top = 575.0
+offset_right = 1240.0
+offset_bottom = 825.0
+
+[node name="ForecastHanger" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 1260.0
+offset_top = 283.0
+offset_right = 1780.0
+offset_bottom = 920.0
+
+[node name="Portrait" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 290.0
+offset_right = 560.0
+offset_bottom = 650.0
+
+[node name="PortraitLabel" type="Label" parent="Portrait"]
+mouse_filter = 2
+anchor_left = 0.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -40.0
+offset_bottom = 40.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "portrait (art to come)"
+autowrap_mode = 3
+
+[node name="Heading" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 118.0
+offset_right = 760.0
+offset_bottom = 228.0
+theme_type_variation = &"HeadingLabel"
+theme_override_font_sizes/font_size = 92
+text = "REST STOP"
+
+[node name="Underline" type="TextureRect" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 224.0
+offset_right = 660.0
+offset_bottom = 236.0
+texture = ExtResource("rule")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="RowLine" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 242.0
+offset_right = 900.0
+offset_bottom = 282.0
+theme_override_font_sizes/font_size = 30
+
+[node name="HealthLabel" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 1330.0
+offset_top = 132.0
+offset_right = 1770.0
+offset_bottom = 176.0
+theme_override_font_sizes/font_size = 32
+
+[node name="HealthFrame" type="Panel" parent="."]
+mouse_filter = 2
+offset_left = 1326.0
+offset_top = 178.0
+offset_right = 1774.0
+offset_bottom = 206.0
+theme_type_variation = &"HealthFrame"
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+mouse_filter = 2
+offset_left = 1332.0
+offset_top = 184.0
+offset_right = 1768.0
+offset_bottom = 200.0
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+theme_type_variation = &"HealthBar"
+
+[node name="CoinsLabel" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 1330.0
+offset_top = 214.0
+offset_right = 1415.0
+offset_bottom = 250.0
+theme_override_font_sizes/font_size = 24
+text = "COINS"
+
+[node name="CoinChip" type="Panel" parent="."]
+mouse_filter = 2
+offset_left = 1420.0
+offset_top = 212.0
+offset_right = 1540.0
+offset_bottom = 250.0
+theme_override_styles/panel = SubResource("coin_chip")
+
+[node name="CoinValue" type="Label" parent="CoinChip"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LineBox" type="PanelContainer" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 665.0
+offset_right = 560.0
+offset_bottom = 895.0
+theme_type_variation = &"PaperCard"
+
+[node name="Box" type="VBoxContainer" parent="LineBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Speaker" type="Label" parent="LineBox/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 22
+text = "Merchant"
+
+[node name="Line" type="Label" parent="LineBox/Box"]
+layout_mode = 2
+mouse_filter = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+text = "..."
+clip_text = true
+
+[node name="FreeCard" type="PanelContainer" parent="."]
+offset_left = 600.0
+offset_top = 322.0
+offset_right = 1230.0
+offset_bottom = 520.0
+focus_mode = 2
+theme_type_variation = &"PaperCard"
+script = ExtResource("card_script")
+
+[node name="Stroke" type="NinePatchRect" parent="FreeCard"]
+visible = false
+top_level = true
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("selection")
+patch_margin_left = 32
+patch_margin_top = 32
+patch_margin_right = 32
+patch_margin_bottom = 32
+draw_center = false
+
+[node name="Box" type="VBoxContainer" parent="FreeCard"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Top" type="HBoxContainer" parent="FreeCard/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Icon" type="Panel" parent="FreeCard/Box/Top"]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("icon_free")
+
+[node name="Glyph" type="Label" parent="FreeCard/Box/Top/Icon"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("theme")
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 44
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "+"
+
+[node name="Titles" type="VBoxContainer" parent="FreeCard/Box/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="FreeCard/Box/Top/Titles"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 38
+text = "Free heal"
+
+[node name="Sub" type="Label" parent="FreeCard/Box/Top/Titles"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 24
+text = "Merchant's gift · costs nothing"
+
+[node name="Tag" type="Panel" parent="FreeCard/Box/Top"]
+custom_minimum_size = Vector2(110, 34)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"TagUpgrade"
+
+[node name="TagLabel" type="Label" parent="FreeCard/Box/Top/Tag"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "FREE"
+
+[node name="Desc" type="Label" parent="FreeCard/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+text = "Restores 25% of max health"
+
+[node name="Preview" type="Control" parent="FreeCard/Box"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Frame" type="Panel" parent="FreeCard/Box/Preview"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"HealthFrame"
+
+[node name="After" type="ProgressBar" parent="FreeCard/Box/Preview"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+max_value = 1000.0
+show_percentage = false
+theme_type_variation = &"HealthBarEnemy"
+
+[node name="Now" type="ProgressBar" parent="FreeCard/Box/Preview"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+max_value = 1000.0
+show_percentage = false
+theme_type_variation = &"HealthBar"
+
+[node name="SecondCard" type="PanelContainer" parent="."]
+offset_left = 600.0
+offset_top = 602.0
+offset_right = 1230.0
+offset_bottom = 798.0
+focus_mode = 2
+theme_type_variation = &"PaperCard"
+script = ExtResource("card_script")
+
+[node name="Stroke" type="NinePatchRect" parent="SecondCard"]
+visible = false
+top_level = true
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("selection")
+patch_margin_left = 32
+patch_margin_top = 32
+patch_margin_right = 32
+patch_margin_bottom = 32
+draw_center = false
+
+[node name="Box" type="VBoxContainer" parent="SecondCard"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Top" type="HBoxContainer" parent="SecondCard/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Icon" type="Panel" parent="SecondCard/Box/Top"]
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("icon_second")
+
+[node name="Glyph" type="Label" parent="SecondCard/Box/Top/Icon"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 44
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "¥"
+
+[node name="Titles" type="VBoxContainer" parent="SecondCard/Box/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="SecondCard/Box/Top/Titles"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 38
+text = "Browse the shop"
+
+[node name="Sub" type="Label" parent="SecondCard/Box/Top/Titles"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 24
+text = "Spend coins instead"
+
+[node name="Tag" type="Panel" parent="SecondCard/Box/Top"]
+custom_minimum_size = Vector2(110, 34)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"TagModifier"
+
+[node name="TagLabel" type="Label" parent="SecondCard/Box/Top/Tag"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "SHOP"
+
+[node name="Desc" type="Label" parent="SecondCard/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+autowrap_mode = 3
+
+[node name="Coming" type="Label" parent="SecondCard/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"PersimmonLabel"
+theme_override_font_sizes/font_size = 24
+text = ""
+
+[node name="PickLine" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 600.0
+offset_top = 836.0
+offset_right = 1240.0
+offset_bottom = 868.0
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+
+[node name="ContinueButton" type="Button" parent="."]
+visible = false
+offset_left = 600.0
+offset_top = 852.0
+offset_right = 1000.0
+offset_bottom = 896.0
+theme_type_variation = &"RedButton"
+theme_override_font_sizes/font_size = 28
+text = "Continue to the map"
+
+[node name="Rule" type="ColorRect" parent="."]
+mouse_filter = 2
+offset_left = 150.0
+offset_top = 902.0
+offset_right = 1240.0
+offset_bottom = 904.0
+color = Color(0.114, 0.106, 0.129, 1)
+
+[node name="Footer" parent="." instance=ExtResource("footer")]
+offset_left = 150.0
+offset_top = 912.0
+offset_right = 1240.0
+offset_bottom = 954.0
+alignment = 0
+OnPaper = true
+
+[node name="Forecast" type="Panel" parent="."]
+mouse_filter = 2
+offset_left = 1272.0
+offset_top = 314.0
+offset_right = 1768.0
+offset_bottom = 888.0
+theme_type_variation = &"PaperCard"
+theme_override_styles/panel = SubResource("flat_empty")
+
+[node name="Heading" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 8.0
+offset_right = 480.0
+offset_bottom = 44.0
+theme_type_variation = &"SealLabel"
+theme_override_font_sizes/font_size = 28
+text = "TANUKI FORECAST"
+
+[node name="IconGlow" type="Panel" parent="Forecast"]
+mouse_filter = 2
+offset_left = 16.0
+offset_top = 52.0
+offset_right = 160.0
+offset_bottom = 196.0
+theme_override_styles/panel = SubResource("glow")
+
+[node name="IconBox" type="Panel" parent="Forecast/IconGlow"]
+mouse_filter = 2
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 134.0
+offset_bottom = 134.0
+theme_override_styles/panel = SubResource("icon_box")
+
+[node name="Icon" type="TextureRect" parent="Forecast/IconGlow/IconBox"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WillCopy" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 182.0
+offset_top = 56.0
+offset_right = 480.0
+offset_bottom = 88.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 24
+text = "Will copy:"
+
+[node name="SpecialName" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 182.0
+offset_top = 86.0
+offset_right = 480.0
+offset_bottom = 142.0
+theme_override_font_sizes/font_size = 46
+text = "Foxfire"
+clip_text = true
+
+[node name="LevelTag" type="Panel" parent="Forecast"]
+mouse_filter = 2
+offset_left = 182.0
+offset_top = 150.0
+offset_right = 268.0
+offset_bottom = 186.0
+theme_type_variation = &"TagNew"
+
+[node name="LevelLabel" type="Label" parent="Forecast/LevelTag"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "Lv 2"
+
+[node name="CopyNote" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 200.0
+offset_right = 474.0
+offset_bottom = 252.0
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+text = "Copied at your level, never your modifier or evolution."
+
+[node name="Divider" type="ColorRect" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 258.0
+offset_right = 474.0
+offset_bottom = 260.0
+color = Color(0.114, 0.106, 0.129, 0.45)
+
+[node name="CostCaption" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 264.0
+offset_right = 474.0
+offset_bottom = 292.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 22
+text = "Expected cost to you"
+
+[node name="CostValue" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 288.0
+offset_right = 474.0
+offset_bottom = 348.0
+theme_type_variation = &"SealLabel"
+theme_override_font_sizes/font_size = 48
+text = "~190 health"
+
+[node name="CostBar" type="Control" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 354.0
+offset_right = 474.0
+offset_bottom = 374.0
+
+[node name="Frame" type="Panel" parent="Forecast/CostBar"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"HealthFrame"
+
+[node name="Fill" type="ProgressBar" parent="Forecast/CostBar"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+max_value = 1000.0
+show_percentage = false
+theme_type_variation = &"HealthBar"
+
+[node name="ScaleLow" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 376.0
+offset_right = 120.0
+offset_bottom = 398.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 20
+text = "0"
+
+[node name="ScaleHigh" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 374.0
+offset_top = 376.0
+offset_right = 474.0
+offset_bottom = 398.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 2
+text = "1000"
+
+[node name="CostMeaning" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 402.0
+offset_right = 474.0
+offset_bottom = 470.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+text = "Average health you lose per fight to this move, from your own fights so far."
+
+[node name="Placeholder" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 474.0
+offset_right = 474.0
+offset_bottom = 500.0
+theme_type_variation = &"PersimmonLabel"
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+text = "PLACEHOLDER: no cost formula yet"
+
+[node name="LockNote" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 504.0
+offset_right = 474.0
+offset_bottom = 566.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+text = "Locks when you enter the Tanuki's node."
