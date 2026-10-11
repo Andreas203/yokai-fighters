@@ -161,9 +161,9 @@ public sealed class SaveStore
 		{
 			uint seed = 0;
 			int health = 0;
-			if (!run.TryGetProperty("seed", out JsonElement s) || s.ValueKind != JsonValueKind.Number || !s.TryGetUInt32(out seed)) why = "seed missing or not a whole number 0-4294967295";
+			if (!run.TryGetProperty("seed", out JsonElement s) || !WholeUInt(s, out seed)) why = "seed missing or not a whole number 0-4294967295";
 			else if (Text(run, "map") is not { } map) why = "map missing";
-			else if (!run.TryGetProperty("health", out JsonElement h) || h.ValueKind != JsonValueKind.Number || !h.TryGetInt32(out health)) why = "health missing or not a whole number";
+			else if (!run.TryGetProperty("health", out JsonElement h) || !Whole(h, out health)) why = "health missing or not a whole number";
 			else if (StringArray(run, "visited") is not { } visited) why = "visited missing or not a list of node ids";
 			else if (Slots(run, out string? slotProblem) is not { } slots) why = slotProblem;
 			// Optional (missing = default), but a value of the wrong kind is damage, not absence: the run is dropped.
@@ -193,8 +193,8 @@ public sealed class SaveStore
 		{
 			problem = $"slots[{slots.Count}]: needs slot, special and level";
 			if (e.ValueKind != JsonValueKind.Object || Text(e, "slot") is not { } slot || Text(e, "special") is not { } special) return null;
-			if (!e.TryGetProperty("level", out JsonElement l) || l.ValueKind != JsonValueKind.Number || !l.TryGetInt32(out int level)) return null;
-			int levelled = e.TryGetProperty("levelled", out JsonElement o) && o.ValueKind == JsonValueKind.Number && o.TryGetInt32(out int rank) ? rank : 0;
+			if (!e.TryGetProperty("level", out JsonElement l) || !Whole(l, out int level)) return null;
+			int levelled = e.TryGetProperty("levelled", out JsonElement o) && Whole(o, out int rank) ? rank : 0;
 			slots.Add(new SlotSave(slot, special, level, Text(e, "modifier"), levelled));
 		}
 		problem = null;
@@ -227,11 +227,36 @@ public sealed class SaveStore
 		return ids;
 	}
 
+	/// <summary>
+	/// A whole number in the run section, written any way JSON allows: <c>100</c>, <c>100.0</c> and <c>1e2</c> all
+	/// read as 100 (designer, 2026-10-11). A fractional value or one out of range is not a whole number. The format
+	/// <c>version</c> is not read this way: it stays strict so an unreadable version counts as newer.
+	/// </summary>
+	private static bool Whole(JsonElement e, out int value)
+	{
+		value = 0;
+		if (e.ValueKind != JsonValueKind.Number) return false;
+		if (e.TryGetInt32(out value)) return true;
+		if (!e.TryGetDecimal(out decimal d) || d != decimal.Truncate(d) || d < int.MinValue || d > int.MaxValue) return false;
+		value = (int)d;
+		return true;
+	}
+
+	private static bool WholeUInt(JsonElement e, out uint value)
+	{
+		value = 0;
+		if (e.ValueKind != JsonValueKind.Number) return false;
+		if (e.TryGetUInt32(out value)) return true;
+		if (!e.TryGetDecimal(out decimal d) || d != decimal.Truncate(d) || d < uint.MinValue || d > uint.MaxValue) return false;
+		value = (uint)d;
+		return true;
+	}
+
 	private static string? OptionalInt(JsonElement obj, string name, out int value)
 	{
 		value = 0;
 		if (!obj.TryGetProperty(name, out JsonElement e)) return null;
-		return e.ValueKind == JsonValueKind.Number && e.TryGetInt32(out value) ? null : $"{name} is not a whole number";
+		return Whole(e, out value) ? null : $"{name} is not a whole number";
 	}
 
 	private static string? OptionalBool(JsonElement obj, string name, out bool? value)
@@ -247,7 +272,7 @@ public sealed class SaveStore
 		copy = null;
 		if (!run.TryGetProperty("locked_copy", out JsonElement e) || e.ValueKind == JsonValueKind.Null) return null;
 		if (e.ValueKind != JsonValueKind.Object || Text(e, "slot") is not { } slot || Text(e, "special") is not { } special
-			|| !e.TryGetProperty("level", out JsonElement l) || l.ValueKind != JsonValueKind.Number || !l.TryGetInt32(out int level))
+			|| !e.TryGetProperty("level", out JsonElement l) || !Whole(l, out int level))
 			return "locked_copy needs slot, special and level";
 		copy = new LockedCopySave(slot, special, level);
 		return null;

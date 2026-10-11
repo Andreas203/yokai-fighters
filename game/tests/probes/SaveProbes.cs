@@ -819,7 +819,10 @@ public static class SaveProbes
 		Assert.True(ok.Data.Run!.Restore(pool, DefaultMap(), Table()).Run.Coins == int.MaxValue, "the largest purse an int holds restores");
 		foreach (string bad in new[] { "-1", "-2147483648" })
 			Refused(() => RestoreText(sample.Replace(tail, "\"coins\": " + bad)), "coins " + bad);
-		foreach (string bad in new[] { "\"lots\"", "1.5", "null", "true", "2147483648", "[5]", "{}", "1e2", "\"25\"" })
+		// Designer, 2026-10-11: a whole number written another way JSON allows reads as that number; coins stay uncapped.
+		foreach (string same in new[] { "1e2", "100.0", "1E+2" })
+			Assert.True(SaveStore.Parse(sample.Replace(tail, "\"coins\": " + same)).Data.Run!.Coins == 100, $"coins {same}: read as 100");
+		foreach (string bad in new[] { "\"lots\"", "1.5", "null", "true", "2147483648", "[5]", "{}", "1e-1", "\"25\"" })
 		{
 			SaveLoad l = SaveStore.Parse(sample.Replace(tail, "\"coins\": " + bad));
 			Assert.True(l.Data.Run == null && l.Status == SaveLoadStatus.Partial, $"coins {bad}: run dropped, not zeroed ({l.Status})");
