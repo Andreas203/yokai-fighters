@@ -97,7 +97,7 @@ public sealed class RunSession
 		Scenes = scenes;
 		Seed = seed;
 		// T1: the lock is taken by Enter and by nothing else, so a walk and its lock must agree from the start.
-		bool passed = PassedLockPoint();
+		bool passed = PassedLockPoint(Map);
 		if (passed && !copyLocked)
 			throw new ArgumentException("the walk has entered the Tanuki's node: its copy lock must be given (RunSession.Restore, T1)", nameof(run));
 		if (!passed && (copyLocked || lockedCopy is not null))
@@ -149,11 +149,11 @@ public sealed class RunSession
 	}
 
 	/// <summary>True when the walk has entered a node of the Tanuki's type (now or earlier): the lock point is behind Ryo.</summary>
-	bool PassedLockPoint()
+	internal static bool PassedLockPoint(RunMap map) // internal: the save's restore asks the same question (YOK-87)
 	{
-		if (Map.Current is { } cur && Map.Graph.Node(cur).Type == NodeTypeRegistry.Boss) return true;
-		foreach (string id in Map.Visited)
-			if (Map.Graph.Node(id).Type == NodeTypeRegistry.Boss) return true;
+		if (map.Current is { } cur && map.Graph.Node(cur).Type == NodeTypeRegistry.Boss) return true;
+		foreach (string id in map.Visited)
+			if (map.Graph.Node(id).Type == NodeTypeRegistry.Boss) return true;
 		return false;
 	}
 

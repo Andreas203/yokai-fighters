@@ -20,13 +20,14 @@ public readonly record struct TitleEntryState(TitleEntry Entry, bool Enabled, st
 /// hides scenes when <see cref="Changed"/> fires. It never touches the sim: the fight scene only exists while
 /// <see cref="Current"/> is <see cref="Screen.Fight"/>.
 /// <para>
-/// Continue and Practice have no backing system yet (save system, practice mode). They start disabled with a reason;
-/// the ticket that builds one calls <see cref="Enable"/> and listens to <see cref="Activated"/> — that is the whole seam.
+/// Continue and Practice start disabled with a reason. Continue is enabled by the boot flow while the save file holds
+/// a run (YOK-87, <see cref="ContinueRun"/>); practice mode is not built: its ticket calls <see cref="Enable"/> and
+/// listens to <see cref="Activated"/>.
 /// </para>
 /// </summary>
 public sealed class ScreenRouter
 {
-	public const string NoSaveReason = "No saved run yet: saving is not built.";
+	public const string NoSaveReason = "No saved run yet.";
 	public const string NoPracticeReason = "Practice mode is not built yet.";
 
 	private readonly Dictionary<TitleEntry, string> _disabled = new()
@@ -47,7 +48,7 @@ public sealed class ScreenRouter
 	public event Action<ControlScheme>? SchemeChanged;
 	/// <summary>Raised when an entry is enabled or disabled, so the title can redraw it.</summary>
 	public event Action<TitleEntryState>? EntryChanged;
-	/// <summary>Raised when an enabled Continue or Practice is selected. Nothing listens yet (no save system, no practice mode).</summary>
+	/// <summary>Raised when an enabled Continue or Practice is selected (Continue: the boot flow restores the saved run).</summary>
 	public event Action<TitleEntry>? Activated;
 	public event Action? Quit;
 
@@ -113,6 +114,14 @@ public sealed class ScreenRouter
 	public bool Confirm()
 	{
 		if (Current != Screen.ControlSelect) return false;
+		Go(Screen.Map);
+		return true;
+	}
+
+	/// <summary>YOK-87: Continue: from the title straight to the saved run's map (no control select: the scheme is the saved setting).</summary>
+	public bool ContinueRun()
+	{
+		if (Current != Screen.Title) return false;
 		Go(Screen.Map);
 		return true;
 	}
