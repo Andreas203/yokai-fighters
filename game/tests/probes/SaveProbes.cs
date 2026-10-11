@@ -38,12 +38,14 @@ public static class SaveProbes
 			{
 				if (!OperatingSystem.IsWindows())
 					foreach (string e in Directory.GetFileSystemEntries(dir, "*", SearchOption.AllDirectories))
-						try { File.SetUnixFileMode(e, (Directory.Exists(e) ? UnixFileMode.UserExecute : 0) | UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { }
+						try { Chmod(e, (Directory.Exists(e) ? UnixFileMode.UserExecute : 0) | UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { }
 				Directory.Delete(dir, recursive: true);
 			}
 			catch (IOException) { }
 		}
 	}
+
+	static void Chmod(string path, UnixFileMode mode) { if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(path, mode); }
 
 	static void WithTempFile(Action<string> body) => WithTempDir(dir => body(Path.Combine(dir, SaveStore.FileName)));
 
@@ -250,14 +252,14 @@ public static class SaveProbes
 		if (OperatingSystem.IsWindows()) return;
 		string good = SaveStore.Serialize(SaveData.Empty.WithUnlock("oni-quake").WithStory("intro").WithStory("win-1"));
 		File.WriteAllText(path, good);
-		File.SetUnixFileMode(path, UnixFileMode.None);
+		Chmod(path, UnixFileMode.None);
 		bool stillBlocked = false, startedRun = false;
 		try
 		{
 			WithBoot(runner, path, flow =>
 			{
 				Assert.True(flow.Saves!.WriteBlocked, "blocked at boot");
-				File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); // permissions come back mid-session
+				Chmod(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); // permissions come back mid-session
 				StartRun(flow);
 				startedRun = flow.Session != null;
 				Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered");
@@ -274,7 +276,7 @@ public static class SaveProbes
 				Assert.True(flow.Saves.LastSaveError != null && flow.Saves.LastSaveError.Contains("untouched"), "the refusal is reported: " + flow.Saves.LastSaveError);
 			});
 		}
-		finally { try { File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { } }
+		finally { try { Chmod(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { } }
 		Assert.True(startedRun && stillBlocked, "still blocked for the session although the file is readable again");
 		Assert.Equal(good, File.ReadAllText(path), "after the session: byte-identical");
 		Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup and no temp file");
@@ -291,7 +293,7 @@ public static class SaveProbes
 		// Boot says "nothing is saved this session", yet after Start Game + quit to title Continue is lit from GameFlow.Saved (memory), though no
 		// run is in the file. It works in-session and is gone on relaunch. Low impact; flip to Disabled if the designer wants Continue to mean "on disk".
 		File.WriteAllText(path, SaveStore.Serialize(SaveData.Empty.WithStory("intro")));
-		File.SetUnixFileMode(path, UnixFileMode.None);
+		Chmod(path, UnixFileMode.None);
 		try
 		{
 			WithBoot(runner, path, flow =>
@@ -302,7 +304,7 @@ public static class SaveProbes
 				Assert.True(!flow.Title.ContinueButton.Disabled, "KnownOpen: Continue is lit for an in-memory run");
 			});
 		}
-		finally { try { File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { } }
+		finally { try { Chmod(path, UnixFileMode.UserRead | UnixFileMode.UserWrite); } catch (Exception) { } }
 	});
 
 	// ---- 5. pending lost-run clear ----
@@ -321,7 +323,7 @@ public static class SaveProbes
 			{
 				StartRun(flow);
 				Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered");
-				File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+				Chmod(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
 				Assert.True(flow.Session.LoseFight().Ok, "lost");
 				Assert.True(flow.Saved.Run == null, "flow: no run");
 				flow.ReturnToTitle();
@@ -336,7 +338,7 @@ public static class SaveProbes
 				Assert.True(!flow.Title.ContinueButton.Disabled, "KnownOpen: so a fresh boot offers Continue for a lost run");
 			});
 		}
-		finally { File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
+		finally { Chmod(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
 	});
 
 	// ---- 6. backup growth ----
@@ -373,13 +375,13 @@ public static class SaveProbes
 		var store = new SaveStore(path);
 		store.Load();
 		string dir = Path.GetDirectoryName(path)!;
-		File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+		Chmod(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
 		try
 		{
 			Assert.True(!store.Save(SaveData.Empty), "refused");
 			Assert.Equal("not json", File.ReadAllText(path), "original untouched");
 		}
-		finally { File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
+		finally { Chmod(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
 		Assert.True(store.Save(SaveData.Empty) && File.ReadAllText(path + SaveStore.BackupSuffix) == "not json", "the retry backs up first, then writes");
 	});
 
@@ -484,7 +486,7 @@ public static class SaveProbes
 				["current unknown"] = C("\"zzz\""), ["current null after visited"] = C("null"), ["current number"] = C("7"),
 				["visited empty, current set"] = V("[]"),
 				["visited has non-id"] = V("[3]"),
-				["nested 10MB"] = "{\"version\":1,\"x\":" + new string('[', 5_000_000) + new string(']', 5_000_000) + "}",
+				["nested 10MB"] = $"{{\"version\":{SaveStore.CurrentVersion},\"x\":" + new string('[', 5_000_000) + new string(']', 5_000_000) + "}",
 				["fingerprint other"] = good.Replace("map_fingerprint\": \"", "map_fingerprint\": \"0000"),
 				["map other"] = good.Replace("\"map\": \"default-map\"", "\"map\": \"other\""),
 			};
@@ -493,7 +495,7 @@ public static class SaveProbes
 				SaveLoad load;
 				try { load = SaveStore.Parse(text); }
 				catch (Exception e) { throw new AssertFailed($"{name}: Parse threw {e.GetType().Name}: {e.Message}"); }
-				Assert.True(load.Data != null && load.Problems != null, name + ": usable data");
+				Assert.True(load.Problems.Count >= 0 && load.Status != SaveLoadStatus.Missing, name + ": usable data");
 				if (load.Data.Run is not { } r) continue;
 				try { AssertLegal(r.Restore(pool, DefaultMap(), Table()), name); }
 				catch (FormatException) { /* refused: fine */ }
@@ -524,7 +526,7 @@ public static class SaveProbes
 	{
 		File.WriteAllBytes(path, Array.Empty<byte>());
 		Assert.Equal(SaveLoadStatus.Corrupt, new SaveStore(path).Load().Status, "zero bytes");
-		var bytes = Encoding.UTF8.GetBytes("{\"version\":1,\"run\":null,\"unlocks\":[\"x").Concat(new byte[] { 0x80, 0xC0, 0xFF, 0xFE }).Concat(Encoding.UTF8.GetBytes("y\"],\"story\":{\"seen\":[]}}")).ToArray();
+		var bytes = Encoding.UTF8.GetBytes($"{{\"version\":{SaveStore.CurrentVersion},\"run\":null,\"unlocks\":[\"x").Concat(new byte[] { 0x80, 0xC0, 0xFF, 0xFE }).Concat(Encoding.UTF8.GetBytes("y\"],\"story\":{\"seen\":[]}}")).ToArray();
 		File.WriteAllBytes(path, bytes);
 		SaveLoad l = new SaveStore(path).Load();
 		Assert.True(l.Status == SaveLoadStatus.Loaded && l.Data.Unlocks.Count == 1, "invalid UTF-8 inside a string is replaced, not fatal: " + l.Status);
@@ -594,13 +596,15 @@ public static class SaveProbes
 	public static void Versions_EachKind_StatusAndWhatTheNextWriteDoes() => WithTempFile(path =>
 	{
 		string body = ", \"run\": null, \"unlocks\": [\"a\"], \"story\": { \"seen\": [\"intro\"] }, \"future\": { \"coins\": 9 } }";
+		int cur = SaveStore.CurrentVersion;
 		var expect = new (string Version, SaveLoadStatus Status, bool Backup)[]
 		{
 			("", SaveLoadStatus.OlderVersion, false), // missing: older and fully read => rewritten without a backup
 			("\"version\": 0", SaveLoadStatus.OlderVersion, false),
-			("\"version\": 1", SaveLoadStatus.Loaded, false),
-			("\"version\": 2", SaveLoadStatus.NewerVersion, true),
-			("\"version\": \"1\"", SaveLoadStatus.NewerVersion, true),
+			($"\"version\": {cur - 1}", SaveLoadStatus.OlderVersion, false), // the previous format, fully read
+			($"\"version\": {cur}", SaveLoadStatus.Loaded, false),
+			($"\"version\": {cur + 1}", SaveLoadStatus.NewerVersion, true),
+			($"\"version\": \"{cur}\"", SaveLoadStatus.NewerVersion, true),
 			("\"version\": -1", SaveLoadStatus.NewerVersion, true),
 		};
 		foreach (var (v, status, backup) in expect)
@@ -616,7 +620,7 @@ public static class SaveProbes
 			Assert.Equal(backup, File.Exists(path + SaveStore.BackupSuffix), $"[{v}] backup made");
 			if (backup) Assert.Equal(text, File.ReadAllText(path + SaveStore.BackupSuffix), $"[{v}] the original is the backup");
 			string now = File.ReadAllText(path);
-			Assert.True(now.Contains("\"version\": 1") && !now.Contains("future"), $"[{v}] the file is now the current version; unknown fields are not carried");
+			Assert.True(now.Contains($"\"version\": {SaveStore.CurrentVersion}") && !now.Contains("future"), $"[{v}] the file is now the current version; unknown fields are not carried");
 		}
 	});
 
@@ -661,7 +665,9 @@ public static class SaveProbes
 		{
 			string src = File.ReadAllText(Path.Combine(ProjectSettings.GlobalizePath("res://scripts"), "SaveGame", "SaveStore.cs"));
 			string planted = Path.Combine(dir, "SaveStore.cs");
-			File.WriteAllText(planted, src.Replace("public const int CurrentVersion = 1;", "public const int CurrentVersion = 1; static long Stamp => System.DateTime.Now.Ticks;"));
+			string plantedText = System.Text.RegularExpressions.Regex.Replace(src, @"(public const int CurrentVersion = \d+;)", "$1 static long Stamp => System.DateTime.Now.Ticks;");
+			Assert.True(plantedText != src && plantedText.Contains("DateTime.Now"), "the clock really was planted, whatever the version number");
+			File.WriteAllText(planted, plantedText);
 			string text = File.ReadAllText(planted);
 			Assert.True(clocks.Any(c => text.Contains(c)), "a planted DateTime.Now is caught by the banned-word list");
 			Assert.True(!clocks.Any(c => src.Contains(c)), "the real file is clean");
@@ -725,7 +731,7 @@ public static class SaveProbes
 	public static void Hostile_HugeUnlockList_ParsesInReasonableTime()
 	{
 		// Non-blocking perf check: Ids() de-duplicates with List.Contains, O(n^2). 20k distinct unlocks must still load in well under a few seconds.
-		var sb = new StringBuilder("{\"version\":1,\"run\":null,\"story\":{\"seen\":[]},\"unlocks\":[");
+		var sb = new StringBuilder($"{{\"version\":{SaveStore.CurrentVersion}," + "\"run\":null,\"story\":{\"seen\":[]},\"unlocks\":[");
 		for (int i = 0; i < 20000; i++) sb.Append(i == 0 ? "" : ",").Append("\"ability-").Append(i).Append('"');
 		sb.Append("]}");
 		var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -734,4 +740,357 @@ public static class SaveProbes
 		GD.Print($"PROBE huge unlock list: 20000 ids parsed in {sw.ElapsedMilliseconds} ms");
 		Assert.True(l.Data.Unlocks.Count == 20000 && sw.ElapsedMilliseconds < 5000, $"{sw.ElapsedMilliseconds} ms");
 	}
+
+	// ======== round 3: format version 2 (coins, the copy lock) ========
+
+	static bool SameCopy(CopyTarget? a, CopyTarget? b) =>
+		a == null ? b == null : b != null && a.Slot == b.Slot && a.Data.Id == b.Data.Id && a.Level == b.Level;
+
+	/// <summary>Plays the default map (merchant: heal, dojo: rest, duels: won and a card picked) until the Tanuki's node is the next pick; enters it when asked.</summary>
+	static RunSession WalkToBoss(uint seed, bool enterBoss, Action<RunSession, string>? atPoint = null)
+	{
+		var s = NewSession(seed);
+		atPoint?.Invoke(s, "start");
+		int turn = 0;
+		while (!s.Reachable().Contains("boss-tanuki"))
+		{
+			Assert.True(s.Enter(s.Reachable()[0]).Ok, "entered");
+			atPoint?.Invoke(s, "entered " + s.Node!.NodeId);
+			if (s.Merchant is { } m) Assert.True(m.TakeHeal().Ok, "heal");
+			else if (s.Dojo is { } d) Assert.True(d.Rest().Ok, "rest");
+			else WinAndPick(s, 800 - turn * 30, turn);
+			if (s.Merchant != null || s.Dojo != null) Assert.True(s.CompleteNode().Ok, "completed");
+			atPoint?.Invoke(s, "completed " + s.Step);
+			turn++;
+		}
+		if (enterBoss)
+		{
+			Assert.True(s.Enter("boss-tanuki").Ok && s.CopyLocked, "entered the Tanuki's node, locked (T1)");
+			atPoint?.Invoke(s, "entered boss");
+		}
+		return s;
+	}
+
+	static string ToV1(string v2Text)
+	{
+		string t = System.Text.RegularExpressions.Regex.Replace(v2Text, "\"version\": \\d+", "\"version\": 1");
+		t = System.Text.RegularExpressions.Regex.Replace(t, "\\s*\"coins\": -?\\d+,", "");
+		t = System.Text.RegularExpressions.Regex.Replace(t, "\\s*\"copy_locked\": (true|false),", "");
+		t = System.Text.RegularExpressions.Regex.Replace(t, "\\s*\"locked_copy\": (null|\\{[^}]*\\}),", "");
+		Assert.True(!t.Contains("coins") && !t.Contains("copy_locked") && !t.Contains("locked_copy"), "the v1 text has no v2 fields");
+		return t;
+	}
+
+	static RunSession RestoreText(string text, List<string>? notes = null)
+	{
+		SaveLoad l = SaveStore.Parse(text);
+		Assert.True(l.Data.Run != null, "the run reads: " + string.Join("; ", l.Problems));
+		return l.Data.Run!.Restore(FightScene.LoadAbilityPool(), DefaultMap(), Table(), notes);
+	}
+
+	static void Refused(Func<RunSession> restore, string what)
+	{
+		try { restore(); }
+		catch (FormatException) { return; }
+		catch (Exception e) { throw new AssertFailed($"{what}: threw {e.GetType().Name} instead of FormatException: {e.Message}"); }
+		throw new AssertFailed($"{what}: was restored, expected a refusal");
+	}
+
+	[Test]
+	public static void V2_Coins_RoundTripAtEverySavePoint_DamageIsUnrestorable() => WithFixtures(() =>
+	{
+		// R8: the purse is run state. Every save point of a walk with merchant, dojo and boss gives back the same coins and the same hash.
+		var pool = FightScene.LoadAbilityPool();
+		int points = 0, maxCoins = 0;
+		string sample = "";
+		WalkToBoss(404, true, (s, what) =>
+		{
+			string text = Text(s, FileMapSource.DefaultFile);
+			var back = RestoreText(text);
+			Assert.True(back.Run.Coins == s.Run.Coins, $"{what}: coins {s.Run.Coins} back as {back.Run.Coins}");
+			Assert.Equal(s.StateHash(), back.StateHash(), what + ": hash");
+			points++;
+			if (s.Run.Coins > maxCoins) { maxCoins = s.Run.Coins; sample = text; }
+		});
+		Assert.True(points >= 10 && maxCoins > 0, $"the walk paid coins ({maxCoins}) over {points} points");
+		string tail = $"\"coins\": {maxCoins}";
+		Assert.True(sample.Contains(tail), "the purse is in the file");
+		SaveLoad ok = SaveStore.Parse(sample.Replace(tail, "\"coins\": 2147483647"));
+		Assert.True(ok.Data.Run!.Restore(pool, DefaultMap(), Table()).Run.Coins == int.MaxValue, "the largest purse an int holds restores");
+		foreach (string bad in new[] { "-1", "-2147483648" })
+			Refused(() => RestoreText(sample.Replace(tail, "\"coins\": " + bad)), "coins " + bad);
+		foreach (string bad in new[] { "\"lots\"", "1.5", "null", "true", "2147483648", "[5]", "{}", "1e2", "\"25\"" })
+		{
+			SaveLoad l = SaveStore.Parse(sample.Replace(tail, "\"coins\": " + bad));
+			Assert.True(l.Data.Run == null && l.Status == SaveLoadStatus.Partial, $"coins {bad}: run dropped, not zeroed ({l.Status})");
+		}
+		Assert.True(SaveStore.Parse(sample.Replace(tail + ",", "")).Data.Run!.Coins == 0, "no coins field: empty purse");
+	});
+
+	[Test]
+	public static void V2_LockInsideTheTanukiNode_RoundTrip_SameHash_StableBytes() => WithFixtures(() =>
+	{
+		var live = WalkToBoss(505, true);
+		string text = Text(live, FileMapSource.DefaultFile);
+		Assert.True(text.Contains("\"copy_locked\": true") && text.Contains("\"locked_copy\": {"), "the lock is in the file: " + text);
+		var back = RestoreText(text);
+		Assert.True(back.CopyLocked && SameCopy(back.LockedCopy, live.LockedCopy) && back.Node?.NodeId == "boss-tanuki", "locked, same copy, inside the boss node");
+		Assert.Equal(live.StateHash(), back.StateHash(), "hash (T1: the copy is part of the run)");
+		Assert.Equal(text, Text(back, FileMapSource.DefaultFile), "save, restore, save: same bytes");
+		Assert.True(SameCopy(live.LockedCopy, CopyRule.Target(live.Run)), "T2/T3: the lock is what the slots lock on");
+		// one step earlier: the last node before the boss, completed: not locked, and the file says so
+		var before = WalkToBoss(505, false);
+		string t2 = Text(before, FileMapSource.DefaultFile);
+		Assert.True(t2.Contains("\"copy_locked\": false") && t2.Contains("\"locked_copy\": null"), "before the Tanuki's node: not locked");
+		var b2 = RestoreText(t2);
+		Assert.True(!b2.CopyLocked && b2.LockedCopy == null && b2.StateHash() == before.StateHash(), "restored unlocked, same hash");
+		// the lock is not re-derived on the way in: after restoring unlocked and entering the boss the copy equals the live run's
+		Assert.True(b2.Enter("boss-tanuki").Ok && SameCopy(b2.LockedCopy, live.LockedCopy), "entering the boss after a Continue locks the same copy");
+	});
+
+	static IEnumerable<(string What, RunSave Save)> BadLocks(RunSave inBoss, RunSave beforeBoss, AbilityPool pool)
+	{
+		var c = inBoss.LockedCopy!;
+		string otherSlot = c.Slot == "A" ? "B" : "A";
+		var other = pool.Specials.First(x => x.Id != c.Special && x.Slot.ToString() == otherSlot);
+		yield return ("locked before the boss, no copy", beforeBoss with { CopyLocked = true, LockedCopy = null });
+		yield return ("locked before the boss, with a copy", beforeBoss with { CopyLocked = true, LockedCopy = c });
+		yield return ("a copy before the boss, unlocked", beforeBoss with { CopyLocked = false, LockedCopy = c });
+		yield return ("unlocked inside the boss", inBoss with { CopyLocked = false, LockedCopy = null });
+		yield return ("copy while copy_locked false", inBoss with { CopyLocked = false });
+		yield return ("copy with no copy_locked field", inBoss with { CopyLocked = null });
+		yield return ("wrong slot (a different valid slot)", inBoss with { LockedCopy = c with { Slot = otherSlot } });
+		yield return ("slot E", inBoss with { LockedCopy = c with { Slot = "E" } });
+		yield return ("slot lower-case", inBoss with { LockedCopy = c with { Slot = c.Slot.ToLowerInvariant() } });
+		yield return ("level 0", inBoss with { LockedCopy = c with { Level = 0 } });
+		yield return ("level 99", inBoss with { LockedCopy = c with { Level = 99 } });
+		yield return ("level -1", inBoss with { LockedCopy = c with { Level = -1 } });
+		yield return ("unknown special", inBoss with { LockedCopy = c with { Special = "no-such-special" } });
+		yield return ("special in another slot than named", inBoss with { LockedCopy = new LockedCopySave(c.Slot, other.Id, 1) });
+	}
+
+	[Test]
+	public static void V2_LockThatDisagreesWithTheWalk_IsRefused_AndGreysContinue_WithoutThrowingOutOfBoot(Node runner) => WithTempDir(dir =>
+	{
+		// T1: nothing is locked before the Tanuki's node and the lock is set on entering it; a copy must be a real special in its own slot and a real level.
+		RunSave inBoss = null!, beforeBoss = null!;
+		AbilityPool pool = null!;
+		WithFixtures(() =>
+		{
+			pool = FightScene.LoadAbilityPool();
+			inBoss = RunSave.Capture(WalkToBoss(606, true), FileMapSource.DefaultFile);
+			beforeBoss = RunSave.Capture(WalkToBoss(606, false), FileMapSource.DefaultFile);
+		});
+		Assert.True(inBoss.CopyLocked == true && inBoss.LockedCopy != null && beforeBoss.CopyLocked == false, "fixtures are the saves they should be");
+		int n = 0;
+		foreach (var (what, bad) in BadLocks(inBoss, beforeBoss, pool))
+		{
+			WithFixtures(() => Refused(() => bad.Restore(pool, DefaultMap(), Table()), what));
+			string path = Path.Combine(dir, $"s{n++}.json");
+			File.WriteAllText(path, SaveStore.Serialize(SaveData.Empty.WithRun(bad).WithStory("intro")));
+			string before = File.ReadAllText(path);
+			WithBoot(runner, path, flow =>
+			{
+				Assert.True(flow.Title.ContinueButton.Disabled, $"{what}: Continue greyed");
+				Assert.True(flow.Title.DisabledReason(TitleEntry.Continue).StartsWith("The saved run cannot be continued"), $"{what}: {flow.Title.DisabledReason(TitleEntry.Continue)}");
+				Assert.True(!flow.ContinueRun() && flow.Session == null && flow.Router.Current == Screen.Title, $"{what}: nothing starts");
+				Assert.True(flow.Saved.Story.Has("intro"), $"{what}: story still loaded (M4)");
+			});
+			Assert.Equal(before, File.ReadAllText(path), $"{what}: the file is left as it was");
+		}
+		Assert.True(n >= 14, "variants run: " + n);
+	});
+
+	[Test]
+	public static void V2_LockWrongTypedInTheFile_DropsTheRunAlone() => WithFixtures(() =>
+	{
+		string text = Text(WalkToBoss(707, true), FileMapSource.DefaultFile);
+		text = text.Replace("\"version\": 2", "\"version\": 2").Replace("\"unlocks\": [", "\"unlocks\": [\"u\"], \"x\": [");
+		foreach (var (from, to) in new[]
+		{
+			("\"copy_locked\": true", "\"copy_locked\": \"yes\""), ("\"copy_locked\": true", "\"copy_locked\": 1"), ("\"copy_locked\": true", "\"copy_locked\": null"),
+			("\"locked_copy\": {", "\"locked_copy\": [], \"was\": {"), ("\"locked_copy\": {", "\"locked_copy\": \"A\", \"was\": {"),
+		})
+		{
+			Assert.True(text.Contains(from), "fixture has " + from);
+			SaveLoad l = SaveStore.Parse(text.Replace(from, to));
+			Assert.True(l.Data.Run == null && l.Status == SaveLoadStatus.Partial && l.Data.Unlocks.SequenceEqual(new[] { "u" }), $"{to}: run dropped, unlocks kept ({l.Status})");
+		}
+		string noLevel = System.Text.RegularExpressions.Regex.Replace(text, "(\"locked_copy\": \\{[^}]*?)\"level\": \\d+", "$1\"lvl\": 1");
+		Assert.True(noLevel != text && SaveStore.Parse(noLevel).Data.Run == null, "locked_copy without a level: run dropped");
+		string half = System.Text.RegularExpressions.Regex.Replace(text, "(\"locked_copy\": \\{[^}]*?)\"level\": (\\d+)", "$1\"level\": $2.5");
+		Assert.True(SaveStore.Parse(half).Data.Run == null, "locked_copy level 2.5: run dropped");
+	});
+
+	[Test]
+	public static void T1_LockInsideTheTanukiNode_MustBeWhatTheEntrySlotsLock_ElseRefused() => WithFixtures(() =>
+	{
+		// T1/T2/T3/T5: once Ryo is inside the Tanuki's node the slots are exactly what they were when the copy locked, so a saved lock that is
+		// not CopyRule.Target(slots) cannot have come from play: a special Ryo never held, a level he never had, or no copy while he owns specials.
+		var pool = FightScene.LoadAbilityPool();
+		var inBoss = RunSave.Capture(WalkToBoss(808, true), FileMapSource.DefaultFile);
+		var c = inBoss.LockedCopy!;
+		var accepted = new List<string>();
+		void Try(string what, RunSave r)
+		{
+			try { r.Restore(pool, DefaultMap(), Table()); accepted.Add(what); }
+			catch (FormatException) { }
+		}
+		int otherLevel = c.Level < pool.Special(c.Special)!.MaxLevel ? c.Level + 1 : c.Level - 1;
+		Assert.True(otherLevel >= 1, "a different level exists");
+		Try($"level {otherLevel} instead of {c.Level} for {c.Special}", inBoss with { LockedCopy = c with { Level = otherLevel } });
+		var notOwned = pool.Specials.First(x => x.Id != c.Special);
+		Try($"{notOwned.Id} (not the slots' target) at level 1", inBoss with { LockedCopy = new LockedCopySave(notOwned.Slot.ToString(), notOwned.Id, 1) });
+		Try("no copy while specials are owned (T5)", inBoss with { LockedCopy = null });
+		Assert.True(accepted.Count == 0, "restored although the lock cannot be what the slots lock on: " + string.Join(" | ", accepted));
+	});
+
+	[Test]
+	public static void V1_Files_CoinsZero_NoLockBeforeBoss_LockReDerivedExactlyInsideBoss() => WithFixtures(() =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		// start of a run: v1 equals the live session, hash and all (nothing was earned yet)
+		var s0 = NewSession(909);
+		string v1Start = ToV1(Text(s0, FileMapSource.DefaultFile));
+		SaveLoad l0 = SaveStore.Parse(v1Start);
+		Assert.True(l0.Status == SaveLoadStatus.OlderVersion && l0.Data.Run!.CopyLocked == null && l0.Data.Run.Coins == 0, "v1: older, no lock said, coins 0");
+		var r0 = RestoreText(v1Start);
+		Assert.True(r0.StateHash() == s0.StateHash() && !r0.CopyLocked && r0.Run.Coins == 0, "start: same hash, unlocked");
+		// every pre-boss save point of a real walk: restores unlocked with an empty purse (coins are the one thing a v1 file cannot hold)
+		int points = 0;
+		var boss = WalkToBoss(909, true, (s, what) =>
+		{
+			if (what == "entered boss") return;
+			var back = RestoreText(ToV1(Text(s, FileMapSource.DefaultFile)));
+			Assert.True(!back.CopyLocked && back.LockedCopy == null && back.Run.Coins == 0 && back.Run.Health == s.Run.Health && Slots(back) == Slots(s), $"v1 {what}: unlocked, coins 0, same slots and health");
+			points++;
+		});
+		Assert.True(points >= 10, "pre-boss points: " + points);
+		// inside the boss: the lock is worked out from the slots and equals the live lock
+		var notes = new List<string>();
+		var inBoss = RestoreText(ToV1(Text(boss, FileMapSource.DefaultFile)), notes);
+		Assert.True(inBoss.CopyLocked && SameCopy(inBoss.LockedCopy, boss.LockedCopy) && inBoss.Node?.NodeId == "boss-tanuki", "v1 inside the boss: the same copy as the live lock (T1)");
+		Assert.True(notes.Any(x => x.Contains("copy lock")), "and the derivation is reported");
+		Assert.True(Slots(inBoss) == Slots(boss) && inBoss.Run.Coins == 0, "slots equal, purse empty");
+		// a level-up order that had to be repaired: refused, never guessed
+		var save = RunSave.Capture(boss, FileMapSource.DefaultFile);
+		var leveled = save.Slots.Select(x => pool.Special(x.Special)!.MaxLevel >= 2 ? x with { Level = 2, Levelled = 0 } : x).ToArray();
+		Assert.True(leveled.Count(x => x.Level == 2) >= 2, "two specials can level");
+		var repairable = save with { Slots = leveled, Coins = 0, CopyLocked = null, LockedCopy = null };
+		Refused(() => repairable.Restore(pool, DefaultMap(), Table()), "v1 inside the boss with a repaired level-up order");
+	});
+
+	[Test]
+	public static void V1_File_IsRewrittenAsVersion2_NothingLost_NoBackup() => WithFixtures(() => WithTempFile(path =>
+	{
+		var s = WalkToBoss(111, false);
+		var data = SaveData.Empty.WithRun(RunSave.Capture(s, FileMapSource.DefaultFile)).WithUnlock("u1").WithUnlock("u0").WithStory("win-1").WithStory("intro");
+		File.WriteAllText(path, ToV1(SaveStore.Serialize(data)));
+		var store = new SaveStore(path);
+		SaveLoad load = store.Load();
+		Assert.Equal(SaveLoadStatus.OlderVersion, load.Status, "older");
+		Assert.True(!SaveStore.LostSomething(load), "nothing lost on reading it");
+		Assert.True(store.Save(load.Data), "saved");
+		string now = File.ReadAllText(path);
+		Assert.True(now.Contains("\"version\": 2") && now.Contains("\"coins\": 0"), "rewritten as the current version: " + now);
+		Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup, no temp");
+		SaveLoad again = new SaveStore(path).Load();
+		Assert.True(again.Status == SaveLoadStatus.Loaded && again.Data.Unlocks.SequenceEqual(new[] { "u1", "u0" }) && again.Data.Story.Seen.SequenceEqual(new[] { "intro", "win-1" }), "unlocks (order) and story intact (M1, M4)");
+		Assert.True(again.Data.Run!.Slots.SequenceEqual(data.Run!.Slots) && again.Data.Run.Visited.SequenceEqual(data.Run.Visited) && again.Data.Run.Health == data.Run.Health, "run fields intact");
+		Assert.True(RestoreText(now).Step == s.Step, "and it still restores");
+	}));
+
+	[Test]
+	public static void V1_BossFile_ThroughTheBoot_ContinueEntersTheBoss_AndTheNextWriteIsVersion2(Node runner) => WithTempFile(path =>
+	{
+		RunSession boss = null!;
+		string v1 = "";
+		WithFixtures(() => { boss = WalkToBoss(222, true); v1 = ToV1(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(boss, FileMapSource.DefaultFile)).WithUnlock("u").WithStory("intro"))); });
+		File.WriteAllText(path, v1);
+		WithBoot(runner, path, flow =>
+		{
+			Assert.True(!flow.Title.ContinueButton.Disabled, "Continue lit for a v1 save inside the boss node");
+			Assert.Equal(v1, File.ReadAllText(path), "boot wrote nothing");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session!.Node?.NodeId == "boss-tanuki" && flow.Session.CopyLocked && SameCopy(flow.Session.LockedCopy, boss.LockedCopy), "inside the boss, the same copy locked");
+			Assert.True(flow.Session.LoseFight().Ok, "lost");
+			SaveLoad after = new SaveStore(path).Load();
+			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
+			Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup");
+		});
+	});
+
+	[Test]
+	public static void MerchantAndDojo_EnteredSavePoints_RestoreOpenWithNoChoice_AndEveryCompletedPointToo() => WithFixtures(() =>
+	{
+		// The author's claim: a stop's choice is None at every save point. Probed through the file: restore at entry (inside the stop) and after completion.
+		var types = new HashSet<string>();
+		foreach (uint seed in new[] { 61u, 62u })
+			foreach (bool last in new[] { false, true })
+			{
+				var s = NewSession(seed);
+				while (!s.IsOver)
+				{
+					var reach = s.Reachable();
+					Assert.True(s.Enter(last ? reach[^1] : reach[0]).Ok, "entered");
+					types.Add(s.Node!.Type);
+					var back = RestoreText(Text(s, FileMapSource.DefaultFile));
+					Assert.Equal(s.StateHash(), back.StateHash(), $"{s.Node.NodeId}: restored inside the node");
+					if (s.Node.Type == NodeTypeRegistry.Merchant)
+					{
+						Assert.True(back.Merchant is { CanChoose: true } && back.Merchant.Choice == MerchantChoice.None, "merchant open, nothing chosen");
+						Assert.True(s.Merchant!.TakeHeal().Ok, "heal");
+						Assert.True(s.StateHash() != back.StateHash(), "the live choice is visible in the hash (so a save after it would differ): it is NOT in the file");
+					}
+					else if (s.Node.Type == NodeTypeRegistry.Dojo)
+					{
+						Assert.True(back.Dojo is { } bd && bd.Choice == DojoChoice.None, "dojo open, nothing chosen");
+						Assert.True(s.Dojo!.Rest().Ok, "rest");
+					}
+					else if (s.WinFight(650) is { } draft) draft.Pick(0, draft.Offer.Cards[0].Targets.Count > 0 ? draft.Offer.Cards[0].Targets[0].Slot : null);
+					Assert.True(s.CompleteNode().Ok, "completed");
+					if (!s.IsOver) Assert.Equal(s.StateHash(), RestoreText(Text(s, FileMapSource.DefaultFile)).StateHash(), "completed point restores");
+				}
+			}
+		Assert.True(types.Contains(NodeTypeRegistry.Merchant) && types.Contains(NodeTypeRegistry.Dojo), "both stops visited");
+	});
+
+	[Test]
+	public static void KnownOpen_MerchantHealThenQuit_ContinueOffersTheHealAgain() => WithFixtures(() =>
+	{
+		// Rules are silent on quitting inside a stop (designer question, same class as retry-by-quitting). A heal taken but not yet completed is not
+		// in the file, so Continue returns to the stop with its entry health and the choice open again. Flip if a choice should be final.
+		var s = NewSession(63);
+		while (s.Reachable().Select(id => s.Map.Graph.Node(id).Type).All(t => t != NodeTypeRegistry.Merchant))
+		{
+			s.Enter(s.Reachable()[0]);
+			if (s.Merchant is { } mm) mm.TakeHeal(); else if (s.Dojo is { } dd) dd.Rest(); else WinAndPick(s, 500, 0);
+			s.CompleteNode();
+		}
+		s.Enter(s.Reachable().First(id => s.Map.Graph.Node(id).Type == NodeTypeRegistry.Merchant));
+		string atEntry = Text(s, FileMapSource.DefaultFile);
+		int entryHealth = s.Run.Health;
+		Assert.True(s.Merchant!.TakeHeal().Ok && s.Run.Health > entryHealth, "the heal healed");
+		var back = RestoreText(atEntry);
+		Assert.True(back.Run.Health == entryHealth && back.Merchant is { CanHeal: true }, "KnownOpen: after quitting, the heal is offered again at the entry health");
+	});
+
+	[Test]
+	public static void V2_RepairedLevelUpOrder_InsideTheBoss_WithASavedLock_IsRefused() => WithFixtures(() =>
+	{
+		// Critic round 3: with a repaired T3 order the saved lock cannot be cross-checked (the tie-break would be a guess), so the run is refused,
+		// as the version 1 branch does. Pinned: flip to "restores with a note" if the designer prefers keeping the run on tie-break damage.
+		var pool = FightScene.LoadAbilityPool();
+		var save = RunSave.Capture(WalkToBoss(909, true), FileMapSource.DefaultFile);
+		var leveled = save.Slots.Select(x => pool.Special(x.Special)!.MaxLevel >= 2 ? x with { Level = 2, Levelled = 0 } : x).ToArray();
+		Assert.True(leveled.Count(x => x.Level == 2) >= 2, "two specials can level");
+		var first = leveled.First(x => x.Level == 2);
+		var v2 = save with { Slots = leveled, LockedCopy = new LockedCopySave(first.Slot, first.Special, 2) };
+		Refused(() => v2.Restore(pool, DefaultMap(), Table()), "v2 inside the boss with a repaired level-up order");
+		// before the boss the same damage is still repaired, never a reason to lose the run (the lock does not exist yet)
+		var early = RunSave.Capture(WalkToBoss(909, false), FileMapSource.DefaultFile);
+		var el = early.Slots.Select(x => pool.Special(x.Special)!.MaxLevel >= 2 ? x with { Level = 2, Levelled = 0 } : x).ToArray();
+		var notes = new List<string>();
+		Assert.True((early with { Slots = el }).Restore(pool, DefaultMap(), Table(), notes) != null && notes.Any(x => x.Contains("level-up order")), "before the boss: repaired with a note");
+	});
 }
