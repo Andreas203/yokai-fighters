@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="MapNodeStyles" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/Ui/MapNodeStyles.cs" id="1"]
+[ext_resource type="Script" path="res://scripts/Ui/MapNodeStyle.cs" id="2"]
+
+[sub_resource type="Resource" id="duel"]
+script = ExtResource("2")
+Type = "duel"
+Label = "Duel"
+Color = Color(0.176, 0.227, 0.369, 1)
+Icon = "D"
+
+[sub_resource type="Resource" id="elder"]
+script = ExtResource("2")
+Type = "elder"
+Label = "Elder duel"
+Color = Color(0.72, 0.2, 0.16, 1)
+Icon = "E"
+
+[sub_resource type="Resource" id="boss"]
+script = ExtResource("2")
+Type = "boss"
+Label = "Boss"
+Color = Color(0.114, 0.106, 0.129, 1)
+Icon = "B"
+
+[sub_resource type="Resource" id="merchant"]
+script = ExtResource("2")
+Type = "merchant"
+Label = "Merchant"
+Color = Color(0.2, 0.36, 0.27, 1)
+Icon = "M"
+
+[sub_resource type="Resource" id="dojo"]
+script = ExtResource("2")
+Type = "dojo"
+Label = "Dojo"
+Color = Color(0.8, 0.5, 0.2, 1)
+Icon = "J"
+
+[sub_resource type="Resource" id="fallback"]
+script = ExtResource("2")
+Type = ""
+Label = ""
+Color = Color(0.45, 0.42, 0.38, 1)
+Icon = "?"
+
+[resource]
+script = ExtResource("1")
+Styles = Array[Object]([SubResource("duel"), SubResource("elder"), SubResource("boss"), SubResource("merchant"), SubResource("dojo")])
+Fallback = SubResource("fallback")

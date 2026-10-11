@@ -1,0 +1,73 @@
+[gd_scene format=3]
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/Ui/MapNode.cs" id="script"]
+
+[node name="MapNode" type="Button"]
+custom_minimum_size = Vector2(150, 100)
+offset_right = 150.0
+offset_bottom = 100.0
+theme = ExtResource("theme")
+focus_mode = 0
+script = ExtResource("script")
+
+[node name="Content" type="VBoxContainer" parent="."]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = -6.0
+offset_bottom = -4.0
+theme_override_constants/separation = 0
+
+[node name="Top" type="HBoxContainer" parent="Content"]
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="IconLabel" type="Label" parent="Content/Top"]
+mouse_filter = 2
+text = "?"
+theme_type_variation = &"BodyLabel"
+
+[node name="IconTexture" type="TextureRect" parent="Content/Top"]
+visible = false
+custom_minimum_size = Vector2(24, 24)
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TypeLabel" type="Label" parent="Content/Top"]
+mouse_filter = 2
+size_flags_horizontal = 3
+clip_text = true
+text = "Type"
+theme_type_variation = &"CaptionLabel"
+
+[node name="ElderMark" type="PanelContainer" parent="Content/Top"]
+visible = false
+custom_minimum_size = Vector2(24, 24)
+mouse_filter = 2
+size_flags_vertical = 4
+
+[node name="ElderGlyph" type="Label" parent="Content/Top/ElderMark"]
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "E"
+theme_type_variation = &"CaptionLabel"
+
+[node name="NameLabel" type="Label" parent="Content"]
+mouse_filter = 2
+size_flags_vertical = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+clip_text = true
+text = "Yokai"
+theme_type_variation = &"BodyLabel"
+
+[node name="StateLabel" type="Label" parent="Content"]
+mouse_filter = 2
+horizontal_alignment = 1
+text = ""
+theme_type_variation = &"CaptionLabel"
