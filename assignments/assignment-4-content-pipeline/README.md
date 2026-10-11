@@ -49,7 +49,7 @@ python tools/content_pipeline/run.py retrieve "Elder Kappa twist"
 python tools/content_pipeline/run.py generate                  # live: needs the `claude` CLI, logged in
 ```
 
-Python 3.10+, standard library only. The pipeline is a project tool and lives in [`tools/content_pipeline/`](../../tools/content_pipeline/). Each run writes `runs/<name>/trace.md` there, with every query, chunk, draft and critic issue, plus `llm-calls.json`, which `--replay` reads back. Three runs are recorded:
+Python 3.10+, standard library only. The schema check on the story cards is the one optional extra: it needs `pip install -r tools/requirements.txt` (`jsonschema`), and without it a replay keeps the check the run recorded. The pipeline is a project tool and lives in [`tools/content_pipeline/`](../../tools/content_pipeline/). Each run writes `runs/<name>/trace.md` there, with every query, chunk, draft and critic issue, plus `llm-calls.json`, which `--replay` reads back. Three runs are recorded:
 
 | Run | What it is | Result |
 |---|---|---|
