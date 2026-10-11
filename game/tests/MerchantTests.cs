@@ -197,5 +197,34 @@ public static class MerchantTests
 		Assert.True(!NewStop().Restore((MerchantChoice)9).Ok, "an unknown value is refused");
 
 		static Merchant NewStop() => AtMerchant(300).Merchant!;
+
+		// the session constructor takes the saved choice, so a restore need not call Restore itself
+		RunState Saved()
+		{
+			var r = RunState.NewRun(saved.Pool);
+			r.SetHealth(saved.Run.Health);
+			r.SetMap(RunMap.Restore(saved.Map.Graph, saved.Map.Snapshot()));
+			return r;
+		}
+		var direct = new RunSession(Saved(), saved.Pool, saved.Scenes, saved.Seed, MerchantChoice.Heal);
+		Assert.True(direct.Merchant!.Choice == MerchantChoice.Heal && !direct.Merchant.TakeHeal().Ok && direct.Run.Health == 550, "restored spent: no second heal");
+		Assert.True(direct.StateHash() == loaded.StateHash(), "the same state as restoring by hand (the rebuilt run has the starters only)");
+		Throws(() => new RunSession(Saved(), saved.Pool, saved.Scenes, saved.Seed, (MerchantChoice)9), "an unknown saved choice");
+		var onMap = RunState.NewRun(saved.Pool, saved.Map.Graph);
+		Throws(() => new RunSession(onMap, saved.Pool, saved.Scenes, saved.Seed, MerchantChoice.Heal), "a saved choice with no merchant entered");
+
+		// a stop of an ended run takes no restored choice either
+		var lost = AtMerchant(300);
+		var stale = lost.Merchant!;
+		lost.LoseFight();
+		ulong ended = lost.StateHash();
+		Assert.True(!stale.Restore(MerchantChoice.Shop).Ok && stale.Choice == MerchantChoice.None && lost.StateHash() == ended, "no restore after the run is over");
+
+		static void Throws(Action body, string what)
+		{
+			try { body(); }
+			catch (ArgumentException) { return; }
+			throw new AssertFailed($"{what}: expected ArgumentException");
+		}
 	});
 }

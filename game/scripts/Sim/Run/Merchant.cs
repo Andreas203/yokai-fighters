@@ -3,7 +3,7 @@ using System;
 namespace YokaiFighters.Sim;
 
 /// <summary>R6: what Ryo did with a merchant stop. One per stop: the free heal <b>or</b> the shop.</summary>
-public enum MerchantChoice { None, Heal, Shop }
+public enum MerchantChoice { None = 0, Heal = 1, Shop = 2 } // explicit: RunSession.StateHash mixes the value
 
 /// <summary>
 /// YOK-83: one merchant stop (pure C#, deterministic, no Godot). R6 gives Ryo one choice here, the free heal or
@@ -66,11 +66,13 @@ public sealed class Merchant
 
 	/// <summary>
 	/// Puts back the choice of a saved stop without giving the heal again (the saved health already has it).
-	/// Refused once a choice is recorded here.
+	/// Refused once a choice is recorded here, and on a stop Ryo is not at or a run that is over. A restored
+	/// session does this itself from its <c>merchantChoice</c> argument (<see cref="RunSession"/>).
 	/// </summary>
 	public MapResult Restore(MerchantChoice choice)
 	{
 		if (!Enum.IsDefined(choice)) return MapResult.Fail($"merchant '{NodeId}': '{choice}' is not a choice (R6)");
+		if (!Open) return MapResult.Fail($"merchant '{NodeId}': Ryo is not at this stop");
 		if (Choice != MerchantChoice.None)
 			return MapResult.Fail($"merchant '{NodeId}': the choice here is already made ({Choice}) (R6)");
 		Choice = choice;

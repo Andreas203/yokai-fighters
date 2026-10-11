@@ -18,8 +18,10 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// <see cref="WinFight"/> (R3 heal, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
 /// <see cref="LoseFight"/>. The run is won when the completed node has no route out, lost on the first lost fight.
 /// <para>
-/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/> and
-/// <see cref="Ended"/> (a later save / Continue, YOK-73, writes those). The object must outlive scene changes:
+/// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/>,
+/// <see cref="Ended"/> and, while Ryo stands at a merchant, that stop's <see cref="Merchant.Choice"/> (R6; the
+/// constructor's <c>merchantChoice</c> puts it back). A later save / Continue (YOK-73) writes those; one that
+/// drops the merchant choice hands the stop's heal out twice. The object must outlive scene changes:
 /// the boot flow holds it, never a node's scene.
 /// </para>
 /// </summary>
@@ -52,7 +54,7 @@ public sealed class RunSession
 	public event Action<NodeContext>? NodeCompleted;
 	public event Action<RunEnd>? RunEnded;
 
-	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed)
+	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, MerchantChoice merchantChoice = MerchantChoice.None)
 	{
 		Run = run;
 		Map = run.Map ?? throw new ArgumentException("the run has no map (RunState.StartMap)", nameof(run));
@@ -62,6 +64,8 @@ public sealed class RunSession
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
 		Merchant = MerchantAt(Node);
+		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
+			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
 	}
 
 	/// <summary>A new run on <paramref name="graph"/>: the starters at Lv 1, full health (A1, C1), no node picked.</summary>
@@ -136,7 +140,7 @@ public sealed class RunSession
 		h = Fnv.Mix(h, unchecked((int)Seed));
 		h = Fnv.Mix(h, Ended is null ? 0 : 1 + (int)Ended.Outcome);
 		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
-		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(h, (int)m.Choice);
+		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(Fnv.MixString(h, "merchant"), (int)m.Choice);
 		return h;
 	}
 }
