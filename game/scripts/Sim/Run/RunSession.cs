@@ -37,6 +37,8 @@ public sealed class RunSession
 	public NodeContext? Node => Entered?.Context;
 	/// <summary>The reward offer of the node just won, until the node is completed. Null when it gives none.</summary>
 	public RewardDraft? Draft { get; private set; }
+	/// <summary>YOK-83: the merchant stop Ryo is at (R6: its one choice, heal or shop); null on any other node.</summary>
+	public Merchant? Merchant { get; private set; }
 	public RunEnd? Ended { get; private set; }
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
@@ -59,6 +61,7 @@ public sealed class RunSession
 		Seed = seed;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
+		Merchant = MerchantAt(Node);
 	}
 
 	/// <summary>A new run on <paramref name="graph"/>: the starters at Lv 1, full health (A1, C1), no node picked.</summary>
@@ -75,6 +78,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
+		Merchant = MerchantAt(Node);
 		NodeEntered?.Invoke(Entered.Context);
 		return step;
 	}
@@ -104,11 +108,15 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = null;
 		Draft = null;
+		Merchant = null;
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
 		return step;
 	}
+
+	Merchant? MerchantAt(NodeContext? node) =>
+		node is { Type: NodeTypeRegistry.Merchant } ? new Merchant(this, node.NodeId) : null;
 
 	/// <summary>Ryo lost the entered node's fight: the run ends there.</summary>
 	public MapResult LoseFight()
@@ -127,6 +135,8 @@ public sealed class RunSession
 		h = Fnv.Mix(h, unchecked((int)(r >> 32)));
 		h = Fnv.Mix(h, unchecked((int)Seed));
 		h = Fnv.Mix(h, Ended is null ? 0 : 1 + (int)Ended.Outcome);
+		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
+		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(h, (int)m.Choice);
 		return h;
 	}
 }
