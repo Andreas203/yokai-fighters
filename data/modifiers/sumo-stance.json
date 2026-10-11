@@ -1,0 +1,34 @@
+{
+  "kind": "modifier",
+  "id": "sumo-stance",
+  "name": "Sumo Stance",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20",
+    "E7"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "damage",
+      "op": "mul_pct",
+      "value": 120,
+      "when": "holding_charge"
+    }
+  ],
+  "card": {
+    "plain": "Hold the button to brace like a sumo wrestler for a harder hit.",
+    "frames": "Hold to charge: +20% damage"
+  },
+  "notes": "Charge timing uses the E7 charge rules (40 ticks held, 8 grace). Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}
