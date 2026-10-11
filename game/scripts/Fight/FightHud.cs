@@ -16,7 +16,10 @@ public partial class FightHud : CanvasLayer
 	public static readonly Color Paper = new(0.93f, 0.89f, 0.78f), Ink = new(0.13f, 0.14f, 0.25f),
 		Seal = new(0.72f, 0.16f, 0.14f), Pine = new(0.22f, 0.38f, 0.3f), Persimmon = new(0.85f, 0.4f, 0.15f);
 
-	private static readonly string[] Names = { "RYO", "KITSUNE" };
+	private string _opponentId = "";
+	private string _opponentName = "";
+	private TextureRect _portrait = null!, _burstArt = null!;
+	private Label _burstLetter = null!, _temperament = null!;
 
 	/// <summary>Meter/burst source (YOK-20): FightScene assigns a MatchHudView over Ryo; defaults to one over the refreshed match.</summary>
 	public IHudView? View { get; set; }
@@ -44,6 +47,10 @@ public partial class FightHud : CanvasLayer
 		for (int i = 0; i < 3; i++) _meter[i] = UiFind.Get<ProgressBar>(this, $"Meter{i + 1}");
 		_meterText = UiFind.Get<Label>(this, "MeterText");
 		_burst = UiFind.Get<Control>(this, "BurstSeal");
+		_burstArt = UiFind.Get<TextureRect>(this, "BurstArt");
+		_burstLetter = UiFind.Get<Label>(this, "BurstLetter");
+		_portrait = UiFind.Get<TextureRect>(this, "P2Portrait");
+		_temperament = UiFind.Get<Label>(this, "Temperament");
 		_banner.Text = "";
 		_ready = true;
 	}
@@ -58,12 +65,20 @@ public partial class FightHud : CanvasLayer
 	{
 		if (!_ready) return; // before _Ready
 		View ??= new MatchHudView(m);
+		ShowOpponent(FightScene.Opponent);
+		_temperament.Text = GetParent() is FightScene fight ? fight.Temperament.ToUpperInvariant() : "";
 		for (int i = 0; i < 2; i++)
 		{
 			Fighter f = m.Fighters[i];
 			_health[i].MaxValue = f.MaxHealth;
 			_health[i].Value = Math.Clamp(f.Health, 0, f.MaxHealth);
-			_healthText[i].Text = HealthText(Names[i], f);
+			_healthText[i].Text = HealthText(i == 0 ? "RYO" : _opponentName, f);
+			// Keep the longest current opponent names readable without clipping their health.
+			var label = _healthText[i];
+			var font = label.GetThemeFont("font");
+			int size = 34;
+			while (size > 26 && font.GetStringSize(label.Text, fontSize: size).X > label.Size.X) size--;
+			label.AddThemeFontSizeOverride("font_size", size);
 		}
 		if (View != null) ShowMeter(View);
 		bool ryoLost = m.Phase == MatchPhase.Over && m.Winner != 0;
@@ -89,7 +104,29 @@ public partial class FightHud : CanvasLayer
 		}
 		// Burst seal: red when unspent, grey when spent (C6).
 		_burst.ThemeTypeVariation = v.BurstAvailable ? "BurstSeal" : "BurstSealSpent";
+		_burstArt.Modulate = v.BurstAvailable ? Colors.White : new Color(0.45f, 0.45f, 0.45f, 0.65f);
+		((ShaderMaterial)_burstArt.Material).SetShaderParameter("spent", !v.BurstAvailable);
+		_burstLetter.Text = v.BurstAvailable ? "B" : "×";
+		_burst.TooltipText = v.BurstAvailable ? "Burst unspent" : "Burst spent";
 		_meterText.Text = $"METER {v.Meter} / {v.MeterMax}";
+	}
+
+	/// <summary>Presentation lookup only. Unknown opponents have no portrait, never another fighter's mask.</summary>
+	public static string PortraitPath(string opponent) => opponent switch
+	{
+		"kitsune" or "nine-tailed-kitsune" => "res://assets/generated/ui/fox-mask.png",
+		"tanuki" => "", // No boss reveal in the HUD.
+		_ => $"res://assets/generated/ui/{opponent}-portrait.png",
+	};
+
+	private void ShowOpponent(string id)
+	{
+		if (_opponentId == id) return;
+		_opponentId = id;
+		_opponentName = Story.StoryLibrary.DisplayName(id).ToUpperInvariant();
+		string path = PortraitPath(id);
+		_portrait.Texture = path.Length > 0 && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
+		_portrait.Visible = _portrait.Texture != null;
 	}
 
 	/// <summary>Health text, e.g. "RYO · 720 / 1000".</summary>
