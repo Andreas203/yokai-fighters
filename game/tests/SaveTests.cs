@@ -827,7 +827,7 @@ public static class SaveTests
 		Throws<FormatException>(() => (saved with { CopyLocked = false, LockedCopy = null }).Restore(pool, DefaultMap(), Table()), "unlocked inside the Tanuki's node (T1)");
 		Throws<FormatException>(() => (saved with { CopyLocked = false }).Restore(pool, DefaultMap(), Table()), "a copy while unlocked");
 		Throws<FormatException>(() => (saved with { CopyLocked = null }).Restore(pool, DefaultMap(), Table()), "a copy with no lock flag");
-		Assert.True((saved with { LockedCopy = null }).Restore(pool, DefaultMap(), Table()) is { CopyLocked: true, LockedCopy: null }, "a lock that found no special is still a lock");
+		Throws<FormatException>(() => (saved with { LockedCopy = null }).Restore(pool, DefaultMap(), Table()), "a lock that found no special while Ryo owns specials (T5)");
 
 		var early = NewSession(41);
 		PlayNode(early, 800);
@@ -913,5 +913,39 @@ public static class SaveTests
 			Assert.True(points == 2 * s.Steps, "a save point on every entry and every completion");
 		}
 		Assert.True(seenTypes.Contains(NodeTypeRegistry.Merchant) && seenTypes.Contains(NodeTypeRegistry.Dojo), "both a merchant and a dojo were visited: " + string.Join(",", seenTypes));
+	});
+
+	[Test]
+	public static void CopyLock_TheSavedCopy_MustBeTheOneTheRunLocks_T2toT5() => WithFixtures(() =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		int levelledSeeds = 0;
+		foreach (uint seed in new uint[] { 1, 2, 3, 41, 52 })
+		{
+			var s = ToTheBoss(seed);
+			RunSave saved = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)))).Data.Run!;
+			Assert.True(Same(saved.Restore(pool, DefaultMap(), Table()).LockedCopy, s.LockedCopy), $"seed {seed}: the true lock restores");
+			var live = s.LockedCopy!;
+			var owned = s.Run.Owned.ToList();
+
+			var wrong = new List<(string What, RunSave Save)>
+			{
+				("no copy while Ryo owns specials (T5)", saved with { LockedCopy = null }),
+				("a level Ryo does not hold (T4)", saved with { LockedCopy = saved.LockedCopy! with { Level = live.Level == 1 ? 2 : live.Level - 1 } }),
+			};
+			var notOwned = pool.Specials.FirstOrDefault(sp => !s.Run.Owns(sp.Id));
+			if (notOwned != null) wrong.Add(("a special Ryo does not own (T2)", saved with { LockedCopy = new LockedCopySave(notOwned.Slot.ToString(), notOwned.Id, 1) }));
+			foreach (var (slot, sp) in owned.Where(o => o.Slot != live.Slot))
+				wrong.Add(($"{slot}:{sp.Data.Id} Lv {sp.Level} instead of the target (T2, T3)", saved with { LockedCopy = new LockedCopySave(slot.ToString(), sp.Data.Id, sp.Level) }));
+			foreach (var (what, bad) in wrong)
+				Throws<FormatException>(() => bad.Restore(pool, DefaultMap(), Table()), $"seed {seed}: {what}");
+			if (saved.Slots.Any(x => x.Level > 1))
+			{
+				levelledSeeds++;
+				Throws<FormatException>(() => (saved with { Slots = saved.Slots.Select(x => x with { Levelled = 0 }).ToArray() }).Restore(pool, DefaultMap(), Table()),
+					$"seed {seed}: a saved lock with a repaired level-up order can't be checked (T3)");
+			}
+		}
+		Assert.True(levelledSeeds > 0, "some seed reached the boss with a levelled special");
 	});
 }

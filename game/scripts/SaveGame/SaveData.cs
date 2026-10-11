@@ -158,6 +158,18 @@ public sealed record RunSave(
 				SpecialData data = pool.Special(c.Special) ?? throw new FormatException($"locked copy '{c.Special}' is not in this build's abilities (T1)");
 				copy = new CopyTarget(ParseSlot(c.Slot), data, c.Level);
 			}
+			// The Tanuki's node is the only save point past the lock (a completed one is a finished walk, refused
+			// above), and nothing changes the slots between the lock and that save. So the saved copy must be the one
+			// the copy rule gives on the restored slots (T2-T5); with a repaired level-up order that can't be checked.
+			if (saved && PastLockPoint(map))
+			{
+				if (orderRepaired) throw new FormatException("the copy lock can't be checked: the level-up order had to be repaired (T3)");
+				CopyTarget? expected = CopyRule.Target(run);
+				bool same = expected is null ? copy is null
+					: copy is not null && copy.Slot == expected.Slot && copy.Data.Id == expected.Data.Id && copy.Level == expected.Level;
+				if (!same)
+					throw new FormatException($"the locked copy {Describe(copy)} is not the one this run locks, {Describe(expected)} (T2-T5)");
+			}
 		}
 		else if (!PastLockPoint(map)) locked = false;
 		else if (map.InNode && map.CurrentNode!.Type == NodeTypeRegistry.Boss && !orderRepaired)
@@ -173,13 +185,9 @@ public sealed record RunSave(
 	}
 
 	/// <summary>T1: has the walk entered a Tanuki's node (the current node or one already visited)?</summary>
-	static bool PastLockPoint(RunMap map)
-	{
-		if (map.Current is { } cur && map.Graph.Node(cur).Type == NodeTypeRegistry.Boss) return true;
-		foreach (string id in map.Visited)
-			if (map.Graph.Node(id).Type == NodeTypeRegistry.Boss) return true;
-		return false;
-	}
+	static bool PastLockPoint(RunMap map) => RunSession.PassedLockPoint(map);
+
+	static string Describe(CopyTarget? c) => c is null ? "none" : $"{c.Slot}:{c.Data.Id}:Lv {c.Level}";
 }
 
 /// <summary>
