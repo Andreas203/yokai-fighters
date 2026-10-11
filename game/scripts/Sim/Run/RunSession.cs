@@ -20,9 +20,10 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// <para>
 /// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/>,
 /// <see cref="Ended"/>, once Ryo has entered the Tanuki's node the copy lock (<see cref="CopyLocked"/>,
-/// <see cref="LockedCopy"/>, T1), and, while Ryo stands at a merchant, that stop's <see cref="Merchant.Choice"/>
-/// (R6; the constructor's and <see cref="Restore"/>'s <c>merchantChoice</c> puts it back). A later save / Continue
-/// (YOK-73) writes those; one that drops the merchant choice hands the stop's heal out twice. The object must
+/// <see cref="LockedCopy"/>, T1), while Ryo stands at a merchant that stop's <see cref="Merchant.Choice"/>
+/// (R6; the constructor's and <see cref="Restore"/>'s <c>merchantChoice</c> puts it back), and while a dojo node
+/// is entered its <see cref="Sim.Dojo.Choice"/> (R7; put back with <c>Dojo.Restore</c>). A later save / Continue
+/// (YOK-73) writes those; one that drops a stop's choice hands its heal or rest out twice. The object must
 /// outlive scene changes: the boot flow holds it, never a node's scene.
 /// </para>
 /// </summary>
@@ -40,6 +41,11 @@ public sealed class RunSession
 	public NodeContext? Node => Entered?.Context;
 	/// <summary>The reward offer of the node just won, until the node is completed. Null when it gives none.</summary>
 	public RewardDraft? Draft { get; private set; }
+	Dojo? _dojo;
+	/// <summary>YOK-84, R7: the dojo stop Ryo is at (its rest and its one choice); null off a dojo node or once the run is over.</summary>
+	public Dojo? Dojo => IsOver ? null : _dojo;
+	/// <summary>R7: a stop takes a choice only while it is the entered node's stop and the run is not over (a kept reference is refused).</summary>
+	bool IsOpenDojo(Dojo stop) => !IsOver && ReferenceEquals(stop, _dojo);
 	/// <summary>YOK-83: the merchant stop Ryo is at (R6: its one choice, heal or shop); null on any other node.</summary>
 	public Merchant? Merchant { get; private set; }
 	public RunEnd? Ended { get; private set; }
@@ -110,6 +116,7 @@ public sealed class RunSession
 		LockedCopy = lockedCopy;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
+		if (Entered?.Context.Type == NodeTypeRegistry.Dojo) _dojo = new Dojo(Run, Entered.Context.NodeId, IsOpenDojo); // its saved choice: Dojo.Restore
 		Merchant = MerchantAt(Node);
 		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
 			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
@@ -164,6 +171,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
+		_dojo = Entered.Context.Type == NodeTypeRegistry.Dojo ? new Dojo(Run, nodeId, IsOpenDojo) : null; // R7
 		Merchant = MerchantAt(Node);
 		(CoinsWon, _paid) = (0, false);
 		LockCopyOnEntering(Entered.Context); // T1, before the event so listeners see the lock
@@ -203,6 +211,7 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = null;
 		Draft = null;
+		_dojo = null;
 		Merchant = null;
 		(CoinsWon, _paid) = (0, false);
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
@@ -242,6 +251,8 @@ public sealed class RunSession
 		}
 		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
 		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(Fnv.MixString(h, "merchant"), (int)m.Choice);
+		// R7: a dojo choice already made is run state; a run with none keeps the hash it had before YOK-84.
+		if (_dojo is { Choice: not DojoChoice.None } dojo) h = Fnv.Mix(Fnv.Mix(h, Sim.Dojo.HashTag), (int)dojo.Choice);
 		return h;
 	}
 }
