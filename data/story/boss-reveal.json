@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "boss-reveal",
+  "status": "proposed",
+  "trigger": "Every run that reaches the boss: the Tanuki's node",
+  "text": "The merchant's smile stays on a moment longer than his face does. \"Ah, you found me,\" says the Tanuki, and the tea house unfolds around Ryo like a paper lantern.",
+  "placeholders": [],
+  "speaker": "Tanuki",
+  "rules": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "notes": "Merchant drops his disguise. Camera push-in (V7) is presentation, not card text."
+}

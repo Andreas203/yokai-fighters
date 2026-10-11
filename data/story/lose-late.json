@@ -1,0 +1,18 @@
+{
+  "kind": "story_card",
+  "id": "lose-late",
+  "status": "proposed",
+  "trigger": "Later loss (not the first), Ryo knocked out on rows 7-8 or at the boss",
+  "text": "So close that {yokai} had to be gentle about it. The road back to the province's edge is long, and Ryo walks it counting what he owes.",
+  "placeholders": [
+    "yokai"
+  ],
+  "speaker": "narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "notes": "Proposed row band 7-8 and boss. {yokai} = winning yokai (Tanuki possible). Echoes 'name the debt'."
+}

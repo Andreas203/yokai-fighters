@@ -1,0 +1,67 @@
+{
+  "kind": "profile",
+  "id": "kappa-patient",
+  "status": "proposed",
+  "yokai": "kappa",
+  "temperament": "patient",
+  "reaction": {
+    "tier": "yokai",
+    "frames": 22
+  },
+  "aggression_bias": 25,
+  "preferred_range": "close",
+  "habit": {
+    "id": "throws-after-two-blocked-hits",
+    "description": "After blocking two hits in a row the Kappa grabs. Stop at one hit, or jump or back off after the second block, and the throw whiffs.",
+    "when": "blocked_two_hits_in_row",
+    "do": "throw",
+    "chance_pct": 70
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    {
+      "when": "at_full_screen",
+      "do": "walk_forward",
+      "weight": 25
+    },
+    {
+      "when": "at_mid_range",
+      "do": "walk_forward",
+      "weight": 30
+    },
+    {
+      "when": "opponent_attacking",
+      "do": "crouch_block",
+      "weight": 30
+    },
+    {
+      "when": "opponent_attacking",
+      "do": "block",
+      "weight": 70
+    },
+    {
+      "when": "opponent_jumping",
+      "do": "block",
+      "weight": 40
+    },
+    {
+      "when": "opponent_in_recovery",
+      "do": "throw",
+      "weight": 20
+    },
+    {
+      "when": "neutral",
+      "do": "block",
+      "weight": 15
+    }
+  ],
+  "rules": [
+    "Y1",
+    "Y2",
+    "Y4",
+    "Y5",
+    "P6",
+    "E22"
+  ],
+  "notes": "Kappa patient (Y2): blocks, then throws after two blocked hits (that throw is the habit above). Kappa uses only generic actions (its throw is the generic throw, C4); data/moves/ has no kappa-* normals or clips yet, so it has no strikes of its own. When they land, add pokes. No ids invented."
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "win-2",
+  "status": "proposed",
+  "trigger": "Win 2: second Tanuki victory",
+  "text": "\"You keep them in paper, I keep them in my sleeves,\" the Tanuki laughs. \"Which of us is the collector, little exorcist?\" Ryo has no answer yet.",
+  "placeholders": [],
+  "speaker": "Tanuki",
+  "rules": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "notes": "Verbatim from GDD 2.4 sample card."
+}

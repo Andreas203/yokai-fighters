@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="Georgia, 'Times New Roman', serif">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16203d"/><stop offset="1" stop-color="#0d1226"/></linearGradient>
+<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity=".45"/></filter>
+</defs>
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#12182f" stroke="none" stroke-width="0" />
+<text x="960" y="66" font-size="28" fill="#efe4cc" text-anchor="middle" font-weight="bold" font-style="normal" >Copy-target talisman · states (rough) · HUD slot: top centre, 120 x 170 px at 1080p</text>
+<rect x="50" y="100" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="70" y="138" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >A · No target yet</text>
+<rect x="110" y="180" width="150" height="205" rx="4" fill="#8a8472" stroke="#555" stroke-width="3" filter="url(#sh)"/>
+<rect x="117" y="187" width="136" height="191" rx="2" fill="none" stroke="#666" stroke-width="2" />
+<text x="185.0" y="206" font-size="15.0" fill="#444" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">COPY TARGET</text>
+<rect x="150.5" y="216" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="185.0" y="255.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >–</text>
+<text x="185.0" y="311.0" font-size="23.076923076923077" fill="#333" text-anchor="middle" font-weight="bold" font-style="normal" >—</text>
+<text x="185.0" y="369" font-size="25.0" fill="#333" text-anchor="middle" font-weight="bold" font-style="normal" ></text>
+<text x="70" y="422" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Fallback only: practice mode or a fight with no run. T5 </text>
+<text x="70" y="448" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >says it is always defined in a run, so this should be </text>
+<text x="70" y="474" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >rare. </text>
+<rect x="670" y="100" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="690" y="138" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >B · Target defined</text>
+<g filter="url(#glow)"><rect x="730" y="180" width="150" height="205" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".95"/>
+</g><rect x="730" y="180" width="150" height="205" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" filter="url(#sh)"/>
+<rect x="737" y="187" width="136" height="191" rx="2" fill="none" stroke="#b3262a" stroke-width="2" />
+<text x="805.0" y="206" font-size="15.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">COPY TARGET</text>
+<rect x="770.5" y="216" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="805.0" y="255.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
+<text x="805.0" y="307.0" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >RISING</text>
+<text x="805.0" y="333.0769230769231" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >TALISMAN</text>
+<text x="805.0" y="369" font-size="25.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >Lv 1</text>
+<text x="690" y="422" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Highest-level special in a slot (T2). Lv 1 starter shown </text>
+<text x="690" y="448" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >at run start; glows steadily. </text>
+<rect x="1290" y="100" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="1310" y="138" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >C · Target levels up</text>
+<g filter="url(#glow)"><rect x="1350" y="180" width="150" height="205" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".95"/>
+</g><rect x="1350" y="180" width="150" height="205" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" filter="url(#sh)"/>
+<rect x="1357" y="187" width="136" height="191" rx="2" fill="none" stroke="#b3262a" stroke-width="2" />
+<text x="1425.0" y="206" font-size="15.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">COPY TARGET</text>
+<rect x="1390.5" y="216" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1425.0" y="255.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
+<text x="1425.0" y="311.0" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >FOXFIRE</text>
+<text x="1425.0" y="369" font-size="25.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >Lv 3</text>
+<circle cx="1425" cy="282" r="130" fill="none" stroke="#f2c14e" stroke-width="3" stroke-dasharray="8 8" opacity=".7"/><text x="1540" y="210" font-size="16" fill="#aab3d6" text-anchor="start" font-weight="normal" font-style="italic" >+ small '+1 Lv' tick, 0.4 s</text>
+<text x="1310" y="422" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Same move gains a level: brief pulse, level number ticks </text>
+<text x="1310" y="448" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >2 → 3. </text>
+<rect x="50" y="580" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="70" y="618" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >D · Target changes</text>
+<g filter="url(#glow)"><rect x="110" y="660" width="150" height="205" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".95"/>
+</g><rect x="110" y="660" width="150" height="205" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" filter="url(#sh)"/>
+<rect x="117" y="667" width="136" height="191" rx="2" fill="none" stroke="#b3262a" stroke-width="2" />
+<text x="185.0" y="686" font-size="15.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">COPY TARGET</text>
+<rect x="150.5" y="696" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="185.0" y="735.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
+<text x="185.0" y="787.0" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >ONI'S</text>
+<text x="185.0" y="813.0769230769231" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >HIDE</text>
+<text x="185.0" y="849" font-size="25.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >Lv 3</text>
+<text x="300" y="690" font-size="16" fill="#aab3d6" text-anchor="start" font-weight="normal" font-style="italic" >was: FOXFIRE Lv 3 (fades out)</text>
+<polygon points="260,720 267,729 255,737 269,746 257,754 266,763 252,771 264,780 581,780 593,771 584,763 598,754 586,746 590,737 583,729 595,720" fill="#efe4cc" filter="url(#sh)"/>
+<text x="425" y="757" font-size="20" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Copy target: Oni's Hide · Lv 3</text>
+<text x="70" y="902" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Another special overtakes it (or the old one is sold or </text>
+<text x="70" y="928" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >replaced, T2/T3): old fades, new slides in, toast names </text>
+<text x="70" y="954" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >it. </text>
+<rect x="670" y="580" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="690" y="618" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >E · Locked at the Tanuki node</text>
+<g filter="url(#glow)"><rect x="730" y="660" width="150" height="205" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".95"/>
+</g><rect x="730" y="660" width="150" height="205" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" filter="url(#sh)"/>
+<rect x="737" y="667" width="136" height="191" rx="2" fill="none" stroke="#b3262a" stroke-width="2" />
+<text x="805.0" y="686" font-size="15.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">LOCKED</text>
+<rect x="770.5" y="696" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="805.0" y="735.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
+<text x="805.0" y="791.0" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >FOXFIRE</text>
+<text x="805.0" y="849" font-size="25.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >Lv 3</text>
+<circle cx="880" cy="668" r="26" fill="#b3262a" stroke="#f6ead0" stroke-width="2.6"/>
+<text x="880" y="677.36" font-size="28.6" fill="#f6ead0" text-anchor="middle" font-weight="bold" font-style="normal" >封</text>
+<text x="690" y="902" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >T1: from Ryo's entry to the Tanuki node it stops </text>
+<text x="690" y="928" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >changing. Red seal stamp, glow stays on. </text>
+<rect x="1290" y="580" width="580" height="440" rx="8" fill="#1d2650" stroke="#3f4c7c" stroke-width="2" />
+<text x="1310" y="618" font-size="26" fill="#efe4cc" text-anchor="start" font-weight="bold" font-style="normal" >F · In the Tanuki fight</text>
+<g filter="url(#glow)"><rect x="1350" y="660" width="150" height="205" rx="4" fill="#d9622b" stroke="none" stroke-width="0" opacity=".95"/>
+</g><rect x="1350" y="660" width="150" height="205" rx="4" fill="#efe4cc" stroke="#d9622b" stroke-width="3" filter="url(#sh)"/>
+<rect x="1357" y="667" width="136" height="191" rx="2" fill="none" stroke="#b3262a" stroke-width="2" />
+<text x="1425.0" y="686" font-size="15.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1">LOCKED</text>
+<rect x="1390.5" y="696" width="69.0" height="69.0" rx="3" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1425.0" y="735.0" font-size="12" fill="#666" text-anchor="middle" font-weight="normal" font-style="italic" >icon</text>
+<text x="1425.0" y="791.0" font-size="23.076923076923077" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >FOXFIRE</text>
+<text x="1425.0" y="849" font-size="25.0" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >Lv 3</text>
+<polygon points="1500,720 1507,733 1495,746 1509,759 1497,771 1506,784 1492,797 1504,810 1821,810 1833,797 1824,784 1838,771 1826,759 1830,746 1823,733 1835,720" fill="#efe4cc" filter="url(#sh)"/>
+<text x="1665" y="756" font-size="16" fill="#b3262a" text-anchor="middle" font-weight="bold" font-style="normal" >THE TANUKI copies</text>
+<text x="1665" y="784" font-size="19" fill="#1b1b24" text-anchor="middle" font-weight="bold" font-style="normal" >Foxfire at Lv 3, no modifiers</text>
+<text x="1310" y="902" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Same talisman, plus 'Copy at Lv 3 · no modifiers' (T4). </text>
+<text x="1310" y="928" font-size="19" fill="#dfe3f5" text-anchor="start" font-weight="normal" font-style="normal" >Elder-twist strip is replaced by this line. </text>
+<rect x="0" y="0" width="1920" height="26" rx="0" fill="#000" stroke="none" stroke-width="0" opacity=".6"/>
+<text x="960" y="19" font-size="15" fill="#ffd24a" text-anchor="middle" font-weight="bold" font-style="normal" >ROUGH PROTOTYPE · awaiting Astra pass · greybox, not final art</text>
+</svg>
