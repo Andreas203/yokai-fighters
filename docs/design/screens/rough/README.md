@@ -111,3 +111,29 @@ Bought abilities render grey (R6 "borrowed ink") and are never offered as carry-
 11. **Heal at full health.** Block the option, allow it with "+0", or hide it?
 12. **Elder twist reminder (Y3).** Not placed here since it is a pre-fight element. Say so if the rest stop should preview the next node's twist.
 13. **Merchant portrait.** Merchant is the Tanuki in disguise (S3). The portrait box is for the human guise only; the Tanuki is never shown on these screens.
+
+
+## Scroll theme (revision 2)
+
+Designer feedback: lean into the scroll theme. This is framing only; the element tables, numbers, states and questions above are unchanged. Where the text above says "torn rice-paper sheet", read the scroll forms below.
+
+Vocabulary, drawn as flat shapes (shared with the map and twist-card mockups):
+- Roller rods: wooden rod darker than the paper, rounded knobs sticking out past the paper at each end; a few offset paper-edge lines beside the side rods show the rolled part.
+- Mounting: indigo (hanging scrolls) or pine (the big sheet) cloth bands along top and bottom, paper inset.
+- Hanging cord: thin cord from a peg at the top centre of each hanging scroll.
+- Tie cord and seal: a red seal stamp marks the Tanuki forecast, the bought state and the locked last special; a rolled, tied scroll means bought.
+
+Changes:
+- Rest stop (both variants): the sheet is now an unrolled handscroll (rods left and right, pine cloth top and bottom). Free heal / Rest and Browse the shop / Training trial are small hanging scrolls on pegs, stacked as before, the selected one keeping its persimmon frame and foxfire glow. The Tanuki forecast is its own hanging scroll with a red seal; still text and move icon only. Portrait box, line box, health, coins and footer are unchanged. The ROUGH strip moved above the scroll so it does not sit on the paper.
+- Merchant shop: the three ability cards hang from pegs. "Your slots" is one tall hanging scroll with the four entries. The example-states strip shows cannot afford as a dimmed hanging scroll, bought as a rolled scroll tied with a cord and seal, and shelf empty as bare pegs. The T5 lock is a cord tied across the entry with a red seal instead of a grey lozenge.
+
+Judgement calls (redirect any):
+- Cards hang from pegs on the sheet rather than lying flat; the sheet itself is fully unrolled (no rolled portion), since all content must be readable at once.
+- Option cards stay stacked, not side by side, to keep text widths. The shop cards lost 12 px of width (312 to 300) so rod knobs do not collide; text sizes are unchanged or larger and nothing wraps worse.
+- The footer rule and key chips now stop short of the forecast / slots scroll.
+
+Left plain on purpose: the portrait and line boxes, health bar, coin chip, key chips and the dashed art placeholders (decoration behind text would hurt legibility); the slot entries inside the slots scroll stay flat paper rows.
+
+New questions:
+1. In the real shelf, should a bought card be rolled up in place (hiding its text) or stay open, grey, with a seal? Drawn as rolled, tied and sealed in the states strip only.
+2. Should the main rest-stop sheet animate unrolling on entry? Not drawn.
