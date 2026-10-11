@@ -43,7 +43,7 @@ public sealed class RunMap
 
 	public MapNodeData? CurrentNode => Current is null ? null : Graph.Node(Current);
 
-	/// <summary>Raised by <see cref="Select"/> once the node is entered (T1: the Tanuki's lock point is its boss node).</summary>
+	/// <summary>Raised by <see cref="Select"/> once the node is entered. Not the place to read the Tanuki's copy (T1): the lock is taken by <c>RunSession.Enter</c> after this is raised; read <c>RunSession.LockedCopy</c> from <c>RunSession.NodeEntered</c>.</summary>
 	public event Action<MapNodeData>? NodeEntered;
 
 	/// <summary>Raised by <see cref="Complete"/> once the node is marked visited.</summary>

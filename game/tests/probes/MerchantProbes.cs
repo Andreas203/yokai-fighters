@@ -59,6 +59,7 @@ public static class MerchantProbes
 		}
 		run.RestoreLevelledOrder(a.Run.LevelledOrder((SpecialSlot)1), a.Run.LevelledOrder((SpecialSlot)2), a.Run.LevelledOrder((SpecialSlot)3), a.Run.LevelledOrder((SpecialSlot)4));
 		run.SetHealth(a.Run.Health);
+		run.RestoreCoins(a.Run.Coins); // R8 purse is run state since YOK-85
 		run.SetMap(RunMap.Restore(a.Map.Graph, a.Map.Snapshot()));
 		return new RunSession(run, a.Pool, a.Scenes, a.Seed, choice);
 	}

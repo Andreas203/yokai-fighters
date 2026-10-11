@@ -15,14 +15,15 @@ public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 /// YOK-77: one run from the first node to its end (pure C#, deterministic, no Godot). Owns the
 /// <see cref="RunState"/> (health C1, slots) and its <see cref="RunMap"/>; scenes only call it:
 /// <see cref="Enter"/> a reachable node → the scene named by <see cref="Entered"/> runs it →
-/// <see cref="WinFight"/> (R3 heal, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
+/// <see cref="WinFight"/> (R3 heal, R8 coins, the A7 draft when the node binds) then <see cref="CompleteNode"/>, or
 /// <see cref="LoseFight"/>. The run is won when the completed node has no route out, lost on the first lost fight.
 /// <para>
 /// All of its state is plain data: <see cref="Seed"/>, the run state, <see cref="RunMap.Snapshot"/>,
-/// <see cref="Ended"/> and, while Ryo stands at a merchant, that stop's <see cref="Merchant.Choice"/> (R6; the
-/// constructor's <c>merchantChoice</c> puts it back). A later save / Continue (YOK-73) writes those; one that
-/// drops the merchant choice hands the stop's heal out twice. The object must outlive scene changes:
-/// the boot flow holds it, never a node's scene.
+/// <see cref="Ended"/>, once Ryo has entered the Tanuki's node the copy lock (<see cref="CopyLocked"/>,
+/// <see cref="LockedCopy"/>, T1), and, while Ryo stands at a merchant, that stop's <see cref="Merchant.Choice"/>
+/// (R6; the constructor's and <see cref="Restore"/>'s <c>merchantChoice</c> puts it back). A later save / Continue
+/// (YOK-73) writes those; one that drops the merchant choice hands the stop's heal out twice. The object must
+/// outlive scene changes: the boot flow holds it, never a node's scene.
 /// </para>
 /// </summary>
 public sealed class RunSession
@@ -42,30 +43,111 @@ public sealed class RunSession
 	/// <summary>YOK-83: the merchant stop Ryo is at (R6: its one choice, heal or shop); null on any other node.</summary>
 	public Merchant? Merchant { get; private set; }
 	public RunEnd? Ended { get; private set; }
+	/// <summary>R8: the coins the entered node's won fight paid; 0 before the win, on the map and for a node that pays none.</summary>
+	public int CoinsWon { get; private set; }
+	bool _paid; // R8: a node pays once, however often its win is reported
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
 	public int Step => Map.Visited.Count + (Map.InNode ? 1 : 0);
 	/// <summary>Nodes in a whole walk (one per row, R1).</summary>
 	public int Steps => Map.Graph.Rows.Count;
 
-	/// <summary>A node was entered. <b>T1 hook</b>: the Tanuki's lock point is this event for its boss node.</summary>
+	/// <summary>
+	/// T1: true from the moment Ryo enters the Tanuki's node (a node of type <see cref="NodeTypeRegistry.Boss"/>)
+	/// to the end of the run. False before: nothing is locked until then.
+	/// </summary>
+	public bool CopyLocked { get; private set; }
+	/// <summary>
+	/// T1: the Tanuki's copy, fixed when Ryo entered its node: <see cref="CopyRule.Target"/> (T2-T4) as the run
+	/// stood at that moment. It is a copy of the answer, not a view of the slots: levelling, replacing or
+	/// attaching afterwards does not change it. Null before the lock, and after it only when Ryo held no
+	/// special at all (T5 keeps that from happening in a real run). Plain data: slot, special and level.
+	/// </summary>
+	public CopyTarget? LockedCopy { get; private set; }
+
+	/// <summary>
+	/// A node was entered. For the Tanuki's node the copy is already locked when this is raised (T1), so a
+	/// listener reads <see cref="LockedCopy"/>.
+	/// </summary>
 	public event Action<NodeContext>? NodeEntered;
 	/// <summary>A node was completed (raised before <see cref="RunEnded"/> on the last one; <see cref="IsOver"/> is already true then).</summary>
 	public event Action<NodeContext>? NodeCompleted;
 	public event Action<RunEnd>? RunEnded;
 
+	/// <summary>
+	/// A session on <paramref name="run"/> and its map. Refused (ArgumentException) for a walk that has already
+	/// entered the Tanuki's node: its copy was locked at that entry (T1) and can't be worked out from the slots
+	/// as they stand now, so such a walk is put back with <see cref="Restore"/> and its saved lock.
+	/// <paramref name="merchantChoice"/> puts back a saved merchant stop's choice (R6).
+	/// </summary>
 	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, MerchantChoice merchantChoice = MerchantChoice.None)
+		: this(run, pool, scenes, seed, false, null, merchantChoice) { }
+
+	RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy, MerchantChoice merchantChoice)
 	{
 		Run = run;
 		Map = run.Map ?? throw new ArgumentException("the run has no map (RunState.StartMap)", nameof(run));
 		Pool = pool;
 		Scenes = scenes;
 		Seed = seed;
+		// T1: the lock is taken by Enter and by nothing else, so a walk and its lock must agree from the start.
+		bool passed = PassedLockPoint();
+		if (passed && !copyLocked)
+			throw new ArgumentException("the walk has entered the Tanuki's node: its copy lock must be given (RunSession.Restore, T1)", nameof(run));
+		if (!passed && (copyLocked || lockedCopy is not null))
+			throw new ArgumentException("the walk has not entered the Tanuki's node: nothing is locked before it (T1)", nameof(lockedCopy));
+		if (lockedCopy is not null)
+		{
+			if (lockedCopy.Data is null) throw new ArgumentException("the locked copy names no special", nameof(lockedCopy));
+			if (!ReferenceEquals(pool.Special(lockedCopy.Data.Id), lockedCopy.Data))
+				throw new ArgumentException($"{lockedCopy.Data.Id} is not a special of this run's pool", nameof(lockedCopy));
+			if (lockedCopy.Slot == SpecialSlot.None || lockedCopy.Slot != lockedCopy.Data.Slot)
+				throw new ArgumentException($"{lockedCopy.Data.Id} does not sit in slot {lockedCopy.Slot} (T2)", nameof(lockedCopy));
+			if (lockedCopy.Level < 1 || lockedCopy.Level > lockedCopy.Data.MaxLevel)
+				throw new ArgumentException($"{lockedCopy.Data.Id} has no level {lockedCopy.Level} (T4)", nameof(lockedCopy));
+		}
+		CopyLocked = copyLocked;
+		LockedCopy = lockedCopy;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
 		Merchant = MerchantAt(Node);
 		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
 			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
+	}
+
+	/// <summary>
+	/// Puts back a saved session (the later save, YOK-73): the run with its restored map, plus the copy lock as
+	/// it was saved (<see cref="CopyLocked"/>, <see cref="LockedCopy"/>; null copy = a lock that found no
+	/// special). The lock is never worked out again from the slots. Throws ArgumentException when the lock and
+	/// the walk disagree (locked before the walk entered the Tanuki's node, or not locked after it, T1), or the
+	/// copy can't be a target: a special that is not this pool's, in a slot not its own, at a level it lacks.
+	/// </summary>
+	public static RunSession Restore(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy,
+		MerchantChoice merchantChoice = MerchantChoice.None) =>
+		new(run, pool, scenes, seed, copyLocked, lockedCopy, merchantChoice);
+
+	/// <summary>T1: is this the Tanuki's node? Decided by the node's type from the map data, never by a yokai or node id.</summary>
+	public static bool IsCopyLockNode(NodeContext node) => node.Type == NodeTypeRegistry.Boss;
+
+	/// <summary>
+	/// T1: locks the copy if <paramref name="node"/> is the Tanuki's node and nothing is locked yet. Called by
+	/// <see cref="Enter"/> only. Once per run: a session whose walk is past the lock point is always built
+	/// locked, so a later boss-type node can never lock late.
+	/// </summary>
+	void LockCopyOnEntering(NodeContext node)
+	{
+		if (CopyLocked || !IsCopyLockNode(node)) return;
+		LockedCopy = CopyRule.Target(Run);
+		CopyLocked = true;
+	}
+
+	/// <summary>True when the walk has entered a node of the Tanuki's type (now or earlier): the lock point is behind Ryo.</summary>
+	bool PassedLockPoint()
+	{
+		if (Map.Current is { } cur && Map.Graph.Node(cur).Type == NodeTypeRegistry.Boss) return true;
+		foreach (string id in Map.Visited)
+			if (Map.Graph.Node(id).Type == NodeTypeRegistry.Boss) return true;
+		return false;
 	}
 
 	/// <summary>A new run on <paramref name="graph"/>: the starters at Lv 1, full health (A1, C1), no node picked.</summary>
@@ -83,13 +165,16 @@ public sealed class RunSession
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
 		Merchant = MerchantAt(Node);
+		(CoinsWon, _paid) = (0, false);
+		LockCopyOnEntering(Entered.Context); // T1, before the event so listeners see the lock
 		NodeEntered?.Invoke(Entered.Context);
 		return step;
 	}
 
 	/// <summary>
 	/// Ryo won the entered node's fight with <paramref name="healthLeft"/>. Health carries (C1); a node that binds
-	/// heals 50 (R3) and, unless it is the last node, offers its cards (A7). Returns the offer, or null for none.
+	/// heals 50 (R3) and, unless it is the last node, offers its cards (A7). The node's coins are paid once (R8).
+	/// Returns the offer, or null for none.
 	/// </summary>
 	public RewardDraft? WinFight(int healthLeft)
 	{
@@ -97,6 +182,12 @@ public sealed class RunSession
 		if (IsOver) throw new InvalidOperationException("the run is over");
 		if (Draft is not null) throw new InvalidOperationException($"node '{node.NodeId}' is already won");
 		Run.AfterDuel(healthLeft, node.Binds);
+		if (!_paid)
+		{
+			_paid = true;
+			CoinsWon = node.Coins;
+			Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
+		}
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
 			Draft = RewardDraft.Build(Run, Pool, node.Fighter, Seed + (uint)Step, node.Elder);
 		return Draft;
@@ -113,6 +204,7 @@ public sealed class RunSession
 		Entered = null;
 		Draft = null;
 		Merchant = null;
+		(CoinsWon, _paid) = (0, false);
 		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
@@ -139,6 +231,15 @@ public sealed class RunSession
 		h = Fnv.Mix(h, unchecked((int)(r >> 32)));
 		h = Fnv.Mix(h, unchecked((int)Seed));
 		h = Fnv.Mix(h, Ended is null ? 0 : 1 + (int)Ended.Outcome);
+		// T1: the locked copy is run state of its own (the slots may differ from it later). Mixed in only once
+		// locked, so a run that has not reached the Tanuki's node keeps the hash it had before the lock existed.
+		if (CopyLocked)
+		{
+			h = Fnv.Mix(h, 1);
+			h = Fnv.Mix(h, (int)(LockedCopy?.Slot ?? SpecialSlot.None));
+			h = Fnv.MixString(h, LockedCopy?.Data.Id ?? "");
+			h = Fnv.Mix(h, LockedCopy?.Level ?? 0);
+		}
 		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
 		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(Fnv.MixString(h, "merchant"), (int)m.Choice);
 		return h;
