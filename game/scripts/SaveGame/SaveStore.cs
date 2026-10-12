@@ -37,13 +37,13 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 3,
+/// { "version": 4,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
-///                   "copy_locked": false, "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
+///                   "first_meeting": false, "copy_locked": false, "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
-///   "story": { "seen": ["intro"] } }
+///   "story": { "seen": ["intro"], "elders_met": ["elder-oni"] } }
 /// </code>
 /// Each section is read on its own (M4): a missing or broken one is empty and the others are kept. Inside the
 /// run, <c>seed</c>, <c>map</c>, <c>visited</c>, <c>health</c> and <c>slots</c> are needed (without them there is
@@ -64,7 +64,8 @@ public sealed class SaveStore
 {
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
-	public const int CurrentVersion = 3;
+	/// <remarks>4 (YOK-106, Y3/M4/M5): <c>story.elders_met</c> (elder ids Ryo has met, story progress) and <c>run.first_meeting</c> (the node saved at its entry is an elder met first on that entry); both missing = none, so version 3 and older files load with no elder met.</remarks>
+	public const int CurrentVersion = 4;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -170,6 +171,8 @@ public sealed class SaveStore
 			// Optional (missing = default), but a value of the wrong kind is damage, not absence: the run is dropped.
 			else if (OptionalInt(run, "coins", out int coins) is { } coinProblem) why = coinProblem;
 			else if (OptionalBool(run, "copy_locked", out bool? copyLocked) is { } lockProblem) why = lockProblem;
+			// Version 4 (YOK-106): missing (version 3 and older) = not a first meeting.
+			else if (OptionalBool(run, "first_meeting", out bool? firstMeeting) is { } meetingProblem) why = meetingProblem;
 			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
@@ -179,6 +182,7 @@ public sealed class SaveStore
 					Coins = coins,
 					CopyLocked = copyLocked,
 					LockedCopy = copy,
+					FirstMeeting = firstMeeting ?? false,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -209,7 +213,13 @@ public sealed class SaveStore
 	{
 		if (!root.TryGetProperty("story", out JsonElement story)) { problems.Add("story: missing, no story progress"); return StoryProgress.None; }
 		if (story.ValueKind != JsonValueKind.Object) { problems.Add("story: not an object, no story progress"); return StoryProgress.None; }
-		return new StoryProgress(Ids(story, "seen", problems, sort: true, label: "story.seen"));
+		var seen = Ids(story, "seen", problems, sort: true, label: "story.seen");
+		// Version 4 (YOK-106, Y3): elders met. Missing (version 3 and older) = none met, not a problem; a list of the
+		// wrong kind is reported and taken as empty, without touching `seen` or any other section (M4).
+		var met = story.TryGetProperty(StoryProgress.EldersMetField, out _)
+			? Ids(story, StoryProgress.EldersMetField, problems, sort: true, label: "story." + StoryProgress.EldersMetField)
+			: Array.Empty<string>();
+		return new StoryProgress(seen, met);
 	}
 
 	/// <summary>A list of ids: entries that are not non-empty strings are skipped (and reported), the rest kept in order, once each.</summary>
@@ -321,6 +331,7 @@ public sealed class SaveStore
 				if (run.Current is null) w.WriteNull("current"); else w.WriteString("current", run.Current);
 				w.WriteNumber("health", run.Health);
 				w.WriteNumber("coins", run.Coins);
+				w.WriteBoolean("first_meeting", run.FirstMeeting);
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
@@ -353,6 +364,9 @@ public sealed class SaveStore
 			w.WriteStartObject("story");
 			w.WriteStartArray("seen");
 			foreach (string flag in d.Story.Seen) w.WriteStringValue(flag);
+			w.WriteEndArray();
+			w.WriteStartArray(StoryProgress.EldersMetField);
+			foreach (string elder in d.Story.EldersMet) w.WriteStringValue(elder);
 			w.WriteEndArray();
 			w.WriteEndObject();
 			w.WriteEndObject();
