@@ -162,7 +162,7 @@ public static class SaveTests
 			{ "version": 2, "coins": 75,
 			  "run": { "seed": 9, "map": "default-map", "visited": [], "health": 1000, "coins": 50, "copy_lock": { "slot": "A" },
 			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "ink": "grey" } ], "merchant": "heal" },
-			  "unlocks": [], "story": { "seen": [], "tanuki": 2 }, "carry": { "special": "foxfire" } }
+			  "unlocks": [], "story": { "seen": [], "elders_met": [], "tanuki": 2 }, "carry": { "special": "foxfire" } }
 			""".Replace("\"version\": 2", Current); // this build's version, with fields it does not know
 		SaveLoad load = SaveStore.Parse(extra);
 		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "unknown fields are not a problem: " + string.Join("; ", load.Problems));
@@ -1001,6 +1001,11 @@ public static class SaveTests
 		Assert.True(ElderMeetings.ElderOf(DefaultMap().Nodes.FirstOrDefault(n => n.Yokai == "no-such-elder")) == null, "an id no node names never answers for a node");
 		SaveLoad badFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true", "\"first_meeting\": \"yes\""));
 		Assert.True(badFlag.Status == SaveLoadStatus.Partial && badFlag.Data.Run == null && badFlag.Data.Story == atMeeting.Story, "first_meeting not true/false: the run is dropped (existing policy), story kept");
+		var noMetKey = System.Text.Json.Nodes.JsonNode.Parse(text)!.AsObject();
+		noMetKey["story"]!.AsObject().Remove(StoryProgress.EldersMetField);
+		SaveLoad noMet = SaveStore.Parse(noMetKey.ToJsonString());
+		Assert.True(noMet.Status == SaveLoadStatus.Loaded && noMet.Data.Story.EldersMet.Count == 0, "a version 4 file without elders_met: none met (a missing field takes its default; SaveProbes pin seen-only current files as Loaded)");
+		Assert.True(noMet.Data.Story.Seen.SequenceEqual(Sample.Story.Seen) && noMet.Data.Run is { FirstMeeting: true }, "and nothing else lost");
 		SaveLoad noFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true,", ""));
 		Assert.True(noFlag.Status == SaveLoadStatus.Loaded && noFlag.Data.Run is { FirstMeeting: false }, "first_meeting missing: false");
 	}
@@ -1099,6 +1104,44 @@ public static class SaveTests
 			Assert.True(flow.Session!.Node?.NodeId == "r5-nine-tails" && flow.FirstMeeting && flow.HasMetElder("nine-tailed-kitsune"), "no elder in the file: this is the first meeting");
 			WinEnteredNode(flow, 700);
 			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded } l && l.Data.Story.HasMetElder("nine-tailed-kitsune"), "written as version 4 at the next save point");
+		});
+	});
+
+	[Test]
+	public static void Boot_AVersion3FileWhoseWalkPassedAnElder_ContinuesWithThatElderMet(Node runner) => WithTempFile(path =>
+	{
+		// Two version 3 files from the same walk past the Elder Oni on row 5: one saved on the map after row 7, one inside row 8's Elder Oni.
+		string onMap = "", inside = "";
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-dojo" })
+			{
+				Assert.True(flow.ChooseNode(id).Ok, id);
+				FinishEnteredNode(flow, 900);
+			}
+			onMap = AsOlderVersion(new SaveStore(path).Load().Data, 3);
+			Assert.True(flow.ChooseNode("r8-elder-oni").Ok, "row 8 entered");
+			inside = AsOlderVersion(new SaveStore(path).Load().Data, 3);
+			Assert.True(flow.ReturnToTitle(), "quit");
+		});
+		Assert.True(!onMap.Contains("elders_met") && !inside.Contains("first_meeting"), "older files: no elder fields");
+
+		File.WriteAllText(path, onMap);
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Map && flow.HasMetElder("elder-oni") && !flow.HasMetElder("elder-kappa"), "the walk's elder is met, no other");
+			Assert.True(flow.ChooseNode("r8-elder-oni").Ok && !flow.FirstMeeting, "the Elder Oni on row 8 is not a first meeting");
+			Assert.True(new SaveStore(path).Load().Data is { Run.FirstMeeting: false } d && d.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }), "saved so at the entry");
+		});
+
+		File.WriteAllText(path, inside);
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session!.Node?.NodeId == "r8-elder-oni" && !flow.FirstMeeting && flow.HasMetElder("elder-oni"), "continued inside row 8: not a first meeting");
 		});
 	});
 }

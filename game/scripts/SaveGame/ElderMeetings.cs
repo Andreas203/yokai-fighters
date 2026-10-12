@@ -40,10 +40,14 @@ public static class ElderMeetings
 	/// Continue: a run saved inside a node goes back into that node from its start (M5). First meeting when the entry
 	/// save said so, or when the elder is not in the story section (a version 3 or older file saved inside an elder
 	/// node). The elder is marked met in the returned save, which the next save point writes.
+	/// Every elder whose node the walk already completed is marked met first: a version 3 or older file has no
+	/// <c>elders_met</c>, but its walk shows who Ryo met (an Elder Oni passed on row 5 is no first meeting on row 8).
 	/// </summary>
 	public static SaveData Resume(SaveData saved, RunSession session, out bool firstMeeting)
 	{
 		firstMeeting = false;
+		foreach (string visited in session.Map.Visited)
+			if (ElderOf(session.Map.Graph.Find(visited)) is { } met) saved = saved.WithElderMet(met);
 		if (!session.Map.InNode || ElderOf(session.Map.CurrentNode) is not { } elder) return saved;
 		firstMeeting = saved.Run is { FirstMeeting: true } || !saved.Story.HasMetElder(elder);
 		return saved.WithElderMet(elder);

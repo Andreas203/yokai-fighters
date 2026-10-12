@@ -214,8 +214,9 @@ public sealed class SaveStore
 		if (!root.TryGetProperty("story", out JsonElement story)) { problems.Add("story: missing, no story progress"); return StoryProgress.None; }
 		if (story.ValueKind != JsonValueKind.Object) { problems.Add("story: not an object, no story progress"); return StoryProgress.None; }
 		var seen = Ids(story, "seen", problems, sort: true, label: "story.seen");
-		// Version 4 (YOK-106, Y3): elders met. Missing (version 3 and older) = none met, not a problem; a list of the
-		// wrong kind is reported and taken as empty, without touching `seen` or any other section (M4).
+		// Version 4 (YOK-106, Y3): elders met. Missing = none met, not a problem, in any version (like the optional run
+		// fields; current-version files with `seen` alone are pinned as Loaded by SaveProbes); a list of the wrong kind
+		// is reported and taken as empty, without touching `seen` or any other section (M4).
 		var met = story.TryGetProperty(StoryProgress.EldersMetField, out _)
 			? Ids(story, StoryProgress.EldersMetField, problems, sort: true, label: "story." + StoryProgress.EldersMetField)
 			: Array.Empty<string>();

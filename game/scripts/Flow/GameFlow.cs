@@ -88,8 +88,13 @@ public partial class GameFlow : Node
 	public bool HasMetElder(string elderId) => Saved.Story.HasMetElder(elderId);
 	/// <summary>
 	/// Y3 (YOK-106): the node Ryo is in is an elder's, met for the first time on this entry (the intro card and the
-	/// callout show). Set before <see cref="RunSession.NodeEntered"/> reaches handlers added after this flow's; stays
-	/// true when a quit inside that node is continued (M5). False off a node and on any later meeting.
+	/// callout show). Stays true when a quit inside that node is continued (M5). False off a node and on any later meeting.
+	/// <para>
+	/// When to read it: it is set in this flow's <see cref="RunSession.NodeEntered"/> handler, so it is right only in
+	/// <c>RunSession.NodeEntered</c> handlers added after this flow's, or once a screen opens for the node. A handler on
+	/// <see cref="RunMap.NodeEntered"/> runs earlier (inside <c>RunMap.Select</c>) and would read the previous node's
+	/// value. The elder UI (YOK-90) must read it when its screen opens (the fight scene, the intro card).
+	/// </para>
 	/// </summary>
 	public bool FirstMeeting => _firstMeeting && Session is { Map.InNode: true };
 
