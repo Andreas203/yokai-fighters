@@ -43,6 +43,29 @@ class ValidateDataTest(unittest.TestCase):
                     wrong.append(f"{c['name']}: validator {'accepted' if code == 0 else 'refused'}\n{out}")
         self.assertEqual(wrong, [], "\n".join(wrong))
 
+    def test_special_gate_cases_match_the_loader(self):
+        """YOK-103: a special's own frame data, read by the same whole-number and stun rules as MoveLoader."""
+        import json
+        import tempfile
+        cases = json.loads(GATE_CASES.read_text(encoding="utf-8"))["special_cases"]
+        self.assertGreaterEqual(len(cases), 8)
+        wrong = []
+        with tempfile.TemporaryDirectory() as tmp:
+            for c in cases:
+                doc = json.loads((ROOT / "game" / "tests" / "fixtures" / "specials" / f"{c['base']}.json").read_text(encoding="utf-8"))
+                doc["id"] = c["name"]
+                fd = doc["levels"]["1"]["frame_data"]
+                fd.update(c["set"])
+                for k in c["remove"]:
+                    fd.pop(k, None)
+                f = Path(tmp) / f"{c['name']}.json"
+                f.write_text(json.dumps(doc), encoding="utf-8")
+                code, out = run(f)
+                lines = [l for l in out.splitlines()[:-1] if "clip: clip '" not in l]  # fixtures have no clip file
+                if (not lines) != c["accept"]:
+                    wrong.append(f"{c['name']}: validator {'accepted' if not lines else 'refused'}\n{out}")
+        self.assertEqual(wrong, [], "\n".join(wrong))
+
     def test_real_modifiers_build_on_every_special(self):
         code, out = run(ROOT / "data" / "modifiers")
         self.assertEqual(code, 0, out)

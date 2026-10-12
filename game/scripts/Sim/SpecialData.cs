@@ -71,6 +71,7 @@ public sealed class SpecialData
 	{
 		var fd = LevelFrameData(level, ex);
 		if (modifier is null) return Parse(fd, ex);
+		if (HasEx) modifier.ExCostFor(ExCost); // fails at load if the modifier's EX cost leaves int32
 		var cfg = defaults ?? SimConfig.Default;
 		string tag = $"{Id}+{modifier.Id}";
 
@@ -182,7 +183,7 @@ public static class SpecialLoader
 			Id = id,
 			Name = root["name"]?.GetValue<string>() ?? id,
 			Slot = slot,
-			ExCost = ex?["meter_cost"]?.GetValue<int>() ?? 0,
+			ExCost = ex?["meter_cost"] is { } cost ? (Effects.Whole(cost, out int c) ? c : throw new FormatException($"{id}: ex.meter_cost must be a whole number")) : 0,
 			Level1Json = fd.ToJsonString(),
 			Level2Tuning = levels["2"]?["tuning"]?.DeepClone(),
 			Level3Changes = levels["3"]?["evolution"]?["changes"]?.DeepClone().AsArray(),
@@ -319,6 +320,35 @@ public static class Effects
 		return true;
 	}
 
+	/// <summary>
+	/// <see cref="Whole(JsonNode?, out int)"/> for frame data read by MoveLoader: 30, 30.0 and 3e1 are 30; a fraction or
+	/// a number outside int32 is a FormatException (tools/validate_data.py <c>whole()</c> is the same rule).
+	/// </summary>
+	public static int WholeInt(this JsonElement e)
+	{
+		if (e.ValueKind == JsonValueKind.Number)
+		{
+			if (e.TryGetInt32(out int i)) return i;
+			if (e.TryGetDecimal(out decimal d) && d == decimal.Truncate(d) && d >= int.MinValue && d <= int.MaxValue) return (int)d;
+		}
+		throw new FormatException($"{e.GetRawText()} is not a whole number between {int.MinValue} and {int.MaxValue}");
+	}
+
+	/// <summary>The result of add / mul_pct, or a FormatException when it leaves int32 (no silent wrap-around).</summary>
+	public static int Combine(string op, int n, int v, string id, string target)
+	{
+		long r = op == "add" ? (long)n + v : MulPctLong(n, v);
+		if (r < int.MinValue || r > int.MaxValue)
+			throw new FormatException($"{id}: effect '{op}' on {target} gives {r}, outside the whole numbers the fight holds");
+		return (int)r;
+	}
+
+	static long MulPctLong(int n, int pct)
+	{
+		long p = (long)n * pct;
+		return p >= 0 ? (p + 50) / 100 : -((-p + 50) / 100);
+	}
+
 	/// <summary>The one throw-invulnerability phase the data can name (Slippery Skin).</summary>
 	public const string ThrowInvulnStartup = "startup";
 
@@ -337,8 +367,8 @@ public static class Effects
 
 	public static int MulPct(int n, int pct)
 	{
-		long p = (long)n * pct;
-		return (int)(p >= 0 ? (p + 50) / 100 : -((-p + 50) / 100));
+		// Runtime use (heal, projectile climb) must never throw mid-fight: clamp. Loading uses Combine, which refuses.
+		return (int)Math.Clamp(MulPctLong(n, pct), int.MinValue, int.MaxValue);
 	}
 
 	/// <summary>
@@ -406,12 +436,12 @@ public static class Effects
 			return;
 		}
 		int n;
-		if (node[leaf] is JsonValue cur && cur.TryGetValue(out int c)) n = c;
+		if (Whole(node[leaf], out int c)) n = c;
 		else if (defaults != null && Default(string.Join('.', path), defaults) is int d) n = d;
 		else throw new FormatException($"{id}: effect '{op}' needs an integer at {target}");
 		Whole(value, out int v);
 		// Integers only (F3). mul_pct rounds to nearest, half away from zero (E20: Fox's Patience's
 		// +25% of C5's 3 meter on block = 4; flooring would leave it at 3, no change).
-		node[leaf] = op == "add" ? n + v : MulPct(n, v);
+		node[leaf] = Combine(op, n, v, id, target);
 	}
 }

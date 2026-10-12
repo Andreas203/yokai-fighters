@@ -386,7 +386,7 @@ public sealed partial class Match
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
 			if (m.HealPctMaxHealth > 0) // YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max
-				att.Health = Math.Min(att.MaxHealth, att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
+				att.Health = (int)Math.Min(att.MaxHealth, (long)att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
 		}
 		def.Guarding = false;
 		def.Crouching = false;

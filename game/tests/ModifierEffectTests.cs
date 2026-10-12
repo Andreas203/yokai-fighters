@@ -175,6 +175,27 @@ public static class ModifierEffectTests
 				wrong.Add($"{name}: loader {(refused is null ? "accepted" : "refused: " + refused)}");
 		}
 		Assert.Equal("", string.Join(" | ", wrong), "loader vs the shared cases");
+
+		// A special's own file (special_cases): SpecialLoader.Parse builds every level, plain and EX.
+		var root = System.Text.Json.Nodes.JsonNode.Parse(System.IO.File.ReadAllText($"{Repo}/game/tests/fixtures/modifier-gate/cases.json"))!;
+		var specialCases = root["special_cases"]!.AsArray();
+		Assert.True(specialCases.Count >= 8, "the special case list is there");
+		foreach (var c in specialCases)
+		{
+			string name = c!["name"]!.GetValue<string>();
+			var doc = System.Text.Json.Nodes.JsonNode.Parse(System.IO.File.ReadAllText(
+				ProjectSettings.GlobalizePath(FightScene.FixtureSpecialsDir) + $"/{c["base"]!.GetValue<string>()}.json"))!.AsObject();
+			doc["id"] = name;
+			var fd = doc["levels"]!["1"]!["frame_data"]!.AsObject();
+			foreach (var kv in c["set"]!.AsObject()) fd[kv.Key] = kv.Value!.DeepClone();
+			foreach (var k in c["remove"]!.AsArray()) fd.Remove(k!.GetValue<string>());
+			string? refused = null;
+			try { SpecialLoader.Parse(doc.ToJsonString()); }
+			catch (FormatException e) { refused = e.Message; }
+			if ((refused is null) != c["accept"]!.GetValue<bool>())
+				wrong.Add($"{name}: loader {(refused is null ? "accepted" : "refused: " + refused)}");
+		}
+		Assert.Equal("", string.Join(" | ", wrong), "loader vs the shared special cases");
 	}
 
 	// --- Oni ----------------------------------------------------------------------------------------

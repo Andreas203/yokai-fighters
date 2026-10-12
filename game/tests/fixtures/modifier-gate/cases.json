@@ -41,6 +41,23 @@
 
     { "name": "ex-cost", "accept": true, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "set", "value": 50 }] },
     { "name": "ex-cost-conditional", "accept": false, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "set", "value": 50, "when": "on_hit" }] },
-    { "name": "damage-below-thirty-percent", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 115, "when": "ryo_health_below_30pct" }] }
+    { "name": "damage-below-thirty-percent", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 115, "when": "ryo_health_below_30pct" }] },
+
+    { "name": "value-outside-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 3000000000 }] },
+    { "name": "add-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 2147483600 }] },
+    { "name": "mul-pct-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 2147483647 }] },
+    { "name": "ex-cost-add", "accept": true, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "add", "value": 10 }] },
+    { "name": "ex-cost-add-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "add", "value": 2147483600 }] }
+  ],
+  "special_cases_about": "A special's own file: the named TEST FIXTURE special (game/tests/fixtures/specials/) with levels.1.frame_data changed by 'set' (field -> value) and 'remove' (fields deleted). The validator side ignores only the missing clip (fixtures have no clip file); the loader side runs SpecialLoader.Parse, which builds every level plain and EX.",
+  "special_cases": [
+    { "name": "special-unchanged", "accept": true, "base": "test-rising-talisman", "set": {}, "remove": [] },
+    { "name": "special-recovery-written-28-point-0", "accept": true, "base": "test-rising-talisman", "set": { "recovery": 28.0 }, "remove": [] },
+    { "name": "special-damage-written-9e1", "accept": true, "base": "test-rising-talisman", "set": { "damage": 9e1 }, "remove": [] },
+    { "name": "special-recovery-fraction", "accept": false, "base": "test-rising-talisman", "set": { "recovery": 28.5 }, "remove": [] },
+    { "name": "special-startup-outside-int32", "accept": false, "base": "test-rising-talisman", "set": { "startup": 3000000000 }, "remove": [] },
+    { "name": "special-hitboxes-without-blockstun", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": ["blockstun"] },
+    { "name": "special-damaging-projectile-without-hitstun", "accept": false, "base": "test-spirit-wave", "set": {}, "remove": ["hitstun"] },
+    { "name": "special-harmless-projectile-without-stun", "accept": true, "base": "test-spirit-wave", "set": { "damage": 0 }, "remove": ["hitstun", "blockstun"] }
   ]
 }

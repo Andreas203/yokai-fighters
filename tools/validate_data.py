@@ -119,9 +119,9 @@ def is_int(v) -> bool:
 def check_ranges(items, lo, hi, where, what, errs):
     for i, item in enumerate(items or []):
         fr = item.get("frames") if isinstance(item, dict) else None
-        if not (isinstance(fr, list) and len(fr) == 2 and all(is_int(x) for x in fr)):
+        if not (isinstance(fr, list) and len(fr) == 2 and all(whole(x) is not None for x in fr)):
             continue
-        a, b = fr
+        a, b = whole(fr[0]), whole(fr[1])
         if a > b:
             errs.append((f"{where}.{i}.frames", f"first frame {a} is after last frame {b}"))
         elif a < lo or b > hi:
@@ -131,8 +131,9 @@ def check_ranges(items, lo, hi, where, what, errs):
 def check_frame_data(fd, where, clip, clip_name, errs):
     if not isinstance(fd, dict):
         return
-    s, a, r = fd.get("startup"), fd.get("active"), fd.get("recovery")
-    if not (is_int(s) and is_int(r) and (a is None or is_int(a))):
+    s, a, r = whole(fd.get("startup")), fd.get("active"), whole(fd.get("recovery"))
+    a = None if a is None else whole(a)
+    if s is None or r is None or (fd.get("active") is not None and a is None):
         return
     total = s + (a or 0) + r
     props = fd.get("properties") or {}
@@ -146,7 +147,7 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     check_ranges(fd.get("hurtboxes"), 1, total, f"{where}.hurtboxes", "hurtbox", errs)
     check_ranges(fd.get("cancel_windows"), 1, total, f"{where}.cancel_windows", "cancel window", errs)
     proj = props.get("projectile")
-    if isinstance(proj, dict) and is_int(proj.get("spawn_frame")) and not 1 <= proj["spawn_frame"] <= total:
+    if isinstance(proj, dict) and whole(proj.get("spawn_frame")) is not None and not 1 <= whole(proj["spawn_frame"]) <= total:
         errs.append((f"{where}.properties.projectile.spawn_frame", f"spawn frame {proj['spawn_frame']} is outside the move (1-{total})"))
     if isinstance(clip, dict):  # F2: frame data must match the clip's real timing
         ft, hs, he = clip.get("frames_total"), clip.get("hit_start"), clip.get("hit_end")
@@ -270,19 +271,36 @@ START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_u
 SPECIAL_DIRS = (DATA / "moves", ROOT / "game" / "tests" / "fixtures" / "specials", ROOT / "game" / "tests" / "fixtures" / "rewards")
 
 
+SAMPLES_DIR = (DATA / "samples").resolve()
+
+
 class Unbuildable(Exception):
     """The loader would throw FormatException here."""
 
 
+INT32 = (-2**31, 2**31 - 1)
+
+
 def whole(v):
-    """A whole number in any JSON notation (2, 2.0, 1e1) as an int, else None: the loader's Effects.Whole."""
+    """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
+    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule."""
     if isinstance(v, bool):
         return None
-    if isinstance(v, int):
+    if isinstance(v, float):
+        if not v.is_integer():
+            return None
+        v = int(v)
+    if isinstance(v, int) and INT32[0] <= v <= INT32[1]:
         return v
-    if isinstance(v, float) and v.is_integer() and -2**31 <= v < 2**31:
-        return int(v)
     return None
+
+
+def combine(op: str, n: int, v: int, target: str) -> int:
+    """add / mul_pct as Effects.Combine: a result outside int32 is refused, never wrapped."""
+    r = n + v if op == "add" else mul_pct(n, v)
+    if not INT32[0] <= r <= INT32[1]:
+        raise Unbuildable(f"effect '{op}' on {target} gives {r}, outside the whole numbers the fight holds")
+    return r
 
 
 def mul_pct(n: int, pct: int) -> int:
@@ -342,7 +360,7 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
         cur = EFFECT_DEFAULTS.get(key)
     if cur is None or v is None:
         raise Unbuildable(f"effect '{op}' needs an integer at {target}")
-    node[leaf] = cur + v if op == "add" else mul_pct(cur, v)
+    node[leaf] = combine(op, cur, v, target)
 
 
 def built_move_errors(fd: dict) -> list[str]:
@@ -353,6 +371,19 @@ def built_move_errors(fd: dict) -> list[str]:
         v = obj.get(name, default) if isinstance(obj, dict) else default
         return default if v is None else whole(v)
 
+    def bad_numbers(o, where):  # MoveLoader reads every number in frame data with WholeInt
+        if isinstance(o, dict):
+            for k, x in o.items():
+                yield from bad_numbers(x, f"{where}.{k}" if where else k)
+        elif isinstance(o, list):
+            for i, x in enumerate(o):
+                yield from bad_numbers(x, f"{where}.{i}")
+        elif isinstance(o, (int, float)) and not isinstance(o, bool) and whole(o) is None:
+            yield f"{where} = {o} is not a whole number inside int32"
+
+    out.extend(bad_numbers(fd, ""))
+    if out:
+        return out
     s, a, r = num(fd, "startup"), num(fd, "active", 0), num(fd, "recovery")
     if s is None or a is None or r is None or num(fd, "damage") is None:
         return ["startup, active, recovery and damage must be whole numbers"]
@@ -365,9 +396,16 @@ def built_move_errors(fd: dict) -> list[str]:
         if value is None or value < lo:
             out.append(f"{name} is {value} after its effects; it must be at least {lo}")
     total = s + a + r
+    stun_given = all(isinstance(fd.get(k), (int, float)) and not isinstance(fd.get(k), bool) for k in ("hitstun", "blockstun"))
+    props0 = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}
+    if isinstance(props0.get("projectile"), dict) and num(fd, "damage") > 0 and not stun_given:
+        out.append("a damaging projectile needs hitstun and blockstun")
+    if fd.get("hitboxes") and not stun_given:
+        out.append("a move with hitboxes needs hitstun and blockstun")
     for i, hb in enumerate(fd.get("hitboxes") or []):
         fr = hb.get("frames") if isinstance(hb, dict) else None
-        if isinstance(fr, list) and len(fr) == 2 and all(is_int(x) for x in fr) and not (a > 0 and s + 1 <= fr[0] and fr[1] <= s + a):
+        if isinstance(fr, list) and len(fr) == 2 and all(whole(x) is not None for x in fr) \
+                and not (a > 0 and s + 1 <= whole(fr[0]) and whole(fr[1]) <= s + a):
             out.append(f"hitbox frames {fr[0]}-{fr[1]} outside the active window")
     props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}
     proj = props.get("projectile")
@@ -453,6 +491,19 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
         frame_effects.append(e)
     if len(errs) > before:
         return
+    ex_effects = [e for e in effects if e.get("target") == "ex.meter_cost"]
+    for sid in sorted(specials):  # ModifierData.ExCostFor on every special with an EX it applies to
+        special = specials[sid]
+        cost = whole((special.get("ex") or {}).get("meter_cost"))
+        if not ex_effects or not cost or not all(has_property(special, r) for r in requires):
+            continue
+        try:
+            for e in ex_effects:
+                v = whole(e["value"])
+                cost = v if e["op"] == "set" else combine(e["op"], cost, v, "ex.meter_cost")
+        except Unbuildable as ex:
+            errs.append(("effects", f"on {sid}: {ex}"))
+            return
     used = [c for c in START_CONDITIONS if any(e.get("when") == c for e in frame_effects)]
     subsets = [[c for j, c in enumerate(used) if mask >> j & 1] for mask in range(1 << len(used))]
     seen: set[str] = set()
@@ -499,7 +550,9 @@ def load_specials(docs: dict) -> dict[str, dict]:
                 continue
             if isinstance(doc, dict) and doc.get("kind") == "special":
                 found[doc.get("id", f.stem)] = doc
-    for doc in docs.values():
+    for path, doc in docs.items():
+        if SAMPLES_DIR in path.resolve().parents:
+            continue  # samples are not in the game's pool
         if isinstance(doc, dict) and doc.get("kind") == "special" and isinstance(doc.get("id"), str):
             found[doc["id"]] = doc
     return found
@@ -527,6 +580,9 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         clip = clips.get(clip_id) if isinstance(clip_id, str) else None
         if isinstance(clip_id, str) and clip is None:
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
+    if kind in ("normal", "throw") and schema_ok and isinstance(doc.get("frame_data"), dict):
+        for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
+            errs.append(("frame_data", msg))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
         if "landing_recovery" in doc and doc.get("air") is not True:  # E11: only jump-ins land mid-move
@@ -636,7 +692,9 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             v = validators[doc["kind"]]
             for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
-            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs))
+            # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
+            game_loads = SAMPLES_DIR not in f.resolve().parents
+            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads))
         if errs:
             failures[f] = errs
 

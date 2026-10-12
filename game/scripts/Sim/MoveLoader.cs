@@ -28,9 +28,9 @@ public static class MoveLoader
 		else throw new FormatException($"{id}: no levels.1.frame_data or frame_data");
 
 		int Req(string name) => fd.TryGetProperty(name, out var v)
-			? v.GetInt32() : throw new FormatException($"{id}: frame_data.{name} is required");
+			? v.WholeInt() : throw new FormatException($"{id}: frame_data.{name} is required");
 		int? Opt(JsonElement obj, string name) =>
-			obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : null;
+			obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.WholeInt() : null;
 
 		JsonElement props = fd.TryGetProperty("properties", out var p) ? p : default;
 		bool Flag(string name) => props.ValueKind == JsonValueKind.Object && props.TryGetProperty(name, out var v) && v.GetBoolean();
@@ -44,7 +44,7 @@ public static class MoveLoader
 			Id = id,
 			Source = root.TryGetProperty("source", out var srcEl) && srcEl.ValueKind == JsonValueKind.String ? srcEl.GetString()! : "",
 			Startup = Req("startup"),
-			Active = activeEl.ValueKind == JsonValueKind.Null ? 0 : activeEl.GetInt32(),
+			Active = activeEl.ValueKind == JsonValueKind.Null ? 0 : activeEl.WholeInt(),
 			Recovery = Req("recovery"),
 			Damage = Req("damage"),
 			Hitstun = Opt(fd, "hitstun") ?? 0,
@@ -171,7 +171,7 @@ public static class MoveLoader
 		if (input.TryGetProperty("directions", out var dirs))
 			foreach (var d in dirs.EnumerateArray())
 			{
-				int n = d.GetInt32();
+				int n = d.WholeInt();
 				if (n < 1 || n > 9) throw new FormatException($"{id}: direction {n} is not a numpad direction");
 				mask |= 1 << n;
 			}
@@ -186,8 +186,8 @@ public static class MoveLoader
 		{
 			var fr = e.GetProperty("frames");
 			var r = e.GetProperty("rect");
-			list.Add(new TimedBox(fr[0].GetInt32(), fr[1].GetInt32(),
-				new Box(r.GetProperty("x").GetInt32(), r.GetProperty("y").GetInt32(), r.GetProperty("w").GetInt32(), r.GetProperty("h").GetInt32())));
+			list.Add(new TimedBox(fr[0].WholeInt(), fr[1].WholeInt(),
+				new Box(r.GetProperty("x").WholeInt(), r.GetProperty("y").WholeInt(), r.GetProperty("w").WholeInt(), r.GetProperty("h").WholeInt())));
 		}
 		return list.ToArray();
 	}

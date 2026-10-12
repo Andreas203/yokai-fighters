@@ -77,7 +77,8 @@ public sealed class ModifierData
 		foreach (var e in ExCostEffects)
 		{
 			global::YokaiFighters.Sim.Effects.Whole(e["value"], out int v); // checked at Parse
-			cost = e["op"]!.GetValue<string>() switch { "set" => v, "add" => cost + v, _ => global::YokaiFighters.Sim.Effects.MulPct(cost, v) };
+			string op = e["op"]!.GetValue<string>();
+			cost = op == "set" ? v : global::YokaiFighters.Sim.Effects.Combine(op, cost, v, Id, global::YokaiFighters.Sim.Effects.ExMeterCost);
 		}
 		return Math.Max(0, cost);
 	}
