@@ -12,6 +12,9 @@ namespace YokaiFighters.Sim;
 /// <item>Buy: a common special (A9) from a yokai not bound this run, 50 coins, into its own empty slot at Lv 1 (A3),
 /// in borrowed ink (never carried over, M3). Never a rare, never a cancel rule, never a locked ability (A11) or a
 /// starter (A1), never one Ryo already holds.</item>
+/// <item>Buy a modifier (designer, 2026-10-11: modifiers are common abilities, A9/A11): same price and the same
+/// shelf rule; the player picks the special it goes on and <see cref="RunState.CanAttach"/> decides (A2: one per
+/// special, <c>applies_to</c>), the rule the reward draft uses. Borrowed ink too.</item>
 /// <item>Release a binding: 40 coins, empties a slot holding a yokai's special. Refused when it holds Ryo's last
 /// special (T5), so the Tanuki's copy target is always defined; the released move no longer counts for it (T2).</item>
 /// </list>
@@ -43,7 +46,8 @@ public sealed class MerchantShop
 	/// <summary>
 	/// What the shop offers now (also before the shop is chosen, so a screen can show it): the pool's specials in
 	/// file-name order that are common, unlocked, not starters, not held by Ryo and sourced from a yokai not bound
-	/// this run (<see cref="RunSession.BoundYokai"/>). Modifiers and cancel rules are not sold.
+	/// this run (<see cref="RunSession.BoundYokai"/>). Modifiers are on <see cref="ModifierShelf"/>; cancel rules
+	/// are never sold.
 	/// </summary>
 	public IReadOnlyList<SpecialData> Shelf => ShelfFor(Run, _session.Pool, _session.BoundYokai());
 
@@ -54,6 +58,59 @@ public sealed class MerchantShop
 		return pool.Specials
 			.Where(s => !s.Starter && !s.Locked && s.Rarity == SoldRarity && !bound.Contains(s.Source) && !run.Owns(s.Id))
 			.ToArray();
+	}
+
+	/// <summary>
+	/// The modifiers the shop offers now, in pool (file-name) order: common, unlocked, from a yokai not bound this
+	/// run, and not already on one of Ryo's specials. Listed whether or not a special can take it now
+	/// (<see cref="ModifierTargets"/> says which can).
+	/// </summary>
+	public IReadOnlyList<ModifierData> ModifierShelf => ModifierShelfFor(Run, _session.Pool, _session.BoundYokai());
+
+	/// <summary>The R6 modifier shelf for a run, a pool and the yokai already bound (see <see cref="ModifierShelf"/>).</summary>
+	public static IReadOnlyList<ModifierData> ModifierShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai)
+	{
+		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
+		return pool.Modifiers
+			.Where(m => !m.Locked && m.Rarity == SoldRarity && !bound.Contains(m.Source) && !run.HasModifier(m.Id))
+			.ToArray();
+	}
+
+	/// <summary>A2: the slots whose special can take <paramref name="modifierId"/> now (none for an id off the shelf).</summary>
+	public IReadOnlyList<SpecialSlot> ModifierTargets(string modifierId)
+	{
+		var m = ModifierShelf.FirstOrDefault(x => x.Id == modifierId);
+		if (m is null) return Array.Empty<SpecialSlot>();
+		return Run.Owned.Where(o => Run.CanAttach(o.Slot, m)).Select(o => o.Slot).ToArray();
+	}
+
+	/// <summary>Why <paramref name="modifierId"/> can't be bought onto the special in <paramref name="slot"/> now, or null when it can.</summary>
+	public string? WhyNotBuyModifier(string modifierId, SpecialSlot slot)
+	{
+		if (!Open) return ClosedReason();
+		var m = ModifierShelf.FirstOrDefault(x => x.Id == modifierId);
+		if (m is null) return $"'{modifierId}' is not on the merchant's shelf (R6)";
+		if (slot is < SpecialSlot.A or > SpecialSlot.D) return $"'{slot}' is not a slot";
+		if (Run[slot] is not { } held) return $"slot {slot} is empty";
+		if (held.Modifier is { } worn) return $"{held.Data.Id} already has {worn.Id} (A2: one modifier per special)";
+		if (!Run.CanAttach(slot, m)) return $"{m.Id} does not apply to {held.Data.Id} (A2)";
+		if (!Run.CanAfford(BuyCost)) return $"{BuyCost} coins needed, Ryo has {Run.Coins} (R6)";
+		return null;
+	}
+
+	public bool CanBuyModifier(string modifierId, SpecialSlot slot) => WhyNotBuyModifier(modifierId, slot) is null;
+
+	/// <summary>
+	/// R6: buys a modifier from the shelf for 50 coins and attaches it to the special in <paramref name="slot"/>
+	/// (<see cref="RunState.Attach"/>, A2), in borrowed ink. A refused buy changes nothing and spends nothing.
+	/// </summary>
+	public MapResult BuyModifier(string modifierId, SpecialSlot slot)
+	{
+		if (WhyNotBuyModifier(modifierId, slot) is { } why) return MapResult.Fail($"merchant '{_merchant.NodeId}': {why}");
+		var m = ModifierShelf.First(x => x.Id == modifierId);
+		if (!Run.TrySpend(BuyCost)) return MapResult.Fail($"merchant '{_merchant.NodeId}': not enough coins (R6)");
+		Run.Attach(slot, m, borrowed: true);
+		return MapResult.Done;
 	}
 
 	/// <summary>Why <paramref name="specialId"/> can't be bought now, or null when it can.</summary>

@@ -48,6 +48,16 @@ public static partial class MerchantShopTests
 		return SpecialLoader.Parse(node.ToJsonString(), id);
 	}
 
+	static ModifierData CloneMod(string from, string id, string source, string rarity, bool locked = false)
+	{
+		var node = JsonNode.Parse(File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "rewards", from + ".json")))!.AsObject();
+		node["id"] = id;
+		node["source"] = source;
+		node["rarity"] = rarity;
+		node["locked"] = locked;
+		return ModifierLoader.Parse(node.ToJsonString(), id);
+	}
+
 	/// <summary>Fixture pool + kappa commons (D, C), oni common (D), oni rare (D), kappa locked common (D), kitsune common (D).</summary>
 	static AbilityPool ShopPool()
 	{
@@ -61,7 +71,16 @@ public static partial class MerchantShopTests
 			Clone("test-kappa-sealed", "kappa", "common", "D", locked: true),
 			Clone("test-kitsune-mirage", "kitsune", "common", "D"),
 		};
-		return new AbilityPool(fx.Specials.Concat(extra), fx.Modifiers);
+		// Modifiers: the fixtures' two are the Kitsune's (bound on the test walk); these are clones from other yokai.
+		var mods = new[]
+		{
+			CloneMod("test-fox-patience", "test-kappa-patience", "kappa", "common"), // applies to any special
+			CloneMod("test-will-o-wisp", "test-kappa-wisp", "kappa", "common"),      // needs a projectile
+			CloneMod("test-fox-patience", "test-oni-patience", "oni", "common"),
+			CloneMod("test-fox-patience", "test-kappa-rare-mod", "kappa", "rare"),
+			CloneMod("test-fox-patience", "test-kappa-sealed-mod", "kappa", "common", locked: true),
+		};
+		return new AbilityPool(fx.Specials.Concat(extra), fx.Modifiers.Concat(mods));
 	}
 
 	static SpecialData S(AbilityPool pool, string id) => pool.Special(id) ?? throw new InvalidOperationException(id);
@@ -130,7 +149,13 @@ public static partial class MerchantShopTests
 			Assert.True(d.Rarity == "common" && !d.Locked && !d.Starter, $"{id}: R6/A9/A11/A1");
 		}
 		Assert.True(!open.Contains("test-oni-quake") && !open.Contains("test-kappa-sealed"), "never a rare (R6), never a locked ability (A11)");
-		Assert.True(!pool.Modifiers.Any(m => open.Contains(m.Id)), "modifiers are not on the shelf");
+		// Modifiers are common abilities too (A9, A11): the same rule, on their own list.
+		Assert.Equal("test-kappa-patience,test-kappa-wisp", string.Join(",", s.Merchant.Shop.ModifierShelf.Select(m => m.Id)),
+			"R6: common modifiers from unbound yokai, pool order; none of the bound Kitsune's or Oni's, no rare, no locked");
+		var mods = MerchantShop.ModifierShelfFor(run, pool, Array.Empty<string>());
+		Assert.True(mods.Count > 0 && mods.All(m => m.Rarity == "common" && !m.Locked), "never a rare, never a locked modifier");
+		Assert.Equal(pool.Modifiers.Count(m => m.Rarity == "common" && !m.Locked), mods.Count, "nothing bound: every common unlocked modifier is sold");
+		Assert.True(!pool.Modifiers.Any(m => open.Contains(m.Id)) && !pool.Specials.Any(x => mods.Any(m => m.Id == x.Id)), "specials and modifiers stay on their own lists");
 	});
 
 	[Test]
@@ -307,6 +332,110 @@ public static partial class MerchantShopTests
 		Assert.Equal("test-kappa-spin,test-kappa-grab", string.Join(",", shop.Shelf.Select(x => x.Id)), "R6 shelf at row 7");
 		Assert.True(shop.Buy("test-kappa-spin").Ok && shop.Release(SpecialSlot.D).Ok && s.Run.Coins == 0, "50 to buy, 40 to release");
 		Assert.True(!shop.Release(SpecialSlot.A).Ok && !s.Merchant!.TakeHeal().Ok, "starters stay, heal closed");
+	});
+
+	[Test]
+	public static void RealPool_ItsCommonModifiersAreSold_UnlessTheirYokaiIsBound()
+	{
+		var pool = FightScene.LoadAbilityPool(); // data/, not the fixtures
+		var run = RunState.NewRun(pool);
+		var open = MerchantShop.ModifierShelfFor(run, pool, Array.Empty<string>()).Select(m => m.Id).ToArray();
+		Assert.True(open.Contains("fox-patience") && open.Contains("will-o-wisp"), "the Kitsune's two modifiers are sold while it is not bound: " + string.Join(",", open));
+		Assert.Equal(pool.Modifiers.Count(m => m.Rarity == "common" && !m.Locked), open.Length, "every common unlocked modifier in data/");
+		var bound = MerchantShop.ModifierShelfFor(run, pool, new[] { "kitsune" });
+		Assert.True(!bound.Any(m => m.Source == "kitsune"), "none of the Kitsune's once it is bound (R6)");
+	}
+
+	[Test]
+	public static void BuyModifier_Costs50_AttachesByA2_InBorrowedInk() => OnFixtures(() =>
+	{
+		var pool = ShopPool();
+		var s = At(pool, 120, true, StartersAnd());
+		var shop = Shopping(s);
+		Assert.Equal("A,B", string.Join(",", shop.ModifierTargets("test-kappa-patience")), "any special takes it");
+		Assert.Equal("A", string.Join(",", shop.ModifierTargets("test-kappa-wisp")), "applies_to: only the projectile (Spirit Wave)");
+		ulong before = s.StateHash();
+		Assert.True(shop.BuyModifier("test-kappa-wisp", SpecialSlot.A).Ok, "bought onto Spirit Wave");
+		Assert.True(s.Run.Coins == 70 && s.StateHash() != before, "120 - 50, and it is in the state hash");
+		Assert.True(s.Run[SpecialSlot.A] is { Borrowed: false, ModifierBorrowed: true, Level: 1 } a && a.Modifier!.Id == "test-kappa-wisp", "attached, the modifier is borrowed ink, the special is still Ryo's own");
+		Assert.True(!shop.ModifierShelf.Any(m => m.Id == "test-kappa-wisp") && shop.ModifierTargets("test-kappa-wisp").Count == 0, "no longer on the shelf");
+		Assert.Equal("B", string.Join(",", shop.ModifierTargets("test-kappa-patience")), "A2: Spirit Wave has its one modifier");
+		// The same attach as the draft's: Ryo's Spirit Wave is built with it.
+		int plain = S(pool, "test-spirit-wave").Build(1, false).Projectile!.Speed;
+		var worn = s.Run[SpecialSlot.A]!;
+		Assert.True(worn.Data.Build(1, false, worn.Modifier, null).Projectile!.Speed > plain, "the modifier works on Ryo's special");
+		// M3: the special may carry over, the borrowed modifier never does.
+		var carry = s.Run.CarryOverCandidates.Single(o => o.Slot == SpecialSlot.A).Special;
+		Assert.True(carry.Modifier is null && !carry.ModifierBorrowed && s.Run.CarryOverCandidates.Count() == 2, "listed for carry-over without the borrowed modifier");
+		// A borrowed special can wear a borrowed modifier: both are borrowed ink.
+		Assert.True(shop.Buy("test-kappa-spin").Ok && s.Run.Coins == 20, "a borrowed special");
+		s.Run.AddCoins(30);
+		Assert.True(shop.BuyModifier("test-kappa-patience", SpecialSlot.D).Ok, "a borrowed modifier on it");
+		Assert.True(s.Run[SpecialSlot.D] is { Borrowed: true, ModifierBorrowed: true } && s.Run.Coins == 0, "both flags");
+	});
+
+	[Test]
+	public static void BuyModifier_Refusals_SpendNothing_ChangeNothing() => OnFixtures(() =>
+	{
+		var pool = ShopPool();
+		var s = At(pool, 49, true, StartersAnd());
+		var shop = s.Merchant!.Shop;
+		ulong before = s.StateHash();
+		Assert.True(!shop.BuyModifier("test-kappa-patience", SpecialSlot.A).Ok && !shop.CanBuyModifier("test-kappa-patience", SpecialSlot.A), "R6: refused before the shop is chosen");
+		Assert.True(s.StateHash() == before, "unchanged");
+		Shopping(s);
+		before = s.StateHash();
+		var poor = shop.BuyModifier("test-kappa-patience", SpecialSlot.A);
+		Assert.True(!poor.Ok && poor.Error!.Contains("50 coins") && s.StateHash() == before && s.Run[SpecialSlot.A]!.Modifier is null, "49 coins: refused, unchanged");
+		s.Run.AddCoins(151);
+		before = s.StateHash();
+		foreach (var id in new[] { "test-fox-patience", "test-will-o-wisp", "test-oni-patience", "test-kappa-rare-mod", "test-kappa-sealed-mod", "test-kappa-spin", "nope" })
+			Assert.True(!shop.BuyModifier(id, SpecialSlot.A).Ok, $"{id}: not on the modifier shelf");
+		Assert.True(!shop.Buy("test-kappa-patience").Ok, "a modifier is not bought as a special");
+		var wrong = shop.BuyModifier("test-kappa-wisp", SpecialSlot.B);
+		Assert.True(!wrong.Ok && wrong.Error!.Contains("A2"), "applies_to: Rising Talisman has no projectile");
+		Assert.True(!shop.BuyModifier("test-kappa-patience", SpecialSlot.C).Ok && !shop.BuyModifier("test-kappa-patience", SpecialSlot.None).Ok, "an empty slot, not a slot");
+		Assert.True(s.StateHash() == before && s.Run.Coins == 200, "every refusal spent nothing and changed nothing");
+		Assert.True(shop.BuyModifier("test-kappa-patience", SpecialSlot.A).Ok, "bought");
+		before = s.StateHash();
+		var second = shop.BuyModifier("test-kappa-wisp", SpecialSlot.A);
+		Assert.True(!second.Ok && second.Error!.Contains("one modifier per special") && s.StateHash() == before && s.Run.Coins == 150, "A2: the worn modifier is not replaced, nothing spent");
+	});
+
+	[Test]
+	public static void BoughtModifier_NeverChangesTheCopy() => OnFixtures(() =>
+	{
+		var pool = ShopPool();
+		var s = At(pool, 200, true, StartersAnd());
+		var shop = Shopping(s);
+		var before = CopyRule.Target(s.Run)!;
+		int speed = before.Build().Projectile!.Speed;
+		Assert.True(shop.BuyModifier("test-kappa-wisp", SpecialSlot.A).Ok && shop.BuyModifier("test-kappa-patience", SpecialSlot.B).Ok, "two modifiers bought");
+		var after = CopyRule.Target(s.Run)!;
+		Assert.True(after == before && after.Data.Id == "test-spirit-wave", "T2/T3: the target is the same special at the same level");
+		Assert.Equal(speed, after.Build().Projectile!.Speed, "T4: the copy never has Ryo's modifier");
+		var mine = s.Run[SpecialSlot.A]!;
+		Assert.True(mine.Data.Build(mine.Level, false, mine.Modifier, null).Projectile!.Speed > speed, "while Ryo's own is faster");
+	});
+
+	[Test]
+	public static void BoughtModifier_GoesWithItsSpecial() => OnFixtures(() =>
+	{
+		var pool = ShopPool();
+		var s = At(pool, 300, true, StartersAnd((SpecialSlot.C, "test-foxfire", 1)));
+		var shop = Shopping(s);
+		Assert.True(shop.BuyModifier("test-kappa-patience", SpecialSlot.C).Ok, "onto Foxfire");
+		Assert.Equal(2, s.Run.LevelUp(SpecialSlot.C), "levelled");
+		Assert.True(s.Run[SpecialSlot.C] is { Level: 2, ModifierBorrowed: true }, "levelling keeps the modifier and its ink");
+		Assert.True(shop.Release(SpecialSlot.C).Ok, "the special is released");
+		Assert.True(s.Run[SpecialSlot.C] is null && !s.Run.HasModifier("test-kappa-patience"), "A6: the modifier goes with it");
+		Assert.True(shop.ModifierShelf.Any(m => m.Id == "test-kappa-patience"), "and is sold again");
+		// A draft that replaces the special drops the bought modifier with it (A6).
+		Assert.True(shop.BuyModifier("test-kappa-patience", SpecialSlot.A).Ok, "onto Spirit Wave");
+		var other = Clone("test-other-a", "kappa", "common", "A");
+		s.Run.Equip(other);
+		Assert.True(s.Run[SpecialSlot.A] is { Modifier: null, ModifierBorrowed: false, Borrowed: false }, "replaced: no modifier, no borrowed ink left behind");
+		Assert.True(Throws(() => RunState.Restore(600, new[] { (SpecialSlot.A, new OwnedSpecial(S(pool, "test-spirit-wave"), 1, null, false, true)) })), "a borrowed modifier needs a modifier");
 	});
 
 	static bool Throws(Action a)

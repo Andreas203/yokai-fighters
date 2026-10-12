@@ -14,6 +14,8 @@ public sealed record SlotSave(string Slot, string Special, int Level, string? Mo
 {
 	/// <summary>R6: bought at the merchant, borrowed ink (version 3; false when the file has none).</summary>
 	public bool Borrowed { get; init; }
+	/// <summary>R6: the modifier was bought at the merchant, borrowed ink (version 3; false when the file has none).</summary>
+	public bool ModifierBorrowed { get; init; }
 }
 
 /// <summary>
@@ -68,7 +70,7 @@ public sealed record RunSave(
 		var snap = session.Map.Snapshot();
 		var slots = new List<SlotSave>();
 		foreach (var (slot, s) in session.Run.Owned)
-			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)) { Borrowed = s.Borrowed });
+			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)) { Borrowed = s.Borrowed, ModifierBorrowed = s.ModifierBorrowed });
 		return new RunSave(session.Seed, snap.MapId, snap.Visited.ToArray(), snap.Current, session.Run.Health, slots)
 		{
 			MapFile = mapFile,
@@ -118,7 +120,7 @@ public sealed record RunSave(
 			SpecialData data = pool.Special(s.Special) ?? throw new FormatException($"special '{s.Special}' is not in this build's abilities");
 			ModifierData? modifier = null;
 			if (s.Modifier is { } id) modifier = pool.Modifier(id) ?? throw new FormatException($"modifier '{id}' is not in this build's abilities");
-			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier, s.Borrowed)));
+			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier, s.Borrowed, s.ModifierBorrowed)));
 			order[(int)slot] = s.Levelled;
 		}
 

@@ -6,8 +6,10 @@ namespace YokaiFighters.Sim;
 /// <summary>
 /// A special Ryo owns this run: its level (A3) and its one modifier (A2). <paramref name="Borrowed"/> (YOK-95, R6):
 /// bought at the merchant, shown in grey "borrowed ink" and never carried over to the next run (M3).
+/// <paramref name="ModifierBorrowed"/>: the same for its modifier, bought at the merchant and attached here; it is
+/// only ever true while <paramref name="Modifier"/> is set, and goes with the modifier (A6).
 /// </summary>
-public sealed record OwnedSpecial(SpecialData Data, int Level, ModifierData? Modifier, bool Borrowed = false);
+public sealed record OwnedSpecial(SpecialData Data, int Level, ModifierData? Modifier, bool Borrowed = false, bool ModifierBorrowed = false);
 
 /// <summary>
 /// YOK-47: Ryo's run state between duels (pure C#, deterministic): health (C1 carries across the run),
@@ -134,6 +136,7 @@ public sealed class RunState
 			if (s.Level < 1 || s.Level > Math.Min(3, s.Data.MaxLevel)) throw new ArgumentException($"{s.Data.Id} has no level {s.Level}");
 			if (s.Modifier is { } m && !m.AppliesTo(s.Data)) throw new ArgumentException($"{m.Id} can't attach to {s.Data.Id}");
 			if (s.Borrowed && s.Data.Starter) throw new ArgumentException($"{s.Data.Id} is a starter: the merchant never sells it (R6, A1)");
+			if (s.ModifierBorrowed && s.Modifier is null) throw new ArgumentException($"{s.Data.Id} has no modifier to be borrowed (R6)");
 			run._slots[(int)slot] = s;
 		}
 		return run;
@@ -193,13 +196,19 @@ public sealed class RunState
 
 	/// <summary>
 	/// M3 / R6: the specials the next run may carry over from, slot order A-D. Borrowed ink never carries over;
-	/// choosing the best of these and the row-6 condition is M3's own code (not built yet).
+	/// choosing the best of these and the row-6 condition is M3's own code (not built yet). A special of Ryo's own
+	/// that wears a borrowed modifier is listed without that modifier.
 	/// </summary>
 	public IEnumerable<(SpecialSlot Slot, OwnedSpecial Special)> CarryOverCandidates
 	{
 		get
 		{
-			foreach (var o in Owned) if (!o.Special.Borrowed) yield return o;
+			foreach (var o in Owned)
+			{
+				if (o.Special.Borrowed) continue;
+				// A borrowed modifier never carries over either: the special is offered without it.
+				yield return o.Special.ModifierBorrowed ? (o.Slot, o.Special with { Modifier = null, ModifierBorrowed = false }) : o;
+			}
 		}
 	}
 
@@ -223,10 +232,18 @@ public sealed class RunState
 	public bool CanAttach(SpecialSlot slot, ModifierData modifier) =>
 		this[slot] is { } s && s.Modifier is null && modifier.AppliesTo(s.Data);
 
-	public void Attach(SpecialSlot slot, ModifierData modifier)
+	/// <summary><paramref name="borrowed"/> (YOK-95, R6): the modifier was bought at the merchant (borrowed ink).</summary>
+	public void Attach(SpecialSlot slot, ModifierData modifier, bool borrowed = false)
 	{
 		if (!CanAttach(slot, modifier)) throw new InvalidOperationException($"{modifier.Id} can't attach to slot {slot}");
-		_slots[(int)slot] = this[slot]! with { Modifier = modifier };
+		_slots[(int)slot] = this[slot]! with { Modifier = modifier, ModifierBorrowed = borrowed };
+	}
+
+	/// <summary>One of Ryo's specials wears this modifier.</summary>
+	public bool HasModifier(string modifierId)
+	{
+		foreach (var (_, s) in Owned) if (s.Modifier?.Id == modifierId) return true;
+		return false;
 	}
 
 	/// <summary>R3: after a won duel the yokai is bound: health left + 50, capped at 1,000.</summary>
@@ -307,6 +324,9 @@ public sealed class RunState
 		int borrowed = 0;
 		for (int i = 1; i < _slots.Length; i++) if (_slots[i] is { Borrowed: true }) borrowed |= 1 << i;
 		if (borrowed != 0) h = Fnv.Mix(Fnv.MixString(h, "borrowed"), borrowed);
+		int borrowedMods = 0;
+		for (int i = 1; i < _slots.Length; i++) if (_slots[i] is { ModifierBorrowed: true }) borrowedMods |= 1 << i;
+		if (borrowedMods != 0) h = Fnv.Mix(Fnv.MixString(h, "borrowed-modifier"), borrowedMods);
 		return h;
 	}
 }
