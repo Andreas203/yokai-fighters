@@ -47,7 +47,8 @@ The pipeline generates card text for this game from its own design documents. Tw
 |---|---|
 | The knowledge base is my GDD | [The source](#the-source-my-gdd-as-a-vault) |
 | The three content types and the gap each fills | [The gap and the outputs](#the-gap-and-the-outputs) |
-| The agents, what each one reads and how to run it | [How the pipeline works](#how-the-pipeline-works), [Run it](#run-it) |
+| The agents and the vault notes each one reads | [The agents and the notes they read](#the-agents-and-the-notes-they-read) |
+| The pipeline and how to run it | [How the pipeline works](#how-the-pipeline-works), [Run it](#run-it) |
 | Notes loaded, line cited and output side by side | [Notes loaded, line cited, output](#notes-loaded-line-cited-output) |
 | A lore break and a tone drift caught and corrected | [What the critic caught](#what-the-critic-caught) |
 | Self-assessment and the change that improved game-fit | [Do the outputs sound like my game?](#do-the-outputs-sound-like-my-game) |
@@ -57,6 +58,16 @@ The pipeline generates card text for this game from its own design documents. Tw
 The knowledge base is [`vault/`](vault/Home.md): 13 Markdown notes distilled from [`Yokai_Fighters_GDD_Extended.pdf`](Yokai_Fighters_GDD_Extended.pdf) and its approved amendments (Linear tickets YOK-1 to YOK-5). It has vision, vibe (tone, story, characters, art and audio) and mechanics (combat, controls, abilities, run loop, yokai, Tanuki, economy, meta-progression). Every number is copied from the GDD, and each note lists the GDD sections it comes from.
 
 The vault is small, about 42 KB in all, so an agent can read the notes it needs from top to bottom. Open questions are kept at the bottom of each note and are cut before an agent reads it, so the model is not handed undecided design as fact.
+
+### The agents and the notes they read
+
+Three crew agents take part. Each one's definition file has a "Vault notes" section that lists the notes it reads, and the pipeline loads exactly that list. The same list tells the agent what to read when it runs in Claude Code through `/produce`.
+
+| Agent | Role here | Notes it loads whole | Size |
+|---|---|---|---|
+| [`habit-writer`](.claude/agents/habit-writer.md) | Writes wake-up cards and elder intro cards | [Tone](vault/01-vibe/Tone.md), [Story](vault/01-vibe/Story.md), [Characters](vault/01-vibe/Characters.md), [Yokai](vault/02-mechanics/Yokai.md) | 15,628 characters |
+| [`movesmith`](.claude/agents/movesmith.md) | Writes modifier reward card text | [Tone](vault/01-vibe/Tone.md), [Abilities](vault/02-mechanics/Abilities.md), [Characters](vault/01-vibe/Characters.md) | 13,501 characters |
+| [`rules-lawyer`](.claude/agents/rules-lawyer.md) | Critic: checks every draft | [Tone](vault/01-vibe/Tone.md), [Story](vault/01-vibe/Story.md), [Characters](vault/01-vibe/Characters.md), [Yokai](vault/02-mechanics/Yokai.md), [Abilities](vault/02-mechanics/Abilities.md) | 20,919 characters |
 
 ### The gap and the outputs
 
@@ -146,14 +157,6 @@ flowchart LR
     R -->|yes: rewrite with the issues| W
     R -->|no| O["runs/NAME/output/*.json<br/>and schema check"]
 ```
-
-Three crew agents take part. Each one's definition file has a "Vault notes" section that lists the notes it reads, and the pipeline loads exactly that list. The same list tells the agent what to read when it runs in Claude Code through `/produce`.
-
-| Agent | Role here | Notes it loads whole | Size |
-|---|---|---|---|
-| [`habit-writer`](.claude/agents/habit-writer.md) | Writes wake-up cards and elder intro cards | [Tone](vault/01-vibe/Tone.md), [Story](vault/01-vibe/Story.md), [Characters](vault/01-vibe/Characters.md), [Yokai](vault/02-mechanics/Yokai.md) | 15,628 characters |
-| [`movesmith`](.claude/agents/movesmith.md) | Writes modifier reward card text | [Tone](vault/01-vibe/Tone.md), [Abilities](vault/02-mechanics/Abilities.md), [Characters](vault/01-vibe/Characters.md) | 13,501 characters |
-| [`rules-lawyer`](.claude/agents/rules-lawyer.md) | Critic: checks every draft | [Tone](vault/01-vibe/Tone.md), [Story](vault/01-vibe/Story.md), [Characters](vault/01-vibe/Characters.md), [Yokai](vault/02-mechanics/Yokai.md), [Abilities](vault/02-mechanics/Abilities.md) | 20,919 characters |
 
 - **Loading** ([`vault.py`](tools/content_pipeline/vault.py)): reads the note list from the agent's file and loads each note complete, minus its "Open questions" section. There is no chunking, index or query.
 - **Writing** ([`content.py`](tools/content_pipeline/content.py)): the prompt carries only the output contract (length, placeholders, JSON shape) and the notes. The model is told it knows nothing about the game except those notes. It runs with every tool off in an empty folder, so it cannot read the rest of the repo. With the text it returns one to four `sources`: the lines of the notes the text rests on, copied word for word.
