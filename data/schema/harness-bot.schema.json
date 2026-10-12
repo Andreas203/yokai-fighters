@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/harness-bot.schema.json",
+  "title": "Whole-run harness bot",
+  "description": "YOK-26: the player-side test bot the headless whole-run harness plays first runs with (R5), in data/harness/<id>.json. Fight parameters read only on-screen state (P6). Tuned by the Sparring Partner; never shipped as gameplay.",
+  "type": "object",
+  "required": ["kind", "id", "rules", "scheme", "fight", "run"],
+  "additionalProperties": false,
+  "$defs": {
+    "pct": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "units": { "type": "integer", "minimum": 0, "maximum": 4000 },
+    "ticks": { "type": "integer", "minimum": 1, "maximum": 600 },
+    "weight": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "button": { "enum": ["light_punch", "medium_punch", "heavy_punch", "light_kick", "medium_kick", "heavy_kick"] }
+  },
+  "properties": {
+    "kind": { "const": "harness_bot" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "scheme": { "const": "kihon", "description": "K2: the bot presses Special + direction for its specials." },
+    "fight": {
+      "type": "object",
+      "required": ["reaction_frames", "decide_every", "mistake_pct", "block_pct", "anti_air_pct", "anti_air_button", "poke_range",
+        "throw_range", "preferred_min", "preferred_max", "walk_ticks", "block_ticks", "wait_ticks", "weights", "max_fight_ticks"],
+      "additionalProperties": false,
+      "properties": {
+        "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120, "description": "Ticks between something showing on screen and the bot acting on it (P6)." },
+        "decide_every": { "$ref": "#/$defs/ticks" },
+        "mistake_pct": { "$ref": "#/$defs/pct" },
+        "block_pct": { "$ref": "#/$defs/pct" },
+        "anti_air_pct": { "$ref": "#/$defs/pct" },
+        "anti_air_button": { "$ref": "#/$defs/button" },
+        "poke_range": { "$ref": "#/$defs/units" },
+        "throw_range": { "$ref": "#/$defs/units" },
+        "preferred_min": { "$ref": "#/$defs/units" },
+        "preferred_max": { "$ref": "#/$defs/units" },
+        "walk_ticks": { "$ref": "#/$defs/ticks" },
+        "block_ticks": { "$ref": "#/$defs/ticks" },
+        "wait_ticks": { "$ref": "#/$defs/ticks" },
+        "weights": {
+          "type": "object",
+          "required": ["walk", "normal", "special", "throw", "jump", "wait"],
+          "additionalProperties": false,
+          "properties": {
+            "walk": { "$ref": "#/$defs/weight" }, "normal": { "$ref": "#/$defs/weight" }, "special": { "$ref": "#/$defs/weight" },
+            "throw": { "$ref": "#/$defs/weight" }, "jump": { "$ref": "#/$defs/weight" }, "wait": { "$ref": "#/$defs/weight" }
+          }
+        },
+        "max_fight_ticks": { "type": "integer", "minimum": 600, "maximum": 216000 }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["route", "reward_order", "merchant", "dojo", "menu_seconds_per_node"],
+      "additionalProperties": false,
+      "properties": {
+        "route": {
+          "type": "object",
+          "required": ["rule"],
+          "additionalProperties": false,
+          "properties": {
+            "rule": { "enum": ["prefer_types_else_random", "random"] },
+            "prefer_types": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "reward_order": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "enum": ["upgrade", "new", "modifier"] }
+        },
+        "merchant": { "enum": ["heal", "skip"], "description": "R6. 'shop' joins once the shop (YOK-95) is on the base." },
+        "dojo": { "enum": ["rest", "skip"], "description": "R7. 'trial' joins once the trial (YOK-98) is built." },
+        "menu_seconds_per_node": { "type": "integer", "minimum": 0, "maximum": 600 }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

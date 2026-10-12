@@ -47,6 +47,7 @@ KIND_SCHEMA = {
     "story_card": "story-card.schema.json",
     "run_map": "run-map.schema.json",
     "node_scenes": "node-scenes.schema.json",
+    "harness_bot": "harness-bot.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -57,6 +58,7 @@ DIR_KIND = {
     "clips": ("clip",),
     "story": ("story_card",),
     "map": ("run_map", "node_scenes"),
+    "harness": ("harness_bot",),
 }
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
