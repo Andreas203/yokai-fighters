@@ -9,7 +9,7 @@ updated: 2026-10-10
 
 Yokai Fighters is a single-player 2.5D roguelite fighting game for PC. You play Ryo, an earnest, stubborn apprentice exorcist who binds yokai rather than destroying them, apologising to each one he seals into a talisman. Every yokai he binds lends him one of three abilities, so the yokai you choose to fight decide the fighter you become. At the end of every run waits the Tanuki, a shapeshifter that copies the move you have invested in most.
 
-This vault is the design written as notes: one topic per note, for people and for the dev agents. It also serves as the retrieval store for the content pipeline in `tools/content_pipeline/`. How notes are written: [_conventions](_conventions.md).
+This vault is the design written as notes: one topic per note, for people and for the dev agents. The content agents read whole notes from it: each agent's definition in `.claude/agents/` lists its notes under "Vault notes", and the content pipeline in `tools/content_pipeline/` loads the same list. How notes are written: [_conventions](_conventions.md).
 
 ## 00 Vision
 

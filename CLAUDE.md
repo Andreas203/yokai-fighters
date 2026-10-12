@@ -66,8 +66,8 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `docs/design/screens/` | Target concept for every screen, with the prompts that made them; `rough/` holds ui-designer's greybox mockups | designer, ui-designer |
 | `docs/screenshots/current/` | Latest capture of each screen, the stage and the fighters; a new capture overwrites the old | ui-designer, gameplay-programmer |
 | `docs/screenshots/review/` | Old ticket screenshots waiting for the designer to keep or delete | designer |
-| `vault/` | The design as linked notes, one topic per note; the retrieval store for the content pipeline | designer |
-| `tools/content_pipeline/` | Drafts card text from the vault (retrieval, generator, critic); output is `proposed` and still goes through the Rules Lawyer | designer |
+| `vault/` | The design as linked notes, one topic per note; the content agents load the notes listed in their definitions whole | designer |
+| `tools/content_pipeline/` | Drafts card text from the vault: runs the writer agents and the Rules Lawyer as critic on the whole notes each lists under "Vault notes"; output is `proposed` and still goes through the Rules Lawyer | designer |
 | `tools/goal_agent/` | Goal-oriented coding agent: reads rules.md and the GDD, scans the code, ranks the gaps (`features.json`, `priority.py`) and writes the top one through build, test, Code Critic and Test Breaker gates. `gaps` is the producer's gap report. Works on a branch, never commits | designer |
 
 ## Tickets, branches and PRs

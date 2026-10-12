@@ -23,7 +23,7 @@ Every note starts with four fields.
 - One topic per note. If a note needs a second topic, it becomes a second note and a link.
 - Numbers go in tables, copied exactly from the GDD or its amendments.
 - Rules are written as statements someone can check, with the `rules.md` ID in brackets where one exists, for example (S2).
-- Each `##` section should make sense read alone. The content pipeline retrieves one section at a time, so a section names its subject instead of saying "it" or "the above".
+- Each `##` section should make sense read alone. Agents load a note whole but cite it one section at a time, so a section names its subject instead of saying "it" or "the above".
 - Examples beat adjectives. A tone note quotes lines, an art note names colours.
 - Open questions go at the bottom of the note. Nobody invents an answer to one; the designer decides.
 
