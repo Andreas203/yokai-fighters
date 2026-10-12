@@ -2,9 +2,10 @@
 
 The code checks cover what can be decided without judgment (length, sentence
 count, placeholders, names that are out of the build, numbers that are not in
-the vault). The critic model reads the draft against vault evidence and reports
-lore breaks and tone drift, quoting the evidence for each. Both feed the same
-issue list, which goes back to the generator for a rewrite.
+the ability table, cited lines that are not in the vault). The critic model
+reads the draft against the vault notes its agent loads and reports lore breaks
+and tone drift, quoting the line for each. Both feed the same issue list, which
+goes back to the writer for a rewrite.
 """
 from __future__ import annotations
 
@@ -12,8 +13,9 @@ import json
 import re
 import unicodedata
 
-from content import OUT_OF_BUILD, format_context
+from content import OUT_OF_BUILD, format_notes
 from llm import parse_json
+from vault import copied_run, has_line, table_row
 
 # Words the tone line rules out: the game is never horror (vault: Tone#The tone line).
 HORROR = [
@@ -22,6 +24,10 @@ HORROR = [
 ]
 # System words a story card must not use (vault: Tone#Card form).
 SYSTEM_WORDS = ["health", "hp", "frames", "level", "roguelite"]
+
+# A run of this many words taken straight from a note counts as copying, not writing.
+# Eight lets a stock opening through ("You wake at the province's edge, and") and stops a lifted example.
+COPY_LIMIT = 8
 
 LIMITS = {
     "wake-up-card": {"field": "text", "max_chars": 280, "min_sent": 1, "max_sent": 2, "placeholders": {"yokai"}},
@@ -48,7 +54,37 @@ def _word_hits(text: str, words: list[str]) -> list[str]:
     return [w for w in words if re.search(rf"\b{re.escape(w)}", plain)]
 
 
-def code_checks(type_id: str, draft: dict, evidence_chunks, move_names: set[str]) -> list[dict]:
+def source_checks(draft: dict, notes) -> list[dict]:
+    """Every line the writer cites must be in a note it loaded, word for word."""
+    sources = draft.get("sources")
+    if not isinstance(sources, list) or not sources:
+        return [_issue("form", "cited lines", "", "The reply cites no lines from the notes.",
+                       fix='Add "sources": the lines of the notes the text rests on.')]
+    by_id = {n.id: n for n in notes}
+    issues = []
+    for s in sources:
+        note_id, line = (str(s.get("note", "")), str(s.get("line", ""))) if isinstance(s, dict) else ("", str(s))
+        if note_id not in by_id:
+            issues.append(_issue("lore_break", "cited note not loaded", note_id or line,
+                                 f"'{note_id}' is not one of the notes you were given.", fix="Cite only the notes you were given."))
+        elif not has_line(by_id[note_id], line):
+            issues.append(_issue("lore_break", "cited line not in the vault", line,
+                                 f"This line is not in {note_id} word for word.", note_id,
+                                 "Copy the line exactly, or drop the claim that rests on it."))
+    return issues
+
+
+def copy_checks(text: str, notes) -> list[dict]:
+    """With whole notes in view the writer can lift a quoted example. A card is new text."""
+    run, note = max(((copied_run(text, n), n) for n in notes), key=lambda pair: len(pair[0].split()))
+    if len(run.split()) < COPY_LIMIT:
+        return []
+    return [_issue("form", "copied from the notes", run,
+                   f"These {len(run.split())} words in a row are copied from {note.id}; a card is new text, not a quoted example.",
+                   note.id, "Say it in new words, with a different image.")]
+
+
+def code_checks(type_id: str, item: dict, draft: dict, notes, move_names: set[str], check_sources: bool = True) -> list[dict]:
     issues: list[dict] = []
     if type_id == "modifier-card":
         fields = {"plain": draft.get("plain"), "frames": draft.get("frames")}
@@ -58,6 +94,10 @@ def code_checks(type_id: str, draft: dict, evidence_chunks, move_names: set[str]
         if not isinstance(value, str) or not value.strip():
             return [_issue("form", "shape", "", f"The reply has no '{name}' text.", fix=f"Return a JSON object with a '{name}' string.")]
 
+    if check_sources:
+        issues += source_checks(draft, notes)
+    # 'frames' is meant to repeat the ability table, so only the written line is checked for copying.
+    issues += copy_checks(fields["plain" if type_id == "modifier-card" else "text"], notes)
     all_text = " ".join(fields.values())
     for name in _word_hits(all_text, OUT_OF_BUILD):
         issues.append(_issue("lore_break", "out of build", name, f"'{name}' is a stretch goal that is not in the 5-week build.",
@@ -69,12 +109,14 @@ def code_checks(type_id: str, draft: dict, evidence_chunks, move_names: set[str]
                 issues.append(_issue("form", "A12 length", value, f"'{name}' is {len(value)} characters; the card field holds 140.", fix="Shorten it."))
         if count_sentences(fields["plain"]) != 1:
             issues.append(_issue("form", "one sentence", fields["plain"], "'plain' must be exactly one sentence.", fix="Make it one sentence."))
-        known = set(re.findall(r"\d+(?:\.\d+)?", " ".join(c.text for c in evidence_chunks)))
+        # A whole note holds every modifier's numbers, so compare against this modifier's own table row.
+        row = next((r for r in (table_row(n, item["modifier"]) for n in notes) if r), "")
+        known = set(re.findall(r"\d+(?:\.\d+)?", row))
         for number in re.findall(r"\d+(?:\.\d+)?", fields["frames"]):
             if number not in known:
-                issues.append(_issue("lore_break", "number not in the vault", number,
-                                     f"'frames' states {number}, which appears nowhere in the retrieved vault text.",
-                                     fix="Use only the numbers in the ability table."))
+                issues.append(_issue("lore_break", "number not in the ability table", number,
+                                     f"'frames' states {number}, which is not in the ability table row for {item['modifier']}.",
+                                     row, "Use only the numbers in the ability table."))
         return issues
 
     limits = LIMITS[type_id]
@@ -110,7 +152,7 @@ def code_checks(type_id: str, draft: dict, evidence_chunks, move_names: set[str]
 
 CRITIC_SYSTEM = (
     "You are the consistency critic for Yokai Fighters, a roguelite fighting game. "
-    "You judge one DRAFT of in-game text against EVIDENCE, which is excerpts from the game's design vault. "
+    "You judge one DRAFT of in-game text against EVIDENCE, which is whole notes from the game's design vault. "
     "The EVIDENCE is the only source of truth; ignore anything you believe about the game from elsewhere. "
     "Report two kinds of problem. "
     "lore_break: the draft contradicts the EVIDENCE, or asserts something about the world, a character or a mechanic that the EVIDENCE does not support. "
@@ -120,23 +162,25 @@ CRITIC_SYSTEM = (
 )
 
 
-def critic_prompt(ctype: dict, item: dict, draft: dict, evidence_chunks) -> str:
+def critic_prompt(ctype: dict, item: dict, draft: dict, notes) -> str:
+    # The critic judges the text. The cited lines are checked by code, so they are left out.
+    draft = {k: v for k, v in draft.items() if k != "sources"}
     contract = "\n".join(f"- {line}" for line in ctype["contract"])
     return (
         f"WHAT THE DRAFT IS FOR\n{item['brief']}\n\n"
         f"OUTPUT CONTRACT IT WAS GIVEN\n{contract}\n\n"
         f"DRAFT\n{json.dumps(draft, ensure_ascii=False)}\n\n"
-        f"EVIDENCE (design vault excerpts)\n{format_context(evidence_chunks)}\n\n"
+        f"EVIDENCE (design vault, each note complete)\n{format_notes(notes)}\n\n"
         "Reply as JSON:\n"
         '{"verdict": "pass" or "revise", "issues": [{"kind": "lore_break" or "tone_drift", '
         '"quote": "<the words in the draft>", "problem": "<what is wrong, one sentence>", '
-        '"evidence": "<chunk id>: <the line of evidence it breaks>", "fix": "<how to fix it, one sentence>"}]}\n'
+        '"evidence": "<note id>#<section heading>: <the line of evidence it breaks>", "fix": "<how to fix it, one sentence>"}]}\n'
         'Use "pass" with an empty issues list when the draft is consistent with the EVIDENCE.\n'
     )
 
 
-def critic_review(llm, model: str, ctype: dict, item: dict, draft: dict, evidence_chunks) -> dict:
-    reply = llm.complete("critic", model, CRITIC_SYSTEM, critic_prompt(ctype, item, draft, evidence_chunks))
+def critic_review(llm, model: str, ctype: dict, item: dict, draft: dict, notes) -> dict:
+    reply = llm.complete("critic", model, CRITIC_SYSTEM, critic_prompt(ctype, item, draft, notes))
     try:
         review = parse_json(reply)
     except ValueError:
