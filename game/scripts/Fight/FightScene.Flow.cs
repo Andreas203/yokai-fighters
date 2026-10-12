@@ -50,6 +50,8 @@ public partial class FightScene
 	public bool OwnsSession { get; private set; }
 	/// <summary>The node being fought (opponent, Y4 row, binds).</summary>
 	public NodeContext Node { get; private set; } = null!;
+	/// <summary>YOK-90 (Y3): the twist of the fight on screen (the HUD reminder), or null off an elder node.</summary>
+	public ElderTwist? Twist => Match?.P2.Twist;
 	/// <summary>Hosted only: Restart was pressed (lose screen, end card, pause, debug menu); the host starts a new run.</summary>
 	public event Action? RunRestartRequested;
 	/// <summary>Fights in a whole walk of the run's map (2 for the demo).</summary>
@@ -145,6 +147,8 @@ public partial class FightScene
 	{
 		Match m = NewMatch(DemoRun); // P2 = Opponent, set from the node in BeginNode
 		if (PlayerScheme is { } scheme) m.P1.Input.Scheme = scheme;
+		if (Twists.Apply(m, Node) is { } twist) // YOK-90: from the node's elder, whoever stands in
+			GD.Print($"FightScene: elder twist '{twist.Id}' ({twist.Effect}) on {Node.Fighter}{(Node.StandIn ? " [stand-in]" : "")}");
 		return m;
 	}
 

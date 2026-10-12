@@ -45,6 +45,9 @@ public sealed class FighterSetup
 	public List<KitEntry> Moves { get; set; } = new();
 	public List<SpecialEntry> Specials { get; set; } = new();
 	public List<CancelEntry> CancelRules { get; set; } = new();
+	/// <summary>YOK-90: the elder twist this fighter held (id + fingerprint), or null. Older recordings: null.</summary>
+	public string? Twist { get; set; }
+	public string? TwistFp { get; set; }
 }
 
 /// <summary>P2's AI as built: profile (with fingerprint), reaction frames (Y4) and seed. Null = devices/recorded input.</summary>

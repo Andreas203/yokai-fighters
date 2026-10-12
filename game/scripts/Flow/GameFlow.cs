@@ -92,6 +92,9 @@ public partial class GameFlow : Node
 	/// true when a quit inside that node is continued (M5). False off a node and on any later meeting.
 	/// </summary>
 	public bool FirstMeeting => _firstMeeting && Session is { Map.InNode: true };
+	/// <summary>YOK-90 (Y3): the twist of the elder node Ryo is in (intro card; the callout when <see cref="FirstMeeting"/>), else
+	/// null. A map node's own twist (its icon): <c>FightScene.Twists.ForNode(node)</c>.</summary>
+	public ElderTwist? CurrentTwist => Session is { Map.InNode: true } s ? FightScene.Twists.ForNode(s.Map.CurrentNode) : null;
 
 	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
 	private string? _saveTrouble;
