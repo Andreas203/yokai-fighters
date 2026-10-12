@@ -20,7 +20,33 @@ def run(*paths):
     return code, out.getvalue()
 
 
+GATE_CASES = ROOT / "game" / "tests" / "fixtures" / "modifier-gate" / "cases.json"
+
+
 class ValidateDataTest(unittest.TestCase):
+    def test_modifier_gate_cases_match_the_loader(self):
+        """YOK-103: the case list the C# loader also runs (ModifierEffectTests.ValidatorAndLoaderAgreeOnTheSharedCases)."""
+        import json
+        import tempfile
+        cases = json.loads(GATE_CASES.read_text(encoding="utf-8"))["cases"]
+        self.assertGreaterEqual(len(cases), 30)
+        wrong = []
+        with tempfile.TemporaryDirectory() as tmp:
+            for c in cases:
+                doc = {"kind": "modifier", "id": c["name"], "name": c["name"], "source": "oni", "rarity": "common",
+                       "locked": False, "rules": ["A10"], "applies_to": {"requires": c["requires"]},
+                       "effects": c["effects"], "card": {"plain": "Test case.", "frames": "Test case."}}
+                f = Path(tmp) / f"{c['name']}.json"
+                f.write_text(json.dumps(doc), encoding="utf-8")
+                code, out = run(f)
+                if (code == 0) != c["accept"]:
+                    wrong.append(f"{c['name']}: validator {'accepted' if code == 0 else 'refused'}\n{out}")
+        self.assertEqual(wrong, [], "\n".join(wrong))
+
+    def test_real_modifiers_build_on_every_special(self):
+        code, out = run(ROOT / "data" / "modifiers")
+        self.assertEqual(code, 0, out)
+
     def test_default_run_over_data_passes(self):
         code, out = run()
         self.assertEqual(code, 0, out)

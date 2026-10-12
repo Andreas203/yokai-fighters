@@ -21,9 +21,9 @@ public sealed record ArmourWindow(int First, int Last, int Hits = 1)
 		window = null;
 		if (node is not JsonObject o || o["frames"] is not JsonArray fr || fr.Count != 2) return false;
 		if (o.Any(kv => kv.Key is not ("frames" or "hits"))) return false;
-		if (fr[0] is not JsonValue a || !a.TryGetValue(out int first) || fr[1] is not JsonValue b || !b.TryGetValue(out int last)) return false;
+		if (!Effects.Whole(fr[0], out int first) || !Effects.Whole(fr[1], out int last)) return false;
 		int hits = 1;
-		if (o["hits"] is { } h && (h is not JsonValue hv || !hv.TryGetValue(out hits))) return false;
+		if (o["hits"] is { } h && !Effects.Whole(h, out hits)) return false;
 		if (first < 1 || last < first || hits < 1) return false;
 		window = new ArmourWindow(first, last, hits);
 		return true;
@@ -94,7 +94,7 @@ public sealed partial record MoveData
 		int NonNegative(string n)
 		{
 			if (!props.TryGetProperty(n, out var v)) return 0;
-			if (v.ValueKind != JsonValueKind.Number || !v.TryGetInt32(out int i) || i < 0)
+			if (!Effects.Whole(JsonNode.Parse(v.GetRawText()), out int i) || i < 0)
 				throw new FormatException($"{move.Id}: properties.{n} must be a whole number >= 0");
 			return i;
 		}

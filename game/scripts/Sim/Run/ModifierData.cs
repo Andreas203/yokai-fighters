@@ -76,7 +76,7 @@ public sealed class ModifierData
 		int cost = baseCost;
 		foreach (var e in ExCostEffects)
 		{
-			int v = e["value"]!.GetValue<int>();
+			global::YokaiFighters.Sim.Effects.Whole(e["value"], out int v); // checked at Parse
 			cost = e["op"]!.GetValue<string>() switch { "set" => v, "add" => cost + v, _ => global::YokaiFighters.Sim.Effects.MulPct(cost, v) };
 		}
 		return Math.Max(0, cost);

@@ -123,7 +123,37 @@ public sealed class SpecialData
 	MoveData Parse(JsonObject fd, bool ex)
 	{
 		var wrapper = new JsonObject { ["kind"] = "special", ["id"] = Id, ["frame_data"] = fd };
-		return MoveLoader.Parse(wrapper.ToJsonString(), Id) with { Ex = ex };
+		return Legal(MoveLoader.Parse(wrapper.ToJsonString(), Id) with { Ex = ex });
+	}
+
+	/// <summary>
+	/// YOK-103: a special as built (after level, EX and modifier effects) must still be a move the schema would
+	/// accept as written: the minimums of frame-data.schema.json, which effects can step past (startup add -100).
+	/// tools/validate_data.py runs the same list (built_move_errors).
+	/// </summary>
+	public static MoveData Legal(MoveData m)
+	{
+		void Min(int value, int min, string what)
+		{
+			if (value < min) throw new FormatException($"{m.Id}: {what} is {value} after its effects; it must be at least {min}");
+		}
+		Min(m.Startup, 1, "startup");
+		Min(m.Active, 0, "active");
+		Min(m.Recovery, 0, "recovery");
+		Min(m.Damage, 0, "damage");
+		Min(m.Hitstun, 0, "hitstun");
+		Min(m.Blockstun, 0, "blockstun");
+		Min(m.HitPushback ?? 0, 0, "pushback.on_hit");
+		Min(m.BlockPushback ?? 0, 0, "pushback.on_block");
+		Min(m.MeterOnHit ?? 0, 0, "meter_gain.on_hit");
+		Min(m.MeterOnBlock ?? 0, 0, "meter_gain.on_block");
+		if (m.Projectile is { } p)
+		{
+			Min(p.Speed, 0, "projectile.speed");
+			Min(p.Lifetime, 0, "projectile.lifetime");
+			Min(p.AbsorbsProjectiles, 0, "projectile.absorbs_projectiles");
+		}
+		return m;
 	}
 }
 
@@ -191,9 +221,13 @@ public static class SpecialLoader
 /// The data-only change vocabulary (common.schema.json <c>effect</c> / <c>modifierEffect</c>: target, op add |
 /// mul_pct | set) applied to a frame_data object. A target whose first segment isn't a frame_data field
 /// resolves under <c>properties</c>, so <c>projectile.hits</c> means <c>properties.projectile.hits</c>.
-/// YOK-103: the accepted targets, ops and value shapes are exactly <see cref="Vocabulary"/>; the schemas list
-/// the same set, so tools/validate_data.py rejects what the loader rejects. A condition (<c>when</c>) is a
-/// modifier's: <see cref="ModifierData"/> sorts its effects by condition before they reach <see cref="Apply"/>.
+/// YOK-103: the accepted targets, ops and value shapes are exactly <see cref="Vocabulary"/>, and the schemas list
+/// the same set. A schema can't say whether an effect still leaves a legal move on the special it lands on, so
+/// tools/validate_data.py also applies every modifier to every special it claims (its own copy of <see cref="Apply"/>
+/// and <see cref="SpecialData.Legal"/>); the two sides are held together by one shared case list,
+/// game/tests/fixtures/modifier-gate/cases.json, which both test suites run. The loader stays the last word:
+/// ModifierEffectTests builds the real pool from data/. A condition (<c>when</c>) is a modifier's:
+/// <see cref="ModifierData"/> sorts its effects by condition before they reach <see cref="Apply"/>.
 /// </summary>
 public static class Effects
 {
@@ -257,7 +291,7 @@ public static class Effects
 		}
 		else if (!Vocabulary.TryGetValue(string.Join('.', Resolve(target)), out kind))
 			throw new FormatException($"{id}: effect target '{target}' is not one the game reads");
-		bool isInt = value is JsonValue iv && iv.GetValueKind() == JsonValueKind.Number && iv.TryGetValue(out int _);
+		bool isInt = Whole(value, out _);
 		bool ok = kind switch
 		{
 			ValueKind.Int => isInt,
@@ -269,6 +303,20 @@ public static class Effects
 			_ => false,
 		};
 		if (!ok) throw new FormatException($"{id}: effect '{op}' on {target} needs {Describe(kind)}");
+	}
+
+	/// <summary>
+	/// A whole number written any way JSON allows: 2, 2.0 and 1e1 all count (the rule the save format uses, YOK-87,
+	/// and what JSON Schema's "integer" accepts, so loader and validator agree). 1.5 or a value past int range doesn't.
+	/// </summary>
+	public static bool Whole(JsonNode? node, out int value)
+	{
+		value = 0;
+		if (node is not JsonValue v || v.GetValueKind() != JsonValueKind.Number) return false;
+		if (v.TryGetValue(out value)) return true;
+		if (!v.TryGetValue(out decimal d) || d != decimal.Truncate(d) || d < int.MinValue || d > int.MaxValue) return false;
+		value = (int)d;
+		return true;
 	}
 
 	/// <summary>The one throw-invulnerability phase the data can name (Slippery Skin).</summary>
@@ -347,14 +395,21 @@ public static class Effects
 				node[side] ??= Default($"{path[0]}.{side}", defaults);
 		if (op == "set")
 		{
-			node[leaf] = value.DeepClone();
+			// Written back in the plain form MoveLoader reads (2.0 -> 2; armour frames and hits as integers).
+			node[leaf] = Vocabulary[string.Join('.', path)] switch
+			{
+				ValueKind.Int when Whole(value, out int w) => JsonValue.Create(w),
+				ValueKind.Armour when ArmourWindow.TryRead(value, out var a) =>
+					new JsonObject { ["frames"] = new JsonArray(a!.First, a.Last), ["hits"] = a.Hits },
+				_ => value.DeepClone(),
+			};
 			return;
 		}
 		int n;
 		if (node[leaf] is JsonValue cur && cur.TryGetValue(out int c)) n = c;
 		else if (defaults != null && Default(string.Join('.', path), defaults) is int d) n = d;
 		else throw new FormatException($"{id}: effect '{op}' needs an integer at {target}");
-		int v = value.GetValue<int>();
+		Whole(value, out int v);
 		// Integers only (F3). mul_pct rounds to nearest, half away from zero (E20: Fox's Patience's
 		// +25% of C5's 3 meter on block = 4; flooring would leave it at 3, no change).
 		node[leaf] = op == "add" ? n + v : MulPct(n, v);

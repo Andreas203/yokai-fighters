@@ -136,6 +136,47 @@ public static class ModifierEffectTests
 		throw new AssertFailed("armour frames outside the move accepted");
 	}
 
+	/// <summary>
+	/// The shared case list both gates run (tools/test_validate_data.py runs the same file through validate_data.py):
+	/// the loader accepts a case exactly when it parses and builds on every special it applies to, at every level,
+	/// plain and EX: what AbilityPool does at load.
+	/// </summary>
+	[Test]
+	public static void ValidatorAndLoaderAgreeOnTheSharedCases()
+	{
+		var specials = AbilityPool.LoadRepo(Repo).Specials.Concat(AbilityPool.LoadFixtures(Repo).Specials)
+			.GroupBy(sp => sp.Id).Select(g => g.First()).ToArray();
+		Assert.True(specials.Any(sp => sp.HasProperty("projectile")) && specials.Any(sp => !sp.HasProperty("projectile")), "specials with and without a projectile");
+		var cases = System.Text.Json.Nodes.JsonNode.Parse(System.IO.File.ReadAllText($"{Repo}/game/tests/fixtures/modifier-gate/cases.json"))!["cases"]!.AsArray();
+		Assert.True(cases.Count >= 30, "the case list is there");
+		var wrong = new List<string>();
+		foreach (var c in cases)
+		{
+			string name = c!["name"]!.GetValue<string>();
+			var file = new System.Text.Json.Nodes.JsonObject
+			{
+				["kind"] = "modifier", ["id"] = name, ["name"] = name, ["source"] = "oni", ["rarity"] = "common", ["locked"] = false,
+				["applies_to"] = new System.Text.Json.Nodes.JsonObject { ["requires"] = c["requires"]!.DeepClone() },
+				["effects"] = c["effects"]!.DeepClone(),
+			};
+			string? refused = null;
+			try
+			{
+				var mod = ModifierLoader.Parse(file.ToJsonString());
+				foreach (var sp in specials.Where(mod.AppliesTo))
+					for (int level = 1; level <= sp.MaxLevel; level++)
+					{
+						sp.Build(level, false, mod, null);
+						if (sp.HasEx) sp.Build(level, true, mod, null);
+					}
+			}
+			catch (FormatException e) { refused = e.Message; }
+			if ((refused is null) != c["accept"]!.GetValue<bool>())
+				wrong.Add($"{name}: loader {(refused is null ? "accepted" : "refused: " + refused)}");
+		}
+		Assert.Equal("", string.Join(" | ", wrong), "loader vs the shared cases");
+	}
+
 	// --- Oni ----------------------------------------------------------------------------------------
 
 	/// <summary>The tick P1 is Idle again after a Rising Talisman requested on tick 1.</summary>
@@ -156,6 +197,50 @@ public static class ModifierEffectTests
 		Assert.Equal(TalismanEnds(null, 60, P2HoldsBack) - 4, TalismanEnds("brute-recovery", 60, P2HoldsBack), "blocked: 4 frames sooner");
 		Assert.Equal(TalismanEnds(null, 60), TalismanEnds("brute-recovery", 60), "on hit: unchanged");
 		Assert.Equal(TalismanEnds(null, 600), TalismanEnds("brute-recovery", 600), "on whiff: unchanged");
+	}
+
+	/// <summary>
+	/// Code-critic repro: Brute Recovery applies to any special (requires []), so on a projectile special the block
+	/// must shorten the owner's recovery too, as long as the owner is still in the move that fired it.
+	/// </summary>
+	[Test]
+	public static void BruteRecoveryAlsoCountsWhenTheSpecialsProjectileIsBlocked()
+	{
+		int WaveEnds(string? modifier, bool block, int p2x)
+		{
+			var m = Setup(modifier, SpecialSlot.A, -100, p2x);
+			for (int t = 1; t <= 200; t++)
+			{
+				m.Step(t == 1 ? FighterInput.Special(SpecialSlot.A) : Idle,
+					block && t >= 12 ? new FighterInput(InputBits.Right | InputBits.Down) : Idle); // crouch-block: no walking away
+				if (t > 1 && m.P1.State == FighterState.Idle) return t;
+			}
+			throw new AssertFailed("the wave's caster never recovered");
+		}
+		int plain = WaveEnds(null, true, 100);
+		Assert.Equal(plain - 4, WaveEnds("brute-recovery", true, 100), "wave blocked while Ryo still recovers: 4 frames sooner");
+		Assert.Equal(WaveEnds(null, false, 100), WaveEnds("brute-recovery", false, 100), "wave hits: unchanged");
+		Assert.Equal(WaveEnds(null, true, 1200), WaveEnds("brute-recovery", true, 1200), "blocked after Ryo has recovered: nothing left to shorten");
+	}
+
+	/// <summary>Every connect of one use picks its outcome from the move as it started: two hits heal twice.</summary>
+	[Test]
+	public static void EachConnectOfAMultiHitMoveGetsItsOutcome()
+	{
+		var log = new Log();
+		var m = Setup("cucumber-gift", SpecialSlot.A, -300, 300, log);
+		m.P1.Health = 500;
+		m.P1.Meter = 100;
+		for (int t = 1; t <= 120 && log.Hits.Count < 2; t++)
+			m.Step(t == 1 ? FighterInput.Special(SpecialSlot.A, ex: true) : Idle, Idle);
+		Assert.Equal(2, log.Hits.Count, "the EX wave hits twice");
+		Assert.Equal(540, m.P1.Health, "2% healed on each hit");
+
+		// Unit level: a blocked connect, then a hit, of the same use (what a multi-hit strike would do).
+		var eq = m.P1.Specials[(int)SpecialSlot.A]!;
+		Assert.True(eq.Move.OnHitVariant != null && eq.Move.OnBlockVariant == null, "cucumber: an on_hit variant only");
+		Assert.Equal(2, eq.Move.Outcome(false).HealPctMaxHealth, "hit");
+		Assert.Equal(0, eq.Move.Outcome(true).HealPctMaxHealth, "blocked: the move itself");
 	}
 
 	static (int p2x, HitEvent hit, Match m) TalismanConnects(string? modifier, int p1x, int p2x, bool block, Action<Match>? before = null)
@@ -467,14 +552,14 @@ public static class ModifierEffectTests
 		}
 		foreach (string id in new[] { "onis-hide", "illusion-cloak", "cucumber-gift", "brute-recovery" })
 			Assert.Equal(Play(id), Play(id), $"{id}: same inputs, same hashes");
-		var a = Setup("illusion-cloak", SpecialSlot.B, -600, 600);
-		var b = Setup("illusion-cloak", SpecialSlot.B, -600, 600);
-		Run(a, 60, At(1, FighterInput.Special(SpecialSlot.B)));
-		Run(b, 60);
-		a.P1.SpecialUses[(int)SpecialSlot.B] = 0;
-		Run(a, 0);
-		Assert.True(a.StateHash() == b.StateHash(), "sanity: identical once the use count matches");
-		a.P1.SpecialUses[(int)SpecialSlot.B] = 1;
-		Assert.True(a.StateHash() != b.StateHash(), "the round's use count is state");
+		var m = Setup("illusion-cloak", SpecialSlot.B, -600, 600);
+		ulong before = m.StateHash();
+		m.P1.SpecialUses[(int)SpecialSlot.B] = 1;
+		Assert.True(m.StateHash() != before, "the round's use count is state");
+		m.P1.SpecialUses[(int)SpecialSlot.B] = 0;
+		m.P1.MoveSerial = 1;
+		Assert.True(m.StateHash() != before, "so is the move serial a projectile is tied to");
+		m.P1.MoveSerial = 0;
+		Assert.True(m.StateHash() == before, "and nothing else moved");
 	}
 }

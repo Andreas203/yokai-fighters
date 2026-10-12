@@ -13,4 +13,10 @@ public sealed partial record SimConfig
 	/// **Proposed** (open designer question: the GDD gives no angle); 50 = about 27 degrees.
 	/// </summary>
 	public int ProjectileAngleUpRisePct { get; init; } = 50;
+
+	/// <summary>
+	/// The <c>ryo_health_below_30pct</c> condition: health strictly below this % of max (rules.md Modifiers table,
+	/// Rage Ember: "+15% damage while Ryo &lt; 30% health"). A constant, not tuning: the data's condition names the number.
+	/// </summary>
+	public const int LowHealthPct = 30;
 }

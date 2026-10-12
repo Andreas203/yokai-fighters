@@ -77,11 +77,11 @@
       "properties": {
         "armour": {
           "type": "object",
-          "required": ["frames", "hits"],
+          "required": ["frames"],
           "additionalProperties": false,
           "properties": {
             "frames": { "$ref": "common.schema.json#/$defs/frameRange" },
-            "hits": { "type": "integer", "minimum": 1 }
+            "hits": { "type": "integer", "minimum": 1, "description": "Hits taken per use of the move; omitted = 1 (the loader's default, YOK-103)." }
           }
         },
         "invuln": {

@@ -13,12 +13,18 @@ Each file declares its type in a top-level "kind" field. Beyond the JSON Schema,
 the validator checks rules that need more than one field or file: id matches the
 file name, rule IDs exist in docs/design/rules.md, clip references resolve and
 match the frame data (F2), hitboxes sit inside the active window, and a few
-rules.md consistency checks.
+rules.md consistency checks. It also does what the game's ability loader does
+(YOK-103): every special is built at every level and EX, and every modifier is
+applied to every special it claims, so a file the game would refuse to load
+fails here first. The game suite stays the last word: before a content PR is
+reviewed, run it too (godot --headless --path game res://tests/test_runner.tscn);
+ModifierEffectTests builds the real ability pool from data/.
 
 Requires the `jsonschema` package (see tools/requirements.txt).
 """
 from __future__ import annotations
 
+import copy
 import json
 import re
 import sys
@@ -240,7 +246,267 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     return errs
 
 
-def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) -> list[tuple[str, str]]:
+# --- YOK-103: the ability loader's own checks, mirrored -------------------------------------------
+# A schema can say which effect targets exist, not whether an effect still leaves a legal move on the
+# special it lands on. PR #92 passed the schema and broke every fight, so this section does what the C#
+# loader does (game/scripts/Sim/SpecialData.cs: Effects.Apply, SpecialData.Build / Legal; MoveLoader):
+# it builds every level and EX version of each special, and every modifier on every special it applies
+# to, and reports what the game would refuse to load. Both sides run the shared case list
+# game/tests/fixtures/modifier-gate/cases.json (tools/test_validate_data.py, ModifierEffectTests), which
+# is what keeps the two copies in step. The loader itself is still the last word: the game suite builds
+# the real pool from data/ (ModifierEffectTests.EveryDataModifierLoadsOnEverySpecialItAppliesTo).
+
+FRAME_FIELDS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun", "pushback", "strength",
+                "meter_gain", "hitboxes", "hurtboxes", "cancel_windows", "properties"}
+INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun", "pushback.on_hit", "pushback.on_block",
+               "meter_gain.on_hit", "meter_gain.on_block", "properties.projectile.speed", "properties.projectile.hits",
+               "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
+               "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health"}
+# SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
+EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
+                   "properties.pull_on_hit": 0, "properties.heal_pct_max_health": 0}
+START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_up")
+# Folders whose specials the game's ability pool can hold (AbilityPool.LoadRepo / LoadFixtures).
+SPECIAL_DIRS = (DATA / "moves", ROOT / "game" / "tests" / "fixtures" / "specials", ROOT / "game" / "tests" / "fixtures" / "rewards")
+
+
+class Unbuildable(Exception):
+    """The loader would throw FormatException here."""
+
+
+def whole(v):
+    """A whole number in any JSON notation (2, 2.0, 1e1) as an int, else None: the loader's Effects.Whole."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v
+    if isinstance(v, float) and v.is_integer() and -2**31 <= v < 2**31:
+        return int(v)
+    return None
+
+
+def mul_pct(n: int, pct: int) -> int:
+    q = n * pct  # nearest, half away from zero (E20)
+    return (q + 50) // 100 if q >= 0 else -((-q + 50) // 100)
+
+
+def resolve_target(target: str) -> list[str]:
+    parts = target.split(".")
+    return parts if parts[0] in FRAME_FIELDS else ["properties"] + parts
+
+
+def read_armour(v):
+    if not isinstance(v, dict) or set(v) - {"frames", "hits"}:
+        return None
+    fr = v.get("frames")
+    if not (isinstance(fr, list) and len(fr) == 2):
+        return None
+    first, last, hits = whole(fr[0]), whole(fr[1]), whole(v.get("hits", 1))
+    if first is None or last is None or hits is None or first < 1 or last < first or hits < 1:
+        return None
+    return {"frames": [first, last], "hits": hits}
+
+
+def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
+    """Effects.Apply: one unconditional effect on a frame_data dict (already schema-valid)."""
+    target, op, value = effect["target"], effect["op"], effect["value"]
+    path = resolve_target(target)
+    key = ".".join(path)
+    if key == "pushback":
+        for side in ("on_hit", "on_block"):
+            apply_effect(fd, {"target": f"{target}.{side}", "op": op, "value": value}, defaults)
+        return
+    node = fd
+    for seg in path[:-1]:
+        if not isinstance(node.get(seg), dict):
+            if op != "set" and not defaults:
+                raise Unbuildable(f"effect target {target} doesn't exist for '{op}'")
+            node[seg] = {}
+        node = node[seg]
+    leaf = path[-1]
+    if defaults and len(path) == 2 and path[0] in ("meter_gain", "pushback"):
+        for side in ("on_hit", "on_block"):
+            if node.get(side) is None:
+                node[side] = EFFECT_DEFAULTS[f"{path[0]}.{side}"]
+    if op == "set":
+        if key in INT_TARGETS:
+            value = whole(value)
+        elif key == "properties.armour":
+            value = read_armour(value)
+            if value is None:
+                raise Unbuildable("armour needs frames [first, last] with first <= last and hits >= 1")
+        node[leaf] = copy.deepcopy(value)
+        return
+    cur, v = whole(node.get(leaf)), whole(value)
+    if cur is None and defaults:
+        cur = EFFECT_DEFAULTS.get(key)
+    if cur is None or v is None:
+        raise Unbuildable(f"effect '{op}' needs an integer at {target}")
+    node[leaf] = cur + v if op == "add" else mul_pct(cur, v)
+
+
+def built_move_errors(fd: dict) -> list[str]:
+    """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects)."""
+    out: list[str] = []
+
+    def num(obj, name, default=None):
+        v = obj.get(name, default) if isinstance(obj, dict) else default
+        return default if v is None else whole(v)
+
+    s, a, r = num(fd, "startup"), num(fd, "active", 0), num(fd, "recovery")
+    if s is None or a is None or r is None or num(fd, "damage") is None:
+        return ["startup, active, recovery and damage must be whole numbers"]
+    for name, value, lo in (("startup", s, 1), ("active", a, 0), ("recovery", r, 0), ("damage", num(fd, "damage"), 0),
+                            ("hitstun", num(fd, "hitstun", 0), 0), ("blockstun", num(fd, "blockstun", 0), 0),
+                            ("pushback.on_hit", num(fd.get("pushback"), "on_hit", 0), 0),
+                            ("pushback.on_block", num(fd.get("pushback"), "on_block", 0), 0),
+                            ("meter_gain.on_hit", num(fd.get("meter_gain"), "on_hit", 0), 0),
+                            ("meter_gain.on_block", num(fd.get("meter_gain"), "on_block", 0), 0)):
+        if value is None or value < lo:
+            out.append(f"{name} is {value} after its effects; it must be at least {lo}")
+    total = s + a + r
+    for i, hb in enumerate(fd.get("hitboxes") or []):
+        fr = hb.get("frames") if isinstance(hb, dict) else None
+        if isinstance(fr, list) and len(fr) == 2 and all(is_int(x) for x in fr) and not (a > 0 and s + 1 <= fr[0] and fr[1] <= s + a):
+            out.append(f"hitbox frames {fr[0]}-{fr[1]} outside the active window")
+    props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}
+    proj = props.get("projectile")
+    if isinstance(proj, dict):
+        missing = [k for k in ("spawn_frame", "speed", "hitbox", "hits") if k not in proj]
+        if missing:
+            out.append(f"properties.projectile.{missing[0]} is required")
+        else:
+            if num(proj, "spawn_frame", 0) > total:
+                out.append(f"projectile spawn_frame {proj['spawn_frame']} is after the move ends")
+            if num(proj, "hits", 0) < 1 or num(proj, "max_active", 1) < 1:
+                out.append("projectile hits and max_active must be >= 1")
+            for name in ("speed", "lifetime", "absorbs_projectiles"):
+                if num(proj, name, 0) < 0:
+                    out.append(f"projectile.{name} is {proj[name]} after its effects; it must be at least 0")
+    if "armour" in props:
+        arm = read_armour(props["armour"])
+        if arm is None or arm["frames"][1] > total:
+            out.append(f"properties.armour needs frames [first, last] inside the move (1-{total})")
+    for name in ("pull_on_hit", "heal_pct_max_health"):
+        if name in props and (whole(props[name]) is None or whole(props[name]) < 0):
+            out.append(f"properties.{name} must be a whole number >= 0")
+    if "throw_invuln" in props and props["throw_invuln"] != "startup":
+        out.append('properties.throw_invuln must be "startup"')
+    return out
+
+
+def special_builds(doc: dict):
+    """(label, frame_data) for every level and EX version the loader builds from a special, or raises Unbuildable."""
+    levels = doc.get("levels") or {}
+    base = (levels.get("1") or {}).get("frame_data")
+    if not isinstance(base, dict):
+        return
+    tuning = (levels.get("2") or {}).get("tuning")
+    changes = ((levels.get("3") or {}).get("evolution") or {}).get("changes")
+    top = 3 if tuning and changes else 2 if tuning else 1
+    ex = doc.get("ex") or {}
+    for level in range(1, top + 1):
+        fd = copy.deepcopy(base)
+        steps = ([tuning] if level >= 2 else []) + (list(changes) if level >= 3 else [])
+        for e in steps:
+            apply_effect(fd, e, defaults=False)
+        yield f"Lv {level}", fd
+        if whole(ex.get("meter_cost")) and whole(ex.get("meter_cost")) > 0:
+            exfd = copy.deepcopy(fd)
+            for e in ex.get("changes") or []:
+                apply_effect(exfd, e, defaults=False)
+            yield f"Lv {level} EX", exfd
+
+
+def has_property(special: dict, name: str) -> bool:
+    fd = ((special.get("levels") or {}).get("1") or {}).get("frame_data") or {}
+    if fd.get(name) is True:
+        return True
+    p = (fd.get("properties") or {}).get(name)
+    return p is not None and p is not False
+
+
+def check_special_builds(doc: dict, errs) -> None:
+    try:
+        for label, fd in special_builds(doc):
+            for msg in built_move_errors(fd):
+                errs.append(("levels", f"{label}: {msg}"))
+    except Unbuildable as e:
+        errs.append(("levels", f"{e}"))
+
+
+def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
+    """ModifierLoader.Parse rules a schema can't state, then SpecialData.Build on every special it applies to."""
+    effects = [e for e in doc.get("effects") or [] if isinstance(e, dict)]
+    requires = (doc.get("applies_to") or {}).get("requires") or []
+    frame_effects = []
+    before = len(errs)
+    for i, e in enumerate(effects):
+        target = e.get("target")
+        if not isinstance(target, str) or target == "ex.meter_cost":
+            continue
+        path = resolve_target(target)
+        if path[:2] == ["properties", "projectile"] and "projectile" not in requires:
+            errs.append((f"effects.{i}.target", f"'{target}' changes a projectile, so applies_to.requires must list \"projectile\""))
+        if ".".join(path) == "properties.armour" and e.get("op") == "set" and read_armour(e.get("value")) is None:
+            errs.append((f"effects.{i}.value", "armour needs frames [first, last] with first <= last and hits >= 1"))
+        frame_effects.append(e)
+    if len(errs) > before:
+        return
+    used = [c for c in START_CONDITIONS if any(e.get("when") == c for e in frame_effects)]
+    subsets = [[c for j, c in enumerate(used) if mask >> j & 1] for mask in range(1 << len(used))]
+    seen: set[str] = set()
+    for sid in sorted(specials):
+        special = specials[sid]
+        if not all(has_property(special, r) for r in requires):
+            continue
+        try:
+            builds = list(special_builds(special))
+        except Unbuildable:
+            continue  # the special's own problem, reported on its own file
+        for label, base in builds:
+            for held in subsets:
+                try:
+                    fd = copy.deepcopy(base)
+                    for e in frame_effects:
+                        if e.get("when", "always") == "always" or e.get("when") in held:
+                            apply_effect(fd, e, defaults=True)
+                    found = [("", m) for m in built_move_errors(fd)]
+                    for outcome in ("on_hit", "on_block"):
+                        if any(e.get("when") == outcome for e in frame_effects):
+                            o = copy.deepcopy(fd)
+                            for e in frame_effects:
+                                if e.get("when") == outcome:
+                                    apply_effect(o, e, defaults=True)
+                            found += [(f" {outcome}", m) for m in built_move_errors(o)]
+                except Unbuildable as e:
+                    found = [("", str(e))]
+                for where, msg in found:
+                    line = f"on {sid} {label}{where}{' when ' + '+'.join(held) if held else ''}: {msg}"
+                    if msg not in seen:  # one line per distinct problem is enough to fix it
+                        seen.add(msg)
+                        errs.append(("effects", line))
+
+
+def load_specials(docs: dict) -> dict[str, dict]:
+    """Every special the game's pool can hold: the SPECIAL_DIRS folders plus specials in this run."""
+    found: dict[str, dict] = {}
+    for d in SPECIAL_DIRS:
+        for f in sorted(d.glob("*.json")) if d.is_dir() else []:
+            try:
+                doc = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(doc, dict) and doc.get("kind") == "special":
+                found[doc.get("id", f.stem)] = doc
+    for doc in docs.values():
+        if isinstance(doc, dict) and doc.get("kind") == "special" and isinstance(doc.get("id"), str):
+            found[doc["id"]] = doc
+    return found
+
+
+def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
+             specials: dict[str, dict] | None = None, schema_ok: bool = True) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
     if doc.get("id") != path.stem:
@@ -282,6 +548,11 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
             errs.append(("starter", "starters must have source 'ryo' and rarity 'common' (A1, A9)"))
         lv1 = ((doc.get("levels") or {}).get("1") or {}).get("frame_data")
         check_frame_data(lv1, "levels.1.frame_data", clip, clip_id, errs)
+        if schema_ok:  # YOK-103: every level and EX version must still be a move the loader runs
+            check_special_builds(doc, errs)
+    elif kind == "modifier":
+        if schema_ok:  # YOK-103: what the C# loader does with it (see the mirror above)
+            check_modifier(doc, specials or {}, errs)
     elif kind == "cancel_rule":
         ob, src = doc.get("offered_by"), doc.get("source")
         if ob in ELDER_SOURCE and src and ELDER_SOURCE[ob] != src:
@@ -353,6 +624,8 @@ def validate(paths: list[str], out=sys.stdout) -> int:
         if isinstance(d, dict) and d.get("kind") == "clip" and isinstance(d.get("id"), str):
             clips[d["id"]] = d
 
+    specials = load_specials(docs)  # YOK-103: modifiers are built on these, as the game's pool does
+
     for f, doc in docs.items():
         errs: list[tuple[str, str]] = []
         if not isinstance(doc, dict):
@@ -363,7 +636,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             v = validators[doc["kind"]]
             for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
-            errs.extend(semantic(doc, f, rule_ids, clips))
+            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs))
         if errs:
             failures[f] = errs
 

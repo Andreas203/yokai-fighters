@@ -46,6 +46,20 @@ public sealed partial class Fighter
 
 	/// <summary>The move being played: a normal/throw from <see cref="Moves"/> or a special variant.</summary>
 	public MoveData? ActiveMove;
+	/// <summary>
+	/// YOK-103: the move as it started (before any on_hit / on_block variant took <see cref="ActiveMove"/>'s place), so
+	/// every connect of the same use picks its outcome from the same root: blocked first, hit later still gets on_hit.
+	/// </summary>
+	public MoveData? ActiveBase;
+	/// <summary>YOK-103: counts moves started this round; a projectile remembers the use that fired it (<see cref="Projectile.FiredBy"/>).</summary>
+	public int MoveSerial;
+
+	/// <summary>Starts playing <paramref name="move"/>: the one place <see cref="ActiveMove"/> and <see cref="ActiveBase"/> are set.</summary>
+	internal void Play(MoveData move, bool newUse = true)
+	{
+		ActiveMove = ActiveBase = move;
+		if (newUse) MoveSerial++;
+	}
 	/// <summary>Slot of the special being played; None for normals and throws.</summary>
 	public SpecialSlot ActiveSpecial;
 	public bool ActiveEx;
@@ -106,6 +120,7 @@ public sealed partial class Fighter
 	{
 		ResetSpecialMoveState();
 		CancelUsed = 0;
+		MoveSerial = 0;
 		Array.Clear(SpecialUses);
 	}
 
@@ -113,6 +128,7 @@ public sealed partial class Fighter
 	internal void ResetSpecialMoveState()
 	{
 		ActiveMove = null;
+		ActiveBase = null;
 		ActiveSpecial = SpecialSlot.None;
 		ActiveEx = false;
 		ActivePrecision = false;
@@ -128,6 +144,7 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
 		h = Fnv.Mix(h, (int)ActiveConditions | ArmourHitsTaken << 8);
+		h = Fnv.Mix(h, MoveSerial);
 		foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
 		for (int i = 1; i < Specials.Length; i++)
 		{

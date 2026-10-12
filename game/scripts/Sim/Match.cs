@@ -231,7 +231,7 @@ public sealed partial class Match
 	{
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
-		f.ActiveMove = f.Moves[slot];
+		f.Play(f.Moves[slot]);
 		f.MoveSlot = slot;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -355,13 +355,18 @@ public sealed partial class Match
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
-		m = m.Outcome(blocked); // YOK-103: a modifier's on_hit / on_block effects hold from the connect on
+		// YOK-103: a modifier's on_hit / on_block effects hold from the connect on. The outcome is always picked from
+		// the move as it started (ActiveBase; a projectile carries it), so a later connect of the same use that goes
+		// the other way (blocked, then hit) still gets its own variant.
+		m = (projectile is null ? att.ActiveBase ?? m : m).Outcome(blocked);
 		if (projectile is null)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
-			if (att.ActiveMove != null) att.ActiveMove = att.ActiveMove.Outcome(blocked); // e.g. recovery on block
+			if (att.ActiveBase != null) att.ActiveMove = m; // e.g. recovery on block
 		}
+		else if (att.State == FighterState.Attack && att.ActiveBase != null && att.MoveSerial == projectile.FiredBy)
+			att.ActiveMove = m; // the owner is still in the move that fired it: its own frame data changes too (Brute Recovery on a projectile special)
 
 		MoveData? defMove = def.CurrentMove;
 		bool counter = !blocked && defenderWasAttacking && defMove?.CounterhitImmune != true; // C7

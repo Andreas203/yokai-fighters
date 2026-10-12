@@ -25,6 +25,8 @@ public sealed class Projectile
 	public int Age;
 	public int HitsLeft;
 	public int AbsorbsLeft;
+	/// <summary>YOK-103: the owner's <see cref="Fighter.MoveSerial"/> when it fired: is the owner still in that use of the move?</summary>
+	public int FiredBy;
 
 	/// <summary>Hitbox in world centi-units, mirrored by the direction it flies.</summary>
 	public (int x0, int y0, int x1, int y1) WorldBox()
@@ -90,7 +92,7 @@ public sealed partial class Match
 
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
-		f.ActiveMove = precision ? WithPrecision(m) : m;
+		f.Play(precision ? WithPrecision(m) : m);
 		f.ActiveConditions = held;
 		f.SpecialUses[(int)slot]++;
 		f.MoveSlot = -1;
@@ -120,7 +122,7 @@ public sealed partial class Match
 	{
 		var held = StartConditions.None;
 		if (wanted.HasFlag(StartConditions.FirstUseEachRound) && f.SpecialUses[(int)slot] == 0) held |= StartConditions.FirstUseEachRound;
-		if (wanted.HasFlag(StartConditions.OwnerHealthBelow30Pct) && (long)f.Health * 100 < (long)f.MaxHealth * 30)
+		if (wanted.HasFlag(StartConditions.OwnerHealthBelow30Pct) && (long)f.Health * 100 < (long)f.MaxHealth * SimConfig.LowHealthPct)
 			held |= StartConditions.OwnerHealthBelow30Pct;
 		if (wanted.HasFlag(StartConditions.HoldingUp) && f.Input.Direction >= 7) held |= StartConditions.HoldingUp;
 		return held;
@@ -141,7 +143,7 @@ public sealed partial class Match
 		if ((now & ~f.SpecialButtons) == 0 || !ExPair(f.SpecialButtons | now)) return false;
 		if (!TrySpendMeter(i, eq.ExCost)) return false;
 		MoveData exMove = eq.ExMove.ForStart(f.ActiveConditions); // same start conditions as the plain start (YOK-103)
-		f.ActiveMove = f.ActivePrecision ? WithPrecision(exMove) : exMove;
+		f.Play(f.ActivePrecision ? WithPrecision(exMove) : exMove, newUse: false);
 		f.ActiveEx = true;
 		f.SpecialButtons |= now;
 		f.Input.TryConsume(out _); // the second press re-parsed as the same special; it's used up here
@@ -223,7 +225,7 @@ public sealed partial class Match
 			if (ProjectileCount(i) >= pd.MaxActive) continue;
 			var p = new Projectile
 			{
-				Owner = i, Serial = ++_projectileSerial, Move = m, Data = pd,
+				Owner = i, Serial = ++_projectileSerial, Move = f.ActiveBase ?? m, Data = pd, FiredBy = f.MoveSerial,
 				X = f.X, Y = f.Y, Dir = f.Facing, HitsLeft = pd.Hits, AbsorbsLeft = pd.AbsorbsProjectiles,
 			};
 			Projectiles.Add(p);
@@ -294,6 +296,7 @@ public sealed partial class Match
 			h = Fnv.Mix(h, p.Age);
 			h = Fnv.Mix(h, p.HitsLeft);
 			h = Fnv.Mix(h, p.AbsorbsLeft);
+			h = Fnv.Mix(h, p.FiredBy);
 			h = Fnv.Mix(h, p.Move.Damage);
 		}
 		return h;
