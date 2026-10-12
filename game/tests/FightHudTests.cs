@@ -172,7 +172,9 @@ public static class FightHudTests
  static bool IsNameOrItsFit(string full, string shown)
  {
   static string Letters(string t) { var sb = new System.Text.StringBuilder(); foreach (char ch in t) if (char.IsLetterOrDigit(ch)) sb.Append(char.ToUpperInvariant(ch)); return sb.ToString(); }
-  return shown.Length > 0 && Letters(full).StartsWith(Letters(shown));
+  if (!shown.Contains('…') && !shown.Contains('\n')) return shown == full.ToUpperInvariant(); // nothing was cut: the exact name
+  string l = Letters(shown);
+  return l.Length >= 4 && Letters(full).StartsWith(l);
  }
 
  sealed class FakeRunView : IHudRunView
@@ -220,6 +222,10 @@ public static class FightHudTests
    var view = new FakeRunView();
    hud.RunView = view;
    void Show() { view.Copy = CopyRule.Target(run); hud.Refresh(new Match()); }
+   hud.RunView = new FakeRunView { Copy = new CopyTarget(SpecialSlot.A, Named("Spirit Wave"), 1) };
+   hud.Refresh(new Match());
+   Assert.Equal("SPIRIT WAVE", hud.CopyTarget.MoveName, "a short name is shown exactly");
+   hud.RunView = view; hud.CopyTarget.Reset();
    Show();
    var t = hud.CopyTarget;
    Assert.Equal(CopyTalismanState.Defined, t.State, "defined from the start (T2/T5)");
@@ -430,6 +436,21 @@ public static class FightHudTests
    s.WinFight(700); s.CompleteNode(); s.Enter("d");
    hud.Refresh(new Match());
    Assert.True(!hud.TwistStripVisible, "a plain duel hides it");
+  }
+  finally { hud.Free(); }
+ }
+
+ [Test]
+ public static void FitName_ZeroWidthLabel_Terminates(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var label = Find<Label>(hud, "MoveName");
+   label.Size = Vector2.Zero;
+   hud.RunView = new FakeRunView { Copy = new CopyTarget(SpecialSlot.A, Named("Thunderstrike Wave"), 1) };
+   hud.Refresh(new Match()); // must return
+   Assert.True(hud.CopyTarget.MoveName.Length > 0, "still shows a name");
   }
   finally { hud.Free(); }
  }

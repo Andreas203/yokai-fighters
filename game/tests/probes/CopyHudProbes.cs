@@ -104,7 +104,7 @@ public static class CopyHudProbes
    {
     r.Grow(8 + 2), r.Grow(4 + 2), // glow rings, width 4
     new Rect2(new Vector2(6, 8), t.Size), r.Grow(2.5f), r.Grow(2 + 2), // shadow, ink border (5), persimmon frame (4)
-    new Rect2(t.Size.X - 6 - 16, t.Size.Y - 6 - 16, 32, 32), // locked seal
+    t.SealRect, // locked seal, top-right since round 2
    };
    var b = new Rect2(t.DrawnBounds.Position - t.Position, t.DrawnBounds.Size);
    foreach (var s in shapes) Assert.True(b.Encloses(s), $"shape {s} escapes DrawnBounds {b}");
@@ -158,7 +158,6 @@ public static class CopyHudProbes
      var panel = Find<Control>(card, "Panel").GetGlobalRect();
      Assert.True(!b.Intersects(panel) || path == "lose_screen", $"{path}: paper never meets the talisman");
      // lose screen: mask rect starts at y=135, the glow's bottom row is y 135..136 -> 1 px of rect overlap, texture edge is transparent.
-     // Known open: flip to "!Intersects" if the mask is moved down or the glow shortened.
      Assert.True(!b.Intersects(mask), $"{path} mask {mask} vs talisman {b}");
     }
     finally { card.Free(); }
@@ -445,6 +444,179 @@ public static class CopyHudProbes
      Assert.True(l.GetThemeFontSize("font_size") * 720f / 1080 >= 17, $"{l.Name} {l.GetThemeFontSize("font_size")}px is under 17 at 720p");
     }
    }
+  }
+  finally { hud.Free(); }
+ }
+
+ static string LettersOf(string t) { var sb = new System.Text.StringBuilder(); foreach (char ch in t) if (char.IsLetterOrDigit(ch)) sb.Append(char.ToUpperInvariant(ch)); return sb.ToString(); }
+
+ // Round 2. Whatever the name, the slot shows it at 26 px, in at most two one-line paragraphs, each inside the slot width,
+ // never losing or inventing letters: no '…' means every letter is still there; with '…' what is shown is a prefix.
+ [Test]
+ public static void NameFit_EveryShape_KeepsSizeLinesWidthAndLetters(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var label = Find<Label>(hud.CopyTarget, "MoveName");
+   var font = label.GetThemeFont("font");
+   var names = new[]
+   {
+    "Fox", "Fox Mirage", "Hundred Demon Parade", "Thousand Hundred Demon Night Parade", new string('W', 40), new string('a', 40),
+    "Iron-Club Charge", "Iron-Club-Charge-Of-The-Hundred-Oni", "Spirit Wave 2", "Burst 100", "O'Neil's Strike", "Ōkami Kagé Ünïcode",
+    "Kitsune-no-Yōkai-Hyakki-Yagyō-Parade", "A", "X Y Z", "Wave  Double  Space", "Trailing-",
+   };
+   foreach (string n in names)
+   foreach (bool locked in new[] { false, true })
+   {
+    hud.RunView = new View { CopyLocked = locked, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.Refresh(new Match());
+    string shown = label.Text;
+    string tag = $"'{n}' locked={locked} -> '{shown.Replace("\n", "|")}'";
+    Assert.Equal(CopyTalisman.NameSize, label.GetThemeFontSize("font_size"), tag + ": size");
+    var paras = shown.Split('\n');
+    Assert.True(paras.Length <= 2, tag + ": paragraphs");
+    Assert.Equal(label.GetLineCount(), label.GetVisibleLineCount(), tag + ": nothing clipped");
+    foreach (string word in shown.Replace("-", "- ").Split(new[] { ' ', '\n' }, System.StringSplitOptions.RemoveEmptyEntries)) Assert.True(font.GetStringSize(word.TrimEnd(), fontSize: 26).X <= label.Size.X, tag + ": word fits");
+    string full = LettersOf(n), got = LettersOf(shown);
+    Assert.True(got.Length > 0, tag + ": not blank");
+    if (shown.Contains('…')) Assert.True(full.StartsWith(got) && got.Length < full.Length, tag + ": ellipsis shows a true prefix");
+    else Assert.Equal(full, got, tag + ": no letter lost or added without an ellipsis");
+    Assert.True(!shown.Contains("-\n-") && !shown.StartsWith("-") || n.StartsWith("-"), tag + ": no stray hyphen");
+   }
+  }
+  finally { hud.Free(); }
+ }
+
+ // Round 2. The hyphenation slices UTF-16 code units: it must not cut a surrogate pair or strand a combining mark.
+ [Test]
+ public static void NameFit_NeverCutsASurrogatePair(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var label = Find<Label>(hud.CopyTarget, "MoveName");
+   foreach (string n in new[] { string.Concat(System.Linq.Enumerable.Repeat("\U0001D504", 30)), string.Concat(System.Linq.Enumerable.Repeat("é", 30)) })
+   {
+    hud.RunView = new View { Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.Refresh(new Match());
+    string shown = label.Text;
+    for (int i = 0; i < shown.Length; i++)
+    {
+     if (char.IsHighSurrogate(shown[i])) { Assert.True(i + 1 < shown.Length && char.IsLowSurrogate(shown[i + 1]), "high surrogate stranded"); i++; }
+     else Assert.True(!char.IsLowSurrogate(shown[i]), "low surrogate stranded");
+    }
+    foreach (string line in shown.Split('\n'))
+     Assert.True(line.Length == 0 || line[0] != '́', "a combining mark starts a line");
+   }
+  }
+  finally { hud.Free(); }
+ }
+
+ // Round 2. An empty name: no crash, the plate does not go blank without a cue (the dash is the none-state cue; this documents what is shown).
+ [Test]
+ public static void KnownOpen_EmptyName_ShowsBlankSlot(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var data = Named("x");
+   var empty = SpecialLoader.Parse("{\"kind\":\"special\",\"id\":\"hud-empty\",\"name\":\"\",\"input\":{\"kata\":{\"slot\":\"A\"}},\"levels\":{\"1\":{\"frame_data\":" + AbilityPool.LoadFixtures(Root).Special("test-spirit-wave")!.Level1Json + "}}}");
+   hud.RunView = new View { Copy = new CopyTarget(SpecialSlot.A, empty, 1) };
+   hud.Refresh(new Match());
+   // Known open: a blank name draws an empty slot with state Defined and no letter badge. Flip to Text.Length > 0 if a fallback is added.
+   Assert.Equal("", hud.CopyTarget.MoveName, "blank name stays blank");
+   Assert.Equal("", Find<Label>(hud.CopyTarget, "IconLetter").Text, "no letter");
+  }
+  finally { hud.Free(); }
+ }
+
+ // Round 2. The moved seal against the caption's ink box, the level tag, the icon and the name, in every state.
+ [Test]
+ public static void Seal_ClearsCaptionLevelIconAndName_InEveryState(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var t = hud.CopyTarget;
+   var run = RunState.NewRun(AbilityPool.LoadFixtures(Root));
+   var views = new (string, View)[]
+   {
+    ("none", new View()), ("defined", new View { Copy = CopyRule.Target(run) }),
+    ("locked", new View { Copy = CopyRule.Target(run), CopyLocked = true }),
+    ("tanuki", new View { Copy = CopyRule.Target(run), CopyLocked = true, InTanukiFight = true }),
+   };
+   foreach (var (name, v) in views)
+   {
+    hud.RunView = v; hud.Refresh(new Match());
+    var seal = t.SealRect;
+    var cap = Find<Label>(t, "Caption");
+    var font = cap.GetThemeFont("font");
+    float w = font.GetStringSize(cap.Text, fontSize: cap.GetThemeFontSize("font_size")).X;
+    var capInk = new Rect2(cap.Position.X + (cap.Size.X - w) / 2, cap.Position.Y, w, cap.Size.Y);
+    Assert.True(!capInk.Intersects(seal), $"{name}: seal {seal} meets caption '{cap.Text}' ink {capInk}");
+    foreach (string n in new[] { "Level", "Icon", "IconLetter", "MoveName" })
+    {
+     var c = Find<Control>(t, n);
+     if (c.Visible) Assert.True(!new Rect2(c.Position, c.Size).Intersects(seal), $"{name}: seal meets {n}");
+    }
+    if (name == "locked") Assert.Equal("LOCKED", cap.Text, "locked caption");
+   }
+  }
+  finally { hud.Free(); }
+ }
+
+ // Round 2. Drawn bounds with the moved seal: still inside the strip (y 0..138), clear of both neighbours, and they enclose the seal in parent coordinates.
+ [Test]
+ public static void DrawnBounds_WithMovedSeal_StayInStripAndGap(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var t = hud.CopyTarget;
+   var b = t.DrawnBounds;
+   var sealParent = new Rect2(t.Position + t.SealRect.Position, t.SealRect.Size);
+   Assert.True(b.Encloses(sealParent), $"bounds {b} enclose seal {sealParent}");
+   Assert.True(b.Position.Y >= 0 && b.End.Y <= 138, $"bounds y {b.Position.Y}..{b.End.Y}");
+   Assert.True(sealParent.Position.Y >= 0, "seal is on screen");
+   // 720p: the HUD scales by 2/3; after pixel snapping the glow still leaves at least one device pixel to both neighbours
+   float k = 720f / 1080;
+   float burstEnd = Find<Control>(hud, "BurstSeal").GetGlobalRect().End.X, barStart = Find<Control>(hud, "P2Health").GetGlobalRect().Position.X;
+   Assert.True(Mathf.Floor(barStart * k) - Mathf.Ceil(b.End.X * k) >= 1, "720p gap right");
+   Assert.True(Mathf.Floor(b.Position.X * k) - Mathf.Ceil(burstEnd * k) >= 1, "720p gap left");
+  }
+  finally { hud.Free(); }
+ }
+
+ // Round 2. Verdict probe on the author's IsNameOrItsFit (private in FightHudTests): it accepts a dash and a shorter, different name.
+ [Test]
+ public static void IsNameOrItsFit_IsStrict(Node runner)
+ {
+  var m = typeof(FightHudTests).GetMethod("IsNameOrItsFit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+  bool Call(string full, string shown) => (bool)m.Invoke(null, new object[] { full, shown })!;
+  Assert.True(Call("Spirit Wave", "SPIRIT WAVE"), "right name accepted");
+  Assert.True(!Call("Spirit Wave", "-"), "a bare dash is refused");
+  Assert.True(!Call("Spirit Wave", "SPIRIT"), "an uncut shorter name is refused");
+  Assert.True(!Call("Spirit Wave", "S"), "a single letter is refused");
+  Assert.True(Call("Spirit Wave", "SPIRIT-\nWAVE…"), "a cut name with a 4+ letter prefix passes");
+  Assert.True(!Call("Spirit Wave", ""), "empty is refused");
+  Assert.True(!Call("Spirit Wave", "FOXFIRE"), "an unrelated name is refused");
+ }
+
+ // Round 2. The fixture target's name is long (it is ellipsised), so the author's three weakened assertions see a truncated name.
+ // Pinned: what is shown, with its text, so a change to the fit shows here. Flip when fixtures get a short name.
+ [Test]
+ public static void KnownOpen_FixtureTargetName_IsShownEllipsised(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var target = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)))!;
+   hud.RunView = new View { Copy = target };
+   hud.Refresh(new Match());
+   string shown = hud.CopyTarget.MoveName;
+   GD.Print("PROBE fixture name shown: " + shown.Replace("\n", "|"));
+   Assert.True(shown.Contains('…') && shown.Length < target.Data.Name.Length, "long fixture name is cut: " + shown);
   }
   finally { hud.Free(); }
  }

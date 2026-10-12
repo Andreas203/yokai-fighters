@@ -123,11 +123,12 @@ public partial class CopyTalisman : Control
 			string joined = line.Length == 0 ? t : (line.EndsWith('-') ? line + t : line + " " + t);
 			if (W(joined) <= width) { line = joined; continue; }
 			Flush();
-			while (W(t) > width) // a single word wider than the slot: break it with a hyphen
+			while (width > 0 && t.Length > 1 && W(t) > width) // a single word wider than the slot: break it with a hyphen
 			{
 				rewrite = true;
 				int n = t.Length - 1;
 				while (n > 2 && W(t[..n] + "-") > width) n--;
+				n = System.Math.Max(1, n);
 				lines.Add(t[..n] + "-");
 				t = t[n..];
 			}
