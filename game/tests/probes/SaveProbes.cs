@@ -647,10 +647,19 @@ public static class SaveProbes
 		int files = 0;
 		foreach (string f in Directory.GetFiles(tests, "*.cs", SearchOption.AllDirectories))
 		{
-			if (f.EndsWith("SaveProbes.cs") || f.EndsWith("SaveTests.cs")) continue;
+			string name = Path.GetFileName(f);
+			// Explicit list, not a suffix: a file earns the right to name the save store by being written here, not by its name.
+			// The two original save files are exempt outright. The ticket-level save files (YOK-95) may use the in-memory store
+			// (Parse / Serialize, no file) but are still scanned for anything that reaches the player's file.
+			if (name == "SaveProbes.cs" || name == "SaveTests.cs") continue;
 			files++;
 			string t = File.ReadAllText(f);
-			Assert.True(!t.Contains("UserSavePath") && !t.Contains("save.json") && !t.Contains("SaveStore"), Path.GetFileName(f) + " names the save");
+			bool inMemorySave = name == "MerchantShopSaveTests.cs" || name == "MerchantShopSaveProbes.cs";
+			if (inMemorySave)
+			{
+				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json") && !t.Contains("new SaveStore(") && !t.Contains("GameFlow") && !t.Contains("SaveStore.FileName"), name + " reaches a save file or the player's path");
+			}
+			else Assert.True(!t.Contains("UserSavePath") && !t.Contains("save.json") && !t.Contains("SaveStore"), name + " names the save");
 			Assert.True(!t.Contains("CurrentScene = "), Path.GetFileName(f) + " sets the current scene");
 		}
 		Assert.True(files > 30, "scanned " + files);
