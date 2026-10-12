@@ -64,6 +64,26 @@ public static class RestStopTests
 		return s;
 	}
 
+	static bool Leads(RunSession s, string from, string to) =>
+		from == to || s.Map.Graph.Next(from).Any(n => Leads(s, n, to));
+
+	/// <summary>A run standing at the named node (a stop), every earlier stop passed and every fight won.</summary>
+	static RunSession AtNode(string nodeId, int health = 300)
+	{
+		var s = NewSession();
+		for (; ; )
+		{
+			var next = s.Reachable();
+			string pick = next.First(id => Leads(s, id, nodeId));
+			Assert.True(s.Enter(pick).Ok, "entered " + pick);
+			if (pick == nodeId) break;
+			if (s.Node!.Type is "merchant" or "dojo") Assert.True(s.CompleteNode().Ok, "a stop passed");
+			else Finish(s, health);
+		}
+		s.Run.SetHealth(health);
+		return s;
+	}
+
 	// ---- the Tanuki forecast (T6) ----
 
 	[Test]
@@ -89,9 +109,16 @@ public static class RestStopTests
 	{
 		var s = AtStop("boss");
 		Assert.True(s.CopyLocked && s.LockedCopy != null, "entering the Tanuki's node took the T1 lock");
-		var f = RestStopScreenForecast.For(s)!;
 		var l = s.LockedCopy!;
-		Assert.True(f.Locked && f.SpecialId == l.Data.Id && f.Slot == l.Slot && f.RyoLevel == l.Level && f.Level == l.MoveLevel, "after the lock: the forecast is LockedCopy");
+		// Ryo moves on after the lock: level the other specials until one overtakes it (T2/T3) ...
+		foreach (var sl in s.Run.Owned.Select(o => o.Slot).Where(x => x != l.Slot).ToList())
+			while (s.Run.CanLevelUp(sl) && CopyRule.Target(s.Run)!.Slot == l.Slot) s.Run.LevelUp(sl);
+		// ... or, if the locked one is out of reach, it is replaced by another special of its slot (A6).
+		if (CopyRule.Target(s.Run)!.Slot == l.Slot)
+			s.Run.Equip(s.Pool.Specials.First(sp => sp.Slot == l.Slot && sp.Id != l.Data.Id));
+		Assert.True(CopyRule.Target(s.Run)!.Data.Id != l.Data.Id,"the current best is now a different special than the lock");
+		var f = RestStopScreenForecast.For(s)!;
+		Assert.True(f.Locked && f.SpecialId == l.Data.Id && f.Slot == l.Slot && f.RyoLevel == l.Level && f.Level == l.MoveLevel, "after the lock: the forecast is still LockedCopy, not the new best");
 	});
 
 	// ---- the model: one choice per stop ----
@@ -133,6 +160,85 @@ public static class RestStopTests
 		s.Enter("r1-apprentice");
 		Assert.True(RestStopScreenModel.Create(s) == null, "a duel is not a stop");
 	});
+
+	[Test]
+	public static void Model_BoundToItsOwnStop_ALaterStopOfTheSessionIsNotIt() => OnFixtures(() =>
+	{
+		var t = AtNode("r4-merchant");
+		var old = RestStopScreenModel.Create(t)!;
+		Assert.True(old.TakeFree().Ok && old.Leave().Ok, "row 4 taken and left");
+		foreach (string id in new[] { "r5-elder-oni", "r6-kitsune", "r7-merchant" })
+		{
+			Assert.True(t.Enter(id).Ok, "entered " + id);
+			if (id != "r7-merchant") Finish(t, 300);
+		}
+		ulong before = t.StateHash();
+		int hp = t.Run.Health;
+		Assert.True(!old.Open && !old.TakeFree().Ok && !old.Leave().Ok, "the row-4 model does nothing at row 7");
+		Assert.True(t.StateHash() == before && t.Run.Health == hp && t.Node!.NodeId == "r7-merchant", "and row 7's choice stays unspent, the node stays entered");
+		var m7 = RestStopScreenModel.Create(t)!;
+		Assert.True(m7.Row == 7 && m7.Kind == RestStopKind.Merchant && m7.Free == RestStopOption.Ready && m7.FreePercent == 25, "a model made for row 7 can take it");
+	});
+
+	[Test]
+	public static void Merchant_Row7_FullHealthHealIsPlusZero_AndTheStopIsStillSpent() => OnFixtures(() =>
+	{
+		var s = AtNode("r7-merchant", 1000);
+		var m = RestStopScreenModel.Create(s)!;
+		Assert.True(m.Row == 7 && m.FreeGain == 0 && m.HealthAfterFree == 1000, "at full health the preview reads +0");
+		Assert.True(m.TakeFree().Ok && s.Run.Health == 1000 && m.FreeGain == 0 && m.ChoiceMade, "taken: nothing healed, the choice is spent anyway");
+		Assert.True(!m.TakeFree().Ok && m.Leave().Ok, "no second take, then leave");
+	});
+
+	[Test]
+	public static void Dojo_QuitThenContinue_ShowsTheDojoAgainWithNoRestTaken_M5(Node runner)
+	{
+		string dir = Path.Combine(Path.GetTempPath(), "yokai-reststop-" + Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(dir);
+		var saved = FightScene.Sources;
+		var savedRun = FightScene.Run;
+		var savedFoe = FightScene.Opponent;
+		FightScene.Sources = FightScene.FixtureSources;
+		FightScene.Run = null;
+		MenuSettings.Reset();
+		var flow = GD.Load<PackedScene>("res://scenes/boot.tscn").Instantiate<GameFlow>();
+		flow.QuitAction = () => { };
+		flow.FixedRunSeed = 77;
+		flow.SaveFile = Path.Combine(dir, "run.dat");
+		flow.ConfigureFight = f => f.ExternalDrive = true;
+		try
+		{
+			runner.AddChild(flow);
+			flow.Title.StartButton.EmitSignal(BaseButton.SignalName.Pressed);
+			flow.ControlSelect.Start.EmitSignal(BaseButton.SignalName.Pressed);
+			var s = flow.Session!;
+			while (true)
+			{
+				string id = s.Reachable().First(n => Leads(s, n, "r7-dojo"));
+				Assert.True(flow.ChooseNode(id).Ok, "entered " + id);
+				if (id == "r7-dojo") break;
+				if (flow.NodeScene is RestStopScreen early) Assert.True(early.TakeFree() && early.Leave(), "a stop passed");
+				else Finish(s, 300);
+			}
+			var screen = (RestStopScreen)flow.NodeScene!;
+			int entry = s.Run.Health;
+			Assert.True(screen.TakeFree() && s.Run.Health > entry, "rested");
+			Assert.True(flow.ReturnToTitle() && flow.ContinueRun(), "quit and Continue");
+			var again = (RestStopScreen)flow.NodeScene!;
+			Assert.True(again != screen && again.Model!.Kind == RestStopKind.Dojo && !again.Model.ChoiceMade && !again.ContinueButton.Visible, "the dojo again, no choice taken (M5)");
+			Assert.True(flow.Session!.Run.Health == entry, "entry-state health");
+		}
+		finally
+		{
+			runner.RemoveChild(flow);
+			flow.QueueFree();
+			MenuSettings.Reset();
+			FightScene.Sources = saved;
+			FightScene.Run = savedRun;
+			FightScene.Opponent = savedFoe;
+			try { Directory.Delete(dir, true); } catch (IOException) { }
+		}
+	}
 
 	// ---- the scene ----
 
@@ -254,5 +360,54 @@ public static class RestStopTests
 			FightScene.Opponent = savedFoe;
 			try { Directory.Delete(dir, true); } catch (IOException) { }
 		}
+	}
+
+	[Test]
+	public static void Scene_Row7MerchantShowsNoRow4StoryLine_AndNoForecastClearsItsLabels(Node runner) => OnFixtures(() =>
+	{
+		var s = AtNode("r7-merchant");
+		var screen = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
+		screen.BindRun(s, ControlScheme.Kihon);
+		runner.AddChild(screen);
+		try
+		{
+			string line = L(screen, "LineBox/Box/Line").Text;
+			Assert.True(!line.Contains("I'd love") && line.Contains("S3"), "row 7 gets a labelled placeholder, not the row-4 card");
+		}
+		finally { runner.RemoveChild(screen); screen.Free(); }
+
+		// Ryo owns no special (a state T5 makes unreachable in play): the forecast has nothing to say and says nothing stale
+		var walked = AtNode("r4-merchant");
+		var run = RunState.Restore(500, Array.Empty<(SpecialSlot, OwnedSpecial)>());
+		run.SetMap(walked.Map);
+		var bare = RunSession.Restore(run, walked.Pool, NodeSceneTable.Default(MapDir), 5, false, null);
+		var empty = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
+		empty.LineSource = _ => "A line.";
+		empty.BindRun(bare, ControlScheme.Kihon);
+		runner.AddChild(empty);
+		try
+		{
+			Assert.True(RestStopScreenForecast.For(bare) == null, "no forecast");
+			Assert.True(!empty.GetNode<Control>("Forecast/LevelTag").Visible && !empty.GetNode<Control>("Forecast/Placeholder").Visible, "no level tag, no placeholder");
+			Assert.True(L(empty, "Forecast/CostValue").Text == "" && !L(empty, "Forecast/LockNote").Text.Contains("Locks when you enter") && !L(empty, "Forecast/CopyNote").Text.StartsWith("Copied at your level"), "no stale cost, lock or copy line");
+		}
+		finally { runner.RemoveChild(empty); empty.Free(); }
+	});
+
+	[Test]
+	public static void Forecast_EveryMoveNameFitsItsColumn_TheRulesEightAndThePool(Node runner)
+	{
+		var screen = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
+		runner.AddChild(screen);
+		try
+		{
+			var label = screen.GetNode<Label>("Forecast/SpecialName");
+			var font = label.GetThemeFont("font");
+			var names = new System.Collections.Generic.List<string> { "Spirit Wave", "Rising Talisman", "Foxfire", "Fox Mirage", "Iron-Club Charge", "Oni Quake", "River Grab", "Shell Spin" };
+			names.AddRange(FightScene.LoadAbilityPool().Specials.Select(sp => sp.Name.Length > 0 ? sp.Name : sp.Id));
+			foreach (string n in names.Distinct())
+				Assert.True(RestStopScreen.NameFits(font, n, label.Size.X, label.Size.Y), $"'{n}' fits the forecast column ({label.Size.X}x{label.Size.Y})");
+		}
+		finally { runner.RemoveChild(screen); screen.Free(); }
 	}
 }

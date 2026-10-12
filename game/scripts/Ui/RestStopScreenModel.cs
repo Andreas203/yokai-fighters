@@ -16,12 +16,14 @@ public enum RestStopOption { Ready, Taken, Closed, ComingSoon }
 public sealed class RestStopScreenModel
 {
 	readonly RunSession _session;
+	readonly Merchant? _merchant; // the stop this model was made for: a later stop of the session is not this one
+	readonly Dojo? _dojo;
 	int _gain;
 
 	public RestStopKind Kind { get; }
 	public int Row { get; }
 
-	RestStopScreenModel(RunSession session, RestStopKind kind, int row) { _session = session; Kind = kind; Row = row; }
+	RestStopScreenModel(RunSession session, RestStopKind kind, int row, Merchant? merchant, Dojo? dojo) { _session = session; Kind = kind; Row = row; _merchant = merchant; _dojo = dojo; }
 
 	/// <summary>The model for the node Ryo is standing at, or null when it is not a merchant or a dojo.</summary>
 	public static RestStopScreenModel? Create(RunSession session)
@@ -29,8 +31,8 @@ public sealed class RestStopScreenModel
 		if (session?.Node is not { } node) return null;
 		return node.Type switch
 		{
-			NodeTypeRegistry.Merchant when session.Merchant is not null => new(session, RestStopKind.Merchant, node.Row),
-			NodeTypeRegistry.Dojo when session.Dojo is not null => new(session, RestStopKind.Dojo, node.Row),
+			NodeTypeRegistry.Merchant when session.Merchant is not null => new(session, RestStopKind.Merchant, node.Row, session.Merchant, null),
+			NodeTypeRegistry.Dojo when session.Dojo is not null => new(session, RestStopKind.Dojo, node.Row, null, session.Dojo),
 			_ => null,
 		};
 	}
@@ -44,28 +46,29 @@ public sealed class RestStopScreenModel
 	public int FreePercent => Kind == RestStopKind.Merchant ? Merchant.HealPercent : Dojo.RestHealPercent;
 
 	/// <summary>Health after the free option from now (the card's preview), or the health Ryo has once it is taken.</summary>
+	// YOK-98: the dojo's capped preview is recomputed here (Dojo has no 'Healed(health)' like Merchant); move it into Dojo.cs when that file is open.
 	public int HealthAfterFree => Kind == RestStopKind.Merchant ? Merchant.Healed(Health) : Math.Min(MaxHealth, Health + Dojo.RestHeal);
 
 	/// <summary>Health the free option adds from now; once it is taken, what it did add.</summary>
 	public int FreeGain => ChoiceMade ? _gain : HealthAfterFree - Health;
 
 	/// <summary>Both cards: the stop's one choice is spent, whichever card it was.</summary>
-	public bool ChoiceMade => Kind == RestStopKind.Merchant ? _session.Merchant is { Choice: not MerchantChoice.None } : _session.Dojo is { Choice: not DojoChoice.None };
+	public bool ChoiceMade => Kind == RestStopKind.Merchant ? _merchant is { Choice: not MerchantChoice.None } : _dojo is { Choice: not DojoChoice.None };
 
 	/// <summary>The stop is still the one Ryo is standing at (it is not after the node is completed or the run ends).</summary>
-	public bool Open => Kind == RestStopKind.Merchant ? _session.Merchant is { Open: true } : _session.Dojo is { IsOpen: true };
+	public bool Open => Kind == RestStopKind.Merchant ? _merchant is { Open: true } : _dojo is { IsOpen: true };
 
-	public bool CanTakeFree => Kind == RestStopKind.Merchant ? _session.Merchant is { CanHeal: true } : _session.Dojo is { CanRest: true };
+	public bool CanTakeFree => Kind == RestStopKind.Merchant ? _merchant is { CanHeal: true } : _dojo is { CanRest: true };
 
 	/// <summary>The shop screen is YOK-104 and the trial YOK-98: until they land the second card is shown, not takeable.</summary>
 	public static bool SecondCardBuilt { get; set; }
 
 	public RestStopOption Free => !ChoiceMade ? RestStopOption.Ready
-		: Kind == RestStopKind.Merchant ? (_session.Merchant!.Choice == MerchantChoice.Heal ? RestStopOption.Taken : RestStopOption.Closed)
+		: Kind == RestStopKind.Merchant ? (_merchant!.Choice == MerchantChoice.Heal ? RestStopOption.Taken : RestStopOption.Closed)
 		: RestStopOption.Taken;
 
 	public RestStopOption Second => ChoiceMade
-		? (Kind == RestStopKind.Merchant && _session.Merchant!.Choice == MerchantChoice.Shop ? RestStopOption.Taken : RestStopOption.Closed)
+		? (Kind == RestStopKind.Merchant && _merchant!.Choice == MerchantChoice.Shop ? RestStopOption.Taken : RestStopOption.Closed)
 		: SecondCardBuilt ? RestStopOption.Ready : RestStopOption.ComingSoon;
 
 	/// <summary>R6 / R7: takes the free heal or the rest. Refused, changing nothing, when the choice is already made or the stop is left.</summary>
@@ -73,13 +76,16 @@ public sealed class RestStopScreenModel
 	{
 		if (!Open) return MapResult.Fail("Ryo is no longer at this stop");
 		int before = Health;
-		var r = Kind == RestStopKind.Merchant ? _session.Merchant!.TakeHeal() : _session.Dojo!.Rest();
+		var r = Kind == RestStopKind.Merchant ? _merchant!.TakeHeal() : _dojo!.Rest();
 		if (r.Ok) _gain = Health - before;
 		return r;
 	}
 
 	/// <summary>Leaves the stop for the map. Only once the choice is made: leaving without one is an open designer question, so it is not offered.</summary>
-	public MapResult Leave() => ChoiceMade ? _session.CompleteNode() : MapResult.Fail("pick one first: the free option or the second one");
+	public MapResult Leave() =>
+		!Open ? MapResult.Fail("Ryo is no longer at this stop")
+		: !ChoiceMade ? MapResult.Fail("pick one first: the free option or the second one")
+		: _session.CompleteNode();
 
 	public RestStopScreenForecast? Forecast => RestStopScreenForecast.For(_session);
 }

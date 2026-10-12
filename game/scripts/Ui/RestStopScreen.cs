@@ -134,9 +134,22 @@ public partial class RestStopScreen : Control, INodeScene
 		else footer.SetHints(new("move", "Choose"), new("confirm", "Take"), new("frames", "Forecast detail"), new("back", "Title"));
 	}
 
+	/// <summary>The largest font size (46 down to 20) at which <paramref name="text"/> wraps to fit a column of this size.</summary>
+	public static int NameFontSize(Font font, string text, float width, float height)
+	{
+		int size = 46;
+		while (size > 20 && font.GetMultilineStringSize(text, HorizontalAlignment.Left, width, size, 2).Y > height) size -= 2;
+		return size;
+	}
+
+	/// <summary>True when the name fits its column at the size <see cref="NameFontSize"/> picked (two lines at most).</summary>
+	public static bool NameFits(Font font, string text, float width, float height) =>
+		font.GetMultilineStringSize(text, HorizontalAlignment.Left, width, NameFontSize(font, text, width, height), 2).Y <= height;
+
 	private string DefaultLine(RestStopScreenModel m)
 	{
 		if (m.Kind == RestStopKind.Dojo) return "Dojo master's line (habit-writer: not written yet).";
+		if (m.Row != 4) return "Merchant's line for this stop (habit-writer: S3 schedules only row 4's).";
 		try
 		{
 			var story = Fight.FightScene.LoadStory();
@@ -204,14 +217,17 @@ public partial class RestStopScreen : Control, INodeScene
 		GetNode<TextureRect>(f0 + "IconGlow/IconBox/Icon").Texture = f == null ? null : PauseMoveArt.ForId(f.SpecialId);
 		var nameLabel = L(f0 + "SpecialName");
 		nameLabel.Text = f?.Name ?? "Nothing yet";
-		var font = nameLabel.GetThemeFont("font");
-		int size = 46;
-		while (size > 24 && font.GetStringSize(nameLabel.Text, HorizontalAlignment.Left, -1, size).X > nameLabel.Size.X) size -= 2;
-		nameLabel.AddThemeFontSizeOverride("font_size", size);
+		nameLabel.AddThemeFontSizeOverride("font_size", NameFontSize(nameLabel.GetThemeFont("font"), nameLabel.Text, nameLabel.Size.X, nameLabel.Size.Y));
 		GetNode<Control>(f0 + "LevelTag").Visible = f != null;
 		if (f == null)
 		{
+			// A lock that found no special (or none owned): nothing to forecast, so no level, cost, note or lock line either.
+			GetNode<ProgressBar>(f0 + "CostBar/Fill").Value = 0;
+			L(f0 + "CopyNote").Text = "The Tanuki has nothing of yours to copy.";
 			L(f0 + "CostValue").Text = "";
+			L(f0 + "CostMeaning").Text = "";
+			GetNode<Control>(f0 + "Placeholder").Visible = false;
+			L(f0 + "LockNote").Text = _session is { CopyLocked: true } ? "Locked for this run: no copy." : "";
 			return;
 		}
 		L(f0 + "LevelTag/LevelLabel").Text = $"Lv {f.Level}";

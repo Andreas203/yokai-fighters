@@ -14,12 +14,12 @@ public partial class RestStopCapture : Node
 {
 	public override async void _Ready()
 	{
-		string dir = ".";
-		foreach (string a in OS.GetCmdlineUserArgs()) if (a.StartsWith("out=")) dir = a[4..];
-		FightScene.Sources = FightScene.FixtureSources;
-		await Shot(dir, "rest_stop_merchant", "merchant", false);
-		await Shot(dir, "rest_stop_dojo", "dojo", false);
-		await Shot(dir, "rest_stop_used", "merchant", true);
+		string dir = ".", suffix = "";
+		foreach (string a in OS.GetCmdlineUserArgs()) { if (a.StartsWith("out=")) dir = a[4..]; if (a.StartsWith("suffix=")) suffix = a[7..]; }
+		// the real pool (move names as the player sees them), not the fixtures
+		await Shot(dir, "rest_stop_merchant" + suffix, "merchant", false);
+		await Shot(dir, "rest_stop_dojo" + suffix, "dojo", false);
+		await Shot(dir, "rest_stop_used" + suffix, "merchant", true);
 		GetTree().Quit();
 	}
 
