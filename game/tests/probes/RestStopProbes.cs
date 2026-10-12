@@ -514,7 +514,7 @@ public static class RestStopProbes
 
 	static void Push(Node n, InputEvent e) => n.GetViewport().PushInput(e);
 	static void Tap(Node n, Key k) { Push(n, new InputEventKey { Keycode = k, PhysicalKeycode = k, Pressed = true }); Push(n, new InputEventKey { Keycode = k, PhysicalKeycode = k, Pressed = false }); }
-	static void Pad(Node n, JoyButton b) { Push(n, new InputEventJoypadButton { ButtonIndex = b, Pressed = true, Pressure = 1f }); Push(n, new InputEventJoypadButton { ButtonIndex = b, Pressed = false }); }
+	static void Pad(Node n, JoyButton b) { Push(n, new InputEventJoypadButton { ButtonIndex = b, Pressed = true }); Push(n, new InputEventJoypadButton { ButtonIndex = b, Pressed = false }); }
 	static Control? Focus(Node n) => n.GetViewport().GuiGetFocusOwner();
 	static bool Inside(Control? f, Control root) => f != null && (f == root || root.IsAncestorOf(f));
 
