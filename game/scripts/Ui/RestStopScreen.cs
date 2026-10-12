@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Godot;
 using YokaiFighters.Flow;
 using YokaiFighters.Sim;
@@ -40,6 +41,8 @@ public partial class RestStopScreen : Control, INodeScene
 	private static readonly Color FightHudSeal = Fight.FightHud.Seal;
 	private RunSession? _session;
 	private bool _ready;
+	private ShopScreen? _shop;
+	private readonly System.Collections.Generic.List<CanvasItem> _hidden = new();
 
 	public void BindRun(RunSession session, ControlScheme scheme)
 	{
@@ -57,7 +60,7 @@ public partial class RestStopScreen : Control, INodeScene
 		SecondCard = GetNode<KitCard>("SecondCard");
 		ContinueButton = GetNode<Button>("ContinueButton");
 		FreeCard.Activated += () => TakeFree();
-		SecondCard.Activated += () => { }; // the shop (YOK-104) and the trial (YOK-98) wire in here; both cards start closed
+		SecondCard.Activated += () => OpenSecond(); // the shop (YOK-104); the trial (YOK-98) wires in here too
 		ContinueButton.Pressed += () => Leave();
 		foreach (string state in new[] { "normal", "hover", "pressed", "focus", "disabled" }) // the kit's RedButton has no fill of its own
 			ContinueButton.AddThemeStyleboxOverride(state, new StyleBoxFlat { BgColor = FightHudSeal, ContentMarginLeft = 24, ContentMarginRight = 24, ContentMarginTop = 6, ContentMarginBottom = 6, BorderColor = new Color("1D1B21"), BorderWidthBottom = state == "focus" ? 4 : 2, BorderWidthTop = 2, BorderWidthLeft = 2, BorderWidthRight = 2 });
@@ -73,6 +76,41 @@ public partial class RestStopScreen : Control, INodeScene
 		Refresh();
 		if (ok) ContinueButton.GrabFocus();
 		return ok;
+	}
+
+	/// <summary>
+	/// The merchant's second card: spends the stop's choice on the shop (which closes the free heal, R6) and shows the shop
+	/// screen over this one; Back returns here in its used state. Refused, changing nothing, when the heal was taken.
+	/// </summary>
+	public bool OpenSecond()
+	{
+		if (Model is not { Kind: RestStopKind.Merchant } m || _shop != null || _session == null) return false;
+		if (!m.OpenShop().Ok) { Refresh(); return false; }
+		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
+		shop.Bind(_session);
+		shop.MerchantLine = L("LineBox/Box/Line").Text;
+		shop.Closed += CloseShop;
+		Refresh(); // the used state first, so nothing under the shop changes while it is open
+		_hidden.Clear();
+		foreach (var c in GetChildren().OfType<CanvasItem>()) if (c.Visible) { _hidden.Add(c); c.Visible = false; }
+		_shop = shop;
+		AddChild(shop);
+		return true;
+	}
+
+	/// <summary>The shop screen, while it is open over this one.</summary>
+	public ShopScreen? Shop => _shop;
+
+	private void CloseShop()
+	{
+		if (_shop is not { } shop) return;
+		_shop = null;
+		RemoveChild(shop);
+		shop.QueueFree();
+		foreach (var c in _hidden) c.Visible = true;
+		_hidden.Clear();
+		Refresh();
+		if (ContinueButton.Visible) ContinueButton.GrabFocus();
 	}
 
 	/// <summary>Continue: completes the node. Refused before a choice is made.</summary>
@@ -91,7 +129,7 @@ public partial class RestStopScreen : Control, INodeScene
 
 	public override void _Input(InputEvent e)
 	{
-		if (!IsVisibleInTree()) return;
+		if (!IsVisibleInTree() || _shop != null) return; // the shop answers its own keys
 		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
 		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
 	}
@@ -204,10 +242,11 @@ public partial class RestStopScreen : Control, INodeScene
 		{
 			RestStopOption.ComingSoon => "Coming soon",
 			RestStopOption.Closed => "Closed: the other option was taken.",
-			RestStopOption.Taken => "Chosen",
+			RestStopOption.Taken => dojo ? "Chosen" : "Chosen · Enter to browse again",
 			_ => "",
 		};
-		SecondCard.CardDisabled = m.Second != RestStopOption.Ready;
+		// The shop stays open for the stop (R6: buying more is allowed): once chosen the card goes back in, as "Chosen".
+		SecondCard.CardDisabled = !(m.Second == RestStopOption.Ready || (m.Second == RestStopOption.Taken && !dojo));
 	}
 
 	private void BindForecast(RestStopScreenModel m)

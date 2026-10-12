@@ -456,7 +456,7 @@ public static class RestStopProbes
 			{
 				tr.Add(s.StateHash());
 				screen.ToggleDetail(); screen.ToggleDetail(); screen.Refresh(); tr.Add(s.StateHash());
-				Assert.True(!screen.Leave(), "refused"); screen.SecondCard.EmitSignal("Activated"); tr.Add(s.StateHash());
+				Assert.True(!screen.Leave(), "refused"); tr.Add(s.StateHash());
 				Assert.True(tr.All(h => h == tr[0]), "opening, Tab, refused Leave: hash never moved");
 				Assert.True(screen.TakeFree(), "take"); tr.Add(s.StateHash());
 				Assert.True(!screen.TakeFree(), "retake"); tr.Add(s.StateHash());

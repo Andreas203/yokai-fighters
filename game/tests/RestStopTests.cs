@@ -129,7 +129,7 @@ public static class RestStopTests
 		var s = AtStop("merchant");
 		var m = RestStopScreenModel.Create(s)!;
 		Assert.True(m.Kind == RestStopKind.Merchant && m.Row == 4 && m.Health == 300 && m.FreePercent == 25, "R6: merchant, row 4, 25%");
-		Assert.True(m.Free == RestStopOption.Ready && m.Second == RestStopOption.ComingSoon && m.FreeGain == 250 && m.HealthAfterFree == 550, "preview +250 -> 550; the shop is not built yet");
+		Assert.True(m.Free == RestStopOption.Ready && m.Second == RestStopOption.Ready && m.FreeGain == 250 && m.HealthAfterFree == 550, "preview +250 -> 550; the shop (YOK-104) is open too");
 		Assert.True(!m.Leave().Ok && s.Node != null, "no leaving without a choice (open question: skipping)");
 		Assert.True(m.TakeFree().Ok && s.Run.Health == 550, "the heal");
 		Assert.True(m.ChoiceMade && m.Free == RestStopOption.Taken && m.Second == RestStopOption.Closed && m.FreeGain == 250, "spent: the other card is closed");
@@ -268,7 +268,7 @@ public static class RestStopTests
 			Assert.Equal(want.Data.Name, L(screen, "Forecast/SpecialName").Text, "the forecast names the copy target");
 			Assert.Equal($"Lv {want.MoveLevel}", L(screen, "Forecast/LevelTag/LevelLabel").Text, "and its level");
 			Assert.True(L(screen, "Forecast/CostValue").Text.StartsWith("~") && screen.GetNode<Control>("Forecast/Placeholder").Visible, "the expected cost, labelled a placeholder");
-			Assert.True(!screen.FreeCard.CardDisabled && screen.SecondCard.CardDisabled && L(screen, "SecondCard/Box/Coming").Text == "Coming soon", "free heal open, shop disabled with its coming state");
+			Assert.True(!screen.FreeCard.CardDisabled && !screen.SecondCard.CardDisabled && L(screen, "SecondCard/Box/Coming").Text == "", "free heal open, the shop card open too (YOK-104)");
 			Assert.True(L(screen, "FreeCard/Box/Desc").Text.Contains("+250") && !screen.ContinueButton.Visible, "heal preview, no Continue yet");
 
 			Assert.True(screen.TakeFree(), "take the heal");
