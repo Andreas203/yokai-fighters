@@ -21,13 +21,22 @@ public partial class CopyTalisman : Control
 	private bool _first = true;
 	private Tween? _pulse, _toastTween;
 
-	/// <summary>Glow rings, seal and shadow stay inside this reach (px) of the control rect; the HUD strip ends at y=138.</summary>
-	public const float GlowReach = 10f;
-	public const int NameSize = 26, NameSizeMin = 20;
+	// Drawing constants: _Draw and DrawnBounds both use these, so the bounds cannot drift from what is drawn.
+	/// <summary>Persimmon glow: rings at 4 and 8 px outside the rect, 4 px wide (a line reaches half its width past its edge).</summary>
+	public const float GlowRingStep = 4f, GlowRingWidth = 4f;
+	public const int GlowRings = 2;
+	public const float GlowReach = GlowRings * GlowRingStep + GlowRingWidth / 2;
+	/// <summary>The T1 seal stamp: a square of half-side <see cref="SealRadius"/> centred <see cref="SealInset"/> px inside the top-right corner.</summary>
+	public const float SealRadius = 16f, SealInset = 6f;
+	/// <summary>The name is never drawn under 26 px at 1080 (17 px at 720p): longer words break across lines, then end in an ellipsis.</summary>
+	public const int NameSize = 26, NameSizeMin = NameSize, NameMaxLines = 2;
 	private static readonly Vector2 ShadowOffset = new(6, 8);
 
+	/// <summary>The seal in local coordinates (it pokes out of the top-right corner, clear of the name slot).</summary>
+	public Rect2 SealRect => new(Size.X - SealInset - SealRadius, SealInset - SealRadius, SealRadius * 2, SealRadius * 2);
+
 	/// <summary>Everything this control can draw (rect, glow, seal, shadow), in parent coordinates. The pulse is a brightness flash, so it never grows past this.</summary>
-	public Rect2 DrawnBounds => new Rect2(Position, Size).Grow(GlowReach).Merge(new Rect2(Position + ShadowOffset, Size));
+	public Rect2 DrawnBounds => new Rect2(Position, Size).Grow(Mathf.Max(GlowReach, SealRadius - SealInset)).Merge(new Rect2(Position + ShadowOffset, Size));
 
 	/// <summary>Forget what was shown (a new run or session): the next <see cref="Apply"/> is a first show, with no pulse or toast.</summary>
 	public void Reset()
@@ -79,6 +88,7 @@ public partial class CopyTalisman : Control
 		_shown = t;
 		State = StateFor(t, locked);
 		_caption.Text = State == CopyTalismanState.Locked ? "LOCKED" : "COPY TARGET";
+		_caption.AddThemeColorOverride("font_color", State == CopyTalismanState.None ? FightHud.Ink : FightHud.Seal); // red on the grey plate would be unreadable
 		_name.Text = t is null ? "-" : t.Data.Name.ToUpperInvariant();
 		_level.Text = t is null ? "" : $"Lv {t.Level}";
 		var art = t is null ? null : RewardArt.ForId(t.Data.Id);
@@ -91,16 +101,48 @@ public partial class CopyTalisman : Control
 	}
 
 	/// <summary>
-	/// Names wrap at spaces and hyphens, two lines at most, at <see cref="NameSize"/> (the 720p floor). Only if a single
-	/// word is still wider than the slot does it shrink, never below <see cref="NameSizeMin"/>.
+	/// The name at <see cref="NameSize"/>, always. Spaces and hyphens wrap it (two lines). Only when a word is wider than
+	/// the slot, or the name needs more than two lines, is the text rewritten: the word breaks with a hyphen, and a name
+	/// still too long ends in an ellipsis. Names that fit keep their text unchanged.
 	/// </summary>
 	private void FitName()
 	{
+		_name.AddThemeFontSizeOverride("font_size", NameSize);
 		var font = _name.GetThemeFont("font");
-		int size = NameSize;
-		foreach (string w in _name.Text.Replace("-", "- ").Split(' ', System.StringSplitOptions.RemoveEmptyEntries))
-			while (size > NameSizeMin && font.GetStringSize(w.TrimEnd(), fontSize: size).X > _name.Size.X) size--;
-		_name.AddThemeFontSizeOverride("font_size", size);
+		float width = _name.Size.X;
+		float W(string t) => font.GetStringSize(t, fontSize: NameSize).X;
+		string text = _name.Text;
+		var tokens = text.Replace("-", "- ").Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+		var lines = new System.Collections.Generic.List<string>();
+		string line = "";
+		bool rewrite = false;
+		void Flush() { if (line.Length > 0) lines.Add(line); line = ""; }
+		foreach (string tok in tokens)
+		{
+			string t = tok;
+			string joined = line.Length == 0 ? t : (line.EndsWith('-') ? line + t : line + " " + t);
+			if (W(joined) <= width) { line = joined; continue; }
+			Flush();
+			while (W(t) > width) // a single word wider than the slot: break it with a hyphen
+			{
+				rewrite = true;
+				int n = t.Length - 1;
+				while (n > 2 && W(t[..n] + "-") > width) n--;
+				lines.Add(t[..n] + "-");
+				t = t[n..];
+			}
+			line = t;
+		}
+		Flush();
+		if (lines.Count > NameMaxLines)
+		{
+			rewrite = true;
+			string last = lines[NameMaxLines - 1].TrimEnd('-');
+			while (last.Length > 1 && W(last + "…") > width) last = last[..^1];
+			lines = lines.GetRange(0, NameMaxLines - 1);
+			lines.Add(last + "…");
+		}
+		if (rewrite) _name.Text = string.Join("\n", lines);
 	}
 
 	private void ClearToast()
@@ -133,12 +175,12 @@ public partial class CopyTalisman : Control
 		var r = new Rect2(Vector2.Zero, Size);
 		bool none = State == CopyTalismanState.None;
 		if (!none) // persimmon glow, steady (T6)
-			for (int i = 2; i >= 1; i--) DrawRect(r.Grow(i * 4), new Color(FightHud.Persimmon, 0.2f), false, 4f); // reaches GlowReach
+			for (int i = GlowRings; i >= 1; i--) DrawRect(r.Grow(i * GlowRingStep), new Color(FightHud.Persimmon, 0.2f), false, GlowRingWidth);
 		DrawRect(new Rect2(r.Position + ShadowOffset, r.Size), new Color(0, 0, 0, 0.35f));
 		DrawRect(r, none ? new Color(0.6f, 0.58f, 0.5f) : FightHud.Paper);
 		DrawRect(r, none ? new Color(0.35f, 0.34f, 0.3f) : FightHud.Ink, false, 5f);
 		DrawRect(r.Grow(-8), FightHud.Seal, false, 2f);
 		if (!none) DrawRect(r.Grow(2), FightHud.Persimmon, false, 4f);
-		if (State == CopyTalismanState.Locked) Paint.Seal(this, new Vector2(Size.X - 6, Size.Y - 6), 16, "S"); // T1 red seal stamp
+		if (State == CopyTalismanState.Locked) Paint.Seal(this, SealRect.GetCenter(), SealRadius, "S"); // T1 red seal stamp
 	}
 }

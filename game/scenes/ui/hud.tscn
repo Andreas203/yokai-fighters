@@ -272,19 +272,19 @@ theme_override_constants/outline_size = 6
 
 [node name="CopyTalisman" type="Control" parent="Strip"]
 layout_mode = 0
-offset_left = 894
+offset_left = 898
 offset_top = 10
-offset_right = 1150
-offset_bottom = 126
+offset_right = 1146
+offset_bottom = 124
 mouse_filter = 2
 script = ExtResource("4_copy")
 
 [node name="Caption" type="Label" parent="Strip/CopyTalisman"]
 layout_mode = 0
 offset_left = 0
-offset_top = 4
-offset_right = 256
-offset_bottom = 36
+offset_top = 10
+offset_right = 248
+offset_bottom = 40
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 26
@@ -319,8 +319,8 @@ text = ""
 [node name="MoveName" type="Label" parent="Strip/CopyTalisman"]
 layout_mode = 0
 offset_left = 70
-offset_top = 36
-offset_right = 250
+offset_top = 40
+offset_right = 242
 offset_bottom = 106
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
@@ -338,7 +338,7 @@ layout_mode = 0
 offset_left = 10
 offset_top = 72
 offset_right = 66
-offset_bottom = 106
+offset_bottom = 104
 mouse_filter = 2
 theme_type_variation = &"BodyLabel"
 theme_override_font_sizes/font_size = 26

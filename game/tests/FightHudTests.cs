@@ -125,7 +125,9 @@ public static class FightHudTests
     if (c is Label label)
     {
      Assert.True(label.GetThemeFontSize("font_size") * 720f / 1080 >= 17, $"{c.Name} readable at 720p");
-     Assert.True(label.GetThemeConstant("outline_size") >= 6 || c.Name == "Caption" || c.Name == "MoveName" || c.Name == "Level" || c.Name == "IconLetter" || c.Name == "Kicker" || c.Name == "TwistText", "ink outline over the stage (paper-backed labels need none)");
+     bool onPaper = false; // labels on the talisman or twist strip paper need no outline; everything else keeps the ink outline
+    for (Node up = c.GetParent(); up != null && !onPaper; up = up.GetParent()) onPaper = up is CopyTalisman || up.Name == "TwistStrip";
+    Assert.True(onPaper || label.GetThemeConstant("outline_size") >= 6, $"{c.Name}: ink outline over the stage (paper-backed labels need none)");
     }
    }
    var talisman = hud.CopyTarget;
@@ -165,6 +167,13 @@ public static class FightHudTests
 
 
  // ---- YOK-74: copy-target talisman and elder-twist / Tanuki strip ----
+
+ /// <summary>The slot shows the name in capitals; a name too long for it is hyphenated and ends in an ellipsis, so compare letters only.</summary>
+ static bool IsNameOrItsFit(string full, string shown)
+ {
+  static string Letters(string t) { var sb = new System.Text.StringBuilder(); foreach (char ch in t) if (char.IsLetterOrDigit(ch)) sb.Append(char.ToUpperInvariant(ch)); return sb.ToString(); }
+  return shown.Length > 0 && Letters(full).StartsWith(Letters(shown));
+ }
 
  sealed class FakeRunView : IHudRunView
  {
@@ -214,7 +223,7 @@ public static class FightHudTests
    Show();
    var t = hud.CopyTarget;
    Assert.Equal(CopyTalismanState.Defined, t.State, "defined from the start (T2/T5)");
-   Assert.Equal(CopyRule.Target(run)!.Data.Name.ToUpperInvariant(), t.MoveName, "move name");
+   Assert.True(IsNameOrItsFit(CopyRule.Target(run)!.Data.Name, t.MoveName), "move name: " + t.MoveName);
    Assert.Equal("Lv 1", t.LevelText, "level");
    Assert.Equal("COPY TARGET", t.CaptionText, "caption");
    Assert.Equal("", t.LastEvent, "nothing animates on the first show");
@@ -253,7 +262,7 @@ public static class FightHudTests
    Assert.Equal(CopyTalismanState.Locked, t.State, "T1: locked");
    Assert.Equal("LOCKED", t.CaptionText, "caption");
    var locked = s.LockedCopy!;
-   Assert.Equal(locked.Data.Name.ToUpperInvariant(), t.MoveName, "shows the locked copy");
+   Assert.True(IsNameOrItsFit(locked.Data.Name, t.MoveName), "shows the locked copy: " + t.MoveName);
    Assert.True(hud.TwistStripVisible, "Tanuki fight line");
    Assert.Equal("THE TANUKI COPIES", hud.TwistKicker, "kicker");
    Assert.Equal(3, locked.Level, "the locked special is Lv 3");
@@ -263,7 +272,7 @@ public static class FightHudTests
    s.Run.LevelUp(SpecialSlot.A); s.Run.LevelUp(SpecialSlot.A); // Ryo keeps levelling: the lock does not move
    ulong afterChange = s.StateHash();
    hud.Refresh(new Match());
-   Assert.Equal(locked.Data.Name.ToUpperInvariant(), t.MoveName, "locked copy unchanged by later level-ups");
+   Assert.True(IsNameOrItsFit(locked.Data.Name, t.MoveName), "locked copy unchanged by later level-ups");
    Assert.Equal("", t.LastEvent, "no change toast after the lock");
    Assert.Equal(afterChange, s.StateHash(), "the HUD reads only; it changes nothing");
    Assert.True(before != afterChange, "(the probe did change Ryo)");
@@ -308,6 +317,7 @@ public static class FightHudTests
    var pool = AbilityPool.LoadRepo(Root);
    var names = new System.Collections.Generic.List<string>(RuleNames);
    foreach (var sp in pool.Specials) names.Add(sp.Name);
+   names.AddRange(new[] { "Thunderstrike", "Wandering Thunderstrike", "Supercalifragilistic", "Tsukuyomi-Barrage" }); // longer than any shipped name
    var label = Find<Label>(hud, "MoveName");
    var font = label.GetThemeFont("font");
    foreach (string n in names)
@@ -316,7 +326,8 @@ public static class FightHudTests
     hud.Refresh(new Match());
     Assert.Equal(CopyTalisman.NameSize, label.GetThemeFontSize("font_size"), $"{n}: kept at the 720p floor size");
     Assert.True(label.GetLineCount() <= 2, $"{n}: wraps to {label.GetLineCount()} lines");
-    foreach (string w in n.ToUpperInvariant().Replace("-", "- ").Split(' ', System.StringSplitOptions.RemoveEmptyEntries))
+    Assert.True(label.Text.Length > 0 && label.Text.Split('\n').Length <= CopyTalisman.NameMaxLines, $"{n}: at most two paragraphs");
+    foreach (string w in label.Text.Replace("-", "- ").Split(new[] { ' ', '\n' }, System.StringSplitOptions.RemoveEmptyEntries))
      Assert.True(font.GetStringSize(w.TrimEnd(), fontSize: CopyTalisman.NameSize).X <= label.Size.X, $"{n}: '{w}' fits the slot width");
    }
   }
