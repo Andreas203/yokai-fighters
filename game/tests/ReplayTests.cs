@@ -78,11 +78,12 @@ public static class ReplayTests
 	}
 
 	/// <summary>YOK-94: the Tanuki (Ryo's fixture kit + a copy of Spirit Wave Lv 1) driven by data/profiles/tanuki-boss.json, P1 idle.</summary>
-	static ReplayRecording TanukiFight(out int copiedUses)
+	/// <param name="copy">The copy to fight with; null = the no-lock default.</param>
+	static ReplayRecording TanukiFight(out int copiedUses, CopyTarget? copy = null)
 	{
 		var src = FightScene.FixtureSources;
 		var ryo = Kit.Load(Kit.Ryo, src);
-		var kit = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(false, null, null, ryo.Specials));
+		var kit = TanukiKit.Build(ryo, copy ?? TanukiKit.CopyAtFightStart(false, null, null, ryo.Specials));
 		var m = new Match(null, ryo.Moves, kit.Moves);
 		ryo.Equip(m.P1);
 		kit.Equip(m.P2);
@@ -110,6 +111,22 @@ public static class ReplayTests
 		var bad = ReplayRecording.FromBytes(rec.ToBytes());
 		bad.Header.Fighters[1].CopiedSlot = (int)SpecialSlot.D;
 		Assert.True(!Replayer.Run(bad, Catalog).Ok, "a copied slot holding no special is refused");
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_SlotClash_ReplaysIdentically()
+	{
+		// Ryo's starter in A is the fixture Spirit Wave; the copy is another special whose own slot is A (the real
+		// spirit-wave from data/moves/), as when a drafted special took a starter's slot. It replaces the starter.
+		var other = SpecialLoader.LoadDirectory(Path.Combine(RepoRoot, "data", "moves")).First(s => s.Id == "spirit-wave");
+		Assert.Equal(SpecialSlot.A, other.Slot, "the stand-in for a drafted special sits in A");
+		var rec = TanukiFight(out int uses, new CopyTarget(SpecialSlot.A, other, 1));
+		var p2 = rec.Header.Fighters[1];
+		Assert.True(uses > 0, "the recorded Tanuki used special:copied");
+		Assert.Equal((int)SpecialSlot.A, p2.CopiedSlot, "the copied slot is Ryo's slot for the copy");
+		Assert.True(p2.Specials.Single(s => s.Slot == (int)SpecialSlot.A).Id == "spirit-wave" && p2.Specials.All(s => s.Id != "test-spirit-wave"), "the copy replaced the starter in A");
+		Assert.True(p2.Specials.Count == 2 && p2.Specials.Any(s => s.Slot == (int)SpecialSlot.B && s.Id == "test-rising-talisman"), "the other starter stays in B");
+		AssertReplays(rec, "tanuki fight, slot clash");
 	}
 
 	[Test]

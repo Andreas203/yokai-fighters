@@ -6,7 +6,7 @@ namespace YokaiFighters.Sim;
 
 /// <summary>
 /// YOK-94, T0: the Tanuki's kit = Ryo's normals, throw and air normals + his starters (A1, Lv 1) + the one special
-/// it copied (T2-T4), on Ryo's model and clips (the presentation maps any fighter but the Kitsune to Ryo's set).
+/// it copied (T2-T4, in Ryo's slot for it, replacing the starter there), on Ryo's model and clips (the presentation maps any fighter but the Kitsune to Ryo's set).
 /// Pure data: built once at fight start from the copy target, never from Ryo's live fighter, so his modifiers and
 /// evolution never reach it (T4).
 /// </summary>
@@ -20,19 +20,24 @@ public sealed class TanukiKit
 
 	/// <summary>Ryo's normals, throw and air normals, the same objects as his kit (T0: no moves of its own).</summary>
 	public MoveData[] Moves { get; }
-	/// <summary>Ryo's starters (A1), each in its own slot at Lv 1.</summary>
+	/// <summary>
+	/// Ryo's starters (A1) the Tanuki holds, each in its own slot at Lv 1: all of them, except the one whose slot the
+	/// copy takes (designer ruling 2026-10-11: that slot mirrors Ryo's own, so a starter Ryo replaced there is gone
+	/// on the Tanuki's side too, and a levelled starter replaces its Lv 1 self).
+	/// </summary>
 	public SpecialData[] Starters { get; }
 	/// <summary>The copied special (T2-T4), or null when the copy rule names none (no special in any slot).</summary>
 	public CopyTarget? Copy { get; }
-	/// <summary>The Tanuki's slot for the copy; None without a copy. See <see cref="SlotFor"/>.</summary>
+	/// <summary>The Tanuki's slot for the copy = Ryo's slot for it (<see cref="CopyTarget.Slot"/>); None without a copy.</summary>
 	public SpecialSlot CopiedSlot { get; }
 	/// <summary>What the kit was built from, for the log.</summary>
 	public IReadOnlyList<string> Notes { get; }
 
 	private TanukiKit(MoveData[] moves, SpecialData[] starters, CopyTarget? copy, List<string> notes)
 	{
-		Moves = moves; Starters = starters; Copy = copy; Notes = notes;
-		CopiedSlot = copy is null ? SpecialSlot.None : SlotFor(copy, starters);
+		Moves = moves; Copy = copy; Notes = notes;
+		CopiedSlot = copy?.Slot ?? SpecialSlot.None;
+		Starters = starters.Where(s => s.Slot != CopiedSlot).ToArray();
 	}
 
 	/// <summary>The kit from Ryo's own kit (<see cref="Kit.Load"/> of <see cref="Kit.Ryo"/>) and a copy target.</summary>
@@ -66,22 +71,8 @@ public sealed class TanukiKit
 	}
 
 	/// <summary>
-	/// Where the copy sits in the Tanuki's slots: Ryo's slot when the Tanuki's starters leave it free or the copy is
-	/// that slot's starter (a levelled starter then replaces its Lv 1 self); otherwise (a drafted special that took
-	/// a starter's slot on Ryo's side) the lowest free slot, so the Tanuki keeps both starters (T0) and the copy.
-	/// </summary>
-	public static SpecialSlot SlotFor(CopyTarget copy, IReadOnlyCollection<SpecialData> starters)
-	{
-		var held = new SpecialData?[5];
-		foreach (var s in starters) if (s.Slot != SpecialSlot.None) held[(int)s.Slot] ??= s;
-		if (held[(int)copy.Slot] is not { } there || there.Id == copy.Data.Id) return copy.Slot;
-		for (int i = 1; i <= 4; i++) if (held[i] is null) return (SpecialSlot)i;
-		return copy.Slot; // every slot holds a starter: the copy takes its own (A1 has two starters, so not reached)
-	}
-
-	/// <summary>
-	/// Equips the Tanuki's fighter: starters at Lv 1 in their slots (A1), then the copy at <see cref="CopyTarget.MoveLevel"/>
-	/// with no modifier (T4), and marks its slot for <c>special:copied</c>.
+	/// Equips the Tanuki's fighter: the kept starters at Lv 1 in their slots (A1), then the copy in Ryo's slot for it at
+	/// <see cref="CopyTarget.MoveLevel"/> with no modifier (T4), and marks that slot for <c>special:copied</c>.
 	/// </summary>
 	public void Equip(Fighter f)
 	{

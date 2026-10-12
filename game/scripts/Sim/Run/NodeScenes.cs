@@ -176,6 +176,8 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			}
 			map[name] = new Entry(Text(e, "scene", where), Text(e, "opponent", where), Text(e, "fighter", where),
 				Text(e, "tier", where), Text(e, "profile", where), binds, Coins(e, where), Text(e, "kit", where));
+			if (map[name].Kit is not null && (section != "opponents" || map[name].Fighter is null))
+				throw new FormatException($"node scenes: {where}.kit is only for an opponent that names its 'fighter'");
 			if (map[name].Kit is { } kit && kit != TanukiKit.KitId) throw new FormatException($"node scenes: {where}.kit '{kit}' is not a kit this build knows ('{TanukiKit.KitId}')");
 		}
 		return map;

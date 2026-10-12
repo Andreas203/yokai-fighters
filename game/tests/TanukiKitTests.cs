@@ -117,7 +117,7 @@ public static class TanukiKitTests
 	}
 
 	[Test]
-	public static void CopyOfASpecialThatTookAStarterSlotGoesToAFreeSlot()
+	public static void CopyOfASpecialThatTookAStarterSlotReplacesThatStarter()
 	{
 		var pool = Pool();
 		var run = RunState.NewRun(pool);
@@ -127,9 +127,14 @@ public static class TanukiKitTests
 		var copy = CopyRule.Target(run)!;
 		Assert.True(copy.Data.Id == "test-gale" && copy.Slot == SpecialSlot.A, "target: the drafted special in A");
 		var (m, kit) = Fight(copy);
-		Assert.Equal(SpecialSlot.C, kit.CopiedSlot, "the lowest free slot");
-		Assert.Equal("test-spirit-wave", m.P2.Specials[(int)SpecialSlot.A]?.Data.Id, "T0: the Tanuki keeps both starters");
-		Assert.True(m.P2.Specials[(int)SpecialSlot.C] is { Level: 2 } c && c.Data.Id == "test-gale", "and the copy at Lv 2");
+		Assert.Equal(SpecialSlot.A, kit.CopiedSlot, "designer ruling 2026-10-11: the copy sits in Ryo's slot for it");
+		Assert.True(m.P2.CopiedSlot == SpecialSlot.A && m.P2.Specials[(int)SpecialSlot.A] is { Level: 2 } a && a.Data.Id == "test-gale", "A holds the copy at Lv 2, not Spirit Wave");
+		Assert.True(kit.Starters.Select(s => s.Id).SequenceEqual(new[] { "test-rising-talisman" }), "the starter Ryo replaced is gone on the Tanuki's side too");
+		Assert.True(m.P2.Specials[(int)SpecialSlot.B] is { Level: 1 } b && b.Data.Id == "test-rising-talisman", "the other starter stays in its own slot");
+		Assert.True(m.P2.Specials[(int)SpecialSlot.C] is null && m.P2.Specials[(int)SpecialSlot.D] is null, "nothing in C or D");
+		var l = AiLoadout.From(m.P2);
+		Assert.True(l.TryGet(BehaviourProfile.ParseAction("special:copied"), out var input, out _) && input == FighterInput.Special(SpecialSlot.A), "special:copied presses slot A");
+		Assert.True(!l.TryGet(BehaviourProfile.ParseAction("special:test-spirit-wave"), out _, out _), "the replaced starter cannot be pressed");
 	}
 
 	[Test]
@@ -253,5 +258,22 @@ public static class TanukiKitTests
 			Assert.True(m.P2.Moves.SequenceEqual(m.P1.Moves), "Ryo's normals and throw");
 		}
 		finally { FightScene.Opponent = savedOpp; FightScene.Sources = savedSrc; }
+	}
+
+	[Test]
+	public static void KitInTheNodeTable_OnlyOnAnOpponentWithAFighter()
+	{
+		static string Table(string types, string opponents) => "{\"kind\":\"node_scenes\",\"id\":\"t\",\"schema_version\":1,"
+			+ "\"default_scene\":\"res://scenes/fight.tscn\",\"fallback_fighter\":\"kitsune\",\"tiers\":{\"yokai\":{\"reaction_frames\":22}},"
+			+ "\"types\":{\"boss\":{" + types + "}},\"opponents\":{\"tanuki\":{" + opponents + "}}}";
+		const string tier = "\"tier\":\"yokai\"", kit = "\"kit\":\"copy_of_ryo\"";
+		var node = MapLoader.Parse("{\"kind\":\"run_map\",\"id\":\"m\",\"schema_version\":1,\"nodes\":[{\"id\":\"n\",\"row\":1,\"type\":\"boss\",\"yokai\":\"tanuki\"}],\"routes\":[]}").Node("n");
+
+		var ok = NodeSceneTable.Parse(Table(tier, "\"fighter\":\"tanuki\"," + kit)).Resolve(node).Context;
+		Assert.True(ok.Kit == TanukiKit.KitId && ok.Fighter == "tanuki" && !ok.StandIn, "an opponent with a fighter may name the kit");
+		Assert.True(NodeSceneTable.Parse(Table(tier, "\"fighter\":\"tanuki\"")).Resolve(node).Context.Kit is null, "no kit named: the fighter's own files");
+		Throws<FormatException>(() => NodeSceneTable.Parse(Table(tier, kit)), "kit without fighter (it would fight under the fallback's model)");
+		Throws<FormatException>(() => NodeSceneTable.Parse(Table(tier + "," + kit, "\"fighter\":\"tanuki\"")), "kit on a type");
+		Throws<FormatException>(() => NodeSceneTable.Parse(Table(tier, "\"fighter\":\"tanuki\",\"kit\":\"mirror\"")), "an unknown kit");
 	}
 }
