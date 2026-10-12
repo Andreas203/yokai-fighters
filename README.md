@@ -46,7 +46,7 @@ The pipeline generates card text for this game from its own design documents. It
 | Where to look | Section |
 |---|---|
 | The knowledge base is my GDD | [The source](#the-source-my-gdd-as-a-vault) |
-| The three content types and the gap each fills | [The gap](#the-gap-what-my-game-is-thin-on), [The ten outputs](#the-ten-outputs) |
+| The three content types and the gap each fills | [The gap and the outputs](#the-gap-and-the-outputs) |
 | The pipeline and how to run it | [How the pipeline works](#how-the-pipeline-works), [Run it](#run-it) |
 | Query, retrieved chunk and output side by side | [Query, retrieved chunk, output](#query-retrieved-chunk-output) |
 | A lore break and a tone drift caught and corrected | [What the critic caught](#what-the-critic-caught) |
@@ -56,15 +56,78 @@ The pipeline generates card text for this game from its own design documents. It
 
 The knowledge base is [`vault/`](vault/Home.md): 13 Markdown notes distilled from [`Yokai_Fighters_GDD_Extended.pdf`](Yokai_Fighters_GDD_Extended.pdf) and its approved amendments (Linear tickets YOK-1 to YOK-5). It has vision, vibe (tone, story, characters, art and audio) and mechanics (combat, controls, abilities, run loop, yokai, Tanuki, economy, meta-progression). Each `##` section is one retrievable chunk, 83 in total. Every number is copied from the GDD, and each note lists the GDD sections it comes from. Open questions are kept at the bottom of each note and are never retrieved, so the model is not handed undecided design as fact.
 
-### The gap: what my game is thin on
+### The gap and the outputs
 
-| Content type | The gap | Generated |
+My game is thin on written text. Three kinds of card the design calls for are missing or only part written. The pipeline wrote ten pieces to fill them. Each part below names the gap, where it shows in the repo, and the text that fills it.
+
+#### 1. Wake-up cards
+
+**The gap.** After a loss the GDD asks for "wake-up variants by row reached and by which yokai won" (rule S3 in [`docs/design/rules.md`](docs/design/rules.md)). The game varies the card by row only: [`lose-early.json`](data/story/lose-early.json), [`lose-mid.json`](data/story/lose-mid.json) and [`lose-late.json`](data/story/lose-late.json) in `data/story/` are each written to fit any yokai. No card is about the yokai that won, and none says whether a talisman carries over.
+
+**The outputs.** Three cards, each for one yokai at one depth.
+
+| Loss | Card | File |
 |---|---|---|
-| **Wake-up cards** | The GDD schedules a story card after every loss, "by row reached and by which yokai won". The game has one generic lose-screen card. | 3 variants: Oni at rows 2–3, Nine-Tailed Kitsune at row 5, Kappa at row 6 |
-| **Elder intro cards** | Each elder's rule twist needs a one-line intro card on its map node (rule Y3). None of the three exists. | 3 cards, one per elder |
-| **Reward card text for modifiers** | 14 modifiers ship and each needs a plain line and a frame-data line. 2 of 14 are written. | 4 cards: the unlocked Oni and Kappa modifiers, which survive even the balance-gate cut |
+| Oni, rows 2–3 | "You wake at the province's edge, every talisman blank as new paper. Far off, {yokai} trudges back to its snowy shrine gate, as if the duel were a chore finished and nothing more." | [`wake-up-oni-early.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/wake-up-card/wake-up-oni-early.json) |
+| Nine-Tailed Kitsune, row 5 | "You wake at the province's edge, and every talisman is blank paper again. {yokai} has already slipped back between the lanterns, tails swaying, as if the duel were only a passing thought." | [`wake-up-nine-tails-row-5.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/wake-up-card/wake-up-nine-tails-row-5.json) |
+| Kappa, row 6 | "You wake at the province's edge. {yokai} has already turned back toward the lantern river, bowing to no one, and one talisman in your sleeve stays faintly inked." | [`wake-up-kappa-row-6.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/wake-up-card/wake-up-kappa-row-6.json) |
 
-The story cards are written in the game's own `story_card` data shape and pass the repo's schema validator (`tools/validate_data.py`). They are marked `proposed` and stay in the run folder: they go through the Rules Lawyer and my approval before anything merges into `data/`.
+Each card places the yokai on its own stage (the Oni's snowy shrine gate, the Kappa's lantern river). The row decides the talisman line: a loss at row 5 or earlier leaves every talisman blank, and a loss at row 6 leaves one faintly inked.
+
+#### 2. Elder intro cards
+
+**The gap.** Each elder adds one rule twist, and the twist must show as "a map-node icon, a one-line intro card, and a callout on first meeting" (rule Y3). [`data/story/`](data/story/) holds no elder intro card.
+
+**The outputs.** One card for each of the three elders.
+
+| Elder and twist | Card | File |
+|---|---|---|
+| Nine-Tailed Kitsune: reflects a special used twice in a row | "Nine tails sway in the dusk; show her the same trick twice running and she hands it back to you as foxfire." | [`elder-intro-nine-tailed-kitsune.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/elder-intro-card/elder-intro-nine-tailed-kitsune.json) |
+| Elder Oni: armour on every special | "Once the Elder Oni raises its iron club, jabs fall on it like snow on a shrine gate, and the swing comes down anyway." | [`elder-intro-elder-oni.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/elder-intro-card/elder-intro-elder-oni.json) |
+| Elder Kappa: throws can't be broken | "The Elder Kappa bows by the lantern river, and once its hands close on you, nothing pulls them open, so keep your distance." | [`elder-intro-elder-kappa.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/elder-intro-card/elder-intro-elder-kappa.json) |
+
+Each card shows the twist as something the player would see, so they can work out the rule before the fight.
+
+#### 3. Reward card text for modifiers
+
+**The gap.** The game ships 14 modifiers (rule A11) and each reward card needs two lines: plain language first, with the frame data behind a toggle (rule A12). [`data/modifiers/`](data/modifiers/) holds two, both from the Kitsune: [`fox-patience.json`](data/modifiers/fox-patience.json) and [`will-o-wisp.json`](data/modifiers/will-o-wisp.json). The Oni and the Kappa have no card text.
+
+**The outputs.** Four cards: the Oni and Kappa modifiers that start unlocked. With the two Kitsune cards they make up the six that stay even if the balance gate cuts modifiers from 14 to 8 (rule G3).
+
+| Modifier | plain | frames |
+|---|---|---|
+| [Oni's Hide](tools/content_pipeline/runs/v2-planned-retrieval/output/modifier-card/onis-hide-card.json) | "An oni's hide turns aside blows: the start of this special shrugs off hits with armour on its first few frames." | "Armour on frames 1–5 of the attached special" |
+| [Iron Will](tools/content_pipeline/runs/v2-planned-retrieval/output/modifier-card/iron-will-card.json) | "An oni with an iron club shrugs off arrows: this special can't be interrupted by projectiles." | "Can't be interrupted by projectiles" |
+| [Slippery Skin](tools/content_pipeline/runs/v2-planned-retrieval/output/modifier-card/slippery-skin-card.json) | "Slick as river mud, the Kappa slips free: the special this is attached to can't be thrown while it starts up." | "Throw-invulnerable during startup of the attached special" |
+| [River Pull](tools/content_pipeline/runs/v2-planned-retrieval/output/modifier-card/river-pull-card.json) | "The river tugs back: when this special hits, your opponent is pulled one step closer to you." | "On hit: pulls opponent one step closer" |
+
+#### The shape of an output
+
+Every output is a JSON file in the game's own data shape. This is the Kappa wake-up card, [`wake-up-kappa-row-6.json`](tools/content_pipeline/runs/v2-planned-retrieval/output/wake-up-card/wake-up-kappa-row-6.json):
+
+```json
+{
+  "kind": "story_card",
+  "id": "wake-up-kappa-row-6",
+  "status": "proposed",
+  "trigger": "Later loss: Ryo is knocked out by the Kappa at row 6 (wake-up variant by row reached and winning yokai, S3)",
+  "text": "You wake at the province's edge. {yokai} has already turned back toward the lantern river, bowing to no one, and one talisman in your sleeve stays faintly inked.",
+  "placeholders": [
+    "yokai"
+  ],
+  "speaker": "narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "M3"
+  ],
+  "notes": "Generated by tools/content_pipeline (run v2-planned-retrieval) from vault chunks: 01-vibe/Story.md#Wake-up cards; 01-vibe/Story.md#The illusion loop; 01-vibe/Story.md#Talismans; 01-vibe/Characters.md#Kappa; 01-vibe/Tone.md#Voice: the narrator; 01-vibe/Tone.md#The tone line; 01-vibe/Tone.md#Card form; 01-vibe/Tone.md#Do and don't examples"
+}
+```
+
+The model wrote the `text`. Code added the id, trigger and rule list, and `notes` records the vault chunks the text was written from. The six story cards pass the repo's schema validator ([`tools/validate_data.py`](tools/validate_data.py)). All ten are marked `proposed` and stay in the run folder: they go through the Rules Lawyer and my approval before anything merges into `data/`.
 
 ### How the pipeline works
 
@@ -102,7 +165,7 @@ Python 3.10+, standard library only. The schema check on the story cards is the 
 | Run | What it is | Result |
 |---|---|---|
 | [`v1-single-query`](tools/content_pipeline/runs/v1-single-query/trace.md) | First attempt at retrieval | 10/10 passed, 2 after correction |
-| [`v2-planned-retrieval`](tools/content_pipeline/runs/v2-planned-retrieval/trace.md) | Final retrieval; its [`output/`](tools/content_pipeline/runs/v2-planned-retrieval/output/) holds the ten pieces below | 10/10 passed, 1 after correction |
+| [`v2-planned-retrieval`](tools/content_pipeline/runs/v2-planned-retrieval/trace.md) | Final retrieval; its [`output/`](tools/content_pipeline/runs/v2-planned-retrieval/output/) holds the ten pieces above | 10/10 passed, 1 after correction |
 | [`critic-seeded-faults`](tools/content_pipeline/runs/critic-seeded-faults/trace.md) | Three hand-broken drafts fed to the critic | 3/3 caught and corrected |
 
 ### Query, retrieved chunk, output
@@ -116,33 +179,6 @@ One example per content type, from the v2 run. The full tables for all ten piece
 | `River Pull modifier effect on the special it is attached to` (scoped to Abilities.md) | **Abilities.md#Kappa modifiers** (score 18.0): "River Pull: Pulls the opponent one step closer on hit" | plain: "The river tugs back: when this special hits, your opponent is **pulled one step closer** to you." <br>frames: "On hit: pulls opponent one step closer" |
 
 The first row shows the retrieved fact deciding the output: the same card type says "one talisman stays faintly inked" for a row 6 loss and "every talisman blank" for a row 2–3 loss, because the carry-over rule (reach row 6) came back from the vault. The "snow on a shrine gate" image in the second row comes from the Oni's stage in the retrieved `Characters.md#Oni` chunk.
-
-### The ten outputs
-
-**Wake-up cards** ([`wake-up-card/`](tools/content_pipeline/runs/v2-planned-retrieval/output/wake-up-card/))
-
-| Loss | Card |
-|---|---|
-| Oni, rows 2–3 | "You wake at the province's edge, every talisman blank as new paper. Far off, {yokai} trudges back to its snowy shrine gate, as if the duel were a chore finished and nothing more." |
-| Nine-Tailed Kitsune, row 5 | "You wake at the province's edge, and every talisman is blank paper again. {yokai} has already slipped back between the lanterns, tails swaying, as if the duel were only a passing thought." |
-| Kappa, row 6 | "You wake at the province's edge. {yokai} has already turned back toward the lantern river, bowing to no one, and one talisman in your sleeve stays faintly inked." |
-
-**Elder intro cards** ([`elder-intro-card/`](tools/content_pipeline/runs/v2-planned-retrieval/output/elder-intro-card/))
-
-| Elder (twist) | Card |
-|---|---|
-| Nine-Tailed Kitsune (reflects a special used twice in a row) | "Nine tails sway in the dusk; show her the same trick twice running and she hands it back to you as foxfire." |
-| Elder Oni (armour on every special) | "Once the Elder Oni raises its iron club, jabs fall on it like snow on a shrine gate, and the swing comes down anyway." |
-| Elder Kappa (throws can't be broken) | "The Elder Kappa bows by the lantern river, and once its hands close on you, nothing pulls them open, so keep your distance." |
-
-**Modifier reward cards** ([`modifier-card/`](tools/content_pipeline/runs/v2-planned-retrieval/output/modifier-card/))
-
-| Modifier | plain | frames |
-|---|---|---|
-| Oni's Hide | "An oni's hide turns aside blows: the start of this special shrugs off hits with armour on its first few frames." | "Armour on frames 1–5 of the attached special" |
-| Iron Will | "An oni with an iron club shrugs off arrows: this special can't be interrupted by projectiles." | "Can't be interrupted by projectiles" |
-| Slippery Skin | "Slick as river mud, the Kappa slips free: the special this is attached to can't be thrown while it starts up." | "Throw-invulnerable during startup of the attached special" |
-| River Pull | "The river tugs back: when this special hits, your opponent is pulled one step closer to you." | "On hit: pulls opponent one step closer" |
 
 ### What the critic caught
 
