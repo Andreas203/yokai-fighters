@@ -1,0 +1,32 @@
+{
+  "kind": "harness_bot",
+  "id": "newcomer-kihon-bot",
+  "status": "proposed",
+  "rules": ["R5", "R4", "R9", "P6", "K2", "Y4"],
+  "scheme": "kihon",
+  "fight": {
+    "reaction_frames": 24,
+    "decide_every": 8,
+    "mistake_pct": 15,
+    "block_pct": 50,
+    "anti_air_pct": 15,
+    "anti_air_button": "heavy_punch",
+    "poke_range": 230,
+    "throw_range": 120,
+    "preferred_min": 150,
+    "preferred_max": 360,
+    "walk_ticks": 12,
+    "block_ticks": 18,
+    "wait_ticks": 10,
+    "weights": { "walk": 30, "normal": 30, "special": 20, "throw": 8, "jump": 8, "wait": 10 },
+    "max_fight_ticks": 10800
+  },
+  "run": {
+    "route": { "rule": "prefer_types_else_random", "prefer_types": ["dojo"] },
+    "reward_order": ["upgrade", "new", "modifier"],
+    "merchant": "heal",
+    "dojo": "rest",
+    "menu_seconds_per_node": 45
+  },
+  "notes": "YOK-26 first pass, every number proposed for the Sparring Partner to tune. A newcomer on Kihon (K2): sees the screen 24 ticks late (P6: only on-screen state, never the opponent's buttons), decides every 8 ticks, presses a random normal whatever the range on 15% of its decisions (mistake), puts its guard up (standing only) for 50% of the threats it sees (a swing or a projectile, rolled once each, held while the threat lasts) and anti-airs 15% of jumps with heavy punch. Specials are Special + direction (neutral A, forward B, back C, down D). Route: the dojo when one is reachable (R4's newcomer heal@4 + rest@7 line), else a seeded random pick. Rewards: an upgrade first, then a new special, then a modifier; a card with several targets goes on the lowest slot. Merchant: the free heal; dojo: rest. A fight with no KO after max_fight_ticks counts as a loss (no round timer is written in rules.md). menu_seconds_per_node is the time outside fights per node for the run-length estimate (R9). Merchant plans: heal, shop (buy shelf commons through the shop, YOK-95, never release), heal_if_hurt_else_shop (with heal_below_pct), skip; the default heals (R4). PROVISIONAL until the designer rules (YOK-36, decision log 'YOK-26 harness'): max_fight_ticks 10800 (3-minute fight cap), menu_seconds_per_node 45, and per-run AI and bot seeds derived from the run seed (batch seeds base..base+n-1, base 1)."
+}
