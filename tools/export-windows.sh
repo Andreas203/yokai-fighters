@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # YOK-39: playable Windows build of the demo.
 #   GODOT=/path/to/Godot_v4.7.2-stable_mono_win64_console.exe tools/export-windows.sh
+# Also runs on Linux with the Linux mono editor (.github/workflows/release.yml does).
 # Needs the 4.7.2.stable.mono export templates installed. Output: build/windows/ and build/YokaiFighters-Demo-Windows.zip.
 # The game reads its JSON content with System.IO, so data/ (and the TEST FIXTURE folders the kits still fall back
 # to, e.g. Kitsune's air normals) are copied next to the exe, where ContentPaths looks in an exported build.
@@ -18,5 +19,9 @@ mkdir -p "$OUT/data" "$OUT/fixtures"
 for d in clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
-powershell.exe -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$OUT")\\*' -DestinationPath '$(cygpath -w "$REPO/build")\\YokaiFighters-Demo-Windows.zip' -Force"
+if command -v powershell.exe >/dev/null; then
+  powershell.exe -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$OUT")\\*' -DestinationPath '$(cygpath -w "$REPO/build")\\YokaiFighters-Demo-Windows.zip' -Force"
+else  # Linux (the release workflow): same zip, built with zip
+  (cd "$OUT" && zip -qr -9 "$REPO/build/YokaiFighters-Demo-Windows.zip" .)
+fi
 ls -l "$REPO/build/YokaiFighters-Demo-Windows.zip"
