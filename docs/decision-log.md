@@ -54,14 +54,18 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - YOK-95 blocks YOK-104.
   - YOK-36 is linked to PR #105.
 - YOK-74 retitled; portraits live in YOK-107.
-- Approved but **not yet applied**:
-  - Set the missing priorities, with YOK-102 and YOK-54 raised to High.
-  - Assign open tickets to the W2/W3/W4–5 milestones.
-  - Comment on YOK-39 about its open children (40, 46, 50).
-- Scope gate YOK-38 is overdue; the designer chose to hold it now.
+- 2026-10-15: missing priorities set, with YOK-102 (Astra art) and YOK-54 (sound) raised to High. Open tickets assigned to W2 (run loop, Tanuki, harness, abilities, art/sound), W3 (screens, icons, fonts, tutorial) and W4–5 (YOK-93 hit feedback). YOK-26 and YOK-99 marked blocked by YOK-94; YOK-107 blocked by YOK-102.
+- 2026-10-15: YOK-105 (trial schema, PR #109) and YOK-74 (copy-target HUD, PR #110) closed after the designer merged them.
+
+## Gates
+- 2026-10-06 YOK-31 retarget gate: Ryo GO, Kitsune GO (see Assets).
+- 2026-10-15 YOK-38 scope gate (designer): **no cut.**
+  - Kata stays: it was already built (the precision bonus is applied in `Match.Specials.cs`), so YOK-24 closed as done.
+  - Meta-unlocks (YOK-86) are deferred behind YOK-89. **If YOK-89 has not merged by 2026-10-17, the meta-unlock layer is cut** and YOK-86 canceled.
+  - Carry-over (YOK-97) and story stay regardless (G2).
+  - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
 
 ## Waiting on the designer
-- **YOK-38 scope gate:** no cut, cut Kata (YOK-24), or cut Kata plus the meta-unlocks (YOK-86, 97). Carry-over and story stay either way (G2).
 - **YOK-36 open rules:**
   - Lv 2 steps for the other specials.
   - Credit and sound spend, plan tier and licence.
@@ -104,4 +108,4 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Oni and Kappa voices, and the tail count.
   - The order of the 12 unlocks.
   - Which modifiers a cut keeps.
-- **Review queue, in suggested order:** #106 Tanuki → #108 merchant → #107 rest stop → #110 HUD → #109 trial schema → #105 rulings.
+- **Review queue, in suggested order:** #106 Tanuki → #108 merchant → #107 rest stop → #105 rulings (#109 and #110 merged 10-15).
