@@ -149,8 +149,9 @@ public partial class ShopScreen : Control
 	public override void _Input(InputEvent e)
 	{
 		if (!IsVisibleInTree()) return;
-		if (MenuInput.FrameData(e)) { ToggleFrameData(); GetViewport().SetInputAsHandled(); }
-		else if (MenuInput.Back(e)) { Back(); GetViewport().SetInputAsHandled(); }
+		var vp = GetViewport(); // Back() can leave the tree, so take it first
+		if (MenuInput.FrameData(e)) { ToggleFrameData(); vp?.SetInputAsHandled(); }
+		else if (MenuInput.Back(e)) { Back(); vp?.SetInputAsHandled(); }
 	}
 
 	string? CurrentKey() => GetViewport()?.GuiGetFocusOwner() is { } f && IsAncestorOf(f) ? f.Name.ToString() : null;
