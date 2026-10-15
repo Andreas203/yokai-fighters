@@ -647,10 +647,19 @@ public static class SaveProbes
 		int files = 0;
 		foreach (string f in Directory.GetFiles(tests, "*.cs", SearchOption.AllDirectories))
 		{
-			if (f.EndsWith("SaveProbes.cs") || f.EndsWith("SaveTests.cs")) continue;
+			string name = Path.GetFileName(f);
+			// Explicit list, not a suffix: a file earns the right to name the save store by being written here, not by its name.
+			// The two original save files are exempt outright. The ticket-level save files (YOK-95) may use the in-memory store
+			// (Parse / Serialize, no file) but are still scanned for anything that reaches the player's file.
+			if (name == "SaveProbes.cs" || name == "SaveTests.cs") continue;
 			files++;
 			string t = File.ReadAllText(f);
-			Assert.True(!t.Contains("UserSavePath") && !t.Contains("save.json") && !t.Contains("SaveStore"), Path.GetFileName(f) + " names the save");
+			bool inMemorySave = name == "MerchantShopSaveTests.cs" || name == "MerchantShopSaveProbes.cs";
+			if (inMemorySave)
+			{
+				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json") && !t.Contains("new SaveStore(") && !t.Contains("GameFlow") && !t.Contains("SaveStore.FileName"), name + " reaches a save file or the player's path");
+			}
+			else Assert.True(!t.Contains("UserSavePath") && !t.Contains("save.json") && !t.Contains("SaveStore"), name + " names the save");
 			Assert.True(!t.Contains("CurrentScene = "), Path.GetFileName(f) + " sets the current scene");
 		}
 		Assert.True(files > 30, "scanned " + files);
@@ -995,7 +1004,7 @@ public static class SaveProbes
 		Assert.True(!SaveStore.LostSomething(load), "nothing lost on reading it");
 		Assert.True(store.Save(load.Data), "saved");
 		string now = File.ReadAllText(path);
-		Assert.True(now.Contains("\"version\": 2") && now.Contains("\"coins\": 0"), "rewritten as the current version: " + now);
+		Assert.True(now.Contains("\"version\": " + SaveStore.CurrentVersion) && now.Contains("\"coins\": 0"), "rewritten as the current version: " + now);
 		Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup, no temp");
 		SaveLoad again = new SaveStore(path).Load();
 		Assert.True(again.Status == SaveLoadStatus.Loaded && again.Data.Unlocks.SequenceEqual(new[] { "u1", "u0" }) && again.Data.Story.Seen.SequenceEqual(new[] { "intro", "win-1" }), "unlocks (order) and story intact (M1, M4)");

@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Yokai Fighters content pipeline: drafts card text from the design vault.
+"""Yokai Fighters content pipeline: crew agents draft card text from the design vault.
 
-    vault/*.md --chunk--> BM25 index --retrieve--> generator --draft--> critic --issues--> generator ... --> output
+    agent file lists its vault notes --> writer reads them whole --> draft + cited lines
+        --> code checks + critic (reads its own notes whole) --issues--> writer rewrites ... --> output
+
+There is no index and no search. Each agent's definition in .claude/agents/ names the
+vault notes it reads, and the pipeline hands the agent those notes complete.
 
 Usage (from anywhere):
-    python tools/content_pipeline/run.py generate                 # write all ten pieces, planned retrieval (v2)
-    python tools/content_pipeline/run.py generate --retrieval v1  # the first attempt: one query per piece
+    python tools/content_pipeline/run.py generate                 # write all ten pieces
     python tools/content_pipeline/run.py generate --only modifier-card
     python tools/content_pipeline/run.py critic-test              # feed the critic deliberately broken drafts
-    python tools/content_pipeline/run.py retrieve "Elder Kappa twist"
+    python tools/content_pipeline/run.py notes                    # which agent loads which notes
     python tools/content_pipeline/run.py generate --replay        # rebuild a recorded run without calling a model
 
-Every run writes runs/<name>/trace.json and trace.md (query, retrieved chunks,
+Every run writes runs/<name>/trace.json and trace.md (notes loaded, lines cited,
 drafts, critic issues, final text) plus llm-calls.json for --replay.
 Standard library only; live runs need the `claude` CLI, logged in.
 """
@@ -26,67 +29,43 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from content import CONTENT_TYPES, GENERATOR_SYSTEM, generation_prompt, revision_prompt  # noqa: E402
+from content import CONTENT_TYPES, CRITIC, WRITER_SYSTEM, revision_prompt, writing_prompt  # noqa: E402
 from critic import code_checks, critic_review  # noqa: E402
 from llm import LLM, parse_json  # noqa: E402
-from retrieval import VaultIndex, ability_names, load_vault  # noqa: E402
+from vault import ability_names, load_agent_notes  # noqa: E402
 
 ROOT = HERE.parent.parent
 VAULT = ROOT / "vault"
+AGENTS = ROOT / ".claude" / "agents"
 RUNS = HERE / "runs"
 VALIDATOR = ROOT / "tools" / "validate_data.py"
 FIXTURES = HERE / "seeded_faults.json"
 
 
-def retrieve(index: VaultIndex, item: dict, mode: str) -> dict:
-    """Return the queries run and the chunks they found, in the order the generator sees them."""
-    queries, order, scores = [], [], {}
-
-    def add(chunk, score):
-        if chunk.id not in scores:
-            order.append(chunk)
-            scores[chunk.id] = score
-
-    if mode == "v1":
-        # First attempt: the request as a person would type it, over the whole vault.
-        hits = index.search(item["request"], k=4)
-        queries.append({"label": "request", "query": item["request"], "scope": "whole vault", "k": 4,
-                        "hits": [{"id": c.id, "score": s} for c, s in hits]})
-        for chunk, score in hits:
-            add(chunk, score)
-    else:
-        # Planned retrieval: one narrow query per thing the piece needs, each scoped to the note that owns it.
-        for label, query, scope, k in item["plan"]:
-            hits = index.search(query, k=k, scope=f"{scope}#")
-            queries.append({"label": label, "query": query, "scope": scope, "k": k,
-                            "hits": [{"id": c.id, "score": s} for c, s in hits]})
-            for chunk, score in hits:
-                add(chunk, score)
-        for chunk_id in item["pinned"]:
-            add(index.get(chunk_id), "pinned")
-    return {"mode": mode, "queries": queries, "chunks": order, "scores": scores}
+def load_agents() -> dict:
+    """Each agent the pipeline runs, with the notes its definition file tells it to read."""
+    writers = sorted({ctype["writer"] for ctype in CONTENT_TYPES.values()})
+    return {agent: load_agent_notes(VAULT, AGENTS, agent) for agent in writers + [CRITIC]}
 
 
-def run_item(llm, index, move_names, type_id, item, args, seeded_draft=None) -> dict:
+def run_item(llm, agents, move_names, type_id, item, args, seeded_draft=None) -> dict:
     ctype = CONTENT_TYPES[type_id]
-    found = retrieve(index, item, args.retrieval)
-    chunks = found["chunks"]
-    # The critic always holds the canonical tone and rule sections, whatever the generator retrieved.
-    evidence = list(chunks)
-    for chunk_id in ctype["critic_pinned"] + item["critic_extra"]:
-        if chunk_id not in {c.id for c in evidence}:
-            evidence.append(index.get(chunk_id))
+    writer = ctype["writer"]
+    notes = agents[writer]
+    evidence = agents[CRITIC]
 
     def ask(role, prompt):
         try:
-            return parse_json(llm.complete(role, args.gen_model, GENERATOR_SYSTEM, prompt))
+            return parse_json(llm.complete(role, args.writer_model, WRITER_SYSTEM, prompt))
         except ValueError:
             return {}
 
-    draft = seeded_draft if seeded_draft is not None else ask("generator", generation_prompt(ctype, item, chunks))
+    draft = seeded_draft if seeded_draft is not None else ask("writer", writing_prompt(ctype, item, notes))
     rounds = []
     for n in range(1, args.max_rounds + 1):
-        code_issues = code_checks(type_id, draft, evidence, move_names)
+        # A seeded draft is written by hand and cites nothing, so its first round skips the cited-line check.
+        cites = not (seeded_draft is not None and n == 1)
+        code_issues = code_checks(type_id, item, draft, notes, move_names, check_sources=cites)
         review = critic_review(llm, args.critic_model, ctype, item, draft, evidence)
         issues = code_issues + review["issues"]
         rounds.append({"round": n, "draft": draft, "code_issues": code_issues,
@@ -94,29 +73,26 @@ def run_item(llm, index, move_names, type_id, item, args, seeded_draft=None) -> 
         print(f"    round {n}: {len(code_issues)} code issue(s), critic {review['verdict']} with {len(review['issues'])} issue(s)")
         if not issues or n == args.max_rounds:
             break
-        # The rewrite sees the critic's evidence too, so it can fix what its own retrieval missed.
-        draft = ask("reviser", revision_prompt(ctype, item, evidence, draft, issues))
+        draft = ask("reviser", revision_prompt(ctype, item, notes, draft, issues))
 
     last = rounds[-1]
     passed = not last["code_issues"] and not last["critic_issues"]
     return {
         "id": item["id"], "type": type_id, "label": item["label"], "brief": item["brief"],
-        "retrieval": {
-            "mode": found["mode"], "queries": found["queries"],
-            "chunks": [{"id": c.id, "score": found["scores"][c.id], "source": c.source, "text": c.text} for c in chunks],
-        },
-        "critic_evidence": [c.id for c in evidence],
+        "writer": writer, "notes": [n.id for n in notes],
+        "critic": CRITIC, "critic_notes": [n.id for n in evidence],
         "seeded": seeded_draft is not None,
         "rounds": rounds,
         "status": "passed" if passed else "needs_human",
         "corrected": passed and len(rounds) > 1,
-        "final": assemble(type_id, item, last["draft"], [c.id for c in chunks], args.run),
+        "final": assemble(type_id, item, last["draft"], writer, [n.id for n in notes], args.run),
     }
 
 
-def assemble(type_id: str, item: dict, draft: dict, chunk_ids: list[str], run: str) -> dict:
+def assemble(type_id: str, item: dict, draft: dict, writer: str, note_ids: list[str], run: str) -> dict:
     """Wrap the model's text in the game's data shape. Ids, triggers and rule lists never come from the model."""
-    note = f"Generated by tools/content_pipeline (run {run}) from vault chunks: " + "; ".join(chunk_ids)
+    note = (f"Generated by tools/content_pipeline (run {run}): written by {writer} from vault notes "
+            + "; ".join(note_ids) + f"; checked by {CRITIC}")
     if type_id == "modifier-card":
         return {"modifier": item["modifier"], "source": item["source"], "status": "proposed",
                 "card": {"plain": draft.get("plain", ""), "frames": draft.get("frames", "")},
@@ -179,15 +155,26 @@ def _draft_text(draft: dict) -> str:
     return draft.get("text", "(no text)")
 
 
+def _sources(draft: dict) -> list[tuple[str, str]]:
+    out = []
+    for s in draft.get("sources") or []:
+        if isinstance(s, dict):
+            out.append((str(s.get("note", "")), str(s.get("line", ""))))
+    return out
+
+
 def render_trace(meta: dict, results: list[dict], validation: dict | None) -> str:
     lines = [f"# Trace: {meta['run']}", "",
-             f"Command: `{meta['command']}`. Retrieval: {meta['retrieval']}. Generator: {meta['gen_model']}. Critic: {meta['critic_model']}.",
-             f"Vault: {meta['chunks']} chunks from {meta['notes']} notes.", ""]
-    lines += ["| Piece | Rounds | Issues caught | Result |", "|---|---|---|---|"]
+             f"Command: `{meta['command']}`. Writer model: {meta['writer_model']}. Critic model: {meta['critic_model']}.", "",
+             "Each agent reads the notes listed under \"Vault notes\" in its definition file, complete.", "",
+             "| Agent | Role | Notes it loads | Size |", "|---|---|---|---|"]
+    for agent, info in meta["agents"].items():
+        lines.append(f"| `{agent}` | {info['role']} | {'<br>'.join(info['notes'])} | {info['chars']:,} characters |")
+    lines += ["", "| Piece | Written by | Rounds | Issues caught | Result |", "|---|---|---|---|---|"]
     for r in results:
         caught = sum(len(x["code_issues"]) + len(x["critic_issues"]) for x in r["rounds"])
         result = "corrected, then passed" if r["corrected"] else ("passed first time" if r["status"] == "passed" else "needs a human")
-        lines.append(f"| {r['label']} | {len(r['rounds'])} | {caught} | {result} |")
+        lines.append(f"| {r['label']} | `{r['writer']}` | {len(r['rounds'])} | {caught} | {result} |")
     if validation and validation.get("ran"):
         lines += ["", f"Schema check (`tools/validate_data.py`) on {validation['files']} story cards: "
                       f"{'all valid' if validation['ok'] else 'ERRORS'}.", "", "```", validation["report"], "```"]
@@ -195,19 +182,15 @@ def render_trace(meta: dict, results: list[dict], validation: dict | None) -> st
         lines += ["", f"## {r['label']}", "", f"Brief: {r['brief']}", ""]
         if r["seeded"]:
             lines += ["Round 1's draft is a seeded fault, written by hand to test the critic.", ""]
-        lines += ["### Query, retrieved chunk, output", "", "| Query | Retrieved chunk (score) | Output |", "|---|---|---|"]
+        lines += ["### Notes loaded, lines cited, output", "",
+                  f"| Notes loaded by `{r['writer']}` | Line the writer cited | Output |", "|---|---|---|"]
+        loaded = "<br>".join(r["notes"])
         output = _cell(_final_text(r))
-        first = True
-        for q in r["retrieval"]["queries"]:
-            for hit in q["hits"]:
-                chunk = next(c for c in r["retrieval"]["chunks"] if c["id"] == hit["id"])
-                query = f"**{q['label']}** in {q['scope']}:<br>{q['query']}"
-                lines.append(f"| {_cell(query)} | **{hit['id']}** ({hit['score']})<br>{_cell(chunk['text'])} | {output if first else ''} |")
-                first = False
-        pinned = [c for c in r["retrieval"]["chunks"] if c["score"] == "pinned"]
-        for chunk in pinned:
-            lines.append(f"| always included | **{chunk['id']}** (pinned)<br>{_cell(chunk['text'])} | |")
-        lines += ["", "### Critic loop", ""]
+        cited = _sources(r["rounds"][-1]["draft"]) or [("", "(none cited)")]
+        for i, (note, line) in enumerate(cited):
+            where = f"**{note}**<br>" if note else ""
+            lines.append(f"| {loaded if i == 0 else ''} | {where}{_cell(line)} | {output if i == 0 else ''} |")
+        lines += ["", f"### Critic loop (`{r['critic']}`)", ""]
         for x in r["rounds"]:
             lines += [f"**Round {x['round']} draft:** {_draft_text(x['draft'])}", ""]
             issues = x["code_issues"] + x["critic_issues"]
@@ -231,7 +214,16 @@ def select_items(only: list[str] | None):
                 yield type_id, item
 
 
-def cmd_generate(args, index, chunks, move_names):
+def agent_summary(agents: dict) -> dict:
+    writes = {}
+    for ctype in CONTENT_TYPES.values():
+        writes.setdefault(ctype["writer"], []).append(ctype["title"])
+    return {agent: {"role": "Critic: checks every draft" if agent == CRITIC else "Writer: " + ", ".join(writes[agent]),
+                    "notes": [n.id for n in notes], "chars": sum(len(n.text) for n in notes)}
+            for agent, notes in agents.items()}
+
+
+def cmd_generate(args, agents, move_names):
     run_dir = RUNS / args.run
     run_dir.mkdir(parents=True, exist_ok=True)
     llm = LLM(run_dir / "llm-calls.json", replay=args.replay)
@@ -246,7 +238,7 @@ def cmd_generate(args, index, chunks, move_names):
         raise SystemExit("Nothing matched --only. Use a type id or a piece id from content.py.")
     for type_id, item, seeded in work:
         print(f"  {item['label']}")
-        results.append(run_item(llm, index, move_names, type_id, item, args, seeded_draft=seeded))
+        results.append(run_item(llm, agents, move_names, type_id, item, args, seeded_draft=seeded))
 
     validation = write_outputs(results, run_dir / "output")
     kept = False
@@ -254,8 +246,8 @@ def cmd_generate(args, index, chunks, move_names):
         recorded = recorded_validation(run_dir / "trace.json", results)
         if recorded:
             skipped, validation, kept = validation.get("reason", ""), recorded, True
-    meta = {"run": args.run, "command": args.command, "retrieval": args.retrieval, "gen_model": args.gen_model,
-            "critic_model": args.critic_model, "chunks": len(chunks), "notes": len({c.note for c in chunks})}
+    meta = {"run": args.run, "command": args.command, "writer_model": args.writer_model,
+            "critic_model": args.critic_model, "agents": agent_summary(agents)}
     (run_dir / "trace.json").write_text(json.dumps({"meta": meta, "validation": validation, "results": results},
                                                    indent=2, ensure_ascii=False), encoding="utf-8")
     (run_dir / "trace.md").write_text(render_trace(meta, results, validation), encoding="utf-8")
@@ -273,10 +265,12 @@ def cmd_generate(args, index, chunks, move_names):
     return 0 if passed == len(results) and validation.get("ok", True) else 1
 
 
-def cmd_retrieve(args, index):
-    for chunk, score in index.search(args.query, k=args.k, scope=args.scope):
-        print(f"{score:>7}  {chunk.id}")
-        print("         " + chunk.text[:160].replace("\n", " ") + "...")
+def cmd_notes(agents):
+    for agent, info in agent_summary(agents).items():
+        print(f"{agent}  ({info['role']})")
+        for note in agents[agent]:
+            print(f"    vault/{note.id:<34} {len(note.text):>6,} characters")
+        print(f"    {'total':<40} {info['chars']:>6,} characters\n")
     return 0
 
 
@@ -287,28 +281,22 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("generate", "critic-test"):
         p = sub.add_parser(name)
-        p.add_argument("--retrieval", choices=["v1", "v2"], default="v2")
         p.add_argument("--run", help="run folder name under runs/ (default depends on the command)")
         p.add_argument("--only", nargs="*", help="content type ids or piece ids")
-        p.add_argument("--gen-model", default="sonnet")
+        p.add_argument("--writer-model", default="sonnet")
         p.add_argument("--critic-model", default="opus")
         p.add_argument("--max-rounds", type=int, default=3, help="drafts per piece, including the first")
         p.add_argument("--replay", action="store_true", help="use the run's recorded model calls; call nothing")
-    p = sub.add_parser("retrieve")
-    p.add_argument("query")
-    p.add_argument("-k", type=int, default=4)
-    p.add_argument("--scope", help="chunk id prefix, e.g. 01-vibe/Tone.md")
+    sub.add_parser("notes")
     args = parser.parse_args()
 
-    chunks = load_vault(VAULT)
-    index = VaultIndex(chunks)
-    if args.command == "retrieve":
-        return cmd_retrieve(args, index)
+    agents = load_agents()
+    if args.command == "notes":
+        return cmd_notes(agents)
     if not args.run:
-        args.run = "critic-seeded-faults" if args.command == "critic-test" else f"{args.retrieval}-" + (
-            "single-query" if args.retrieval == "v1" else "planned-retrieval")
-    print(f"Vault: {len(chunks)} chunks. Run: {args.run}")
-    return cmd_generate(args, index, chunks, ability_names(VAULT))
+        args.run = "critic-seeded-faults" if args.command == "critic-test" else "whole-notes"
+    print(f"Agents: {', '.join(agents)}. Run: {args.run}")
+    return cmd_generate(args, agents, ability_names(VAULT))
 
 
 if __name__ == "__main__":

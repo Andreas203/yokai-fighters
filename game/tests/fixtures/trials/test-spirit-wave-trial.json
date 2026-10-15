@@ -1,0 +1,21 @@
+{
+  "kind": "trial",
+  "id": "test-spirit-wave-trial",
+  "status": "proposed",
+  "special": "test-spirit-wave",
+  "prompt": "Hit the dummy with Spirit Wave at mid range, then anti-air its jump with Rising Talisman.",
+  "attempts": 3,
+  "setup": {
+    "distance": 600,
+    "attempt_frames": 600,
+    "dummy": { "action": "jump", "every": 90 }
+  },
+  "goal": {
+    "steps": [
+      { "event": "hit", "move": "test-spirit-wave", "dummy_state": "grounded", "distance": { "min": 400, "max": 900 } },
+      { "event": "hit", "move": "test-rising-talisman", "dummy_state": "airborne" }
+    ]
+  },
+  "rules": ["R7", "K2"],
+  "notes": "TEST FIXTURE (YOK-105): the GDD's sample Spirit Wave trial on the fixture specials; made-up distances and timing. Real trials are movesmith's (YOK-98) in data/trials/; never copy this there."
+}

@@ -161,9 +161,9 @@ public static class SaveTests
 		string extra = """
 			{ "version": 2, "coins": 75,
 			  "run": { "seed": 9, "map": "default-map", "visited": [], "health": 1000, "coins": 50, "copy_lock": { "slot": "A" },
-			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "borrowed": true } ], "merchant": "heal" },
+			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "ink": "grey" } ], "merchant": "heal" },
 			  "unlocks": [], "story": { "seen": [], "tanuki": 2 }, "carry": { "special": "foxfire" } }
-			""";
+			""".Replace("\"version\": 2", Current); // this build's version, with fields it does not know
 		SaveLoad load = SaveStore.Parse(extra);
 		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "unknown fields are not a problem: " + string.Join("; ", load.Problems));
 		var run = load.Data.Run!;

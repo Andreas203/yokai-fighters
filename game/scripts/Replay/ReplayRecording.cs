@@ -45,6 +45,12 @@ public sealed class FighterSetup
 	public List<KitEntry> Moves { get; set; } = new();
 	public List<SpecialEntry> Specials { get; set; } = new();
 	public List<CancelEntry> CancelRules { get; set; } = new();
+	/// <summary>
+	/// YOK-94: <see cref="Fighter.CopiedSlot"/> (1-4 = slot A-D), what the AI's <c>special:copied</c> presses. Left out
+	/// of the file when 0 (no copy), so a recording made before the field existed reads as none and still replays.
+	/// </summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public int CopiedSlot { get; set; }
 }
 
 /// <summary>P2's AI as built: profile (with fingerprint), reaction frames (Y4) and seed. Null = devices/recorded input.</summary>

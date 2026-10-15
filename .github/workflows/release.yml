@@ -1,0 +1,95 @@
+name: release
+# Push a tag like demo-v0.2 → Windows build + headless tests → a DRAFT GitHub release with the zip attached.
+# The designer reads the test line in the notes and publishes (or deletes) the draft; nothing ships on its own.
+# Run it by hand (Actions → release → Run workflow) to get the zip as a workflow artifact without a release.
+on:
+  push:
+    tags: ["demo-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT_DIR: ${{ github.workspace }}/.godot-bin
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache Godot and export templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.GODOT_DIR }}
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable.mono
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux
+
+      - name: Download Godot and export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+          mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+          curl -fsSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_mono_export_templates.tpz"
+          tpl=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable.mono
+          mkdir -p "$tpl" && unzip -q templates.tpz -d tpz
+          mv tpz/templates/* "$tpl"/ && rm -rf tpz templates.tpz
+
+      - name: Locate Godot
+        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Build and import
+        working-directory: game
+        run: |
+          dotnet build
+          "$GODOT" --headless --path . --import
+
+      - name: Headless tests
+        id: tests
+        working-directory: game
+        run: |
+          set +e
+          "$GODOT" --headless --path . res://tests/test_runner.tscn > ../test-output.log 2>&1
+          code=$?
+          set -e
+          summary=$(grep '^TESTS ' ../test-output.log | tail -1)
+          echo "summary=${summary:-TESTS did not finish (exit $code)}" >> "$GITHUB_OUTPUT"
+          { echo "### ${summary:-Tests did not finish (exit $code)}"; grep '^FAIL ' ../test-output.log | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+          grep '^FAIL ' ../test-output.log > ../test-failures.txt || true
+
+      - name: Export Windows build
+        run: bash tools/export-windows.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YokaiFighters-Demo-Windows
+          path: |
+            build/YokaiFighters-Demo-Windows.zip
+            test-output.log
+
+      - name: Draft the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TESTS: ${{ steps.tests.outputs.summary }}
+        run: |
+          {
+            echo "**${TESTS}** (headless runner, Linux CI)"
+            if [ -s test-failures.txt ]; then echo; echo '<details><summary>Failing tests</summary>'; echo; sed 's/^/- /' test-failures.txt; echo; echo '</details>'; fi
+            echo
+            echo "SHA-256 \`$(sha256sum build/YokaiFighters-Demo-Windows.zip | cut -d' ' -f1)\`"
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" build/YokaiFighters-Demo-Windows.zip \
+            --draft --verify-tag --title "Yokai Fighters ${GITHUB_REF_NAME}" \
+            --notes-file notes.md --generate-notes

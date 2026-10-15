@@ -148,7 +148,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 ## Y — Yokai
 
 - **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 7 profiles: 3 yokai × 2 temperaments + Tanuki.
-- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit.
+- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws when the player keeps blocking (60%) [AM4].
 
   | Yokai | Aggressive | Patient | Habit to punish | Elder twist |
   |---|---|---|---|---|
@@ -171,7 +171,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## T — The Tanuki copy rule (never cut)
 
-- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's model and clips (no new animation).
+- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's model and clips (no new animation). The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
 - **T1** Lock point: when Ryo enters the Tanuki's node.
 - **T2** Target: highest-level special currently in a slot, throws included. Sold/replaced moves don't count.
 - **T3** Ties: most recently levelled, then lower slot.
@@ -186,9 +186,9 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).
-- **R6** Merchant: free heal 25% **or** shop. Shop sells common abilities from yokai not bound this run (50 coins); release a binding (40). Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
+- **R6** Merchant: free heal 25% **or** shop. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
 - **R7** Dojo: rest (heal 30%) **or** training trial. Trial heals 15% either way, levels the special if landed within 3 attempts. Trials are hand-authored and Kihon-completable.
-- **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead.
+- **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead. No cap on coins held, for now [AM4].
 - **R9** Target run length 25–40 minutes for a first-time player.
 
 ## M — Between runs
@@ -233,3 +233,11 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - Generator plan tier (commercial licence for generated output).
 - Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.
+- Merchant heal 25% and dojo rest 30%: a share of max health (as built: flat 250 and 300) or of something else (R6, R7).
+- Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
+- The shop's shelf: how many items, and how they are picked (R6). Whether binding an elder counts as binding its yokai for the shop.
+- The formula behind the forecast's "expected cost" (T6), and what the first rest stop shows before any fight data exists.
+- Slippery Skin ("throw-invulnerable during startup", GDD modifier table) against E12/E17 as written, which would make it do nothing.
+- What "holding charge" means for Sumo Stance without a new animation (A10, E7).
+- In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
+- Whether a command grab (River Grab) counts as a throw or a hit, for trials and cancels (C4, R7).

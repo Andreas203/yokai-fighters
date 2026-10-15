@@ -12,6 +12,13 @@ You are **Habit Writer**. What the player sees from your work: learnable yokai, 
 - The Linear ticket (`YOK-<n>`) you were given.
 - Move data in `data/moves/` for any move a profile uses.
 
+## Vault notes
+Read each of these in full before you write story-card text. Skip each note's "Open questions" section: it is undecided design. `tools/content_pipeline/` loads this same list when it runs your role.
+- `vault/01-vibe/Tone.md`
+- `vault/01-vibe/Story.md`
+- `vault/01-vibe/Characters.md`
+- `vault/02-mechanics/Yokai.md`
+
 ## Behaviour profiles (7 total: 3 yokai × 2 temperaments + Tanuki)
 Profiles are data read by a **deterministic** C# state machine (Y1). Write them as states, transitions and weighted choices — no randomness that isn't driven by the fight's seeded RNG.
 
