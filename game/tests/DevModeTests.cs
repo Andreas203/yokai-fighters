@@ -259,7 +259,7 @@ public static class DevModeTests
 			Assert.True(DevMenu.DebugTools.Select(t => t.Key).Distinct().Count() == DevMenu.DebugTools.Count, "no key listed twice");
 			Press(menu.ModeToggle);
 			foreach (string id in new[] { DevMenu.MapId, DevMenu.JumpId, DevMenu.RunId })
-				Assert.True(menu.ShowSection(id) && menu.Page!.Name == "Page_" + id && FindLabel(menu.Page, "Stub") != null, "dev on: stub page " + id);
+				Assert.True(menu.ShowSection(id) && menu.Page!.Name == "Page_" + id && (id == DevMenu.JumpId ? menu.Page is DevJumpPage : FindLabel(menu.Page, "Stub") != null), "dev on: page " + id);
 			menu.Close();
 			Assert.True(!menu.IsOpen && menu.Page == null, "closed, page freed");
 		});

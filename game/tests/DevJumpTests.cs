@@ -1,0 +1,382 @@
+using System;
+using System.IO;
+using System.Linq;
+using Godot;
+using YokaiFighters.Dev;
+using YokaiFighters.Fight;
+using YokaiFighters.Flow;
+using YokaiFighters.Sim;
+using YokaiFighters.Ui;
+
+namespace YokaiFighters.Tests;
+
+/// <summary>
+/// YOK-125 dev mode Jump page: every built target opens from the title and the map without errors, greyed targets
+/// refuse with their reason, fight setups reach the fight scene (opponent, temperament, elder, stage, scheme), the
+/// Tanuki's chosen copy is locked on entering its node (T1, AM6), fights start deterministically, jumps are refused
+/// mid-fight or with dev mode off, and a dev jump never writes a save (neither the player's file nor the dev slot).
+/// </summary>
+public static class DevJumpTests
+{
+	static void WithDev(Action body)
+	{
+		DevMode.Configure(new DevModeState(true, true));
+		try { body(); }
+		finally { DevMode.ResetToLaunch(); DevRunStates.Reset(); }
+	}
+
+	static void WithBoot(Node runner, string? saveFile, Action<GameFlow> body)
+	{
+		var saved = FightScene.Sources;
+		var savedRun = FightScene.Run;
+		var savedFoe = FightScene.Opponent;
+		bool savedStage = FightScene.UsePlaceholderStage;
+		FightScene.Sources = FightScene.FixtureSources;
+		FightScene.Run = null;
+		MenuSettings.Reset();
+		var flow = GD.Load<PackedScene>("res://scenes/boot.tscn").Instantiate<GameFlow>();
+		flow.QuitAction = () => { };
+		flow.FixedRunSeed = 91;
+		flow.SaveFile = saveFile;
+		flow.ConfigureFight = f => { f.ExternalDrive = true; f.PauseEnabled = true; f.HeldBitsSource = () => InputBits.None; };
+		var stage = new SubViewport { Size = new Vector2I(1920, 1080), Name = "DevJumpStage" };
+		runner.AddChild(stage);
+		try { stage.AddChild(flow); body(flow); }
+		finally
+		{
+			Shell.Menu.Close();
+			flow.DevScreen?.Finish();
+			runner.RemoveChild(stage);
+			stage.QueueFree();
+			MenuSettings.Reset();
+			FightScene.Sources = saved;
+			FightScene.Run = savedRun;
+			FightScene.Opponent = savedFoe;
+			FightScene.UsePlaceholderStage = savedStage;
+		}
+	}
+
+	static DevShell Shell => DevShell.Instance ?? throw new AssertFailed("the DevShell autoload is missing");
+
+	/// <summary>Opens the dev menu where the flow is (title or map) on the Jump page.</summary>
+	static DevJumpPage OpenJump(GameFlow flow)
+	{
+		Assert.True(flow.OpenDevMenu(), "the dev menu opens on " + flow.Router.Current);
+		Assert.True(Shell.Menu.ShowSection(DevMenu.JumpId) && Shell.Menu.Page is DevJumpPage, "the Jump page");
+		return (DevJumpPage)Shell.Menu.Page!;
+	}
+
+	/// <summary>Back to the title from wherever a jump left the flow.</summary>
+	static void Leave(GameFlow flow)
+	{
+		flow.DevScreen?.Finish();
+		if (flow.Router.Current != Screen.Title) flow.ReturnToTitle();
+		Assert.Equal(Screen.Title, flow.Router.Current, "back on the title");
+	}
+
+	static void CheckOpened(GameFlow flow, DevJumpTarget t)
+	{
+		Assert.True(!Shell.Menu.IsOpen, t.Id + ": the dev menu closed for the jump");
+		switch (t.Kind)
+		{
+			case DevJumpKind.Fight:
+				Assert.True(flow.Router.Current == Screen.Fight && flow.Fight is { } f && f.IsInsideTree() && f.Node.NodeId == DevJump.FightNodeId, t.Id + ": the fight runs the dev node");
+				break;
+			case DevJumpKind.RestStop:
+				Assert.True(flow.Router.Current == Screen.Fight && flow.NodeScene is RestStopScreen { Model: not null } stop
+					&& stop.Model.Kind == (t.Arg == NodeTypeRegistry.Merchant ? RestStopKind.Merchant : RestStopKind.Dojo), t.Id + ": the rest stop is bound to the run");
+				break;
+			default:
+				Assert.True(flow.DevScreen is { IsClosed: false } host && host.Screen.IsInsideTree() && host.Screen.Visible, t.Id + ": the screen shows in the dev viewer");
+				Assert.True(!flow.Title.Visible && !flow.Map.Visible, t.Id + ": the menu underneath is hidden");
+				break;
+		}
+	}
+
+	// ---- the catalog ----
+
+	[Test]
+	public static void Catalog_ListsEveryStoryCardAndTrial_GreysWhatIsNotBuilt()
+	{
+		var targets = DevJump.Targets();
+		Assert.True(targets.Select(t => t.Id).Distinct().Count() == targets.Count, "ids are unique");
+		foreach (var c in DevJump.StoryCards())
+			Assert.True(targets.Any(t => t.Id == "story:" + c.Id && t.Built), "story card listed and built: " + c.Id);
+		foreach (string id in new[] { "intro-soen", "binding-line", "merchant-row4", "first-loss", "lose-early", "boss-reveal", "win-1", "win-2", "win-3" })
+			Assert.True(targets.Any(t => t.Id == "story:" + id), "S3 card listed: " + id);
+		var trials = targets.Where(t => t.Kind == DevJumpKind.Trial).ToList();
+		Assert.True(trials.Count >= 1 && trials.All(t => !t.Built && t.NotBuilt!.Contains(DevJump.NotBuiltYet)), "dojo trials greyed: not built yet (no trial runner on main)");
+		Assert.True(TrialLoader.LoadDirectory(ContentPaths.Data("trials")).All(tr => trials.Any(t => t.Arg == tr.Id)), "one entry per trial in data/trials");
+		foreach (var k in new[] { DevJumpKind.Fight, DevJumpKind.RewardDraft, DevJumpKind.RestStop, DevJumpKind.LoseScreen, DevJumpKind.RunComplete, DevJumpKind.ControlSelect, DevJumpKind.MoveList })
+			Assert.True(targets.Any(t => t.Kind == k && t.Built), "built: " + k);
+		Assert.Equal(2, targets.Count(t => t.Kind == DevJumpKind.RestStop && t.Built), "merchant and dojo");
+
+		var foes = DevJump.Opponents();
+		Assert.True(foes.First(o => o.Yokai == "kitsune").Built && foes.First(o => o.Yokai == DevJump.TanukiId).Built, "Kitsune and Tanuki have fighters");
+		var table = DevJump.Table();
+		foreach (var o in foes.Where(o => DevJump.OpponentIds.Contains(o.Yokai)))
+		{
+			bool standIn = table.Resolve(new MapNodeData("probe", 2, o.Yokai == DevJump.TanukiId ? NodeTypeRegistry.Boss : NodeTypeRegistry.Duel, o.Yokai)).Context.StandIn;
+			Assert.Equal(!standIn, o.Built, o.Yokai + ": built exactly when node-scenes gives it its own fighter");
+		}
+		Assert.True(foes.Any(o => o.Yokai == "human-guises" && !o.Built), "human guises greyed");
+		Assert.Equal(3, DevJump.Elders.Length, "one elder per yokai (Y table)");
+	}
+
+	// ---- every target opens ----
+
+	[Test]
+	public static void EveryBuiltTarget_OpensFromTheTitle_AndFromTheMap(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var built = DevJump.Targets().Where(t => t.Built).ToList();
+		foreach (var t in built)
+		{
+			var page = OpenJump(flow);
+			Assert.True(page.Jump(t.Id), $"{t.Id} from the title: {page.Status}");
+			CheckOpened(flow, t);
+			Leave(flow);
+		}
+		foreach (var t in built)
+		{
+			Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm() && flow.Router.Current == Screen.Map, "a run on the map");
+			var page = OpenJump(flow);
+			Assert.True(page.Jump(t.Id), $"{t.Id} from the map: {page.Status}");
+			CheckOpened(flow, t);
+			if (t.Kind is not (DevJumpKind.Fight or DevJumpKind.RestStop))
+			{
+				flow.DevScreen!.Finish();
+				Assert.True(flow.Router.Current == Screen.Map && flow.Map.Visible && flow.DevScreen == null, t.Id + ": closing the viewer gives the map back");
+			}
+			Leave(flow);
+		}
+	}));
+
+	[Test]
+	public static void GreyedTargets_Refuse_WithTheirReason(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		foreach (var t in DevJump.Targets().Where(t => !t.Built))
+		{
+			var page = OpenJump(flow);
+			Assert.True(page.TargetButtons[t.Id].Disabled, t.Id + ": its button is disabled");
+			Assert.True(!page.Jump(t.Id) && page.Status.Contains(DevJump.NotBuiltYet), t.Id + ": refused: " + page.Status);
+			Assert.True(flow.Router.Current == Screen.Title && flow.DevScreen == null && Shell.Menu.IsOpen, t.Id + ": nothing opened");
+			Shell.Menu.Close();
+		}
+	}));
+
+	[Test]
+	public static void ViewerScreens_FinishOnTheirOwnDoneEvents(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var fight = new DevFightSetup();
+		var draft = new DevDraftSetup();
+		bool Open(string id) => DevJumpPage.Perform(flow, DevJump.Targets().First(t => t.Id == id), fight, draft, null, out _);
+
+		Assert.True(Open("story:binding-line") && flow.DevScreen!.Screen is StoryCard, "binding card");
+		var card = (StoryCard)flow.DevScreen!.Screen;
+		Assert.True(card.Showing && card.Text.Contains("Kitsune"), "filled with the yokai: " + card.Text);
+		card.Continue();
+		Assert.True(flow.DevScreen == null && flow.Title.Visible, "Continue closes the viewer");
+		Assert.True(Open("results-lose") && flow.DevScreen!.Screen is LoseScreen, "lose screen");
+		((LoseScreen)flow.DevScreen!.Screen).Restart.EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.True(flow.DevScreen == null, "Restart closes it");
+		Assert.True(Open("reward-draft") && flow.DevScreen!.Screen is RewardScreen rewards && rewards.Showing, "reward draft");
+		Assert.True(!Open("move-list"), "one viewer at a time");
+		flow.DevScreen!.CloseButton.EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.True(flow.DevScreen == null && flow.Title.Visible, "Close gives the title back");
+	}));
+
+	// ---- fight setup ----
+
+	[Test]
+	public static void FightSetup_ReachesTheFight_OpponentTemperamentElderStageScheme(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var foe in DevJump.Opponents().Where(o => o.Built))
+			foreach (bool elder in DevJump.ElderOf(foe.Yokai) is null ? new[] { false } : new[] { false, true })
+			{
+				var probe = new DevFightSetup(foe.Yokai, Elder: elder);
+				foreach (string temp in DevJump.Temperaments(DevJump.FighterOf(probe)))
+					foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
+					{
+						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Grove };
+						var jump = DevJump.BuildFight(setup, pool);
+						string what = $"{foe.Yokai} elder={elder} {temp} {scheme}";
+						Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, scheme, setup.Stage).Ok, what + ": started");
+						var f = flow.Fight!;
+						Assert.Equal(DevJump.FighterOf(setup), FightScene.Opponent, what + ": opponent fighter");
+						Assert.Equal(temp, f.Temperament, what + ": temperament");
+						Assert.Equal(scheme, f.SchemeOf(0), what + ": P1 scheme");
+						Assert.Equal(elder, f.Node.Elder, what + ": elder node");
+						string type = foe.Yokai == DevJump.TanukiId ? NodeTypeRegistry.Boss : elder ? NodeTypeRegistry.ElderDuel : NodeTypeRegistry.Duel;
+						Assert.Equal(type, f.Node.Type, what + ": node type");
+						bool groveThere = BambooGroveStage.AssetsPresent(FightScene.StageDir);
+						Assert.Equal(setup.Stage == DevStage.Grove && groveThere ? FightScene.GroveScene : FightScene.PlaceholderScene, f.StageRoot.SceneFilePath, what + ": stage");
+						flow.ReturnToTitle();
+					}
+			}
+		Assert.True(!FightScene.UsePlaceholderStage || OS.GetCmdlineUserArgs().Contains("--stage=placeholder"), "the stage choice does not outlive the jump");
+	}));
+
+	[Test]
+	public static void BuildFight_RefusesUnknownOpponentsAndElderlessElders()
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var bad in new[] { new DevFightSetup("nue"), new DevFightSetup(DevJump.TanukiId, Elder: true) })
+		{
+			bool threw = false;
+			try { DevJump.BuildFight(bad, pool); } catch (ArgumentException) { threw = true; }
+			Assert.True(threw, $"refused: {bad.Opponent} elder={bad.Elder}");
+		}
+	}
+
+	// ---- the Tanuki's copy (T1-T4, AM6) ----
+
+	[Test]
+	public static void ShapeCopy_MakesTheChosenSpecialAndLevelTheTarget_ForEverySpecial()
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var s in pool.Specials)
+			for (int lv = 1; lv <= Math.Min(3, s.MaxLevel); lv++)
+			{
+				var run = RunState.NewRun(pool);
+				var t = DevJump.ShapeCopy(run, pool, s.Id, lv);
+				Assert.True(t.Data.Id == s.Id && t.Level == lv && t.Slot == s.Slot, $"{s.Id} Lv {lv}: target");
+				Assert.True(CopyRule.Target(run) == t, $"{s.Id} Lv {lv}: the copy rule agrees");
+				Assert.Equal(Math.Min(lv, CopyRule.HighestUnevolvedLevel), t.MoveLevel, $"{s.Id} Lv {lv}: T4 move level");
+			}
+		// From a run already past the chosen level.
+		var starter = pool.Starters.First();
+		var high = RunState.NewRun(pool);
+		while (high.CanLevelUp(starter.Slot)) high.LevelUp(starter.Slot);
+		Assert.True(DevJump.ShapeCopy(high, pool, starter.Id, 1) is { Level: 1 } low && low.Data.Id == starter.Id, "a special above the chosen level comes back down");
+	}
+
+	[Test]
+	public static void TanukiJump_LocksTheChosenCopy_AndTheHudShowsItLocked(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var s in pool.Specials)
+		{
+			int lv = Math.Min(2, s.MaxLevel);
+			var setup = new DevFightSetup(DevJump.TanukiId, CopySpecial: s.Id, CopyLevel: lv);
+			var jump = DevJump.BuildFight(setup, pool);
+			Assert.True(!jump.Session.CopyLocked, s.Id + ": nothing is locked before the Tanuki's node (T1)");
+			Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, setup.Scheme).Ok, s.Id + ": Tanuki fight");
+			Assert.True(jump.Session.CopyLocked && jump.Session.LockedCopy is { } c && c.Data.Id == s.Id && c.Level == lv, s.Id + ": locked on entering (T1)");
+			var hud = flow.Fight!.GetNode<FightHud>("Hud");
+			hud.Refresh(flow.Fight.Match);
+			Assert.True(hud.CopyTarget.Visible && hud.CopyTarget.State == CopyTalismanState.Locked, s.Id + ": the HUD shows the copy locked (AM6)");
+			flow.ReturnToTitle();
+		}
+		// A yokai fight never shows the talisman (AM6).
+		var duel = DevJump.BuildFight(new DevFightSetup("kitsune"), pool);
+		Assert.True(flow.StartDevRun(duel.Session, duel.NodeId, ControlScheme.Kihon).Ok, "kitsune fight");
+		var h = flow.Fight!.GetNode<FightHud>("Hud");
+		h.Refresh(flow.Fight.Match);
+		Assert.True(!h.CopyTarget.Visible, "no talisman in a yokai fight");
+	}));
+
+	// ---- determinism ----
+
+	[Test]
+	public static void DevFights_StartDeterministically(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var setup in new[]
+		{
+			new DevFightSetup("kitsune", "aggressive", Seed: 7),
+			new DevFightSetup("kitsune", "patient", Elder: true, Scheme: ControlScheme.Kata),
+			new DevFightSetup(DevJump.TanukiId, CopySpecial: pool.Starters.First().Id, CopyLevel: 2),
+		})
+		{
+			ulong Run()
+			{
+				var jump = DevJump.BuildFight(setup, pool);
+				Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, setup.Scheme, setup.Stage).Ok, "started");
+				var f = flow.Fight!;
+				ulong start = f.Match.StateHash() ^ jump.Session.StateHash();
+				var rng = new SimRng(3);
+				for (int t = 0; t < 600; t++) f.StepWithAi(new FighterInput((InputBits)(rng.Next(1 << 10))));
+				ulong end = f.Match.StateHash();
+				flow.ReturnToTitle();
+				return start * 31 + end;
+			}
+			Assert.Equal(Run(), Run(), $"{setup.Opponent}: same setup, same inputs, same fight");
+		}
+	}));
+
+	// ---- refusals and saves ----
+
+	[Test]
+	public static void Jumps_RefusedMidFightAndWithDevModeOff(Node runner) => WithBoot(runner, null, flow =>
+	{
+		WithDev(() =>
+		{
+			var page = new DevJumpPage(new DevContext(DevPlace.Fight, flow));
+			Assert.True(!page.Jump("fight") && page.Status.Contains(DevContext.MidFightReason), "mid-fight: refused");
+			Assert.True(flow.Router.Current == Screen.Title && flow.DevScreen == null, "nothing happened");
+			page.QueueFree();
+			var lone = new DevJumpPage(new DevContext(DevPlace.Title));
+			Assert.True(!lone.Jump("move-list") && lone.Status.Contains(DevJumpPage.ReasonNoFlow), "no flow: refused");
+			lone.QueueFree();
+		});
+		DevMode.Configure(new DevModeState(true, false));
+		try
+		{
+			var off = new DevJumpPage(new DevContext(DevPlace.Title, flow));
+			Assert.True(!off.Jump("fight") && off.Status.Contains(DevContext.DevOffReason), "dev off: refused");
+			off.QueueFree();
+		}
+		finally { DevMode.ResetToLaunch(); }
+	});
+
+	[Test]
+	public static void DevJumps_NeverWriteASave_PlayerFileOrDevSlot(Node runner)
+	{
+		string dir = Path.Combine(Path.GetTempPath(), "yokai-devjump-" + Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(dir);
+		try
+		{
+			string player = Path.Combine(dir, "progress.json"), dev = DevMode.SavePathFor(player);
+			const string playerText = "{ \"version\": 3, \"run\": null, \"unlocks\": [\"player-only-unlock\"], \"story\": { \"seen\": [] } }";
+			File.WriteAllText(player, playerText);
+			DateTime stamp = File.GetLastWriteTimeUtc(player);
+			WithDev(() => WithBoot(runner, player, flow =>
+			{
+				Assert.Equal(dev, flow.Saves!.Path, "dev mode is on the dev slot");
+				foreach (string id in new[] { "fight", "rest-merchant", "rest-dojo" })
+				{
+					var page = OpenJump(flow);
+					Assert.True(page.Jump(id), id + ": " + page.Status);
+					var s = flow.Session!;
+					if (id == "fight") { s.LoseFight(); }
+					else { Assert.True(s.CompleteNode().Ok && flow.Router.Current == Screen.Map, id + ": left the stop, on the map"); }
+					Leave(flow);
+				}
+			}));
+			Assert.Equal(playerText, File.ReadAllText(player), "the player's file is untouched");
+			Assert.Equal(stamp, File.GetLastWriteTimeUtc(player), "and not rewritten");
+			Assert.True(!File.Exists(dev), "no dev-jump session reaches the dev slot either");
+		}
+		finally { try { Directory.Delete(dir, true); } catch (IOException) { } }
+	}
+
+	// ---- reward draft ----
+
+	[Test]
+	public static void RewardDraft_IsSeeded_AndTheRaritySpreadDecidesRares()
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (string yokai in DevJump.DraftYokai(pool))
+		{
+			string Ids(uint seed, bool rares) => string.Join(",", DevJump.BuildDraft(pool, yokai, seed, rares).Draft.Offer.Cards.Select(c => c.Kind + ":" + c.AbilityId));
+			for (uint seed = 0; seed < 8; seed++) Assert.Equal(Ids(seed, false), Ids(seed, false), $"{yokai} seed {seed}: same draft");
+			bool Rare(string id) => pool.Special(id)?.Rarity == "rare" || pool.Modifier(id)?.Rarity == "rare";
+			for (uint seed = 0; seed < 32; seed++)
+				Assert.True(DevJump.BuildDraft(pool, yokai, seed, false).Draft.Offer.Cards.All(c => c.AbilityId is null || !Rare(c.AbilityId)), $"{yokai} seed {seed}: a duel's spread offers no rare (A9)");
+			bool hasRare = pool.Specials.Any(s => s.Source == yokai && s.Rarity == "rare" && !s.Locked && !s.Starter);
+			if (hasRare)
+				Assert.True(Enumerable.Range(0, 64).Any(seed => DevJump.BuildDraft(pool, yokai, (uint)seed, true).Draft.Offer.Cards.Any(c => c.AbilityId is { } id && Rare(id))), $"{yokai}: the elder's spread can offer its rare");
+		}
+	}
+}

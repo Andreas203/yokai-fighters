@@ -470,6 +470,7 @@ public partial class GameFlow : Node
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
 			ConfigureFight?.Invoke(fight);
+			ApplyDevStage(fight); // YOK-125: a dev jump's stage choice
 			Fight = fight;
 		}
 		else if (scene is INodeScene other)
