@@ -20,6 +20,7 @@ public static class AbilityArtProbes
 		{
 			foreach (var v in new[] { id.ToUpperInvariant(), " " + id, id + "\t", id + "\n", id.Replace('-', '_'), id.Replace('-', ' '), "​" + id, " ", "\t" })
 			{
+				if (v == id) continue; // replace was a no-op
 				Assert.True(!AbilityArt.Has(v), "no art for variant '" + v + "'");
 				Assert.True(AbilityArt.ForId(v) == AbilityArt.Fallback, "fallback for variant '" + v + "'");
 			}
