@@ -3,10 +3,10 @@
 Ticket: YOK-116. Owner: rig-specialist. Rules: F5, F6, G4, T0, AM5. Diagnosis: `assets/specs/ryo-regen.md` §1–2.
 Designer's choice: try a free Blender weight repair on the current rig before any regeneration spend. **No Meshy, Tripo or AccuRIG job was run. 0 credits spent.**
 
-**Verdict: ACCEPT (repair reaches WARN). Swapping it into the game is the designer's call, and it has not been done.** The regeneration in `ryo-regen.md` stays available if the designer wants the outfit fixed as well.
+**Verdict: ACCEPT (repair reaches WARN). Swapped in on 2026-10-15 with the designer's approval, and there will be no regeneration.** `ryo-regen.md` is kept on file as not needed. `game/assets/generated/characters/ryo/ryo-rigged.glb` is now the repaired file (sha256 `38b14f62…`). The raw take-2 rig is in git history at `fe5d423`.
 
 ## What was done
-- Script: `tools/blender/repair_weights.py`. It runs headless and logs every step. Input is the raw `game/assets/generated/characters/ryo/ryo-rigged.glb` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`, sha256 `6cd871a4…`), which is never written.
+- Script: `tools/blender/repair_weights.py`. It runs headless and logs every step. Input is the raw take-2 rig, `ryo-rigged.glb` as of `fe5d423` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`, sha256 `6cd871a4…`). The script never writes its input.
 - It changes only the `JOINTS_0`/`WEIGHTS_0` bytes in a copy of the GLB. Mesh, UVs, normals, texture, skeleton, skin order, inverse bind matrices and the bundled clip are byte-identical: all 48,045 changed bytes fall inside those two buffer views.
 - It only works in the pelvis band, from z 0.668 to 1.089 m (3,273 of 17,714 verts). Every other vert keeps its exact original slots.
 - Steps:
@@ -14,7 +14,8 @@ Designer's choice: try a free Blender weight repair on the current rig before an
   2. Laplacian-smooth the Hips/UpLeg columns for 20 iterations, keeping their per-vert total.
   3. Separate the two sides, so each half of the fused crotch follows its own leg. The two sides blend over ±5 cm at the midline.
   4. Fade UpLeg weight out above the hip joint and give it to Hips. At the front it fades from 0 to 8 cm above the joint, at the back from 3 to 12 cm.
-  5. Prune weights under 0.01, keep at most 4 influences, and normalise.
+  5. Optional prop step, off by default (see "Charm, pouch and sash").
+  6. Prune weights under 0.01, keep at most 4 influences, and normalise.
 - Net change: Hips +758, LeftUpLeg −456, RightUpLeg −302 (summed vert weights).
 - Deterministic: two runs give the same output, sha256 `38b14f62…`.
 - Tried and dropped:
@@ -22,10 +23,11 @@ Designer's choice: try a free Blender weight repair on the current rig before an
   - Giving the crotch midline to Hips tore the crouch (113 edges).
   - Smoothing again after the fade re-spread the UpLeg weight and tore the hip crease.
 
-Reproduce:
+Reproduce from the raw rig (the script refuses to overwrite its input):
 ```
+git show fe5d423:game/assets/generated/characters/ryo/ryo-rigged.glb > <dir>/ryo-rigged.take2-raw.glb
 Blender -b --python tools/blender/repair_weights.py -- \
-  --in game/assets/generated/characters/ryo/ryo-rigged.glb --out <dir>/ryo-rigged-repaired.glb --log <dir>/repair_log.json
+  --in <dir>/ryo-rigged.take2-raw.glb --out game/assets/generated/characters/ryo/ryo-rigged.glb --log <dir>/repair_log.json
 ```
 
 ## Rig check, before and after
@@ -67,27 +69,39 @@ What the stills show:
   4. In `ryo-grab-2` frame 40 the sash sits slightly lower at the front and half covers the paper strip.
 - No new tears at the wrists, shoulders or head. Those weights are untouched.
 
-Stills and raw reports are kept outside the repo. Each `*_compare.png` sheet has before on top, after below, in front, side and pelvis close-up views.
-- Compare sheets: `/private/tmp/claude-501/-Users-whash-yokai-fighters/da2b5d58-deeb-4eb6-a182-300c22b991dc/scratchpad/ryo-repair/compare/`
-- Rig check reports: `…/ryo-repair/before/report.json`, `…/ryo-repair/after/report.json`
-- Clip report: `…/ryo-repair/clips/clip_report.json`
-- Repaired GLB: `…/ryo-repair/after/ryo-rigged-repaired.glb`
+Stills are in `assets/specs/rigs/stills/`. Each sheet has before on top and after below, in front, side and pelvis close-up views:
+- `ryo-repair-deep-crouch.png` and `ryo-repair-high-kick.png`: the stress poses.
+- `ryo-repair-clip-crouch-f107.png`, `-hk-f026`, `-grab-2-f040`, `-get-up-f019` and `-block-low-f013`: Ryo's clips.
 
-On acceptance, copy the sheets to `assets/specs/rigs/stills/ryo-repair-*.png`.
+## Charm, pouch and sash (YOK-110 cloth pass re-check)
+The cloth pass (`assets/specs/rigs/cloth/ryo.md`, YOK-110 branch) found the lightning paper charm and the pouch at the front of the hip weighted to the thighs. The rig plan wants them rigid on `Hips`. They are not separate parts: they are painted onto the one body mesh, which has only 3 islands, and they sit across the hip crease (z 0.84–0.96 m; the hip joint is at 0.862). I found them by base colour in the pelvis band:
+- Light charm and pouch: 275 verts.
+- Persimmon rope sash: 250 verts.
+
+| Set | Take-2 raw rig | Accepted repair (in game) |
+|---|---|---|
+| Charm + pouch (275 verts) | `Hips` mean 0.27; UpLeg mean 0.69; 266 verts thigh-dominant | `Hips` mean 0.67; UpLeg mean 0.29; 95 verts thigh-dominant |
+| Rope sash (250 verts) | `Hips` mean 0.32; UpLeg mean 0.61; 151 thigh-dominant | `Hips` mean 0.70; UpLeg mean 0.23; 62 thigh-dominant |
+
+The upper parts of the charm, pouch and sash are now on `Hips`. **They are not rigid.** The parts below about 5 cm above the hip joint still follow the thighs.
+
+A full rigid bind was tried as step 4 of the script (`--set prop_bind=1`). It sets UpLeg to 0 on each colour patch of 20 or more verts and blends into the body over 3–16 edge rings. Every variant FAILED the deep crouch with 87–198 failing edges and up to 19x stretch, and the kick rose to 31–67 edges. Binding only the parts above the joint failed as well (107–198). A painted patch that crosses the crease cannot stay rigid while the cloth under it bends with the thigh: it either tears or clips.
+
+What's left:
+- The lower charm, pouch and rope ends still move with the thighs. In the stills this reads as the charm and pouch tilting with the leg, with no tear.
+- A true rigid bind needs the props as separate geometry on `Hips`, with the body painted plain under them. That is a mesh edit, so an asset-smith or modelling task.
+- It is listed below as an open point and is not done here.
 
 ## Godot check
 The repaired GLB was imported headless in Godot 4.7.2 mono, in a scratch project. It loads with 1 `Skeleton3D` of 24 bones, 1 skinned `MeshInstance3D` with 17,714 verts, and the bundled animation.
 
-## How it would replace the game asset (designer's call, not done)
-1. Regenerate the GLB with the command above, straight to `game/assets/generated/characters/ryo/ryo-rigged.glb`. Keep the old file as `ryo-rigged.take2-raw.glb` outside `game/`, or rely on git history.
-2. Keep the filename and the `.import` file, with uid `uid://dnphawusyrft0`. Then `game/scenes/fighters/ryo.tscn` and `FighterAnimSet.cs` (`ModelPath`) need no edit, and Godot re-imports on the next open.
-3. Clips need no rework. The skeleton, rest pose and bone heads are identical, so all 26 `data/clips/ryo-*.json` matches, the frame data and the hurtboxes stand. The clip GLBs carry their own copies of the old skin, but the game draws Ryo from `ryo-rigged.glb`.
-4. Re-check once in engine: a capture of the crouch, kick and throw for `docs/screenshots/current/`, and the game suite.
-5. T0: the Tanuki fights in this rig, so it gets the fix too.
-6. Update `assets/specs/rigs/ryo.md` (YOK-111 branch). Put the repaired file in its Rig table, replace "Stress poses (pending)" with this check, and add a row to Takes: "weight repair (script), 0 credits".
+## Swap (done 2026-10-15)
+1. The repaired GLB was regenerated from the raw rig straight onto `game/assets/generated/characters/ryo/ryo-rigged.glb` (sha256 `38b14f62…`, the same as the reviewed file). The filename and the `.import` file (uid `uid://dnphawusyrft0`) are unchanged, so `ryo.tscn` and `FighterAnimSet.cs` need no edit.
+2. Re-imported with `godot --headless --path game --import` (Godot 4.7.2 mono), exit 0, `ryo-rigged.glb` re-imported. A headless load of `res://assets/generated/characters/ryo/ryo-rigged.glb` gives 1 `Skeleton3D` with 24 bones, 1 skinned mesh with 17,714 verts, and its animation. The import log's theme errors (`rice-sheet.png`, `rice-card.png`) come from the fresh `.godot` cache and have nothing to do with this file.
+3. Clips, frame data and hurtboxes carry over: the skeleton, rest pose and bone heads are identical. T0: the Tanuki fights in this rig and gets the fix too.
+4. Still to do: run the game suite (coordinator) and take an in-engine capture for `docs/screenshots/current/`. `assets/specs/rigs/ryo.md` (YOK-111 branch) gets the repaired file and a Takes row, "weight repair (script), 0 credits", when the two branches meet.
 
 ## Open points for the designer
-- Approve or decline the swap into `game/`.
-- Whether to still spend on the regeneration in `ryo-regen.md`. The repair fixes the rig gate, not the outfit (loose trouser folds, hip-height coat panel).
+- Charm, pouch and sash: only partly freed from the thighs (see above). A rigid bind needs a separate-mesh prop edit.
 - The arm raise and grab WARNs at the shoulders are outside this repair. They are the same as before.
 - The `rig_check.py` volume metric depends on which verts are mostly weighted to `Hips`. A weight repair changes that set, so both numbers are given above. The rule could fix the vert set at rest in a later YOK-110 revision.

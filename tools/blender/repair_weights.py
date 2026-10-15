@@ -31,7 +31,14 @@ outside the band keep their exact original joint/weight slots.
   3. falloff - UpLeg weight fades out above the hip joint (front y < 0: upleg_z + front_lo to
                + front_hi; back/seat: back_lo to back_hi); the removed weight goes to Hips, so
                the belly, sash and coat panel stop being dragged by the thighs.
-  4. tidy    - drop influences under min_weight, keep the 4 largest, normalise to 1.
+  4. props   - OFF by default (prop_bind=0). When on, the charm, pouch and rope sash (painted parts of the one body mesh, found by
+               base colour in the band: light paper/pouch, persimmon rope; patches of at least
+               prop_min_verts) are set rigid to Hips 1.0 and blended into the body over
+               prop_rings edge rings, as the rig plan bakes them (YOK-110 cloth pass found them
+               weighted to the thighs). On Ryo every variant tore the deep crouch (87-198
+               failing edges): the props are painted onto the body surface across the hip
+               crease, so a rigid patch there must tear or clip. Kept for a separate-mesh take.
+  5. tidy    - drop influences under min_weight, keep the 4 largest, normalise to 1.
 Tried and dropped (YOK-116 runs): a narrow side band (1.2 cm) tore the crotch in the kick (10x
 stretch); giving the crotch midline to Hips tore it in the crouch; smoothing again after the
 falloff re-spread the UpLeg weight and tore the hip crease.
@@ -62,6 +69,12 @@ PARAMS = {
     "falloff_front_hi_m": 0.08,  # ... to zero at upleg_z + hi (front, y < 0)
     "falloff_back_lo_m": 0.03,
     "falloff_back_hi_m": 0.12,
+    "prop_bind": 0,              # 1 = run step 4 (off: it fails the crouch on Ryo, see note)
+    "prop_light_min": 0.55,      # charm / pouch: base colour brighter than this ...
+    "prop_light_max_chroma": 0.25,  # ... and nearly grey
+    "prop_z_lo_m": -0.03,        # props searched from upleg_z + this up to the band top
+    "prop_min_verts": 20,
+    "prop_rings": 6,
     "min_weight": 0.01,
     "max_influences": 4,
     "torso_fix": 0,             # 1 = run the torso steps T1-T5 (off for Ryo)
@@ -189,7 +202,20 @@ def world_rest(path):
     m = np.array(mesh.matrix_world)
     co = co @ m[:3, :3].T + m[:3, 3]
     heads = {pb.name: np.array(arm.matrix_world @ pb.head) for pb in arm.pose.bones}
-    return co, heads
+    # base colour per vert (glTF verts are split at UV seams, so each has one UV)
+    col = np.zeros((len(co), 3))
+    imgs = [n.image for mt in mesh.data.materials if mt and mt.node_tree
+            for n in mt.node_tree.nodes if n.type == "TEX_IMAGE" and n.image]
+    if imgs:
+        w, h = imgs[0].size
+        px = np.array(imgs[0].pixels[:]).reshape(h, w, 4)
+        uv = np.zeros((len(co), 2))
+        uvl = mesh.data.uv_layers.active.data
+        for lp in mesh.data.loops:
+            uv[lp.vertex_index] = uvl[lp.index].uv
+        col = px[np.clip((uv[:, 1] % 1.0 * h).astype(int), 0, h - 1),
+                 np.clip((uv[:, 0] % 1.0 * w).astype(int), 0, w - 1), :3]
+    return co, heads, col
 
 
 def weld_groups(P):
@@ -245,7 +271,7 @@ def main():
     for k in range(4):
         np.add.at(W, (np.arange(nv), J[:, k]), Wq[:, k])
 
-    co, heads = world_rest(a["in"])
+    co, heads, col = world_rest(a["in"])
     assert len(co) == nv, "importer vertex count differs from the GLB (%d vs %d)" % (len(co), nv)
     P = g.read(att["POSITION"]).astype(np.float64)
     # index check: the importer keeps glTF vertex order (Blender is Z-up, glTF Y-up)
@@ -411,10 +437,59 @@ def main():
             edit |= rig
             W3 = W2
 
-    W4 = to_weld(W3)[rep]
+    # 4. props: the charm, pouch and rope sash are baked rigid to Hips (rig plan, ryo.md). They
+    # are painted parts of the one body mesh, so they are found by base colour inside the
+    # pelvis band (light paper/pouch, persimmon rope), kept when a connected patch has at least
+    # prop_min_verts verts, set to Hips 1.0, and blended into the body over prop_rings rings.
+    W3b = W3.copy()
+    if not p["prop_bind"]:
+        W3b = W3  # step off: props keep the falloff weights
+    light = (col.mean(1) > p["prop_light_min"]) & (col.max(1) - col.min(1) < p["prop_light_max_chroma"])
+    rope = (col[:, 0] > 0.35) & (col[:, 0] > 1.8 * col[:, 2]) & (col[:, 0] > 1.3 * col[:, 1])
+    band = (z > uz + p["prop_z_lo_m"]) & (z < hz + p["region_top_m"]) & region
+    cand_w = np.zeros(nw, bool)
+    np.logical_or.at(cand_w, rep, band & (light | rope))
+    ce = edges[cand_w[edges[:, 0]] & cand_w[edges[:, 1]]]
+    par = np.arange(nw)
 
-    # 4. tidy (edited verts only, the rest of the skin keeps its exact weights): prune, limit,
-    # normalise
+    def find(i):
+        while par[i] != i:
+            par[i] = par[par[i]]
+            i = par[i]
+        return i
+    for i, j in ce:
+        ri, rj = find(i), find(j)
+        if ri != rj:
+            par[ri] = rj
+    roots = np.array([find(i) if cand_w[i] else -1 for i in range(nw)])
+    ids, counts = np.unique(roots[roots >= 0], return_counts=True)
+    keep_ids = ids[counts >= p["prop_min_verts"]]
+    prop_w = np.isin(roots, keep_ids)
+    # ring distance from the props over the welded mesh
+    ring = np.full(nw, 99)
+    ring[prop_w] = 0
+    for k in range(1, p["prop_rings"] + 1):
+        nxt = np.zeros(nw, bool)
+        nxt[edges[ring[edges[:, 0]] == k - 1, 1]] = True
+        nxt[edges[ring[edges[:, 1]] == k - 1, 0]] = True
+        ring[nxt & (ring == 99)] = k
+    t = np.where(ring <= p["prop_rings"], 1 - ring / (p["prop_rings"] + 1.0), 0.0)[rep]
+    t = t * region * (1 if p["prop_bind"] else 0)
+    # leg influence (UpLeg) goes to Hips; Spine02's share at the waist is left as it is
+    for c in (L, R):
+        cut = W3b[:, c] * t
+        W3b[:, c] -= cut
+        W3b[:, H] += cut
+    log["props"] = {"patches": [int(c) for c in sorted(counts[counts >= p["prop_min_verts"]], reverse=True)],
+                    "rigid_verts": int((t >= 1).sum()), "blend_verts": int(((t > 0) & (t < 1)).sum())}
+    print("repair_weights: props    patches %s, rigid %d, blend %d" % (
+        log["props"]["patches"], log["props"]["rigid_verts"], log["props"]["blend_verts"]))
+    stats("props", W3, W3b, names, log)
+
+    W4 = to_weld(W3b)[rep]
+
+    # 5. tidy (edited verts only: the pelvis band, plus the torso steps when on; the rest of the
+    # skin keeps its exact weights): prune, limit, normalise
     W4 = np.where(edit[:, None], W4, W0)
     touched = edit | (np.abs(W4 - W0).max(1) > 0)
     W4[touched[:, None] & (W4 < p["min_weight"])] = 0
