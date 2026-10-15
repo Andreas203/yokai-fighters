@@ -307,5 +307,130 @@ class CliProbes(unittest.TestCase):
 
 
 
+class WrongTypeReadsAsAbsentProbes(unittest.TestCase):
+    """Round 2: a wrong type must fail its rule, not read as 'absent' and skip it."""
+
+    def _special(self, edit):
+        d = special()
+        edit(d)
+        return overlay({"moves/spirit-wave.json": d})
+
+    def test_ex_changes_dict_spending_meter(self):
+        # C5/E16: EX changes may not rewrite the cost, even when `changes` is a dict instead of a list
+        code, rep = self._special(lambda d: d["ex"].update(changes={"target": "ex.meter_cost", "op": "set", "value": 0}))
+        self.assertEqual(code, 1, rep["violations"])
+
+    def test_lv3_changes_dict_damage_only(self):
+        # P1: damage-only evolution, `changes` as a single dict
+        def e(d):
+            d["levels"]["3"]["evolution"]["changes"] = {"target": "damage", "op": "add", "value": 5}
+        code, rep = self._special(e)
+        self.assertEqual(code, 1, rep["violations"])
+
+    def test_lv3_preset_wrong_type(self):
+        # A5: the preset is a name; a list or number is not one
+        for bad in (["great-wave"], 5, {"a": 1}):
+            with self.subTest(preset=bad):
+                code, rep = self._special(lambda d: d["levels"]["3"]["evolution"].update(preset=bad))
+                self.assertEqual(code, 1, rep["violations"])
+
+
+    def test_lv2_tuning_with_evolution_key_is_refused_even_as_null(self):
+        # A4: Lv 2 carrying an `evolution` key (even null) is not the written shape
+        code, rep = self._special(lambda d: d["levels"]["2"].update(evolution=None))
+        self.assertEqual(code, 1, rep["violations"])
+
+
+    def test_run_slot_modifier_dict_two(self):
+        # A2: modifier given as a dict of two
+        run = {"slots": [{"slot": "A", "special": "spirit-wave", "level": 1, "modifier": {"a": 1, "b": 2}}]}
+        code, rep = overlay({"saves/run.json": run})
+        self.assertTrue(hit(rep, "A2"), rep["violations"])
+
+    def test_run_slots_as_dict_is_reported(self):
+        # A1: five specials slotted as a dict are still five specials; a run whose slots are not a list is malformed
+        slots = {k: {"slot": k, "special": "spirit-wave"} for k in "ABCDE"}
+        code, rep = overlay({"saves/run.json": {"run": {"slots": slots}}})
+        self.assertEqual(code, 1, "run with dict slots ignored silently")
+
+    def test_run_cancels_wrong_types_over_cap(self):
+        # X2: up to two held; three as a dict or a string of three is over the cap
+        for held in ({"a": 1, "b": 2, "c": 3}, "abc"):
+            with self.subTest(held=held):
+                code, rep = overlay({"saves/run.json": {"slots": [], "cancels": held}})
+                self.assertEqual(code, 1, "held cancels of wrong type skipped")
+
+    def test_trial_steps_not_a_list(self):
+        # R7/K2: steps as a dict hide a kitsune move and a Kata motion
+        for steps in ({"0": {"move": "kitsune-light-punch", "motion": "236"}}, "hit", 3):
+            with self.subTest(steps=steps):
+                t = real("trials/spirit-wave-trial.json")
+                t["goal"]["steps"] = steps
+                code, rep = overlay({"trials/spirit-wave-trial.json": t})
+                self.assertEqual(code, 1, rep["violations"])
+
+    def test_trial_goal_not_an_object(self):
+        # R7: a trial whose goal is a string has no landable goal
+        t = real("trials/spirit-wave-trial.json")
+        t["goal"] = "land a hit"
+        code, rep = overlay({"trials/spirit-wave-trial.json": t})
+        self.assertEqual(code, 1, rep["violations"])
+
+    def test_trial_attempts_over_three(self):
+        # R7: the special levels only if landed within 3 attempts; a trial granting 10 breaks the rule
+        for n in (4, 10):
+            with self.subTest(attempts=n):
+                t = real("trials/spirit-wave-trial.json")
+                t["attempts"] = n
+                code, rep = overlay({"trials/spirit-wave-trial.json": t})
+                self.assertEqual(code, 1, rep["violations"])
+
+
+    def test_trial_move_int_or_null(self):
+        # R7: a step move of 5 does not exist
+        t = real("trials/spirit-wave-trial.json")
+        t["goal"]["steps"][0]["move"] = 5
+        code, rep = overlay({"trials/spirit-wave-trial.json": t})
+        self.assertTrue(hit(rep, "R7"), rep["violations"])
+
+    def test_input_slots_non_string(self):
+        # A1/K1: slot given as the number 1 or true is not A-D
+        for bad in (1, True, ["A"]):
+            with self.subTest(slot=bad):
+                def e(d):
+                    d["input"]["kata"]["slot"] = bad
+                    d["input"]["kihon"]["slot"] = bad
+                code, rep = self._special(e)
+                self.assertTrue(hit(rep, "A1"), rep["violations"])
+
+    def test_starter_flag_as_string_still_counts_two_starters(self):
+        # A1: Ryo starts with exactly 2 starters; dropping one to "true" (string) must not leave 2 silently
+        code, rep = self._special(lambda d: d.update(starter="true"))
+        self.assertEqual(code, 1, rep["violations"])
+
+    def test_only_unreadable_root_is_a_failure_not_a_setup_error_or_pass(self):
+        # setup: a root holding only a truncated JSON file is a violation (exit 1), never 0
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "x.json").write_text('{"kind": ')
+            r = subprocess.run([sys.executable, "-I", str(SCRIPT), tmp], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertNotIn("Traceback", r.stderr)
+
+    def test_same_id_across_move_kinds_in_one_root(self):
+        # overlay: a normal and a special with one id in a root are one (move, id) key, reported as duplicate
+        n = real("moves/ryo-light-punch.json")
+        n["id"] = "spirit-wave"
+        code, rep = overlay({"moves/spirit-wave-normal.json": n})
+        self.assertEqual(code, 1, rep["violations"])
+
+    def test_internal_backstop_is_not_hiding_a_crash(self):
+        # the try/except backstop must surface as a violation, never exit 0 with partial results
+        for name, doc in MALFORMED.items():
+            with self.subTest(case=name):
+                code, rep = overlay({f"x/{name}.json": doc})
+                self.assertFalse(any(v["check"] == "internal" for v in rep["violations"]),
+                                 [v for v in rep["violations"] if v["check"] == "internal"])
+
+
 if __name__ == "__main__":
     unittest.main()
