@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "run": {
+    "slots": [
+      {
+        "slot": "A",
+        "special": "spirit-wave",
+        "level": 2,
+        "modifier": [
+          "will-o-wisp",
+          "fox-patience"
+        ]
+      },
+      {
+        "slot": "B",
+        "special": "rising-talisman",
+        "level": 1,
+        "modifier": null
+      }
+    ]
+  }
+}
