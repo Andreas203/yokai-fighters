@@ -64,6 +64,8 @@ Setting changes against take 2:
 
 **Free option before spending: weight repair.** `rig-specialist` can try a Blender weight repair on the current `ryo-rigged.glb` (re-paint crotch and inner-thigh weights, run `rig_check.py`). If crouch reaches WARN or better, regeneration is unnecessary and Ryo's clips, the Tanuki and the portrait are untouched. I recommend asking for that first; the choice is the designer's. The regeneration here is the route if repair fails or the designer wants the outfit fixed too.
 
+**Repair result (2026-10-15):** the designer chose the repair first. `tools/blender/repair_weights.py` takes the deep crouch from FAIL to WARN (`Hips` mean 0.686 to 0.964, failing edges 68 to 27) and the high kick from 35 to 9 failing edges, at 0 credits. See `assets/specs/rigs/ryo-weight-repair.md`. The swap into `game/` and whether to still regenerate are the designer's calls.
+
 ## 5. Acceptance checks
 
 Run on import of the new rig; results go under `## Acceptance` when a take lands.
