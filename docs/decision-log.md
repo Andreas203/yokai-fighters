@@ -35,6 +35,11 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - F5 reuses: Kitsune's light punch uses her medium punch; Ryo's air punch uses the 422 jump-in kick.
 - Spend so far: 251 credits on models (balance 959 on 10-06), then 18 on the gate (balance 941), then clip takes.
 - 2026-10-11 YOK-102: Astra (a separate GPT agent) makes the concept art and turnarounds that feed Meshy; Claude only makes greybox sketches. No Oni, Kappa or Tanuki image-to-3D, rig or clip jobs until that art lands.
+- 2026-10-15 YOK-116: free scripted weight repair of Ryo's rig accepted and swapped into `game/` (`tools/blender/repair_weights.py`, 0 credits).
+  - Deep crouch goes from FAIL to WARN (Hips mean 0.686 to 0.964); the high kick drops from 35 to 9 failing edges.
+  - Same skeleton, so the clips, frame data and Tanuki carry over.
+  - No regeneration: `assets/specs/ryo-regen.md` is kept on file as not needed.
+  - Charm, pouch and sash are only partly freed from the thighs; a full rigid bind tears the crouch (`assets/specs/rigs/ryo-weight-repair.md`).
 
 ## Tooling and process
 - 2026-10-11 YOK-59/62: UI moved to the Codex ui-designer (Astra). Its 18 generated plates replaced Meshy plates, because Claude's kit (#74) was not close enough to the concepts.

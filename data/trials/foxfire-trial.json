@@ -1,0 +1,21 @@
+{
+  "kind": "trial",
+  "id": "foxfire-trial",
+  "status": "proposed",
+  "special": "foxfire",
+  "prompt": "Send a slow Foxfire at the dummy, then follow the flame in and land a hit.",
+  "attempts": 3,
+  "setup": {
+    "distance": 800,
+    "attempt_frames": 900,
+    "dummy": { "action": "idle" }
+  },
+  "goal": {
+    "steps": [
+      { "event": "hit", "move": "foxfire", "distance": { "min": 450 } },
+      { "event": "hit", "distance": { "max": 260 } }
+    ]
+  },
+  "rules": ["R7", "K1", "K2", "K3", "F3", "T0"],
+  "notes": "Teaches Foxfire as a slow flame you advance behind (speed 5). Second step accepts any Kihon normal at close range. Foxfire is Kitsune-sourced (A8) but draftable by Ryo; clip kitsune-foxfire matches ryo-foxfire-cast frame for frame. Harness to confirm completability."
+}
