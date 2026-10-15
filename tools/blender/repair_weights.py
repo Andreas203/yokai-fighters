@@ -43,6 +43,12 @@ Tried and dropped (YOK-116 runs): a narrow side band (1.2 cm) tore the crotch in
 stretch); giving the crotch midline to Hips tore it in the crouch; smoothing again after the
 falloff re-spread the UpLeg weight and tore the hip crease.
 Every step is logged (verts changed, weight moved per bone) to --log.
+
+Per-fighter settings (--fighter, default ryo; YOK-117): FIGHTERS below. "ryo" runs exactly the
+steps above (output byte-identical to YOK-116). "kitsune" adds torso steps T1-T5 for the back
+hair, coat back and sash bell; see the comment on FIGHTERS["kitsune"]. Run:
+  ... repair_weights.py -- --fighter kitsune \
+      --in game/assets/generated/characters/kitsune/kitsune-rigged.glb --out <dir>/kitsune-rigged-repaired.glb
 """
 import bpy
 import hashlib
@@ -71,12 +77,52 @@ PARAMS = {
     "prop_rings": 6,
     "min_weight": 0.01,
     "max_influences": 4,
+    "torso_fix": 0,             # 1 = run the torso steps T1-T5 (off for Ryo)
 }
+
+# Per-fighter settings. "ryo" is PARAMS as it stands (YOK-116; its output must stay
+# byte-identical). Others start from PARAMS and add or override keys.
+FIGHTERS = {
+    "ryo": {},
+    # YOK-117. Kitsune's Meshy auto-skin hangs the long back hair (a sheet from the head to the
+    # waist, 0.15-0.21 m behind the spine) on LeftArm AND RightArm, and the hair tips and coat
+    # back also on Hips + both UpLegs: 886 arm-and-leg bleed verts, and the waist tears in every
+    # stress pose. Torso steps (Blender world axes as above; y is measured from the Hips head,
+    # + is behind the character):
+    #   T1 arm strip - inside the torso column (|x| < trunk_x0..x1, below trunk_z0..z1) and the
+    #                  hair layer behind the back (y > hair_y0..y1: wider, |x| < hair_x0..x1,
+    #                  up to hair_z0..z1) arm weight goes to the spine chain, split by height
+    #                  between the Hips/Spine02/Spine01/Spine/neck heads. Smoothstep edges, so
+    #                  the hair-to-sleeve seam blends instead of tearing. The sleeves (|x| beyond
+    #                  hair_x1, or in front of the hair layer above trunk_z1) keep their weights.
+    #   T2 leg strip - leg weight in the hair layer above the seat (hairleg_z0..z1) -> trunk.
+    #   T3 smooth    - Laplacian smoothing of [arm bones, trunk total] over the T1/T2 verts
+    #                  (per-vert total kept); the trunk total is split back as the vert's own
+    #                  original trunk weights first and the height split for any gain.
+    #   then steps 1-3 (pelvis), then
+    #   T4 bleed     - a vert still holding both arm and leg weight loses the smaller group to
+    #                  the trunk (height split).
+    #   T5 rigid     - a small prop inside a box (rigid_*) is bound to Hips alone.
+    "kitsune": {
+        "torso_fix": 1,
+        "hair_y0_m": 0.05, "hair_y1_m": 0.09,
+        "trunk_x0_m": 0.12, "trunk_x1_m": 0.18, "trunk_z0_m": 1.00, "trunk_z1_m": 1.10,
+        "hair_x0_m": 0.10, "hair_x1_m": 0.40, "hair_z0_m": 1.24, "hair_z1_m": 1.34,
+        "hairleg_z0_m": 0.86, "hairleg_z1_m": 0.93,
+        "torso_smooth_iters": 60,
+        # bell on the sash front: |x| < 4.5 cm, more than 11 cm in front of the Hips head,
+        # z 0.87-0.97 m -> Hips only
+        "rigid_x_m": 0.045, "rigid_y_max_m": -0.11, "rigid_z0_m": 0.87, "rigid_z1_m": 0.97,
+    },
+}
+TRUNK = ("Hips", "Spine02", "Spine01", "Spine", "neck")
+ARM_BONES = tuple(s + n for s in ("Left", "Right") for n in ("Shoulder", "Arm", "ForeArm", "Hand"))
+LEG_BONES = tuple(s + n for s in ("Left", "Right") for n in ("UpLeg", "Leg", "Foot", "ToeBase"))
 
 
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    a = {"in": None, "out": None, "log": None, "set": []}
+    a = {"in": None, "out": None, "log": None, "fighter": "ryo", "set": []}
     i = 0
     while i < len(argv):
         k = argv[i].lstrip("-")
@@ -91,7 +137,9 @@ def parse_args():
         sys.exit("repair_weights: --in and --out are required")
     if os.path.abspath(a["in"]) == os.path.abspath(a["out"]):
         sys.exit("repair_weights: refusing to overwrite the input rig")
-    p = dict(PARAMS)
+    if a["fighter"] not in FIGHTERS:
+        sys.exit("repair_weights: unknown fighter %s (have %s)" % (a["fighter"], sorted(FIGHTERS)))
+    p = dict(PARAMS, **FIGHTERS[a["fighter"]])
     for s in a["set"]:
         k, v = s.split("=", 1)
         if k not in p:
@@ -241,7 +289,8 @@ def main():
     x, y, z = co[:, 0] - mid_x, co[:, 1] - heads["Hips"][1], co[:, 2]
     region = (z > kz + p["region_bottom_m"]) & (z < hz + p["region_top_m"])
 
-    log = {"tool": "tools/blender/repair_weights.py", "input": a["in"], "output": a["out"],
+    log = {"tool": "tools/blender/repair_weights.py", "fighter": a["fighter"],
+           "input": a["in"], "output": a["out"],
            "input_sha256": hashlib.sha256(open(a["in"], "rb").read()).hexdigest(),
            "params": p, "frame": {"hips_z": round(hz, 4), "upleg_z": round(uz, 4),
                                   "leg_z": round(kz, 4), "mid_x": round(mid_x, 4)},
@@ -281,9 +330,66 @@ def main():
         Ww[:, cols] = np.where(st > 1e-9, sm / np.maximum(st, 1e-9) * tot, sub)
         return Ww[rep]
 
+    # verts the repair may change; Ryo: the pelvis band only
+    edit = region.copy()
+    TI = [B[n] for n in TRUNK]
+    AI = [B[n] for n in ARM_BONES]
+    LI = [B[n] for n in LEG_BONES]
+    trunk_z = np.array([heads[n][2] for n in TRUNK])
+
+    def trunk_split(zz):
+        """Per vert, a weight over TRUNK by height: linear between consecutive joint heads."""
+        out = np.zeros((len(zz), len(TRUNK)))
+        zc = np.clip(zz, trunk_z[0], trunk_z[-1])
+        k = np.clip(np.searchsorted(trunk_z, zc) - 1, 0, len(TRUNK) - 2)
+        t = (zc - trunk_z[k]) / (trunk_z[k + 1] - trunk_z[k])
+        out[np.arange(len(zz)), k] = 1 - t
+        out[np.arange(len(zz)), k + 1] += t
+        return out
+
+    Wt = W
+    if p["torso_fix"]:
+        # T1. arm strip in the torso column and the hair layer behind the back
+        hair = smoothstep(p["hair_y0_m"], p["hair_y1_m"], y)        # 0 body .. 1 hair layer
+        mix = lambda k: p["trunk_" + k] + hair * (p["hair_" + k] - p["trunk_" + k])
+        strip = ((1 - smoothstep(mix("x0_m"), mix("x1_m"), np.abs(x)))
+                 * (1 - smoothstep(mix("z0_m"), mix("z1_m"), z)) * (z > uz - 0.1))
+        WA = W.copy()
+        cut = WA[:, AI] * strip[:, None]
+        WA[:, AI] -= cut
+        WA[:, TI] += cut.sum(1)[:, None] * trunk_split(z)
+        stats("armstrip", W0, WA, names, log)
+        # T2. leg strip in the hair layer above the seat
+        WB = WA.copy()
+        lcut = WB[:, LI] * (hair * smoothstep(p["hairleg_z0_m"], p["hairleg_z1_m"], z))[:, None]
+        WB[:, LI] -= lcut
+        WB[:, TI] += lcut.sum(1)[:, None] * trunk_split(z)
+        stats("legstrip", WA, WB, names, log)
+        # T3. smooth [arm bones, trunk total] over the T1/T2 verts
+        tedit = (strip > 1e-3) | (lcut.sum(1) > 1e-6)
+        tw = np.zeros(nw, bool)
+        np.logical_or.at(tw, rep, tedit)
+        Ww, Wo = to_weld(WB), to_weld(W)
+        sub = np.concatenate([Ww[:, AI], Ww[:, TI].sum(1, keepdims=True)], 1)
+        tot = sub.sum(1, keepdims=True)
+        sm = laplacian(sub, edges, tw & (tot[:, 0] > 1e-6), p["torso_smooth_iters"], p["smooth_lambda"])
+        st = sm.sum(1, keepdims=True)
+        sm = np.where(st > 1e-9, sm / np.maximum(st, 1e-9) * tot, sub)
+        Ww[:, AI] = sm[:, :-1]
+        t_new, T0 = sm[:, -1], Wo[:, TI]
+        t0 = T0.sum(1)
+        t_keep = np.minimum(t_new, t0)
+        dist0 = np.where(t0[:, None] > 1e-9, T0 / np.maximum(t0, 1e-9)[:, None], 0)
+        Ww[:, TI] = dist0 * t_keep[:, None] + trunk_split(to_weld(z[:, None])[:, 0]) * (t_new - t_keep)[:, None]
+        Wt = Ww[rep]
+        stats("tsmooth", WB, Wt, names, log)
+        edit |= tedit
+        log["torso_verts"] = int(tedit.sum())
+        print("repair_weights: torso verts %d" % tedit.sum())
+
     # 1. pre-smooth: take the blockiness out of the auto-skin before the rules below
-    Ws = smooth(W, p["smooth_pre_iters"])
-    stats("smooth1", W0, Ws, names, log)
+    Ws = smooth(Wt, p["smooth_pre_iters"])
+    stats("smooth1", Wt, Ws, names, log)
 
     # 2. side separation (UpLeg and Leg pairs): each half of the crotch follows its own leg
     W1 = Ws.copy()
@@ -305,6 +411,31 @@ def main():
         W3[:, c] -= cut
         W3[:, H] += cut
     stats("falloff", W1, W3, names, log)
+
+    if p["torso_fix"]:
+        # T4. arm-and-leg bleed: the smaller group goes to the trunk
+        W2 = W3.copy()
+        aw, lw = W2[:, AI].sum(1), W2[:, LI].sum(1)
+        both = (aw > 0) & (lw > 0)
+        for msk, grp in ((both & (aw <= lw), AI), (both & (aw > lw), LI)):
+            c = W2[:, grp] * msk[:, None]
+            W2[:, grp] -= c
+            W2[:, TI] += c.sum(1)[:, None] * trunk_split(z)
+        stats("bleed", W3, W2, names, log)
+        log["bleed_verts"] = int(both.sum())
+        edit |= both
+        W3 = W2
+        # T5. rigid prop: the small part inside the box (Kitsune: the bell on the sash front)
+        # is bound to one bone, so the midline leg blend cannot shear it
+        rig = ((np.abs(x) < p["rigid_x_m"]) & (y < p["rigid_y_max_m"])
+               & (z > p["rigid_z0_m"]) & (z < p["rigid_z1_m"]))
+        if rig.any():
+            W2 = W3.copy()
+            W2[rig] = W3[rig].mean(0)
+            stats("rigid", W3, W2, names, log)
+            log["rigid_verts"] = int(rig.sum())
+            edit |= rig
+            W3 = W2
 
     # 4. props: the charm, pouch and rope sash are baked rigid to Hips (rig plan, ryo.md). They
     # are painted parts of the one body mesh, so they are found by base colour inside the
@@ -357,9 +488,10 @@ def main():
 
     W4 = to_weld(W3b)[rep]
 
-    # 5. tidy (region only, the rest of the skin keeps its exact weights): prune, limit, normalise
-    W4 = np.where(region[:, None], W4, W0)
-    touched = region | (np.abs(W4 - W0).max(1) > 0)
+    # 5. tidy (edited verts only: the pelvis band, plus the torso steps when on; the rest of the
+    # skin keeps its exact weights): prune, limit, normalise
+    W4 = np.where(edit[:, None], W4, W0)
+    touched = edit | (np.abs(W4 - W0).max(1) > 0)
     W4[touched[:, None] & (W4 < p["min_weight"])] = 0
     order = np.argsort(-W4, 1, kind="stable")
     J_new = order[:, :p["max_influences"]]
