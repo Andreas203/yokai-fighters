@@ -2,7 +2,7 @@
 
 ## Pause feedback — diamond move icons (2026-10-11)
 
-Designer approved four built-in imagegen jobs. Saved under `game/assets/generated/ui/`: `pause-icon-spirit-wave.png`, `pause-icon-rising-talisman.png`, `pause-icon-foxfire.png`, `pause-icon-fallback.png`. Each source is 1254×1254, resized with Godot Image Lanczos to 256×256, preserving alpha; no nine-slice. All four were visually inspected: text-free, no characters, blank talisman, transparent exterior. The sibling manifest `game/ui/pause_move_art.tres` maps move IDs to textures, with a generic pine energy-ring fallback. Icons also supply faint right-hand motifs. Existing paper-card and blossom plates are reused; no fonts added.
+Designer approved four built-in imagegen jobs. Saved under `game/assets/generated/ui/`: `ability-icon-spirit-wave.png`, `ability-icon-rising-talisman.png`, `ability-icon-foxfire.png`, `ability-icon-fallback.png`. Each source is 1254×1254, resized with Godot Image Lanczos to 256×256, preserving alpha; no nine-slice. All four were visually inspected: text-free, no characters, blank talisman, transparent exterior. The sibling manifest `game/ui/pause_move_art.tres` maps move IDs to textures, with a generic pine energy-ring fallback. Icons also supply faint right-hand motifs. Existing paper-card and blossom plates are reused; no fonts added.
 
 Exact executed prompts:
 
