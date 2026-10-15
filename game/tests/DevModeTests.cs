@@ -80,7 +80,7 @@ public static class DevModeTests
 
 		WithMode(Release, () =>
 		{
-			Assert.True(!DevMode.SetOn(true) && !DevMode.On && !DevMode.Available, "release: switching on is refused");
+			Assert.True(!DevMode.TrySetOn(DevPlace.Title, true, out string? why) && why == DevMode.UnavailableReason && !DevMode.On && !DevMode.Available, "release: switching on is refused");
 			foreach (var place in Enum.GetValues<DevPlace>()) Assert.True(!DevShell.CanOpen(place), $"release: no dev menu on {place}");
 			Assert.True(!Shell.OpenMenu(new DevContext(DevPlace.Title)) && !Shell.Menu.IsOpen, "the shell refuses to open");
 			Assert.True(!Shell.Badge.Visible, "no badge");
@@ -88,8 +88,8 @@ public static class DevModeTests
 		WithMode(Debug, () =>
 		{
 			Assert.True(!DevMode.On && !Shell.Badge.Visible, "debug build starts off, no badge");
-			Assert.True(DevMode.SetOn(true) && DevMode.On && Shell.Badge.Visible, "the toggle switches it on; the badge shows");
-			Assert.True(DevMode.SetOn(false) && !DevMode.On && !Shell.Badge.Visible, "and off again");
+			Assert.True(DevMode.TrySetOn(DevPlace.Title, true, out _) && DevMode.On && Shell.Badge.Visible, "the toggle switches it on; the badge shows");
+			Assert.True(DevMode.TrySetOn(DevPlace.Title, false, out _) && !DevMode.On && !Shell.Badge.Visible, "and off again");
 		});
 		Assert.Equal(DevMode.Launch(), DevMode.State, "back to the launch state");
 		Assert.True(!DevMode.On || OS.GetCmdlineUserArgs().Concat(OS.GetCmdlineArgs()).Contains(DevMode.Arg), "the test run itself is not in dev mode without --dev");
@@ -170,6 +170,49 @@ public static class DevModeTests
 		{
 			Assert.True(flow.DevMenuButton == null, "release: no Dev button on the title");
 			Assert.True(!flow.OpenDevMenu() && !Shell.Menu.IsOpen, "release: F11 / the menu cannot open");
+		}));
+	});
+
+	[Test]
+	public static void Switch_IsTitleOnly_ForPagesToo()
+	{
+		WithMode(Debug, () =>
+		{
+			foreach (var place in new[] { DevPlace.Map, DevPlace.Fight })
+				Assert.True(!DevMode.TrySetOn(place, true, out string? why) && why == DevMode.TitleOnlyReason && !DevMode.On, $"switching on from {place} is refused");
+			Assert.True(DevMode.TrySetOn(DevPlace.Title, true, out _) && DevMode.On, "allowed on the title");
+			foreach (var place in new[] { DevPlace.Map, DevPlace.Fight })
+				Assert.True(!DevMode.TrySetOn(place, false, out string? why) && why == DevMode.TitleOnlyReason && DevMode.On, $"switching off from {place} is refused");
+			Assert.True(DevMode.TrySetOn(DevPlace.Map, true, out string? none) && none == null && DevMode.On, "asking for the current state is no switch, so it is not refused");
+		});
+	}
+
+	[Test]
+	public static void Switch_IsRefusedWhileAWriteIsPending_SoTheEndedRunIsNeverOffered(Node runner) => WithTempDir(dir =>
+	{
+		if (OperatingSystem.IsWindows()) return;
+		string player = Path.Combine(dir, "progress.json");
+		WithMode(Debug, () => WithBoot(runner, player, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered");
+			string held = File.ReadAllText(player);
+			File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+			try
+			{
+				Assert.True(flow.Session.LoseFight().Ok && flow.Saved.Run == null, "lost: the flow knows the run is over");
+				Assert.Equal(held, File.ReadAllText(player), "but the disk refused the write: the file still holds the run");
+				Assert.True(flow.ReturnToTitle() && flow.Title.ContinueButton.Disabled, "the title does not offer the ended run");
+				Assert.True(!DevMode.TrySetOn(DevPlace.Title, true, out string? why) && why == GameFlow.PendingWriteReason && !DevMode.On, "switching slots is refused while the write is pending: " + why);
+				Assert.True(flow.Saves!.Path == player, "still on the player's file");
+				Assert.True(flow.OpenDevMenu() && Shell.Menu.ModeToggle.Disabled && Shell.Menu.ModeToggleRefusal == GameFlow.PendingWriteReason, "the menu greys the toggle with the reason");
+				Shell.Menu.Close();
+			}
+			finally { File.SetUnixFileMode(dir, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute); }
+			Assert.True(DevMode.TrySetOn(DevPlace.Title, true, out _) && DevMode.On, "once the disk allows it the switch goes through");
+			Assert.True(File.ReadAllText(player).Contains("\"run\": null"), "and the pending removal was written to the player's file first");
+			Assert.True(DevMode.TrySetOn(DevPlace.Title, false, out _) && flow.Saves!.Path == player && flow.Title.ContinueButton.Disabled, "back on the player's file: the ended run is not offered");
 		}));
 	});
 

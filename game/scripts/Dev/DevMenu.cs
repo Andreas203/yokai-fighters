@@ -137,15 +137,14 @@ public partial class DevMenu : Control
 		Page = null;
 	}
 
-	/// <summary>Why the on/off toggle is greyed; null when it can be pressed (available, and on the title).</summary>
-	public string? ModeToggleRefusal => !DevMode.Available ? "Dev mode is not available in this build (launch with --dev)."
-		: Context?.Place != DevPlace.Title ? "Switch dev mode on or off from the title screen (it changes the save slot)." : null;
+	/// <summary>Why the on/off toggle is greyed (<see cref="DevMode.SwitchRefusal"/>); null when it can be pressed.</summary>
+	public string? ModeToggleRefusal => Context is null ? DevMode.TitleOnlyReason : DevMode.SwitchRefusal(Context.Place, !DevMode.On);
 
 	private void ToggleMode()
 	{
-		if (ModeToggleRefusal != null) return;
-		DevMode.SetOn(!DevMode.On);
-		Rebuild(CurrentSection);
+		if (Context is null) return;
+		DevMode.TrySetOn(Context.Place, !DevMode.On, out _);
+		Rebuild(CurrentSection); // a refusal shows as the greyed toggle and its reason
 	}
 
 	private void RefreshHeader()

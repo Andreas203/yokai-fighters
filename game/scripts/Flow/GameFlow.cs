@@ -133,13 +133,24 @@ public partial class GameFlow : Node
 		}
 	}
 
+	public const string PendingWriteReason = "The last save could not be written yet; dev mode can be switched once it is (check the disk, then try again).";
+
 	/// <summary>
-	/// Dev mode switched: finish any refused write in the old slot, then open the other slot. A run in progress at that
-	/// moment is not saved again in either slot (its earlier saves stay in the old one).
+	/// <see cref="DevMode.SwitchBlocker"/>: retries a refused write in the current slot, and refuses the switch while it
+	/// is still refused, so swapping slots can never drop a pending write (e.g. an ended run still in the player's file, M5).
+	/// </summary>
+	private string? DevSwitchBlocker()
+	{
+		RetryPendingWrite();
+		return _writePending ? PendingWriteReason : null;
+	}
+
+	/// <summary>
+	/// Dev mode switched (only possible with no write pending, see <see cref="DevSwitchBlocker"/>): open the other slot.
+	/// A run in progress at that moment is not saved again in either slot (its earlier saves stay in the old one).
 	/// </summary>
 	private void OnDevModeChanged()
 	{
-		RetryPendingWrite();
 		_unsavedSession = Session;
 		AttachSaves();
 		if (Router.Current == Screen.Title) RefreshContinue();
@@ -210,6 +221,7 @@ public partial class GameFlow : Node
 		Router.ChooseScheme(MenuSettings.Scheme);
 		MenuSettings.Changed += OnSettingsChanged;
 		DevMode.Changed += OnDevModeChanged;
+		DevMode.SwitchBlocker = DevSwitchBlocker;
 		AddDevButton();
 
 		ControlScheme? direct = DirectFight ?? DirectFightFromArgs(OS.GetCmdlineUserArgs());
@@ -220,6 +232,7 @@ public partial class GameFlow : Node
 	{
 		MenuSettings.Changed -= OnSettingsChanged;
 		DevMode.Changed -= OnDevModeChanged;
+		if (DevMode.SwitchBlocker == DevSwitchBlocker) DevMode.SwitchBlocker = null;
 		RetryPendingWrite();
 		if (SettingsLoaded != null) MenuSettings.Detach(); // every change is already on disk
 	}

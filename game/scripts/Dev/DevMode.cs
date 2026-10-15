@@ -12,9 +12,9 @@ public readonly record struct DevModeState(bool Available, bool On);
 /// <summary>
 /// YOK-123 dev mode flag (YOK-122). A development tool only: it never ships switched on.
 /// <list type="bullet">
-/// <item>Debug builds (editor, debug exports): available, off at launch; the dev menu's toggle switches it on (title screen only).</item>
+/// <item>Debug builds (editor, debug exports): available, off at launch; the dev menu's toggle switches it on (title screen only, <see cref="TrySetOn"/>).</item>
 /// <item>Any build launched with <c>--dev</c> (<c>godot --path game -- --dev</c>, or an export run with <c>--dev</c>): on at launch.</item>
-/// <item>A release build without <c>--dev</c>: unavailable; <see cref="SetOn"/> refuses, so nothing can reach it.</item>
+/// <item>A release build without <c>--dev</c>: unavailable; <see cref="TrySetOn"/> refuses, so nothing can reach it.</item>
 /// </list>
 /// While on: the DEV badge shows on every screen (<see cref="DevShell"/>) and the boot flow saves to the dev slot
 /// (<see cref="SavePathFor"/>), never the player's save. Nothing in <c>Sim/</c>, <c>Ai/</c> or <c>Replay/</c> reads it.
@@ -45,10 +45,33 @@ public static class DevMode
 	/// <summary>This process's state at launch: <see cref="OS.IsDebugBuild"/> and the user and engine command-line args.</summary>
 	public static DevModeState Launch() => Evaluate(OS.IsDebugBuild(), OS.GetCmdlineUserArgs().Concat(OS.GetCmdlineArgs()));
 
-	/// <summary>Switch dev mode on or off. Turning it on is refused (false, no change) when it is not <see cref="Available"/>.</summary>
-	public static bool SetOn(bool on)
+	public const string UnavailableReason = "Dev mode is not available in this build (launch with --dev).";
+	public const string TitleOnlyReason = "Switch dev mode on or off from the title screen (it changes the save slot).";
+
+	/// <summary>
+	/// Set by the boot flow (<c>GameFlow</c>) while it holds a save slot: returns why the slot cannot be swapped right
+	/// now (a write still refused by the disk), or null. Asked on every switch; it may retry the pending write first.
+	/// </summary>
+	public static Func<string?>? SwitchBlocker { get; set; }
+
+	/// <summary>Why switching to <paramref name="on"/> from <paramref name="place"/> is refused; null when it is allowed (or already so).</summary>
+	public static string? SwitchRefusal(DevPlace place, bool on)
 	{
-		if (on && !_state.Available) return false;
+		if (on && !_state.Available) return UnavailableReason;
+		if (_state.On == on) return null;
+		if (place != DevPlace.Title) return TitleOnlyReason;
+		return SwitchBlocker?.Invoke();
+	}
+
+	/// <summary>
+	/// The only way to switch dev mode at run time (the dev menu's toggle, and any page): allowed only on the title,
+	/// only when <see cref="Available"/> (to switch on), and only while the boot flow has no refused save write
+	/// pending (<see cref="SwitchBlocker"/>). False with the reason, and no change, otherwise.
+	/// </summary>
+	public static bool TrySetOn(DevPlace place, bool on, out string? refusal)
+	{
+		refusal = SwitchRefusal(place, on);
+		if (refusal != null) return false;
 		if (_state.On == on) return true;
 		_state = _state with { On = on };
 		Changed?.Invoke();
