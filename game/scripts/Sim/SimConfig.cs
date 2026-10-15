@@ -21,7 +21,7 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// Visible width of the side-on camera at the gameplay plane, in centi-units. AM7 (YOK-120): 1,440 (was 1,920), the
 	/// camera sits closer at the same ~25 deg FOV (F4; <c>FightScene.CameraDistance</c> derives the distance from this).
-	/// Tune with <see cref="MaxSeparation"/>: MaxSeparation + 2 x ModelBackReach must not exceed it (CameraTests).
+	/// Tune with <see cref="MaxSeparation"/>: MaxSeparation + 2 x the larger model reach (front/back) must not exceed it; MaxSeparation derives from this unless set (CameraTests).
 	/// </summary>
 	public int ViewWidth { get; init; } = 1440 * Scale;
 
