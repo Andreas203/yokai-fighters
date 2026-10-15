@@ -198,15 +198,14 @@ public static class FightHudTests
  """;
 
  [Test]
- public static void CopyTarget_NoRun_ShowsTheGreyFallback(Node runner)
+ public static void CopyTarget_NoRun_IsHidden(Node runner)
  {
   var hud = Load(runner);
   try
   {
    hud.RunView = new SessionHudRunView(null);
    hud.Refresh(new Match());
-   Assert.Equal(CopyTalismanState.None, hud.CopyTarget.State, "no run, no target");
-   Assert.Equal("-", hud.CopyTarget.MoveName, "dash");
+   Assert.True(!hud.CopyTarget.Visible, "AM6, T6: no run, no talisman");
    Assert.True(!hud.TwistStripVisible, "no strip without a run");
   }
   finally { hud.Free(); }
@@ -219,10 +218,10 @@ public static class FightHudTests
   try
   {
    var run = RunState.NewRun(AbilityPool.LoadFixtures(Root));
-   var view = new FakeRunView();
+   var view = new FakeRunView { InTanukiFight = true };
    hud.RunView = view;
    void Show() { view.Copy = CopyRule.Target(run); hud.Refresh(new Match()); }
-   hud.RunView = new FakeRunView { Copy = new CopyTarget(SpecialSlot.A, Named("Spirit Wave"), 1) };
+   hud.RunView = new FakeRunView { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, Named("Spirit Wave"), 1) };
    hud.Refresh(new Match());
    Assert.Equal("SPIRIT WAVE", hud.CopyTarget.MoveName, "a short name is shown exactly");
    hud.RunView = view; hud.CopyTarget.Reset();
@@ -259,7 +258,7 @@ public static class FightHudTests
    Assert.True(s.Enter("a").Ok, "enter a");
    s.Run.LevelUp(SpecialSlot.B); s.Run.LevelUp(SpecialSlot.B); // Lv 3: the copy runs the Lv 2 tuning only (T4)
    hud.Refresh(new Match());
-   Assert.Equal(CopyTalismanState.Defined, hud.CopyTarget.State, "before the lock");
+   Assert.True(!hud.CopyTarget.Visible, "AM6: a yokai duel before the lock shows no talisman");
    Assert.True(!hud.TwistStripVisible, "a plain duel has no strip");
    s.WinFight(700); s.CompleteNode();
    Assert.True(s.Enter("den").Ok, "enter the Tanuki's node");
@@ -328,7 +327,7 @@ public static class FightHudTests
    var font = label.GetThemeFont("font");
    foreach (string n in names)
    {
-    hud.RunView = new FakeRunView { Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.RunView = new FakeRunView { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
     hud.Refresh(new Match());
     Assert.Equal(CopyTalisman.NameSize, label.GetThemeFontSize("font_size"), $"{n}: kept at the 720p floor size");
     Assert.True(label.GetLineCount() <= 2, $"{n}: wraps to {label.GetLineCount()} lines");
@@ -341,7 +340,7 @@ public static class FightHudTests
  }
 
  [Test]
- public static void CopyTarget_RestartAndLevelUp_DoNotLeaveAStaleToast(Node runner)
+ public static void CopyTarget_YokaiFightLevelUpsAndRestart_StayHiddenWithNoToast(Node runner)
  {
   var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
   scene.ExternalDrive = true;
@@ -351,21 +350,87 @@ public static class FightHudTests
    var hud = scene.GetNode<FightHud>("Hud");
    scene.Step(FighterInput.None, FighterInput.None);
    var t = hud.CopyTarget;
-   Assert.Equal(CopyTalismanState.Defined, t.State, "the default view reads the hosting scene's own session");
+   Assert.True(!t.Visible, "AM6, T6: the default view over a yokai fight hides the talisman");
    scene.DemoRun.LevelUp(SpecialSlot.B);
    scene.Step(FighterInput.None, FighterInput.None);
-   Assert.Equal("changed", t.LastEvent, "another special overtakes it");
-   Assert.True(t.ToastText.Length > 0, "toast up");
    scene.DemoRun.LevelUp(SpecialSlot.B);
    scene.Step(FighterInput.None, FighterInput.None);
-   Assert.Equal("levelled", t.LastEvent, "same move, next level");
-   Assert.Equal("", t.ToastText, "a level-up clears the older toast");
+   Assert.True(!t.Visible, "still hidden after level-ups");
+   Assert.Equal("", t.ToastText, "no 'copy target changed' toast in a yokai fight");
+   Assert.Equal("", t.LastEvent, "nothing animates");
    scene.RestartRun();
    scene.Step(FighterInput.None, FighterInput.None);
-   Assert.Equal("", t.LastEvent, "a restart is a fresh first show, not a change");
-   Assert.Equal("", t.ToastText, "and carries no toast");
+   Assert.True(!t.Visible && t.ToastText == "", "a restart changes nothing");
   }
   finally { scene.Free(); }
+ }
+
+ // AM6, T6: the HUD's copy-target talisman shows only in the Tanuki fight.
+ [Test]
+ public static void CopyTarget_HiddenInAYokaiFight_EvenWithATarget(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)));
+   hud.RunView = new FakeRunView { Copy = copy };
+   hud.Refresh(new Match());
+   Assert.True(!hud.CopyTarget.Visible, "AM6: a yokai fight shows no copy target");
+   Assert.True(!hud.TwistStripVisible, "and no strip");
+  }
+  finally { hud.Free(); }
+ }
+
+ [Test]
+ public static void CopyTarget_HiddenInAnElderFight_EvenWithATarget(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)));
+   hud.RunView = new FakeRunView { ElderFight = true, Copy = copy };
+   hud.Refresh(new Match());
+   Assert.True(!hud.CopyTarget.Visible, "AM6: an elder fight shows no copy target");
+   Assert.True(hud.TwistStripVisible && hud.TwistKicker == "ELDER TWIST", "the elder twist reminder (Y3) still shows");
+  }
+  finally { hud.Free(); }
+ }
+
+ [Test]
+ public static void CopyTarget_ShownLockedInTheTanukiFight(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)))!;
+   hud.RunView = new FakeRunView { InTanukiFight = true, CopyLocked = true, Copy = copy };
+   hud.Refresh(new Match());
+   Assert.True(hud.CopyTarget.Visible, "AM6: shown in the Tanuki fight");
+   Assert.Equal(CopyTalismanState.Locked, hud.CopyTarget.State, "T1: the locked copy");
+   Assert.True(IsNameOrItsFit(copy.Data.Name, hud.CopyTarget.MoveName), "names the locked move: " + hud.CopyTarget.MoveName);
+   Assert.Equal($"Lv {copy.Level}", hud.CopyTarget.LevelText, "its level");
+   // leaving the Tanuki fight hides it again
+   hud.RunView = new FakeRunView { Copy = copy };
+   hud.Refresh(new Match());
+   Assert.True(!hud.CopyTarget.Visible, "hidden once the fight is not the Tanuki's");
+  }
+  finally { hud.Free(); }
+ }
+
+ [Test]
+ public static void CopyTarget_HiddenWithANullRun(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   hud.RunView = new SessionHudRunView(null);
+   hud.Refresh(new Match());
+   Assert.True(!hud.CopyTarget.Visible, "no run: no talisman, no placeholder");
+   hud.RunView = null;
+   hud.Refresh(new Match());
+   Assert.True(!hud.CopyTarget.Visible, "no view at all: no talisman");
+  }
+  finally { hud.Free(); }
  }
 
  [Test]
@@ -375,7 +440,7 @@ public static class FightHudTests
   try
   {
    var run = RunState.NewRun(AbilityPool.LoadFixtures(Root));
-   var view = new FakeRunView { Copy = CopyRule.Target(run) };
+   var view = new FakeRunView { InTanukiFight = true, Copy = CopyRule.Target(run) };
    hud.RunView = view;
    hud.Refresh(new Match());
    run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run);
@@ -448,7 +513,7 @@ public static class FightHudTests
   {
    var label = Find<Label>(hud, "MoveName");
    label.Size = Vector2.Zero;
-   hud.RunView = new FakeRunView { Copy = new CopyTarget(SpecialSlot.A, Named("Thunderstrike Wave"), 1) };
+   hud.RunView = new FakeRunView { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, Named("Thunderstrike Wave"), 1) };
    hud.Refresh(new Match()); // must return
    Assert.True(hud.CopyTarget.MoveName.Length > 0, "still shows a name");
   }

@@ -96,7 +96,11 @@ public partial class FightHud : CanvasLayer
 	private void ShowRun()
 	{
 		var run = RunView;
-		_copyTalisman.Apply(run?.Copy, run?.CopyLocked ?? false);
+		// AM6, T6: the copy-target talisman shows only in the Tanuki fight (the locked copy, T1); hidden in yokai and elder fights, and with no run.
+		bool showCopy = run?.InTanukiFight ?? false;
+		_copyTalisman.Visible = showCopy;
+		if (showCopy) _copyTalisman.Apply(run?.Copy, run?.CopyLocked ?? false);
+		else _copyTalisman.Reset();
 		var copy = run?.Copy;
 		bool tanuki = (run?.InTanukiFight ?? false) && copy != null; // nothing locked = nothing to say (the strip stays hidden)
 		_twistStrip.Visible = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
