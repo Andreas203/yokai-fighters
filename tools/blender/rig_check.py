@@ -7,6 +7,8 @@ Run (Blender 4.1.1):
       [--bone-map <map.md|.json|NAME>] # rig bone -> shared bone; NAME picks skeleton["bone_maps"][NAME]
       [--out <dir>]                # report.json and stills go here (default: ./rig_check_out)
       [--height <m>]               # expected world height (overrides the skeleton file)
+      [--cloth <regions.md|.json>] # per-fighter cloth regions: exempt from the stress-pose edge and
+                                   # volume checks, reported as info (off unless given)
       [--no-render]                # skip the stills
       [--dump-skeleton <path.json>]   # write this rig's bone list in the format below and exit
 
@@ -23,6 +25,31 @@ What it checks, and writes to <out>/report.json:
              collapse (mean distance of a bone's verts from its bone segment, posed/rest), which is
              how candy-wrapper wrists/forearms and collapsing shoulders/hips show up
   stills     front and side Workbench renders of rest + each stress pose
+  cloth      with --cloth only: which verts are cloth, and per pose their stretch as info
+
+Cloth regions (--cloth). A .json file, or Markdown with one fenced `cloth-regions-json` block:
+
+  ```cloth-regions-json
+  {"fighter": "kitsune", "regions": [
+    {"name": "sleeves", "bones": ["LeftArm", "LeftForeArm", "RightArm", "RightForeArm"],
+     "min_radius_m": 0.09, "axial_min": 0.0},
+    {"name": "hakama_lower", "bones": ["LeftLeg", "RightLeg"], "min_radius_m": 0.08,
+     "z_band_m": [0.10, 0.60]}]}
+  ```
+A vert is cloth when, in the rest pose, (1) its highest-weight bone is one of the region's bones
+(shared names), (2) its distance from that bone's segment (head -> mean child head) is at least
+min_radius_m (and at most max_radius_m if given), (3) its height is inside z_band_m and its
+depth (glTF +Z forward, metres) inside depth_band_m, each if given, and
+(4) its position along the bone, as a fraction of the segment (unclipped), lies in
+[axial_min, axial_max] if given. The rule is geometric and repeatable: no vertex indices.
+Body skin sits inside min_radius_m, so it stays checked. Guarantees that the exemption cannot
+hide a body fault:
+  - the torso and head chain (PROTECTED_BONES) can never be a cloth bone; a region naming one is
+    refused, so the Hips/spine volume check always sees every vert it owns;
+  - an edge is exempt only when BOTH its verts are cloth: every body-to-cloth seam edge is checked;
+  - cloth verts leave the per-bone volume populations, body verts of the same bone stay in them;
+  - weight checks (influences, normalisation, cross-side, arm-leg bleed) ignore the exemption.
+Exempt stretch is still reported per pose under "cloth" (count, worst ratio, per region).
 
 Bone list formats. The shared skeleton is assets/specs/rigs/skeleton.md (YOK-111), read as-is:
   - bones, parents and skin order: the "| # | Bone | Parent | ..." table (first three columns;
@@ -86,7 +113,12 @@ DEFAULTS = {
     "collapse_mean_fail": 0.75,        # posed/rest mean radius of a bone's verts
     "collapse_p5_fail": 0.40,          # 5th percentile of the per-vert ratio
     "collapse_min_verts": 30,
+    "arm_leg_bleed_min_weight": 0.10,  # a vert weighted to both an arm and a leg bone = WARN
 }
+
+PROTECTED_BONES = {"Hips", "Spine02", "Spine01", "Spine", "neck", "Head"}
+ARM_BONES = {s + n for s in ("Left", "Right") for n in ("Shoulder", "Arm", "ForeArm", "Hand")}
+LEG_BONES = {s + n for s in ("Left", "Right") for n in ("UpLeg", "Leg", "Foot", "ToeBase")}
 
 # Shared-skeleton names (Meshy humanoid). Axes are Blender world after glTF import:
 # +Z up, character faces -Y, character's left is +X. Angles in degrees, applied in order,
@@ -126,7 +158,7 @@ AXES = {"X": Vector((1, 0, 0)), "Y": Vector((0, 1, 0)), "Z": Vector((0, 0, 1))}
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     a = {"rig": None, "skeleton": None, "bone_map": None, "out": "rig_check_out",
-         "render": True, "dump": None, "height": None}
+         "render": True, "dump": None, "height": None, "cloth": None}
     i = 0
     while i < len(argv):
         k = argv[i]
@@ -138,7 +170,8 @@ def parse_args():
             sys.exit("rig_check: %s needs a value" % k)
         v = argv[i + 1]
         key = {"--rig": "rig", "--skeleton": "skeleton", "--bone-map": "bone_map",
-               "--out": "out", "--dump-skeleton": "dump", "--height": "height"}.get(k)
+               "--out": "out", "--dump-skeleton": "dump", "--height": "height",
+               "--cloth": "cloth"}.get(k)
         if key is None:
             sys.exit("rig_check: unknown argument %s" % k)
         a[key] = v
@@ -425,7 +458,7 @@ def weight_table(obj):
 
 def check_weights(meshes, rest_co, bmap, T):
     out = {"meshes": {}}
-    ok_all = True
+    ok_all, warn_any = True, False
     start = 0
     for o in meshes:
         W, names = weight_table(o)
@@ -446,20 +479,85 @@ def check_weights(meshes, rest_co, bmap, T):
         cross = np.where(((x > m) & (wr > wl)) | ((x < -m) & (wl > wr)))[0]
         bw = T["cross_side_blend_weight"]
         blend = np.where(((x > m) & (wr > bw)) | ((x < -m) & (wl > bw)))[0]
+        ac = [i for i, n in enumerate(shared) if n in ARM_BONES]
+        lc = [i for i, n in enumerate(shared) if n in LEG_BONES]
+        bwt = T["arm_leg_bleed_min_weight"]
+        bleed = (np.where((W[:, ac].max(1) > bwt) & (W[:, lc].max(1) > bwt))[0]
+                 if ac and lc else np.array([], int))
         ok = not len(over) and not len(zero) and not len(cross)
         ok_all &= ok
+        warn_any = warn_any or bool(len(bleed))
         out["meshes"][o.name] = {
             "verts": len(W), "max_influences_found": int(infl.max()) if len(W) else 0,
             "over_max_influences": len(over), "unnormalised": len(unnorm), "unweighted": len(zero),
             "cross_side": len(cross), "cross_side_blend_info": len(blend),
+            "arm_leg_bleed": len(bleed),
+            "arm_leg_bleed_sample": [{"vert": int(i), "z_m": round(float(co[i, 2]), 3),
+                                      "arm_w": round(float(W[i, ac].max()), 3),
+                                      "leg_w": round(float(W[i, lc].max()), 3)} for i in bleed[:10]],
             "cross_side_sample": [{"vert": int(i), "x_m": round(float(x[i]), 3),
                                    "left_w": round(float(wl[i]), 3), "right_w": round(float(wr[i]), 3)}
                                   for i in cross[:10]],
             "over_max_sample": [int(i) for i in over[:10]],
             "unnormalised_sample": [int(i) for i in unnorm[:10]],
         }
-    out["status"] = status(ok_all, warn=False)
+    out["status"] = "FAIL" if not ok_all else ("WARN" if warn_any else "PASS")
     return out
+
+
+# ---------------------------------------------------------------- cloth
+
+def load_cloth(path):
+    if not path:
+        return None
+    spec = load_fenced_json(path, "cloth-regions-json")
+    for r in spec.get("regions", []):
+        bad = PROTECTED_BONES.intersection(r.get("bones", []))
+        if bad:
+            sys.exit("rig_check: cloth region %r names protected bones %s; the torso chain is "
+                     "never exempt" % (r.get("name"), sorted(bad)))
+        if "min_radius_m" not in r:
+            sys.exit("rig_check: cloth region %r needs min_radius_m" % r.get("name"))
+    return spec
+
+
+def cloth_mask(arm, meshes, rest_co, spec, H):
+    """Per vert: region name or None, by the geometric rule in the header (rest pose)."""
+    top = []
+    for o in meshes:
+        W, names = weight_table(o)
+        ix = W.argmax(1) if W.shape[1] else np.zeros(len(W), int)
+        top += [names[i] for i in ix]
+    top = np.array(top, dtype=object)
+    seg = bone_segments(arm)
+    region = np.array([None] * len(rest_co), dtype=object)
+    counts = {}
+    for r in spec["regions"]:
+        n = 0
+        for shared in r["bones"]:
+            b = H(shared)
+            free = np.array([x is None for x in region])
+            sel = np.where((top == b) & free)[0]
+            if not len(sel) or b not in seg:
+                continue
+            a, e = seg[b]
+            co = rest_co[sel]
+            rad = radial(co, a, e)
+            keep = rad >= r["min_radius_m"]
+            if "max_radius_m" in r:
+                keep &= rad <= r["max_radius_m"]
+            if "z_band_m" in r:
+                keep &= (co[:, 2] >= r["z_band_m"][0]) & (co[:, 2] <= r["z_band_m"][1])
+            if "depth_band_m" in r:  # glTF +Z forward == Blender -Y
+                keep &= (-co[:, 1] >= r["depth_band_m"][0]) & (-co[:, 1] <= r["depth_band_m"][1])
+            if e is not None and ("axial_min" in r or "axial_max" in r):
+                d = np.array(e) - np.array(a)
+                t = (co - np.array(a)) @ d / max(float(d @ d), 1e-12)
+                keep &= (t >= r.get("axial_min", -1e9)) & (t <= r.get("axial_max", 1e9))
+            region[sel[keep]] = r["name"]
+            n += int(keep.sum())
+        counts[r["name"]] = n
+    return region, counts
 
 
 # ---------------------------------------------------------------- poses
@@ -534,8 +632,14 @@ def owners(meshes, arm):
     return np.array(res, dtype=object)
 
 
-def check_poses(arm, meshes, rest_co, H, T, out_dir, render):
+def check_poses(arm, meshes, rest_co, H, T, out_dir, render, cloth=None):
     E = edges_of(meshes)
+    if cloth is None:
+        is_cloth = np.zeros(len(rest_co), bool)
+    else:
+        is_cloth = np.array([x is not None for x in cloth])
+    edge_cloth = is_cloth[E[:, 0]] & is_cloth[E[:, 1]]
+    body_e = ~edge_cloth
     rest_len = np.linalg.norm(rest_co[E[:, 0]] - rest_co[E[:, 1]], axis=1)
     good = rest_len > 1e-6
     own = owners(meshes, arm)
@@ -547,15 +651,16 @@ def check_poses(arm, meshes, rest_co, H, T, out_dir, render):
         seg = bone_segments(arm)
         r = np.ones(len(E))
         r[good] = np.linalg.norm(co[E[good, 0]] - co[E[good, 1]], axis=1) / rest_len[good]
-        bad = np.where((r > T["edge_stretch_fail"]) | (r < T["edge_squash_fail"]))[0]
+        torn = (r > T["edge_stretch_fail"]) | (r < T["edge_squash_fail"])
+        bad = np.where(torn & body_e)[0]
         bad_bones = {}
         for e in bad:
             for v in E[e]:
-                if own[v]:
-                    bad_bones[own[v]] = bad_bones.get(own[v], 0) + 1
+                k = own[v] or "(mixed)"  # no bone holds > 0.5 of the vert
+                bad_bones[k] = bad_bones.get(k, 0) + 1
         collapse = {}
         for b in arm.data.bones:
-            sel = np.where(own == b.name)[0]
+            sel = np.where((own == b.name) & ~is_cloth)[0]
             if len(sel) < T["collapse_min_verts"]:
                 continue
             r0 = radial(rest_co[sel], *rest_seg[b.name])
@@ -569,15 +674,27 @@ def check_poses(arm, meshes, rest_co, H, T, out_dir, render):
             if mean < T["collapse_mean_fail"] or p5 < T["collapse_p5_fail"]:
                 collapse[b.name] = {"mean_ratio": round(mean, 3), "p5_ratio": round(p5, 3)}
         stills = render_views(name, out_dir) if render else []
+        rb = r[body_e] if body_e.any() else np.ones(1)
         res[name] = {
             "status": ("FAIL" if (len(bad) > T["edge_fail_max_frac"] * len(E) or collapse or skipped)
                        else "WARN" if len(bad) else "PASS"),
-            "edge_ratio_max": round(float(r.max()), 3), "edge_ratio_min": round(float(r.min()), 3),
-            "edges_over_warn": int((r > T["edge_stretch_warn"]).sum()),
+            "edge_ratio_max": round(float(rb.max()), 3), "edge_ratio_min": round(float(rb.min()), 3),
+            "edges_over_warn": int(((r > T["edge_stretch_warn"]) & body_e).sum()),
             "edges_total": len(E), "edges_failing": len(bad),
             "failing_edges_by_bone": dict(sorted(bad_bones.items(), key=lambda kv: -kv[1])[:8]),
             "collapsed_bones": collapse, "missing_pose_bones": skipped, "stills": stills,
         }
+        if cloth is not None:
+            ce = np.where(edge_cloth)[0]
+            ct = np.where(torn & edge_cloth)[0]
+            by = {}
+            for e in ct:
+                by[cloth[E[e, 0]]] = by.get(cloth[E[e, 0]], 0) + 1
+            res[name]["cloth"] = {  # info only: never changes the pose status
+                "edges_exempt": len(ce), "edges_torn_exempt": len(ct),
+                "edge_ratio_max": round(float(r[ce].max()), 3) if len(ce) else None,
+                "edge_ratio_min": round(float(r[ce].min()), 3) if len(ce) else None,
+                "torn_by_region": by}
     reset_pose(arm)
     return res
 
@@ -610,6 +727,24 @@ def setup_render(rest_co):
 VIEWS = {"front": ((0, -10, 0), (math.radians(90), 0, 0)),
          "side": ((10, 0, 0), (math.radians(90), 0, math.radians(90)))}
 _CAM = {}
+
+
+def render_cloth_mask(meshes, cloth, out_dir):
+    """Rest stills with cloth verts red and body grey, so the region rule can be audited."""
+    start = 0
+    for o in meshes:
+        n = len(o.data.vertices)
+        attr = o.data.color_attributes.new("rig_check_cloth", "FLOAT_COLOR", "POINT")
+        cols = np.tile(np.array([0.6, 0.6, 0.6, 1.0]), (n, 1))
+        cols[np.array([x is not None for x in cloth[start:start + n]])] = (0.9, 0.1, 0.1, 1.0)
+        attr.data.foreach_set("color", cols.ravel())
+        o.data.color_attributes.active_color = attr
+        start += n
+    sh = bpy.context.scene.display.shading
+    sh.color_type = "VERTEX"
+    paths = render_views("cloth_mask", out_dir)
+    sh.color_type = "TEXTURE"
+    return paths
 
 
 def render_views(tag, out_dir):
@@ -668,7 +803,16 @@ def main():
     if a["render"]:
         _CAM["cam"], _CAM["h"] = setup_render(rest_co)
         report["rest_stills"] = render_views("rest", out_dir)
-    report["poses"] = check_poses(arm, meshes, rest_co, H, T, out_dir, a["render"])
+    cloth = None
+    spec = load_cloth(a["cloth"])
+    if spec:
+        cloth, counts = cloth_mask(arm, meshes, rest_co, spec, H)
+        report["cloth"] = {"file": a["cloth"], "fighter": spec.get("fighter"),
+                           "regions": spec["regions"], "verts_by_region": counts,
+                           "verts_total": int(sum(counts.values())), "verts_in_mesh": len(rest_co)}
+        if a["render"]:
+            report["cloth"]["mask_stills"] = render_cloth_mask(meshes, cloth, out_dir)
+    report["poses"] = check_poses(arm, meshes, rest_co, H, T, out_dir, a["render"], cloth)
 
     keys = ["skeleton", "rest_pose", "scale", "up_axis", "origin", "weights"]
     states = [report[k]["status"] for k in keys] + [p["status"] for p in report["poses"].values()]
