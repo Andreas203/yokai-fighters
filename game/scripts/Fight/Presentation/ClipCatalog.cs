@@ -53,7 +53,7 @@ public readonly record struct RetimeSegment(int FirstFrame, int LastFrame, int F
 	public double TickAt(int frame)
 	{
 		int f = Math.Clamp(frame, FirstFrame, LastFrame);
-		return FirstTick + (double)((long)(LastTick - FirstTick) * (f - FirstFrame)) / (LastFrame - FirstFrame);
+		return FirstTick + (double)(((long)LastTick - FirstTick) * ((long)f - FirstFrame)) / ((long)LastFrame - FirstFrame);
 	}
 }
 
@@ -213,20 +213,20 @@ public sealed class ClipCatalog
 			if (s.FirstTick < 0 || s.LastTick < 0) return $"segment {i}: negative tick";
 			if (trim is { } t && (Math.Min(s.FirstTick, s.LastTick) < t.Start || Math.Max(s.FirstTick, s.LastTick) > t.End))
 				return $"segment {i}: ticks {s.FirstTick}-{s.LastTick} fall outside trim {t.Start}-{t.End}";
-			int df = s.LastFrame - s.FirstFrame, dt = s.LastTick - s.FirstTick;
+			long df = (long)s.LastFrame - s.FirstFrame, dt = (long)s.LastTick - s.FirstTick; // long: no int32 overflow on huge segments
 			if (df <= 0) return $"segment {i}: last frame must be after first ({s.FirstFrame}-{s.LastFrame})";
 			if (i > 0 && (s.FirstFrame != segs[i - 1].LastFrame || s.FirstTick != segs[i - 1].LastTick))
 				return $"segment {i}: not contiguous with segment {i - 1}";
 			if (dt == 0)
 			{
 				if (holdFrom < 0) holdFrom = s.FirstFrame;
-				if (s.LastFrame - holdFrom + 1 > RetimeMaxHoldFrames)
-					return $"segment {i}: held tick {s.FirstTick} shows on {s.LastFrame - holdFrom + 1} frames (max {RetimeMaxHoldFrames})";
+				if (((long)s.LastFrame - holdFrom + 1) > RetimeMaxHoldFrames)
+					return $"segment {i}: held tick {s.FirstTick} shows on {((long)s.LastFrame - holdFrom + 1)} frames (max {RetimeMaxHoldFrames})";
 			}
 			else
 			{
 				holdFrom = -1;
-				if (2 * dt < df || dt > 2 * df) return $"segment {i}: plays at {(double)dt / df:0.###}x, outside 0.5x-2x";
+				if (2L * dt < df || dt > 2L * df) return $"segment {i}: plays at {(double)dt / df:0.###}x, outside 0.5x-2x";
 			}
 		}
 		return null;
