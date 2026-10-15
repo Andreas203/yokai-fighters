@@ -163,6 +163,30 @@ public static class ShopScreenTests
 	// ---- the scene: releasing ----
 
 	[Test]
+	public static void Scene_EnterBuyAndEnterRelease_NeverFreeTheCardThatIsEmitting_NoOrphans(Node runner) => OnFixtures(() =>
+	{
+		var s = Shopping(120);
+		var screen = Open(runner, s);
+		try
+		{
+			Func<double> orphans = () => Performance.GetMonitor(Performance.Monitor.ObjectOrphanNodeCount);
+			screen.Refresh("Special_test-river-grab");
+			double before = orphans();
+			screen.Refresh("Special_test-river-grab");
+			Assert.True(orphans() == before, $"plain refresh: {before} -> {orphans()}");
+			Tap(screen, Key.Enter);
+			Assert.True(s.Run.Owns("test-river-grab"), "Enter purchase: bought"); Assert.True(orphans() == before, $"no orphan card left behind: {before} -> {orphans()}");
+			screen.Refresh("Slot_D");
+			before = orphans();
+			Tap(screen, Key.Enter);
+			Assert.True(screen.Armed == SpecialSlot.D && orphans() == before, "first Enter on a slot: armed, no orphan");
+			Tap(screen, Key.Enter);
+			Assert.True(s.Run[SpecialSlot.D] == null && orphans() == before, "second Enter: released, no orphan");
+		}
+		finally { runner.RemoveChild(screen); screen.Free(); }
+	});
+
+	[Test]
 	public static void Scene_Release_NeedsASecondEnter_CostsForty_AndFreesTheSlot(Node runner) => OnFixtures(() =>
 	{
 		var s = Shopping(120);
@@ -370,11 +394,11 @@ public static class ShopScreenTests
 		try
 		{
 			Assert.True(stop.TakeFree(), "heal");
-			ulong h = s.StateHash();
+			ulong h = s.StateHash(); int healthBefore = s.Run.Health;
 			int asked = 0; stop.ShopRequested += () => asked++;
 			Assert.True(!stop.OpenSecond() && asked == 0 && s.StateHash() == h && stop.SecondCard.CardDisabled, "R6 one choice: the shop is refused and the card closed");
 			stop.SecondCard.EmitSignal(KitCard.SignalName.Activated);
-			Assert.True(asked == 0 && s.StateHash() == h && s.Run.Health == s.Run.Health && s.Merchant!.Choice == MerchantChoice.Heal, "activating the closed card: no request, hash and choice unchanged");
+			Assert.True(asked == 0 && s.StateHash() == h && s.Run.Health == healthBefore && s.Merchant!.Choice == MerchantChoice.Heal, "activating the closed card: no request, hash and choice unchanged");
 		}
 		finally { runner.RemoveChild(stop); stop.Free(); }
 	});

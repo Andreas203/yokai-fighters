@@ -127,8 +127,9 @@ public sealed class ShopScreenModel
 			{
 				if (Run[slot] is not { } o) { rows.Add(new(slot, true, "", "", 0, null, false, false, false, false, false, null)); continue; }
 				string? why = Shop.WhyNotRelease(slot);
-				// T5 and the starter rule lock the row whatever the coins; only a plain shortfall reads "Need 40".
-				bool locked = why is not null && !why.StartsWith($"{ReleasePrice} coins needed");
+				// T5 and the starter rule lock the row whatever the coins; only a plain shortfall reads "Need 40":
+				// the shop checks coins last, so a refusal that survives a full purse is a lock.
+				bool locked = why is not null && (Run.CanAfford(ReleasePrice) || o.Data.Starter || Run.SpecialCount == 1);
 				rows.Add(new(slot, false, o.Data.Id, Name(o.Data.Name, o.Data.Id), o.Level, o.Modifier is { } m ? Name(m.Name, m.Id) : null, o.Borrowed, o.ModifierBorrowed,
 					target == slot, why is null, locked, why is null ? null : Clean(why)));
 			}

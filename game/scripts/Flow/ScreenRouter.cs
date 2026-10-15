@@ -53,15 +53,12 @@ public sealed class ScreenRouter
 	public event Action? Quit;
 	/// <summary>YOK-104: true while the merchant's shop screen is open over the rest stop (a sub-screen of the node, not a top-level screen).</summary>
 	public bool ShopOpen { get; private set; }
-	/// <summary>Raised when the shop opens (true) or closes (false).</summary>
-	public event Action<bool>? ShopChanged;
 
 	/// <summary>Merchant stop to shop. Only while a node scene runs (<see cref="Screen.Fight"/>); False, changing nothing, anywhere else or when already open.</summary>
 	public bool OpenShop()
 	{
 		if (Current != Screen.Fight || ShopOpen) return false;
 		ShopOpen = true;
-		ShopChanged?.Invoke(true);
 		return true;
 	}
 
@@ -70,7 +67,6 @@ public sealed class ScreenRouter
 	{
 		if (!ShopOpen) return false;
 		ShopOpen = false;
-		ShopChanged?.Invoke(false);
 		return true;
 	}
 

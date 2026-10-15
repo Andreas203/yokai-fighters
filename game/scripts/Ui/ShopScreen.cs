@@ -198,16 +198,26 @@ public partial class ShopScreen : Control
 	{
 		var list = new List<Control>();
 		foreach (string row in new[] { "SpecialsRow", "ModifiersRow" })
-			foreach (var c in GetNode("Shelves").GetNode(row.Replace("Row", "Scroll") + "/" + row).GetChildren().OfType<KitCard>()) list.Add(c);
+			foreach (var c in GetNode("Shelves").GetNode(row.Replace("Row", "Scroll") + "/" + row).GetChildren().OfType<KitCard>().Where(k => !k.IsQueuedForDeletion())) list.Add(c);
 		list.AddRange(Rows.OrderBy(r => r.Key).Select(r => (Control)r.Value));
 		list.Add(BackButton);
 		return list;
 	}
 
+	/// <summary>The card whose Activated signal is being handled: Godot refuses to free an object mid-emit, so it leaves the shelf hidden and is freed with the frame.</summary>
+	Control? _emitter;
+
+	void Discard(Node c)
+	{
+		if (c == _emitter) { c.Name = "_gone"; _emitter.Visible = false; _emitter.FocusMode = FocusModeEnum.None; c.QueueFree(); return; }
+		c.GetParent().RemoveChild(c);
+		c.Free();
+	}
+
 	void Fill(string shelf, IReadOnlyList<ShopEntry> entries)
 	{
 		var row = GetNode<HBoxContainer>($"Shelves/{shelf}Scroll/{shelf}Row");
-		foreach (var c in row.GetChildren()) { row.RemoveChild(c); c.Free(); }
+		foreach (var c in row.GetChildren()) Discard(c);
 		bool any = entries.Count > 0;
 		GetNode<Control>($"Shelves/{shelf}Scroll").Visible = any;
 		GetNode<Control>($"Shelves/{shelf}Label").Visible = any;
@@ -281,7 +291,7 @@ public partial class ShopScreen : Control
 		card.CardDisabled = bought; // a bought card is not offered again
 		card.Selected = false;
 		card.FocusEntered += () => ShowDetail(_notice.Length > 0 ? _notice : CardDetail(e));
-		card.Activated += () => OnCardActivated(e);
+		card.Activated += () => { _emitter = card; try { OnCardActivated(e); } finally { _emitter = null; } };
 		return card;
 	}
 
@@ -301,7 +311,7 @@ public partial class ShopScreen : Control
 	void BuildSlots(ShopScreenModel m, IReadOnlyList<ShopSlotRow> slots)
 	{
 		var box = GetNode<VBoxContainer>("SlotRows");
-		foreach (var c in box.GetChildren()) { box.RemoveChild(c); c.Free(); }
+		foreach (var c in box.GetChildren()) Discard(c);
 		var targets = Picking is { } id ? m.TargetsFor(id) : null;
 		foreach (var s in slots)
 		{
@@ -361,7 +371,7 @@ public partial class ShopScreen : Control
 			if (picking && locked) card.FocusMode = FocusModeEnum.None;
 			var slot = s.Slot;
 			card.FocusEntered += () => ShowDetail(_notice.Length > 0 ? _notice : SlotDetail(m, s, offered));
-			card.Activated += () => ReleaseSlot(slot);
+			card.Activated += () => { _emitter = card; try { ReleaseSlot(slot); } finally { _emitter = null; } };
 			card.FocusExited += () => { if (Armed == slot && GetViewport()?.GuiGetFocusOwner() is { } f && f != card) { Armed = null; CallDeferred(nameof(RefreshKeepFocus)); } };
 		}
 	}
@@ -383,10 +393,15 @@ public partial class ShopScreen : Control
 		return s;
 	}
 
+	bool? _footerPicking;
+
 	void BindFooter()
 	{
 		var footer = GetNode<KeyChipFooter>("Footer");
-		if (Picking != null) footer.SetHints(new("move", "Choose"), new("confirm", "Attach"), new("back", "Cancel"));
+		bool picking = Picking != null;
+		if (_footerPicking == picking) return; // the kit footer rebuilds its chips on every set; only set when the hints change
+		_footerPicking = picking;
+		if (picking) footer.SetHints(new("move", "Choose"), new("confirm", "Attach"), new("back", "Cancel"));
 		else footer.SetHints(new("move", "Move"), new("confirm", "Buy / Release"), new("frames", "Frame data"), new("back", "Back"));
 	}
 
