@@ -336,7 +336,7 @@ public static class SettingsTests
 			flow.Router.Back();
 
 			Press(flow.Title.StartButton);
-			Assert.True(flow.ControlSelect.KataButton.Text.StartsWith("●") && !flow.ControlSelect.KihonButton.Text.StartsWith("●"), "control select opens on the saved scheme");
+			Assert.True(flow.ControlSelect.KataButton.GetNode<Control>("Radio/Dot").Visible && !flow.ControlSelect.KihonButton.GetNode<Control>("Radio/Dot").Visible, "control select opens on the saved scheme");
 			Press(flow.ControlSelect.Start);
 			flow.ChooseNode(flow.Session!.Reachable()[0]); // YOK-77: the map comes first
 			Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "and the fight uses it");
@@ -368,7 +368,7 @@ public static class SettingsTests
 			flow.Router.Back();
 			Assert.True(new SettingsStore(path).Load().Data is { Scheme: ControlScheme.Kihon, Music: 20 }, "settings-sheet changes are saved to the same file");
 			Press(flow.Title.StartButton);
-			Assert.True(flow.ControlSelect.KihonButton.Text.StartsWith("●"), "one value: control select follows the sheet");
+			Assert.True(flow.ControlSelect.KihonButton.GetNode<Control>("Radio/Dot").Visible, "one value: control select follows the sheet");
 		});
 		WithBoot(runner, path, flow =>
 		{

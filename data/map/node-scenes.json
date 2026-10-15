@@ -21,6 +21,7 @@
   },
   "opponents": {
     "kitsune": { "fighter": "kitsune" },
+    "tanuki": { "fighter": "tanuki", "kit": "copy_of_ryo" },
     "apprentice": { "tier": "apprentice" }
   },
   "rows": {

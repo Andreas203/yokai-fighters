@@ -262,7 +262,7 @@ public static class BootFlowTests
 		flow.Router.Back();
 		Assert.Equal(ControlScheme.Kata, flow.Router.Scheme, "the settings choice reaches the router");
 		Press(flow.Title.StartButton);
-		Assert.True(flow.ControlSelect.KataButton.Text.StartsWith("●"), "control select opens on it");
+		Assert.True(flow.ControlSelect.KataButton.GetNode<Control>("Radio/Dot").Visible, "control select opens on it");
 		StartGame(flow);
 		Assert.Equal(ControlScheme.Kata, flow.Fight!.SchemeOf(0), "and the fight uses it");
 		MenuSettings.SetScheme(ControlScheme.Kihon); // a menu value changing during the fight

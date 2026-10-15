@@ -291,5 +291,102 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn("4 file(s), 0 valid, 4 invalid", out)
 
 
+FIXTURE_TRIAL = ROOT / "game" / "tests" / "fixtures" / "trials" / "test-spirit-wave-trial.json"
+
+
+class TrialSchemaTest(unittest.TestCase):
+    """YOK-105 (R7): kind 'trial' is registered and data/trials/ takes only trials."""
+
+    def variant(self, tmp, change, name="test-spirit-wave-trial", folder=None):
+        import json
+        doc = json.loads(FIXTURE_TRIAL.read_text(encoding="utf-8"))
+        doc["id"] = name
+        change(doc)
+        d = Path(tmp) / folder if folder else Path(tmp)
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / f"{name}.json"
+        p.write_text(json.dumps(doc), encoding="utf-8")
+        return run(p)
+
+    def test_fixture_trial_passes(self):
+        code, out = run(FIXTURE_TRIAL)
+        self.assertEqual(code, 0, out)
+        self.assertIn("1 valid, 0 invalid", out)
+
+    def test_bad_trials_fail_with_reasons(self):
+        import tempfile
+        cases = [
+            (lambda d: d.__setitem__("attempts", 4), "attempts: 3 was expected"),
+            (lambda d: d.pop("special"), "'special' is a required property"),
+            (lambda d: d["setup"].pop("distance"), "setup: 'distance' is a required property"),
+            (lambda d: d["goal"]["steps"][1].__setitem__("motion", "623"),
+             "goal.steps.1.motion: 'motion' needs a Kata input; trials must be Kihon-completable (R7, K2)"),
+            (lambda d: d["goal"]["steps"][1].__setitem__("precision", True), "Kihon-completable (R7, K2)"),
+            (lambda d: d["goal"]["steps"][0].pop("move"), "no step names the trial's special 'test-spirit-wave'"),
+            (lambda d: d["goal"]["steps"][0].__setitem__("distance", {"min": 900, "max": 400}), "min 900 is greater than max 400"),
+            (lambda d: d["goal"]["steps"].__setitem__(1, {"event": "combo", "count": 1}), "goal.steps.1"),
+            (lambda d: d["goal"]["steps"].__setitem__(1, {"event": "throw", "dummy_state": "airborne"}), "goal.steps.1"),
+            (lambda d: d["goal"]["steps"].__setitem__(1, {"event": "hit", "dummy_state": "landed"}), "goal.steps.1"),
+            (lambda d: d["setup"]["dummy"].pop("every"), "setup.dummy"),
+            # A whole float is an integer to the schema and to the game's loader: compare it as one.
+            (lambda d: d["goal"]["steps"][0].__setitem__("distance", {"min": 900.0, "max": 400}), "min 900 is greater than max 400"),
+            # Only an attacking dummy can be blocked or counterhit (C7).
+            (lambda d: d["goal"]["steps"].__setitem__(1, {"event": "block", "count": 3}),
+             "goal.steps.1.event: block needs a dummy with action 'attack'"),
+            (lambda d: d["goal"]["steps"][0].__setitem__("counter", True),
+             "goal.steps.0.counter: a counterhit needs a dummy with action 'attack'"),
+            (lambda d: d["setup"].__setitem__("dummy", {"action": "idle"}) or d["goal"]["steps"][0].__setitem__("counter", True),
+             "goal.steps.0.counter: a counterhit needs a dummy with action 'attack'"),
+            (lambda d: d["setup"].__setitem__("attempt_frames", 60), "setup.dummy.every: 90 is longer than the attempt (60 ticks)"),
+            (lambda d: d["setup"].__setitem__("attempt_frames", 60.0), "setup.dummy.every: 90 is longer than the attempt (60 ticks)"),
+        ]
+        for change, expect in cases:
+            with self.subTest(expect=expect), tempfile.TemporaryDirectory() as tmp:
+                code, out = self.variant(tmp, change)
+                self.assertEqual(code, 1, out)
+                self.assertIn(expect, out)
+
+    def test_block_and_counter_pass_against_an_attacking_dummy(self):
+        import tempfile
+
+        def change(d):
+            d["setup"]["dummy"] = {"action": "attack", "moves": ["test-jab"], "every": 120}
+            d["goal"]["steps"] = [{"event": "block", "count": 2}, {"event": "hit", "move": "test-spirit-wave", "counter": True}]
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = self.variant(tmp, change)
+            self.assertEqual(code, 0, out)
+
+    def test_throws_only_meet_throw_steps(self):
+        import json, tempfile
+        throw = FIXTURE_THROWS / "test-ryo-throw.json"
+        punch = SAMPLES / "sample-light-punch.json"
+        cases = [
+            ({"event": "hit", "move": "test-ryo-throw"}, 1, "goal.steps.1.move: 'test-ryo-throw' is a throw; throws only meet a throw step"),
+            ({"event": "combo", "count": 2, "move": "test-ryo-throw"}, 1, "is a throw; throws only meet a throw step"),
+            ({"event": "throw", "move": "sample-light-punch"}, 1, "goal.steps.1.move: 'sample-light-punch' is not a throw"),
+            ({"event": "throw", "move": "test-ryo-throw", "dummy_state": "landed", "landed_within": 3}, 0, ""),
+        ]
+        for step, want, expect in cases:
+            with self.subTest(step=step), tempfile.TemporaryDirectory() as tmp:
+                doc = json.loads(FIXTURE_TRIAL.read_text(encoding="utf-8"))
+                doc["goal"]["steps"][1] = step
+                p = Path(tmp) / "test-spirit-wave-trial.json"
+                p.write_text(json.dumps(doc), encoding="utf-8")
+                out = io.StringIO()
+                validate_data.validate([str(p), str(throw), str(punch), str(SAMPLES / "sample-light-punch-clip.json")], out=out)
+                text = "\n".join(l for l in out.getvalue().splitlines() if "test-spirit-wave-trial.json" in l)
+                self.assertEqual(bool(text), bool(want), out.getvalue())
+                self.assertIn(expect, text)
+
+    def test_trials_folder_takes_only_trials(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = self.variant(tmp, lambda d: None, folder="data/trials")
+            self.assertEqual(code, 0, out)
+            code, out = self.variant(tmp, lambda d: d.__setitem__("kind", "trial"), name="x", folder="data/moves")
+            self.assertEqual(code, 1, out)
+            self.assertIn("files in data/moves/ must be kind", out)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -86,8 +86,8 @@
     },
     "action": {
       "type": "string",
-      "description": "A move id (normal or special) or a generic action.",
-      "pattern": "^(walk_forward|walk_back|dash_forward|dash_back|jump|block|crouch_block|throw|special:[a-z0-9-]+|normal:[a-z0-9-]+)$"
+      "description": "A move id (normal or special), a generic action, or special:copied = the Tanuki's copied special, resolved when the copy locks (T0, T1; YOK-94). 'copied' is reserved and is no special's id.",
+      "pattern": "^(walk_forward|walk_back|dash_forward|dash_back|jump|block|crouch_block|throw|special:copied|special:[a-z0-9-]+|normal:[a-z0-9-]+)$"
     }
   }
 }
