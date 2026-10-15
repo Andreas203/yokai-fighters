@@ -47,6 +47,7 @@ KIND_SCHEMA = {
     "story_card": "story-card.schema.json",
     "run_map": "run-map.schema.json",
     "node_scenes": "node-scenes.schema.json",
+    "trial": "trial.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -57,7 +58,10 @@ DIR_KIND = {
     "clips": ("clip",),
     "story": ("story_card",),
     "map": ("run_map", "node_scenes"),
+    "trials": ("trial",),
 }
+# Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
+TRIAL_KATA_ONLY = ("motion", "precision", "kata")
 ELDER_SOURCE = {"nine-tailed-kitsune": "kitsune", "elder-oni": "oni", "elder-kappa": "kappa"}
 
 
@@ -240,7 +244,59 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     return errs
 
 
-def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) -> list[tuple[str, str]]:
+def whole(v):
+    """A JSON Schema integer as a number: 3, 3.0 and 3e0 are all 3 (as the game's TrialLoader reads them)."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return None
+    if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf")) or v != int(v)):
+        return None
+    return int(v)
+
+
+def check_trial(doc: dict, move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
+    """YOK-105 (R7): the checks of the game's TrialLoader the schema cannot express. Kihon-completable steps,
+    one step lands the trial's own special, distance min <= max, block / counterhit steps only against an
+    attacking dummy, `every` no longer than the attempt, and (for moves found in data/moves/ or this run)
+    throws only in throw steps."""
+    errs: list[tuple[str, str]] = []
+    goal = doc.get("goal")
+    steps = goal.get("steps") if isinstance(goal, dict) else None
+    steps = steps if isinstance(steps, list) else []
+    setup = doc.get("setup") if isinstance(doc.get("setup"), dict) else {}
+    dummy = setup.get("dummy") if isinstance(setup.get("dummy"), dict) else {}
+    attacks = dummy.get("action") == "attack"
+    every, frames = whole(dummy.get("every")), whole(setup.get("attempt_frames"))
+    if every is not None and frames is not None and every > frames:
+        errs.append(("setup.dummy.every", f"{every} is longer than the attempt ({frames} ticks)"))
+    for i, st in enumerate(steps):
+        if not isinstance(st, dict):
+            continue
+        for key in TRIAL_KATA_ONLY:
+            if key in st:
+                errs.append((f"goal.steps.{i}.{key}", f"'{key}' needs a Kata input; trials must be Kihon-completable (R7, K2)"))
+        d = st.get("distance")
+        if isinstance(d, dict):
+            lo, hi = whole(d.get("min")), whole(d.get("max"))
+            if lo is not None and hi is not None and lo > hi:
+                errs.append((f"goal.steps.{i}.distance", f"min {lo} is greater than max {hi}"))
+        if not attacks:
+            if st.get("event") == "block":
+                errs.append((f"goal.steps.{i}.event", "block needs a dummy with action 'attack' (nothing to block otherwise)"))
+            if st.get("counter") is True:
+                errs.append((f"goal.steps.{i}.counter", "a counterhit needs a dummy with action 'attack' (C7: the dummy must be in a move)"))
+        mk = (move_kinds or {}).get(st.get("move")) if isinstance(st.get("move"), str) else None
+        if mk == "throw" and st.get("event") != "throw":
+            errs.append((f"goal.steps.{i}.move", f"'{st['move']}' is a throw; throws only meet a throw step"))
+        elif mk is not None and mk != "throw" and st.get("event") == "throw":
+            errs.append((f"goal.steps.{i}.move", f"'{st['move']}' is not a throw"))
+    special = doc.get("special")
+    if isinstance(special, str) and steps and not any(isinstance(st, dict) and st.get("move") == special for st in steps):
+        errs.append(("goal.steps", f"no step names the trial's special '{special}' as its move (R7: the trial is for that special)"))
+    return errs
+
+
+def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
+             move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
     if doc.get("id") != path.stem:
@@ -307,6 +363,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict]) 
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
         errs.extend(check_node_scenes(doc, path))
+    elif kind == "trial":
+        errs.extend(check_trial(doc, move_kinds))
     elif kind == "clip":
         hs, he, ft = doc.get("hit_start"), doc.get("hit_end"), doc.get("frames_total")
         if (hs is None) != (he is None):
@@ -353,6 +411,18 @@ def validate(paths: list[str], out=sys.stdout) -> int:
         if isinstance(d, dict) and d.get("kind") == "clip" and isinstance(d.get("id"), str):
             clips[d["id"]] = d
 
+    # Move kinds a trial's steps are checked against: data/moves/ plus moves in this run.
+    move_kinds: dict[str, str] = {}
+    move_docs = []
+    for mf in sorted((DATA / "moves").glob("*.json")) if (DATA / "moves").is_dir() else []:
+        try:
+            move_docs.append(json.loads(mf.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError):
+            pass
+    for d in move_docs + list(docs.values()):
+        if isinstance(d, dict) and d.get("kind") in ("special", "normal", "throw") and isinstance(d.get("id"), str):
+            move_kinds[d["id"]] = d["kind"]
+
     for f, doc in docs.items():
         errs: list[tuple[str, str]] = []
         if not isinstance(doc, dict):
@@ -363,7 +433,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             v = validators[doc["kind"]]
             for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
-            errs.extend(semantic(doc, f, rule_ids, clips))
+            errs.extend(semantic(doc, f, rule_ids, clips, move_kinds))
         if errs:
             failures[f] = errs
 
