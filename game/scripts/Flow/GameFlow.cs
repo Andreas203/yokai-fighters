@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using YokaiFighters.Dev;
 using YokaiFighters.Fight;
 using YokaiFighters.SaveGame;
 using YokaiFighters.Settings;
@@ -84,12 +85,42 @@ public partial class GameFlow : Node
 	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
 	private string? _saveTrouble;
 
+	/// <summary>The player's save path for this boot (null = no file); while <see cref="DevMode.On"/> the store uses its dev slot instead.</summary>
+	private string? _playerSavePath;
+	/// <summary>The session that was running when dev mode was switched: it is never saved again, in either slot (YOK-123).</summary>
+	private RunSession? _unsavedSession;
+	/// <summary>The title's "Dev menu" button (dev mode available only; null otherwise).</summary>
+	public Button? DevMenuButton { get; private set; }
+
 	/// <summary>Before the menus are ready, so the title and control select first draw with the saved values.</summary>
 	public override void _EnterTree()
 	{
 		bool mainScene = GetTree().CurrentScene == this;
-		if ((SaveFile ?? (mainScene ? UserSavePath : null)) is { } savePath)
+		_playerSavePath = SaveFile ?? (mainScene ? UserSavePath : null);
+		AttachSaves();
+		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
+		if (path == null) return;
+		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
+		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
+		if (SettingsLoaded.Status is not (SettingsLoadStatus.Loaded or SettingsLoadStatus.Missing))
+			GD.PushWarning($"GameFlow: settings {path}: {SettingsLoaded.Status} ({string.Join("; ", SettingsLoaded.Problems)})");
+	}
+
+	/// <summary>
+	/// YOK-123: opens the save slot for the current mode: the player's file, or while <see cref="DevMode.On"/> its dev
+	/// slot (<see cref="DevMode.SavePathFor"/>), so a dev session never reads or writes the player's save. M5 / AM3
+	/// node-boundary saves work the same in either slot. Called at boot and when dev mode is switched.
+	/// </summary>
+	private void AttachSaves()
+	{
+		Saves = null;
+		SaveLoaded = null;
+		Saved = SaveData.Empty;
+		_saveTrouble = null;
+		_writePending = false;
+		if (_playerSavePath is { } playerPath)
 		{
+			string savePath = DevMode.SavePath(playerPath);
 			Saves = new SaveStore(savePath);
 			SaveLoaded = Saves.Load();
 			Saved = SaveLoaded.Data;
@@ -100,12 +131,54 @@ public partial class GameFlow : Node
 			else if (SaveLoaded.Status == SaveLoadStatus.Corrupt) _saveTrouble = "The save file could not be read. A copy is kept when the next run is saved.";
 			else if (Saved.Run is null && SaveStore.LostSomething(SaveLoaded)) _saveTrouble = "The saved run could not be read. A copy of the file is kept when the next run is saved.";
 		}
-		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
-		if (path == null) return;
-		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
-		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
-		if (SettingsLoaded.Status is not (SettingsLoadStatus.Loaded or SettingsLoadStatus.Missing))
-			GD.PushWarning($"GameFlow: settings {path}: {SettingsLoaded.Status} ({string.Join("; ", SettingsLoaded.Problems)})");
+	}
+
+	/// <summary>
+	/// Dev mode switched: finish any refused write in the old slot, then open the other slot. A run in progress at that
+	/// moment is not saved again in either slot (its earlier saves stay in the old one).
+	/// </summary>
+	private void OnDevModeChanged()
+	{
+		RetryPendingWrite();
+		_unsavedSession = Session;
+		AttachSaves();
+		if (Router.Current == Screen.Title) RefreshContinue();
+		RefreshDevButton();
+	}
+
+	/// <summary>
+	/// YOK-123: opens the dev menu on the title or the map (F11 or the title's Dev menu button). False when the
+	/// shell refuses (dev mode unavailable, or off away from the title) or on any other screen.
+	/// </summary>
+	public bool OpenDevMenu()
+	{
+		DevPlace? place = Router.Current switch { Screen.Title => DevPlace.Title, Screen.Map => DevPlace.Map, _ => null };
+		if (place is not { } at || DevShell.Instance is not { } shell) return false;
+		Control? back = at == DevPlace.Title ? Title.StartButton : null;
+		return shell.OpenMenu(new DevContext(at, this), () => { if (back != null && IsInstanceValid(back) && back.IsVisibleInTree()) back.GrabFocus(); });
+	}
+
+	private void AddDevButton()
+	{
+		if (!DevMode.Available) return;
+		DevMenuButton = new Button { Name = "DevMenuButton", FocusMode = Control.FocusModeEnum.None };
+		DevMenuButton.AddThemeFontSizeOverride("font_size", 22);
+		DevMenuButton.Position = new Vector2(16, 12);
+		DevMenuButton.Size = new Vector2(220, 44);
+		DevMenuButton.Pressed += () => OpenDevMenu();
+		Title.AddChild(DevMenuButton);
+		RefreshDevButton();
+	}
+
+	private void RefreshDevButton()
+	{
+		if (DevMenuButton != null) DevMenuButton.Text = DevMode.On ? "Dev menu (F11)" : "Dev mode (F11)";
+	}
+
+	public override void _UnhandledInput(InputEvent e)
+	{
+		if (e is InputEventKey { Pressed: true, Echo: false } k && k.PhysicalKeycode == DevMode.MenuKey && OpenDevMenu())
+			GetViewport().SetInputAsHandled();
 	}
 
 	public override void _Ready()
@@ -136,6 +209,8 @@ public partial class GameFlow : Node
 		// One scheme value for the whole menu side: the settings sheet and control select both write MenuSettings.
 		Router.ChooseScheme(MenuSettings.Scheme);
 		MenuSettings.Changed += OnSettingsChanged;
+		DevMode.Changed += OnDevModeChanged;
+		AddDevButton();
 
 		ControlScheme? direct = DirectFight ?? DirectFightFromArgs(OS.GetCmdlineUserArgs());
 		if (direct is { } scheme) Router.StartFightDirect(scheme);
@@ -144,6 +219,7 @@ public partial class GameFlow : Node
 	public override void _ExitTree()
 	{
 		MenuSettings.Changed -= OnSettingsChanged;
+		DevMode.Changed -= OnDevModeChanged;
 		RetryPendingWrite();
 		if (SettingsLoaded != null) MenuSettings.Detach(); // every change is already on disk
 	}
@@ -232,13 +308,13 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
-			if (session == Session && Saves is not null) Write(Saved.WithRun(null));
+			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
 		};
 	}
 
 	private void SaveRun(RunSession session)
 	{
-		if (Saves is null || session != Session) return;
+		if (Saves is null || session != Session || session == _unsavedSession) return;
 		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile)));
 	}
 
