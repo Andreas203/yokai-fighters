@@ -171,6 +171,55 @@ class ValidateDataTest(unittest.TestCase):
         bare = {k: x for k, x in good.items() if k not in ("trim_start", "trim_end", "speed_scale", "file")}
         self.assertEqual([], [e.message for e in v.iter_errors(bare)], "the fields are optional")
 
+    def test_clip_retime_curve(self):
+        """YOK-113 (F2, AM5): retime segments are contiguous, cover frames_total, 0.5x-2x, holds <= 4 frames."""
+        import json
+        path = ROOT / "data" / "clips" / "ryo-get-up.json"
+        base = json.loads(path.read_text(encoding="utf-8"))  # trim 22-102, frames_total 33
+        v = validate_data.load_validators()["clip"]
+        ids = validate_data.load_rule_ids()
+        # snap (2x), hold (4 frames shown), stretch (0.5x), 1x out: 1-5 -> 22-30, 5-8 hold, 8-12 -> 30-32, 12-33 -> 32-53
+        good_curve = [{"frames": [1, 5], "ticks": [22, 30], "note": "startup snaps"},
+                      {"frames": [5, 8], "ticks": [30, 30], "note": "hit pose holds"},
+                      {"frames": [8, 12], "ticks": [30, 32]},
+                      {"frames": [12, 33], "ticks": [32, 53]}]
+        good = dict(base, retime=good_curve)
+        self.assertEqual([], [e.message for e in v.iter_errors(good)])
+        self.assertEqual([], validate_data.semantic(good, path, ids, {}))
+
+        def sem(curve, **kw):
+            return validate_data.semantic(dict(base, retime=curve, **kw), path, ids, {})
+        seg = lambda a, b, ta, tb: {"frames": [a, b], "ticks": [ta, tb]}
+        tail = [seg(12, 33, 32, 53)]
+        # too fast / too slow / backwards
+        self.assertIn(("retime.0.ticks", "ticks 22-40 over frames 1-5 play at 4.5x; a segment plays between 0.5x and 2x (F2)"),
+                      sem([seg(1, 5, 22, 40), seg(5, 33, 40, 70)]))
+        self.assertIn(("retime.1.ticks", "ticks 30-31 over frames 5-12 play at 0.142857x; a segment plays between 0.5x and 2x (F2)"),
+                      sem([seg(1, 5, 22, 30), seg(5, 12, 30, 31), seg(12, 33, 31, 52)]))
+        self.assertTrue(any(w == "retime.1.ticks" and "-1x" in m for w, m in sem([seg(1, 5, 22, 30), seg(5, 6, 30, 29), seg(6, 33, 29, 50)])))
+        # hold too long, alone and split over two segments
+        self.assertIn(("retime.1.frames", "held tick 30 shows on 5 frames (5-9); a hold lasts at most 4 (F2)"),
+                      sem([seg(1, 5, 22, 30), seg(5, 9, 30, 30), seg(9, 12, 30, 33), seg(12, 33, 33, 54)]))
+        self.assertIn(("retime.2.frames", "held tick 30 shows on 5 frames (5-9); a hold lasts at most 4 (F2)"),
+                      sem([seg(1, 5, 22, 30), seg(5, 7, 30, 30), seg(7, 9, 30, 30), seg(9, 12, 30, 33), seg(12, 33, 33, 54)]))
+        # gaps, overlaps, tick jumps, coverage
+        self.assertIn(("retime.1.frames", "segments must be contiguous: starts on frame 6, previous ends on 5"),
+                      sem([seg(1, 5, 22, 30), seg(6, 12, 30, 32)] + tail))
+        self.assertIn(("retime.1.ticks", "segments must be contiguous: starts on tick 31, previous ends on 30"),
+                      sem([seg(1, 5, 22, 30), seg(5, 12, 31, 32)] + tail))
+        self.assertIn(("retime.0.frames", "curve must start on game frame 1, starts on 2"), sem([seg(2, 33, 22, 54)]))
+        self.assertIn(("retime.0.frames", "curve must end on frames_total 33, ends on 30 (F2)"), sem([seg(1, 30, 22, 51)]))
+        self.assertIn(("retime.0.frames", "need last frame > first frame, got 1-1"), sem([seg(1, 1, 22, 22), seg(1, 33, 22, 54)]))
+        self.assertIn(("retime.0.ticks", "ticks 0-32 fall outside trim 22-102"), sem([seg(1, 33, 0, 32)]))
+        # the curve, not speed_scale, decides frames_total: no trim/speed mismatch is reported with a curve
+        self.assertEqual([], sem([seg(1, 33, 22, 54)], speed_scale=1))
+        # schema: malformed segments
+        for bad in ([], [{"frames": [1, 33]}], [{"frames": [1], "ticks": [22, 54]}], [{"frames": [0, 33], "ticks": [22, 54]}],
+                    [{"frames": [1, 33], "ticks": [22, -1]}], [{"frames": [1, 33], "ticks": [22, 54], "speed": 2}],
+                    [{"frames": [1, 33], "ticks": [22.5, 54]}]):
+            self.assertNotEqual([], [e.message for e in v.iter_errors(dict(base, retime=bad))], bad)
+        self.assertEqual([("retime", "retime must be a non-empty list of segments")], validate_data.check_retime([], 33))
+
     def test_story_cards_validate(self):
         code, out = run(ROOT / "data" / "story", SAMPLES / "sample-story-card.json")
         self.assertEqual(code, 0, out)
