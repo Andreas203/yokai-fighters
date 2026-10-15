@@ -1,0 +1,21 @@
+{
+  "kind": "trial",
+  "id": "spirit-wave-trial",
+  "status": "proposed",
+  "special": "spirit-wave",
+  "prompt": "Hit the dummy from far away with Spirit Wave, then hit it again.",
+  "attempts": 3,
+  "setup": {
+    "distance": 800,
+    "attempt_frames": 600,
+    "dummy": { "action": "idle" }
+  },
+  "goal": {
+    "steps": [
+      { "event": "hit", "move": "spirit-wave", "distance": { "min": 450 } },
+      { "event": "hit", "move": "spirit-wave" }
+    ]
+  },
+  "rules": ["R7", "K1", "K2", "K3", "F3"],
+  "notes": "Teaches Spirit Wave as a far poke (projectile, speed 12). Kihon: the Spirit Wave button (slot A, neutral) plus walking. The second wave must land after the first, so the player learns to keep firing. Values are first passes; harness to confirm completability."
+}
