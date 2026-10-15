@@ -41,6 +41,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-11 YOK-89 → YOK-103: PR #92 (the 33 abilities) was reverted in `ccd9581`, because the loader rejected 13 of its 15 files and 72 tests failed. The data comes back through YOK-103.
 - 2026-10-11 YOK-103 rule: **content PRs run the full `dotnet test` suite before review**; schema plus Rules Lawyer is not enough.
 - 2026-10-11: ui-designer owns the rough mockups (`docs/design/screens/rough/`).
+- 2026-10-15 (designer): rig-specialist runs on Opus (low volume; rig verdicts from stress-pose stills and `bpy` scripts gate every clip). animator stays on Sonnet; move single tickets to Opus if its verdicts prove unreliable.
 - 2026-10-12 YOK-103: blocked after 3 failed code-critic rounds (the workflow's cap). Sumo Stance is left out.
 - 2026-10-12 YOK-74 → YOK-107: the Oni and Kappa HUD portraits were split out to wait for Astra art.
 - Rules Lawyer PASS does not merge a PR that also edits tests; it is held for the designer (YOK-43).
