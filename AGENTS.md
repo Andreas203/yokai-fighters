@@ -19,7 +19,8 @@ The crew exists in three places, from the same role definitions in `.claude/agen
 | Lead | Producer | [`producer`](.claude/agents/producer.md) | `ceo` | `claude-sonnet-5-5` |
 | Assets | Asset Smith | [`asset-smith`](.claude/agents/asset-smith.md) | `designer` | not hired yet |
 | Assets | Sound Scout | [`sound-scout`](.claude/agents/sound-scout.md) | `researcher` | unset → Opus 5 (hired as Asset Scout; instructions need re-applying) |
-| Assets | Clip Matcher | [`clip-matcher`](.claude/agents/clip-matcher.md) | `designer` | unset → Opus 5 |
+| Assets | Rig Specialist | [`rig-specialist`](.claude/agents/rig-specialist.md) | `designer` | not hired yet |
+| Assets | Animator | [`animator`](.claude/agents/animator.md) | `designer` | unset → Opus 5 (hired as Clip Matcher; instructions need re-applying) |
 | Content | Movesmith | [`movesmith`](.claude/agents/movesmith.md) | `designer` | unset → Opus 5 |
 | Content | Habit Writer | [`habit-writer`](.claude/agents/habit-writer.md) | `designer` | unset → Opus 5 |
 | Content | Rules Lawyer | [`rules-lawyer`](.claude/agents/rules-lawyer.md) | `qa` | unset → Opus 5 |

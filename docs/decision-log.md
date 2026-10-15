@@ -13,6 +13,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - The Tanuki's habit is throwing at a blocking player, 60% of the time (Y2).
   - The shop sells common specials **and** modifiers at 50 each (R6), and releasing a binding costs Ryo 40.
   - Coins have no cap, for now (R8).
+- **AM5** 2026-10-15: clip-matcher splits into `rig-specialist` and `animator`; level presets move to asset-smith. Generators are Tripo or Meshy (Tripo likely). Rigs try the generator auto-rig against AccuRIG 2. Blender cleanup by script, video mocap, ActorCore and Auto-Rig Pro allowed; Cascadeur only for its physics pass. One shared skeleton (Meshy's) with bone maps. Clips may carry retiming curves (F2), 0.5×–2× per segment, holds ≤4 frames (first pass).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39).
@@ -43,6 +44,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-12 YOK-103: blocked after 3 failed code-critic rounds (the workflow's cap). Sumo Stance is left out.
 - 2026-10-12 YOK-74 → YOK-107: the Oni and Kappa HUD portraits were split out to wait for Astra art.
 - Rules Lawyer PASS does not merge a PR that also edits tests; it is held for the designer (YOK-43).
+- 2026-10-15 AM5: tickets YOK-110 (Blender scripts), YOK-111 (shared skeleton), YOK-112 (Oni rig trial), YOK-113 (retiming in ClipCatalog), YOK-114 (mocap throw trial), YOK-115 (designer setup and purchases).
 
 ## Backlog refinement 2026-10-13 (designer approved)
 - Closed as done on evidence from main: YOK-1–5 (vault), 13 (codebase map), 32, 33, 42, 43, 44, 45, 48, 49, 53, 56, 58, 75, and the parent YOK-39 (demo shipped).
@@ -66,6 +68,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
 
 ## Waiting on the designer
+- **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur; Paperclip bundles for rig-specialist and animator.
 - **YOK-36 open rules:**
   - Lv 2 steps for the other specials.
   - Credit and sound spend, plan tier and licence.

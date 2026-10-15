@@ -26,6 +26,9 @@ Practice mode reuses the dojo scene — no new screen. Placeholder versions of a
 ## Style
 Paper talismans, brush strokes, red seals; muted ukiyo-e palette (persimmon, indigo, rice paper, pine). Bought abilities render in grey "borrowed ink" (R6). Readability beats decoration: the HUD must be legible during hitstop and screen shake, at 1080p and 720p, and must never cover the fighters' gameplay plane.
 
+## Mockups
+A screen with no target concept in `docs/design/screens/` gets a greybox mockup from you first. Draw it in code — SVG or HTML rendered to a 1920x1080 PNG with headless Chrome — into `docs/design/screens/rough/`, with the source beside it and a README: every element with the rule ID that requires it and the data it binds to, the input flow, the states, and open questions. Flat shapes, real labels, plausible numbers from the rules, labelled dashed boxes for art; a "ROUGH PROTOTYPE" strip on every image. Never use an image generator and never try to look finished: once the designer approves the layout, the designer's Astra pass turns it into the finished concept, and you build the Godot screen to match that. Mockup branches are docs only (nothing under `game/`) and go straight to the designer, with no code gates.
+
 ## Workflow
 1. Branch named `YOK-<number>-<brief-name>` after the Linear ticket (e.g. `YOK-41-reward-screen`); with no ticket, `YOK-<brief-name>`. Use the same string as the PR title. Never push to `main`, never merge.
 2. UI reads game state through the gameplay code's APIs; never duplicate game rules in UI code. If an API is missing, say so and stop — the Producer will ticket it for `gameplay-programmer`.

@@ -281,8 +281,9 @@ The game is built with a crew of AI agents running in Claude Code. They are **de
 | Team | Agent | Responsibility |
 |---|---|---|
 | Lead | `producer` | Turns outstanding work into Linear tickets and a dispatch plan |
-| Assets | `asset-smith` | Writes generation specs for models, stages and textures, runs approved jobs through the Meshy MCP and checks the results |
-| Assets | `clip-matcher` | Specs each move's clip for Meshy and measures the generated take, then level presets and frame-timed sound |
+| Assets | `asset-smith` | Writes generation specs for models, stages and textures (Tripo or Meshy), runs approved jobs and checks the results; level presets |
+| Assets | `rig-specialist` | Rigs every fighter (generator auto-rig or AccuRIG 2), checks it in Blender, keeps it on the shared skeleton, runs the G4 gate |
+| Assets | `animator` | Specs each move's clip (generator, motion capture or bought pack), cleans, measures and retimes the take, then frame-timed sound |
 | Assets | `sound-scout` | Shortlists sound-effect and music packs for the designer to buy |
 | Content | `movesmith` | Writes frame data from the matched clip, hitboxes, card text and dojo trials |
 | Content | `habit-writer` | Writes yokai behaviour profiles and all story-card text |
@@ -310,8 +311,9 @@ flowchart TD
     P -- "dispatch plan" --> O
 
     subgraph ASSETS["Assets team"]
-        AS["Asset Smith<br/>generation specs + acceptance"]
-        CM["Clip Matcher<br/>clip specs, measured takes,<br/>presets, sound cues"]
+        AS["Asset Smith<br/>generation specs + acceptance,<br/>level presets"]
+        RS["Rig Specialist<br/>rigs, Blender checks, G4 gate"]
+        CM["Animator<br/>clip specs, cleaned + measured<br/>+ retimed takes, sound cues"]
         SS["Sound Scout<br/>sound + music shortlists"]
     end
 
@@ -332,7 +334,8 @@ flowchart TD
     M[("main branch")]
 
     O -- "generate" --> AS
-    AS -- "spec → approved → Meshy MCP → accepted rigs" --> CM
+    AS -- "spec → approved → accepted model" --> RS
+    RS -- "passed rigs, G4 gate" --> CM
     O -- "sound" --> SS
     SS -- "shortlist → designer buys" --> CM
 
@@ -361,10 +364,11 @@ flowchart TD
 
 | Workflow | Path | Ends when |
 |---|---|---|
-| **content** | Clip Matcher (if a clip is needed: see **clip**) → Movesmith or Habit Writer → Rules Lawyer → harness checks | Schema, Rules Lawyer and harness pass, then the data merges. Three failed gate rounds block the ticket for the designer. |
-| **generate** | Asset Smith spec → designer approves job and credits → Asset Smith runs it via the Meshy MCP → acceptance check | Accepted, or 3 takes then a fallback |
-| **clip** | Clip Matcher spec → designer approves the take → Clip Matcher runs it via the Meshy MCP and measures it | A measured clip in `data/clips/`, or an F5 substitute after 3 takes |
-| **sound** | Sound Scout → designer buys → Clip Matcher sound cues | The designer has made the purchase decision |
+| **content** | Animator (if a clip is needed: see **clip**) → Movesmith or Habit Writer → Rules Lawyer → harness checks | Schema, Rules Lawyer and harness pass, then the data merges. Three failed gate rounds block the ticket for the designer. |
+| **generate** | Asset Smith spec → designer approves job and cost → job runs (Meshy MCP, or the designer in Tripo) → acceptance check | Accepted, or 3 takes then a fallback |
+| **rig** | Rig Specialist spec → designer approves the job (generator auto-rig or AccuRIG 2) → job runs → Blender checks → G4 gate for a yokai | Rig accepted, or 3 takes then a fallback |
+| **clip** | Animator spec → designer approves the take → take runs (generator, motion capture or bought pack) → Animator cleans, measures and retimes it | A measured clip in `data/clips/`, or an F5 substitute after 3 takes |
+| **sound** | Sound Scout → designer buys → Animator sound cues | The designer has made the purchase decision |
 | **code** | Gameplay Programmer or UI Designer on its own branch, build-and-test loop via the Godot MCP | The designer approves the PR. Agents never merge. |
 | **balance** | Harness results → Sparring Partner → Producer tickets the tuning | Tuning tickets re-enter the content workflow |
 
