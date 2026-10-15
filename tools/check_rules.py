@@ -14,13 +14,15 @@ and the GDD section it comes from:
                   most four specials, each once (A3)
   modifiers  A2   one modifier per special (in a run's slots, or on a special file)
   cancel-cap X2 / A11 / X4   at most two cancel rules held in a run; at most three in data
-  cancels    X3   every rule is once per combo, and the cancel graph over the moves
-                  (from/into classes of every rule in data) has no loop
+  cancels    X3   every rule is once per combo; a loop in the cancel graph over the moves
+                  (from/into classes of every rule in data) fails only when a rule on it is
+                  not once per combo, otherwise it is left for the harness
   levels     A3 / A4 / A5 / E21 / P1   every special has exactly Lv 1-3; Lv 2 one
                   tuning step that is not damage alone; Lv 3 an evolution with a preset
-  meter      C5 / E16   meter is spent only by a special's EX (1 bar = 100); no
-                  normal, throw, level or modifier spends meter except on EX
-  schemes    K1 / K2 / K3   every special has a Kata motion and a Kihon direction,
+  meter      C5 / E16   only a special's EX (1 bar = 100) or the burst (C6, not in data)
+                  spends meter; no normal, throw, level or modifier spends it, except an
+                  effect on the EX cost spelt with an `ex.` target (`ex.meter_cost`)
+  schemes    K1 / K2 / E18  every special has a Kata motion and a Kihon direction,
                   on the same slot, matching that slot's K1 motion and K2 direction
   trials     R7 / K2   each trial's special and every step's move exist, are in Ryo's
                   kit and have a Kihon input; completability within 3 attempts is
@@ -64,6 +66,7 @@ GDD = {
     "K2": "GDD 3.3 Control schemes",
     "K3": "GDD 3.3 Control schemes",
     "R7": "GDD 6.3 Rest stops (Dojo)",
+    "C4": "GDD 3.2 Fight basics (Throws); command grabs are an open question in rules.md",
     "P1": "GDD 1.3 Design pillars",
     "E16": "rules.md E16 (designer default, no GDD section)",
     "E21": "rules.md E21 (designer decision YOK-41, no GDD section)",
@@ -228,10 +231,10 @@ def move_classes(d: dict) -> set[str]:
     k = d.get("kind")
     out = set()
     if k == "special":
+        # Specials are never in successful_throws: the game's CancelFrom.SuccessfulThrows is m.IsThrow, which
+        # only the throw input sets (Match.Specials.cs, MoveData.cs). Whether a command grab such as River Grab
+        # counts as a throw is an open question (C4); check_cancels flags it for the harness instead.
         out |= {"specials", "one_special"}
-        props = (((d.get("levels") or {}).get("1") or {}).get("frame_data") or {}).get("properties") or {}
-        if props.get("throw"):  # a command grab (River Grab, C4); counting it as a throw is an open question
-            out.add("successful_throws")
     elif k == "normal" and d.get("source") == "ryo":
         out.add("normals")
         btn = (d.get("input") or {}).get("button")
@@ -309,11 +312,27 @@ def check_cancels(docs, rep: Report):
         return
     moves = [d for _, d in of_kind(docs, "special", "normal", "throw")]
     graph = cancel_graph(moves, [d for _, d in rules])
-    by_id = {str(d.get("id")): p for p, d in rules}
+    by_id = {str(d.get("id")): (p, d) for p, d in rules}
+    # X3: once per combo is what stops stacked rules looping. A cycle is a violation only when a rule on it
+    # lacks once_per_combo: true; otherwise the runtime bound has to hold, which the harness confirms.
     for members, example, used in find_loops(graph):
         chain = " -> ".join(example + [example[0]])
-        rep.fail("cancels", "X3", by_id.get(used[0]) if used else None,
-                 f"cancel loop via {used} among {members} (e.g. {chain}); stacked rules must never loop")
+        unbounded = [r for r in used if (by_id.get(r) or (None, {}))[1].get("once_per_combo") is not True]
+        first = (by_id.get(used[0]) or (None,))[0] if used else None
+        if unbounded:
+            rep.fail("cancels", "X3", (by_id.get(unbounded[0]) or (None,))[0],
+                     f"cancel loop via {used} among {members} (e.g. {chain}) and {unbounded} not once per combo; "
+                     f"stacked rules would loop")
+        else:
+            rep.confirm("cancels", "X3", first,
+                        f"cancel cycle via {used} among {members} (e.g. {chain}) stops only by once per combo")
+    if any(isinstance(d.get("path"), dict) and d["path"].get("from") == "successful_throws" for _, d in rules):
+        for p, d in of_kind(docs, "special"):
+            props = (((d.get("levels") or {}).get("1") or {}).get("frame_data") or {}).get("properties") or {}
+            if props.get("throw"):
+                rep.confirm("cancels", "C4", p,
+                            f"'{d.get('id')}' is a command grab: the game does not count it as a successful throw "
+                            f"for cancels (open question in rules.md, C4)")
     rep.confirm("cancels", "X3", None,
                 f"with the {len(rules)} cancel rule(s) in data, held up to {MAX_HELD_CANCELS} at once (X2), "
                 f"no move is cancelled into twice in one combo (runtime once-per-combo enforcement)")
@@ -377,7 +396,7 @@ def check_meter(docs, rep: Report):
         kind = d.get("kind")
         for where in _meter_keys(d):
             if not (kind == "special" and where == "ex.meter_cost"):
-                rep.fail("meter", "C5", p, f"{where}: meter is spent only by a special's EX version")
+                rep.fail("meter", "C5", p, f"{where}: only a special's EX (C5) or the burst (C6) spends meter")
         if kind == "special" and isinstance(d.get("ex"), dict):
             cost = d["ex"].get("meter_cost")
             if cost != EX_COST:
@@ -416,7 +435,8 @@ def check_schemes(docs, rep: Report):
             if s in KIHON_DIRECTION and kihon.get("direction") != KIHON_DIRECTION[s]:
                 rep.fail("schemes", "K2", p, f"Kihon slot {s} is direction {KIHON_DIRECTION[s]}, got {kihon.get('direction')!r}")
         if isinstance(kata, dict) and isinstance(kihon, dict) and kata.get("slot") != kihon.get("slot"):
-            rep.fail("schemes", "K3", p, f"Kata slot {kata.get('slot')} and Kihon slot {kihon.get('slot')} differ; both schemes map the same slot")
+            rep.fail("schemes", "K1", p, f"Kata slot {kata.get('slot')} and Kihon slot {kihon.get('slot')} differ; "
+                     f"K1 and K2 (E18) name the same four slots, so a special sits in one slot in both schemes")
 
 
 # --- R7 trials completable with Kihon inputs --------------------------------------------------

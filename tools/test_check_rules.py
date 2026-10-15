@@ -80,8 +80,9 @@ class BrokenSamplesTest(unittest.TestCase):
         for v in rep["violations"]:
             self.assertTrue(v["gdd"], v)
 
-    def test_cancel_loop(self):
+    def test_cancel_loop_without_once_per_combo(self):
         self.assertCaught("cancel-loop", "X3", "cancels", "cancel loop via ['spirit-chain']")
+        self.assertCaught("cancel-loop", "X3", "cancels", "['spirit-chain'] not once per combo")
         _, hits, _ = rules_hit("cancel-loop")
         self.assertFalse(any("fox-step" in m for _, _, m in hits), "Fox Step alone ends in a dash and cannot loop")
 
@@ -102,7 +103,7 @@ class BrokenSamplesTest(unittest.TestCase):
 
     def test_wrong_motion_and_split_slots(self):
         self.assertCaught("wrong-scheme", "K1", "schemes", "Kata slot B is motion 623")
-        self.assertCaught("wrong-scheme", "K3", "schemes", "Kata slot B and Kihon slot C differ")
+        self.assertCaught("wrong-scheme", "K1", "schemes", "Kata slot B and Kihon slot C differ")
 
     def test_two_modifiers_on_one_special(self):
         self.assertCaught("two-modifiers", "A2", "modifiers", "slots[0]: 'spirit-wave' carries 2 modifiers")
@@ -122,7 +123,7 @@ class BrokenSamplesTest(unittest.TestCase):
         self.assertCaught("levels", "A5", "levels", "no visual preset")
 
     def test_meter_for_ex_only(self):
-        self.assertCaught("meter", "C5", "meter", "meter_cost: meter is spent only by a special's EX")
+        self.assertCaught("meter", "C5", "meter", "meter_cost: only a special's EX (C5) or the burst (C6) spends meter")
         self.assertCaught("meter", "C5", "meter", "ex.meter_cost 200")
         self.assertCaught("meter", "C5", "meter", "target 'meter_cost' spends meter outside the EX")
 
@@ -132,12 +133,37 @@ class BrokenSamplesTest(unittest.TestCase):
         self.assertCaught("trial-broken", "R7", "trials", "move 'ghost-palm' does not exist")
         self.assertCaught("trial-broken", "R7", "trials", "trial special 'fox-mirage' is not a special")
 
-    def test_every_fixture_is_tested_and_fails(self):
-        tested = {"cancel-loop", "cancel-not-once", "cancel-cap", "missing-kihon", "wrong-scheme",
+    def test_every_fixture_is_tested(self):
+        broken = {"cancel-loop", "cancel-not-once", "cancel-cap", "missing-kihon", "wrong-scheme",
                   "two-modifiers", "slot-overflow", "levels", "meter", "trial-broken"}
-        self.assertEqual(tested, {p.name for p in FIX.iterdir() if p.is_dir()})
-        for name in tested:
+        self.assertEqual(broken | PASSING, {p.name for p in FIX.iterdir() if p.is_dir()})
+        for name in broken:
             self.assertEqual(rules_hit(name)[0], 1, name)
+        for name in PASSING:
+            self.assertEqual(rules_hit(name)[0], 0, name)
+
+
+PASSING = {"cancel-cycle-bounded", "river-grab-x4", "ninefold-spark"}
+
+
+class PassingSamplesTest(unittest.TestCase):
+    def test_cycle_bounded_by_once_per_combo_is_left_for_the_harness(self):
+        code, hits, rep = rules_hit("cancel-cycle-bounded")
+        self.assertEqual(code, 0, hits)
+        self.assertTrue(any(h["rule"] == "X3" and "cancel cycle via ['spirit-chain']" in h["message"]
+                            for h in rep["harness_must_confirm"]), rep["harness_must_confirm"])
+
+    def test_river_grab_with_the_three_x4_rules_is_no_loop(self):
+        # The game's SuccessfulThrows is IsThrow (throw input only), so a command grab is just a special (C4 open).
+        code, hits, rep = rules_hit("river-grab-x4")
+        self.assertEqual(code, 0, hits)
+        self.assertTrue(any(h["rule"] == "C4" and "'river-grab' is a command grab" in h["message"]
+                            for h in rep["harness_must_confirm"]))
+        self.assertFalse(any("cancel cycle" in h["message"] for h in rep["harness_must_confirm"]))
+
+    def test_ninefold_spark_style_ex_cost_modifier_passes(self):
+        code, hits, _ = rules_hit("ninefold-spark")
+        self.assertEqual(code, 0, hits)
 
 
 class GraphTest(unittest.TestCase):

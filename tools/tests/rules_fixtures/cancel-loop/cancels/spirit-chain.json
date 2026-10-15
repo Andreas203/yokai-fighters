@@ -21,10 +21,10 @@
       "block"
     ]
   },
-  "once_per_combo": true,
+  "once_per_combo": false,
   "card": {
     "plain": "Cancel any special into a dash.",
     "frames": "Special → dash inside the move's cancel window, once per combo"
   },
-  "notes": "YOK-35 broken fixture."
+  "notes": "YOK-35 broken fixture: specials -> specials loop with no once-per-combo bound (X3)."
 }
