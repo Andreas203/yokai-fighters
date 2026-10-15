@@ -7,6 +7,7 @@ using YokaiFighters.Flow;
 using YokaiFighters.Settings;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
+using YokaiFighters.Ui.Kit;
 
 namespace YokaiFighters.Tests;
 
@@ -140,6 +141,8 @@ public static class ShopScreenTests
 			Assert.True(screen.PickTarget(offered[0]), "picked");
 			Assert.True(s.Run.Coins == 70 && s.Run[offered[0]] is { Modifier.Id: "test-kappa-wisp", ModifierBorrowed: true }, "A2 / R6: 50 coins, attached, borrowed ink");
 			Assert.True(screen.Picking == null && screen.Cards["Modifier_test-kappa-wisp"].CardDisabled, "back to the shelf, the card is bought");
+			Assert.True(Text(screen.Rows[offered[0]], "Sub").Contains("borrowed ink"), "R6: the slot with the bought modifier reads borrowed ink");
+			Assert.True(((Control)screen.Rows[offered[0]].GetNode("Body")).Modulate.R < 0.95f, "and is greyed");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});
@@ -190,6 +193,22 @@ public static class ShopScreenTests
 			Assert.True(!screen.ReleaseSlot(SpecialSlot.A) && s.StateHash() == h, "refused even with 500 coins");
 			Assert.Equal("LOCKED", Text(screen.Rows[SpecialSlot.A], "BadgeLabel"), "the button reads LOCKED");
 			Assert.True(Text(screen.Rows[SpecialSlot.A], "Sub").Contains("Tanuki target"), "Tanuki target named (T2)");
+		}
+		finally { runner.RemoveChild(screen); screen.Free(); }
+	});
+
+	[Test]
+	public static void Scene_LastSpecial_UnderFortyCoins_ReadsLockedWithT5_NotNeed40(Node runner) => OnFixtures(() =>
+	{
+		var s = Shopping(30, (SpecialSlot.D, "test-river-grab", 1));
+		var screen = Open(runner, s);
+		try
+		{
+			var row = screen.Model!.Slots[3];
+			Assert.True(s.Run.SpecialCount == 1 && row.Locked && !row.CanRelease && row.Reason != null && row.Reason.Contains("last special"), "T5 wins over the coin shortfall");
+			Assert.Equal("LOCKED", Text(screen.Rows[SpecialSlot.D], "BadgeLabel"), "the button reads LOCKED, not Need 40");
+			Assert.True(Text(screen.Rows[SpecialSlot.D], "Why").Contains("last special"), "with the reason");
+			Assert.True(((Control)screen.Rows[SpecialSlot.D].GetNode("Body")).Modulate.R < 0.95f, "greyed");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});
@@ -323,15 +342,15 @@ public static class ShopScreenTests
 		{
 			Assert.True(!stop.SecondCard.CardDisabled && stop.Model!.Second == RestStopOption.Ready, "the shop card is open");
 			int health = s.Run.Health;
-			Assert.True(stop.OpenSecond() && stop.Shop != null, "the shop opens");
+			int asked = 0;
+			stop.ShopRequested += () => asked++;
+			Assert.True(stop.OpenSecond() && asked == 1, "the shop is requested from the flow");
 			Assert.True(s.Merchant!.Choice == MerchantChoice.Shop && s.Run.Health == health, "Choose(Shop): the choice is spent, no heal");
 			Assert.True(!stop.Model!.CanTakeFree && !s.Merchant.TakeHeal().Ok && s.Run.Health == health, "the free heal is closed");
-			Assert.True(!stop.FreeCard.IsVisibleInTree() && stop.Shop!.IsVisibleInTree(), "only the shop shows");
-			Tap(stop, Key.Escape);
-			Assert.True(stop.Shop == null && stop.ContinueButton.Visible && stop.FreeCard.CardDisabled, "Back: the rest stop in its used state with Continue");
+			stop.ShopClosed();
+			Assert.True(stop.ContinueButton.Visible && stop.FreeCard.CardDisabled, "Back: the rest stop in its used state with Continue");
 			Assert.True(stop.GetViewport().GuiGetFocusOwner() == stop.ContinueButton, "focus on Continue");
-			Assert.True(!stop.SecondCard.CardDisabled && stop.OpenSecond() && stop.Shop != null, "the shop can be opened again (it stays open for the stop)");
-			Tap(stop, Key.Escape);
+			Assert.True(!stop.SecondCard.CardDisabled && stop.OpenSecond() && asked == 2, "the shop can be opened again (it stays open for the stop)");
 			bool left = false;
 			stop.Left += () => left = true;
 			Assert.True(stop.Leave() && left, "Continue to the map");
@@ -352,7 +371,10 @@ public static class ShopScreenTests
 		{
 			Assert.True(stop.TakeFree(), "heal");
 			ulong h = s.StateHash();
-			Assert.True(!stop.OpenSecond() && stop.Shop == null && s.StateHash() == h && stop.SecondCard.CardDisabled, "R6 one choice: the shop is refused and the card closed");
+			int asked = 0; stop.ShopRequested += () => asked++;
+			Assert.True(!stop.OpenSecond() && asked == 0 && s.StateHash() == h && stop.SecondCard.CardDisabled, "R6 one choice: the shop is refused and the card closed");
+			stop.SecondCard.EmitSignal(KitCard.SignalName.Activated);
+			Assert.True(asked == 0 && s.StateHash() == h && s.Run.Health == s.Run.Health && s.Merchant!.Choice == MerchantChoice.Heal, "activating the closed card: no request, hash and choice unchanged");
 		}
 		finally { runner.RemoveChild(stop); stop.Free(); }
 	});
@@ -388,12 +410,16 @@ public static class ShopScreenTests
 			var stop = (RestStopScreen)flow.NodeScene!;
 			int health = s.Run.Health, coins = s.Run.Coins;
 			s.Run.AddCoins(100);
-			Assert.True(stop.OpenSecond() && stop.Shop != null && stop.Shop!.Model!.Open, "in the shop");
-			Assert.True(!stop.Shop!.ReleaseSlot(SpecialSlot.A), "a starter cannot be released");
+			Assert.True(stop.OpenSecond() && flow.Shop != null && flow.Router.ShopOpen && flow.Shop.Model!.Open, "in the shop, routed by the flow");
+			Assert.True(!stop.Visible && flow.Shop.IsVisibleInTree(), "only the shop shows");
+			Assert.True(!flow.Shop.ReleaseSlot(SpecialSlot.A), "a starter cannot be released");
+			Tap(flow, Key.Escape);
+			Assert.True(flow.Shop == null && !flow.Router.ShopOpen && stop.Visible && stop.ContinueButton.Visible, "Back: the stop again, used");
+			Assert.True(stop.OpenSecond() && flow.Shop != null, "the shop opens again");
 			Assert.True(flow.ReturnToTitle() && flow.NodeScene == null, "quit to the title from inside the shop");
 			Assert.True(flow.ContinueRun(), "Continue");
 			var again = (RestStopScreen)flow.NodeScene!;
-			Assert.True(again != stop && again.Shop == null && !again.Model!.ChoiceMade && again.Model.Second == RestStopOption.Ready, "the stop as entered: no choice taken, the shop closed");
+			Assert.True(again != stop && flow.Shop == null && !flow.Router.ShopOpen && !again.Model!.ChoiceMade && again.Model.Second == RestStopOption.Ready, "the stop as entered: no choice taken, the shop closed");
 			Assert.True(flow.Session!.Run.Health == health && flow.Session.Run.Coins == coins, "entry-state health and coins: nothing the shop did was kept");
 		}
 		finally

@@ -207,7 +207,7 @@ public partial class ShopScreen : Control
 	void Fill(string shelf, IReadOnlyList<ShopEntry> entries)
 	{
 		var row = GetNode<HBoxContainer>($"Shelves/{shelf}Scroll/{shelf}Row");
-		foreach (var c in row.GetChildren()) { row.RemoveChild(c); c.QueueFree(); }
+		foreach (var c in row.GetChildren()) { row.RemoveChild(c); c.Free(); }
 		bool any = entries.Count > 0;
 		GetNode<Control>($"Shelves/{shelf}Scroll").Visible = any;
 		GetNode<Control>($"Shelves/{shelf}Label").Visible = any;
@@ -301,7 +301,7 @@ public partial class ShopScreen : Control
 	void BuildSlots(ShopScreenModel m, IReadOnlyList<ShopSlotRow> slots)
 	{
 		var box = GetNode<VBoxContainer>("SlotRows");
-		foreach (var c in box.GetChildren()) { box.RemoveChild(c); c.QueueFree(); }
+		foreach (var c in box.GetChildren()) { box.RemoveChild(c); c.Free(); }
 		var targets = Picking is { } id ? m.TargetsFor(id) : null;
 		foreach (var s in slots)
 		{
@@ -330,10 +330,11 @@ public partial class ShopScreen : Control
 			var t = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsHorizontal = SizeFlags.ExpandFill };
 			t.AddThemeConstantOverride("separation", -2);
 			var name = Lbl(s.Name, 22, clip: true, name: "Name");
-			if (s.Borrowed) name.AddThemeColorOverride("font_color", Borrowed);
+			if (s.Borrowed || s.ModifierBorrowed) name.AddThemeColorOverride("font_color", Borrowed);
 			t.AddChild(name);
 			string sub = $"Slot {s.Slot} · Lv {s.Level}";
 			if (s.ModifierName != null) sub += $" · {s.ModifierName}";
+			if (s.ModifierBorrowed && !s.Borrowed) sub += " · modifier in borrowed ink";
 			if (s.IsTanukiTarget) sub += " · Tanuki target";
 			if (s.Borrowed) sub += " · borrowed ink";
 			if (picking && offered is { Offered: false, Reason: { } why }) sub = char.ToUpperInvariant(why[0]) + why[1..];
@@ -356,7 +357,7 @@ public partial class ShopScreen : Control
 			h.AddChild(bp);
 
 			if (s.IsTanukiTarget) card.AddThemeStyleboxOverride("panel", FlatPaper(Foxfire, 4));
-			margin.Modulate = locked ? new Color(0.72f, 0.7f, 0.68f) : s.Borrowed ? new Color(0.86f, 0.85f, 0.84f) : Colors.White;
+			margin.Modulate = locked ? new Color(0.72f, 0.7f, 0.68f) : s.Borrowed || s.ModifierBorrowed ? new Color(0.86f, 0.85f, 0.84f) : Colors.White;
 			if (picking && locked) card.FocusMode = FocusModeEnum.None;
 			var slot = s.Slot;
 			card.FocusEntered += () => ShowDetail(_notice.Length > 0 ? _notice : SlotDetail(m, s, offered));

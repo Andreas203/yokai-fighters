@@ -51,6 +51,28 @@ public sealed class ScreenRouter
 	/// <summary>Raised when an enabled Continue or Practice is selected (Continue: the boot flow restores the saved run).</summary>
 	public event Action<TitleEntry>? Activated;
 	public event Action? Quit;
+	/// <summary>YOK-104: true while the merchant's shop screen is open over the rest stop (a sub-screen of the node, not a top-level screen).</summary>
+	public bool ShopOpen { get; private set; }
+	/// <summary>Raised when the shop opens (true) or closes (false).</summary>
+	public event Action<bool>? ShopChanged;
+
+	/// <summary>Merchant stop to shop. Only while a node scene runs (<see cref="Screen.Fight"/>); False, changing nothing, anywhere else or when already open.</summary>
+	public bool OpenShop()
+	{
+		if (Current != Screen.Fight || ShopOpen) return false;
+		ShopOpen = true;
+		ShopChanged?.Invoke(true);
+		return true;
+	}
+
+	/// <summary>Shop back to the rest stop. False when it was not open.</summary>
+	public bool CloseShop()
+	{
+		if (!ShopOpen) return false;
+		ShopOpen = false;
+		ShopChanged?.Invoke(false);
+		return true;
+	}
 
 	public TitleEntryState Entry(TitleEntry entry) =>
 		_disabled.TryGetValue(entry, out string? why) ? new(entry, false, why) : new(entry, true, "");
@@ -163,6 +185,7 @@ public sealed class ScreenRouter
 	{
 		Screen from = Current;
 		Current = to;
+		ShopOpen = false; // a shop never outlives its node scene
 		Changed?.Invoke(from, to);
 	}
 }

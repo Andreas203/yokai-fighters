@@ -92,9 +92,11 @@ public sealed class ShopScreenModel
 				if (live.FirstOrDefault(m => m.Id == id) is { } m)
 				{
 					var targets = Shop.ModifierTargets(id);
-					// Card-level reason: ask the shop about the first special that could take it, else about the first special at all.
+					// Card-level reason: the shop's own for a slot that could take it; with none, the coin reason if short, else a plain one.
 					string? why = targets.Count > 0 ? Shop.WhyNotBuyModifier(id, targets[0])
-						: Run.Owned.Select(o => o.Slot).FirstOrDefault() is var first && first != SpecialSlot.None ? Shop.WhyNotBuyModifier(id, first) : "Ryo holds no special";
+						: !Shop.Open ? Shop.WhyNotBuyModifier(id, SpecialSlot.A)
+						: !Run.CanAfford(BuyPrice) ? $"{BuyPrice} coins needed, Ryo has {Run.Coins}"
+						: Run.Owned.Any() ? "no special can carry it" : "Ryo holds no special";
 					list.Add(new(ShopKind.Modifier, id, Name(m.Name, id), Title(m.Source), "modifier", m.CardPlain, m.CardFrames, BuyPrice, why is null ? ShopCardState.Buyable : ShopCardState.Refused, why is null ? null : Clean(why)));
 				}
 				else if (_bought.Contains(id) && Run.Owned.Select(o => o.Special.Modifier).FirstOrDefault(x => x?.Id == id) is { } held)
@@ -125,7 +127,8 @@ public sealed class ShopScreenModel
 			{
 				if (Run[slot] is not { } o) { rows.Add(new(slot, true, "", "", 0, null, false, false, false, false, false, null)); continue; }
 				string? why = Shop.WhyNotRelease(slot);
-				bool locked = why is not null && Run.CanAfford(ReleasePrice);
+				// T5 and the starter rule lock the row whatever the coins; only a plain shortfall reads "Need 40".
+				bool locked = why is not null && !why.StartsWith($"{ReleasePrice} coins needed");
 				rows.Add(new(slot, false, o.Data.Id, Name(o.Data.Name, o.Data.Id), o.Level, o.Modifier is { } m ? Name(m.Name, m.Id) : null, o.Borrowed, o.ModifierBorrowed,
 					target == slot, why is null, locked, why is null ? null : Clean(why)));
 			}

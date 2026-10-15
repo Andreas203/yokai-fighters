@@ -41,8 +41,6 @@ public partial class RestStopScreen : Control, INodeScene
 	private static readonly Color FightHudSeal = Fight.FightHud.Seal;
 	private RunSession? _session;
 	private bool _ready;
-	private ShopScreen? _shop;
-	private readonly System.Collections.Generic.List<CanvasItem> _hidden = new();
 
 	public void BindRun(RunSession session, ControlScheme scheme)
 	{
@@ -79,36 +77,27 @@ public partial class RestStopScreen : Control, INodeScene
 	}
 
 	/// <summary>
-	/// The merchant's second card: spends the stop's choice on the shop (which closes the free heal, R6) and shows the shop
-	/// screen over this one; Back returns here in its used state. Refused, changing nothing, when the heal was taken.
+	/// The merchant's second card: spends the stop's choice on the shop (which closes the free heal, R6) and asks the flow
+	/// to show the shop screen (<see cref="ShopRequested"/>, routed by GameFlow/ScreenRouter). Refused, changing nothing, when the heal was taken.
 	/// </summary>
 	public bool OpenSecond()
 	{
-		if (Model is not { Kind: RestStopKind.Merchant } m || _shop != null || _session == null) return false;
+		if (Model is not { Kind: RestStopKind.Merchant } m || _session == null) return false;
 		if (!m.OpenShop().Ok) { Refresh(); return false; }
-		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
-		shop.Bind(_session);
-		shop.MerchantLine = L("LineBox/Box/Line").Text;
-		shop.Closed += CloseShop;
 		Refresh(); // the used state first, so nothing under the shop changes while it is open
-		_hidden.Clear();
-		foreach (var c in GetChildren().OfType<CanvasItem>()) if (c.Visible) { _hidden.Add(c); c.Visible = false; }
-		_shop = shop;
-		AddChild(shop);
+		ShopRequested?.Invoke();
 		return true;
 	}
 
-	/// <summary>The shop screen, while it is open over this one.</summary>
-	public ShopScreen? Shop => _shop;
+	/// <summary>Raised after the shop was chosen: the flow shows the shop over this stop (and hides it).</summary>
+	public event Action? ShopRequested;
 
-	private void CloseShop()
+	/// <summary>The line the merchant is speaking, for the shop screen to repeat.</summary>
+	public string MerchantLine => L("LineBox/Box/Line").Text;
+
+	/// <summary>The flow calls this when the shop closed and the stop shows again: the used state, focus on Continue.</summary>
+	public void ShopClosed()
 	{
-		if (_shop is not { } shop) return;
-		_shop = null;
-		RemoveChild(shop);
-		shop.QueueFree();
-		foreach (var c in _hidden) c.Visible = true;
-		_hidden.Clear();
 		Refresh();
 		if (ContinueButton.Visible) ContinueButton.GrabFocus();
 	}
@@ -129,7 +118,7 @@ public partial class RestStopScreen : Control, INodeScene
 
 	public override void _Input(InputEvent e)
 	{
-		if (!IsVisibleInTree() || _shop != null) return; // the shop answers its own keys
+		if (!IsVisibleInTree()) return; // hidden while the shop is open: the shop answers its own keys
 		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
 		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
 	}

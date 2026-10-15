@@ -31,7 +31,3 @@ theme/custom="res://ui/talisman_theme.tres"
 [physics]
 
 common/physics_jitter_fix=0.0
-
-[memory]
-
-limits/message_queue/max_size_mb=128
