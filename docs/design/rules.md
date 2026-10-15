@@ -23,7 +23,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## C — Combat basics
 
 - **C1** One round, 60 ticks/s, deterministic. Ryo has 1,000 health that carries across the run.
-- **C2** Movement: walk crosses the screen in ~2.5 s; dash 18 frames; jump 40 frames airtime.
+- **C2** Movement: walk crosses the screen in ~2.5 s (measured on the original 1,920-unit screen: 12.8 units/tick; ~1.9 s across AM7's 1,440-unit screen); dash 18 frames; jump 40 frames airtime.
 - **C3** Block by holding back. Lows must be blocked crouching (Oni Quake hits low).
 - **C4** Throws are generic: attacker plays a grab clip, defender a standard knockdown. Startup 5, break window 7 frames (press throw), 120 damage. **No paired throw animations anywhere.**
 - **C5** Meter: 3 bars × 100. +6 per hit landed, +3 per hit blocked or taken. EX special costs 1 bar.
@@ -60,7 +60,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 
 Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by the designer. Tunable like every other number here.
 
-- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart (screen walls; was 1,600, lowered in YOK-39 so both rigged models, up to 200 units behind their position, stay in frame: 1,520 + 2 × 200 = 1,920; designer-approved 2026-10-06). The camera follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
+- **E1** Scale: 200 units per metre; one screen is 1,440 units (7.2 m) [AM7, proposed; was 1,920]; the stage is 3,840 units wide (two of the old 1,920-unit screens); fighters are at most 1,040 units apart (screen walls, so both rigged models, up to 200 units behind their position, stay in frame: 1,040 + 2 × 200 = 1,440) [AM7; was 1,520 from YOK-39, 1,600 before]. The camera stays at a fixed distance (~25° FOV, F4), follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
 - **E2** KO slow-down (V4): the world plays the 30 frames over 60 real ticks; inputs are ignored meanwhile.
 - **E3** Every yokai has 1,000 health until the yokai rules give its own figure.
 - **E4** Standard knockdown (C4): 40 frames.

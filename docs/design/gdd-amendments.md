@@ -142,3 +142,23 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | §5.3 The Tanuki, point 6 | "Visible all run: the target's talisman glows in the HUD, and the rest-stop forecast names it." | "Visible all run outside fights: the map shows the target's glowing talisman and the rest-stop forecast names it. In fights, the HUD shows it only against the Tanuki." Rule T6. |
 | Figure 4, Fight HUD mockup | "glowing: copy target" in a fight against a patient Kitsune | No copy target in a yokai fight; the talisman appears in the Tanuki fight only. |
 | §8 Screens, Fight HUD row | "Health, meter, burst, copy target, elder twist reminder (Figure 4)." | "Health, meter, burst, elder twist reminder; the copy target in the Tanuki fight only (Figure 4, AM6)." |
+
+---
+
+## AM7 — Closer fight camera, screen walls brought in (2026-10-15) — PROPOSED, designer approves at PR review
+
+**Status.** Proposed on branch `YOK-120-closer-camera-walls`. The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15); the numbers below are a first try and become approved only when the designer approves the PR.
+
+**Decision.** The fight camera sits closer to the fighters and stays fixed in distance. One screen at the gameplay plane is **1,440 units** (7.2 m), was 1,920 (9.6 m). The screen walls come in with it: fighters are at most **1,040 units** apart, was 1,520, so both rigged models (up to 200 units behind their position) still fit: 1,040 + 2 × 200 = 1,440. The stage stays **3,840 units** wide (two of the old 1,920-unit screens, now about 2.7 of the new ones), so the stage art and the part of it the camera can ever show are unchanged. The camera still follows the fighters' midpoint and stops where a cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge. All four numbers are tunable in one place (`SimConfig`).
+
+**Why.** Bigger fighters on screen: at 1,920 units a 1.8 m fighter filled about a third of the screen height; at 1,440 units, about 44%. A fixed closer camera keeps V7 (no zoom with distance); bringing the walls in is what keeps both fighters in view.
+
+**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md E1 (scale; written rule, not in the PDF) | "one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart … 1,520 + 2 × 200 = 1,920" | "one screen is 1,440 units (7.2 m); the stage is 3,840 units wide; fighters are at most 1,040 units apart … 1,040 + 2 × 200 = 1,440" |
+| §3.2 Fight basics, Movement row | "Walk crosses the screen in about 2.5 seconds" | Walk speed unchanged: about 2.5 seconds across 1,920 units, about 1.9 seconds across the closer 1,440-unit screen. Rule C2. |
+| §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera is closer to the plane. |

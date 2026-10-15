@@ -15,6 +15,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Coins have no cap, for now (R8).
 - **AM5** 2026-10-15: clip-matcher splits into `rig-specialist` and `animator`; level presets move to asset-smith. Generators are Tripo or Meshy (Tripo likely). Rigs try the generator auto-rig against AccuRIG 2. Blender cleanup by script, video mocap, ActorCore and Auto-Rig Pro allowed; Cascadeur only for its physics pass. One shared skeleton (Meshy's) with bone maps. Clips may carry retiming curves (F2), 0.5×–2× per segment, holds ≤4 frames (first pass).
 - **AM6** 2026-10-15: the fight HUD shows the copy-target talisman only in the Tanuki fight, never in yokai or elder fights. The map talisman and the rest-stop forecast still show the target all run (T6). Copy rule unchanged.
+- **AM7** 2026-10-15 (PROPOSED, designer approves at PR review, YOK-120): closer fixed camera, screen 1,920 → 1,440 units, screen walls 1,520 → 1,040 (1,040 + 2 × 200 = 1,440); stage stays 3,840; V7 steady camera and F4 ~25° FOV unchanged (camera moves closer); walk speed unchanged (~1.9 s across the new screen, C2). Values tunable in SimConfig.
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39).
