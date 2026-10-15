@@ -68,6 +68,26 @@ public static class CameraTests
 	}
 
 	[Test]
+	public static void Camera_ShakeStaysTwoToFourScreenPx_AtAnyViewWidth()
+	{
+		// V3 (YOK-120): the 2-4 px shake is screen px; the camera offset goes through ViewWidth, so AM7's closer
+		// 1,440-unit view (1 unit = 1.33 px) does not push the (4, -2) frame to 5.3 px.
+		foreach (var c in new[] { SimConfig.Default, SimConfig.Default with { ViewWidth = 1920 * SimConfig.Scale } })
+		{
+			float metresPerPx = YokaiFighters.Fight.FightScene.ToMeters(c.ViewWidth) / YokaiFighters.Fight.FightScene.DesignCanvasWidthPx;
+			var s = new YokaiFighters.Fight.ScreenShake(6);
+			s.Start();
+			for (int t = 0; t < 6; t++, s.Advance())
+			{
+				var (h, v) = YokaiFighters.Fight.FightScene.ShakeOffsetMeters(c, s.OffsetPx);
+				float px = Math.Abs(h) / metresPerPx, py = Math.Abs(v) / metresPerPx; // vertical: 16:9 keeps the same px per metre
+				Assert.True(px >= 2f - 1e-3f && px <= 4f + 1e-3f && py >= 2f - 1e-3f && py <= 4f + 1e-3f,
+					$"view {c.ViewWidth / SimConfig.Scale}: shake frame {t} is {px:0.00} x {py:0.00} screen px (V3: 2-4)");
+			}
+		}
+	}
+
+	[Test]
 	public static void Camera_MaxSeparationFitsBothBackReaches()
 	{
 		var c = SimConfig.Default;

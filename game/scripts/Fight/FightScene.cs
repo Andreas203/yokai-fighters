@@ -17,7 +17,7 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class FightScene : Node3D
 {
-	/// <summary>200 gameplay units per metre: the 1920-unit screen is 9.6 m wide, a 1.8 m fighter is 360 units.</summary>
+	/// <summary>200 gameplay units per metre: the 1,440-unit screen (AM7) is 7.2 m wide, a 1.8 m fighter is 360 units.</summary>
 	public const float UnitsPerMeter = 200f;
 	public const float CameraFovDegrees = 25f; // F4
 	public const float CameraHeight = 1.5f;
@@ -235,6 +235,17 @@ public partial class FightScene : Node3D
 		Render();
 	}
 
+	/// <summary>Width of the design canvas in px: the screen <see cref="SimConfig.ViewWidth"/> spans (UI canvas, 1920x1080).</summary>
+	public const int DesignCanvasWidthPx = 1920;
+
+	/// <summary>
+	/// V3 (YOK-120 / AM7): a shake offset in screen px as a camera offset in metres at the Z = 0 plane. ViewWidth units
+	/// span DesignCanvasWidthPx px, so 1 px = ViewWidth / 1920 units (0.75 units at AM7's 1,440), and the 2-4 px
+	/// pattern stays 2-4 px on screen whatever the view width.
+	/// </summary>
+	public static (float H, float V) ShakeOffsetMeters(SimConfig c, (int x, int y) px) =>
+		(ToMeters(px.x * c.ViewWidth / DesignCanvasWidthPx), ToMeters(px.y * c.ViewWidth / DesignCanvasWidthPx));
+
 	public static float ToMeters(int centiUnits) => centiUnits / (SimConfig.Scale * UnitsPerMeter);
 
 	private void Render()
@@ -256,9 +267,9 @@ public partial class FightScene : Node3D
 
 		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen; the rig carries the camera.
 		_cameraRig.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, CameraDistance(c));
-		var (sx, sy) = Shake.OffsetPx; // V3: px = gameplay units at the Z = 0 plane
-		_camera.HOffset = ToMeters(sx * SimConfig.Scale);
-		_camera.VOffset = ToMeters(sy * SimConfig.Scale);
+		var (hx, vy) = ShakeOffsetMeters(c, Shake.OffsetPx); // V3: 2-4 screen px, converted through the view width
+		_camera.HOffset = hx;
+		_camera.VOffset = vy;
 
 		RenderProjectiles();
 		_hud.Refresh(Match);

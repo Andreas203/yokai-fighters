@@ -56,7 +56,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 - **F5** No hand-keyed animation [AM5]: clips come from a generator, motion capture of a real performance, or a bought motion-capture pack, plus scripted cleanup and retiming and Cascadeur's automatic physics pass; nobody poses or edits keys by hand. A move gets at most 3 takes across all sources; if none is usable, it becomes a mechanically equivalent move on an approved clip.
 - **F6** Visual assets are generated, sound is sourced [AM1, AM5]. Generators: Tripo or Meshy, the designer's choice per job. Models: turnaround → Image-to-3D → auto-rig (the generator's or AccuRIG 2, whichever passes the Rig Specialist's check) → Blender check and extra bones → glTF into Godot. Every rig plays clips on one shared humanoid skeleton (today Meshy's) through the Rig Specialist's bone map. Clips: generator library or prompt, video motion capture, or ActorCore packs; cleaned and retargeted in Blender by script, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: generator 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs, capture sessions and purchases the designer has approved at the approved cost.
 
-## E — Engine defaults (designer-approved 2026-10-06)
+## E — Engine defaults (designer-approved 2026-10-06; E1's screen and wall numbers are proposed under AM7, YOK-120)
 
 Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by the designer. Tunable like every other number here.
 

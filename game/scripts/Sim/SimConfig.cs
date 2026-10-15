@@ -2,7 +2,8 @@ namespace YokaiFighters.Sim;
 
 /// <summary>
 /// Fight-wide constants for the simulation. Pure C#, no Godot types, integers only (F3).
-/// Positions are centi-units: 1 unit = 1 px at 1920x1080 (data/schema convention), so 100 = one unit.
+/// Positions are centi-units, so 100 = one gameplay unit; 200 units per metre, and 1,440 units span the 1,920 px
+/// screen at the fight camera (E1, AM7).
 /// Defaults are placeholders until a data loader (YOK-40) feeds stage and fighter data.
 /// </summary>
 public sealed partial record SimConfig

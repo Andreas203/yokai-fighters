@@ -18,7 +18,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **AM7** 2026-10-15 (PROPOSED, designer approves at PR review, YOK-120): closer fixed camera, screen 1,920 → 1,440 units, screen walls 1,520 → 1,040 (1,040 + 2 × 200 = 1,440); stage stays 3,840; V7 steady camera and F4 ~25° FOV unchanged (camera moves closer); walk speed unchanged (~1.9 s across the new screen, C2). Values tunable in SimConfig.
 
 ## Rules and tuning
-- 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39).
+- 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39; 1,040 proposed in AM7).
 - 2026-10-06 YOK-41 / E21: at Lv 2, Spirit Wave recovers 4 frames faster and Rising Talisman 6 faster, both relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1).
 - 2026-10-06 YOK-31 / E15: strikes are open-handed (the rig has no finger bones). The generic throw is the Meshy 259 `Step_Forward_and_Push` clip, head-trimmed from tick 30.
 - 2026-10-11 YOK-87: a whole number written as `1e2` reads as 100. Save format is v2.
