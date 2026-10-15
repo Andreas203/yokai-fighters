@@ -52,7 +52,7 @@ Each hired agent's `AGENTS.md` is its role definition plus a fixed operating con
 - Agents never push to `main` and never merge. Branches and PR titles are `YOK-<number>-<brief-name>`.
 - Content merges only after schema, the Rules Lawyer gate and harness checks. Code merges only after designer approval, and reaches the designer only after the Code Critic and Test Breaker gates.
 - Timer heartbeats are off for the whole crew; agents wake on demand when the Producer assigns them an issue.
-- Each agent holds only the `paperclip` skill, for reading and updating its own issues.
+- Each agent holds only the `paperclip` skill, for reading and updating its own issues. The Producer also uses the Linear MCP tools: Linear is the master board, the Producer mirrors each dispatch into a Paperclip child issue and copies results back (see `.claude/agents/producer.md`). The `linear-server` MCP must be configured at user scope (`claude mcp add --scope user ...`) so it is reachable from Paperclip's workspace copy of the repo.
 
 ## Changing a role
 

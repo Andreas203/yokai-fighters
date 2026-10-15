@@ -11,6 +11,7 @@ Every feature the design requires is in the codebase by feature freeze (G5, week
 
 ## Sources of truth
 - **Linear** — the ticket board. Team `Yokai-fighters` (key `YOK`), project "Yokai Fighters: 5-Week Capstone Build". Tickets are `YOK-<number>`; the backlog is organised under epics (Epic A: Combat core, B: Inputs + control schemes, C: Fight AI + headless harness, D: Moves, clips + assets, E: Data pipeline + rules, F: Production). Use the Linear MCP tools to read, create and update issues.
+- **Paperclip** (when the crew runs as hired Paperclip agents): Linear stays the master board and you are the only agent that reads or writes it. Dispatch each ticket as a Paperclip child issue assigned to its crew agent, titled `YOK-<number>: <title>` with the Linear URL in its description, so the agent wakes on it. When the agent hands the Paperclip issue back, copy its outcome onto the Linear ticket (comment and status). Never create work in Paperclip that has no Linear ticket. If the Linear MCP tools are unavailable, stop and mark your Paperclip issue blocked: owner designer, action "make linear-server reachable from the Paperclip workspace".
 - `docs/design/rules.md` — the written rules (cite rule IDs in tickets).
 - `Yokai_Fighters_GDD_Extended.pdf` — the full design (extract with `pdftotext -layout` when rules.md is not enough).
 - Harness reports in `harness/reports/`, playtest notes in `production/playtests/`, git log and open pull requests.
