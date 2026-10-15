@@ -281,6 +281,60 @@ public static class MapScreenTests
 	}
 
 	[Test]
+	public static void PassedOverEdgeCases()
+	{
+		var sess = StartSession();
+		var view = new SessionMapView(sess);
+		MapNodeState St(string id) => view.Nodes.First(n => n.Id == id).State;
+		Walk(sess, "r1-apprentice", "r2-kitsune");
+		Assert.Equal(MapNodeState.PassedOver, St("r2-oni"), "siblings of the chosen row-2 node are passed over");
+		// Rows-only definition: r3-kappa is not reachable from r2-kitsune, but its row (3) is still ahead of Ryo, so it stays "later" (Locked), not passed over.
+		Assert.Equal(MapNodeState.Locked, St("r3-kappa"), "a node in a row not yet reached is later, even when this route cannot get there");
+		Assert.Equal(MapNodeState.Reachable, St("r3-oni"), "the route's own next node");
+
+		var inside = StartSession();
+		var iv = new SessionMapView(inside);
+		Walk(inside, "r1-apprentice");
+		inside.Enter("r2-oni"); // entered, not completed
+		Assert.Equal(MapNodeState.Current, iv.Nodes.First(n => n.Id == "r2-oni").State, "the entered node is Current");
+		Assert.Equal(MapNodeState.PassedOver, iv.Nodes.First(n => n.Id == "r2-kitsune").State, "its row-mates are passed over as soon as it is entered");
+		Assert.True(iv.Nodes.All(n => n.State != MapNodeState.Reachable), "nothing is reachable inside a node");
+
+		var boss = StartSession();
+		var bv = new SessionMapView(boss);
+		while (boss.Map.Graph.Node(boss.Reachable()[0]).Type != "boss") Walk(boss, boss.Reachable()[0]);
+		Assert.Equal(MapNodeState.Reachable, bv.Nodes.First(n => n.Id == "boss-tanuki").State, "the boss is reachable, not passed over, after row 8");
+		boss.Enter("boss-tanuki");
+		Assert.Equal(MapNodeState.Current, bv.Nodes.First(n => n.Id == "boss-tanuki").State, "boss row: the boss is Current");
+		Assert.Equal(1, bv.Nodes.Count(n => n.Row == 8 && n.State == MapNodeState.PassedOver), "exactly one row-8 elder was passed over, the other was walked");
+		Assert.Equal(1, bv.Nodes.Count(n => n.Row == 9), "one boss node");
+	}
+
+	[Test]
+	public static void AfterRowUsesTheLastPlayRowNotTheCount(Node host)
+	{
+		// play rows 1, 2, 4 (three of them), boss on row 5: the boss header must read "AFTER ROW 4", not "AFTER ROW 3"
+		var v = new StubMapView().Add("a", 1, "duel", "A").Add("b", 2, "duel", "B").Add("c", 4, "duel", "C").Add("d", 5, "boss", "D")
+			.Route("a", "b").Route("b", "c").Route("c", "d").Open("a");
+		v.Status = new MapStatusView(1000, 1000, 0, 0, 3) { LastPlayRow = 4 };
+		var s = Make(host, v);
+		Assert.Equal("ROW 4", s.HeaderTexts[2], "row 4 is a play row");
+		Assert.Equal("AFTER ROW 4", s.HeaderTexts[3], "the boss column");
+		Assert.Equal("row 0 of 3 done", s.StatusRowsText, "the count still says how many play rows");
+		Assert.Equal("AFTER ROW 4", MapScreen.HeaderText(5, false, v.Status.PlayRowLimit), "pure helper agrees");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void RestStopLinesDoNotNameABase()
+	{
+		var sess = StartSession();
+		var view = new RunMapView(sess.Map, sess.Run, sess.Scenes);
+		Assert.Equal($"Heal {Merchant.HealPercent}%, or shop with your coins.", view.Detail("r4-merchant")!.Reward, "merchant line, no base health named (open question)");
+		Assert.Equal($"Rest {Dojo.RestHealPercent}%, or take a training trial.", view.Detail("r7-dojo")!.Reward, "dojo line in the same form");
+	}
+
+	[Test]
 	public static void NodeStylesAreALookupWithAFallback()
 	{
 		var st = GD.Load<MapNodeStyles>("res://ui/map_node_styles.tres");

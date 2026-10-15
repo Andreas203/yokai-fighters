@@ -104,15 +104,15 @@ public partial class MapScreen : Control
 	}
 
 	/// <summary>Header over a row's column: "ROW 3", "ROW 5 · ELDER" (R1, Y3), "AFTER ROW 8" for the row past the last play row.</summary>
-	public static string HeaderText(int row, bool elder, int? playRows) =>
-		playRows is { } n && row > n ? $"AFTER ROW {n}" : elder ? $"ROW {row} · ELDER" : $"ROW {row}";
+	public static string HeaderText(int row, bool elder, int? lastPlayRow) =>
+		lastPlayRow is { } n && row > n ? $"AFTER ROW {n}" : elder ? $"ROW {row} · ELDER" : $"ROW {row}";
 
 	void BuildHeaders(IReadOnlyList<MapNodeView> nodes)
 	{
 		var holder = UiFind.Get<Control>(this, "RowHeaders");
 		foreach (var l in _headers) { holder.RemoveChild(l); l.QueueFree(); }
 		_headers.Clear();
-		int? playRows = View!.Status?.RowsTotal;
+		int? playRows = View!.Status?.PlayRowLimit;
 		foreach (var (row, x) in _layout.Columns)
 		{
 			bool elder = nodes.Any(n => n.Row == row && n.Elder);
@@ -174,7 +174,7 @@ public partial class MapScreen : Control
 		if (focus == null) return;
 		var look = Styles!.Look(focus.Type);
 		var detail = View.Detail(focus.Id);
-		int? playRows = status?.RowsTotal;
+		int? playRows = status?.PlayRowLimit;
 		string where = playRows is { } n && focus.Row > n ? $"after row {n}" : $"row {focus.Row}";
 		UiFind.Get<Label>(this, "DetailName").Text = $"{(focus.Yokai ?? look.Label).ToUpperInvariant()} · {look.Label} · {where}";
 		var twist = UiFind.Get<Label>(this, "DetailTwist");

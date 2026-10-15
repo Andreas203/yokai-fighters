@@ -11,7 +11,12 @@ namespace YokaiFighters.Ui;
 public enum MapNodeState { Visited, Current, Reachable, Locked, PassedOver }
 
 /// <summary>The run's numbers for the map's status panel (C1 health, R8 coins, R1 rows done). RowsTotal excludes the boss's row.</summary>
-public sealed record MapStatusView(int Health, int MaxHealth, int Coins, int RowsDone, int RowsTotal);
+public sealed record MapStatusView(int Health, int MaxHealth, int Coins, int RowsDone, int RowsTotal)
+{
+	/// <summary>The highest play-row value (the boss's row is past it). RowsTotal is a count, so it is not this when row values skip. 0 = use RowsTotal.</summary>
+	public int LastPlayRow { get; init; }
+	public int PlayRowLimit => LastPlayRow > 0 ? LastPlayRow : RowsTotal;
+}
 
 /// <summary>What the detail panel adds to a node's own data: the reward line, and the elder twist line when the twist data exists (Y3, YOK-90).</summary>
 public sealed record MapNodeDetail(string? Reward, string? Twist = null);
