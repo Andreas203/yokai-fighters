@@ -231,4 +231,49 @@ public static class CloserCameraProbes
 		Assert.Equal(fresh, m.StateHash(), "Reset == new match");
 		Assert.Equal(0, FightCamera.CenterX(m), "camera centred");
 	}
+
+	// E1 round 2: more seeds, cross-up heavy (jump toward + attack), throws (LP+LK / HP+HK) near both corners; models stay framed.
+	[Test]
+	public static void Fuzz2_CrossUpsAndThrowsNearCorners_NeverClip()
+	{
+		var c = SimConfig.Default;
+		int corner = c.StageHalfWidth - c.BodyWidth / 2;
+		InputBits U = InputBits.Up, L = InputBits.Left, R = InputBits.Right;
+		InputBits[] dirs = { U | L, U | R, U | L, U | R, L, R, L, R, InputBits.None, InputBits.Down, U };
+		InputBits[] btn = { InputBits.LightPunch, InputBits.HeavyKick, InputBits.MediumPunch, InputBits.LightPunch | InputBits.LightKick,
+			InputBits.HeavyPunch | InputBits.HeavyKick, InputBits.MediumKick | InputBits.MediumPunch, InputBits.HeavyPunch };
+		int switches = 0, throwsSeen = 0;
+		foreach (int start in new[] { -corner, corner, -corner + 130 * SimConfig.Scale, corner - 130 * SimConfig.Scale })
+			for (int seed = 100; seed < 130; seed++)
+			{
+				var m = NewMatch();
+				int dir = start < 0 ? 1 : -1;
+				m.P1.X = start; m.P2.X = Math.Clamp(start + dir * (130 + seed % 5 * 200) * SimConfig.Scale, -corner, corner);
+				if (m.P1.X == m.P2.X) m.P2.X -= dir * c.BodyWidth;
+				m.P1.Facing = Math.Sign(m.P2.X - m.P1.X) is var f1 && f1 != 0 ? f1 : 1; m.P2.Facing = -m.P1.Facing;
+				var rng = new Random(seed * 31 + start);
+				int last = Math.Sign(m.P2.X - m.P1.X);
+				for (int t = 0; t < 1500; t++)
+				{
+					var inp = new FighterInput[2];
+					for (int i = 0; i < 2; i++)
+					{
+						var b = dirs[rng.Next(dirs.Length)];
+						if (rng.Next(3) == 0) b |= btn[rng.Next(btn.Length)];
+						inp[i] = rng.Next(60) == 0 ? FighterInput.Special((SpecialSlot)rng.Next(2), rng.Next(4) == 0, b) : In(b);
+					}
+					m.Step(inp[0], inp[1]);
+					foreach (var f in m.Fighters) if (f.State.ToString().Contains("Throw") || f.State.ToString().Contains("Grab") || f.State.ToString().Contains("Held")) throwsSeen++;
+					int sep = Math.Abs(m.P2.X - m.P1.X);
+					Assert.True(sep <= c.MaxSeparation, $"start {start} seed {seed} t {t}: sep {sep}");
+					Assert.True(FightCamera.BothInView(m), $"start {start} seed {seed} t {t}: clipped (P1 {m.P1.X} f{m.P1.Facing} {m.P1.State}, P2 {m.P2.X} f{m.P2.Facing} {m.P2.State})");
+					int side = Math.Sign(m.P2.X - m.P1.X);
+					if (side != 0 && last != 0 && side != last) switches++;
+					if (side != 0) last = side;
+					if (m.Phase == MatchPhase.Over) m.Reset();
+				}
+			}
+		Assert.True(switches > 20, $"side switches covered ({switches})");
+		Assert.True(throwsSeen > 0, $"throw states covered ({throwsSeen})");
+	}
 }
