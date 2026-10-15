@@ -366,7 +366,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			reason = "";
 			return session;
@@ -431,6 +431,7 @@ public partial class GameFlow : Node
 				Title.Visible = false;
 				ControlSelect.Close();
 				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
+				DevMap.Apply(Session); // YOK-124: the dev full map (off unless dev mode is on and the toggle is set)
 				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
 				Map.Visible = true;
 				break;

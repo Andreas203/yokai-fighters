@@ -46,6 +46,12 @@ public sealed record RunSave(
 	public bool? CopyLocked { get; init; }
 	/// <summary>T1: the locked copy; null before the lock, or a lock that found no special.</summary>
 	public LockedCopySave? LockedCopy { get; init; }
+	/// <summary>
+	/// YOK-124: the walk stepped off the routes (dev mode's full map). Written only when true (<c>off_route</c>), so
+	/// the version is unchanged; honoured on restore only with <c>allowOffRoute</c> (the dev slot), otherwise such
+	/// a walk is refused like any walk the map does not allow.
+	/// </summary>
+	public bool OffRoute { get; init; }
 
 	public static string Hex(ulong value) => value.ToString("x16", CultureInfo.InvariantCulture);
 
@@ -78,6 +84,7 @@ public sealed record RunSave(
 			Coins = session.Run.Coins,
 			CopyLocked = session.CopyLocked,
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
+			OffRoute = snap.OffRoute,
 		};
 	}
 
@@ -104,7 +111,7 @@ public sealed record RunSave(
 	/// was read as saved. Otherwise the run is refused: the copy cannot be known exactly.
 	/// </para>
 	/// </summary>
-	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null)
+	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null, bool allowOffRoute = false)
 	{
 		if (graph.Id != MapId) throw new FormatException($"the run was saved on map '{MapId}', this is '{graph.Id}'");
 		if (MapFingerprint is { } print && !string.Equals(print, Hex(graph.Fingerprint), StringComparison.OrdinalIgnoreCase))
@@ -148,7 +155,7 @@ public sealed record RunSave(
 			notes?.Add($"level-up order not usable ({e.Message}): lower slots taken as more recent");
 			orderRepaired = true;
 		}
-		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current));
+		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current) { OffRoute = OffRoute }, allowOffRoute);
 		// A finished walk is a won run: it has ended, there is nothing to pick and nothing to continue.
 		if (map.IsFinished) throw new FormatException($"the saved walk is already at the end of map '{MapId}': that run is over");
 		run.SetMap(map);

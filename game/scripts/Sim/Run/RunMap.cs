@@ -15,7 +15,11 @@ public sealed record MapResult(bool Ok, string? Error = null)
 /// The whole of a <see cref="RunMap"/>'s progress as plain data (ids only), for a later save / Continue:
 /// <see cref="RunMap.Snapshot"/> writes it, <see cref="RunMap.Restore"/> checks it against the graph.
 /// </summary>
-public sealed record RunMapSnapshot(string MapId, IReadOnlyList<string> Visited, string? Current);
+public sealed record RunMapSnapshot(string MapId, IReadOnlyList<string> Visited, string? Current)
+{
+	/// <summary>YOK-124: the walk took a step off the routes (<see cref="RunMap.FreeTravel"/>); restored only where the caller allows it.</summary>
+	public bool OffRoute { get; init; }
+}
 
 /// <summary>
 /// YOK-76: where Ryo is on the run map (pure C#, deterministic, no RNG). State is node ids only.
@@ -49,6 +53,18 @@ public sealed class RunMap
 	/// <summary>Raised by <see cref="Complete"/> once the node is marked visited.</summary>
 	public event Action<MapNodeData>? NodeCompleted;
 
+	/// <summary>
+	/// YOK-124 (a development tool: the dev menu's "Full map unlocked"): every node not yet walked can be picked,
+	/// whatever the routes say. Still one node at a time: nothing is reachable while a node is entered or once the
+	/// map is finished, and a visited node is never picked again. Off (the default) = the routes, R1. Switching it
+	/// off leaves the walk as it is: the routes out of the last completed node open, as always. Nothing in the
+	/// game sets it but the dev menu.
+	/// </summary>
+	public bool FreeTravel { get; set; }
+
+	/// <summary>YOK-124: true once any step was taken off the routes (sticky; saved in the snapshot, mixed into the hash).</summary>
+	public bool OffRoute { get; private set; }
+
 	public RunMap(MapGraph graph) => Graph = graph;
 
 	public bool IsVisited(string nodeId) => _visited.Contains(nodeId);
@@ -59,6 +75,8 @@ public sealed class RunMap
 	/// </summary>
 	public IReadOnlyList<string> Reachable()
 	{
+		if (FreeTravel)
+			return InNode || IsFinished ? Array.Empty<string>() : Graph.Nodes.Where(n => !IsVisited(n.Id)).Select(n => n.Id).ToArray();
 		if (Current is null) return Graph.StartNodes;
 		return InNode ? Array.Empty<string>() : Graph.Next(Current);
 	}
@@ -72,10 +90,13 @@ public sealed class RunMap
 		if (InNode) return MapResult.Fail($"'{Current}' is not completed yet");
 		if (IsFinished) return MapResult.Fail("the map is finished");
 		if (!CanSelect(nodeId)) return MapResult.Fail($"'{nodeId}' is not reachable from {(Current is null ? "the start" : $"'{Current}'")}");
+		if (!OnRoute(nodeId)) OffRoute = true; // only free travel gets here off the routes
 		Current = nodeId;
 		NodeEntered?.Invoke(Graph.Node(nodeId));
 		return MapResult.Done;
 	}
+
+	bool OnRoute(string nodeId) => Current is null ? Graph.StartNodes.Contains(nodeId) : Graph.HasRoute(Current, nodeId);
 
 	/// <summary>Marks the entered node visited and opens its routes. Fails unless <paramref name="nodeId"/> is the entered node.</summary>
 	public MapResult Complete(string nodeId)
@@ -87,14 +108,19 @@ public sealed class RunMap
 		return MapResult.Done;
 	}
 
-	public RunMapSnapshot Snapshot() => new(Graph.Id, _visited.ToArray(), Current);
+	public RunMapSnapshot Snapshot() => new(Graph.Id, _visited.ToArray(), Current) { OffRoute = OffRoute };
 
-	/// <summary>Rebuilds progress on <paramref name="graph"/>; throws <see cref="FormatException"/> when the snapshot is not a walk of it.</summary>
-	public static RunMap Restore(MapGraph graph, RunMapSnapshot snapshot)
+	/// <summary>
+	/// Rebuilds progress on <paramref name="graph"/>; throws <see cref="FormatException"/> when the snapshot is not a walk of it.
+	/// YOK-124: a walk marked <see cref="RunMapSnapshot.OffRoute"/> is replayed with free travel only when
+	/// <paramref name="allowOffRoute"/> (the dev slot); otherwise it must follow the routes like any other. The
+	/// restored map has <see cref="FreeTravel"/> off either way.
+	/// </summary>
+	public static RunMap Restore(MapGraph graph, RunMapSnapshot snapshot, bool allowOffRoute = false)
 	{
 		if (snapshot.MapId != graph.Id)
 			throw new FormatException($"the saved walk is of map '{snapshot.MapId}', not '{graph.Id}'");
-		var map = new RunMap(graph);
+		var map = new RunMap(graph) { FreeTravel = snapshot.OffRoute && allowOffRoute };
 		foreach (string id in snapshot.Visited)
 		{
 			var step = map.Select(id);
@@ -107,6 +133,7 @@ public sealed class RunMap
 			var step = snapshot.Current is null ? MapResult.Fail("no current node after visited nodes") : map.Select(snapshot.Current);
 			if (!step.Ok) throw new FormatException($"the saved walk of map '{graph.Id}' is not valid: {step.Error}");
 		}
+		map.FreeTravel = false;
 		return map;
 	}
 
@@ -117,6 +144,7 @@ public sealed class RunMap
 		h = Fnv.Mix(h, _visited.Count);
 		foreach (string id in _visited) h = Fnv.MixString(h, id);
 		h = Fnv.MixString(h, Current ?? "");
+		if (OffRoute) h = Fnv.MixString(h, "off-route"); // YOK-124: a walk on the routes keeps its old hash
 		return h;
 	}
 }
