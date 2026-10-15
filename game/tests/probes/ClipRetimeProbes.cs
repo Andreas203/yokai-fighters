@@ -126,4 +126,28 @@ public static class ClipRetimeProbes
 			Assert.True(ClipCatalog.ParseRetime(doc.RootElement, out _) != null, $"frame literal {lit} rejected");
 		}
 	}
+
+	// F2/F3: 1.33x over 1.5e9 frames passes, and TickAt on huge segments stays inside [first,last] and never decreases.
+	[Test]
+	public static void Probe_HugeSegments_TickAtBoundedAndMonotonic()
+	{
+		Assert.True(Check(1_500_000_000, S(1, 1_500_000_000, 0, 2_000_000_000)) == null, "1.33x over 1.5e9 frames");
+		Assert.True(Check(int.MaxValue, S(1, int.MaxValue, 0, int.MaxValue)) == null, "max-frames 1x full tick range");
+		Assert.True(Check(3, S(1, 3, 0, int.MaxValue)) != null, "huge 1e9x still rejected");
+		var cases = new[] { S(1, int.MaxValue, 0, int.MaxValue), S(1, 1_500_000_000, 0, 2_000_000_000), S(1, int.MaxValue, 7, 1_100_000_000) };
+		foreach (var seg in cases)
+		{
+			var c = new ClipInfo("h", "res://x.glb", seg.FirstTick, seg.LastTick, 1.0, seg.LastFrame) { Retime = new[] { seg } };
+			double prev = seg.FirstTick;
+			foreach (int f in new[] { 1, 2, 3, 1000, seg.LastFrame / 2, seg.LastFrame - 2, seg.LastFrame - 1, seg.LastFrame })
+			{
+				double v = c.RawTickAt(f);
+				Assert.True(v >= seg.FirstTick && v <= seg.LastTick, $"frame {f} inside range, got {v}");
+				Assert.True(v >= prev, $"frame {f} not decreasing");
+				prev = v;
+			}
+			Assert.Equal((double)seg.LastTick, c.RawTickAt(seg.LastFrame), "last frame = last tick exactly");
+			Assert.Equal((double)seg.FirstTick, c.RawTickAt(1), "frame 1 = first tick exactly");
+		}
+	}
 }
