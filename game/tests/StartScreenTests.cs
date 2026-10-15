@@ -66,11 +66,11 @@ public static class StartScreenTests
 			var grid = YokaiFighters.Ui.UiFind.Get<GridContainer>(screen, "KeyboardGrid");
 			string Table() => string.Join("|", grid.GetChildren().OfType<Label>().Where(l => l.Visible).Select(l => l.Text));
 			Assert.Equal(ControlScheme.Kihon, StartScreen.Scheme, "Kihon by default (E18)");
-			Assert.True(screen.KihonButton.Text.StartsWith("●") && screen.KataButton.Text.StartsWith("○"), "Kihon marked");
+			Assert.True(screen.KihonButton.GetNode<Control>("Radio/Dot").Visible && !screen.KataButton.GetNode<Control>("Radio/Dot").Visible, "Kihon marked");
 			Assert.True(Table().Contains("Space + direction"), "Kihon table: Special + direction (K2)");
 			screen.KataButton.EmitSignal(BaseButton.SignalName.Pressed);
 			Assert.Equal(ControlScheme.Kata, StartScreen.Scheme, "Kata chosen");
-			Assert.True(screen.KataButton.Text.StartsWith("●") && screen.KihonButton.Text.StartsWith("○"), "Kata marked");
+			Assert.True(screen.KataButton.GetNode<Control>("Radio/Dot").Visible && !screen.KihonButton.GetNode<Control>("Radio/Dot").Visible, "Kata marked");
 			Assert.True(Table().Contains("draw the motion") && !Table().Contains("Space + direction"), "Kata table: motions (K1)");
 			screen.KihonButton.EmitSignal(BaseButton.SignalName.Pressed);
 			Assert.Equal(ControlScheme.Kihon, StartScreen.Scheme, "back to Kihon");
