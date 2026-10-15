@@ -67,3 +67,24 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Where | Was | Now |
 |---|---|---|
 | GDD §6 run structure (save behaviour) | Not specified | As above. Rule M5 in `docs/design/rules.md`. |
+
+---
+
+## AM4 — Rulings on the Tanuki, the shop and coins (2026-10-11 and 2026-10-12)
+
+**Decisions.** Answers the designer gave where the PDF was silent or could be read two ways.
+
+- **The Tanuki's copy mirrors Ryo's slot.** The copied special sits in the slot it has on Ryo's side. If a starter sits in that slot on the Tanuki's side, the copy replaces it; the other starter stays in its own slot. So when Ryo has drafted a special over a starter and that special is the copy, the Tanuki does not keep the starter Ryo replaced. A copied starter replaces its own Lv 1 version.
+- **The Tanuki's habit.** It throws when the player keeps blocking, 60% of the time. The counter is to break the throw.
+- **The shop sells modifiers as well as specials.** "Common abilities" in the shop means common specials and common modifiers. A bought modifier attaches to one of Ryo's specials, chosen by the player, under the same rule as a drafted modifier, and is borrowed ink like a bought special.
+- **Releasing a binding costs Ryo 40 coins.** It is a paid service to free a slot, not a sale.
+- **Coins are not capped,** for now.
+
+### GDD text affected
+
+| Topic | Was | Now |
+|---|---|---|
+| The Tanuki's kit | "Ryo's normals, his starters and the one copied special" | The same, with the copy in Ryo's slot for it and replacing a starter there. Rule T0. |
+| Yokai habits | No habit named for the Tanuki | Throws at a blocking player, 60%. Rule Y2. |
+| The merchant | "sells common abilities … (50 coins); release a binding (40)" | Common specials and common modifiers, 50 each; releasing costs Ryo 40. Rule R6. |
+| Coins | No cap stated | No cap, for now. Rule R8. |
