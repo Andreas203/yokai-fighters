@@ -92,6 +92,9 @@ public static class ClipRetimeTests
 		Assert.True(Check(33, S(1, 5, 22, 30), S(5, 7, 30, 30), S(7, 9, 30, 30), S(9, 33, 30, 54))?.Contains("5 frames") == true,
 			"split hold still counts as one");
 		Assert.True(Check(33, S(1, 1, 22, 22), S(1, 33, 22, 54))?.Contains("after first") == true, "zero-length segment");
+		Assert.True(ClipCatalog.CheckRetime(new[] { S(1, 5, 5, 9) }, 5, (10, 20))?.Contains("outside trim 10-20") == true, "ticks below the trim");
+		Assert.True(ClipCatalog.CheckRetime(new[] { S(1, 5, 18, 22) }, 5, (10, 20))?.Contains("outside trim 10-20") == true, "ticks past the trim");
+		Assert.True(ClipCatalog.CheckRetime(new[] { S(1, 5, 10, 14) }, 5, (10, 20)) == null && Check(5, S(1, 5, 5, 9)) == null, "inside the trim, or no trim, passes");
 		Assert.True(Check(33, S(1, 2, 0, 2), S(2, 33, 2, 33)) == null && Check(2, S(1, 2, 0, 1)) == null, "exactly 2x and 0.5x pass");
 	}
 
@@ -115,6 +118,7 @@ public static class ClipRetimeTests
 			Clip("ryo-bad-shape", ",\"trim_start\":22,\"trim_end\":53,\"retime\":[{\"frames\":[1],\"ticks\":[22,54]}]");
 			Clip("ryo-bad-float", ",\"trim_start\":22,\"trim_end\":53,\"retime\":[{\"frames\":[1,33],\"ticks\":[22.5,54]}]");
 			Clip("ryo-bad-empty", ",\"trim_start\":22,\"trim_end\":53,\"retime\":[]");
+			Clip("ryo-bad-trim", ",\"trim_start\":30,\"trim_end\":53,\"retime\":" + good);
 			var cat = ClipCatalog.Load(clips, game);
 			var a = cat["ryo-curve"]!;
 			Assert.True(a.Retime != null && a.Retime.Count == 4, "curve read");
@@ -124,7 +128,7 @@ public static class ClipRetimeTests
 			Assert.Equal(30.0, b.RawTickAt(7), "hold through the curve");
 			var p = cat["ryo-plain"]!;
 			Assert.True(p.Retime == null && p.RawTickAt(5) == 36.0, "no curve: trim + speed as before");
-			foreach (string id in new[] { "ryo-bad-gap", "ryo-bad-shape", "ryo-bad-float", "ryo-bad-empty" })
+			foreach (string id in new[] { "ryo-bad-gap", "ryo-bad-shape", "ryo-bad-float", "ryo-bad-empty", "ryo-bad-trim" })
 				Assert.True(!cat.Has(id) && cat.Problems.Exists(x => x.StartsWith(id + ": retime")), $"{id} rejected with a problem");
 			var notesOnly = ClipCatalog.Load(clips, game, notesOnly: true);
 			Assert.True(!notesOnly.Has("ryo-curve"), "notesOnly ignores structured fields, the curve included");

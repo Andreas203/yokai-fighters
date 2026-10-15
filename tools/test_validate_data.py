@@ -216,9 +216,16 @@ class ValidateDataTest(unittest.TestCase):
         # schema: malformed segments
         for bad in ([], [{"frames": [1, 33]}], [{"frames": [1], "ticks": [22, 54]}], [{"frames": [0, 33], "ticks": [22, 54]}],
                     [{"frames": [1, 33], "ticks": [22, -1]}], [{"frames": [1, 33], "ticks": [22, 54], "speed": 2}],
-                    [{"frames": [1, 33], "ticks": [22.5, 54]}]):
+                    [{"frames": [1, 33], "ticks": [22.5, 54]}], [{"frames": [1, 33], "ticks": [22, 2147483648]}],
+                    [{"frames": [1, 2147483648], "ticks": [22, 54]}]):
             self.assertNotEqual([], [e.message for e in v.iter_errors(dict(base, retime=bad))], bad)
         self.assertEqual([("retime", "retime must be a non-empty list of segments")], validate_data.check_retime([], 33))
+        # the int32 ceiling (C# reads ticks with TryGetInt32) is allowed by the schema; one past it is not
+        top = [{"frames": [1, 33], "ticks": [2147483647, 2147483647]}]
+        self.assertEqual([], [e.message for e in v.iter_errors(dict(base, retime=top))])
+        msgs = [e.message for e in v.iter_errors(dict(base, retime=[{"frames": [1, 33], "ticks": [22, 2147483648]}]))]
+        self.assertIn("2147483648 is greater than the maximum of 2147483647", msgs)
+        self.assertIn(("retime.0.ticks", "ticks 5-9 fall outside trim 10-20"), validate_data.check_retime([seg(1, 5, 5, 9)], 5, 10, 20))
 
     def test_story_cards_validate(self):
         code, out = run(ROOT / "data" / "story", SAMPLES / "sample-story-card.json")

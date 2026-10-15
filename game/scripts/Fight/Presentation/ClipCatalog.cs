@@ -135,7 +135,9 @@ public sealed class ClipCatalog
 			List<RetimeSegment>? retime = null;
 			if (!notesOnly && root.TryGetProperty("retime", out var rt))
 			{
-				string? why = ParseRetime(rt, out retime) ?? CheckRetime(retime!, total);
+				(int, int)? trimFields = Num("trim_start", out var rts) && Num("trim_end", out var rte)
+					&& rts.TryGetInt32(out int rs) && rte.TryGetInt32(out int re) ? (rs, re) : null;
+				string? why = ParseRetime(rt, out retime) ?? CheckRetime(retime!, total, trimFields);
 				if (why != null) { cat.Problems.Add($"{id}: retime {why}"); continue; }
 			}
 			(int Start, int End, double Speed)? trim;
@@ -197,8 +199,9 @@ public sealed class ClipCatalog
 	}
 
 	/// <summary>Contiguous from frame 1 to <paramref name="framesTotal"/>, each segment 0.5x-2x (exact integer
-	/// compare) or a hold, a held tick on at most <see cref="RetimeMaxHoldFrames"/> frames; returns why not, or null.</summary>
-	public static string? CheckRetime(IReadOnlyList<RetimeSegment> segs, int framesTotal)
+	/// compare) or a hold, a held tick on at most <see cref="RetimeMaxHoldFrames"/> frames, and every tick inside
+	/// <paramref name="trim"/> (the trim_start/trim_end fields) when set; returns why not, or null.</summary>
+	public static string? CheckRetime(IReadOnlyList<RetimeSegment> segs, int framesTotal, (int Start, int End)? trim = null)
 	{
 		if (segs.Count == 0) return "must be a non-empty list of segments";
 		if (segs[0].FirstFrame != 1) return $"must start on game frame 1, starts on {segs[0].FirstFrame}";
@@ -208,6 +211,8 @@ public sealed class ClipCatalog
 		{
 			var s = segs[i];
 			if (s.FirstTick < 0 || s.LastTick < 0) return $"segment {i}: negative tick";
+			if (trim is { } t && (Math.Min(s.FirstTick, s.LastTick) < t.Start || Math.Max(s.FirstTick, s.LastTick) > t.End))
+				return $"segment {i}: ticks {s.FirstTick}-{s.LastTick} fall outside trim {t.Start}-{t.End}";
 			int df = s.LastFrame - s.FirstFrame, dt = s.LastTick - s.FirstTick;
 			if (df <= 0) return $"segment {i}: last frame must be after first ({s.FirstFrame}-{s.LastFrame})";
 			if (i > 0 && (s.FirstFrame != segs[i - 1].LastFrame || s.FirstTick != segs[i - 1].LastTick))
