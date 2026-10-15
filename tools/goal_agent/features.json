@@ -3,7 +3,7 @@
   "not_tracked": {
     "P1": "pillar: a tie-breaker for judgment calls, not a system",
     "P2": "pillar", "P3": "pillar", "P4": "pillar", "P5": "pillar",
-    "F2": "process: clip first, then frame data (Clip Matcher, Movesmith)",
+    "F2": "process: clip first, then frame data (Animator, Movesmith)",
     "F5": "process: no hand-keyed animation",
     "F6": "process: how assets are generated and sourced",
     "M2": "pacing target, read from harness results by Sparring Partner",

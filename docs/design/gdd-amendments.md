@@ -88,3 +88,39 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Yokai habits | No habit named for the Tanuki | Throws at a blocking player, 60%. Rule Y2. |
 | The merchant | "sells common abilities … (50 coins); release a binding (40)" | Common specials and common modifiers, 50 each; releasing costs Ryo 40. Rule R6. |
 | Coins | No cap stated | No cap, for now. Rule R8. |
+
+---
+
+## AM5 — Rigging and animation get their own specialists and tools (2026-10-15)
+
+**Decision.** A fighting game feels good only when its rigs and clips are very clean, so rigging and animation each get a specialist, and the pipeline gains tools beyond one generator. It amends AM1 where AM1 names the Meshy MCP as the only route.
+
+**The crew.**
+- **Rig Specialist** (`rig-specialist`, new) owns every rig: the auto-rig job and its settings, rig checks in Blender, extra bones for tails, sleeves, coat tail, shell and club, attachment bones, the bone map onto the shared skeleton, and the G4 retarget gate. Rigging moves out of Asset Smith.
+- **Animator** (`animator`, was Clip Matcher) owns every clip: the clip spec, the take, the scripted cleanup pass, measuring it, its retiming curve and its frame-timed sound cues.
+- **Asset Smith** keeps models, stages and textures, and takes over the level presets (V8), which are VFX work.
+
+**Tools.**
+- **Generators**: **Tripo** or **Meshy**, the designer's choice per job; Tripo is the likely default. Either runs through its MCP when one is installed, otherwise the designer runs the approved job in the generator's own app and drops the files in the repo for the specialist to check.
+- **Auto-rigging**: the generator's own auto-rig (Tripo or Meshy) and **AccuRIG 2** (Reallusion, free) are both tried on the next fighter, and the Rig Specialist's acceptance check picks the better rig. AccuRIG 2 is a desktop app, so the designer runs it from the specialist's settings.
+- **Blender** (4.1, headless Python): rig checks, weight repair, extra bones, retargeting, cleanup (strip root motion, resample to 60 fps, Butterworth smoothing on hit frames, trim) and glTF export. Scripted only: no hand-placed keys.
+- **Auto-Rig Pro** (Blender add-on, bought by the designer): retargeting clips between skeletons and game-ready export.
+- **Clip measurement**: a scripted check that reports foot slide and joint jitter per 60-tick frame and renders the hit-frame stills, so a take's verdict rests on numbers.
+- **Clip sources** beyond the generators: **video motion capture** (Rokoko Vision, Move.ai Move One, DeepMotion or Plask) of a performance the designer records, and **ActorCore** motion-capture packs bought by the designer. **Cascadeur** may be used only for its automatic physics pass on an existing clip, never to pose keys.
+
+**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
+
+**Retiming curves (F2).** A measured clip may carry a **retiming curve**: a short list of segments mapping game frames onto clip time, so startup can be snappy, the pose holds through the active frames and recovery eases out. Each segment plays between 0.5× and 2× the clip's speed (first pass, designer may change), and a held pose lasts at most 4 frames. Frame data is written from the clip *as retimed*. Retiming stays data, played through `AnimationPlayer.Seek()` (F3).
+
+**What "hand-keyed" means now (F5).** Allowed: generated clips, motion capture of a real performance, bought motion-capture packs, scripted cleanup and retiming, and Cascadeur's automatic physics pass. Not allowed: posing or editing keys by hand. The take cap of 3 counts takes from every source together.
+
+**What does not change.** Every generation job, capture session and purchase needs the designer's approval and its cost. Clips are in place. No paired throws (C4). The Tanuki uses Ryo's model and clips (T0). G4 still gates each yokai with the folklore human guise as its fallback. Every tool's output must be cleared for commercial use on the plan the designer uses.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1 pipeline, 3D models and animation | Meshy only, Meshy auto-rig, Meshy animation tools | Tripo or Meshy; generator auto-rig or AccuRIG 2; Blender cleanup and retargeting; motion capture and ActorCore as clip sources. Rules F5, F6. |
+| §3.4 Frame data / rule F2 | Frame data from the clip's real timing | Frame data from the clip's real timing as retimed by its curve. |
+| §9 Agents table | Clip Matcher: "Specs each move's clip and measures the generated take, then adds level presets and frame-timed sound." | **Rig Specialist**: "Rigs every fighter, checks it, and keeps every rig on the shared skeleton." **Animator**: "Specs, cleans, measures and retimes each move's clip, then adds frame-timed sound." Asset Smith adds level presets. |
+| §12 Risks | — | **New:** "Rigs from different tools disagree" → one shared skeleton and a bone map; a new rig must play the existing gate clips first. |
