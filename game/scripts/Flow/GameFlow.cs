@@ -276,6 +276,29 @@ public partial class GameFlow : Node
 	}
 
 	/// <summary>A new run from inside a fight (Restart on the lose screen, the end card or the pause menu): back to the map on a fresh session.</summary>
+	/// <summary>
+	/// YOK-126: the dev menu's Run state page puts a run it built (<see cref="Dev.DevRunEditor"/>) in place of the
+	/// current one. Only on the title (the run then shows on the map) or the map, between nodes, with dev mode on, so
+	/// the save it writes goes to the dev slot. Call it through <see cref="DevContext.TryChangeRun"/>. False, with the
+	/// reason, anywhere else; nothing changes then.
+	/// </summary>
+	public bool AdoptDevSession(RunSession session, out string? refusal)
+	{
+		refusal = !DevMode.On ? DevContext.DevOffReason
+			: Router.Current is not (Screen.Title or Screen.Map) ? DevContext.MidFightReason
+			: session.Map.InNode || session.IsOver ? "the run must stand between nodes" : null;
+		if (refusal != null) return false;
+		Session = session;
+		_freshRun = false;
+		_runMapFile = MapFile;
+		GD.Print($"GameFlow: dev run state on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
+		Adopt(session);
+		SaveRun(session);
+		if (Router.Current == Screen.Title) Router.ContinueRun();
+		else Map.SetView(new SessionMapView(session));
+		return true;
+	}
+
 	public bool RestartRun()
 	{
 		if (Router.Current != Screen.Fight) return false;
