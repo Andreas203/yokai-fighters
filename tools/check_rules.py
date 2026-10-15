@@ -83,6 +83,26 @@ KATA_ONLY_KEYS = ("motion", "precision", "kata")  # same list as validate_data.T
 HEAVY_BUTTONS = ("HP", "HK")  # Match.Specials: CancelFrom.HeavyNormals = HP or HK normal
 
 
+
+KINDS = ("special", "normal", "throw", "modifier", "cancel_rule", "profile", "clip", "story_card",
+         "run_map", "node_scenes", "trial")  # validate_data.KIND_SCHEMA
+
+
+# Shape guards: this check reads files the schema would refuse, so every value read from a document goes
+# through one of these and a wrong type reads as absent instead of raising.
+def D(x) -> dict:
+    return x if isinstance(x, dict) else {}
+
+
+def L(x) -> list:
+    return x if isinstance(x, list) else []
+
+
+def S(x):
+    """A string, or None (also keeps unhashable values out of sets and dict keys)."""
+    return x if isinstance(x, str) else None
+
+
 def rel(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -109,34 +129,46 @@ def group(kind) -> str:
     return "move" if kind in ("special", "normal", "throw") else str(kind)
 
 
-def load(roots: list[Path]) -> tuple[dict, list[tuple[Path, str]]]:
-    """(kind group, id) -> (path, doc); later roots replace earlier entries. Run-state docs key by path."""
+def load(roots: list[Path], rep: "Report") -> dict:
+    """(kind group, id) -> (path, doc). A later root replaces an earlier entry; two files with one kind and id
+    inside the same root are a violation (neither may hide the other). Run-state docs key by path."""
     docs: dict = {}
-    unreadable = []
     for root in roots:
         files = [root] if root.is_file() else sorted(root.rglob("*.json"))
+        this_root: dict = {}
         for f in files:
             below = f.relative_to(root).parts[:-1] if root.is_dir() else ()
             if SKIP_DIRS.intersection(below):
                 continue
             try:
                 doc = json.loads(f.read_text(encoding="utf-8"))
-            except (OSError, ValueError) as e:
-                unreadable.append((f, str(e)))
+            except (OSError, ValueError, RecursionError) as e:  # UnicodeDecodeError is a ValueError
+                rep.fail("read", "", f, f"cannot read JSON: {type(e).__name__}: {str(e)[:200]}")
                 continue
             if not isinstance(doc, dict):
                 continue
             if "kind" in doc:
-                docs[(group(doc["kind"]), doc.get("id", f.stem))] = (f, doc)
+                kind = doc["kind"]
+                if S(kind) not in KINDS:
+                    rep.fail("read", "", f, f"unknown kind {kind!r}; expected one of {list(KINDS)}")
+                    continue
+                key = (group(kind), str(doc["id"]) if "id" in doc else f.stem)
+                if key in this_root:
+                    rep.fail("read", "", f, f"duplicate id: {key[0]} '{key[1]}' is also defined in {rel(this_root[key])}")
+                this_root[key] = f
+                docs[key] = (f, doc)
             elif run_slots(doc) is not None:
-                docs[("run", f.name)] = (f, doc)
-    return docs, unreadable
+                docs[("run", str(f))] = (f, doc)
+    return docs
+
+
+def run_of(doc: dict) -> dict:
+    """A run state: the save file's `run` object (SaveStore v3) or the document itself."""
+    return doc["run"] if isinstance(doc.get("run"), dict) else doc
 
 
 def run_slots(doc: dict):
-    """Slots of a run state: the save file's `run.slots` (SaveStore v3) or a top-level `slots`."""
-    run = doc.get("run") if isinstance(doc.get("run"), dict) else doc
-    slots = run.get("slots")
+    slots = run_of(doc).get("slots")
     return slots if isinstance(slots, list) else None
 
 
@@ -149,17 +181,22 @@ def is_ryo_move(d: dict) -> bool:
     return d.get("kind") == "special" or d.get("source") == "ryo"
 
 
+def lv1_props(d: dict) -> dict:
+    return D(D(D(D(d.get("levels")).get("1")).get("frame_data")).get("properties"))
+
+
 # --- A1 slot limits, A2 one modifier per special, X2 cancel cap ---------------------------------
 
 def check_slots(docs, rep: Report):
     specials = of_kind(docs, "special")
-    starters: dict[str, list[str]] = {}
+    starters: dict[str, list] = {}
     for p, d in specials:
-        slot = ((d.get("input") or {}).get("kihon") or {}).get("slot") or ((d.get("input") or {}).get("kata") or {}).get("slot")
-        if slot is not None and slot not in SLOTS:
-            rep.fail("slots", "A1", p, f"slot '{slot}' is not one of the four special slots A-D")
+        inp = D(d.get("input"))
+        raw = D(inp.get("kihon")).get("slot") or D(inp.get("kata")).get("slot")
+        if raw is not None and S(raw) not in SLOTS:
+            rep.fail("slots", "A1", p, f"slot {raw!r} is not one of the four special slots A-D")
         if d.get("starter") is True:
-            starters.setdefault(str(slot), []).append(d.get("id"))
+            starters.setdefault(str(raw), []).append(d.get("id"))
         mods = d.get("modifiers")
         if isinstance(mods, list) and len(mods) > 1:
             rep.fail("modifiers", "A2", p, f"special carries {len(mods)} modifiers {mods}; one modifier per special")
@@ -174,9 +211,9 @@ def check_slots(docs, rep: Report):
     if len(cancels) > MAX_CANCEL_RULES:
         rep.fail("cancel-cap", "A11", cancels[-1][0], f"{len(cancels)} cancel rules in data; the game has {MAX_CANCEL_RULES} (A11, X4)")
 
-    known_specials = {d.get("id") for _, d in specials}
-    known_mods = {d.get("id") for _, d in of_kind(docs, "modifier")}
-    known_cancels = {d.get("id") for _, d in cancels}
+    known_specials = {S(d.get("id")) for _, d in specials}
+    known_mods = {S(d.get("id")) for _, d in of_kind(docs, "modifier")}
+    known_cancels = {S(d.get("id")) for _, d in cancels}
     for (g, _), (p, doc) in sorted(docs.items(), key=lambda kv: str(kv[1][0])):
         if g != "run":
             continue
@@ -185,43 +222,54 @@ def check_slots(docs, rep: Report):
             rep.fail("slots", "A1", p, f"{len(slots)} specials slotted; there are four slots")
         seen_slot, seen_special = {}, {}
         for i, s in enumerate(slots):
-            if not isinstance(s, dict):
-                continue
-            letter, sp = s.get("slot"), s.get("special")
             where = f"slots[{i}]"
+            if not isinstance(s, dict):
+                rep.fail("slots", "A1", p, f"{where}: {s!r} is not a slot")
+                continue
+            letter, sp = S(s.get("slot")), S(s.get("special"))
             if letter not in SLOTS:
-                rep.fail("slots", "A1", p, f"{where}: slot '{letter}' is not one of A-D")
+                rep.fail("slots", "A1", p, f"{where}: slot {s.get('slot')!r} is not one of A-D")
             elif letter in seen_slot:
                 rep.fail("slots", "A1", p, f"{where}: slot {letter} is filled twice (also slots[{seen_slot[letter]}])")
             else:
                 seen_slot[letter] = i
-            if sp in seen_special:
+            if sp is None:
+                rep.fail("slots", "A1", p, f"{where}: special {s.get('special')!r} is not a special id")
+            elif sp in seen_special:
                 rep.fail("slots", "A3", p, f"{where}: '{sp}' is slotted twice (also slots[{seen_special[sp]}]); drafting an owned special levels it up")
             else:
                 seen_special[sp] = i
-            if known_specials and sp not in known_specials:
-                rep.fail("slots", "A1", p, f"{where}: '{sp}' is not a special in data/moves/")
+                if known_specials and sp not in known_specials:
+                    rep.fail("slots", "A1", p, f"{where}: '{sp}' is not a special in data/moves/")
             lv = s.get("level")
-            if lv is not None and lv not in (1, 2, 3):
+            if lv is not None and (type(lv) is not int or lv not in (1, 2, 3)):
                 rep.fail("levels", "A3", p, f"{where}: level {lv!r}; a special is Lv 1, 2 or 3")
-            mod = s.get("modifier")
-            mods = s.get("modifiers")
-            listed = [m for m in ([mod] if isinstance(mod, str) else (mod if isinstance(mod, list) else []))
-                      + (mods if isinstance(mods, list) else []) if m]
+            mod, mods = s.get("modifier"), s.get("modifiers")
+            listed = ([mod] if mod is not None and not isinstance(mod, list) else L(mod)) + \
+                     ([mods] if mods is not None and not isinstance(mods, list) else L(mods))
+            listed = [m for m in listed if m]
             if len(listed) > 1:
                 rep.fail("modifiers", "A2", p, f"{where}: '{sp}' carries {len(listed)} modifiers {listed}; one modifier per special")
             for m in listed:
-                if known_mods and m not in known_mods:
+                if S(m) is None:
+                    rep.fail("modifiers", "A2", p, f"{where}: modifier {m!r} is not a modifier id")
+                elif known_mods and m not in known_mods:
                     rep.fail("modifiers", "A2", p, f"{where}: modifier '{m}' is not in data/modifiers/")
-        held = (doc.get("run") if isinstance(doc.get("run"), dict) else doc).get("cancels")
-        if isinstance(held, list):
-            if len(held) > MAX_HELD_CANCELS:
-                rep.fail("cancel-cap", "X2", p, f"{len(held)} cancel rules held {held}; up to {MAX_HELD_CANCELS} at once")
-            if len(set(map(str, held))) != len(held):
-                rep.fail("cancel-cap", "X2", p, f"a cancel rule is held twice: {held}")
-            for c in held:
-                if known_cancels and c not in known_cancels:
-                    rep.fail("cancel-cap", "X2", p, f"held cancel rule '{c}' is not in data/cancels/")
+        held = run_of(doc).get("cancels")
+        if held is None:
+            continue
+        if not isinstance(held, list):
+            rep.fail("cancel-cap", "X2", p, f"cancels {held!r} is not a list of cancel rule ids")
+            continue
+        if len(held) > MAX_HELD_CANCELS:
+            rep.fail("cancel-cap", "X2", p, f"{len(held)} cancel rules held {held}; up to {MAX_HELD_CANCELS} at once")
+        if len({json.dumps(c, sort_keys=True) for c in held}) != len(held):
+            rep.fail("cancel-cap", "X2", p, f"a cancel rule is held twice: {held}")
+        for c in held:
+            if S(c) is None:
+                rep.fail("cancel-cap", "X2", p, f"held cancel rule {c!r} is not a cancel rule id")
+            elif known_cancels and c not in known_cancels:
+                rep.fail("cancel-cap", "X2", p, f"held cancel rule '{c}' is not in data/cancels/")
 
 
 # --- X3 once per combo and the cancel graph ---------------------------------------------------
@@ -237,9 +285,9 @@ def move_classes(d: dict) -> set[str]:
         out |= {"specials", "one_special"}
     elif k == "normal" and d.get("source") == "ryo":
         out.add("normals")
-        btn = (d.get("input") or {}).get("button")
-        btns = (d.get("input") or {}).get("buttons") or []
-        if btn in HEAVY_BUTTONS or (not btn and any(b in HEAVY_BUTTONS for b in btns)):
+        inp = D(d.get("input"))
+        btn = S(inp.get("button"))
+        if btn in HEAVY_BUTTONS or (not btn and any(S(b) in HEAVY_BUTTONS for b in L(inp.get("buttons")))):
             out.add("heavy_normals")
     elif k == "throw" and d.get("source") == "ryo":
         out.add("successful_throws")
@@ -252,8 +300,8 @@ def cancel_graph(moves: list[dict], rules: list[dict]) -> dict[str, dict[str, li
     graph: dict[str, dict[str, list[str]]] = {mid: {} for mid in classes}
     graph["dash"] = {}
     for r in rules:
-        path = r.get("path") or {}
-        src, dst = path.get("from"), path.get("into")
+        path = D(r.get("path"))
+        src, dst = S(path.get("from")), S(path.get("into"))
         targets = ["dash"] if dst == "dash" else [mid for mid, c in classes.items() if dst in c]
         for mid, c in classes.items():
             if src in c:
@@ -303,6 +351,8 @@ def find_loops(graph: dict[str, dict[str, list[str]]]) -> list[tuple[list[str], 
     return out
 
 
+
+
 def check_cancels(docs, rep: Report):
     rules = of_kind(docs, "cancel_rule")
     for p, d in rules:
@@ -326,10 +376,9 @@ def check_cancels(docs, rep: Report):
         else:
             rep.confirm("cancels", "X3", first,
                         f"cancel cycle via {used} among {members} (e.g. {chain}) stops only by once per combo")
-    if any(isinstance(d.get("path"), dict) and d["path"].get("from") == "successful_throws" for _, d in rules):
+    if any(D(d.get("path")).get("from") == "successful_throws" for _, d in rules):
         for p, d in of_kind(docs, "special"):
-            props = (((d.get("levels") or {}).get("1") or {}).get("frame_data") or {}).get("properties") or {}
-            if props.get("throw"):
+            if lv1_props(d).get("throw"):
                 rep.confirm("cancels", "C4", p,
                             f"'{d.get('id')}' is a command grab: the game does not count it as a successful throw "
                             f"for cancels (open question in rules.md, C4)")
@@ -340,27 +389,47 @@ def check_cancels(docs, rep: Report):
 
 # --- A3-A5 three levels per special -----------------------------------------------------------
 
+def _targets(node):
+    """Every effect `target` inside a tuning step, however nested."""
+    if isinstance(node, dict):
+        if "target" in node:
+            yield node["target"]
+        for k, v in node.items():
+            if k != "target":
+                yield from _targets(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _targets(v)
+
+
+def _is_damage(t) -> bool:
+    return isinstance(t, str) and t.strip().lower() == "damage"
+
+
 def check_levels(docs, rep: Report):
     for p, d in of_kind(docs, "special"):
-        levels = d.get("levels") if isinstance(d.get("levels"), dict) else {}
+        raw = d.get("levels")
+        if not isinstance(raw, dict):
+            rep.fail("levels", "A3", p, f"levels {type(raw).__name__}; every special has exactly Lv 1, 2 and 3")
+            continue
+        levels = raw
         keys = sorted(levels)
         if keys != ["1", "2", "3"]:
             rep.fail("levels", "A3", p, f"levels {keys}; every special has exactly Lv 1, 2 and 3")
-        lv1 = levels.get("1") or {}
-        if "1" in levels and not isinstance(lv1.get("frame_data"), dict):
+        if "1" in levels and not isinstance(D(levels.get("1")).get("frame_data"), dict):
             rep.fail("levels", "A3", p, "Lv 1 has no frame data")
-        lv2 = levels.get("2") or {}
         if "2" in levels:
+            lv2 = D(levels.get("2"))
             t = lv2.get("tuning")
-            if not isinstance(t, dict):
-                rep.fail("levels", "A4", p, "Lv 2 must be one tuning step (a single effect in `tuning`)")
-            elif t.get("target") == "damage":
+            targets = list(_targets(t))
+            if not isinstance(t, dict) or not targets or not all(S(x) for x in targets):
+                rep.fail("levels", "A4", p, "Lv 2 must be one tuning step (an effect with a `target` in `tuning`)")
+            if targets and all(_is_damage(x) for x in targets):
                 rep.fail("levels", "E21", p, "Lv 2 step changes damage alone; damage-only steps are out (P1, E21)")
             if "evolution" in lv2:
                 rep.fail("levels", "A4", p, "Lv 2 carries an evolution; the evolution is Lv 3")
-        lv3 = levels.get("3") or {}
         if "3" in levels:
-            ev = lv3.get("evolution")
+            ev = D(levels.get("3")).get("evolution")
             if not isinstance(ev, dict):
                 rep.fail("levels", "A4", p, "Lv 3 must be an evolution")
             else:
@@ -368,8 +437,8 @@ def check_levels(docs, rep: Report):
                     rep.fail("levels", "A5", p, "Lv 3 evolution has no visual preset")
                 if ev.get("locked") is True:
                     rep.fail("levels", "A5", p, "evolutions come with their special and are never locked")
-                ch = [c for c in ev.get("changes") or [] if isinstance(c, dict)]
-                if ch and all(c.get("target") == "damage" for c in ch):
+                targets = list(_targets(ev.get("changes")))
+                if targets and all(_is_damage(x) for x in targets):
                     rep.fail("levels", "P1", p, "Lv 3 evolution changes damage alone; upgrades change how you fight")
 
 
@@ -378,7 +447,7 @@ def check_levels(docs, rep: Report):
 def _meter_keys(node, path=""):
     if isinstance(node, dict):
         for k, v in node.items():
-            here = f"{path}.{k}" if path else k
+            here = f"{path}.{k}" if path else str(k)
             if k == "meter_cost":
                 yield here
             yield from _meter_keys(v, here)
@@ -388,7 +457,7 @@ def _meter_keys(node, path=""):
 
 
 def _spends_meter(target) -> bool:
-    return isinstance(target, str) and bool(re.search(r"(^|\.)(meter_cost|meter_spend|meter\.cost)$", target))
+    return isinstance(target, str) and bool(re.search(r"(^|\.)(meter_cost|meter_spend|meter\.cost)$", target.lower()))
 
 
 def check_meter(docs, rep: Report):
@@ -397,45 +466,47 @@ def check_meter(docs, rep: Report):
         for where in _meter_keys(d):
             if not (kind == "special" and where == "ex.meter_cost"):
                 rep.fail("meter", "C5", p, f"{where}: only a special's EX (C5) or the burst (C6) spends meter")
-        if kind == "special" and isinstance(d.get("ex"), dict):
-            cost = d["ex"].get("meter_cost")
-            if cost != EX_COST:
-                rep.fail("meter", "C5", p, f"ex.meter_cost {cost!r}; an EX special costs 1 bar = {EX_COST} (C5, E16)")
-            for i, c in enumerate(d["ex"].get("changes") or []):
-                if isinstance(c, dict) and _spends_meter(c.get("target")):
-                    rep.fail("meter", "C5", p, f"ex.changes.{i}: the EX changes its own cost; the cost is ex.meter_cost (E16)")
+        ex = d.get("ex")
+        if kind == "special" and ex is not None:
+            if not isinstance(ex, dict):
+                rep.fail("meter", "C5", p, f"ex {ex!r} is not an EX block with a meter_cost")
+            else:
+                cost = ex.get("meter_cost")
+                if type(cost) is not int or cost != EX_COST:
+                    rep.fail("meter", "C5", p, f"ex.meter_cost {cost!r}; an EX special costs 1 bar = {EX_COST} (C5, E16)")
+                for i, c in enumerate(L(ex.get("changes"))):
+                    if _spends_meter(D(c).get("target")):
+                        rep.fail("meter", "C5", p, f"ex.changes.{i}: the EX changes its own cost; the cost is ex.meter_cost (E16)")
         effects = []
         if kind == "modifier":
-            effects = [("effects", e) for e in d.get("effects") or []]
+            effects = [("effects", e) for e in L(d.get("effects"))]
         elif kind == "special":
-            lv = d.get("levels") or {}
-            effects = [("levels.2.tuning", (lv.get("2") or {}).get("tuning"))]
-            effects += [("levels.3.evolution.changes", c) for c in ((lv.get("3") or {}).get("evolution") or {}).get("changes") or []]
+            lv = D(d.get("levels"))
+            effects = [("levels.2.tuning", t) for t in [D(lv.get("2")).get("tuning")]]
+            effects += [("levels.3.evolution.changes", c) for c in L(D(D(lv.get("3")).get("evolution")).get("changes"))]
         for where, e in effects:
-            if isinstance(e, dict) and _spends_meter(e.get("target")) and not str(e.get("target")).startswith("ex."):
-                rep.fail("meter", "C5", p, f"{where}: target '{e.get('target')}' spends meter outside the EX version")
+            for t in _targets(e):
+                if _spends_meter(t) and not str(t).startswith("ex."):
+                    rep.fail("meter", "C5", p, f"{where}: target '{t}' spends meter outside the EX version")
 
 
-# --- K1-K3 every special in both schemes ------------------------------------------------------
+# --- K1/K2 every special in both schemes ------------------------------------------------------
 
 def check_schemes(docs, rep: Report):
     for p, d in of_kind(docs, "special"):
-        inp = d.get("input") if isinstance(d.get("input"), dict) else {}
+        inp = D(d.get("input"))
         kata, kihon = inp.get("kata"), inp.get("kihon")
-        if not isinstance(kata, dict):
-            rep.fail("schemes", "K1", p, "no Kata input: every special needs its slot's motion")
-        if not isinstance(kihon, dict):
+        ks, hs = S(D(kata).get("slot")), S(D(kihon).get("slot"))
+        if not isinstance(kata, dict) or ks not in SLOTS:
+            rep.fail("schemes", "K1", p, "no Kata input on a slot A-D: every special needs its slot's motion")
+        if not isinstance(kihon, dict) or hs not in SLOTS:
             rep.fail("schemes", "K2", p, "no Kihon input: every special needs a Special + direction slot (Kihon is never cut, K4)")
-        if isinstance(kata, dict):
-            s = kata.get("slot")
-            if s in KATA_MOTION and kata.get("motion") != KATA_MOTION[s]:
-                rep.fail("schemes", "K1", p, f"Kata slot {s} is motion {KATA_MOTION[s]}, got {kata.get('motion')!r}")
-        if isinstance(kihon, dict):
-            s = kihon.get("slot")
-            if s in KIHON_DIRECTION and kihon.get("direction") != KIHON_DIRECTION[s]:
-                rep.fail("schemes", "K2", p, f"Kihon slot {s} is direction {KIHON_DIRECTION[s]}, got {kihon.get('direction')!r}")
-        if isinstance(kata, dict) and isinstance(kihon, dict) and kata.get("slot") != kihon.get("slot"):
-            rep.fail("schemes", "K1", p, f"Kata slot {kata.get('slot')} and Kihon slot {kihon.get('slot')} differ; "
+        if ks in KATA_MOTION and kata.get("motion") != KATA_MOTION[ks]:
+            rep.fail("schemes", "K1", p, f"Kata slot {ks} is motion {KATA_MOTION[ks]}, got {kata.get('motion')!r}")
+        if hs in KIHON_DIRECTION and kihon.get("direction") != KIHON_DIRECTION[hs]:
+            rep.fail("schemes", "K2", p, f"Kihon slot {hs} is direction {KIHON_DIRECTION[hs]}, got {kihon.get('direction')!r}")
+        if ks in SLOTS and hs in SLOTS and ks != hs:
+            rep.fail("schemes", "K1", p, f"Kata slot {ks} and Kihon slot {hs} differ; "
                      f"K1 and K2 (E18) name the same four slots, so a special sits in one slot in both schemes")
 
 
@@ -445,22 +516,24 @@ def has_kihon(d: dict) -> bool:
     """Normals and throws are buttons in both schemes (K2, E12); a special needs its Kihon slot."""
     if d.get("kind") != "special":
         return True
-    k = (d.get("input") or {}).get("kihon")
-    return isinstance(k, dict) and k.get("slot") in SLOTS
+    return S(D(D(d.get("input")).get("kihon")).get("slot")) in SLOTS
 
 
 def check_trials(docs, rep: Report):
-    moves = {d.get("id"): d for _, d in of_kind(docs, "special", "normal", "throw")}
+    moves = {S(d.get("id")): d for _, d in of_kind(docs, "special", "normal", "throw") if S(d.get("id"))}
     for p, t in of_kind(docs, "trial"):
         sp = t.get("special")
-        sd = moves.get(sp)
+        sd = moves.get(S(sp))
         if sd is None or sd.get("kind") != "special":
-            rep.fail("trials", "R7", p, f"trial special '{sp}' is not a special in data/moves/")
+            rep.fail("trials", "R7", p, f"trial special {sp!r} is not a special in data/moves/")
         elif not has_kihon(sd):
             rep.fail("trials", "K2", p, f"trial special '{sp}' has no Kihon input; trials must be Kihon-completable")
-        steps = ((t.get("goal") or {}).get("steps") or []) if isinstance(t.get("goal"), dict) else []
-        for i, st in enumerate(steps):
+        steps = D(t.get("goal")).get("steps")
+        if not isinstance(steps, list) or not steps:
+            rep.fail("trials", "R7", p, f"goal.steps {steps!r}: a trial needs a list of steps")
+        for i, st in enumerate(L(steps)):
             if not isinstance(st, dict):
+                rep.fail("trials", "R7", p, f"goal.steps.{i}: {st!r} is not a step")
                 continue
             for key in KATA_ONLY_KEYS:
                 if key in st:
@@ -468,30 +541,31 @@ def check_trials(docs, rep: Report):
             mid = st.get("move")
             if mid is None:
                 continue
-            md = moves.get(mid)
+            md = moves.get(S(mid))
             if md is None:
-                rep.fail("trials", "R7", p, f"goal.steps.{i}: move '{mid}' does not exist in data/moves/")
+                rep.fail("trials", "R7", p, f"goal.steps.{i}: move {mid!r} does not exist in data/moves/")
             elif not is_ryo_move(md):
                 rep.fail("trials", "R7", p, f"goal.steps.{i}: '{mid}' is a {md.get('source')} move, not in Ryo's kit")
             elif not has_kihon(md):
                 rep.fail("trials", "K2", p, f"goal.steps.{i}: '{mid}' has no Kihon input")
-        dummy = (t.get("setup") or {}).get("dummy") if isinstance(t.get("setup"), dict) else None
-        for j, mid in enumerate((dummy or {}).get("moves") or []):
-            if mid not in moves:
-                rep.fail("trials", "R7", p, f"setup.dummy.moves.{j}: '{mid}' does not exist in data/moves/")
-        rep.confirm("trials", "R7", p, f"'{t.get('id')}' can be landed with Kihon inputs within {t.get('attempts', 3)} attempts")
+        for j, mid in enumerate(L(D(D(t.get("setup")).get("dummy")).get("moves"))):
+            if S(mid) not in moves:
+                rep.fail("trials", "R7", p, f"setup.dummy.moves.{j}: {mid!r} does not exist in data/moves/")
+        attempts = t.get("attempts", 3)
+        rep.confirm("trials", "R7", p, f"'{t.get('id')}' can be landed with Kihon inputs within {attempts!r} attempts")
 
 
 CHECKS = (check_slots, check_cancels, check_levels, check_meter, check_schemes, check_trials)
 
 
 def check(roots: list[Path]) -> tuple[Report, int]:
-    docs, unreadable = load(roots)
     rep = Report()
-    for f, err in unreadable:
-        rep.fail("read", "", f, f"cannot read JSON: {err}")
+    docs = load(roots, rep)
     for fn in CHECKS:
-        fn(docs, rep)
+        try:
+            fn(docs, rep)
+        except Exception as e:  # noqa: BLE001 - backstop: a malformed file must be reported, never a traceback
+            rep.fail("internal", "", None, f"{fn.__name__} stopped on malformed data: {type(e).__name__}: {e}")
     return rep, len(docs)
 
 
@@ -506,6 +580,9 @@ def main(argv=None, out=sys.stdout) -> int:
             print(f"check_rules: {r} does not exist", file=sys.stderr)
             return 2
     rep, n = check(roots)
+    if n == 0 and not rep.violations:
+        print(f"check_rules: no documents found under {', '.join(map(str, roots))}", file=sys.stderr)
+        return 2
     if args.json:
         json.dump({"ok": not rep.violations, "documents": n, "violations": rep.violations,
                    "harness_must_confirm": rep.harness}, out, indent=2, ensure_ascii=False)
