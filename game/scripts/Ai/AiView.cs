@@ -18,6 +18,10 @@ public readonly record struct FighterView(
 	public bool Threatening => Attacking && MoveFrame <= MoveLastActive;
 	/// <summary>Recovery frames of a visible move.</summary>
 	public bool Recovering => Attacking && MoveFrame > MoveLastActive;
+	/// <summary>YOK-57: the health bar's full length (the HUD draws health against it).</summary>
+	public int MaxHealth { get; init; }
+	/// <summary>YOK-57: the burst seal is spent (the HUD shows it, C6).</summary>
+	public bool BurstUsed { get; init; }
 }
 
 public readonly record struct ProjectileView(int Owner, int X, int Dir);
@@ -47,6 +51,6 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 		MoveData? mv = f.CurrentMove;
 		return new FighterView(f.X, f.Y, f.Facing, f.State, f.StunLeft, f.Airborne, f.KnockedOut, f.Health, f.Meter,
 			mv?.Id, mv is not null && f.ActiveSpecial != SpecialSlot.None, mv is null ? 0 : f.MoveFrame,
-			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected);
+			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected) { MaxHealth = f.MaxHealth, BurstUsed = f.BurstUsed };
 	}
 }
