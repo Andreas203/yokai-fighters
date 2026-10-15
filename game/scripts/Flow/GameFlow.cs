@@ -383,7 +383,11 @@ public partial class GameFlow : Node
 			ConfigureFight?.Invoke(fight);
 			Fight = fight;
 		}
-		else if (scene is INodeScene other) other.BindRun(Session!, Router.Scheme);
+		else if (scene is INodeScene other)
+		{
+			other.BindRun(Session!, Router.Scheme);
+			if (scene is RestStopScreen stop) stop.TitleRequested += () => Router.ReturnToTitle(); // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
 		AddChild(scene);
