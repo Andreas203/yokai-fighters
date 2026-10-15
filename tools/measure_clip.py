@@ -7,6 +7,9 @@ Resamples the clip to 60 ticks (linear / slerp), runs FK and linear-blend skinni
 and reports: ticks, root drift/sway, planted-foot shift, max joint rotation per tick,
 end-effector reach/speed (hands, feet), stretched edges (sleeve vs hakama), arm vertices
 inside the torso core, hair-to-hakama distance and a proxy tail fan (9 capsules on Hips).
+Superseded for the per-take gate by tools/blender/measure_clip.py (YOK-110: Blender, foot slide per frame,
+joint acceleration, hit stills). This numpy-only version stays for its mesh proxies (edge stretch, tail fan,
+arm-in-torso) used by the retarget gate (assets/specs/clips/retarget_gate.md), which the Blender script does not do.
 Method limits are the same as assets/specs/clips/retarget_gate.md: proxies, not the real verdict;
 rendered stills are the verdict.
 """
