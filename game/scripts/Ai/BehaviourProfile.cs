@@ -79,6 +79,15 @@ public sealed record BehaviourProfile
 		return o.ToString();
 	}
 
+	/// <summary>
+	/// YOK-94, T0: <c>special:copied</c> names the Tanuki's copied special, whose id is known only at the copy lock
+	/// (T1). It parses like any special id and resolves in <see cref="AiLoadout"/> to the fighter's
+	/// <see cref="YokaiFighters.Sim.Fighter.CopiedSlot"/>; a literal <c>special:&lt;id&gt;</c> is unchanged. Reserved:
+	/// no special may have this id (tools/validate_data.py).
+	/// </summary>
+	public const string CopiedSpecial = "copied";
+
+	/// <summary>Parses "walk_forward", "normal:&lt;id&gt;", "special:&lt;id&gt;" or "special:copied" (<see cref="CopiedSpecial"/>).</summary>
 	public static AiAction ParseAction(string s)
 	{
 		int colon = s.IndexOf(':');

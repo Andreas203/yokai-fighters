@@ -24,6 +24,11 @@ public sealed class AiLoadout
 		}
 		for (int s = 1; s < f.Specials.Length; s++)
 			if (f.Specials[s] is { } eq) l._moves.TryAdd("special:" + eq.Data.Id, (FighterInput.Special((SpecialSlot)s), eq.Move.TotalFrames));
+		// YOK-94, T0: "special:copied" = the slot the Tanuki's copy sits in (none on any other fighter: the action is skipped).
+		string copied = "special:" + BehaviourProfile.CopiedSpecial;
+		l._moves.Remove(copied);
+		if (f.CopiedSlot != SpecialSlot.None && f.Specials[(int)f.CopiedSlot] is { } c)
+			l._moves[copied] = (FighterInput.Special(f.CopiedSlot), c.Move.TotalFrames);
 		return l;
 	}
 

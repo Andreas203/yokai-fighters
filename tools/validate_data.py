@@ -330,6 +330,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             s = fd["startup"]
             check_ranges(fd.get("throwboxes"), s + 1, s + fd["active"], "frame_data.throwboxes", "throwbox", errs)
     elif kind == "special":
+        if doc.get("id") == "copied":  # YOK-94: profiles' special:copied names the Tanuki's copy (T0)
+            errs.append(("id", "'copied' is reserved: profiles use special:copied for the Tanuki's copied special (T0)"))
         inp = doc.get("input") or {}
         ks, hs = (inp.get("kata") or {}).get("slot"), (inp.get("kihon") or {}).get("slot")
         if ks and hs and ks != hs:

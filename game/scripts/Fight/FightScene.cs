@@ -94,14 +94,25 @@ public partial class FightScene : Node3D
 	public static Match NewMatch() => NewMatch(Run);
 
 	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
-	public static Match NewMatch(RunState? run)
+	public static Match NewMatch(RunState? run, RunSession? session = null)
 	{
 		var cfg = run?.MatchConfig();
 		var ryo = LoadKit(Kit.Ryo);
-		var foe = LoadKit(Opponent);
-		var m = new Match(cfg, ryo.Moves, foe.Moves);
+		Match m;
+		if (session?.Node?.Kit == TanukiKit.KitId) // YOK-94, T0: the node's opponent fights with Ryo's kit + the copy locked on entering the boss node (T1)
+		{
+			var tanuki = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(session?.CopyLocked ?? false, session?.LockedCopy, run, ryo.Specials));
+			foreach (var n in tanuki.Notes) GD.Print("FightScene: " + n);
+			m = new Match(cfg, ryo.Moves, tanuki.Moves);
+			tanuki.Equip(m.P2);
+		}
+		else
+		{
+			var foe = LoadKit(Opponent);
+			m = new Match(cfg, ryo.Moves, foe.Moves);
+			foe.Equip(m.P2);
+		}
 		ryo.Equip(m.P1);
-		foe.Equip(m.P2);
 		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
 		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
 		return m;
