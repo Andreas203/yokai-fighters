@@ -7,6 +7,7 @@ Single-player 2.5D roguelite fighting game for PC, built in **Godot 4 (.NET) wit
 - `docs/design/gdd-extended.md`, `docs/design/gdd-short.md` — word-for-word Markdown transcriptions of the two PDFs, with page markers; read these instead of extracting the PDF. Diagrams are approximate there, and if a transcription disagrees with its PDF, the PDF wins and the transcription gets fixed.
 - `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated, sound is sourced). An amendment wins over the PDF section it names.
 - `docs/design/rules.md` — the written rules distilled from the GDD and its amendments, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF + amendments, they win and rules.md gets fixed.
+- `docs/decision-log.md` — compact history of decisions (Linear comments, amendments, gates, spend) and what still waits on the designer. Load it as memory before planning; append new decisions there. The sources above win if it disagrees.
 - The **designer** (the human) owns open questions, purchases, approval of every generation job and its credit spend, cut gates and every code merge. Never decide those on their behalf.
 
 ## The agent crew
