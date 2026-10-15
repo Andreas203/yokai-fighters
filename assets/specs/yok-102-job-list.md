@@ -1,8 +1,20 @@
 # YOK-102 approval job list (Oni, Kappa, Tanuki concept art and models)
 
-Status: DRAFT. Nothing run, nothing approved. Costs from the Meshy published table used in `yok-29-job-list.md` (nano-banana-pro 9, nano-banana 3, meshy-7.1 image-to-3d with texture 30, meshy-6-lite image-to-3d with texture 15, rig 5). Take cap 3 per chain.
+Status: UPDATED 2026-10-16 with designer decisions. Nothing run. **Approved spend: 0 credits.** Costs from the Meshy published table used in `yok-29-job-list.md` (nano-banana-pro 9, nano-banana 3, meshy-7.1 image-to-3d with texture 30, meshy-6-lite image-to-3d with texture 15, rig 5). Take cap 3 per chain.
 
 Balance: `meshy_check_balance` was NOT callable in this session (the Meshy MCP tools were not connected to the spec run). Last recorded: 941 on 2026-10-06 after the gate, then 123 approved for clips (clips may not have used Meshy credits; check). Run `meshy_check_balance` before any approved job; stop if it does not cover the approved amount.
+
+## Designer decisions (2026-10-16)
+
+1. **Option B:** Astra makes the concept fronts and turnarounds for Oni, Kappa and the Tanuki; the designer runs Astra. Brief: `docs/design/characters/astra-brief.md`. Meshy 2D lines O1, O2, K1, K2, T1, T2 are NOT USED (0 credits).
+2. **No Meshy jobs approved now.** Mesh lines O3-O5 and K3-K5 wait until the Astra sheets land and are accepted, then get their own approval.
+3. **Tanuki: 2D concept only.** T3 and T4 are dropped.
+4. **Kappa shell: separate rigid mesh** (K4, K5 stay in).
+5. Still open: palette entries (oni red, kappa teal, shell ochre, Tanuki brown), heights, human-guise fallbacks (G1, G2), licence. The Astra amendment to AM1/F6 is still pending in the decision log.
+
+**Spend now: 0.** Once sheets are accepted, the mesh pass to be approved is O3, O4, O5, K3, K4, K5 = 96 credits first pass, 288 worst case (3 takes). The Astra cost is the designer's own and is not counted here.
+
+Rows below are the original draft table. Status by line: O1, O2, K1, K2, T1, T2 not used (Option B, Astra); T3, T4 dropped; O3-O5 and K3-K5 pending approval after the Astra sheets; G1, G2 contingency, open.
 
 | ID | Job | Tool | Model | Settings (short) | Credits | Spec |
 |---|---|---|---|---|---|---|
@@ -39,7 +51,7 @@ Mesh lines use the front view of the accepted O2/K2 turnaround (or the Astra tur
 
 Next, NOT in this approval: rigging (`meshy_rig`, 5 each, 2.0 m Oni, 1.5 m Kappa), owned by `rig-specialist` with its own spec and approval; clips, G4 gate.
 
-## Open conflict: who makes the turnarounds (designer to decide)
+## Resolved 2026-10-16: turnarounds come from Astra (Option B); original options kept for the record
 
 `docs/decision-log.md` (2026-10-11) records that Astra (the designer's own Codex run) makes the concept art and turnarounds that feed Meshy. AM1, rule F6 and the `asset-smith` definition say 2D comes from the Meshy 2D image models; the log lists "an amendment so AM1, F6 and asset-smith.md allow Astra turnarounds" as still pending. Not decided here.
 
