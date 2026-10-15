@@ -49,7 +49,7 @@ public class RunMapView : IMapView
 	}
 
 	public MapStatusView? Status => _run is null ? null
-		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count);
+		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count) { LastPlayRow = _playRows.Max() };
 
 	public virtual CopyTarget? CopyTarget => _run is null ? null : CopyRule.Target(_run);
 	public virtual bool CopyLocked => false;
@@ -62,8 +62,8 @@ public class RunMapView : IMapView
 	{
 		switch (n.Type)
 		{
-			case NodeTypeRegistry.Merchant: return $"Heal {Merchant.HealPercent}% of your health, or shop with your coins.";
-			case NodeTypeRegistry.Dojo: return $"Rest for {Dojo.RestHealPercent}% health, or take a training trial.";
+			case NodeTypeRegistry.Merchant: return $"Heal {Merchant.HealPercent}%, or shop with your coins.";
+			case NodeTypeRegistry.Dojo: return $"Rest {Dojo.RestHealPercent}%, or take a training trial.";
 			case NodeTypeRegistry.Boss: return "The last duel of the run.";
 		}
 		if (_scenes is null) return null;
