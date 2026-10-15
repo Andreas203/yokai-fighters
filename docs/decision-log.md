@@ -41,6 +41,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-11 YOK-89 → YOK-103: PR #92 (the 33 abilities) was reverted in `ccd9581`, because the loader rejected 13 of its 15 files and 72 tests failed. The data comes back through YOK-103.
 - 2026-10-11 YOK-103 rule: **content PRs run the full `dotnet test` suite before review**; schema plus Rules Lawyer is not enough.
 - 2026-10-11: ui-designer owns the rough mockups (`docs/design/screens/rough/`).
+- 2026-10-15 (designer): Astra (`gpt-6-astra`) is kept for finished concept art and 3D reference images and stays the designer's own Codex run, because it is costly. The UI Designer runs in Codex on `gpt-6.1-sol` (Sol 6.1): it expands concepts, prototypes (Sol image generation allowed, marked rough) and writes an `astra-brief.md`, then hands it to the designer. No Astra crew agent.
 - 2026-10-15 (designer): rig-specialist runs on Opus (low volume; rig verdicts from stress-pose stills and `bpy` scripts gate every clip). animator stays on Sonnet; move single tickets to Opus if its verdicts prove unreliable.
 - 2026-10-12 YOK-103: blocked after 3 failed code-critic rounds (the workflow's cap). Sumo Stance is left out.
 - 2026-10-12 YOK-74 → YOK-107: the Oni and Kappa HUD portraits were split out to wait for Astra art.
@@ -69,7 +70,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
 
 ## Waiting on the designer
-- **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur; Paperclip bundles for rig-specialist and animator.
+- **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur.
 - **YOK-36 open rules:**
   - Lv 2 steps for the other specials.
   - Credit and sound spend, plan tier and licence.
