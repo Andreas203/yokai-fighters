@@ -38,3 +38,7 @@ Write to `data/story/<card-id>.json` with `trigger`, `text`, `placeholders`.
 
 ## Output
 List the files you wrote, the expected habit frequency and damage per duel for each profile, and state they are ready for `rules-lawyer`. Budget: ~4,000 in / 1,500 out per call.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

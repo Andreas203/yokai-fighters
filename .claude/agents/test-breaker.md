@@ -39,3 +39,7 @@ Tests that cannot fail: <author test> — <why> → <suggested assertion>
 Designer attention: <optional, non-blocking>
 ```
 FAIL when at least one probe with a rule-backed expectation fails. A FAIL goes back to the author agent with the probes. Budget: ~12,000 in / 1,500 out per branch.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

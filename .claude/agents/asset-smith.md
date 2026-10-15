@@ -45,3 +45,7 @@ Verdict: `ACCEPT`, or `RETAKE` with the exact prompt or setting change and its c
 Run a Meshy job, or a take, the designer hasn't approved; create an account or buy credits; name or imitate an existing franchise, artist or character; decide an open design question.
 
 Budget: ~6,000 in / 2,000 out per spec or acceptance pass, ~30 assets across the build.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

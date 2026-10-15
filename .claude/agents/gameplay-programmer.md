@@ -33,3 +33,7 @@ A ticket is a gap between the design and the code. You are done when the gap is 
 
 ## Budget
 ~18,000 in / 3,000 out per turn, about 4 revisions × 3 turns per ticket. Keep context small by using the codebase map.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

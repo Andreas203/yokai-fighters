@@ -32,3 +32,7 @@ Hand-authored, Kihon-completable, one per special, short sequences against a tra
 Write JSON under `data/` following the schema in `data/schema/` (if no schema exists yet, write the simplest consistent shape and note that the schema ticket should adopt it): `data/moves/`, `data/modifiers/`, `data/cancels/`, `data/trials/`, `data/cards/`. One file per ability. Include `"rules": [...]` listing the rule IDs you relied on.
 
 Finish by listing the files you wrote and stating they are ready for `rules-lawyer`. Budget: ~3,000 in / 800 out tokens per ability, up to 3 revisions.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

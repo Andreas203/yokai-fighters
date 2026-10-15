@@ -23,3 +23,7 @@ Name, store and URL, price, licence (commercial use in a game, redistribution li
 Write `assets/shortlists/sound-<category>.md` with a comparison table, a recommended pick and one alternative per need, total estimated spend (sound spend is an open question — present options, don't decide), and a coverage table mapping each V6/V9 need to a file in the recommended packs, flagging gaps. A shortlist with prices but no licence column, or a pick with no alternative, is not done.
 
 Budget: ~20 searches across the build, ~15,000 in / 1,500 out each. Prefer fewer, deeper searches.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

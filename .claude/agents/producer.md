@@ -61,3 +61,7 @@ Every branch and pull-request title is `YOK-<number>-<brief-name>` for the Linea
 
 ## Output
 End with a short dispatch plan: an ordered list of `agent → YOK-<n> → branch → one-line goal`, and anything blocked on the designer (generation jobs to run with their spec paths, purchases, gate decisions, open questions in rules.md). Never answer open design questions yourself.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

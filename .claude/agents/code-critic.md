@@ -39,3 +39,7 @@ VERDICT: PASS | FAIL
 Designer attention: <optional, non-blocking>
 ```
 FAIL when there is at least one BLOCKING finding. A FAIL goes back to the author agent with the findings; be specific enough that it can fix them in one revision. Budget: ~12,000 in / 800 out per branch.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

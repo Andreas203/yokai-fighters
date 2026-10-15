@@ -37,3 +37,7 @@ VERDICT: PASS | FAIL
 Designer attention: <optional, non-blocking>
 ```
 A FAIL goes back to the author agent with the reason. Be specific enough that the author can fix it in one revision. Budget: ~4,000 in / 300 out per file.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.

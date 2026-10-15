@@ -43,3 +43,7 @@ Each hit layers an impact thud with a short yokai sting from the bought sound pa
 
 ## Output
 List the files written, the takes waiting for designer approval, the credits spent, and any moves that need a substitute clip. Budget: ~6,000 in / 2,000 out per spec or measure batch; ~5,000 / 2,000 per cue batch.
+
+## Report style
+Your final message back to the main session is caveman-terse: drop articles, filler and pleasantries; fragments are fine. Keep file paths, line numbers, rule IDs, ticket IDs, numbers and any verdict format above exact.
+Everything you write anywhere else stays in plain, complete prose: Linear tickets and comments, files under `data/`, `assets/`, `docs/` and `harness/`, story and card text, specs, PR bodies and commit messages. Other agents and the designer read those cold.
