@@ -78,7 +78,7 @@ public static class CopyHudProbes
    var hits = new List<string>();
    foreach (string n in AllNames())
    {
-    hud.RunView = new View { CopyLocked = true, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.RunView = new View { InTanukiFight = true, CopyLocked = true, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
     hud.Refresh(new Match());
     Assert.Equal(CopyTalismanState.Locked, t.State, "locked");
     var boxes = NameBoxes(label);
@@ -185,17 +185,18 @@ public static class CopyHudProbes
    var run = RunState.NewRun(AbilityPool.LoadFixtures(Root));
    var states = new (string, View)[]
    {
-    ("none", new View()),
-    ("defined", new View { Copy = CopyRule.Target(run) }),
-    ("locked", new View { Copy = CopyRule.Target(run), CopyLocked = true }),
+    ("none", new View { InTanukiFight = true }),
+    ("defined", new View { InTanukiFight = true, Copy = CopyRule.Target(run) }),
+    ("locked", new View { InTanukiFight = true, Copy = CopyRule.Target(run), CopyLocked = true }),
     ("tanuki", new View { Copy = CopyRule.Target(run), CopyLocked = true, InTanukiFight = true }),
     ("elder", new View { ElderFight = true }),
    };
    foreach (var (name, v) in states)
    {
     hud.RunView = v; hud.Refresh(new Match());
-    Assert.True(t.Visible && t.Modulate.A >= 1f && t.SelfModulate.A >= 1f, $"{name}: plate drawn opaque");
-    foreach (string n in new[] { "Caption", "MoveName", "Level", "IconLetter" })
+    if (name == "elder") Assert.True(!t.Visible, "elder: the talisman is hidden (AM6, T6)");
+    else Assert.True(t.Visible && t.Modulate.A >= 1f && t.SelfModulate.A >= 1f, $"{name}: plate drawn opaque");
+    if (name != "elder") foreach (string n in new[] { "Caption", "MoveName", "Level", "IconLetter" })
     {
      var l = Find<Label>(t, n);
      if (!l.Visible) continue;
@@ -219,7 +220,7 @@ public static class CopyHudProbes
   var hud = Load(runner);
   try
   {
-   hud.RunView = new View(); hud.Refresh(new Match());
+   hud.RunView = new View { InTanukiFight = true }; hud.Refresh(new Match());
    var cap = Find<Label>(hud.CopyTarget, "Caption");
    float ratio = Contrast(cap.GetThemeColor("font_color"), new Color(0.6f, 0.58f, 0.5f));
    float onPaper = Contrast(cap.GetThemeColor("font_color"), FightHud.Paper);
@@ -241,7 +242,7 @@ public static class CopyHudProbes
    var worst = new List<string>();
    foreach (string n in new[] { "Thunderclap", "Thunderstrike", "Hundredfold", "Wandering Thunderstrike", "Shapeshifter", "Pandemonium", "Tsukuyomi-Barrage", "Supercalifragilistic" })
    {
-    hud.RunView = new View { Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.RunView = new View { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
     hud.Refresh(new Match());
     int size = label.GetThemeFontSize("font_size");
     if (size * 720f / 1080 < 17) worst.Add($"{n} -> {size}px ({size * 720f / 1080:F1} at 720p)");
@@ -300,7 +301,7 @@ public static class CopyHudProbes
     Assert.Equal(twin.StateHash(), watched.StateHash(), step + ": watched run equals the unwatched twin");
    }
    hud.Refresh(new Match());
-   Assert.Equal(CopyTalismanState.Defined, hud.CopyTarget.State, "defined at start");
+   Assert.True(!hud.CopyTarget.Visible, "AM6: hidden outside the Tanuki fight, so no copy toast or pulse can fire on the way");
    Both(s => s.Enter("a"), "enter a");
    Both(s => s.Run.LevelUp(SpecialSlot.A), "level A (levelled or changed)");
    Both(s => s.Run.LevelUp(SpecialSlot.B), "level B");
@@ -469,7 +470,7 @@ public static class CopyHudProbes
    foreach (string n in names)
    foreach (bool locked in new[] { false, true })
    {
-    hud.RunView = new View { CopyLocked = locked, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.RunView = new View { InTanukiFight = true, CopyLocked = locked, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
     hud.Refresh(new Match());
     string shown = label.Text;
     string tag = $"'{n}' locked={locked} -> '{shown.Replace("\n", "|")}'";
@@ -498,7 +499,7 @@ public static class CopyHudProbes
    var label = Find<Label>(hud.CopyTarget, "MoveName");
    foreach (string n in new[] { string.Concat(System.Linq.Enumerable.Repeat("\U0001D504", 30)), string.Concat(System.Linq.Enumerable.Repeat("é", 30)) })
    {
-    hud.RunView = new View { Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
+    hud.RunView = new View { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, Named(n), 1) };
     hud.Refresh(new Match());
     string shown = label.Text;
     for (int i = 0; i < shown.Length; i++)
@@ -522,7 +523,7 @@ public static class CopyHudProbes
   {
    var data = Named("x");
    var empty = SpecialLoader.Parse("{\"kind\":\"special\",\"id\":\"hud-empty\",\"name\":\"\",\"input\":{\"kata\":{\"slot\":\"A\"}},\"levels\":{\"1\":{\"frame_data\":" + AbilityPool.LoadFixtures(Root).Special("test-spirit-wave")!.Level1Json + "}}}");
-   hud.RunView = new View { Copy = new CopyTarget(SpecialSlot.A, empty, 1) };
+   hud.RunView = new View { InTanukiFight = true, Copy = new CopyTarget(SpecialSlot.A, empty, 1) };
    hud.Refresh(new Match());
    // Known open: a blank name draws an empty slot with state Defined and no letter badge. Flip to Text.Length > 0 if a fallback is added.
    Assert.Equal("", hud.CopyTarget.MoveName, "blank name stays blank");
@@ -542,8 +543,8 @@ public static class CopyHudProbes
    var run = RunState.NewRun(AbilityPool.LoadFixtures(Root));
    var views = new (string, View)[]
    {
-    ("none", new View()), ("defined", new View { Copy = CopyRule.Target(run) }),
-    ("locked", new View { Copy = CopyRule.Target(run), CopyLocked = true }),
+    ("none", new View { InTanukiFight = true }), ("defined", new View { InTanukiFight = true, Copy = CopyRule.Target(run) }),
+    ("locked", new View { InTanukiFight = true, Copy = CopyRule.Target(run), CopyLocked = true }),
     ("tanuki", new View { Copy = CopyRule.Target(run), CopyLocked = true, InTanukiFight = true }),
    };
    foreach (var (name, v) in views)
@@ -612,7 +613,7 @@ public static class CopyHudProbes
   try
   {
    var target = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)))!;
-   hud.RunView = new View { Copy = target };
+   hud.RunView = new View { InTanukiFight = true, Copy = target };
    hud.Refresh(new Match());
    string shown = hud.CopyTarget.MoveName;
    GD.Print("PROBE fixture name shown: " + shown.Replace("\n", "|"));

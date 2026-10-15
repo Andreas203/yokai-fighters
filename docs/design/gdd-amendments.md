@@ -124,3 +124,21 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | §3.4 Frame data / rule F2 | Frame data from the clip's real timing | Frame data from the clip's real timing as retimed by its curve. |
 | §9 Agents table | Clip Matcher: "Specs each move's clip and measures the generated take, then adds level presets and frame-timed sound." | **Rig Specialist**: "Rigs every fighter, checks it, and keeps every rig on the shared skeleton." **Animator**: "Specs, cleans, measures and retimes each move's clip, then adds frame-timed sound." Asset Smith adds level presets. |
 | §12 Risks | — | **New:** "Rigs from different tools disagree" → one shared skeleton and a bone map; a new rig must play the existing gate clips first. |
+
+---
+
+## AM6 — The copy-target talisman shows only in the Tanuki fight (2026-10-15)
+
+**Decision.** The fight HUD shows the copy-target talisman only in the Tanuki's fight. In every other fight (the yokai, the elders) the HUD carries no copy target. Outside fights the target stays visible all run: the map still shows the glowing copy-target talisman, and the rest-stop forecast still names the move, its level and its expected cost.
+
+**Why.** In a yokai fight the copy plays no part: only the Tanuki uses it. Showing it there reads as if the copy rule were active in that fight. The map and the rest stop are where the player plans around the copy, so the warning stays there.
+
+**What does not change.** The copy rule itself (T0–T5): the lock on entering the Tanuki's node, the target, ties, strength and "always defined". The row 4 story card stays templated to the copy target (S3). In the Tanuki fight the talisman shows the locked copy (T1).
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| §5.3 The Tanuki, point 6 | "Visible all run: the target's talisman glows in the HUD, and the rest-stop forecast names it." | "Visible all run outside fights: the map shows the target's glowing talisman and the rest-stop forecast names it. In fights, the HUD shows it only against the Tanuki." Rule T6. |
+| Figure 4, Fight HUD mockup | "glowing: copy target" in a fight against a patient Kitsune | No copy target in a yokai fight; the talisman appears in the Tanuki fight only. |
+| §8 Screens, Fight HUD row | "Health, meter, burst, copy target, elder twist reminder (Figure 4)." | "Health, meter, burst, elder twist reminder; the copy target in the Tanuki fight only (Figure 4, AM6)." |

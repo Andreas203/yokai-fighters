@@ -5,7 +5,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// Windowed screenshot tool (not a test), YOK-74: the HUD with the copy-target talisman in its states.
+/// Windowed screenshot tool (not a test), YOK-74: the HUD in a yokai, an elder and the Tanuki fight (AM6: the talisman shows only in the last).
 /// Run: godot --path game res://tests/copy_hud_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; tag=1080
 /// </summary>
 public partial class CopyHudCapture : Node
@@ -35,16 +35,11 @@ public partial class CopyHudCapture : Node
 		hud.RunView = view;
 		void Tick() { scene.Step(FighterInput.None, FighterInput.None); }
 		Tick();
-		await Snap($"{dir}/hud_copy_none_{tag}.png");
+		await Snap($"{dir}/hud_copy_yokai_hidden_{tag}.png"); // AM6: a yokai fight shows no copy target
 		view.Copy = CopyRule.Target(run); view.ElderFight = true; Tick();
-		await Snap($"{dir}/hud_copy_defined_elder_{tag}.png");
-		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick(); await Wait(0.3);
-		await Snap($"{dir}/hud_copy_changed_{tag}.png");
-		run.LevelUp(SpecialSlot.B); view.Copy = CopyRule.Target(run); Tick(); await Wait(0.9);
-		view.CopyLocked = true; view.ElderFight = false; Tick(); await Wait(0.3);
-		await Snap($"{dir}/hud_copy_locked_{tag}.png");
-		view.InTanukiFight = true; Tick(); await Wait(0.3);
-		await Snap($"{dir}/hud_copy_tanuki_{tag}.png");
+		await Snap($"{dir}/hud_copy_elder_hidden_{tag}.png"); // AM6: nor does an elder fight (twist strip only)
+		view.CopyLocked = true; view.ElderFight = false; view.InTanukiFight = true; Tick(); await Wait(0.3);
+		await Snap($"{dir}/hud_copy_tanuki_{tag}.png"); // AM6, T1: the Tanuki fight shows the locked copy
 		GetTree().Quit();
 	}
 

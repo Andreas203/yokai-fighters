@@ -177,7 +177,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run: target talisman glows in the HUD; rest-stop forecast names it, its level and expected cost.
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
 
 ## R — The run
 
