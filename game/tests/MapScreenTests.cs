@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using YokaiFighters.Flow;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
 
@@ -41,7 +42,7 @@ public static class MapScreenTests
 		Assert.Equal("Kitsune", s.NodeFor("a")!.YokaiText, "the yokai that waits (R2)");
 		Assert.True(s.NodeFor("c")!.ElderShown && !s.NodeFor("b")!.ElderShown, "elder marker only on the elder node (Y3)");
 		Assert.Equal("Shrine", s.NodeFor("d")!.TypeText, "unknown type still renders, with its id as label");
-		Assert.Equal("", s.NodeFor("d")!.YokaiText, "no yokai, no name");
+		Assert.Equal("Shrine", s.NodeFor("d")!.YokaiText, "no yokai: the node shows its type name, never a blank");
 		Assert.True(s.NodeFor("a")!.State == MapNodeState.Reachable && s.NodeFor("e")!.State == MapNodeState.Locked, "states shown");
 		foreach (var (a, b, _) in s.Routes.Lines) Assert.True(a.X < b.X, "routes run forward");
 		var r = s.RectOf("a");
@@ -158,6 +159,124 @@ public static class MapScreenTests
 		Press(s, "ui_down"); Press(s, "ui_accept");
 		Assert.Equal("r2-oni", chosen, "second pick");
 		Assert.True(view.Nodes.First(n => n.Id == "r1-apprentice").State == MapNodeState.Visited, "earlier node Visited");
+		s.GetParent().QueueFree();
+	}
+
+	static RunSession StartSession()
+	{
+		string md = ContentPaths.Data("map");
+		return RunSession.Start(YokaiFighters.Fight.FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+	}
+
+	/// <summary>Walk the session through <paramref name="ids"/> (win each fight with 840 left, take card 0).</summary>
+	static void Walk(RunSession s, params string[] ids)
+	{
+		foreach (var id in ids)
+		{
+			s.Enter(id);
+			if (s.Node!.Type is not ("merchant" or "dojo"))
+			{
+				var d = s.WinFight(840);
+				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
+			}
+			s.CompleteNode();
+		}
+	}
+
+	[Test]
+	public static void EveryNodeShowsItsNameIncludingMerchantAndDojo(Node host)
+	{
+		var s = Make(host, new SessionMapView(StartSession()));
+		Assert.True(s.Nodes.All(n => n.YokaiText != ""), "no node is nameless (R2)");
+		Assert.Equal("Merchant", s.NodeFor("r4-merchant")!.YokaiText, "the merchant is named");
+		Assert.Equal("Dojo", s.NodeFor("r7-dojo")!.YokaiText, "the dojo is named");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void NodeStatesAndCaptionsOnTheDefaultMap(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		Assert.Equal("selected", s.NodeFor("r1-apprentice")!.StateText, "the cursor node reads selected");
+		Walk(sess, "r1-apprentice", "r2-oni");
+		s.SetView(new SessionMapView(sess));
+		Assert.Equal(MapNodeState.Visited, s.NodeFor("r1-apprentice")!.State, "cleared");
+		Assert.Equal("cleared", s.NodeFor("r1-apprentice")!.StateText, "caption");
+		Assert.Equal(MapNodeState.Current, s.NodeFor("r2-oni")!.State, "here");
+		Assert.Equal("YOU ARE HERE", s.NodeFor("r2-oni")!.StateText, "caption");
+		Assert.Equal(MapNodeState.PassedOver, s.NodeFor("r2-kitsune")!.State, "an unchosen node in the row Ryo left is passed over");
+		Assert.Equal(MapNodeState.PassedOver, s.NodeFor("r2-kappa")!.State, "so is its sibling");
+		Assert.Equal("passed over", s.NodeFor("r2-kitsune")!.StateText, "caption");
+		Assert.True(s.NodeFor("r2-kitsune")!.Disabled, "a passed-over node cannot be picked");
+		Assert.True(s.NodeFor("r3-oni")!.State == MapNodeState.Reachable && s.NodeFor("r3-kappa")!.State == MapNodeState.Reachable, "row 3 opens");
+		Assert.True(s.NodeFor("r6-kitsune")!.State == MapNodeState.Locked && s.NodeFor("r6-kitsune")!.StateText == "", "later rows stay locked, no caption");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void StatusRowHeadersDetailAndLegend(Node host)
+	{
+		var sess = StartSession();
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
+		sess.Run.SetHealth(840);
+		var s = Make(host, new SessionMapView(sess));
+		Assert.Equal("RYO · 840 / 1000", s.StatusHealthText, "health as the HUD words it (C1)");
+		Assert.Equal($"{sess.Run.Coins} coins", s.StatusCoinsText, "coins (R8)");
+		Assert.Equal("row 4 of 8 done", s.StatusRowsText, "rows done; the boss row is not counted");
+		Assert.Equal(9, s.HeaderTexts.Count, "a header per column");
+		Assert.Equal("ROW 1", s.HeaderTexts[0], "plain row");
+		Assert.Equal("ROW 5 · ELDER", s.HeaderTexts[4], "elder row marked (R1, Y3)");
+		Assert.Equal("ROW 8 · ELDER", s.HeaderTexts[7], "second elder row");
+		Assert.Equal("AFTER ROW 8", s.HeaderTexts[8], "the boss column");
+		Assert.True(s.DetailNameText.EndsWith("row 5") && s.DetailNameText.Contains("Elder duel"), "detail names the focused node: " + s.DetailNameText);
+		Assert.True(s.DetailRewardText.Contains("Pays 50 coins") && s.DetailRewardText.Contains("rare"), "reward line from the node table: " + s.DetailRewardText);
+		Assert.True(!s.DetailTwist.Visible, "the twist slot stays hidden until the view gives a twist (YOK-90)");
+		Assert.Equal(6, s.LegendStateCount, "a swatch per node state");
+		Assert.True(s.LegendTypesText.Contains("merchant") && s.LegendTypesText.Contains("dojo") && s.LegendTypesText.Contains("elder"), "legend types come from the styles resource");
+		string before = sess.StateHash().ToString();
+		Press(s, "ui_down");
+		Assert.Equal("r5-nine-tails", s.CursorId, "down steps to the next route");
+		Press(s, "ui_up");
+		Assert.Equal("r5-elder-oni", s.CursorId, "up steps back");
+		Assert.True(s.DetailNameText.StartsWith("ELDER ONI"), "the detail follows the cursor");
+		Assert.Equal(before, sess.StateHash().ToString(), "moving the cursor leaves the run untouched");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void TwistSlotShowsWhenTheViewGivesATwist(Node host)
+	{
+		var v = Fork();
+		v.Details["a"] = new MapNodeDetail("Pays 25 coins.", "Reflects any special used twice in a row.");
+		var s = Make(host, v);
+		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Reflects"), "twist line shown in its slot");
+		Assert.Equal("Pays 25 coins.", s.DetailRewardText, "reward line");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void CopyChipShowsTheLiveTargetOrNothing(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		var target = CopyRule.Target(sess.Run);
+		Assert.True(target != null && s.CopyChip.State == CopyTalismanState.Defined, "a new run has a target at turn one (T2): the lowest-slot starter");
+		Assert.Equal(target!.Data.Name.ToUpperInvariant(), s.CopyChip.MoveName, "the chip names the target's move");
+		Assert.Equal($"Lv {target.Level}", s.CopyChip.LevelText, "and its level");
+		var bare = Make(host, Fork());
+		Assert.Equal(CopyTalismanState.None, bare.CopyChip.State, "no target in the view: the chip is the grey plate");
+		s.GetParent().QueueFree(); bare.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void FooterSaysArrowsAndDpadAndRowsAreNotCountedWithoutARun(Node host)
+	{
+		var s = Make(host, Fork());
+		var chips = UiFind.Get<YokaiFighters.Ui.Kit.KeyChipFooter>(s, "Hint").ChipTexts();
+		Assert.Equal("ARROWS", chips[0], "up/down move the cursor, so the chip no longer says LEFT / RIGHT");
+		Assert.True(!UiFind.Get<Control>(s, "Status").Visible, "no run behind the view: no status panel");
+		Assert.Equal("ROW 3", s.HeaderTexts[2], "no play-row count: every column is a plain row");
 		s.GetParent().QueueFree();
 	}
 
