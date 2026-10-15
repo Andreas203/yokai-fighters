@@ -49,6 +49,36 @@ public partial class MapCapture : Node
 		session.Run.SetHealth(840);
 		screen.SetView(new SessionMapView(session));
 		await Snap(dir + $"/map_midrun{suffix}.png");
+
+		// YOK-119: the chip's other states. Changed: another special overtakes the target, so the toast shows on the way back to the map.
+		var fresh = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+		screen.SetView(new SessionMapView(fresh));
+		var owned = fresh.Run.Owned.GetEnumerator(); owned.MoveNext(); owned.MoveNext();
+		fresh.Run.LevelUp(owned.Current.Slot);
+		screen.SetView(new SessionMapView(fresh));
+		await Snap(dir + $"/map_copy_changed{suffix}.png");
+
+		// Locked: the Tanuki's node entered (T1).
+		while (fresh.Map.Graph.Node(fresh.Reachable()[0]).Type != "boss")
+		{
+			fresh.Enter(fresh.Reachable()[0]);
+			if (fresh.Node!.Type is not ("merchant" or "dojo"))
+			{
+				var d = fresh.WinFight(840);
+				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
+			}
+			fresh.CompleteNode();
+		}
+		fresh.Enter(fresh.Reachable()[0]);
+		screen.SetView(new SessionMapView(fresh));
+		await Snap(dir + $"/map_copy_locked{suffix}.png");
+
+		// None: no slot holds a special.
+		var graph = FileMapSource.Default(md).Load();
+		var bare = RunState.Restore(840, System.Array.Empty<(SpecialSlot, OwnedSpecial)>());
+		bare.StartMap(graph);
+		screen.SetView(new SessionMapView(new RunSession(bare, FightScene.LoadAbilityPool(), NodeSceneTable.Default(md), 5)));
+		await Snap(dir + $"/map_copy_none{suffix}.png");
 		GetTree().Quit();
 	}
 

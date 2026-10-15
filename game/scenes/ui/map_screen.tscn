@@ -60,16 +60,16 @@ anchor_right = 1.0
 offset_bottom = 176.0
 
 [node name="CopyChip" parent="TopBar" instance=ExtResource("chip")]
-offset_left = 700.0
+offset_left = 680.0
 offset_top = 38.0
-offset_right = 1180.0
+offset_right = 1240.0
 offset_bottom = 138.0
 
 [node name="Toast" type="Label" parent="TopBar"]
 mouse_filter = 2
-offset_left = 560.0
+offset_left = 540.0
 offset_top = 146.0
-offset_right = 1320.0
+offset_right = 1380.0
 offset_bottom = 180.0
 theme_override_colors/font_color = Color(0.945, 0.91, 0.831, 1)
 theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)

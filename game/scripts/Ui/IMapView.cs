@@ -42,6 +42,11 @@ public interface IMapView
 	CopyTarget? CopyTarget => null;
 	/// <summary>True once the copy is locked (T1): the chip then shows <see cref="CopyTarget"/> as the locked copy.</summary>
 	bool CopyLocked => false;
+	/// <summary>
+	/// YOK-119: who this view belongs to (the run). The screen forgets what the copy chip last showed when it changes, so a new run
+	/// starts with no pulse or toast. Null = unknown (the chip then carries over between views, as the tests' stubs do).
+	/// </summary>
+	object? RunKey => null;
 	/// <summary>YOK-108: the reward line (and twist line) for one node; null = nothing to add.</summary>
 	MapNodeDetail? Detail(string nodeId) => null;
 	/// <summary>Try to enter the node. False = refused (not reachable, or the view says no); nothing changes then.</summary>
