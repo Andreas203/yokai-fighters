@@ -1,6 +1,6 @@
 # Ryo regeneration and re-rig (spec only)
 
-Ticket: YOK-116. Status: **SPEC. No job run, no credits spent.** Designer approves the job and its cost afterwards. Take 2 in `assets/specs/ryo.md` stays the live model until a take here is accepted.
+Ticket: YOK-116. Status: **NOT NEEDED.** The free weight repair was accepted and swapped in on 2026-10-15 (`assets/specs/rigs/ryo-weight-repair.md`). No job was run and no credits were spent. Kept on file in case the outfit is revisited. Take 2 in `assets/specs/ryo.md` stays the live model, with its repaired weights.
 Inputs read: `assets/specs/ryo.md` (takes 1 and 2), `docs/decision-log.md` (YOK-30 open points: Ryo's simplified outfit, retakes need new approval), `docs/design/characters/ryo/README.md`, `assets/specs/rigs/skeleton.md` (YOK-111, on its own branch), and the `tools/blender/rig_check.py` report and stills from the YOK-110 run on `ryo-rigged.glb` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`).
 
 ## 1. What the rig check found
@@ -64,7 +64,7 @@ Setting changes against take 2:
 
 **Free option before spending: weight repair.** `rig-specialist` can try a Blender weight repair on the current `ryo-rigged.glb` (re-paint crotch and inner-thigh weights, run `rig_check.py`). If crouch reaches WARN or better, regeneration is unnecessary and Ryo's clips, the Tanuki and the portrait are untouched. I recommend asking for that first; the choice is the designer's. The regeneration here is the route if repair fails or the designer wants the outfit fixed too.
 
-**Repair result (2026-10-15):** the designer chose the repair first. `tools/blender/repair_weights.py` takes the deep crouch from FAIL to WARN (`Hips` mean 0.686 to 0.964, failing edges 68 to 27) and the high kick from 35 to 9 failing edges, at 0 credits. See `assets/specs/rigs/ryo-weight-repair.md`. The swap into `game/` and whether to still regenerate are the designer's calls.
+**Repair result (2026-10-15):** the designer chose the repair first. `tools/blender/repair_weights.py` takes the deep crouch from FAIL to WARN (`Hips` mean 0.686 to 0.964, failing edges 68 to 27) and the high kick from 35 to 9 failing edges, at 0 credits. See `assets/specs/rigs/ryo-weight-repair.md`. The designer accepted the repair and the swap, and chose no regeneration (2026-10-15).
 
 ## 5. Acceptance checks
 
