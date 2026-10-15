@@ -155,7 +155,7 @@ public static class TrialTests
 		Assert.True(!step.DummyStateMet(false, bestLand), "and could never be met if it were read when the throw lands");
 		Assert.True(!step.DummyStateMet(true, 0), "airborne is not landed");
 		Assert.True(!step.DummyStateMet(false, 4) && !step.DummyStateMet(false, 2000), "too long ago, or never jumped");
-		Assert.True(step.DistanceMet(0) && step.DistanceMet(1520), "no distance asked");
+		Assert.True(step.DistanceMet(0) && step.DistanceMet(TrialLoader.MaxStartDistance), "no distance asked");
 		var ranged = TrialLoader.LoadFile(FixturePath).Steps[0];
 		Assert.True(ranged.DistanceMet(400) && ranged.DistanceMet(900) && !ranged.DistanceMet(399) && !ranged.DistanceMet(901), "distance bounds are inclusive");
 	}

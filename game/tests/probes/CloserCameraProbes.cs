@@ -25,7 +25,7 @@ public static class CloserCameraProbes
 		return m;
 	}
 
-	// E1: fighters at most 1,040 apart AND both models in frame. Fuzz with throws, specials, jumps, dashes, from
+	// E1: fighters at most 960 apart AND both models in frame. Fuzz with throws, specials, jumps, dashes, from
 	// corner starts and mid-stage, over several seeds; check every tick, including side switches (jump-overs).
 	[Test]
 	public static void Walls_HoldUnderEverything_CornersAndMid()
@@ -82,17 +82,17 @@ public static class CloserCameraProbes
 			var m2 = NewMatch();
 			m2.P1.X = -sign * 100; m2.P2.X = sign * (c.MaxSeparation - 100) ;
 			for (int t = 0; t < 30; t++) m2.Step(In(sign > 0 ? InputBits.Left : InputBits.Right), In(sign > 0 ? InputBits.Right : InputBits.Left));
-			Assert.Equal(c.MaxSeparation, Math.Abs(m2.P2.X - m2.P1.X), "walking apart holds at exactly 1,040 (not 1,039, not 1,041)");
+			Assert.Equal(c.MaxSeparation, Math.Abs(m2.P2.X - m2.P1.X), "walking apart holds at exactly 960 (not 1,039, not 961)");
 		}
 	}
 
-	// F4/E1: the view is fixed 1,440 and centred on the midpoint: with fighters 1,040 apart in the corner, models 240/200 inside.
+	// F4/E1: the view is fixed 1,440 and centred on the midpoint: with fighters 960 apart in the corner, models 240/200 inside.
 	[Test]
 	public static void Camera_ExactCornerExtents_BothFacingsAndSides()
 	{
 		var c = SimConfig.Default;
 		Assert.Equal(1440 * SimConfig.Scale, c.ViewWidth, "E1: one screen is 1,440 units");
-		Assert.Equal(1040 * SimConfig.Scale, c.MaxSeparation, "E1: 1,040 apart");
+		Assert.Equal(960 * SimConfig.Scale, c.MaxSeparation, "E1: 960 apart");
 		Assert.Equal(3840 * SimConfig.Scale, c.StageHalfWidth * 2, "E1: stage 3,840 wide");
 		int corner = c.StageHalfWidth - c.BodyWidth / 2;
 		foreach (int side in new[] { -1, 1 })
@@ -161,21 +161,21 @@ public static class CloserCameraProbes
 		Assert.True(Math.Abs(dn / dw - 0.75f) < 1e-3f, $"distance ratio {dn / dw} should be 1440/1920 = 0.75 (same FOV)");
 	}
 
-	// R7 / E1: trial start distance 1,040 accepted, 1,041 rejected; also in a goal-step distance bound.
+	// R7 / E1: trial start distance 960 accepted, 961 rejected; also in a goal-step distance bound.
 	[Test]
-	public static void Trial_StartDistanceBoundary_1040In_1041Out()
+	public static void Trial_StartDistanceBoundary_960In_961Out()
 	{
 		string f = File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "trials", "test-spirit-wave-trial.json"));
-		Assert.Equal(1040, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 1040,")).Distance, "1,040 accepted");
+		Assert.Equal(960, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 960,")).Distance, "960 accepted");
 		Assert.Equal(120, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 120,")).Distance, "120 accepted");
-		foreach (int bad in new[] { 1041, 1520, 119, 0, -1 })
+		foreach (int bad in new[] { 961, 1520, 119, 0, -1 })
 		{
 			bool threw = false;
 			try { TrialLoader.Parse(f.Replace("\"distance\": 600,", $"\"distance\": {bad},")); } catch (FormatException) { threw = true; }
 			Assert.True(threw, $"start distance {bad} rejected");
 		}
-		TrialLoader.Parse(f.Replace("\"max\": 900", "\"max\": 1040"));
-		foreach (string repl in new[] { "\"max\": 1041", "\"min\": 1041", "\"max\": 1520" })
+		TrialLoader.Parse(f.Replace("\"max\": 900", "\"max\": 960"));
+		foreach (string repl in new[] { "\"max\": 961", "\"min\": 961", "\"max\": 1520" })
 		{
 			bool threw = false;
 			string src = repl.StartsWith("\"max") ? f.Replace("\"max\": 900", repl) : f.Replace("\"min\": 400", repl);
@@ -184,14 +184,14 @@ public static class CloserCameraProbes
 		}
 	}
 
-	// A trial start at 1,040 plays out: the fighters at the declared distance are legal and in frame.
+	// A trial start at 960 plays out: the fighters at the declared distance are legal and in frame.
 	[Test]
 	public static void Trial_StartAtMaxDistance_InFrameAndLegal()
 	{
 		var m = NewMatch();
-		m.P1.X = -520 * SimConfig.Scale; m.P2.X = 520 * SimConfig.Scale;
+		m.P1.X = -480 * SimConfig.Scale; m.P2.X = 480 * SimConfig.Scale;
 		for (int t = 0; t < 20; t++) m.Step(FighterInput.None, FighterInput.None);
-		Assert.Equal(1040 * SimConfig.Scale, m.P2.X - m.P1.X, "start separation survives");
+		Assert.Equal(960 * SimConfig.Scale, m.P2.X - m.P1.X, "start separation survives");
 		Assert.True(FightCamera.BothInView(m), "in frame");
 	}
 

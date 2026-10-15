@@ -153,7 +153,9 @@ public static class TrialLoader
 	public static readonly string[] KataOnlyKeys = { "motion", "precision", "kata" };
 
 	// Bounds mirror trial.schema.json: distance = SimConfig body width .. max separation (gameplay units, AM7).
-	public const int MinStartDistance = 120, MaxStartDistance = 1040;
+	public const int MinStartDistance = 120;
+	/// <summary>The screen walls (SimConfig.MaxSeparation, 960 under AM7), so the bound cannot drift from the sim.</summary>
+	public static readonly int MaxStartDistance = SimConfig.Default.MaxSeparation / SimConfig.Scale;
 	public const int MinAttemptFrames = 60, MaxAttemptFrames = 3600;
 	public const int MaxSteps = 4, MaxCount = 10, MaxLandedWithin = 60, MaxEvery = 600, MaxDummyMoves = 4, MaxPrompt = 160;
 

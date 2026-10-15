@@ -29,12 +29,19 @@ public sealed partial record SimConfig
 	public int BodyWidth { get; init; } = 120 * Scale;
 
 	/// <summary>
-	/// Screen walls: the farthest two fighters may be apart so both stay in view, with both models' back reach (a
-	/// knocked-down body lies 200 behind its X, <see cref="ModelBackReach"/>) inside the view. E1/AM7 (YOK-120):
-	/// 1,040 + 2 x 200 = 1,440 = <see cref="ViewWidth"/> (was 1,520 for the 1,920 view, YOK-39). Trial start
-	/// distances are capped at this (TrialData.MaxStartDistance, trial.schema.json).
+	/// Screen walls: the farthest two fighters may be apart so both models stay in view whichever way each faces.
+	/// Derived, so it cannot drift: <see cref="ViewWidth"/> - 2 x the larger model reach (front 240 / back 200), because
+	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM7 (YOK-120):
+	/// 960 + 2 x 240 = 1,440 (was 1,520 for the 1,920 view, YOK-39, which only budgeted the 200 back reach).
+	/// Setting it in an initializer overrides the derivation (tests). Trial start distances are capped at this
+	/// (TrialData.MaxStartDistance, trial.schema.json).
 	/// </summary>
-	public int MaxSeparation { get; init; } = 1040 * Scale;
+	public int MaxSeparation
+	{
+		get => _maxSeparation ?? ViewWidth - 2 * System.Math.Max(System.Math.Max(ModelFrontReach, ModelBackReach), BodyWidth / 2);
+		init => _maxSeparation = value;
+	}
+	private readonly int? _maxSeparation;
 
 	/// <summary>
 	/// YOK-39: how far a fighter's rigged model reaches past its X toward its facing (front) and away from it (back),
