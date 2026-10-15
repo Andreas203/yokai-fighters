@@ -112,6 +112,15 @@ public static class MapCopyChipTests
 		screen.SetView(new SessionMapView(s));
 		var chip = screen.CopyChip;
 		Assert.Equal(CopyTalismanState.Locked, chip.State, "locked state");
+		// The locked slot itself moves on: levelled if it can be, then emptied. The snapshot ignores both (T1).
+		if (s.Run.CanLevelUp(locked.Slot)) s.Run.LevelUp(locked.Slot);
+		s.Run.Release(locked.Slot);
+		Assert.True(s.Run[locked.Slot] is null, "the locked special's slot is empty now");
+		screen.SetView(new SessionMapView(s));
+		Assert.Equal(CopyTalismanState.Locked, chip.State, "still locked");
+		Assert.Equal(locked.Data.Name.ToUpperInvariant(), chip.MoveName, "still the copy that was locked");
+		Assert.Equal($"Lv {locked.Level}", chip.LevelText, "at the locked level");
+		Assert.Equal("", chip.LastEvent, "no pulse or toast: the snapshot did not change");
 		Assert.Equal("LOCKED", chip.CaptionText, "caption");
 		Assert.Equal(locked.Data.Name.ToUpperInvariant(), chip.MoveName, "the copy that was locked");
 		Assert.Equal($"Lv {locked.Level}", chip.LevelText, "at the level it was locked at");
@@ -147,7 +156,7 @@ public static class MapCopyChipTests
 		screen.Refresh(); screen.Move(1); screen.Move(-1);
 		Assert.Equal(h0, watched.StateHash(), "reading the target and drawing the chip leave the run's hash alone");
 		WalkToBossDoor(plain);
-		WalkToBossDoor(watched, () => screen.SetView(new SessionMapView(watched)));
+		WalkToBossDoor(watched, () => { screen.SetView(new SessionMapView(watched)); screen.Move(1); screen.Move(-1); }); // Move reads the detail panel too
 		Assert.Equal(plain.StateHash(), watched.StateHash(), "a whole walk with the chip on screen ends in the same state (no RNG drawn, no state written)");
 		Assert.True(plain.Enter(plain.Reachable()[0]).Ok && watched.Enter(watched.Reachable()[0]).Ok, "both enter the boss node");
 		Assert.Equal(plain.StateHash(), watched.StateHash(), "and lock the same copy");
