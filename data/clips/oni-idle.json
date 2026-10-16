@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "oni-idle",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Axe_Breathe_and_Look_Around",
+  "frames_total": 66,
+  "trim_start": 0,
+  "trim_end": 65,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/oni/oni-idle-club.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. Club clearance PASS (every 2nd tick of the 66-frame loop: 0 new club vertices inside the body). Foot slide 0.09 cm per frame, max joint acceleration 1.8 deg per frame squared.",
+  "rules": ["F2", "F5", "F6"],
+  "notes": "Meshy preset 335 on task 01a14515-b3d9-7033-b954-d4eeed6e92bf, raw take game/assets/generated/characters/oni/takes/oni-idle-335.glb (679 ticks, an 11 s look-around, most of which puts the club through his hips). Cleaned with clean_clip.py: trim raw ticks 77-142 (file tick 0 = raw 77), the quiet breathing loop, strip-root horizontal, no smoothing. Loop closes within about 1 degree per bone (pose difference raw 77 vs 143)."
+}
