@@ -175,4 +175,49 @@ public static class HipScaleProbes
 		Assert.True(p1 == p2, $"pose at 0.25 s identical ({p1} vs {p2})");
 		m.QueueFree();
 	}
+
+	// Round 2: guard edges.
+	[Test]
+	public static void NegativeZero_AndDenormalClipRest_Guarded()
+	{
+		Assert.Equal(1f, FighterModel.HipScale(-0f, 94.9f), "-0 rig rest is unknown");
+		Assert.Equal(1f, FighterModel.HipScale(94.9f, -0f), "-0 clip rest is unknown");
+		float k = FighterModel.HipScale(94.9f, float.Epsilon); // ratio overflows to +inf
+		Assert.True(float.IsFinite(k), "denormal clip rest gives a finite scale");
+	}
+
+	// A denormal rig rest is positive and finite, so the ratio underflows to 0 and would flatten every hips key to 0.
+	// A scale of 0 is not a body size; expected: treated as unknown (1).
+	[Test]
+	public static void DenormalRigRest_DoesNotCollapseHipsToZero()
+	{
+		float k = FighterModel.HipScale(float.Epsilon, 94.9f);
+		Assert.True(k > 0f, $"scale {k} must be above 0");
+	}
+
+	[Test]
+	public static void MaxValueRest_GivesFiniteScale()
+	{
+		Assert.True(float.IsFinite(FighterModel.HipScale(float.MaxValue, 94.9f)), "MaxValue rig rest");
+		Assert.True(float.IsFinite(FighterModel.HipScale(94.9f, float.MaxValue)), "MaxValue clip rest");
+		Assert.True(float.IsFinite(FighterModel.HipScale(float.MaxValue, float.Epsilon)), "overflowing ratio");
+	}
+
+	[Test]
+	public static void WarnBandEdges_AreAppliedRaw()
+	{
+		Assert.True(Math.Abs(FighterModel.HipScale(30f, 100f) - 0.3f) < 1e-5f, "0.3 applied");
+		Assert.True(Math.Abs(FighterModel.HipScale(300f, 100f) - 3f) < 1e-5f, "3 applied");
+		Assert.True(Math.Abs(FighterModel.HipScale(1f, 100f) - 0.01f) < 1e-6f, "out-of-band still applied, not clamped");
+	}
+
+	// Extreme rig builds and its keys stay finite (the warning is per clip in BuildLibrary, outside the key loop).
+	[Test]
+	public static void ExtremeRig_BuildsWithFiniteKeys(Node runner)
+	{
+		var m = Synthetic(10f);
+		var (mn, mx) = HipY(Clip(m, "ryo-idle-guard"));
+		Assert.True(float.IsFinite(mn) && float.IsFinite(mx), "finite keys");
+		m.Free();
+	}
 }
