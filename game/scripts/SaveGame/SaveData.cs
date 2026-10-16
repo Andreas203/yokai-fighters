@@ -47,6 +47,10 @@ public sealed record RunSave(
 	/// <summary>T1: the locked copy; null before the lock, or a lock that found no special.</summary>
 	public LockedCopySave? LockedCopy { get; init; }
 	/// <summary>
+	/// YOK-128, R8/R3: the entered node's fight was won and paid when saved (<see cref="RunSession.NodePaid"/>), so
+	/// its coins and heal are already in <see cref="Coins"/> and <see cref="Health"/> (version 4; false when missing).
+	/// </summary>
+	public bool NodePaid { get; init; }
 	/// YOK-124: the walk stepped off the routes (dev mode's full map). Written only when true (<c>off_route</c>), so
 	/// the version is unchanged; honoured on restore only with <c>allowOffRoute</c> (the dev slot), otherwise such
 	/// a walk is refused like any walk the map does not allow.
@@ -84,6 +88,7 @@ public sealed record RunSave(
 			Coins = session.Run.Coins,
 			CopyLocked = session.CopyLocked,
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
+			NodePaid = session.NodePaid && session.Draft is null, // A7: a draft node is never saved paid
 			OffRoute = snap.OffRoute,
 		};
 	}
@@ -137,6 +142,7 @@ public sealed record RunSave(
 		if (owned.Count == 0) throw new FormatException("no slot holds a special: a run always owns at least one (A1, T5)");
 
 		if (Coins < 0) throw new FormatException($"coins {Coins}: a purse can't be negative (R8)");
+		if (NodePaid && Current is null) throw new FormatException("a paid node with no node entered (R8)");
 		if (CopyLocked is null && LockedCopy is not null) throw new FormatException("a locked copy without the copy lock (T1)");
 		if (CopyLocked == false && LockedCopy is not null) throw new FormatException("a locked copy while the copy is not locked (T1)");
 
@@ -195,7 +201,7 @@ public sealed record RunSave(
 		}
 		else throw new FormatException("the walk is past the Tanuki's node but the file has no copy lock, and it can't be worked out exactly (T1)");
 
-		try { return RunSession.Restore(run, pool, scenes, Seed, locked, copy); }
+		try { return RunSession.Restore(run, pool, scenes, Seed, locked, copy, nodePaid: NodePaid); }
 		catch (ArgumentException e) { throw new FormatException(e.Message); }
 	}
 
