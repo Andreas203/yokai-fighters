@@ -15,9 +15,12 @@ public partial class RestStopScreenDecor : Control
 
 	public static readonly string[] Hangers = { "FreeHanger", "SecondHanger", "ForecastHanger" };
 
+	/// <summary>The marker Controls whose rectangles get a hanging scroll; the shop screen (YOK-104) overrides it.</summary>
+	protected virtual string[] HangerNames => Hangers;
+
 	public override void _Ready() => MouseFilter = MouseFilterEnum.Ignore;
 
-	static void Bar(CanvasItem c, Rect2 r, Color fill, float radius = 6f)
+	internal static void Bar(CanvasItem c, Rect2 r, Color fill, float radius = 6f)
 	{
 		var box = new StyleBoxFlat { BgColor = fill, BorderColor = Ink, CornerRadiusBottomLeft = (int)radius, CornerRadiusBottomRight = (int)radius, CornerRadiusTopLeft = (int)radius, CornerRadiusTopRight = (int)radius };
 		box.SetBorderWidthAll(2);
@@ -38,7 +41,7 @@ public partial class RestStopScreenDecor : Control
 		DrawRect(new Rect2(132, 122, 1656, 836), Paper);
 		foreach (float x in new[] { 137f, 142f, 1778f, 1783f }) DrawLine(new Vector2(x, 126), new Vector2(x, 954), new Color("C9BE9F"), 2f);
 
-		foreach (string name in Hangers)
+		foreach (string name in HangerNames)
 			if (GetParent()?.GetNodeOrNull<Control>(name) is { } h) Hanging(h.GetRect());
 
 		if (GetParent()?.GetNodeOrNull<Control>("Portrait") is { } p) Placeholder(p.GetRect());

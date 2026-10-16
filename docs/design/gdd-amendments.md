@@ -145,6 +145,22 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+## AM7 — Fighter concept art and turnarounds may come from Astra (2026-10-16)
+
+**Decision.** A fighter's concept front and its front/side/back turnaround may be made in **Astra** (`gpt-6-astra`, run by the designer in Codex) instead of a generator's 2D image model. The designer chooses the source per character. For Oni, Kappa and the Tanuki the designer chose Astra (YOK-102). Asset Smith writes the settled brief (`docs/design/characters/astra-brief.md`), the designer runs it and drops the sheets in `docs/design/characters/<name>/`, and Asset Smith checks them before any mesh job is listed for approval. Meshes, rigs and clips still come from the tools AM1 and AM5 name.
+
+**Why.** Astra's character art is much stronger than the generators' 2D models, and the turnaround is the image every later step copies. Astra is expensive, so it runs only from a settled brief, never for exploration.
+
+**What does not change.** Every generation job and its cost still needs the designer's approval. The sheet must be flat-lit with no baked shading, on a plain background, in T-pose, with no held items, so it can feed Image-to-3D; baked shading is a retake reason. The style block (`assets/specs/style.md`) and the V1 palette still apply. The output must be cleared for commercial use on the designer's plan.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1 pipeline, 3D models | Concept turnaround from Meshy's 2D image models | From a generator's 2D image model or from Astra, the designer's choice per character. Rule F6. |
+
+---
+
 ## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
 
 **Status.** Approved by the designer on 2026-10-16 (merge of PR #133). The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15).

@@ -89,6 +89,10 @@ public partial class FightHud : CanvasLayer
 	private SessionHudRunView? _sessionView;
 
 	public CopyTalisman CopyTarget => _copyTalisman;
+	/// <summary>YOK-121: 10 s at 60 ticks/s; the last <see cref="TwistFadeTicks"/> fade the strip out.</summary>
+	public const int TwistStripTicks = 600, TwistFadeTicks = 30;
+	public float TwistStripAlpha => _twistStrip.Modulate.A;
+	private Match? _match;
 	public bool TwistStripVisible => _twistStrip.Visible;
 	public string TwistKicker => _twistKicker.Text;
 	public string TwistLine => _twistText.Text;
@@ -103,7 +107,12 @@ public partial class FightHud : CanvasLayer
 		else _copyTalisman.Reset();
 		var copy = run?.Copy;
 		bool tanuki = (run?.InTanukiFight ?? false) && copy != null; // nothing locked = nothing to say (the strip stays hidden)
-		_twistStrip.Visible = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
+		bool hasStrip = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
+		// YOK-121: the strip is a reminder shown for the first TwistStripTicks of unpaused fight time. Match.Tick only
+		// advances in the sim step, so a pause freezes the timer and a reset/restart/new fight (Tick 0) shows it again.
+		int tick = _match?.Tick ?? 0;
+		_twistStrip.Visible = hasStrip && tick < TwistStripTicks;
+		_twistStrip.Modulate = new Color(1, 1, 1, Mathf.Clamp((TwistStripTicks - tick) / (float)TwistFadeTicks, 0f, 1f));
 		if (tanuki)
 		{
 			_twistKicker.Text = "THE TANUKI COPIES";
@@ -126,6 +135,7 @@ public partial class FightHud : CanvasLayer
 	{
 		if (!_ready) return; // before _Ready
 		View ??= new MatchHudView(m);
+		_match = m;
 		ShowOpponent(FightScene.Opponent);
 		_temperament.Text = GetParent() is FightScene fight ? fight.Temperament.ToUpperInvariant() : "";
 		for (int i = 0; i < 2; i++)

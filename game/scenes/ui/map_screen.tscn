@@ -5,7 +5,32 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/map_node.tscn" id="node"]
+[ext_resource type="PackedScene" path="res://scenes/ui/copy_chip.tscn" id="chip"]
 [ext_resource type="Resource" path="res://ui/map_node_styles.tres" id="styles"]
+
+[sub_resource type="StyleBoxFlat" id="paper_panel"]
+bg_color = Color(0.945, 0.91, 0.831, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.114, 0.106, 0.129, 1)
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="legend_panel"]
+bg_color = Color(0.11, 0.13, 0.22, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.62, 0.63, 0.7, 0.6)
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
 
 [node name="MapScreen" type="Control"]
 anchor_right = 1.0
@@ -21,21 +46,120 @@ Dim = 0.6
 [node name="Title" type="Label" parent="."]
 mouse_filter = 2
 offset_left = 80.0
-offset_top = 40.0
-offset_right = 1840.0
-offset_bottom = 150.0
-theme_override_font_sizes/font_size = 80
+offset_top = 36.0
+offset_right = 680.0
+offset_bottom = 136.0
+theme_override_font_sizes/font_size = 64
 text = "Choose your path"
+vertical_alignment = 1
 theme_type_variation = &"HeadingLabelPaper"
+
+[node name="TopBar" type="Control" parent="."]
+mouse_filter = 2
+anchor_right = 1.0
+offset_bottom = 176.0
+
+[node name="CopyChip" parent="TopBar" instance=ExtResource("chip")]
+offset_left = 680.0
+offset_top = 38.0
+offset_right = 1240.0
+offset_bottom = 138.0
+
+[node name="Toast" type="Label" parent="TopBar"]
+mouse_filter = 2
+offset_left = 540.0
+offset_top = 146.0
+offset_right = 1380.0
+offset_bottom = 180.0
+theme_override_colors/font_color = Color(0.945, 0.91, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+theme_type_variation = &"BodyLabel"
+
+[node name="Status" type="PanelContainer" parent="TopBar"]
+offset_left = 1260.0
+offset_top = 38.0
+offset_right = 1840.0
+offset_bottom = 138.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("paper_panel")
+
+[node name="Rows" type="VBoxContainer" parent="TopBar/Status"]
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Top" type="HBoxContainer" parent="TopBar/Status/Rows"]
+mouse_filter = 2
+
+[node name="HealthText" type="Label" parent="TopBar/Status/Rows/Top"]
+mouse_filter = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "RYO · 1000 / 1000"
+theme_type_variation = &"BodyLabel"
+
+[node name="CoinsText" type="Label" parent="TopBar/Status/Rows/Top"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 2
+text = "0 coins"
+theme_type_variation = &"BodyLabel"
+
+[node name="Bottom" type="HBoxContainer" parent="TopBar/Status/Rows"]
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="BarBox" type="Control" parent="TopBar/Status/Rows/Bottom"]
+custom_minimum_size = Vector2(0, 20)
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="BarFrame" type="Panel" parent="TopBar/Status/Rows/Bottom/BarBox"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_type_variation = &"HealthFrame"
+
+[node name="HealthBar" type="ProgressBar" parent="TopBar/Status/Rows/Bottom/BarBox"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+theme_type_variation = &"HealthBar"
+
+[node name="RowsText" type="Label" parent="TopBar/Status/Rows/Bottom"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+text = "row 0 of 8 done"
+theme_type_variation = &"CaptionLabel"
+
+[node name="RowHeaders" type="Control" parent="."]
+mouse_filter = 2
+anchor_right = 1.0
+offset_left = 80.0
+offset_top = 178.0
+offset_right = -80.0
+offset_bottom = 214.0
 
 [node name="Board" type="Control" parent="."]
 mouse_filter = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 80.0
-offset_top = 170.0
+offset_top = 220.0
 offset_right = -80.0
-offset_bottom = -130.0
+offset_bottom = -262.0
 
 [node name="Routes" type="Control" parent="Board"]
 mouse_filter = 2
@@ -43,10 +167,81 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("routes")
 
+[node name="Detail" type="PanelContainer" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = -252.0
+offset_right = 1000.0
+offset_bottom = -84.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("paper_panel")
+
+[node name="Lines" type="VBoxContainer" parent="Detail"]
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="DetailName" type="Label" parent="Detail/Lines"]
+mouse_filter = 2
+clip_text = true
+theme_override_font_sizes/font_size = 34
+text = "Name"
+theme_type_variation = &"BodyLabel"
+
+[node name="DetailTwist" type="Label" parent="Detail/Lines"]
+visible = false
+mouse_filter = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+text = ""
+theme_type_variation = &"SealLabel"
+
+[node name="DetailReward" type="Label" parent="Detail/Lines"]
+mouse_filter = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26
+text = ""
+theme_type_variation = &"BodyLabel"
+
+[node name="Legend" type="PanelContainer" parent="."]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -900.0
+offset_top = -252.0
+offset_right = -80.0
+offset_bottom = -84.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("legend_panel")
+
+[node name="Lines" type="VBoxContainer" parent="Legend"]
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="LegendTitle" type="Label" parent="Legend/Lines"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "LEGEND"
+theme_type_variation = &"PaperLabel"
+
+[node name="LegendStates" type="HFlowContainer" parent="Legend/Lines"]
+mouse_filter = 2
+theme_override_constants/h_separation = 22
+theme_override_constants/v_separation = 6
+
+[node name="LegendTypes" type="Label" parent="Legend/Lines"]
+mouse_filter = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+text = ""
+theme_type_variation = &"PaperLabel"
+
 [node name="Hint" parent="." instance=ExtResource("footer")]
 mouse_filter = 2
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -100.0
-offset_bottom = -40.0
+offset_top = -66.0
+offset_bottom = -12.0

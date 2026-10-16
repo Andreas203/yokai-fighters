@@ -32,13 +32,15 @@ public static class Assert
 /// </summary>
 public partial class TestRunner : Node
 {
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		int pass = 0, fail = 0;
+		Type? last = null;
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		foreach (var m in type.GetMethods(BindingFlags.Public | BindingFlags.Static))
 		{
 			if (m.GetCustomAttribute<TestAttribute>() == null) continue;
+			if (last != type) { last = type; await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); } // let queued frees and redraws drain between classes
 			string name = $"{type.Name}.{m.Name}";
 			try
 			{

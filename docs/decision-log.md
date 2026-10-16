@@ -15,6 +15,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Coins have no cap, for now (R8).
 - **AM5** 2026-10-15: clip-matcher splits into `rig-specialist` and `animator`; level presets move to asset-smith. Generators are Tripo or Meshy (Tripo likely). Rigs try the generator auto-rig against AccuRIG 2. Blender cleanup by script, video mocap, ActorCore and Auto-Rig Pro allowed; Cascadeur only for its physics pass. One shared skeleton (Meshy's) with bone maps. Clips may carry retiming curves (F2), 0.5×–2× per segment, holds ≤4 frames (first pass).
 - **AM6** 2026-10-15: the fight HUD shows the copy-target talisman only in the Tanuki fight, never in yokai or elder fights. The map talisman and the rest-stop forecast still show the target all run (T6). Copy rule unchanged.
+- **AM7** 2026-10-16: fighter concept fronts and turnarounds may come from Astra (designer-run) instead of a generator's 2D model; the designer picks per character. Oni, Kappa and Tanuki use Astra (YOK-102). Rule F6, asset-smith.md.
 - **AM8** 2026-10-15, approved 2026-10-16 by the designer (merge of PR #133, YOK-120): closer fixed camera, screen 1,920 → 1,440 units, screen walls 1,520 → 960 (960 + 2 × 240 = 1,440: a fighter facing away shows its 240 front reach outside; first try 1,040 clipped by up to 40, found by test-breaker; derived in SimConfig); stage stays 3,840; V7 steady camera and F4 ~25° FOV unchanged (camera moves closer); walk speed unchanged (~1.9 s across the new screen, C2). Values tunable in SimConfig.
 
 ## Rules and tuning
@@ -91,7 +92,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
     - Sumo Stance's "holding charge".
     - Which level the Tanuki fight shows for the copied move.
     - Whether River Grab counts as a throw or a hit.
-- **YOK-102:** an amendment so AM1, rule F6 and asset-smith.md allow Astra turnarounds.
+- **YOK-102:** run Astra from `docs/design/characters/astra-brief.md`; palette hexes, Oni/Kappa heights, guise fallbacks (G1, G2) and the Meshy licence. 0 Meshy credits approved; mesh lines (96 first pass) wait for the sheets.
 - **YOK-103 and YOK-89:**
   - Whether to allow a 4th critic round (the `-4.0` fix at `RewardDraft.cs:166-167`).
   - Unset values: River Pull, Trickster's Angle, Oni's Hide, Iron Will.
