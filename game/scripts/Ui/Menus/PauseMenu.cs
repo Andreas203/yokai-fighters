@@ -22,6 +22,11 @@ public sealed record PauseRunSummary(PauseFighterSummary Player, PauseFighterSum
 public partial class PauseMenu : Control
 {
 	public event Action? ResumeRequested, RestartRequested, QuitToTitleRequested, MoveListRequested, SettingsRequested;
+	/// <summary>YOK-123: the Dev menu button or F11 while <see cref="SetDevMenuEntry"/> is on.</summary>
+	public event Action? DevMenuRequested;
+	/// <summary>YOK-123: small "Dev menu (F11)" button, shown only in dev mode; null until first shown.</summary>
+	public Button? DevButton { get; private set; }
+	private bool _devEntry;
 
 	/// <summary>Pause the scene tree while open (the real fight). Tests and the capture tool may turn it off.</summary>
 	public bool FreezeTree { get; set; } = true;
@@ -161,6 +166,30 @@ public partial class PauseMenu : Control
 
 	public void Resume() { Close(); ResumeRequested?.Invoke(); }
 
+	/// <summary>YOK-123: shows or hides the dev menu entry (button + F11). The fight sets it on each pause from dev mode.</summary>
+	public void SetDevMenuEntry(bool on)
+	{
+		_devEntry = on;
+		if (on && DevButton == null)
+		{
+			DevButton = new Button { Name = "DevMenu", Text = "Dev menu (F11)", FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(220, 44) };
+			DevButton.AddThemeFontSizeOverride("font_size", 22);
+			DevButton.Pressed += RequestDevMenu;
+			AddChild(DevButton);
+			DevButton.SetAnchorsAndOffsetsPreset(LayoutPreset.BottomLeft, LayoutPresetMode.Minsize, 16);
+		}
+		if (DevButton != null) DevButton.Visible = on;
+	}
+
+	/// <summary>While the dev menu is over the pause menu: the pause buttons cannot take focus. <see cref="ReleaseOverlay"/> gives Resume focus back.</summary>
+	public void LockForOverlay() => _focusLock.Engage(Mains);
+	public void ReleaseOverlay() { _focusLock.Release(); if (Visible) ResumeButton.GrabFocus(); }
+
+	private void RequestDevMenu()
+	{
+		if (_devEntry && Visible && !MoveList.Visible && !Settings.Visible && !ConfirmBox.Visible) DevMenuRequested?.Invoke();
+	}
+
 	// A sheet is modal for focus: the five pause buttons cannot be reached until it closes, then the opener gets focus back.
 	private void ShowSheet(Control sheet) { _focusLock.Engage(Mains); sheet.Visible = true; }
 	private void CloseSheet(Control sheet, Button back) { sheet.Visible = false; _focusLock.Release(); back.GrabFocus(); }
@@ -182,6 +211,7 @@ public partial class PauseMenu : Control
 		if (!Visible) return;
 		if (MoveList.Visible || Settings.Visible) return; // the open sheet handles Back itself
 		if (ConfirmBox.Visible) { if (MenuInput.Back(e)) { CloseConfirm(); GetViewport().SetInputAsHandled(); } return; }
+		if (_devEntry && e is InputEventKey { Pressed: true, Echo: false } k && k.PhysicalKeycode == Dev.DevMode.MenuKey) { RequestDevMenu(); GetViewport().SetInputAsHandled(); return; }
 		if (MenuInput.Pause(e)) { Resume(); GetViewport().SetInputAsHandled(); }
 	}
 }
