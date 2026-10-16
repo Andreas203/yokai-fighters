@@ -6,7 +6,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-129 / AM9 (proposed): the dynamic fight camera, as pure camera maths (no scene boot). Zoom monotonic with
+/// YOK-129 / AM9: the dynamic fight camera, as pure camera maths (no scene boot). Zoom monotonic with
 /// separation, the framing targets (fighter share of the screen height, chest height, pitch), both models in frame
 /// and heads under the HUD through jumps at every zoom and in both corners, smooth easing, and easing deterministic.
 /// </summary>
