@@ -114,6 +114,8 @@ public sealed record RunSave(
 	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null, bool allowOffRoute = false)
 	{
 		if (graph.Id != MapId) throw new FormatException($"the run was saved on map '{MapId}', this is '{graph.Id}'");
+		// YOK-124: a walk off the routes (dev mode's full map) is only ever continued in a dev session.
+		if (OffRoute && !allowOffRoute) throw new FormatException("the saved walk left the map's routes (dev mode's full map): it continues only in a dev session");
 		if (MapFingerprint is { } print && !string.Equals(print, Hex(graph.Fingerprint), StringComparison.OrdinalIgnoreCase))
 			throw new FormatException($"map '{MapId}' has changed since the run was saved");
 		if (Health < 1 || Health > RunState.MaxHealth)

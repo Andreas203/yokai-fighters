@@ -82,6 +82,48 @@ public static class DevMapTests
 	});
 
 	[Test]
+	public static void ToggleOffAfterAnOffRouteWalk_NeverOffersAWalkedNode_AndNeverSticks() => OnFixtures(() =>
+	{
+		// Routes back into walked nodes: r2-oni → r3-oni after r3-oni was walked first.
+		var s = NewSession();
+		var graph = s.Map.Graph;
+		Assert.True(graph.HasRoute("r2-oni", "r3-oni") && graph.Next("r2-oni").Count > 1, "the default map has the routes this test needs");
+		s.Map.FreeTravel = true;
+		foreach (string id in new[] { "r1-apprentice", "r3-oni", "r2-oni" }) { Assert.True(s.Enter(id).Ok, "walked " + id); Clear(s); }
+		s.Map.FreeTravel = false;
+		var open = s.Reachable();
+		Assert.True(open.Count > 0 && !open.Contains("r3-oni") && open.SequenceEqual(graph.Next("r2-oni").Where(id => !s.Map.IsVisited(id))), "the routes minus walked nodes: " + string.Join(", ", open));
+		int coins = s.Run.Coins;
+		Assert.True(!s.Enter("r3-oni").Ok && s.Map.Current == "r2-oni" && s.Run.Coins == coins, "a walked node is refused, nothing paid again (R8)");
+
+		// The critic's repro: r1 → r4-merchant → r3-oni, toggle off: the only route out leads back to the merchant.
+		var d = NewSession();
+		d.Map.FreeTravel = true;
+		foreach (string id in new[] { "r1-apprentice", "r4-merchant", "r3-oni" }) { Assert.True(d.Enter(id).Ok, "walked " + id); Clear(d); }
+		d.Map.FreeTravel = false;
+		Assert.True(graph.Next("r3-oni").All(d.Map.IsVisited), "every route out of r3-oni is walked");
+		var fallback = d.Reachable();
+		Assert.True(!fallback.Contains("r4-merchant") && fallback.SequenceEqual(graph.Nodes.Select(n => n.Id).Where(id => !d.Map.IsVisited(id))), "dead end: every unwalked node opens: " + string.Join(", ", fallback));
+		Assert.True(!d.Enter("r4-merchant").Ok && d.Merchant == null, "R6: the merchant is not re-run");
+		Assert.True(d.Enter("r5-nine-tails").Ok, "the run goes on");
+
+		// A walk on the routes is unchanged by any of this: same reachable lists and hash as before free travel existed.
+		var a = NewSession();
+		var b = NewSession();
+		b.Map.FreeTravel = true;
+		b.Map.FreeTravel = false;
+		foreach (var walk in new[] { a, b })
+			while (!walk.IsOver)
+			{
+				var r = walk.Reachable();
+				Assert.True(walk.Map.Current is null ? r.SequenceEqual(graph.StartNodes) : r.SequenceEqual(graph.Next(walk.Map.Current)), "routes unchanged");
+				Assert.True(walk.Enter(r[^1]).Ok, "route step");
+				Clear(walk);
+			}
+		Assert.True(!b.Map.OffRoute && a.StateHash() == b.StateHash(), "same hash");
+	});
+
+	[Test]
 	public static void JumpToTheBoss_LocksTheCopy_AsTheRunStandsOnEntry() => OnFixtures(() =>
 	{
 		var s = NewSession();

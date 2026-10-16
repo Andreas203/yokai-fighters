@@ -64,7 +64,7 @@ public static class DevMap
 		refusal = TravelRefusal(ctx, nodeId);
 		if (refusal != null) return false;
 		string? error = null;
-		ctx.TryChangeRun(() => { if (ctx.Flow!.ChooseNode(nodeId) is { Ok: false } step) error = step.Error; }, out _);
+		if (!ctx.TryChangeRun(() => { if (ctx.Flow!.ChooseNode(nodeId) is { Ok: false } step) error = step.Error; }, out refusal)) return false;
 		refusal = error;
 		return error == null;
 	}

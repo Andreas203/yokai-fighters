@@ -75,11 +75,18 @@ public sealed class RunMap
 	/// </summary>
 	public IReadOnlyList<string> Reachable()
 	{
-		if (FreeTravel)
-			return InNode || IsFinished ? Array.Empty<string>() : Graph.Nodes.Where(n => !IsVisited(n.Id)).Select(n => n.Id).ToArray();
+		if (InNode || IsFinished) return Array.Empty<string>();
+		if (FreeTravel) return Unvisited();
 		if (Current is null) return Graph.StartNodes;
-		return InNode ? Array.Empty<string>() : Graph.Next(Current);
+		var next = Graph.Next(Current);
+		if (!OffRoute) return next; // a walk on the routes never has a visited node ahead of it: unchanged
+		// YOK-124: after an off-route walk the routes out of Current may lead back to a walked node (never picked
+		// twice: R3, R6, R8 would pay again). If none is left, every unwalked node opens so a dev run never sticks.
+		var open = next.Where(id => !IsVisited(id)).ToArray();
+		return open.Length > 0 ? open : Unvisited();
 	}
+
+	string[] Unvisited() => Graph.Nodes.Where(n => !IsVisited(n.Id)).Select(n => n.Id).ToArray();
 
 	public bool CanSelect(string nodeId) => Reachable().Contains(nodeId);
 
