@@ -23,6 +23,9 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-06 YOK-41 / E21: at Lv 2, Spirit Wave recovers 4 frames faster and Rising Talisman 6 faster, both relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1).
 - 2026-10-06 YOK-31 / E15: strikes are open-handed (the rig has no finger bones). The generic throw is the Meshy 259 `Step_Forward_and_Push` clip, head-trimmed from tick 30.
 - 2026-10-11 YOK-87: a whole number written as `1e2` reads as 100. Save format is v2.
+- 2026-10-16 YOK-57: elders and the Tanuki may use EX and burst from profile fields `ex_use` / `burst_use`, applied only in elder and Tanuki fights (the node decides; standard fights never spend, E22). Tanuki values (EX 40%, burst 50% from the 2nd hit) are still `proposed`; elder values not added.
+- 2026-10-16 YOK-121: the HUD twist/copy strip is a scroll, shown for the first 10 s (600 ticks) of every fight, then it fades.
+- 2026-10-16 YOK-128: save format v4 adds `run.node_paid`, so a won node never pays coins or heals twice after Continue (R3, R8). Paid state is not in `StateHash` yet (two probes pin that; designer call).
 
 ## Assets and spend (designer)
 - 2026-10-05 YOK-30: first pass approved at 163 credits.
@@ -55,6 +58,10 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-12 YOK-74 → YOK-107: the Oni and Kappa HUD portraits were split out to wait for Astra art.
 - Rules Lawyer PASS does not merge a PR that also edits tests; it is held for the designer (YOK-43).
 - 2026-10-15 AM5: tickets YOK-110 (Blender scripts), YOK-111 (shared skeleton), YOK-112 (Oni rig trial), YOK-113 (retiming in ClipCatalog), YOK-114 (mocap throw trial), YOK-115 (designer setup and purchases).
+- 2026-10-16 (designer): merged #131 (YOK-121), #132 (YOK-113 clip retiming curves), #133 (YOK-120 closer camera, AM8), #134 (YOK-123 dev mode shell), #138 (YOK-57), #139 (YOK-124 full map), #140 (YOK-126 run-state editor), #141 (YOK-125 jump page), #142 (YOK-128). Suite 905 passed on the last merge.
+- 2026-10-16: dev mode (YOK-122): F11 menu, `--dev` works in any build, separate `save.dev.json` slot, title-only switch; settings and the replays folder are shared with normal play.
+- 2026-10-16: the test runner waits one frame between test classes, so the suite no longer overflows Godot's message queue (YOK-125).
+- 2026-10-16 YOK-35 (rules check script): blocked after 3 failed gate rounds; last findings and open questions on the ticket.
 
 ## Backlog refinement 2026-10-13 (designer approved)
 - Closed as done on evidence from main: YOK-1–5 (vault), 13 (codebase map), 32, 33, 42, 43, 44, 45, 48, 49, 53, 56, 58, 75, and the parent YOK-39 (demo shipped).
