@@ -1,0 +1,44 @@
+{
+ "tool": "repose_legs.py",
+ "in": "kappa-cut.glb",
+ "ref": "game/assets/generated/characters/ryo/ryo-rigged.glb",
+ "out": "kappa-reposed.glb",
+ "blend": 1.0,
+ "leg_deg_before": {
+  "Left": 18.29,
+  "Right": 18.99
+ },
+ "ref_leg_deg": {
+  "Left": 4.11,
+  "Right": 4.32
+ },
+ "turns_deg": {
+  "Left": {
+   "UpLeg": 21.21,
+   "Leg": 23.24
+  },
+  "Right": {
+   "UpLeg": 21.85,
+   "Leg": 23.51
+  }
+ },
+ "leg_deg_after": {
+  "Left": 4.24,
+  "Right": 4.5
+ },
+ "lift_m": 0.051,
+ "height_before_m": null,
+ "height_after_m": 1.551,
+ "hips_z_before_m": 0.735,
+ "hips_z_after_m": 0.786,
+ "feet_x_before_m": [
+  0.3139,
+  -0.3214
+ ],
+ "feet_x_after_m": [
+  0.191,
+  -0.195
+ ],
+ "sha256_in": "12178f5721456c27979f05d3eade6fd2f9db418ef86b022a4005b7f9c53314dd",
+ "sha256_out": "285f497624a9aeff06228c8bc9ae45c11434802d2522667e923ba0c03a0f59fe"
+}

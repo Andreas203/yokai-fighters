@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "oni-block-low",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "CrouchLookAroundBow",
+  "frames_total": 1,
+  "trim_start": 100,
+  "trim_end": 100,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/ryo/ryo-crouch.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. The shared Ryo crouch hold, club-clean (0 poses over 2 cm; the club check on the shared clips, oni-club-clips.md). Designer approved 2026-10-16: no new take; the Oni block low is the held crouch.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 258 CrouchLookAroundBow, file ryo-crouch.glb, one hold frame (raw 100) as ryo-crouch; the 6-tick down and up are a data blend. Reads as a crouch, not a guarded block. No credits."
+}

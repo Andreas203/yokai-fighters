@@ -170,13 +170,14 @@ FIGHTERS = {
         "pure_zbot0_m": 1.04, "pure_zbot1_m": 1.42, "pure_ztop_m": 1.82, "pure_xflat_m": 0.12,
         "pure_zslope": 1.6, "pure_ztop_band_m": 0.16,
     },
-    # YOK-102. Kappa, after cut_shell.py (1.5 m; hip joints 0.672 m, knees 0.419 m, arm heads
+    # YOK-102. Kappa, after cut_shell.py and repose_legs.py (heights below are in the re-posed, re-grounded
+    # 1.551 m frame: everything 5.1 cm above the take-1 figures in this comment; 1.5 m take: hip joints 0.672 m, knees 0.419 m, arm heads
     # 1.198 m at x 0.268). The auto-skin gave the short torso, the capped back and the shell rim
     # to the arms and legs at once (1,243 bleed verts), the flanks 0.5 UpLeg 20 cm above the hip
     # joint, the crotch to the shins (the splayed knees sit at crotch height) and the calf backs
     # 0.4-0.5 UpLeg, so the shins collapsed in the crouch. Ryo's pelvis rules off (they made it
     # worse). Steps: T2 leg strip over the whole torso and T6 trunk-by-height over the full
-    # depth, both from 0.58 to 0.92 m; C crotch (|x| < 0.12 m: Leg -> UpLeg); K knee: within
+    # depth, both from 0.63 to 0.97 m (re-posed frame); C crotch (|x| < 0.12 m: Leg -> UpLeg); K knee: within
     # 0.20 m of each knee head (0.08 m fade) the UpLeg/Leg pair splits by height over +-0.05 m,
     # and below the knee line - 0.02 m the leg's own UpLeg weight goes to Leg, blended over 0.14 m.
     "kappa": {
@@ -184,12 +185,12 @@ FIGHTERS = {
         "region_bottom_m": 0.12, "region_top_m": 0.12, "side_band_m": 0.05,
         "falloff_front_hi_m": 0.07, "falloff_back_lo_m": 0.02, "falloff_back_hi_m": 0.10,
         "trunk_x0_m": 0.0, "trunk_x1_m": 0.001, "hair_x0_m": 0.0, "hair_x1_m": 0.001,
-        "torso_smooth_iters": 0, "legstrip_all": 1, "hairleg_z0_m": 0.58, "hairleg_z1_m": 0.92,
+        "torso_smooth_iters": 0, "legstrip_all": 1, "hairleg_z0_m": 0.63, "hairleg_z1_m": 0.97,
         "hair_y0_m": 0.17, "hair_y1_m": 0.22, "trunk_z0_m": 0.89, "trunk_z1_m": 0.99,
         "hair_z0_m": 1.15, "hair_z1_m": 1.25,
         "rigid_x_m": 0.0, "rigid_y_max_m": -9.0, "rigid_z0_m": 0.0, "rigid_z1_m": 0.0,
         "pure_on": 1, "pure_y0_m": -1.0, "pure_y1_m": -0.9,
-        "pure_zbot0_m": 0.58, "pure_zbot1_m": 0.92, "pure_ztop_m": 1.25, "pure_xflat_m": 0.15,
+        "pure_zbot0_m": 0.63, "pure_zbot1_m": 0.97, "pure_ztop_m": 1.30, "pure_xflat_m": 0.15,
         "pure_zslope": 1.4, "pure_ztop_band_m": 0.10,
         "crotch_x_m": 0.12,
         "knee_split": 1, "knee_band_m": 0.05, "knee_radius_m": 0.20, "knee_fade_m": 0.08,

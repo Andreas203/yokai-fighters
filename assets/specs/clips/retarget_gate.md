@@ -201,3 +201,13 @@ Method limits:
 - The skin and prop checks play only the clip's rotations, as the game does. Hip translation is a whole-body offset there.
 - The toe heights come from Godot 4 on the merged tree. They are joint heights, compared against each rig's rest joint height.
 - Reach is the `RightHand` joint, not the fingertips.
+
+### Kappa after the leg re-pose (2026-10-16)
+The designer approved a free scripted leg re-pose (`tools/blender/repose_legs.py`; details in `assets/specs/rigs/kappa.md`, "Leg re-pose").
+- Splay: 18-19 deg → 4.2/4.5 deg. Height: 1.551 m. Hip scale: 0.828.
+- Re-run on a throwaway merge with YOK-130:
+  - toe joints against the rest contact: walk +0.5, heavy -3.2, throw +1.9, idle +0.4 cm (before: -4.3 / -7.8 / -3.0 / -3.6);
+  - skin worst failing edges per frame: 20 / 53 / 35;
+  - shell: no visible clipping.
+- **Kappa: GO** (feet WARN cleared except the heavy's deepest tick, 1.2 cm past ±2).
+- The Kappa stills in this folder were re-rendered on the re-posed rig.

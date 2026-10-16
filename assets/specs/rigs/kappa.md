@@ -3,7 +3,78 @@
 Ticket: YOK-102 (rig follow-up), on the rigger the YOK-112 trial chose (Meshy). Owner: rig-specialist. Rules: F5, F6, G4, T0, E15, AM5.
 Model spec and acceptance: `assets/specs/kappa.md` (asset-smith, K3 and K5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`. Trial: `assets/specs/rigs/oni.md`.
 
-**Verdict: ACCEPT (rig, weights, shell), 2026-10-16.** The rest-pose check still flags the 18-19 degree leg splay of the generated stance. The feet sink 3-8 cm on the shared clips (G4 WARN).
+**Verdict: ACCEPT (rig, weights, shell), 2026-10-16, after the leg re-pose.**
+- The rest pose now PASSes: legs at 4.2 and 4.5 deg, against 18-19 before; Ryo is at 4.1 and 4.3.
+- Every stress pose is WARN or better.
+- G4 feet are within -3.2 to +1.9 cm of the rest contact, against -7.8 to -3.0 before.
+- See "Leg re-pose" below. It supersedes the stance, height, shell-box and G4-feet figures in the earlier sections.
+
+## Leg re-pose (2026-10-16, designer-approved, free)
+
+**Why.** The shared clips set every bone's local rotation outright, so in game the Kappa's legs already took Ryo's straight stance:
+- the skin was wrenched from the splayed bind on every frame;
+- a straightened leg is longer than the squat rest leg is tall, so his feet went 3-8 cm into the floor, while his rest hips (which YOK-130 scales by) still assumed the squat.
+
+The re-pose fixes the bind and the feet together.
+
+**Chain.** Every step is scripted and gives the same bytes every run (rig sha256 `561daeaa7c4b…`):
+1. raw take 1 (`d7b0999`);
+2. `cut_shell.py --colour-band 0.0,0.45,0.75,1.36`;
+3. **`repose_legs.py --ref ryo-rigged.glb`** (new);
+4. `repair_weights.py --fighter kappa`;
+5. → `game/assets/generated/characters/kappa/kappa-rigged.glb`. The file name is the same, so `kappa.tscn` needs no change.
+
+What `repose_legs.py` does:
+- turns `UpLeg` about the hip and `Leg` about the knee to Ryo's rest hip→knee and knee→ankle directions, with the foot turned back so the sole stays flat;
+- bakes that pose as the new bind (rest == bind);
+- lifts everything so the lowest vertex sits on the floor.
+
+No keys are placed and no action is written (F5). Log: `logs/kappa-repose.json`.
+
+| | Before | After |
+|---|---|---|
+| Leg splay (hip→ankle off vertical) | 18.3 / 19.0 deg (rest FAIL) | **4.2 / 4.5 deg** (rest PASS; Ryo 4.1 / 4.3) |
+| Height | 1.500 m | **1.551 m** (+5.1 cm, legs straightened) |
+| Hips height (rest) | 0.735 m | 0.786 m |
+| Ankles apart | 0.635 m (x ±0.31-0.32) | **0.386 m** (x ±0.19) |
+| Hip scale on the shared clips (YOK-130) | 0.775 | 0.828 |
+
+**How much the look changes.**
+- He reads about 5 cm taller and noticeably less frog-legged: the knees no longer bow out, and the feet stand about a third closer together.
+- He is still the shortest and widest fighter. The round belly, short thick thighs, hunched shoulders, big webbed feet, beak, dish and shell are untouched.
+- The squat, grounded silhouette now comes from the body and the clips' bent knees rather than a bow-legged rest stance.
+- Compare the front rest stills:
+  - before: `stills/kappa-rest-front-before-repose.png` and `-side-`;
+  - after: `stills/kappa-repaired-rest-front.png` and `-side.png`.
+- If the designer wants more of the bow-legged look back, `--blend` (0-1) turns the legs only part-way. At 0.75 the splay would be about 8 deg, still inside the 15-deg limit. Not run.
+
+**Repair after the re-pose.** Same `kappa` steps. Their absolute heights moved up 5 cm with the lift (seat blend 0.63-0.97 m, armpit line 1.30 m), and the loincloth cloth band moved to z 0.43-0.71 (`cloth/kappa.md`).
+
+| Check | Before re-pose | After |
+|---|---|---|
+| rest pose | FAIL (splay) | **PASS** |
+| weights | PASS | PASS (0 bleed, 0 cross-side) |
+| kick / crouch / arm raise / twist / grab | WARN 8 / 29 / 22 / 0 / 6 | **WARN 6 / 41 / 41 / 1 / 8** (limit 55, no collapse) |
+
+Stills: `stills/kappa-repaired-{rest,high-kick,deep-crouch,arm-raise,torso-twist,grab}-{front,side}.png`.
+
+**Shell.** The fit box moved up 5.1 cm with the body (z 0.79-1.37). Size, scale and mount are unchanged (`Spine01`, 0.68 x 0.44 x 0.58 m), and so is the child transform, so `kappa.tscn` keeps its value.
+- Stress poses: no visible clipping. The deep crouch has 1 vert (2.5 cm). The other poses' figures are the sunk underside meeting the back, hidden under the dome.
+- Stills: `stills/kappa-shell-*`.
+
+**G4 after the re-pose** (throwaway merge with YOK-130 `b52afe9`, not pushed). Toe-joint heights in Godot, against the rig's own rest contact of 5.5 cm:
+
+| Clip | Ryo | Kappa before re-pose | **Kappa after** |
+|---|---|---|---|
+| walk | +3.8 | -4.3 | **+0.5** |
+| heavy | +1.3 | -7.8 | **-3.2** |
+| throw | +3.4 | -3.0 | **+1.9** |
+| idle | +0.7 | -3.6 | **+0.4** |
+
+- Walk, throw and idle are now within ±2 cm, as asked. The heavy is 1.2 cm outside that, at its deepest tick: the uppercut drops the hips, and Ryo's own stays 1.3 cm above his contact there.
+- Skin on the clips: worst failing edges per frame are 20 / 53 / 35 (walk / heavy / throw), against 11 / 42 / 17 before. The new peaks (up to 13x) are about 10 crotch edges of the loincloth that the re-pose squashed, all under the cloth. No tearing shows in the stills.
+- Shell: no visible clipping in any clip.
+- Reach: the heavy's hand reaches 0.46 m forward at 1.15 m, and the throw push 0.56 m at 0.96 m.
 
 ## Status 2026-10-16 (repair, props, scene, G4)
 This section supersedes the take-1 verdict and the work list further down.
