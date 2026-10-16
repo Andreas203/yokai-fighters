@@ -38,7 +38,7 @@ public partial class FightScene
 		if (slots is null) { slots = new Node3D { Name = "Fighters" }; AddChild(slots); }
 		for (int i = 0; i < 2; i++)
 		{
-			var set = FighterAnimSet.For(i == 0 ? Kit.Ryo : Opponent);
+			var set = i == 0 ? FighterAnimSet.For(Kit.Ryo) : FighterAnimSet.ForNode(Opponent, Node?.Yokai); // PLAYTEST: Oni/Kappa bodies on stand-in nodes
 			_presenters[i] = new FighterPresenter(set, Catalog, MoveClips);
 			string slot = i == 0 ? "P1" : "P2";
 			var model = slots.GetNodeOrNull<FighterModel>(slot);

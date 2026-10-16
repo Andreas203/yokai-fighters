@@ -189,7 +189,7 @@ public sealed class FighterPresenter
 		return (PoseKind.Idle, C(PoseKind.Idle), m.WorldFrame % idleTotal + 1, true, false);
 	}
 
-	private string? FallbackThrow() => _set.Fighter == "kitsune" ? "kitsune-throw" : "ryo-generic-throw";
+	private string? FallbackThrow() => _set.Fighter is "kitsune" or "oni" or "kappa" ? "kitsune-throw" : "ryo-generic-throw";
 
 	private int BlendInto(PoseKind from, PoseKind to, Fighter f)
 	{

@@ -108,5 +108,44 @@ public sealed class FighterAnimSet
 		},
 	};
 
-	public static FighterAnimSet For(string fighter) => fighter == "kitsune" ? Kitsune : Ryo;
+	/// <summary>
+	/// PLAYTEST (YOK-oni-kappa-playtest): the Oni's body on the Kitsune's shared clips. Presentation only: the fight
+	/// still runs the node's fighter (the Kitsune stand-in kit, node-scenes.json); move data and reach are movesmith's.
+	/// Known: the always-in-hand club clips the leg in the walk and the head in the heavy recovery.
+	/// </summary>
+	public static readonly FighterAnimSet Oni = Borrow(Kitsune, "oni", "res://assets/generated/characters/oni/oni-rigged.glb", "res://scenes/fighters/oni.tscn");
+
+	/// <summary>PLAYTEST: the Kappa's body on the Kitsune's shared clips (see <see cref="Oni"/>). Known: feet sink 3-8 cm.</summary>
+	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn");
+
+	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene) => new()
+	{
+		Fighter = fighter,
+		ModelPath = model,
+		ScenePath = scene,
+		JumpFrameOffset = from.JumpFrameOffset,
+		LandingFrame = from.LandingFrame,
+		BurstFrame = from.BurstFrame,
+		AirClips = from.AirClips,
+		ClipOverrides = from.ClipOverrides,
+		Clips = from.Clips,
+	};
+
+	public static FighterAnimSet For(string fighter) => fighter switch
+	{
+		"kitsune" => Kitsune,
+		"oni" or "elder-oni" => Oni,
+		"kappa" or "elder-kappa" => Kappa,
+		_ => Ryo,
+	};
+
+	/// <summary>
+	/// The body a fight shows for P2: the node's yokai when it has a body of its own (an Oni or Kappa node fought by the
+	/// Kitsune stand-in kit shows the Oni or Kappa), else the fighter's. Presentation only; the sim never reads it.
+	/// </summary>
+	public static FighterAnimSet ForNode(string fighter, string? yokai) =>
+		yokai is "oni" or "elder-oni" or "kappa" or "elder-kappa" ? For(yokai) : For(fighter);
+
+	/// <summary>True when the yokai has a body of its own (a dev-jump opponent worth picking even on a stand-in kit).</summary>
+	public static bool HasBody(string yokai) => For(yokai) != Ryo;
 }
