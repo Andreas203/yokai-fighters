@@ -43,14 +43,14 @@
  "rest_pose": {
   "left_arm_deg": 8.84,
   "right_arm_deg": 8.86,
-  "left_leg_deg": 18.29,
-  "right_leg_deg": 18.99,
+  "left_leg_deg": 4.24,
+  "right_leg_deg": 4.5,
   "rest_vs_bind_max_offset_m": 0.0,
-  "status": "FAIL"
+  "status": "PASS"
  },
  "scale": {
-  "height_m": 1.5,
-  "want_height_m": 1.5,
+  "height_m": 1.551,
+  "want_height_m": 1.55,
   "armature_object_scale": [
    0.01,
    0.01,
@@ -64,23 +64,23 @@
   "status": "PASS"
  },
  "origin": {
-  "min_z_m": 0.0,
+  "min_z_m": -0.0,
   "feet_centre_xy_m": [
-   -0.0038,
-   -0.0153
+   -0.002,
+   -0.0641
   ],
   "status": "PASS"
  },
  "weights": {
   "meshes": {
    "char1": {
-    "verts": 13024,
+    "verts": 13033,
     "max_influences_found": 4,
     "over_max_influences": 0,
     "unnormalised": 0,
     "unweighted": 0,
     "cross_side": 0,
-    "cross_side_blend_info": 323,
+    "cross_side_blend_info": 196,
     "arm_leg_bleed": 0,
     "arm_leg_bleed_sample": [],
     "cross_side_sample": [],
@@ -91,8 +91,8 @@
   "status": "PASS"
  },
  "rest_stills": [
-  "kappa-check/rest_front.png",
-  "kappa-check/rest_side.png"
+  "rest_front.png",
+  "rest_side.png"
  ],
  "cloth": {
   "file": "assets/specs/rigs/cloth/kappa.md",
@@ -112,95 +112,99 @@
    }
   ],
   "verts_by_region": {
-   "loincloth": 1504
+   "loincloth": 909
   },
-  "verts_total": 1504,
-  "verts_in_mesh": 13024,
+  "verts_total": 909,
+  "verts_in_mesh": 13033,
   "mask_stills": [
-   "kappa-check/cloth_mask_front.png",
-   "kappa-check/cloth_mask_side.png"
+   "cloth_mask_front.png",
+   "cloth_mask_side.png"
   ]
  },
  "poses": {
   "high_kick": {
    "status": "WARN",
-   "edge_ratio_max": 2.311,
-   "edge_ratio_min": 0.16,
-   "edges_over_warn": 58,
+   "edge_ratio_max": 3.075,
+   "edge_ratio_min": 0.117,
+   "edges_over_warn": 70,
    "edges_total": 24425,
-   "edges_failing": 8,
+   "edges_failing": 4,
    "failing_edges_by_bone": {
-    "Hips": 11,
-    "LeftUpLeg": 4,
-    "(mixed)": 1
+    "Hips": 4,
+    "LeftArm": 2,
+    "(mixed)": 1,
+    "RightUpLeg": 1
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
    "stills": [
-    "kappa-check/high_kick_front.png",
-    "kappa-check/high_kick_side.png"
+    "high_kick_front.png",
+    "high_kick_side.png"
    ],
    "cloth": {
-    "edges_exempt": 2161,
-    "edges_torn_exempt": 38,
-    "edge_ratio_max": 4.793,
-    "edge_ratio_min": 0.083,
+    "edges_exempt": 1245,
+    "edges_torn_exempt": 36,
+    "edge_ratio_max": 17.216,
+    "edge_ratio_min": 0.056,
     "torn_by_region": {
-     "loincloth": 38
+     "loincloth": 36
     }
    }
   },
   "deep_crouch": {
    "status": "WARN",
-   "edge_ratio_max": 4.042,
-   "edge_ratio_min": 0.058,
-   "edges_over_warn": 369,
+   "edge_ratio_max": 5.671,
+   "edge_ratio_min": 0.135,
+   "edges_over_warn": 433,
    "edges_total": 24425,
-   "edges_failing": 29,
+   "edges_failing": 39,
    "failing_edges_by_bone": {
-    "Hips": 35,
-    "LeftLeg": 12,
-    "LeftUpLeg": 6,
-    "RightLeg": 3,
-    "RightUpLeg": 1,
+    "Spine02": 19,
+    "LeftLeg": 15,
+    "LeftUpLeg": 13,
+    "Hips": 12,
+    "RightLeg": 12,
+    "RightUpLeg": 6,
     "(mixed)": 1
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
    "stills": [
-    "kappa-check/deep_crouch_front.png",
-    "kappa-check/deep_crouch_side.png"
+    "deep_crouch_front.png",
+    "deep_crouch_side.png"
    ],
    "cloth": {
-    "edges_exempt": 2161,
-    "edges_torn_exempt": 3,
-    "edge_ratio_max": 2.914,
-    "edge_ratio_min": 0.124,
+    "edges_exempt": 1245,
+    "edges_torn_exempt": 8,
+    "edge_ratio_max": 5.966,
+    "edge_ratio_min": 0.28,
     "torn_by_region": {
-     "loincloth": 3
+     "loincloth": 8
     }
    }
   },
   "arm_raise": {
    "status": "WARN",
-   "edge_ratio_max": 3.715,
+   "edge_ratio_max": 5.507,
    "edge_ratio_min": 0.333,
-   "edges_over_warn": 218,
+   "edges_over_warn": 232,
    "edges_total": 24425,
-   "edges_failing": 22,
+   "edges_failing": 29,
    "failing_edges_by_bone": {
-    "(mixed)": 30,
-    "LeftArm": 10,
-    "RightArm": 4
+    "(mixed)": 36,
+    "LeftArm": 14,
+    "Spine01": 4,
+    "RightShoulder": 2,
+    "RightArm": 2
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
    "stills": [
-    "kappa-check/arm_raise_front.png",
-    "kappa-check/arm_raise_side.png"
+    "arm_raise_front.png",
+    "arm_raise_side.png"
    ],
    "cloth": {
-    "edges_exempt": 2161,
+    "edges_exempt": 1245,
     "edges_torn_exempt": 0,
     "edge_ratio_max": 1.0,
     "edge_ratio_min": 1.0,
@@ -208,57 +212,59 @@
    }
   },
   "torso_twist": {
-   "status": "PASS",
-   "edge_ratio_max": 2.932,
-   "edge_ratio_min": 0.311,
-   "edges_over_warn": 22,
+   "status": "WARN",
+   "edge_ratio_max": 4.307,
+   "edge_ratio_min": 0.182,
+   "edges_over_warn": 45,
    "edges_total": 24425,
-   "edges_failing": 0,
-   "failing_edges_by_bone": {},
+   "edges_failing": 6,
+   "failing_edges_by_bone": {
+    "(mixed)": 10,
+    "LeftArm": 2
+   },
    "collapsed_bones": {},
    "missing_pose_bones": [],
    "stills": [
-    "kappa-check/torso_twist_front.png",
-    "kappa-check/torso_twist_side.png"
+    "torso_twist_front.png",
+    "torso_twist_side.png"
    ],
    "cloth": {
-    "edges_exempt": 2161,
+    "edges_exempt": 1245,
     "edges_torn_exempt": 0,
-    "edge_ratio_max": 1.128,
-    "edge_ratio_min": 0.914,
+    "edge_ratio_max": 1.094,
+    "edge_ratio_min": 0.936,
     "torn_by_region": {}
    }
   },
   "grab": {
    "status": "WARN",
-   "edge_ratio_max": 3.006,
+   "edge_ratio_max": 4.669,
    "edge_ratio_min": 0.17,
-   "edges_over_warn": 62,
+   "edges_over_warn": 76,
    "edges_total": 24425,
-   "edges_failing": 6,
+   "edges_failing": 8,
    "failing_edges_by_bone": {
-    "LeftArm": 5,
-    "(mixed)": 4,
+    "LeftArm": 13,
     "LeftShoulder": 3
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
    "stills": [
-    "kappa-check/grab_front.png",
-    "kappa-check/grab_side.png"
+    "grab_front.png",
+    "grab_side.png"
    ],
    "cloth": {
-    "edges_exempt": 2161,
+    "edges_exempt": 1245,
     "edges_torn_exempt": 0,
-    "edge_ratio_max": 1.117,
-    "edge_ratio_min": 0.937,
+    "edge_ratio_max": 1.041,
+    "edge_ratio_min": 0.76,
     "torn_by_region": {}
    }
   }
  },
  "summary": {
   "skeleton": "PASS",
-  "rest_pose": "FAIL",
+  "rest_pose": "PASS",
   "scale": "PASS",
   "up_axis": "PASS",
   "origin": "PASS",
@@ -266,8 +272,8 @@
   "pose:high_kick": "WARN",
   "pose:deep_crouch": "WARN",
   "pose:arm_raise": "WARN",
-  "pose:torso_twist": "PASS",
+  "pose:torso_twist": "WARN",
   "pose:grab": "WARN"
  },
- "overall": "FAIL"
+ "overall": "WARN"
 }

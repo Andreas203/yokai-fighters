@@ -24,7 +24,7 @@ use_external_skeleton = true
 external_skeleton = NodePath("../Model/Armature/Skeleton3D")
 
 [node name="ShellPivot" type="Node3D" parent="Mirror/Yaw/Shell" unique_id=1316017846]
-transform = Transform3D(100.0, 0.0, -7e-06, -0.0, 99.9935, 1.140931, 7e-06, -1.140931, 99.9935, 2e-06, 5.192045, -2.23373)
+transform = Transform3D(100.0, 0.0, -1.1e-05, 0.0, 99.993492, 1.140936, 1.1e-05, -1.140936, 99.993492, 2e-06, 5.096037, -2.232636)
 
 [node name="ShellMesh" type="Node3D" parent="Mirror/Yaw/Shell/ShellPivot" unique_id=1348361293 instance=ExtResource("3_prop")]
 
