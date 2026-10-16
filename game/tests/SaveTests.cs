@@ -948,4 +948,31 @@ public static class SaveTests
 		}
 		Assert.True(levelledSeeds > 0, "some seed reached the boss with a levelled special");
 	});
+
+	/// <summary>YOK-124 (M5): a walk taken off the routes by dev mode's full map is saved with <c>off_route</c> and comes back only in a dev session.</summary>
+	[Test]
+	public static void OffRouteWalk_ComesBackOnlyInADevSession() => WithFixtures(() =>
+	{
+		var s = NewSession(124);
+		s.Map.FreeTravel = true;
+		Assert.True(s.Enter("r4-merchant").Ok, "jumped to row 4");
+		var save = RunSave.Capture(s);
+		Assert.True(save.OffRoute, "the save records the off-route walk");
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(save));
+		Assert.True(text.Contains("\"off_route\": true"), "written as off_route: " + text);
+		var back = SaveStore.Parse(text).Data.Run!;
+		Assert.True(back.OffRoute, "read back");
+		var pool = FightScene.LoadAbilityPool();
+		Throws<FormatException>(() => back.Restore(pool, DefaultMap(), Table()), "outside a dev session the walk is not one the map allows");
+		var again = back.Restore(pool, DefaultMap(), Table(), allowOffRoute: true);
+		Assert.True(again.Map.Current == "r4-merchant" && again.Map.InNode && again.Map.OffRoute && !again.Map.FreeTravel, "dev slot: restored at the node, free travel off until the toggle applies");
+		Assert.True(again.Merchant is { Open: true }, "the stop comes back open");
+		Assert.Equal(s.StateHash(), again.StateHash(), "same run state");
+
+		var onRoute = NewSession(124);
+		Assert.True(onRoute.Enter("r1-apprentice").Ok, "a normal step");
+		string plain = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(onRoute)));
+		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
+		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
+	});
 }
