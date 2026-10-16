@@ -29,20 +29,30 @@ public partial class GameFlow
 	public MapResult StartDevRun(RunSession session, string nodeId, ControlScheme scheme, DevStage? stage = null)
 	{
 		if (DevScreen != null) return MapResult.Fail("the dev viewer is open");
+		if (Router.Current is not (Screen.Title or Screen.Map)) return MapResult.Fail("dev jumps start from the title or the map");
+		if (session.Node is null)
+		{
+			var step = session.Enter(nodeId); // first, so a refused jump changes nothing (the Tanuki's copy locks here, T1)
+			if (!step.Ok) { GD.PushWarning($"GameFlow: dev jump to '{nodeId}' refused: {step.Error}"); return step; }
+		}
+		else if (session.Node.NodeId != nodeId) return MapResult.Fail($"the session is already in node '{session.Node.NodeId}'");
 		if (Router.Current == Screen.Map) Router.ReturnToTitle();
-		if (Router.Current != Screen.Title) return MapResult.Fail("dev jumps start from the title or the map");
-		Router.ChooseScheme(scheme);
+		Router.ChooseScheme(scheme); // this run only: reaching the title puts the saved scheme back (E18)
 		_freshRun = false;
 		_unsavedSession = session; // before Adopt: no save point of this session reaches a file
+		_devJumpSession = session;
 		Session = session;
 		Adopt(session);
 		_devStage = stage;
 		Router.ContinueRun(); // Title → Map on this session
 		var entered = ChooseNode(nodeId);
 		_devStage = null;
-		if (!entered.Ok) GD.PushWarning($"GameFlow: dev jump to '{nodeId}' refused: {entered.Error}");
 		return entered;
 	}
+
+	/// <summary>The session a dev jump started: never saved, and Restart on it goes to the title rather than a new run.</summary>
+	private RunSession? _devJumpSession;
+	private bool IsDevJumpSession => Session != null && ReferenceEquals(Session, _devJumpSession);
 
 	/// <summary>Called by <see cref="BeginFight"/> before the fight scene enters the tree; gives the launch setting back once it is ready.</summary>
 	private void ApplyDevStage(FightScene fight)

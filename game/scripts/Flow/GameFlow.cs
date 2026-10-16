@@ -279,6 +279,7 @@ public partial class GameFlow : Node
 	public bool RestartRun()
 	{
 		if (Router.Current != Screen.Fight) return false;
+		if (IsDevJumpSession) return Router.ReturnToTitle(); // YOK-125: a dev jump's run is not restarted into a new (saved) run
 		_freshRun = true;
 		return Router.ReturnToMap();
 	}
@@ -436,6 +437,7 @@ public partial class GameFlow : Node
 				break;
 			case Screen.Title:
 				Session = null; // the run stays in the save file as of its last node boundary (YOK-87)
+				Router.ChooseScheme(MenuSettings.Scheme); // YOK-125: a dev jump's scheme never outlives it (E18)
 				ControlSelect.Close();
 				Title.Open();
 				RefreshContinue();
