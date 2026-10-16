@@ -265,11 +265,32 @@ public static class DevJumpTests
 			Assert.True(pool.Starters.Where(st => st.Slot != sp.Slot).All(st => run.Owns(st.Id)), $"{id} Lv {lv}: every other starter still held");
 		}
 		Assert.True(pool.Special("rising-talisman") is null || Throws(() => DevJump.ShapeCopy(RunState.NewRun(pool), pool, "rising-talisman", 1)), "Rising Talisman Lv 1: T3 picks Spirit Wave, refused");
-		// From a run already past the chosen level (the lowest-slot starter wins a Lv 1 tie).
-		var starter = pool.Starters.OrderBy(st => st.Slot).First();
-		var high = RunState.NewRun(pool);
-		while (high.CanLevelUp(starter.Slot)) high.LevelUp(starter.Slot);
-		Assert.True(DevJump.ShapeCopy(high, pool, starter.Id, 1) is { Level: 1 } low && low.Data.Id == starter.Id, "a special above the chosen level comes back down");
+		// Round 2: both refused on the default run (Foxfire sits in slot C, the starters in A and B; T3 keeps the lower slot).
+		foreach (string id in new[] { "foxfire", "rising-talisman" })
+			if (pool.Special(id) != null)
+				Assert.True(Throws(() => DevJump.ShapeCopy(RunState.NewRun(pool), pool, id, 1)), id + " Lv 1 on the default run: refused");
+
+		// A starter above the chosen level can't come back down (A1, R6): refused, the run unchanged.
+		foreach (var starter in pool.Starters)
+		{
+			var high = RunState.NewRun(pool);
+			while (high.CanLevelUp(starter.Slot)) high.LevelUp(starter.Slot);
+			if (high[starter.Slot]!.Level == 1) continue;
+			ulong before = high.StateHash();
+			Assert.True(Throws(() => DevJump.ShapeCopy(high, pool, starter.Id, 1)), starter.Id + ": a starter never loses levels");
+			Assert.Equal(before, high.StateHash(), starter.Id + ": the refused run is unchanged");
+		}
+		// A yokai special above the chosen level still comes back down (it can be replaced by a fresh draft, A6).
+		var yokaiSpecial = pool.Specials.FirstOrDefault(s => !s.Starter && Math.Min(3, s.MaxLevel) >= 3);
+		if (yokaiSpecial != null)
+		{
+			var run = RunState.NewRun(pool);
+			run.Equip(yokaiSpecial);
+			while (run.CanLevelUp(yokaiSpecial.Slot)) run.LevelUp(yokaiSpecial.Slot);
+			var t = DevJump.ShapeCopy(run, pool, yokaiSpecial.Id, 2);
+			Assert.True(t.Data.Id == yokaiSpecial.Id && t.Level == 2, yokaiSpecial.Id + ": Lv 3 comes back down to Lv 2");
+		}
+		else GD.Print("DevJumpTests: no yokai special reaches Lv 3 in this pool; the come-down case is skipped");
 	}
 
 	static bool Throws(Action a)
@@ -439,6 +460,15 @@ public static class DevJumpTests
 		Assert.True(MenuSettings.Scheme != saved, "the real screen switches the scheme while open");
 		flow.DevScreen!.Finish();
 		Assert.Equal(saved, MenuSettings.Scheme, "closing the dev view puts the player's scheme back");
+
+		// Leaving the tree without Close (quit with the view open) restores it too.
+		Assert.True(DevJumpPage.Perform(flow, DevJump.Targets().First(t => t.Id == "control-select"), new DevFightSetup(), new DevDraftSetup(), null, out _), "opened again");
+		var host = flow.DevScreen!;
+		screen = (StartScreen)host.Screen;
+		(saved == ControlScheme.Kata ? screen.KihonButton : screen.KataButton).EmitSignal(BaseButton.SignalName.Pressed);
+		host.GetParent().RemoveChild(host);
+		Assert.Equal(saved, MenuSettings.Scheme, "the view leaving the tree puts the scheme back");
+		host.Finish();
 	}));
 
 	// ---- reward draft ----

@@ -186,6 +186,7 @@ public static class DevJump
 		var slot = data.Slot;
 		if (run[slot] is { } held && held.Data.Id == specialId && held.Level > level)
 		{
+			if (held.Data.Starter) throw new ArgumentException($"{held.Data.Name} is at Lv {held.Level}: Ryo's starter can't lose levels (A1, R6)");
 			if (run.SpecialCount == 1) throw new ArgumentException($"{specialId} is Ryo's only special at Lv {held.Level}; it can't go down to Lv {level}");
 			run.Release(slot);
 		}

@@ -324,7 +324,8 @@ public partial class DevJumpPage : VBoxContainer
 					s.Open();
 					s.Started += h.Finish;
 					s.BackRequested += h.Finish;
-					h.Closed += () => { if (MenuSettings.Scheme != keep) MenuSettings.SetScheme(keep); };
+					// TreeExiting: on Close and also when the host leaves the tree any other way (quit with the view open).
+					h.TreeExiting += () => { if (MenuSettings.Scheme != keep) MenuSettings.SetScheme(keep); };
 				};
 				break;
 			}
