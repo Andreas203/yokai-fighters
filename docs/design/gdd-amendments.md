@@ -169,7 +169,7 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 **Why.** Bigger fighters on screen: at 1,920 units a 1.8 m fighter filled about a third of the screen height; at 1,440 units, about 44%. A fixed closer camera keeps V7 (no zoom with distance); bringing the walls in is what keeps both fighters in view.
 
-**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
+**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. E17's "on screen" means the sim's screen: the widest view (1,540 units) centred on the fighters, so when the camera is zoomed in a projectile can leave the visible view before it despawns. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
 
 ### Sections replaced
 

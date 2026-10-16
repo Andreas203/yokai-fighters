@@ -64,6 +64,7 @@ public partial class TestRunner : Node
 			}
 		}
 		}
+		if (only != null && pass + fail == 0) { GD.PrintErr($"FAIL TestRunner: only={only} matches no tests"); fail++; }
 		GD.Print($"TESTS {pass} passed, {fail} failed");
 		GetTree().Quit(fail == 0 && pass > 0 ? 0 : 1);
 	}

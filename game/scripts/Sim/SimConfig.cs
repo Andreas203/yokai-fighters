@@ -55,8 +55,8 @@ public sealed partial record SimConfig
 	public int ModelBackReach { get; init; } = 200 * Scale;
 
 	/// <summary>
-	/// C2: walk crosses the original 1,920-unit screen in ~2.5 s (150 ticks) = 12.8 units/tick. AM8 keeps the speed, so
-	/// the closer 1,440-unit screen takes ~1.9 s (designer to confirm at review).
+	/// C2: walk crosses the original 1,920-unit screen in ~2.5 s (150 ticks) = 12.8 units/tick. AM8 and AM9 keep the speed:
+	/// ~2.0 s across the widest 1,540-unit view (AM9).
 	/// </summary>
 	public int WalkSpeed { get; init; } = 1280;
 
