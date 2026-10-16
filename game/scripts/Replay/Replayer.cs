@@ -202,7 +202,12 @@ public static class Replayer
 		if (ps.Count == 0) throw new ReplaySetupException($"AI profile '{a.ProfileId}' no longer exists");
 		var prof = ps.FirstOrDefault(p => Fingerprint.Of(p) == a.ProfileFp)
 			?? throw new ReplaySetupException($"AI profile '{a.ProfileId}' changed since the recording");
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames);
+		var tier = a.FightTier switch
+		{
+			null or "standard" => AiFightTier.Standard, "elder" => AiFightTier.Elder, "tanuki" => AiFightTier.Tanuki,
+			_ => throw new ReplaySetupException($"unknown AI fight tier '{a.FightTier}'"),
+		};
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier);
 	}
 }
 

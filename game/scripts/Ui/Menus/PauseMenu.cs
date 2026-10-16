@@ -120,7 +120,7 @@ public partial class PauseMenu : Control
 			card.AddThemeStyleboxOverride("panel", paper);
 			var content = new Control { CustomMinimumSize = new(640, 92), MouseFilter = MouseFilterEnum.Ignore };
 			card.AddChild(content);
-			var texture = PauseMoveArt.ForId(slot.MoveId);
+			var texture = AbilityArt.ForId(slot.MoveId);
 			// ExpandMode first: with the default mode the texture's own size is the minimum and Size would be clamped up to it.
 			var flourish = new TextureRect { Name = "Flourish", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
 				Position = new(536, 0), Size = new(104, 92),

@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/lose_screen.tscn" id="3_lose_screen"]
 [ext_resource type="Script" path="res://scripts/Ui/CopyTalisman.cs" id="4_copy"]
 [ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="5_panel"]
+[ext_resource type="Script" path="res://scripts/Ui/TwistStripDecor.cs" id="twist_decor"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ryo-portrait.png" id="ryo"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/burst-blank.png" id="burst"]
 
@@ -379,7 +380,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("5_panel")
+script = ExtResource("twist_decor")
 
 [node name="Kicker" type="Label" parent="Strip/TwistStrip"]
 layout_mode = 0
