@@ -30,14 +30,14 @@
   "high_kick": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 1354,
-     "worst_depth_m": 0.2642,
+     "verts_inside": 1219,
+     "worst_depth_m": 0.2638,
      "prop_min_z_m": 0.7617,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.0167,
-     "contact_gap_max_m": 0.0369,
-     "new_vs_rest": 172,
-     "new_worst_depth_m": 0.0939,
+     "contact_gap_mean_m": 0.0166,
+     "contact_gap_max_m": 0.033,
+     "new_vs_rest": 23,
+     "new_worst_depth_m": 0.1093,
      "verts_total": 4832
     }
    },
@@ -50,14 +50,14 @@
   "deep_crouch": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 1232,
-     "worst_depth_m": 0.2161,
+     "verts_inside": 1224,
+     "worst_depth_m": 0.2443,
      "prop_min_z_m": 0.4722,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.017,
-     "contact_gap_max_m": 0.0426,
+     "contact_gap_mean_m": 0.0174,
+     "contact_gap_max_m": 0.047,
      "new_vs_rest": 1,
-     "new_worst_depth_m": 0.0242,
+     "new_worst_depth_m": 0.0246,
      "verts_total": 4832
     }
    },
@@ -70,14 +70,14 @@
   "arm_raise": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 1013,
-     "worst_depth_m": 0.1931,
+     "verts_inside": 1070,
+     "worst_depth_m": 0.2244,
      "prop_min_z_m": 0.79,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.0178,
-     "contact_gap_max_m": 0.0465,
-     "new_vs_rest": 103,
-     "new_worst_depth_m": 0.1248,
+     "contact_gap_mean_m": 0.0174,
+     "contact_gap_max_m": 0.0407,
+     "new_vs_rest": 108,
+     "new_worst_depth_m": 0.1305,
      "verts_total": 4832
     }
    },
@@ -90,14 +90,14 @@
   "torso_twist": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 1145,
-     "worst_depth_m": 0.2243,
+     "verts_inside": 1205,
+     "worst_depth_m": 0.2231,
      "prop_min_z_m": 0.79,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.0302,
-     "contact_gap_max_m": 0.0876,
-     "new_vs_rest": 383,
-     "new_worst_depth_m": 0.2243,
+     "contact_gap_mean_m": 0.0296,
+     "contact_gap_max_m": 0.0854,
+     "new_vs_rest": 451,
+     "new_worst_depth_m": 0.2231,
      "verts_total": 4832
     }
    },
@@ -110,14 +110,14 @@
   "grab": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 888,
-     "worst_depth_m": 0.181,
+     "verts_inside": 910,
+     "worst_depth_m": 0.2068,
      "prop_min_z_m": 0.8651,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.0193,
-     "contact_gap_max_m": 0.0561,
-     "new_vs_rest": 34,
-     "new_worst_depth_m": 0.1464,
+     "contact_gap_mean_m": 0.0184,
+     "contact_gap_max_m": 0.0449,
+     "new_vs_rest": 6,
+     "new_worst_depth_m": 0.0923,
      "verts_total": 4832
     }
    },
@@ -130,14 +130,14 @@
   "arms_down": {
    "props": {
     "shell-fit.glb": {
-     "verts_inside": 1034,
-     "worst_depth_m": 0.2878,
+     "verts_inside": 1014,
+     "worst_depth_m": 0.2669,
      "prop_min_z_m": 0.79,
      "contact_verts": 220,
-     "contact_gap_mean_m": 0.016,
-     "contact_gap_max_m": 0.0339,
-     "new_vs_rest": 108,
-     "new_worst_depth_m": 0.2878,
+     "contact_gap_mean_m": 0.0161,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 89,
+     "new_worst_depth_m": 0.2143,
      "verts_total": 4832
     }
    },

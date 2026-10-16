@@ -80,7 +80,7 @@
     "unnormalised": 0,
     "unweighted": 0,
     "cross_side": 0,
-    "cross_side_blend_info": 196,
+    "cross_side_blend_info": 220,
     "arm_leg_bleed": 0,
     "arm_leg_bleed_sample": [],
     "cross_side_sample": [],
@@ -106,15 +106,15 @@
     ],
     "min_radius_m": 0.17,
     "z_band_m": [
-     0.38,
-     0.66
+     0.43,
+     0.71
     ]
    }
   ],
   "verts_by_region": {
-   "loincloth": 909
+   "loincloth": 1261
   },
-  "verts_total": 909,
+  "verts_total": 1261,
   "verts_in_mesh": 13033,
   "mask_stills": [
    "cloth_mask_front.png",
@@ -125,15 +125,15 @@
   "high_kick": {
    "status": "WARN",
    "edge_ratio_max": 3.075,
-   "edge_ratio_min": 0.117,
-   "edges_over_warn": 70,
+   "edge_ratio_min": 0.158,
+   "edges_over_warn": 97,
    "edges_total": 24425,
-   "edges_failing": 4,
+   "edges_failing": 6,
    "failing_edges_by_bone": {
-    "Hips": 4,
-    "LeftArm": 2,
-    "(mixed)": 1,
-    "RightUpLeg": 1
+    "Hips": 6,
+    "(mixed)": 2,
+    "RightUpLeg": 2,
+    "LeftArm": 2
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
@@ -142,30 +142,30 @@
     "high_kick_side.png"
    ],
    "cloth": {
-    "edges_exempt": 1245,
-    "edges_torn_exempt": 36,
+    "edges_exempt": 1719,
+    "edges_torn_exempt": 32,
     "edge_ratio_max": 17.216,
     "edge_ratio_min": 0.056,
     "torn_by_region": {
-     "loincloth": 36
+     "loincloth": 32
     }
    }
   },
   "deep_crouch": {
    "status": "WARN",
-   "edge_ratio_max": 5.671,
-   "edge_ratio_min": 0.135,
-   "edges_over_warn": 433,
+   "edge_ratio_max": 5.966,
+   "edge_ratio_min": 0.108,
+   "edges_over_warn": 397,
    "edges_total": 24425,
-   "edges_failing": 39,
+   "edges_failing": 41,
    "failing_edges_by_bone": {
-    "Spine02": 19,
+    "LeftUpLeg": 21,
+    "Hips": 16,
     "LeftLeg": 15,
-    "LeftUpLeg": 13,
-    "Hips": 12,
+    "RightUpLeg": 14,
     "RightLeg": 12,
-    "RightUpLeg": 6,
-    "(mixed)": 1
+    "Spine02": 2,
+    "(mixed)": 2
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
@@ -174,28 +174,27 @@
     "deep_crouch_side.png"
    ],
    "cloth": {
-    "edges_exempt": 1245,
-    "edges_torn_exempt": 8,
-    "edge_ratio_max": 5.966,
-    "edge_ratio_min": 0.28,
+    "edges_exempt": 1719,
+    "edges_torn_exempt": 2,
+    "edge_ratio_max": 2.31,
+    "edge_ratio_min": 0.213,
     "torn_by_region": {
-     "loincloth": 8
+     "loincloth": 2
     }
    }
   },
   "arm_raise": {
    "status": "WARN",
-   "edge_ratio_max": 5.507,
+   "edge_ratio_max": 5.478,
    "edge_ratio_min": 0.333,
-   "edges_over_warn": 232,
+   "edges_over_warn": 246,
    "edges_total": 24425,
-   "edges_failing": 29,
+   "edges_failing": 41,
    "failing_edges_by_bone": {
-    "(mixed)": 36,
-    "LeftArm": 14,
-    "Spine01": 4,
-    "RightShoulder": 2,
-    "RightArm": 2
+    "(mixed)": 42,
+    "LeftArm": 22,
+    "RightArm": 12,
+    "Spine01": 6
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
@@ -204,7 +203,7 @@
     "arm_raise_side.png"
    ],
    "cloth": {
-    "edges_exempt": 1245,
+    "edges_exempt": 1719,
     "edges_torn_exempt": 0,
     "edge_ratio_max": 1.0,
     "edge_ratio_min": 1.0,
@@ -213,13 +212,12 @@
   },
   "torso_twist": {
    "status": "WARN",
-   "edge_ratio_max": 4.307,
-   "edge_ratio_min": 0.182,
-   "edges_over_warn": 45,
+   "edge_ratio_max": 2.932,
+   "edge_ratio_min": 0.179,
+   "edges_over_warn": 49,
    "edges_total": 24425,
-   "edges_failing": 6,
+   "edges_failing": 1,
    "failing_edges_by_bone": {
-    "(mixed)": 10,
     "LeftArm": 2
    },
    "collapsed_bones": {},
@@ -229,10 +227,10 @@
     "torso_twist_side.png"
    ],
    "cloth": {
-    "edges_exempt": 1245,
+    "edges_exempt": 1719,
     "edges_torn_exempt": 0,
     "edge_ratio_max": 1.094,
-    "edge_ratio_min": 0.936,
+    "edge_ratio_min": 0.918,
     "torn_by_region": {}
    }
   },
@@ -240,7 +238,7 @@
    "status": "WARN",
    "edge_ratio_max": 4.669,
    "edge_ratio_min": 0.17,
-   "edges_over_warn": 76,
+   "edges_over_warn": 77,
    "edges_total": 24425,
    "edges_failing": 8,
    "failing_edges_by_bone": {
@@ -254,9 +252,9 @@
     "grab_side.png"
    ],
    "cloth": {
-    "edges_exempt": 1245,
+    "edges_exempt": 1719,
     "edges_torn_exempt": 0,
-    "edge_ratio_max": 1.041,
+    "edge_ratio_max": 1.084,
     "edge_ratio_min": 0.76,
     "torn_by_region": {}
    }
