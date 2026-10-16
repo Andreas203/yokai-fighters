@@ -9,7 +9,7 @@ The grappler of the lantern riverbank. Formal, stubborn and polite (personality 
 
 - **Silhouette:** low and wide: hunched shoulders, short thick legs, big hands, a round shell on the back, a flat dish on the crown. About 1.5 m, the shortest fighter. Reads as "round and grounded" at 720p. The shell gives a back bulge; the dish a flat-topped head.
 - **Face:** beaked mouth, round eyes, calm stubborn expression, webbed hands and feet.
-- **Outfit:** a plain rice-paper loincloth sash with a rope tie and a small cucumber charm at the hip. Otherwise bare skin.
+- **Outfit:** a plain rice-paper loincloth sash with a rope tie (no charm, designer 2026-10-16). Otherwise bare skin.
 - **Colours (V1):** skin kappa teal, shell dark pine `#34483B` with ochre rim, dish rice paper `#F1E8D4` with a thin ink rim (water NOT modelled), beak and belly pale, outline ink `#1D1B21`, sash rice paper, charm pine.
   - Palette gap (designer to confirm, then added to `style.md`): kappa teal skin PROPOSED `#3E8C84`; shell ochre rim PROPOSED `#8A6A3A`. Pine `#34483B` is the only existing green.
 
@@ -18,7 +18,7 @@ The grappler of the lantern riverbank. Formal, stubborn and polite (personality 
 Written so the same text works as an Astra brief. Replace "Avoid: [negative prompt]" with the block from style.md.
 
 Concept front view (K1, text_to_image, 2:3, nano-banana-pro):
-> Full-body concept art of a squat river-spirit fighter, front view, neutral standing pose with the arms slightly away from the body and the feet apart, plain white background. Hunched wide shoulders, short thick legs, large webbed hands and feet, a beaked mouth, round calm stubborn eyes, a flat pale dish on the top of the head (empty, no water), a round dark-green shell on the back visible at the shoulders, skin in kappa teal #3E8C84, a rice-paper sash with a rope tie and a small cucumber charm at the hip. No held items, no water, no effects. Avoid: [negative prompt].
+> Full-body concept art of a squat river-spirit fighter, front view, neutral standing pose with the arms slightly away from the body and the feet apart, plain white background. Hunched wide shoulders, short thick legs, large webbed hands and feet, a beaked mouth, round calm stubborn eyes, a flat pale dish on the top of the head (empty, no water), a round dark-green shell on the back visible at the shoulders, skin in kappa teal #3E8C84, a rice-paper sash with a rope tie. No held items, no water, no effects. Avoid: [negative prompt].
 
 Turnaround (K2, image_to_image, reference = chosen K1 image):
 > Character turnaround sheet of the same river-spirit fighter: front, side and back views, same height and scale, T-pose (arms straight out), plain white background. Keep the art style, proportions and palette of the reference exactly. The back view clearly shows the round shell. No held items, no water. Avoid: [negative prompt].
