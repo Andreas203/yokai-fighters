@@ -17,7 +17,7 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class FightScene : Node3D
 {
-	/// <summary>200 gameplay units per metre: the widest 1,720-unit screen (AM9, proposed) is 8.6 m wide, a 1.8 m fighter is 360 units.</summary>
+	/// <summary>200 gameplay units per metre: the widest 1,540-unit screen (AM9, proposed) is 7.7 m wide, a 1.8 m fighter is 360 units.</summary>
 	public const float UnitsPerMeter = 200f;
 	public const float CameraFovDegrees = 25f; // F4
 	/// <summary>YOK-129: chest height of the dynamic camera at rest (<see cref="CameraConfig.BaseHeightMeters"/>).</summary>

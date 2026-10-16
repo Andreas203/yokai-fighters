@@ -54,8 +54,8 @@ public static class DynamicCameraTests
 		Assert.True(cam.MinWidth < cam.MaxWidth, "the camera zooms");
 	}
 
-	/// <summary>Share of the screen height a 1.75 m model (the measured top bone, 1.73 m, plus hair) fills, feet to top.</summary>
-	static float HeightShare(DynamicCamera cam, float x) => (cam.Project(x, 1.75f).Y - cam.Project(x, 0f).Y) / 2f;
+	/// <summary>Share of the screen height Ryo's fighting stance (<see cref="CameraConfig.StanceHeightMeters"/>) fills, feet to hair.</summary>
+	static float HeightShare(DynamicCamera cam, float x) => (cam.Project(x, cam.Config.StanceHeightMeters).Y - cam.Project(x, 0f).Y) / 2f;
 
 	[Test]
 	public static void Framing_FighterHeightShare_ChestHeight_SlightPitch()

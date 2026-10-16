@@ -94,10 +94,10 @@ public static class CloserCameraProbes
 	public static void Camera_ExactCornerExtents_BothFacingsAndSides()
 	{
 		var c = SimConfig.Default;
-		// YOK-129: reads the config (AM9 proposed: widest screen 1,720, walls 1,240) instead of AM8's fixed 1,440 / 960.
+		// YOK-129: reads the config (AM9 proposed: widest screen 1,540, walls 1,060) instead of AM8's fixed 1,440 / 960.
 		Assert.Equal(c.ViewWidth - 2 * FightCamera.ModelReach(c), c.MaxSeparation, "E1: walls = widest screen - 2 x the larger reach");
-		Assert.Equal(1720 * SimConfig.Scale, c.ViewWidth, "E1 (AM9): widest screen 1,720 units");
-		Assert.Equal(1240 * SimConfig.Scale, c.MaxSeparation, "E1 (AM9): 1,240 apart");
+		Assert.Equal(1540 * SimConfig.Scale, c.ViewWidth, "E1 (AM9): widest screen 1,540 units");
+		Assert.Equal(1060 * SimConfig.Scale, c.MaxSeparation, "E1 (AM9): 1,060 apart");
 		Assert.Equal(3840 * SimConfig.Scale, c.StageHalfWidth * 2, "E1: stage 3,840 wide");
 		int corner = c.StageHalfWidth - c.BodyWidth / 2;
 		foreach (int side in new[] { -1, 1 })
@@ -176,17 +176,17 @@ public static class CloserCameraProbes
 	public static void Trial_StartDistanceBoundary_960In_961Out()
 	{
 		string f = File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "trials", "test-spirit-wave-trial.json"));
-		int max = SimConfig.Default.MaxSeparation / SimConfig.Scale; // YOK-129: reads the walls (AM9: 1,240)
+		int max = SimConfig.Default.MaxSeparation / SimConfig.Scale; // YOK-129: reads the walls (AM9: 1,060)
 		Assert.Equal(max, TrialLoader.Parse(f.Replace("\"distance\": 600,", $"\"distance\": {max},")).Distance, $"{max} accepted");
 		Assert.Equal(120, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 120,")).Distance, "120 accepted");
-		foreach (int bad in new[] { max + 1, 1720, 119, 0, -1 })
+		foreach (int bad in new[] { max + 1, 1540, 119, 0, -1 })
 		{
 			bool threw = false;
 			try { TrialLoader.Parse(f.Replace("\"distance\": 600,", $"\"distance\": {bad},")); } catch (FormatException) { threw = true; }
 			Assert.True(threw, $"start distance {bad} rejected");
 		}
 		TrialLoader.Parse(f.Replace("\"max\": 900", $"\"max\": {max}"));
-		foreach (string repl in new[] { $"\"max\": {max + 1}", $"\"min\": {max + 1}", "\"max\": 1720" })
+		foreach (string repl in new[] { $"\"max\": {max + 1}", $"\"min\": {max + 1}", "\"max\": 1540" })
 		{
 			bool threw = false;
 			string src = repl.StartsWith("\"max") ? f.Replace("\"max\": 900", repl) : f.Replace("\"min\": 400", repl);

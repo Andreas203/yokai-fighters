@@ -113,7 +113,7 @@ public static class CameraTests
 		var cam = new YokaiFighters.Fight.DynamicCamera(m.Config);
 		cam.Snap(YokaiFighters.Fight.DynamicCamera.SubjectOf(m));
 		float minW = float.MaxValue, maxW = 0f;
-		for (int t = 0; t < 7000; t++) // YOK-129: 7,000 ticks in 1,400-tick drifts (was 5,000 / 1,000) so the wider 1,240 walls still reach the corners
+		for (int t = 0; t < 7000; t++) // YOK-129: 7,000 ticks in 1,400-tick drifts (was 5,000 / 1,000) so the wider 1,060 walls still reach the corners
 		{
 			var input = new FighterInput[2];
 			for (int i = 0; i < 2; i++)

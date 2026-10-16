@@ -16,26 +16,26 @@ public sealed record CameraConfig
 	/// <summary>Screen aspect the widths are measured on (1920x1080).</summary>
 	public float Aspect { get; init; } = 16f / 9f;
 
-	/// <summary>Visible width when the fighters are close (at or under <see cref="NearSeparation"/>): a fighter fills ~52% of the screen height.</summary>
-	public float CloseViewWidth { get; init; } = 1200f;
+	/// <summary>Visible width when the fighters are close (at or under <see cref="NearSeparation"/>): Ryo's fighting stance fills ~52% of the screen height (~36% at the widest).</summary>
+	public float CloseViewWidth { get; init; } = 1060f;
 
 	/// <summary>Separation (units) up to which the camera holds its closest zoom.</summary>
 	public float NearSeparation { get; init; } = 200f;
 
 	/// <summary>Camera height (m) at the closest zoom when nobody is airborne: chest height.</summary>
-	public float BaseHeightMeters { get; init; } = 1.15f;
+	public float BaseHeightMeters { get; init; } = 1.2f;
 
 	/// <summary>Camera height (m) at the widest zoom: rises a little as it dollies out so the floor line stays low on screen.</summary>
-	public float WideHeightMeters { get; init; } = 1.45f;
+	public float WideHeightMeters { get; init; } = 1.4f;
 
 	/// <summary>Downward pitch (deg, at most 5): a little more floor, fighters read tall.</summary>
-	public float PitchDegrees { get; init; } = 1.5f;
+	public float PitchDegrees { get; init; } = 1f;
 
 	/// <summary>Share of the higher fighter's jump height the camera rises by ("rises partway").</summary>
 	public float JumpFollow { get; init; } = 0.45f;
 
 	/// <summary>Extra view width per unit of the higher fighter's jump height (a jump eases the camera out a little).</summary>
-	public float JumpZoomPerUnit { get; init; } = 0.6f;
+	public float JumpZoomPerUnit { get; init; } = 1f;
 
 	/// <summary>Per-tick easing toward the target width and height (fixed lerp per sim tick, never delta time).</summary>
 	public float ZoomEase { get; init; } = 0.08f;
@@ -46,6 +46,12 @@ public sealed record CameraConfig
 	/// 1.732 m, Ryo) plus the 15 cm hair/ear allowance the HUD test uses. Kept below <see cref="HudClearPx"/>.
 	/// </summary>
 	public float ModelTopMeters { get; init; } = 1.9f;
+
+	/// <summary>
+	/// What "a fighter fills x% of the screen height" measures: Ryo's idle fighting stance, feet to hair top, 1.55 m
+	/// (measured on the YOK-129 captures; standing straight he is ~1.75 m). Framing tests only; the camera never reads it.
+	/// </summary>
+	public float StanceHeightMeters { get; init; } = 1.55f;
 
 	/// <summary>The top HUD strip (138 px) plus a margin, on the 1080-px canvas: no fighter's head goes above this line.</summary>
 	public float HudClearPx { get; init; } = 146f;
