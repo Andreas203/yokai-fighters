@@ -50,7 +50,7 @@ public static class EditableSceneTests
 		var (x, y, z, pitch) = scene.Cam.Transform;
 		var want = new Vector3(x, y, z);
 		Assert.True(scene.CameraRig.Position.IsEqualApprox(want), $"rig at {scene.CameraRig.Position}, dynamic camera {want}");
-		Assert.True(Math.Abs(scene.CameraRig.Rotation.X - pitch) < 1e-5f && pitch < 0f, $"rig pitched down {scene.CameraRig.Rotation.X} = {pitch}");
+		Assert.True(Math.Abs(scene.CameraRig.Rotation.X - pitch) < 1e-5f, $"rig pitch {scene.CameraRig.Rotation.X} = {pitch}");
 		Assert.True(scene.Cam.CenterX < 0, "walked left: the camera followed");
 		Assert.True(scene.Cam.InFrame(DynamicCamera.SubjectOf(scene.Match)), "both models in the dynamic view");
 		scene.QueueFree();

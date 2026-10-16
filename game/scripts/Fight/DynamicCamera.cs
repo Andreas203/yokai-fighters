@@ -42,18 +42,31 @@ public sealed class DynamicCamera
 	public float CenterX { get; private set; }
 	public bool Ready { get; private set; }
 
-	private readonly float _tanV, _pitch, _cos, _sin, _topTan;
+	private readonly float _tanV, _topNdcTan;
+	private float _pitch, _cos, _sin;
+
+	/// <summary>Current downward pitch in degrees (negative = looking up): lerped with the zoom from <see cref="CameraConfig.PitchDegrees"/> to <see cref="CameraConfig.WidePitchDegrees"/>.</summary>
+	public float PitchDegrees => _pitch * 180f / MathF.PI;
+
+	private float Zoom(float width) => MaxWidth > MinWidth ? Math.Clamp((width - MinWidth) / (MaxWidth - MinWidth), 0f, 1f) : 0f;
+
+	/// <summary>Sets the pitch for a view width (a fixed function of the eased width, so deterministic per tick).</summary>
+	private void SetPitch(float width)
+	{
+		float deg = Config.PitchDegrees + (Config.WidePitchDegrees - Config.PitchDegrees) * Zoom(width);
+		_pitch = deg * MathF.PI / 180f;
+		_cos = MathF.Cos(_pitch);
+		_sin = MathF.Sin(_pitch);
+	}
 
 	public DynamicCamera(SimConfig sim, CameraConfig? config = null)
 	{
 		Sim = sim;
 		Config = config ?? CameraConfig.Default;
 		_tanV = MathF.Tan(Config.FovDegrees * MathF.PI / 360f);
-		_pitch = Config.PitchDegrees * MathF.PI / 180f;
-		_cos = MathF.Cos(_pitch);
-		_sin = MathF.Sin(_pitch);
 		float topNdc = 1f - 2f * Config.HudClearPx / 1080f;
-		_topTan = MathF.Tan(MathF.Atan(topNdc * _tanV) - _pitch); // highest allowed ray, relative to horizontal
+		_topNdcTan = topNdc * _tanV;
+		SetPitch(MinWidth);
 	}
 
 	public static Subject SubjectOf(Match m, float pushIn = 0f)
@@ -88,7 +101,7 @@ public sealed class DynamicCamera
 	/// <summary>Where the eased height heads: chest height, lerped up toward <see cref="CameraConfig.WideHeightMeters"/> with the current zoom, plus part of the jump.</summary>
 	public float TargetHeight(in Subject s, float width)
 	{
-		float zoom = MaxWidth > MinWidth ? Math.Clamp((width - MinWidth) / (MaxWidth - MinWidth), 0f, 1f) : 0f;
+		float zoom = Zoom(width);
 		return Config.BaseHeightMeters + (Config.WideHeightMeters - Config.BaseHeightMeters) * zoom
 			+ Config.JumpFollow * MathF.Max(0f, s.MaxY) / UnitsPerMeter;
 	}
@@ -102,19 +115,25 @@ public sealed class DynamicCamera
 	public float MinHeight(float width, in Subject s)
 	{
 		float top = MathF.Max(0f, s.MaxY) / UnitsPerMeter + Config.ModelTopMeters;
-		return top - DistanceFor(width) * _topTan;
+		float pitch = (Config.PitchDegrees + (Config.WidePitchDegrees - Config.PitchDegrees) * Zoom(width)) * MathF.PI / 180f; // the pitch at this width
+		return top - DistanceFor(width) * MathF.Tan(MathF.Atan(_topNdcTan) - pitch);
 	}
 
-	/// <summary>Half the visible width (units) at the depth of a point at height h (m), for a camera at height cy and distance d.</summary>
-	private float HalfAt(float d, float cy, float h) => (d * _cos - (h - cy) * _sin) * _tanV * Config.Aspect * UnitsPerMeter;
 
 	private float TopOf(in Body b) => MathF.Max(0f, b.Y) / UnitsPerMeter + Config.ModelTopMeters;
+	private float FeetOf(in Body b) => MathF.Max(0f, b.Y) / UnitsPerMeter;
+
+	/// <summary>How much nearer than the axis depth (m) the nearest of a model's feet and top is: looking down that is the top, looking up the feet.</summary>
+	private float Nearer(in Body b, float cy) => MathF.Max((TopOf(b) - cy) * _sin, (FeetOf(b) - cy) * _sin);
+
+	/// <summary>The narrowest half-width (units) over a model's height: at its nearest point.</summary>
+	private float HalfFor(float d, float cy, in Body b) => (d * _cos - Nearer(b, cy)) * _tanV * Config.Aspect * UnitsPerMeter;
 
 	/// <summary>Narrowest width (units) at camera height cy that fits both models' extents side by side (the pitched view is narrowest at their tops).</summary>
 	public float RequiredWidth(float cy, in Subject s)
 	{
 		float scale = _tanV * Config.Aspect * UnitsPerMeter;
-		float ka = (TopOf(s.A) - cy) * _sin, kb = (TopOf(s.B) - cy) * _sin;
+		float ka = Nearer(s.A, cy), kb = Nearer(s.B, cy);
 		float d = 0f;
 		void Pair(float right, float ki, float left, float kj) => d = MathF.Max(d, ((right - left) / scale + ki + kj) / (2f * _cos));
 		Pair(s.A.Right, ka, s.A.Left, ka);
@@ -144,6 +163,7 @@ public sealed class DynamicCamera
 
 	private void Constrain(in Subject s)
 	{
+		SetPitch(Width);
 		Width = MathF.Max(Width, RequiredWidth(HeightMeters, s));
 		HeightMeters = MathF.Max(HeightMeters, MinHeight(Width, s));
 		Width = MathF.Max(Width, RequiredWidth(HeightMeters, s)); // a higher camera only lowers this; kept for safety
@@ -151,7 +171,7 @@ public sealed class DynamicCamera
 		float lim = MathF.Max(0f, StageHalf - Width / 2f);
 		float cx = Math.Clamp((s.A.X + s.B.X) / 2f, -lim, lim);
 		float d = Distance;
-		float ha = HalfAt(d, HeightMeters, TopOf(s.A)), hb = HalfAt(d, HeightMeters, TopOf(s.B));
+		float ha = HalfFor(d, HeightMeters, s.A), hb = HalfFor(d, HeightMeters, s.B);
 		float lo = MathF.Max(s.A.Right - ha, s.B.Right - hb), hi = MathF.Min(s.A.Left + ha, s.B.Left + hb);
 		CenterX = lo <= hi ? Math.Clamp(cx, lo, hi) : (lo + hi) / 2f;
 	}
@@ -161,6 +181,7 @@ public sealed class DynamicCamera
 	public void Place(float width, float heightMeters, float centerX)
 	{
 		Width = width; HeightMeters = heightMeters; CenterX = centerX; Ready = true;
+		SetPitch(width);
 	}
 
 	/// <summary>World ray (m) through a normalised screen point (-1..1, y up): origin and unnormalised direction.</summary>
@@ -176,7 +197,7 @@ public sealed class DynamicCamera
 	public (float X, float Y) Project(float x, float h)
 	{
 		float rx = (x - CenterX) / UnitsPerMeter, ry = h - HeightMeters, rz = -Distance;
-		float yc = ry * _cos + rz * _sin;   // up = (0, cos p, -sin p)
+		float yc = ry * _cos - rz * _sin;   // up = (0, cos p, -sin p)
 		float depth = -ry * _sin - rz * _cos; // forward = (0, -sin p, -cos p)
 		return (rx / (depth * _tanV * Config.Aspect), yc / (depth * _tanV));
 	}

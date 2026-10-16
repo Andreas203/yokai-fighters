@@ -214,7 +214,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **V4** Round-ending blow: 30 frames at half speed, then the ink-stroke binding.
 - **V5** Hit sparks: foxfire orange, oni red, kappa teal, Ryo ink black.
 - **V6** Every hit layers impact thud + short yokai sting, timed to the impact frame.
-- **V7** Camera zooms with the fighters' separation [AM9 proposed; was "steady"]: eased with no snapping, a fixed step per sim tick, both models always in frame; chest height with a slight downward pitch; rises partway on jumps and never puts the higher fighter's head under the HUD; stops at the stage edge. The slow push-ins on the Tanuki reveal and the round-ending blow layer on top. Presentation only: the sim never reads it.
+- **V7** Camera zooms with the fighters' separation [AM9 proposed; was "steady"]: eased with no snapping, a fixed step per sim tick, both models always in frame; chest height (1.2 m) with a slight pitch (0.5° down close in to 3° up at the widest zoom, feet ~90% down the frame); rises partway on jumps and never puts the higher fighter's head under the HUD; stops at the stage edge. The slow push-ins on the Tanuki reveal and the round-ending blow layer on top. Presentation only: the sim never reads it.
 - **V8** Moves change colour/effects as they level (level presets).
 - **V9** Stages: bamboo grove at dusk (Kitsune), snowbound shrine gate (Oni), lantern riverbank (Kappa), Tanuki's tea house with season-flickering screens. Music: shamisen, shakuhachi, taiko, intensity rising by row; Tanuki theme detunes the merchant's melody.
 

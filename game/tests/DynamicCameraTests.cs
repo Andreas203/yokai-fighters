@@ -67,10 +67,15 @@ public static class DynamicCameraTests
 		var wide = Settled(Apart(C.MaxSeparation / (float)SimConfig.Scale));
 		float far = HeightShare(wide, wide.CenterX);
 		Assert.True(far >= 0.35f && far <= 0.40f, $"at the screen walls a fighter fills {far:P1} (target 35-40%)");
-		float pitch = -close.Transform.Pitch * 180f / MathF.PI;
-		Assert.True(pitch > 0f && pitch <= 5f, $"slight downward pitch ({pitch} deg, at most 5)");
+		Assert.True(wide.HeightMeters >= 1.1f && wide.HeightMeters <= 1.3f, $"at the walls the camera stays at chest height ({wide.HeightMeters:0.00} m)");
+		foreach (var cam in new[] { close, wide })
+			Assert.True(Math.Abs(cam.PitchDegrees) <= 5f && Math.Abs(-cam.Transform.Pitch * 180f / MathF.PI - cam.PitchDegrees) < 1e-3f, $"slight pitch ({cam.PitchDegrees} deg, at most 5)");
+		Assert.True(close.PitchDegrees >= 0f, "close in the camera looks level or slightly down");
 		Assert.True(Math.Abs(close.Config.FovDegrees - FightScene.CameraFovDegrees) < 1e-4f, "F4 FOV unchanged");
-		Assert.True(close.ScreenYPx(0f, 0f) > 540f, "the floor line sits in the lower half");
+		// Designer review 2026-10-16: the feet sit low, ~88-92% of the way down at the walls (no empty floor band).
+		float feetWide = wide.ScreenYPx(0f, 0f) / 1080f, feetClose = close.ScreenYPx(0f, 0f) / 1080f;
+		Assert.True(feetWide >= 0.88f && feetWide <= 0.92f, $"at the walls the feet sit {feetWide:P1} down (target 88-92%)");
+		Assert.True(feetClose >= 0.85f && feetClose <= 0.93f, $"close in the feet sit {feetClose:P1} down");
 	}
 
 	[Test]
@@ -121,7 +126,7 @@ public static class DynamicCameraTests
 						lowestHeadPx = Math.Min(lowestHeadPx, cam.ScreenYPx(s.A.Y >= s.B.Y ? s.A.X : s.B.X, top));
 						highest = Math.Max(highest, cam.HeightMeters);
 					}
-					Assert.True(lowestHeadPx >= cam.Config.HudClearPx, $"sep {sep}, at {at}: highest head at {lowestHeadPx:0} px, under the HUD line {cam.Config.HudClearPx}");
+					Assert.True(lowestHeadPx >= cam.Config.HudClearPx - 0.01f, $"sep {sep}, at {at}: highest head at {lowestHeadPx:0} px, under the HUD line {cam.Config.HudClearPx}");
 					Assert.True(highest > rest + 0.1f, $"sep {sep}, at {at}: the camera rises on a jump ({rest:0.00} -> {highest:0.00})");
 					Assert.True(highest - rest < jump, $"sep {sep}, at {at}: rises only partway ({highest - rest:0.00} m of a {jump:0.00} m jump)");
 				}

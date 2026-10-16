@@ -25,11 +25,18 @@ public sealed record CameraConfig
 	/// <summary>Camera height (m) at the closest zoom when nobody is airborne: chest height.</summary>
 	public float BaseHeightMeters { get; init; } = 1.2f;
 
-	/// <summary>Camera height (m) at the widest zoom: rises a little as it dollies out so the floor line stays low on screen.</summary>
-	public float WideHeightMeters { get; init; } = 1.4f;
+	/// <summary>Camera height (m) at the widest zoom (designer review 2026-10-16: stays at chest height, no rise).</summary>
+	public float WideHeightMeters { get; init; } = 1.2f;
 
-	/// <summary>Downward pitch (deg, at most 5): a little more floor, fighters read tall.</summary>
-	public float PitchDegrees { get; init; } = 1f;
+	/// <summary>
+	/// Pitch at the closest zoom, degrees down (negative = up), at most 5 either way. Lerped with the zoom to
+	/// <see cref="WidePitchDegrees"/>, so the feet sit ~88-90% of the way down the frame at every zoom (a camera
+	/// that dollies back at a fixed height sees the floor line rise unless it tilts up a little).
+	/// </summary>
+	public float PitchDegrees { get; init; } = 0.5f;
+
+	/// <summary>Pitch at the widest zoom: 3 deg up, a low heroic angle that keeps the feet ~90% down at the screen walls.</summary>
+	public float WidePitchDegrees { get; init; } = -3f;
 
 	/// <summary>Share of the higher fighter's jump height the camera rises by ("rises partway").</summary>
 	public float JumpFollow { get; init; } = 0.45f;
