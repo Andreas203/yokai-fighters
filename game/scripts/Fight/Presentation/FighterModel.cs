@@ -86,6 +86,8 @@ public partial class FighterModel : Node3D
 	{
 		var lib = new AnimationLibrary();
 		Vector3 rest = hips >= 0 ? skel.GetBoneRest(hips).Origin : Vector3.Zero;
+		if (!(rest.Y > 0f) || !float.IsFinite(rest.Y)) // once per rig
+			GD.PushWarning($"YOK-130: {set.Fighter} rig rest Hips Y {rest.Y} is not a positive finite height; clip hips are not scaled to it");
 		foreach (var (id, info) in catalog.Clips)
 		{
 			var (src, clipHipY) = Source(info.ResPath);
@@ -130,7 +132,7 @@ public partial class FighterModel : Node3D
 		// NaN or infinite rests would write NaN/inf into every Hips key: treat them as unknown.
 		if (!float.IsFinite(rigHipRestY) || !float.IsFinite(clipHipRestY) || !(rigHipRestY > 0f) || !(clipHipRestY > 0f)) return 1f;
 		float k = rigHipRestY / clipHipRestY;
-		if (!float.IsFinite(k)) return 1f;
+		if (!float.IsFinite(k) || !(k > 0f)) return 1f; // overflow, or a denormal rest underflowing to 0
 		return Mathf.Abs(k - 1f) < HipScaleSnap ? 1f : k;
 	}
 
@@ -166,7 +168,7 @@ public partial class FighterModel : Node3D
 					if (cand.Length > 0.1f) { found = cand; break; } // skip a rig's one-key T-pose clip
 				}
 			node.Free();
-			if (found is not null && hipY <= 0f)
+			if (found is not null && (!(hipY > 0f) || !float.IsFinite(hipY)))
 				GD.PushWarning($"YOK-130: clip {path} has no Skeleton3D Hips rest; its hips height is not scaled to the rig");
 		}
 		SourceCache[path] = (found, hipY);
