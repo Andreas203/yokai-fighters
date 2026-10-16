@@ -380,6 +380,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         elif is_int(ts) and is_int(te):
             if ts > te:
                 errs.append(("trim_end", f"need trim_start <= trim_end, got {ts}-{te}"))
+            elif "retime" in doc:
+                pass  # YOK-113: the curve, not speed_scale, sets frames_total (checked below)
             elif isinstance(sp, (int, float)) and not isinstance(sp, bool) and sp > 0 and is_int(ft):
                 frames = int((te - ts) / sp + 1e-9) + 1
                 if abs(frames - ft) > 1:
@@ -387,6 +389,64 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         f = doc.get("file")
         if isinstance(f, str) and f.endswith(".glb") and not (ROOT / "game" / f).is_file():
             errs.append(("file", f"game/{f} does not exist"))
+        if "retime" in doc:
+            errs.extend(check_retime(doc.get("retime"), ft, ts if is_int(ts) and is_int(te) else None, te))
+    return errs
+
+
+# YOK-113 (F2, AM5) first-pass retiming limits; the designer may change them. Keep in step with ClipInfo (C#).
+RETIME_MIN_SPEED = (1, 2)   # 0.5x as a ratio, so the check is exact integer math
+RETIME_MAX_SPEED = (2, 1)   # 2x
+RETIME_MAX_HOLD_FRAMES = 4  # game frames one held tick may show on
+
+
+def check_retime(segs, frames_total, trim_start=None, trim_end=None) -> list[tuple[str, str]]:
+    """Retiming curve: contiguous segments from frame 1 to frames_total, each 0.5x-2x or a hold of <= 4 frames."""
+    errs: list[tuple[str, str]] = []
+    if not isinstance(segs, list) or not segs:
+        return [("retime", "retime must be a non-empty list of segments")]
+    parsed = []
+    for i, s in enumerate(segs):
+        fr, tk = (s.get("frames"), s.get("ticks")) if isinstance(s, dict) else (None, None)
+        if not (isinstance(fr, list) and isinstance(tk, list) and len(fr) == 2 and len(tk) == 2
+                and all(is_int(x) for x in fr + tk)):
+            errs.append((f"retime.{i}", "segment needs frames [a, b] and ticks [ta, tb] as integers"))
+            return errs
+        parsed.append((i, fr[0], fr[1], tk[0], tk[1]))
+    if is_int(frames_total):
+        if parsed[0][1] != 1:
+            errs.append(("retime.0.frames", f"curve must start on game frame 1, starts on {parsed[0][1]}"))
+        if parsed[-1][2] != frames_total:
+            errs.append((f"retime.{len(parsed) - 1}.frames",
+                         f"curve must end on frames_total {frames_total}, ends on {parsed[-1][2]} (F2)"))
+    prev = None
+    hold_from = None  # first frame of the current run of held segments
+    for i, a, b, ta, tb in parsed:
+        where = f"retime.{i}"
+        if b <= a:
+            errs.append((f"{where}.frames", f"need last frame > first frame, got {a}-{b}"))
+            prev, hold_from = (b, tb), None
+            continue
+        if prev is not None:
+            if a != prev[0]:
+                errs.append((f"{where}.frames", f"segments must be contiguous: starts on frame {a}, previous ends on {prev[0]}"))
+            if ta != prev[1]:
+                errs.append((f"{where}.ticks", f"segments must be contiguous: starts on tick {ta}, previous ends on {prev[1]}"))
+        df, dt = b - a, tb - ta
+        if dt == 0:
+            hold_from = a if hold_from is None else hold_from
+            shown = b - hold_from + 1
+            if shown > RETIME_MAX_HOLD_FRAMES:
+                errs.append((f"{where}.frames", f"held tick {ta} shows on {shown} frames ({hold_from}-{b}); a hold lasts at most {RETIME_MAX_HOLD_FRAMES} (F2)"))
+        else:
+            hold_from = None
+            lo_n, lo_d = RETIME_MIN_SPEED
+            hi_n, hi_d = RETIME_MAX_SPEED
+            if dt * lo_d < lo_n * df or dt * hi_d > hi_n * df:
+                errs.append((f"{where}.ticks", f"ticks {ta}-{tb} over frames {a}-{b} play at {dt / df:g}x; a segment plays between 0.5x and 2x (F2)"))
+        if trim_start is not None and is_int(trim_end) and not (trim_start <= min(ta, tb) and max(ta, tb) <= trim_end):
+            errs.append((f"{where}.ticks", f"ticks {ta}-{tb} fall outside trim {trim_start}-{trim_end}"))
+        prev = (b, tb)
     return errs
 
 

@@ -505,6 +505,73 @@ public static class FightHudTests
   finally { hud.Free(); }
  }
 
+ // YOK-121: the bottom strip is a 10 s reminder (600 ticks), then it is gone.
+ [Test]
+ public static void TwistStrip_ShowsFor600Ticks_ThenHides_ForElderAndTanuki(Node runner)
+ {
+  var hud = Load(runner);
+  try
+  {
+   var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)));
+   foreach (var view in new FakeRunView[] { new() { ElderFight = true }, new() { InTanukiFight = true, Copy = copy } })
+   {
+    hud.RunView = view;
+    var m = new Match();
+    hud.Refresh(m);
+    Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha >= 1f, "visible and opaque at fight start");
+    for (int i = 0; i < FightHud.TwistStripTicks - FightHud.TwistFadeTicks; i++) m.Step(FighterInput.None, FighterInput.None);
+    hud.Refresh(m);
+    Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha >= 1f, "still opaque until the fade starts");
+    for (int i = 0; i < FightHud.TwistFadeTicks / 2; i++) m.Step(FighterInput.None, FighterInput.None);
+    hud.Refresh(m);
+    Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha > 0f && hud.TwistStripAlpha < 1f, "fading near the end of the window");
+    for (int i = 0; i < FightHud.TwistFadeTicks / 2 - 1; i++) m.Step(FighterInput.None, FighterInput.None);
+    hud.Refresh(m);
+    Assert.Equal(FightHud.TwistStripTicks - 1, m.Tick, "tick 599");
+    Assert.True(hud.TwistStripVisible, "last visible tick is 599");
+    m.Step(FighterInput.None, FighterInput.None);
+    hud.Refresh(m);
+    Assert.True(!hud.TwistStripVisible, "hidden from tick 600 (10 s)");
+    hud.Refresh(m);
+    Assert.True(!hud.TwistStripVisible, "stays hidden");
+    m.Reset();
+    hud.Refresh(m);
+    Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha >= 1f, "a restart (tick 0) shows it for a fresh 10 s");
+    Assert.True(hud.TwistLine != "", "text is set while shown");
+   }
+  }
+  finally { hud.Free(); }
+ }
+
+ // YOK-121: the pause freezes the sim tick, so the 10 s window does not drain while paused; a restart shows it again.
+ [Test]
+ public static void TwistStrip_TimerPausesWithTheGamePause_AndRestartShowsItAgain(Node runner)
+ {
+  var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+  scene.PauseEnabled = true;
+  scene.ExternalDrive = true;
+  runner.AddChild(scene);
+  try
+  {
+   var hud = scene.GetNode<FightHud>("Hud");
+   hud.RunView = new FakeRunView { ElderFight = true };
+   for (int i = 0; i < 100; i++) scene.Step(FighterInput.None, FighterInput.None);
+   Assert.True(hud.TwistStripVisible, "visible mid-window");
+   Assert.True(scene.TryPause(), "pause opens");
+   int tick = scene.Match.Tick;
+   for (int i = 0; i < 700; i++) scene.Step(FighterInput.None, FighterInput.None); // a paused scene ignores steps
+   Assert.Equal(tick, scene.Match.Tick, "no tick passes while paused");
+   Assert.True(hud.TwistStripVisible, "paused for longer than 10 s, the strip is still up");
+   scene.PauseMenu!.Resume();
+   for (int i = 0; i < FightHud.TwistStripTicks; i++) scene.Step(FighterInput.None, FighterInput.None);
+   Assert.True(!hud.TwistStripVisible, "after 10 s of unpaused fight it is gone");
+   scene.RestartRun();
+   scene.Step(FighterInput.None, FighterInput.None);
+   Assert.True(hud.TwistStripVisible, "restart shows it again");
+  }
+  finally { scene.Free(); }
+ }
+
  [Test]
  public static void FitName_ZeroWidthLabel_Terminates(Node runner)
  {
