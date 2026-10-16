@@ -127,7 +127,7 @@ public static class MoveListSource
 		return new MoveRow(id, name, air ? input("") : label, Plain(id), frames);
 	}
 
-	/// <summary>Seconds to walk one screen width (C2 says about 2.5).</summary>
+	/// <summary>Seconds to walk one screen width (C2: ~2.5 across the original 1,920 units; ~1.9 across AM8's 1,440).</summary>
 	public static double WalkSeconds(SimConfig c) => c.ViewWidth / (double)c.WalkSpeed / 60.0;
 
 	private static string ButtonLabel(string b) => b;
