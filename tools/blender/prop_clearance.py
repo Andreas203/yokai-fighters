@@ -86,6 +86,8 @@ def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=a["rig"])
     arm = [o for o in bpy.context.scene.objects if o.type == "ARMATURE"][0]
+    if arm.animation_data:
+        arm.animation_data.action = None  # the rig's one-frame bind clip would reset the pose at render
     body = [o for o in bpy.context.scene.objects
             if o.type == "MESH" and any(m.type == "ARMATURE" for m in o.modifiers)]
     height = max((o.matrix_world @ Vector(c)).z for o in body for c in o.bound_box)

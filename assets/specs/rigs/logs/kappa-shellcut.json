@@ -1,7 +1,7 @@
 {
  "tool": "cut_shell.py",
- "in": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/kappa-raw.glb",
- "out": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/kappa-cut.glb",
+ "in": "kappa-raw.glb",
+ "out": "kappa-cut.glb",
  "box": {
   "y_min": 0.17,
   "z_min": 0.58,
@@ -11,12 +11,14 @@
  "verts_before": 11695,
  "open_edges_before": 8848,
  "open_edges_after_weld": 28,
- "verts_cut": 647,
- "loose_island_verts": 0,
- "verts_after": 7132,
- "cap_faces": 102,
- "boundary_edges_filled": 104,
- "open_edges_left_elsewhere": 28,
+ "verts_cut": 1421,
+ "verts_cut_by_colour": 1268,
+ "colour_band": "0.0,0.45,0.75,1.36",
+ "loose_island_verts": 3,
+ "verts_after": 6355,
+ "cap_faces": 204,
+ "boundary_edges_filled": 221,
+ "open_edges_left_elsewhere": 26,
  "cap_uv": [
   0.5526260137557983,
   0.7087730169296265
@@ -24,16 +26,16 @@
  "cap_uv_sample_dist_m": 0.0443,
  "cut_bbox_blender_m": {
   "min": [
-   -0.337,
-   0.17,
+   -0.3936,
+   0.0029,
    0.6115
   ],
   "max": [
-   0.3352,
+   0.3922,
    0.3591,
-   1.2858
+   1.3599
   ]
  },
  "sha256_in": "43456030534ebc8199479f9f009472b08df703ddd51188f6d89162303c671b3c",
- "sha256_out": "78ed9719285d5aff58e890798a3d17130e945bd84ca3e73d440832641b78b946"
+ "sha256_out": "12178f5721456c27979f05d3eade6fd2f9db418ef86b022a4005b7f9c53314dd"
 }

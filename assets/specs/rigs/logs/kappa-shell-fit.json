@@ -15,56 +15,56 @@
  ],
  "dome_side": "-",
  "scale_xyz": [
-  0.4529,
-  0.275,
-  0.3848
+  0.3948,
+  0.4481,
+  0.3057
  ],
  "size_out_m": [
-  0.78,
-  0.27,
-  0.73
+  0.68,
+  0.44,
+  0.58
  ],
  "target_min": [
-  -0.38999998569488525,
-  0.10000000149011612,
-  0.6299999952316284
+  -0.3400000035762787,
+  -0.03999999910593033,
+  0.7400000095367432
  ],
  "target_max": [
-  0.38999998569488525,
-  0.3700000047683716,
-  1.3600000143051147
+  0.3400000035762787,
+  0.4000000059604645,
+  1.3200000524520874
  ],
  "mount": {
-  "rig": "game/assets/generated/characters/kappa/kappa-rigged-shellcut.glb",
+  "rig": "game/assets/generated/characters/kappa/kappa-rigged.glb",
   "bone": "Spine01",
   "point_gltf_m": [
    0.0,
-   0.995,
-   -0.1
+   1.03,
+   0.04
   ],
   "child_matrix_rows_bone_space_cm": [
    [
     100.0,
     0.0,
     -7e-06,
-    3e-06
+    2e-06
    ],
    [
     -0.0,
     99.9935,
     1.140931,
-    1.532544
+    5.192045
    ],
    [
     7e-06,
     -1.140931,
     99.9935,
-    -16.192886
+    -2.23373
    ]
   ],
-  "godot_child_transform": "Transform3D(100.0, 0.0, -7e-06, -0.0, 99.9935, 1.140931, 7e-06, -1.140931, 99.9935, 3e-06, 1.532544, -16.192886)",
+  "godot_child_transform": "Transform3D(100.0, 0.0, -7e-06, -0.0, 99.9935, 1.140931, 7e-06, -1.140931, 99.9935, 2e-06, 5.192045, -2.23373)",
   "note": "BoneAttachment3D(bone) > child Node3D with this transform > prop scene. Basis is written row by row (Godot's Transform3D text order)."
  },
  "sha256_in": "a366f452c0e187e21a8fb5b24e71b2953a857fdb364535da92ebc771ffff7baf",
- "sha256_out": "be0f4409e14901c59b5364e02e588ed29da7f23dee523202fb4c005266f16a77"
+ "sha256_out": "d9213058b6e08d5fec52afa2d95606166657a08cc65a61e18687963258da63a3"
 }

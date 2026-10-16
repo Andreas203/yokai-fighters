@@ -8,6 +8,24 @@
   0.3419,
   1.8975
  ],
+ "axis_from_bones": {
+  "bones": [
+   "RightForeArm",
+   "RightHand"
+  ],
+  "forearm_gltf": [
+   -0.9984,
+   -0.0545,
+   0.0152
+  ],
+  "tilt_deg": 45.0,
+  "tilt_toward": "0,0,1",
+  "axis_gltf": [
+   -0.6952,
+   -0.0379,
+   0.7178
+  ]
+ },
  "long_axis": "Z",
  "length_in_m": 1.8975,
  "scale": 0.63241,
@@ -26,7 +44,7 @@
  "axis_gltf": "0,0,1",
  "hand_centre_verts": 583,
  "mount": {
-  "rig": "game/assets/generated/characters/oni/oni-rigged.glb",
+  "rig": "oni-raw.glb",
   "bone": "RightHand",
   "point_gltf_m": [
    -0.8626,
@@ -57,5 +75,5 @@
   "note": "BoneAttachment3D(bone) > child Node3D with this transform > prop scene. Basis is written row by row (Godot's Transform3D text order)."
  },
  "sha256_in": "2378ab746fc55a7bd66fda7e4368fb5c6b1040bc356e841bb9a02bb034ae74b5",
- "sha256_out": "195c41710fd2d13886c2aa56aa95950abd48682db4066e47ffb5307db5893847"
+ "sha256_out": "cef14678014e623aefc065c896f2c1f2a38d714e6f01eb4f1aaaa719a7f6c61d"
 }

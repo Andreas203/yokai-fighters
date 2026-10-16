@@ -8,7 +8,9 @@ What it does (Blender world axes after glTF import: +Z up, the character faces -
   0. import with merge_vertices and weld verts within --weld m, so UV-seam splits are joined and the
      islands and holes are real (the exporter splits seams again);
   1. select every vert of the skinned mesh inside the box: depth y > --y-min (behind the back),
-     --z-min < z < --z-max, |x| < --x-max (metres, rest pose);
+     --z-min < z < --z-max, |x| < --x-max (metres, rest pose); with --colour-band, also every vert
+     in that wider band whose base colour is the shell's (the rim strip the box leaves at the flanks,
+     which cannot be cut by depth without opening the body: the shell was the back);
   2. delete them, then delete loose islands under --min-island verts that lie wholly within 0.10 m of the box
      (inner shell bits; islands elsewhere, such as eyes, are kept);
   3. fill each open boundary loop next to the box (both edge verts within --cap-margin of it; other
@@ -51,6 +53,8 @@ def args():
     ap.add_argument("--min-island", type=int, default=200)
     ap.add_argument("--cap-margin", type=float, default=0.04)
     ap.add_argument("--weld", type=float, default=1e-5)
+    ap.add_argument("--colour-band", help="y_min,x_max,z0,z1: also cut verts in this band whose base colour "
+                                          "is the shell's (dark pine or ochre: r/g > 0.6, b/g < 0.88, mean < 0.62)")
     ap.add_argument("--skin-sample", default="0.45,0.10,1.10")
     return ap.parse_args(sys.argv[sys.argv.index("--") + 1:])
 
@@ -100,13 +104,40 @@ def main():
 
     def near_box(v, m=a.cap_margin):
         p = mw @ v.co
+        if a.colour_band:  # the colour band widens the area whose holes are capped
+            cy, cx, cz0, cz1 = [float(t) for t in a.colour_band.split(",")]
+            if p.y > cy - m and abs(p.x) < cx + m and cz0 - m < p.z < cz1 + m:
+                return True
         return p.y > a.y_min - m and a.z_min - m < p.z < a.z_max + m and abs(p.x) < a.x_max + m
 
     def inside(v):
         p = mw @ v.co
         return p.y > a.y_min and a.z_min < p.z < a.z_max and abs(p.x) < a.x_max
 
-    cut = [v for v in bm.verts if inside(v)]
+    shell_col = set()
+    if a.colour_band:
+        cy, cx, cz0, cz1 = [float(t) for t in a.colour_band.split(",")]
+        img = [n.image for mt in obj.data.materials if mt and mt.node_tree
+               for n in mt.node_tree.nodes if n.type == "TEX_IMAGE" and n.image][0]
+        w, h = img.size
+        px = img.pixels[:]
+        uvl = bm.loops.layers.uv.active
+        for v in bm.verts:
+            p = mw @ v.co
+            if not (p.y > cy and abs(p.x) < cx and cz0 < p.z < cz1):
+                continue
+            acc = [0.0, 0.0, 0.0]
+            for lp in v.link_loops:
+                u, t = lp[uvl].uv
+                i = (min(int(t % 1.0 * h), h - 1) * w + min(int(u % 1.0 * w), w - 1)) * 4
+                for k in range(3):
+                    acc[k] += px[i + k]
+            n = max(len(v.link_loops), 1)
+            r, g, b = (c / n for c in acc)
+            g = max(g, 1e-3)
+            if r / g > 0.6 and b / g < 0.88 and (r + g + b) / 3 < 0.62:
+                shell_col.add(v)
+    cut = [v for v in bm.verts if inside(v) or v in shell_col]
     cut_world = [mw @ v.co for v in cut]
     if not cut:
         raise SystemExit("nothing inside the box")
@@ -153,7 +184,8 @@ def main():
     log = {
         "tool": "cut_shell.py", "in": a.inp, "out": a.out,
         "box": {"y_min": a.y_min, "z_min": a.z_min, "z_max": a.z_max, "x_max": a.x_max},
-        "verts_before": verts_before, "open_edges_before": open_before, "open_edges_after_weld": open_welded, "verts_cut": len(cut), "loose_island_verts": len(loose),
+        "verts_before": verts_before, "open_edges_before": open_before, "open_edges_after_weld": open_welded, "verts_cut": len(cut), "verts_cut_by_colour": len([v for v in shell_col]),
+        "colour_band": a.colour_band, "loose_island_verts": len(loose),
         "verts_after": verts_after, "cap_faces": len(cap), "boundary_edges_filled": len(boundary), "open_edges_left_elsewhere": other_open,
         "cap_uv": list(best), "cap_uv_sample_dist_m": round(best_d, 4),
         "cut_bbox_blender_m": {"min": [round(x, 4) for x in bb_min], "max": [round(x, 4) for x in bb_max]},

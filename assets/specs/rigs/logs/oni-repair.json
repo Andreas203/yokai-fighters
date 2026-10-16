@@ -1,8 +1,8 @@
 {
  "tool": "tools/blender/repair_weights.py",
  "fighter": "oni",
- "input": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/oni-220.glb",
- "output": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/oni-rigged.glb",
+ "input": "oni-220.glb",
+ "output": "oni-rigged.glb",
  "input_sha256": "9bd1bcb57b23e387b0be4989ea23c9f503e89f621748ad930f407c242f66f058",
  "params": {
   "region_bottom_m": 0.18,

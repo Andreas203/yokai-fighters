@@ -74,7 +74,7 @@
  "weights": {
   "meshes": {
    "char1": {
-    "verts": 14439,
+    "verts": 13024,
     "max_influences_found": 4,
     "over_max_influences": 0,
     "unnormalised": 0,
@@ -115,7 +115,7 @@
    "loincloth": 1504
   },
   "verts_total": 1504,
-  "verts_in_mesh": 14439,
+  "verts_in_mesh": 13024,
   "mask_stills": [
    "kappa-check/cloth_mask_front.png",
    "kappa-check/cloth_mask_side.png"
@@ -126,8 +126,8 @@
    "status": "WARN",
    "edge_ratio_max": 2.311,
    "edge_ratio_min": 0.16,
-   "edges_over_warn": 60,
-   "edges_total": 27322,
+   "edges_over_warn": 58,
+   "edges_total": 24425,
    "edges_failing": 8,
    "failing_edges_by_bone": {
     "Hips": 11,
@@ -154,16 +154,16 @@
    "status": "WARN",
    "edge_ratio_max": 4.042,
    "edge_ratio_min": 0.058,
-   "edges_over_warn": 591,
-   "edges_total": 27322,
-   "edges_failing": 30,
+   "edges_over_warn": 369,
+   "edges_total": 24425,
+   "edges_failing": 29,
    "failing_edges_by_bone": {
-    "Hips": 37,
+    "Hips": 35,
     "LeftLeg": 12,
     "LeftUpLeg": 6,
     "RightLeg": 3,
-    "(mixed)": 1,
-    "RightUpLeg": 1
+    "RightUpLeg": 1,
+    "(mixed)": 1
    },
    "collapsed_bones": {},
    "missing_pose_bones": [],
@@ -185,11 +185,11 @@
    "status": "WARN",
    "edge_ratio_max": 3.715,
    "edge_ratio_min": 0.333,
-   "edges_over_warn": 463,
-   "edges_total": 27322,
-   "edges_failing": 24,
+   "edges_over_warn": 218,
+   "edges_total": 24425,
+   "edges_failing": 22,
    "failing_edges_by_bone": {
-    "(mixed)": 34,
+    "(mixed)": 30,
     "LeftArm": 10,
     "RightArm": 4
    },
@@ -211,8 +211,8 @@
    "status": "PASS",
    "edge_ratio_max": 2.932,
    "edge_ratio_min": 0.311,
-   "edges_over_warn": 117,
-   "edges_total": 27322,
+   "edges_over_warn": 22,
+   "edges_total": 24425,
    "edges_failing": 0,
    "failing_edges_by_bone": {},
    "collapsed_bones": {},
@@ -231,14 +231,13 @@
   },
   "grab": {
    "status": "WARN",
-   "edge_ratio_max": 3.009,
+   "edge_ratio_max": 3.006,
    "edge_ratio_min": 0.17,
-   "edges_over_warn": 103,
-   "edges_total": 27322,
-   "edges_failing": 8,
+   "edges_over_warn": 62,
+   "edges_total": 24425,
+   "edges_failing": 6,
    "failing_edges_by_bone": {
     "LeftArm": 5,
-    "RightShoulder": 4,
     "(mixed)": 4,
     "LeftShoulder": 3
    },
