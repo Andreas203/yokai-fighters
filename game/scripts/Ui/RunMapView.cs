@@ -49,7 +49,7 @@ public class RunMapView : IMapView
 	}
 
 	public MapStatusView? Status => _run is null ? null
-		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count) { LastPlayRow = _playRows.Max() };
+		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count) { LastPlayRow = _playRows.Count == 0 ? 0 : _playRows.Max() };
 
 	public virtual CopyTarget? CopyTarget => _run is null ? null : CopyRule.Target(_run);
 	public virtual bool CopyLocked => false;
