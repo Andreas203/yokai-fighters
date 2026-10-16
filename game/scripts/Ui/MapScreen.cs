@@ -52,6 +52,7 @@ public partial class MapScreen : Control
 	readonly Dictionary<string, MapNode> _nodes = new();
 	readonly List<Label> _headers = new();
 	bool _legendBuilt;
+	object? _runKey;
 	Control? _board; MapRoutes? _routes;
 	MapLayoutResult _layout = new(new Dictionary<string, Rect2>(), Vector2.Zero);
 	bool _ready;
@@ -71,7 +72,9 @@ public partial class MapScreen : Control
 	/// <summary>Show this map. Safe before or after the screen enters the tree. Clears the pick lock.</summary>
 	public void SetView(IMapView view)
 	{
-		View = view; CursorId = null; Locked = false;
+		bool newRun = view.RunKey is not null && !ReferenceEquals(view.RunKey, _runKey);
+		View = view; CursorId = null; Locked = false; _runKey = view.RunKey ?? _runKey;
+		if (_ready && newRun) CopyChip.Reset(); // a new run's first chip is a first show: no "levelled" / "changed" against the last run
 		if (_ready) Rebuild();
 	}
 
