@@ -220,4 +220,30 @@ public static class HipScaleProbes
 		Assert.True(float.IsFinite(mn) && float.IsFinite(mx), "finite keys");
 		m.Free();
 	}
+
+	// Round 3: k > 0 guard.
+	[Test]
+	public static void TinyButRepresentableRatio_IsStillApplied()
+	{
+		float k = FighterModel.HipScale(1e-30f, 94.9f); // normal float, > 0, far outside the warn band
+		Assert.True(k > 0f && k < 1e-20f, $"applied raw, got {k}");
+		Assert.Equal(1f, FighterModel.HipScale(float.Epsilon, 94.9f), "underflow to 0 is unknown");
+	}
+
+	// Warning markers "YOK-130-R3 ..." are counted from the suite log: a zero-height rig built twice warns once about the
+	// rig (library cached); real-size rigs (0.77, 1.0, 1.19 and Ryo's own) print no rig-rest warning.
+	[Test]
+	public static void ZeroRestRig_BuildsTwice_AndRealRigsStayQuiet(Node runner)
+	{
+		GD.Print("YOK-130-R3 begin quiet rigs");
+		foreach (float k in new[] { 0.77f, 1f, 1.19f }) Synthetic(k).Free();
+		FighterModel.Create(FighterAnimSet.Ryo, Cat)!.Free();
+		FighterModel.Create(FighterAnimSet.Kitsune, Cat)!.Free();
+		GD.Print("YOK-130-R3 end quiet rigs");
+		var a = Synthetic(0f); var b = Synthetic(0f);
+		var (mn, mx) = HipY(Clip(a, "ryo-idle-guard"));
+		Assert.True(float.IsFinite(mn) && float.IsFinite(mx), "zero-rest rig keeps finite keys");
+		a.Free(); b.Free();
+		GD.Print("YOK-130-R3 end zero rig");
+	}
 }
