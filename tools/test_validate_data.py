@@ -47,6 +47,49 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn("behaviours.0.when: 'opponent_pressed_punch' is not one of", out)
         self.assertIn("temperament: 'boss' temperament is for the Tanuki only", out)
 
+    def _profile(self, edit):
+        """The kitsune-patient sample with one edit, validated from a temp data/profiles/ folder."""
+        import json, tempfile
+        doc = json.loads((SAMPLES / "kitsune-patient.json").read_text(encoding="utf-8"))
+        edit(doc)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "data" / "profiles" / "kitsune-patient.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            return run(path)
+
+    def test_profile_ex_and_burst_use_optional_and_checked(self):
+        # YOK-57 (E16, C6): both blocks optional (absent = no meter use), shape checked when present.
+        self.assertEqual(self._profile(lambda d: None)[0], 0)
+        # The Tanuki profile carries them (applied in its boss fight).
+        code, out = run(ROOT / "data" / "profiles" / "tanuki-boss.json")
+        self.assertEqual(code, 0, out)
+        # Allowed on a yokai profile too: elder fights reuse yokai-tier profiles, and the game applies the blocks
+        # only in elder and Tanuki fights (E22 gate at runtime: ProfileAi's AiFightTier, AiMeterTests), so a
+        # standard-row fight with this profile still spends no meter.
+        def full(d):
+            d["ex_use"] = {"chance_pct": 40, "keep_meter": 100}
+            d["burst_use"] = {"chance_pct": 50, "min_combo_hits": 3, "max_health_pct": 60}
+        code, out = self._profile(full)
+        self.assertEqual(code, 0, out)
+        code, out = self._profile(lambda d: d.update(ex_use={"chance_pct": 0}, burst_use={"chance_pct": 0}))
+        self.assertEqual(code, 0, out)
+        bad = [
+            (lambda d: d.update(ex_use={}), "ex_use: 'chance_pct' is a required property"),
+            (lambda d: d.update(ex_use={"chance_pct": 101}), "ex_use.chance_pct: 101 is greater than the maximum of 100"),
+            (lambda d: d.update(ex_use={"chance_pct": 50, "keep_meter": 301}), "ex_use.keep_meter: 301 is greater than the maximum of 300"),
+            (lambda d: d.update(ex_use={"chance_pct": 50, "when": "p1_pressed_hp"}), "ex_use: Additional properties are not allowed"),
+            (lambda d: d.update(burst_use={"chance_pct": -1}), "burst_use.chance_pct: -1 is less than the minimum of 0"),
+            (lambda d: d.update(burst_use={"chance_pct": 50, "min_combo_hits": 0}), "burst_use.min_combo_hits: 0 is less than the minimum of 1"),
+            (lambda d: d.update(burst_use={"chance_pct": 50, "max_health_pct": 0}), "burst_use.max_health_pct: 0 is less than the minimum of 1"),
+            (lambda d: d.update(burst_use={"chance_pct": 50, "on_button": "lp"}), "burst_use: Additional properties are not allowed"),
+        ]
+        for edit, msg in bad:
+            with self.subTest(msg=msg):
+                code, out = self._profile(edit)
+                self.assertEqual(code, 1, out)
+                self.assertIn(msg, out)
+
     def test_malformed_normal_fails_with_clear_messages(self):
         code, out = run(SAMPLES / "sample-light-punch-clip.json", SAMPLES / "invalid" / "broken-normal.json")
         self.assertEqual(code, 1)

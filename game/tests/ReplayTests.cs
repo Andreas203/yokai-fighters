@@ -209,6 +209,41 @@ public static class ReplayTests
 		}
 	}
 
+	/// <summary>YOK-57: an elder fight with EX and burst in play records its fight tier and replays identically;
+	/// the same recording read as a standard fight (tier stripped) no longer matches the AI.</summary>
+	[Test]
+	public static void ElderAiWithExAndBurst_ReplaysIdentically()
+	{
+		FightScene.Run = null;
+		var m = FightScene.NewMatch();
+		// The opponent kit's own EX special (fixture or data), thrown often from neutral.
+		string? special = null;
+		foreach (var eq in m.P2.Specials) if (eq is not null && eq.Data.HasEx) { special = eq.Data.Id; break; }
+		Assert.True(special is not null, "the opponent kit has a special with an EX version");
+		var prof = Profile("test-kitsune-aggressive") with
+		{
+			Id = "test-meter-elder",
+			Behaviours = new System.Collections.Generic.List<Behaviour>(Profile("test-kitsune-aggressive").Behaviours)
+				{ new(Observation.Neutral, BehaviourProfile.ParseAction("special:" + special), 40) },
+			ExUse = new ExUse(100), BurstUse = new BurstUse(100),
+		};
+		var cat = ReplayCatalog.FromRepo(RepoRoot);
+		cat.Profiles.Add(prof);
+		int ex = 0, bursts = 0;
+		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Ex) ex++; };
+		m.BurstFired += (_, i) => { if (i == 1) bursts++; };
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 57, tier: AiFightTier.Elder);
+		var rec = Play(m, Chaos(57), null, 5400, ai, 57, stopAtOver: false);
+		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");
+		var back = ReplayRecording.FromBytes(rec.ToBytes());
+		Assert.Equal("elder", back.Header.Ai!.FightTier, "the fight tier is in the file");
+		var r = Replayer.Run(back, cat);
+		Assert.True(r.Ok && r.AiStepsChecked == rec.Steps, $"elder fight replays with every AI input re-derived: {r}");
+		back.Header.Ai.FightTier = null;
+		var std = Replayer.Run(back, cat);
+		Assert.True(!std.Ok, "read as a standard fight, the AI no longer spends meter, so the replay differs");
+	}
+
 	[Test]
 	public static void RematchAfterRewardPick_CarriesRunState()
 	{
