@@ -12,7 +12,7 @@ Balance: `meshy_check_balance` was NOT callable in this session (the Meshy MCP t
 4. **Kappa shell: separate rigid mesh** (K4, K5 stay in).
 5. Still open: palette entries (oni red, kappa teal, shell ochre, Tanuki brown), heights, human-guise fallbacks (G1, G2), licence. The Astra amendment to AM1/F6 is still pending in the decision log.
 
-**Spend now: 0.** Once sheets are accepted, the mesh pass to be approved is O3, O4, O5, K3, K4, K5 = 96 credits first pass, 288 worst case (3 takes). The Astra cost is the designer's own and is not counted here.
+**Spend now: 0.** Once sheets are accepted, the mesh pass to be approved is O3, O5, K3, K4, K5 = 93 credits first pass, 279 worst case (3 takes). O4 (club image) is replaced by the Astra club `docs/design/characters/oni/oni-club-astra.png` (2026-10-16), so O5 takes that image directly. The Astra cost is the designer's own and is not counted here.
 
 Rows below are the original draft table. Status by line: O1, O2, K1, K2, T1, T2 not used (Option B, Astra); T3, T4 dropped; O3-O5 and K3-K5 pending approval after the Astra sheets; G1, G2 contingency, open.
 
@@ -25,8 +25,8 @@ Rows below are the original draft table. Status by line: O1, O2, K1, K2, T1, T2 
 | T1 | Tanuki merchant concept | text_to_image | nano-banana-pro | 2:3 | 9 | tanuki.md |
 | T2 | Tanuki true-form concept | text_to_image | nano-banana-pro | 2:3 | 9 | tanuki.md |
 | O3 | Oni mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~2.0 m | 30 | oni.md |
-| O4 | Club image | text_to_image | nano-banana | 1:1 | 3 | oni.md |
-| O5 | Club mesh (separate, rigid) | image_to_3d | meshy-6-lite | 4k tri, 2K tex | 15 | oni.md |
+| O4 | Club image: **done in Astra** (`oni-club-astra.png`), not run in Meshy | — | — | — | 0 | oni.md |
+| O5 | Club mesh (separate, rigid) from `oni-club-astra.png` | image_to_3d | meshy-6-lite | 4k tri, 2K tex, pivot at grip, ~1.2 m | 15 | oni.md |
 | K3 | Kappa mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~1.5 m | 30 | kappa.md |
 | K4 | Shell image (recommended, designer chooses) | text_to_image | nano-banana | 1:1 | 3 | kappa.md |
 | K5 | Shell mesh (separate, rigid) | image_to_3d | meshy-6-lite | 3k tri, 2K tex | 15 | kappa.md |
