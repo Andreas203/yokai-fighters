@@ -31,7 +31,7 @@ public partial class DevMenu
 	static DevMenu()
 	{
 		AddSection(ToolsId, "Debug tools", _ => ToolsPage(), needsDevMode: false);
-		AddSection(MapId, "Map", _ => StubPage("Map", "YOK-124: the full map unlocked; travel to any node."));
+		AddSection(MapId, "Map", ctx => new DevMapPage(ctx));
 		AddSection(JumpId, "Jump", _ => StubPage("Jump", "YOK-125: jump straight to any fight or screen."));
 		AddSection(RunId, "Run state", ctx => new DevRunStatePage(ctx));
 	}

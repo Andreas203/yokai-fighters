@@ -20,7 +20,7 @@ Visual assets are generated, not bought (F6, AM1 and AM5 in `docs/design/gdd-ame
 
 ## Specs
 Write `assets/specs/<asset-id>.md` for each asset:
-1. **Prompt**: built from `assets/specs/style.md`, never restating a franchise, artist or existing character. Fighters: front/side/back A-pose turnaround first (`meshy_image_to_image` from the reference image in `docs/design/characters/`); only the chosen front view goes to `meshy_image_to_3d`.
+1. **Prompt**: built from `assets/specs/style.md`, never restating a franchise, artist or existing character. Fighters: front/side/back turnaround first, from `meshy_image_to_image` on the reference image in `docs/design/characters/`, or from Astra when the designer chooses it (AM7): then write a settled brief in `docs/design/characters/astra-brief.md`, the designer runs it, and you check the sheets. Only the chosen front view goes to `meshy_image_to_3d`.
 2. **Job chain**: the generator and each call in order with its settings: image model and reference strength; Image-to-3D model, topology, target poly count and texture resolution. Stop at the unrigged mesh in T-pose: `rig-specialist` takes it from there.
 3. **Rig notes** for `rig-specialist`: the parts a humanoid skeleton can't drive (tails, sleeves, coat tail, shell, club) and whether you modelled each as a separate mesh or part of the body.
 4. **Acceptance criteria** you will check on import (below).

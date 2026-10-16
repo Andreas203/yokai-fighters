@@ -393,7 +393,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			reason = "";
 			return session;
@@ -458,6 +458,7 @@ public partial class GameFlow : Node
 				Title.Visible = false;
 				ControlSelect.Close();
 				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
+				DevMap.Apply(Session); // YOK-124: the dev full map (off unless dev mode is on and the toggle is set)
 				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
 				Map.Visible = true;
 				break;
@@ -502,7 +503,7 @@ public partial class GameFlow : Node
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) stop.TitleRequested += () => Router.ReturnToTitle(); // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
@@ -510,8 +511,31 @@ public partial class GameFlow : Node
 		MoveChild(scene, 0); // under the menu layer
 	}
 
+	/// <summary>YOK-104: the merchant's shop over the rest stop: the router says it is open, the stop hides, Back brings it back used.</summary>
+	public ShopScreen? Shop { get; private set; }
+
+	private void OpenShop(RestStopScreen stop)
+	{
+		if (Session == null || !Router.OpenShop()) return;
+		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
+		shop.Bind(Session);
+		shop.MerchantLine = stop.MerchantLine;
+		shop.Closed += () =>
+		{
+			Router.CloseShop();
+			if (Shop == shop) { RemoveChild(shop); shop.QueueFree(); Shop = null; } // not Free: this runs inside the shop's own input
+			if (IsInstanceValid(stop)) { stop.Visible = true; stop.ShopClosed(); }
+		};
+		stop.Visible = false;
+		Shop = shop;
+		AddChild(shop);
+		MoveChild(shop, 1); // over the stop, under the menu layer
+	}
+
 	private void EndFight()
 	{
+		if (Shop is { } shop && IsInstanceValid(shop)) { RemoveChild(shop); shop.Free(); }
+		Shop = null;
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run
 		if (NodeScene is { } scene && IsInstanceValid(scene)) { RemoveChild(scene); scene.QueueFree(); }
 		Fight = null;
