@@ -1,0 +1,24 @@
+{
+  "kind": "clip",
+  "id": "oni-quake",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Heavy_Hammer_Swing",
+  "frames_total": 56,
+  "trim_start": 0,
+  "trim_end": 52,
+  "retime": [
+    { "frames": [1, 17], "ticks": [0, 16], "note": "slow charged rise to the overhead peak, 1x" },
+    { "frames": [17, 20], "ticks": [16, 16], "note": "club held overhead for 4 frames, the tell" },
+    { "frames": [20, 28], "ticks": [16, 32], "note": "the slam falls at 2x" },
+    { "frames": [28, 32], "ticks": [32, 36], "note": "impact pose, club low in front, 1x through the active frames" },
+    { "frames": [32, 40], "ticks": [36, 44], "note": "recovery, 1x" },
+    { "frames": [40, 56], "ticks": [44, 52], "note": "recovery eases out at 0.5x" }
+  ],
+  "file": "assets/generated/clips/oni/oni-heavy-club.glb",
+  "hit_start": 28,
+  "hit_end": 31,
+  "retarget_notes": "Same file and clearance result as oni-heavy-punch (club clean on every tick). Free reuse of the accepted overhead slam, no new take.",
+  "rules": ["F2", "F5", "F6"],
+  "notes": "Oni Quake: the overhead slam of oni-heavy-punch (Meshy preset 128, task 01a14515-ba26-7266-bea2-b233e1d2f6e2) with a slower charged startup and a held overhead tell. Startup 27, active 4 (28-31), recovery 25. The same pose plays twice in the Oni kit, so the heavy punch uses the fast curve and Quake this one."
+}

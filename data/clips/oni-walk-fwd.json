@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "oni-walk-fwd",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Carry_Heavy_Object_Walk_inplace",
+  "frames_total": 83,
+  "trim_start": 0,
+  "trim_end": 123,
+  "speed_scale": 1.5,
+  "file": "assets/generated/clips/oni/oni-walk-club.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. Club clearance PASS on the raw take (99 poses, every 4th tick of all 393) and on the cleaned loop (62 poses, 0 vertices inside the body); the club stays out in front, lowest point 1.59 m. Walk back is this clip played in reverse in move data.",
+  "rules": ["F2", "F5", "F6"],
+  "notes": "Meshy preset 611 on task 01a14545-a7f0-71a5-b698-4fa41ac04df2 (take 2 of 3 for the walks), raw take game/assets/generated/characters/oni/takes/oni-walk-611.glb (393 ticks). Cleaned with clean_clip.py: trim raw ticks 74-197 (the one-cycle loop, pose closure best of the take, file tick 0 = raw 74), strip-root horizontal, no smoothing; 124 frames at 1x. Played at 1.5x here (83 frames, 1.4 s) because 2.07 s a stride is slow; the stance feet move about 1.0 cm per tick at 1x on the rig's own units, so about 1.65 cm per tick at 1.5x on screen (about 1 m/s): set the move data's walk speed from that to avoid sliding. Verdict ACCEPT, loop closes within about 1 degree per bone, jitter 3.1 deg per frame squared."
+}

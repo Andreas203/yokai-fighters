@@ -28,6 +28,45 @@ Club check = `prop_clearance.py --clip` on `oni-rigged.glb` with `club-grip.glb`
 
 This is take 2 of 3 for the walks. After a second rejection propose a mechanically equivalent move on an approved clip (F5), for example the idle clip played as the walk with the movement in data, which is a designer call.
 
+## Walk retake result (take 2 of 3): ACCEPT
+Preset 611 `Carry_Heavy_Object_Walk_inplace`, task `01a14545-a7f0-71a5-b698-4fa41ac04df2`, 3 credits (balance 685 to 682). Raw 393 ticks (`takes/oni-walk-611.glb`).
+- **Club check:** 0 poses above 2 cm on the raw take (99 poses, every 4th tick of all 393) and on the cleaned loop (62 poses): both forearms stay out in front, the club never touches the body, lowest point 1.59 m.
+- **Loop:** pose closure best at raw 74 to 198 (error 0.82, against 3.2 for the rejected 669), so trim raw 74-197, one 124-frame stride cycle (2.07 s). Cleaned: `clean_clip.py --trim 74 197 --strip-root horizontal`, no smoothing; stripped file `game/assets/generated/clips/oni/oni-walk-club.glb`.
+- **Measure** (`measure_clip.py --movement-clip`): PASS, root travel 0, jitter 3.1 deg per frame squared, 3 reversals (feet). Planted feet travel 0.9-1.3 cm per frame at 1x (a walk, not judged for slide).
+- **Retime:** speed_scale 1.5, 83 frames (1.4 s), which puts the stance foot at about 1.65 cm per tick on screen (about 1 m/s); move data sets the walk speed from that. Walk back = the same clip reversed in data. No curve needed.
+- Data: `data/clips/oni-walk-fwd.json` (proposed, validates). Stills: `stills/oni/oni-walk-club_f*.png`, `oni-walk-club-clearance_f{01,63}-side.png`.
+- Risk: the Oni walks with both arms forward as if carrying, so the pose is the same as a guard; that is the reason it clears the club.
+
+## Oni-specific picks (designer decisions, 2026-10-16; free calls only, not run)
+Decided after the movesmith review: 3 credits each, one take each, rig `01a144ad-b98d-7520-8376-c776c414a476`. Picks are from preview sheets of the public table; the club check after the take decides. A general warning from the Ryo clips: the shared hit high (174), hit low (171) and block low (146) fail the club check, so those presets are not repeated here except as noted.
+
+| # | Clip | Preset | Why | Club-in-right-hand risk | Fallback |
+|---|---|---|---|---|---|
+| 1 | Hit high | **175** `Face_Punch_Reaction_1` (Fighting/GettingHit, 73 frames) | A head-and-torso twist and recoil, then a recovery to guard; the arms stay close to the chest, so the body moves, not the club. Reads as a big body taking a hit | The recoil turns the torso, which swings the club arm back (the same cause as the old hit high, 25 cm). Check the first 20 ticks | **179** `Hit_Reaction_1` (31 frames, a small flinch), then 176 `Face_Punch_Reaction_2` (unseen) |
+| 2 | Hit low | **179** `Hit_Reaction_1` (Fighting/GettingHit, 31 frames) | A short flinch with one arm out, with no deep fold, unlike 171 | 171 `Hit_Reaction_to_Waist`, which the Ryo hit low uses, folds him at the waist and put the club 34 cm into the legs; avoid it. The fold is what makes it read low, so this one reads more as a hit than as a low one; low versus high is also hitstun data | **178** `Hit_Reaction` (41 frames, an arm flail, bigger swing of the club arm) |
+| 3 | Block low | **146** `Block10` (Fighting/Blocking, 15 frames) | The one blocking preset that ends in a low crouched guard; the first Ryo take of this id was used for Kitsune/Ryo block low. Short, hold the last pose | The Ryo block low (same id family) put the club 33 cm through the legs at one tick (19) and 8 cm at 4, so check the crouch's final pose; the hands come up to the face, so the club points forward-up | **140** `Block3` (37 frames, a standing high guard; reads less low, so move low to move data, a lowered stance) |
+| 4 | Club swing (medium punch and medium kick, retimed in data) | **219** `Right_Hand_Sword_Slash` (Fighting/Punching, 37 frames) | A one-handed right-hand slash across the body with a step: a horizontal swing, the right-hand fit | The arm crosses the torso and the club follows at the hip on the follow-through; check the swing's end near the left leg | **240** `Thrust_Slash` (73 frames, a wide one-arm sweep; longer, head-trim) or **97** `Left_Slash` (97 frames) |
+| 5 | Iron-Club Charge | **654** `Rifle_Charge_inplace` (WalkAndRun/Running, in place) | A run with both forearms held in front of the chest, steady, like the 611 walk that cleared the club; the legs drive, the club stays out in front | Same family as the working walk, so the lowest risk of the runs. The pump of the torso may lift the club head into the chin | **673** `Standard_Forward_Charge_inplace` (the arms pump; likely fails like the old walk) |
+
+First pass **15 credits** (5 x 3). Worst case at the F5 cap (3 takes each): 45 credits, so 30 beyond the first pass. The cleanup, 60-tick measure, club check (`prop_clearance.py --clip`, command in the plan above) and retiming follow the same pipeline; the medium punch and the medium kick are two curves over one swing take: punch the first half, kick a slower curve (each segment 0.5-2x, a hold at most 4 frames).
+
+### Oni Quake: reuse of the heavy slam (free)
+`data/clips/oni-quake.json` (proposed, validates): the accepted `oni-heavy-club.glb` with its own curve, so the heavy punch and the Quake share one file.
+
+| Frames | File ticks (raw) | Speed | Role |
+|---|---|---|---|
+| 1-17 | 0-16 (60-76) | 1x | slow charged rise to the overhead peak |
+| 17-20 | 16 held (76) | hold, 4 frames | club held overhead, the tell |
+| 20-28 | 16-32 (76-92) | 2x | the slam falls |
+| 28-32 | 32-36 (92-96) | 1x | **impact, hit 28-31** |
+| 32-40 | 36-44 (96-104) | 1x | recovery |
+| 40-56 | 44-52 (104-112) | 0.5x | eases out |
+
+56 frames: startup 27, active 4, recovery 25. The earlier heavy punch uses the fast 45-frame curve of the same file. The quake's ground effect and any longer active window belong to movesmith.
+
+### Kit (designer, 2026-10-16)
+Oni plays LP, MP, MK, HP, HK and the throw, as the Kitsune does. No light kick, no jumping, no dash back, no air normals, no other fighters' specials, so those clips need no take. Status of each clip for him: idle (accepted take), walk (accepted take), HP (accepted take), MP and MK (swing pick 4), LP (shared light punch, clean), HK (shared heavy kick, clean), throw (shared, clean), crouch (shared, clean), knockdown (shared, clean), get-up (shared, small overlap up to 6.6 cm, a movesmith/designer call), block high (shared, 2.4 cm at one tick), hit high, hit low, block low (picks 1-3), charge (pick 5).
+
 ## Cleanup
 Scripts under `tools/blender/` (Blender 4.1.1 headless), scratch outputs only; the GLBs committed are mesh-stripped with `tools/strip_clip.py`.
 - Heavy: `clean_clip.py --clip takes/oni-heavy-128.glb --out oni-heavy-clean.glb --trim 60 112 --strip-root horizontal --hit 33 37` (no smoothing: jitter was under the warn level; file tick 0 = raw tick 60; 53 frames at 60 fps). Result: `game/assets/generated/clips/oni/oni-heavy-club.glb` (stripped, 76 KB).
