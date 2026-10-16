@@ -15,6 +15,10 @@ public static class ModelExtentTests
 	/// <summary>Skin, fingers and toes past the last bone joint, in units (bones are joint centres).</summary>
 	public const int FleshPad = 20;
 
+	/// <summary>YOK-102: the Oni's own club takes are cut on his 2.2 m rig (their GLBs live under an <c>oni/</c> folder) and
+	/// only his body plays them; Ryo's and the Kitsune's library still loads every catalogued clip, so their checks skip these.</summary>
+	public static bool OnOniRig(string? resPath) => resPath != null && resPath.Contains("/oni/");
+
 	/// <summary>(front, back) reach in units for one model, facing +X, over every frame of every clip in its library.</summary>
 	public static (int Front, int Back, string FrontClip, string BackClip) Measure(FighterModel model) => Measure(model, out _, out _);
 
@@ -28,6 +32,7 @@ public static class ModelExtentTests
 		top = 0; topClip = "";
 		foreach (var name in lib.GetAnimationList())
 		{
+			if (OnOniRig(YokaiFighters.Fight.FightScene.Catalog[name.ToString()]?.ResPath)) continue;
 			var anim = lib.GetAnimation(name);
 			string full = FighterModel.LibraryName + "/" + name;
 			model.Player.Play(full);

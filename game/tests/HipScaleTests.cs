@@ -53,6 +53,7 @@ public static class HipScaleTests
 			Assert.True(model != null, $"{set.Fighter} loads");
 			foreach (var (id, info) in Cat.Clips)
 			{
+				if (ModelExtentTests.OnOniRig(info.ResPath)) continue; // the Oni's own takes: hips 112.8 by design
 				float k = model!.HipScaleFor(info);
 				Assert.Equal(1f, k, $"{set.Fighter} on {id}: hip scale {k:0.0000} is exactly 1 (unchanged)");
 			}
