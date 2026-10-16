@@ -57,6 +57,34 @@ public static class EditableSceneTests
 	}
 
 	[Test]
+	public static void DynamicCameraProjection_MatchesTheRenderedCamera_DownAndUpPitch(Node runner)
+	{
+		// YOK-129: the pure camera maths (Cam.ScreenYPx, used by every in-frame and HUD-line check) must agree with
+		// Godot's Camera3D within 1 px, for a feet point and a top point, looking down (close) and up (widest).
+		var scene = Load(runner);
+		try
+		{
+			float hPx = scene.GetViewport().GetVisibleRect().Size.Y;
+			foreach (var (name, p1, p2, wantDown) in new[] { ("close", InputBits.Right, InputBits.Left, true), ("widest", InputBits.Left, InputBits.Right, false) })
+			{
+				for (int t = 0; t < 400; t++) scene.Step(new FighterInput(p1), new FighterInput(p2));
+				for (int t = 0; t < 120; t++) scene.Step(FighterInput.None, FighterInput.None);
+				var cam = scene.Cam;
+				Assert.True(wantDown ? cam.PitchDegrees > 0f : cam.PitchDegrees < 0f, $"{name}: pitch {cam.PitchDegrees} deg ({(wantDown ? "down" : "up")})");
+				foreach (var f in scene.Match.Fighters)
+					foreach (float h in new[] { 0f, cam.Config.ModelTopMeters })
+					{
+						float x = f.X / (float)SimConfig.Scale;
+						float godot = scene.Camera.UnprojectPosition(new Vector3(x / DynamicCamera.UnitsPerMeter, h, 0f)).Y * 1080f / hPx;
+						float pure = cam.ScreenYPx(x, h);
+						Assert.True(Math.Abs(godot - pure) <= 1f, $"{name}: x {x}, h {h}: pure {pure:0.00} px vs rendered {godot:0.00} px");
+					}
+			}
+		}
+		finally { scene.QueueFree(); }
+	}
+
+	[Test]
 	public static void FighterScenes_AreManualAndKitsuneHasNinePlacedTails()
 	{
 		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })

@@ -98,7 +98,7 @@ public sealed class DynamicCamera
 		return w * (1f - Config.KoPushIn * s.KoProgress) * (1f - Math.Clamp(s.PushIn, 0f, 0.5f));
 	}
 
-	/// <summary>Where the eased height heads: chest height, lerped up toward <see cref="CameraConfig.WideHeightMeters"/> with the current zoom, plus part of the jump.</summary>
+	/// <summary>Where the eased height heads: chest height (1.2 m at every zoom by default; lerped from <see cref="CameraConfig.BaseHeightMeters"/> to <see cref="CameraConfig.WideHeightMeters"/> with the zoom) plus part of the jump.</summary>
 	public float TargetHeight(in Subject s, float width)
 	{
 		float zoom = Zoom(width);
@@ -163,10 +163,14 @@ public sealed class DynamicCamera
 
 	private void Constrain(in Subject s)
 	{
+		// The pitch follows the width; re-set it after every width floor so the rendered pitch is the one MinHeight
+		// assumed for that width (MinHeight falls as the width grows, so a later floor keeps the height valid).
 		SetPitch(Width);
 		Width = MathF.Max(Width, RequiredWidth(HeightMeters, s));
+		SetPitch(Width);
 		HeightMeters = MathF.Max(HeightMeters, MinHeight(Width, s));
 		Width = MathF.Max(Width, RequiredWidth(HeightMeters, s)); // a higher camera only lowers this; kept for safety
+		SetPitch(Width);
 
 		float lim = MathF.Max(0f, StageHalf - Width / 2f);
 		float cx = Math.Clamp((s.A.X + s.B.X) / 2f, -lim, lim);
