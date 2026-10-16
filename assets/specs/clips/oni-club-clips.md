@@ -129,6 +129,38 @@ Both play the same file, one swing, so the medium kick is a club strike with a s
 - **Prompt (exact):** "A huge ogre warrior holds a heavy spiked club in his right hand with the arm hanging low and out to his side, the club pointing forward and down away from his body. He is hit in the face from the front: his head snaps back and to the side, his torso leans back a little and he staggers half a step back, then steadies and returns to the same stance. His right arm and the club stay low and out to the side the whole time and never cross his chest or rise behind his head; his left arm flinches up toward his face. In place, no travel, about 1.5 seconds."
 - **Risk:** a text prompt can still swing the right arm; the club check decides. If this also fails, F5 applies: a mechanically equivalent move on an approved clip, for example the accepted hit low (177 trimmed) for both hit heights (a free substitute that the designer may prefer to spending the take).
 
+## Hit high take 3 (text_to_motion), run 2026-10-16: RETAKE, cap reached, F5 substitute
+Swift, 3 credits (balance 658 to 655), task `01a14555-2a59-7350-b25e-ffc137dbdc0a`, prompt trimmed to the 400-character limit by the main session. The raw BVH (`takes/oni-hit-high-t2m.bvh`, Meshy's 77-joint text-to-motion skeleton, 240 frames at 30 fps = 8 s, not the 2 s asked) was NOT applied through meshy_animate (it would cost 3 more).
+- **Retarget (free, scripted):** new `tools/blender/retarget_bvh.py` maps the 22 body joints of the BVH onto `oni-rigged.glb` through a bone map (Hips, Spine1 to Spine02, Spine2 to Spine01, Chest to Spine, Neck1 to neck, Head, shoulders, arms, forearms, hands; Leg to UpLeg, Shin to Leg, foot, toe; fingers, Root, Neck2, eyes and jaw dropped). For each bone the source's world rotation change from its T-pose rest is applied to the target's rest pose, and Hips takes the translation change scaled by the hip-height ratio. No pose is placed by hand (F5). Both rigs face the same way after import. It clears the rig's bind clip and writes one 479-tick action. Retarget looks right in the stills (a crouched stance, arms and legs in the right places).
+- **Club check** (every 6th tick of all 479): 64 of 80 poses over 2 cm, up to 65 cm. Clean only ticks 1-85, before the hit. The hit (91-151) puts the club through the head (65 cm at tick 97), and the take then holds a crouched guard with the right forearm folded up for the other 5 s, so the club stays 5-18 cm into the head and shoulder. The model ignored "right arm low and out to the side".
+- **Verdict: RETAKE.** The cap of 3 takes (175, 173, t2m) is spent. **F5 substitute:** the accepted hit low (177, trimmed raw 23-55) serves both hit heights; the height difference is hitstun and hitbox data. `data/clips/oni-hit-high.json` is written (proposed, validates) and points at `oni-hit-low-club.glb`.
+- Stills: `stills/oni/oni-hit-high-t2m-reject_f097-side.png` (the hit) and `..._f241-side.png` (the held stance).
+
+## Oni clip kit: final summary
+Own = a take made for the Oni. Shared = an existing Ryo clip, club-clean per the check. Data files are all `proposed`, in `data/clips/`; clips in `game/assets/generated/clips/oni/` unless noted. The kit is the Kitsune pattern, LP, MP, MK, HP, HK plus the throw.
+
+| Move | Data file | Clip file | Own or shared | Note |
+|---|---|---|---|---|
+| Idle | `oni-idle` | `oni-idle-club.glb` | own (335) | 66-frame loop, ACCEPT |
+| Walk forward, and back reversed | `oni-walk-fwd` | `oni-walk-club.glb` | own (611) | 83 frames at 1.5x, ACCEPT |
+| LP | `ryo-light-punch` | `clips/ryo/ryo-lp.glb` | shared | club-clean |
+| MP | `oni-medium-punch` | `oni-swing-club.glb` | own (97) | 20 frames, 8/5/7, WARN: one tick 15 cm |
+| MK | `oni-medium-kick` | `oni-swing-club.glb` | own (97) | same take, 28 frames, 15/6/7 |
+| HP | `oni-heavy-punch` | `oni-heavy-club.glb` | own (128) | 45 frames, 16/4/25, WARN foot shuffle |
+| HK | `ryo-heavy-kick` | `clips/ryo/ryo-hk.glb` | shared | club-clean |
+| Throw | `ryo-generic-throw` | `clips/ryo/ryo-grab-2.glb` | shared | club-clean (C4) |
+| Quake (special) | `oni-quake` | `oni-heavy-club.glb` | own, reuse of HP | 56 frames, 27/4/25 |
+| Iron-Club Charge | `oni-iron-club-charge` | `oni-charge-club.glb` | own (654) | 14-frame clean half stride, no loop, WARN |
+| Hit high | `oni-hit-high` | `oni-hit-low-club.glb` | own, F5 substitute for hit low | 33 frames, flinch |
+| Hit low | `oni-hit-low` | `oni-hit-low-club.glb` | own (177) | 33 frames, WARN |
+| Block high | `ryo-block-high` | `clips/ryo/ryo-block-high.glb` | shared | one tick 2.4 cm |
+| Block low | `oni-block-low` | `clips/ryo/ryo-crouch.glb` | shared (the crouch hold) | designer-approved, reads as a crouch |
+| Crouch | `ryo-crouch` | `clips/ryo/ryo-crouch.glb` | shared | club-clean |
+| Knockdown | `ryo-knockdown` | `clips/ryo/ryo-knockdown.glb` | shared | club-clean |
+| Get-up | `ryo-get-up` | `clips/ryo/ryo-get-up.glb` | shared | small overlap up to 6.6 cm, a designer call |
+
+Credits spent on the Oni: 12 + 3 + 15 + 9 + 3 = **42** (balance 697 to 655). Not in the kit, so no clip: light kick, jump, dash back, air normals, other fighters' specials. Sound cues for the Oni heavy and Quake still wait for a `data/sound` schema.
+
 ## Cleanup
 Scripts under `tools/blender/` (Blender 4.1.1 headless), scratch outputs only; the GLBs committed are mesh-stripped with `tools/strip_clip.py`.
 - Heavy: `clean_clip.py --clip takes/oni-heavy-128.glb --out oni-heavy-clean.glb --trim 60 112 --strip-root horizontal --hit 33 37` (no smoothing: jitter was under the warn level; file tick 0 = raw tick 60; 53 frames at 60 fps). Result: `game/assets/generated/clips/oni/oni-heavy-club.glb` (stripped, 76 KB).
