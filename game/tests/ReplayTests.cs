@@ -163,7 +163,7 @@ public static class ReplayTests
 	static void RandomCoverage()
 	{
 		FightScene.Run = null;
-		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (4, ControlScheme.Kihon, ControlScheme.Kata), (5, ControlScheme.Kata, ControlScheme.Kata) }) // seed 5: seed 3 stopped bursting once wake-ups lengthened knockdowns; seed 4: seed 2 stopped bursting with the YOK-39 screen walls (1520)
+		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (8, ControlScheme.Kihon, ControlScheme.Kata), (6, ControlScheme.Kata, ControlScheme.Kata) }) // coverage seeds, re-picked when a sim change stops one bursting: YOK-120 (AM8 walls, 960) stopped seeds 4 and 5 bursting, so 8 and 6 (earlier: 3 -> 5 for wake-ups, 2 -> 4 for the YOK-39 walls)
 		{
 			var m = FightScene.NewMatch();
 			m.P1.Input.Scheme = s1;
@@ -207,6 +207,41 @@ public static class ReplayTests
 			Assert.True(!rb.Ok && rb.FirstAiMismatchStep == 300, $"tampered AI input reported at 300: {rb}");
 			Assert.Equal(-1, rb.FirstDivergentStep, "the AI re-run, not the tampered input, drives P2 (state still identical)");
 		}
+	}
+
+	/// <summary>YOK-57: an elder fight with EX and burst in play records its fight tier and replays identically;
+	/// the same recording read as a standard fight (tier stripped) no longer matches the AI.</summary>
+	[Test]
+	public static void ElderAiWithExAndBurst_ReplaysIdentically()
+	{
+		FightScene.Run = null;
+		var m = FightScene.NewMatch();
+		// The opponent kit's own EX special (fixture or data), thrown often from neutral.
+		string? special = null;
+		foreach (var eq in m.P2.Specials) if (eq is not null && eq.Data.HasEx) { special = eq.Data.Id; break; }
+		Assert.True(special is not null, "the opponent kit has a special with an EX version");
+		var prof = Profile("test-kitsune-aggressive") with
+		{
+			Id = "test-meter-elder",
+			Behaviours = new System.Collections.Generic.List<Behaviour>(Profile("test-kitsune-aggressive").Behaviours)
+				{ new(Observation.Neutral, BehaviourProfile.ParseAction("special:" + special), 40) },
+			ExUse = new ExUse(100), BurstUse = new BurstUse(100),
+		};
+		var cat = ReplayCatalog.FromRepo(RepoRoot);
+		cat.Profiles.Add(prof);
+		int ex = 0, bursts = 0;
+		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Ex) ex++; };
+		m.BurstFired += (_, i) => { if (i == 1) bursts++; };
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 57, tier: AiFightTier.Elder);
+		var rec = Play(m, Chaos(57), null, 5400, ai, 57, stopAtOver: false);
+		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");
+		var back = ReplayRecording.FromBytes(rec.ToBytes());
+		Assert.Equal("elder", back.Header.Ai!.FightTier, "the fight tier is in the file");
+		var r = Replayer.Run(back, cat);
+		Assert.True(r.Ok && r.AiStepsChecked == rec.Steps, $"elder fight replays with every AI input re-derived: {r}");
+		back.Header.Ai.FightTier = null;
+		var std = Replayer.Run(back, cat);
+		Assert.True(!std.Ok, "read as a standard fight, the AI no longer spends meter, so the replay differs");
 	}
 
 	[Test]

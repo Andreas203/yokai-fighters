@@ -6,7 +6,12 @@ using Godot;
 namespace YokaiFighters.Ui;
 
 /// <summary>Where each node sits on the board and how big it is.</summary>
-public sealed record MapLayoutResult(IReadOnlyDictionary<string, Rect2> Rects, Vector2 NodeSize);
+public sealed record MapLayoutResult(IReadOnlyDictionary<string, Rect2> Rects, Vector2 NodeSize)
+{
+	/// <summary>YOK-108: the row value of each column and the x of its centre, left to right (for the row headers).</summary>
+	public IReadOnlyList<(int Row, float X)> Columns { get; init; } = new List<(int, float)>();
+	public float ColumnWidth { get; init; }
+}
 
 /// <summary>
 /// YOK-78: pure layout from graph data. Rows run left to right (one column per distinct row value, ascending); nodes within a row
@@ -35,6 +40,6 @@ public static class MapLayout
 				rects[rows[c][j].Id] = new Rect2(centre - size / 2, size);
 			}
 		}
-		return new(rects, size);
+		return new(rects, size) { Columns = rows.Select((r, c) => (r[0].Row, (c + 0.5f) * colW)).ToList(), ColumnWidth = colW };
 	}
 }

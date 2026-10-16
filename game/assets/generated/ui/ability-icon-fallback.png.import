@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bovxkssnqh2tj"
-path="res://.godot/imported/pause-icon-rising-talisman.png-942a3f486357c4a9485a374029a1f54a.ctex"
+uid="uid://bmc66wve3rhje"
+path="res://.godot/imported/ability-icon-fallback.png-f3b778a353d3476bd5f97925705e7102.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/generated/ui/pause-icon-rising-talisman.png"
-dest_files=["res://.godot/imported/pause-icon-rising-talisman.png-942a3f486357c4a9485a374029a1f54a.ctex"]
+source_file="res://assets/generated/ui/ability-icon-fallback.png"
+dest_files=["res://.godot/imported/ability-icon-fallback.png-f3b778a353d3476bd5f97925705e7102.ctex"]
 
 [params]
 
