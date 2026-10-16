@@ -91,6 +91,8 @@ public partial class FighterModel : Node3D
 			var (src, clipHipY) = Source(info.ResPath);
 			if (src is null) continue;
 			float hipScale = HipScale(rest.Y, clipHipY);
+			if (hipScale < HipScaleWarnMin || hipScale > HipScaleWarnMax)
+				GD.PushWarning($"YOK-130: {set.Fighter} on clip {id}: hip scale {hipScale} (rig {rest.Y} / clip {clipHipY}) is outside [{HipScaleWarnMin}, {HipScaleWarnMax}]; units mismatch between rig and clip?");
 			var anim = (Animation)src.Duplicate(true);
 			anim.LoopMode = Animation.LoopModeEnum.None;
 			bool air = set.AirClips.Contains(id);
@@ -125,14 +127,20 @@ public partial class FighterModel : Node3D
 	/// </summary>
 	public static float HipScale(float rigHipRestY, float clipHipRestY)
 	{
-		if (rigHipRestY <= 0f || clipHipRestY <= 0f) return 1f;
+		// NaN or infinite rests would write NaN/inf into every Hips key: treat them as unknown.
+		if (!float.IsFinite(rigHipRestY) || !float.IsFinite(clipHipRestY) || !(rigHipRestY > 0f) || !(clipHipRestY > 0f)) return 1f;
 		float k = rigHipRestY / clipHipRestY;
+		if (!float.IsFinite(k)) return 1f;
 		return Mathf.Abs(k - 1f) < HipScaleSnap ? 1f : k;
 	}
 
 	/// <summary>Hip ratios closer to 1 than this are taken as 1: rest-height noise between rigs of the same size
 	/// (Kitsune on Ryo's clips is 1.0105), not a different body. The Oni (1.19) and Kappa (0.77) are far outside.</summary>
 	public const float HipScaleSnap = 0.015f;
+
+	/// <summary>A hip ratio outside this band is still applied but warned about: no fighter differs from the clip rig by
+	/// more than about 3x, so it is likely a units mismatch (a cm clip on a metre rig gives 0.01).</summary>
+	public const float HipScaleWarnMin = 0.3f, HipScaleWarnMax = 3f;
 
 	/// <summary>The clip GLB's rest <c>Hips</c> Y in its bone space; 0 when the clip has no skeleton or no Hips (tests).</summary>
 	public static float ClipHipRestY(ClipInfo clip) => Source(clip.ResPath).HipRestY;
