@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Godot;
 
@@ -32,13 +33,20 @@ public static class Assert
 /// </summary>
 public partial class TestRunner : Node
 {
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		int pass = 0, fail = 0;
+		Type? last = null;
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
+		{
+		// YOK-125: one process frame between test classes, so nodes the last class freed (QueueFree) and its
+		// deferred calls are flushed instead of piling up in the message queue for the whole suite.
+		if (type.GetMethods(BindingFlags.Public | BindingFlags.Static).Any(m => m.GetCustomAttribute<TestAttribute>() != null))
+			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		foreach (var m in type.GetMethods(BindingFlags.Public | BindingFlags.Static))
 		{
 			if (m.GetCustomAttribute<TestAttribute>() == null) continue;
+			if (last != type) { last = type; await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); } // let queued frees and redraws drain between classes
 			string name = $"{type.Name}.{m.Name}";
 			try
 			{
@@ -51,6 +59,7 @@ public partial class TestRunner : Node
 				GD.PrintErr($"FAIL {name}: {e.InnerException?.Message}");
 				fail++;
 			}
+		}
 		}
 		GD.Print($"TESTS {pass} passed, {fail} failed");
 		GetTree().Quit(fail == 0 && pass > 0 ? 0 : 1);

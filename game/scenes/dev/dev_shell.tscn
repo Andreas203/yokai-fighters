@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Dev/DevShell.cs" id="1_shell"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dev_menu.tscn" id="2_menu"]
+
+[sub_resource type="StyleBoxFlat" id="badge_box"]
+bg_color = Color(0.72, 0.11, 0.09, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.945, 0.91, 0.831, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="DevShell" type="CanvasLayer"]
+process_mode = 3
+layer = 120
+script = ExtResource("1_shell")
+
+[node name="Menu" parent="." instance=ExtResource("2_menu")]
+
+[node name="Badge" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -58.0
+offset_top = 12.0
+offset_right = 58.0
+offset_bottom = 56.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_box")
+
+[node name="Text" type="Label" parent="Badge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.945, 0.91, 0.831, 1)
+theme_override_font_sizes/font_size = 28
+text = "DEV"
+horizontal_alignment = 1
+vertical_alignment = 1

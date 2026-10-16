@@ -60,7 +60,7 @@ public sealed class RestStopScreenModel
 
 	public bool CanTakeFree => Kind == RestStopKind.Merchant ? _merchant is { CanHeal: true } : _dojo is { CanRest: true };
 
-	/// <summary>The shop screen is YOK-104 and the trial YOK-98: until they land the second card is shown, not takeable.</summary>
+	/// <summary>The dojo's trial is YOK-98: until it lands that second card is shown, not takeable. The merchant's shop (YOK-104) is built.</summary>
 	public static bool SecondCardBuilt { get; set; }
 
 	public RestStopOption Free => !ChoiceMade ? RestStopOption.Ready
@@ -69,7 +69,16 @@ public sealed class RestStopScreenModel
 
 	public RestStopOption Second => ChoiceMade
 		? (Kind == RestStopKind.Merchant && _merchant!.Choice == MerchantChoice.Shop ? RestStopOption.Taken : RestStopOption.Closed)
-		: SecondCardBuilt ? RestStopOption.Ready : RestStopOption.ComingSoon;
+		: Kind == RestStopKind.Merchant || SecondCardBuilt ? RestStopOption.Ready : RestStopOption.ComingSoon;
+
+	/// <summary>R6: Ryo shops here (spending the stop's choice, which closes the heal), or comes back to a shop he already chose. Refused, changing nothing, once the heal was taken or the stop is left.</summary>
+	public MapResult OpenShop()
+	{
+		if (Kind != RestStopKind.Merchant) return MapResult.Fail("this stop has no shop");
+		if (!Open) return MapResult.Fail("Ryo is no longer at this stop");
+		if (_merchant!.Choice == MerchantChoice.Shop) return MapResult.Done;
+		return _merchant.Choose(MerchantChoice.Shop);
+	}
 
 	/// <summary>R6 / R7: takes the free heal or the rest. Refused, changing nothing, when the choice is already made or the stop is left.</summary>
 	public MapResult TakeFree()

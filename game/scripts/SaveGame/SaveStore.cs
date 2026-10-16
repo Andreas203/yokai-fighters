@@ -174,6 +174,7 @@ public sealed class SaveStore
 			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
 			// Version 4 (YOK-128, R8): the entered node already paid; missing (version 3 and older) = not paid.
 			else if (OptionalBool(run, "node_paid", out bool? nodePaid) is { } paidProblem) why = paidProblem;
+			else if (OptionalBool(run, "off_route", out bool? offRoute) is { } routeProblem) why = routeProblem; // YOK-124, dev slot only
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
@@ -183,6 +184,7 @@ public sealed class SaveStore
 					CopyLocked = copyLocked,
 					LockedCopy = copy,
 					NodePaid = nodePaid ?? false,
+					OffRoute = offRoute ?? false,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -327,6 +329,7 @@ public sealed class SaveStore
 				w.WriteNumber("coins", run.Coins);
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
 				if (run.NodePaid) w.WriteBoolean("node_paid", true); // only after a won node, before it is completed
+				if (run.OffRoute) w.WriteBoolean("off_route", true); // YOK-124: only a dev walk off the routes has it
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
 				{

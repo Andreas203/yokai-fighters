@@ -142,3 +142,39 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | §5.3 The Tanuki, point 6 | "Visible all run: the target's talisman glows in the HUD, and the rest-stop forecast names it." | "Visible all run outside fights: the map shows the target's glowing talisman and the rest-stop forecast names it. In fights, the HUD shows it only against the Tanuki." Rule T6. |
 | Figure 4, Fight HUD mockup | "glowing: copy target" in a fight against a patient Kitsune | No copy target in a yokai fight; the talisman appears in the Tanuki fight only. |
 | §8 Screens, Fight HUD row | "Health, meter, burst, copy target, elder twist reminder (Figure 4)." | "Health, meter, burst, elder twist reminder; the copy target in the Tanuki fight only (Figure 4, AM6)." |
+
+---
+
+## AM7 — Fighter concept art and turnarounds may come from Astra (2026-10-16)
+
+**Decision.** A fighter's concept front and its front/side/back turnaround may be made in **Astra** (`gpt-6-astra`, run by the designer in Codex) instead of a generator's 2D image model. The designer chooses the source per character. For Oni, Kappa and the Tanuki the designer chose Astra (YOK-102). Asset Smith writes the settled brief (`docs/design/characters/astra-brief.md`), the designer runs it and drops the sheets in `docs/design/characters/<name>/`, and Asset Smith checks them before any mesh job is listed for approval. Meshes, rigs and clips still come from the tools AM1 and AM5 name.
+
+**Why.** Astra's character art is much stronger than the generators' 2D models, and the turnaround is the image every later step copies. Astra is expensive, so it runs only from a settled brief, never for exploration.
+
+**What does not change.** Every generation job and its cost still needs the designer's approval. The sheet must be flat-lit with no baked shading, on a plain background, in T-pose, with no held items, so it can feed Image-to-3D; baked shading is a retake reason. The style block (`assets/specs/style.md`) and the V1 palette still apply. The output must be cleared for commercial use on the designer's plan.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1 pipeline, 3D models | Concept turnaround from Meshy's 2D image models | From a generator's 2D image model or from Astra, the designer's choice per character. Rule F6. |
+
+---
+
+## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
+
+**Status.** Approved by the designer on 2026-10-16 (merge of PR #133). The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15).
+
+**Decision.** The fight camera sits closer to the fighters and stays fixed in distance. One screen at the gameplay plane is **1,440 units** (7.2 m), was 1,920 (9.6 m). The screen walls come in with it: fighters are at most **960 units** apart, was 1,520, so both rigged models stay in frame whichever way each faces. A model reaches up to 240 units ahead of its position and 200 behind; a fighter facing away from the other (after a cross-up, a throw or a back dash) shows its 240-unit front reach on the outside, so the walls budget the larger reach on both sides: 960 + 2 × 240 = 1,440. (The YOK-39 walls, 1,520 + 2 × 200 = 1,920, budgeted only the back reach, and a fighter facing away could clip by up to 40 units; test-breaker probes on YOK-120 found it.) `SimConfig` derives the walls from the screen width and the model reach, so the two cannot drift apart. The stage stays **3,840 units** wide (two of the old 1,920-unit screens, now about 2.7 of the new ones), so the stage art and the part of it the camera can ever show are unchanged. The camera still follows the fighters' midpoint and stops where a cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge. The screen width and stage width are tunable in one place (`SimConfig`); the walls follow from the screen width.
+
+**Why.** Bigger fighters on screen: at 1,920 units a 1.8 m fighter filled about a third of the screen height; at 1,440 units, about 44%. A fixed closer camera keeps V7 (no zoom with distance); bringing the walls in is what keeps both fighters in view.
+
+**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md E1 (scale; written rule, not in the PDF) | "one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart … 1,520 + 2 × 200 = 1,920" | "one screen is 1,440 units (7.2 m); the stage is 3,840 units wide; fighters are at most 960 units apart … 960 + 2 × 240 = 1,440, either facing" |
+| §3.2 Fight basics, Movement row | "Walk crosses the screen in about 2.5 seconds" | Walk speed unchanged: about 2.5 seconds across 1,920 units, about 1.9 seconds across the closer 1,440-unit screen. Rule C2. |
+| §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera is closer to the plane. |

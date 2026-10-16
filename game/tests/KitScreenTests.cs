@@ -31,7 +31,7 @@ public static class KitScreenTests
 	[Test]
 	public static void Glyphs_EveryMenuActionHasBothTexts()
 	{
-		foreach (var a in new[] { "confirm", "back", "pause", "frames", "scheme", "choose", "move", "tab" })
+		foreach (var a in new[] { "confirm", "back", "pause", "frames", "scheme", "choose", "route", "move", "tab" })
 		{
 			string k = InputGlyphs.Glyph(a, InputDevice.Keyboard), p = InputGlyphs.Glyph(a, InputDevice.Pad);
 			Assert.True(k != p, $"{a} differs per device ({k} vs {p})");

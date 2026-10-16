@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using YokaiFighters.Dev;
 using YokaiFighters.Fight;
 using YokaiFighters.SaveGame;
 using YokaiFighters.Settings;
@@ -84,12 +85,42 @@ public partial class GameFlow : Node
 	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
 	private string? _saveTrouble;
 
+	/// <summary>The player's save path for this boot (null = no file); while <see cref="DevMode.On"/> the store uses its dev slot instead.</summary>
+	private string? _playerSavePath;
+	/// <summary>The session that was running when dev mode was switched: it is never saved again, in either slot (YOK-123).</summary>
+	private RunSession? _unsavedSession;
+	/// <summary>The title's "Dev menu" button (dev mode available only; null otherwise).</summary>
+	public Button? DevMenuButton { get; private set; }
+
 	/// <summary>Before the menus are ready, so the title and control select first draw with the saved values.</summary>
 	public override void _EnterTree()
 	{
 		bool mainScene = GetTree().CurrentScene == this;
-		if ((SaveFile ?? (mainScene ? UserSavePath : null)) is { } savePath)
+		_playerSavePath = SaveFile ?? (mainScene ? UserSavePath : null);
+		AttachSaves();
+		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
+		if (path == null) return;
+		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
+		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
+		if (SettingsLoaded.Status is not (SettingsLoadStatus.Loaded or SettingsLoadStatus.Missing))
+			GD.PushWarning($"GameFlow: settings {path}: {SettingsLoaded.Status} ({string.Join("; ", SettingsLoaded.Problems)})");
+	}
+
+	/// <summary>
+	/// YOK-123: opens the save slot for the current mode: the player's file, or while <see cref="DevMode.On"/> its dev
+	/// slot (<see cref="DevMode.SavePathFor"/>), so a dev session never reads or writes the player's save. M5 / AM3
+	/// node-boundary saves work the same in either slot. Called at boot and when dev mode is switched.
+	/// </summary>
+	private void AttachSaves()
+	{
+		Saves = null;
+		SaveLoaded = null;
+		Saved = SaveData.Empty;
+		_saveTrouble = null;
+		_writePending = false;
+		if (_playerSavePath is { } playerPath)
 		{
+			string savePath = DevMode.SavePath(playerPath);
 			Saves = new SaveStore(savePath);
 			SaveLoaded = Saves.Load();
 			Saved = SaveLoaded.Data;
@@ -100,12 +131,65 @@ public partial class GameFlow : Node
 			else if (SaveLoaded.Status == SaveLoadStatus.Corrupt) _saveTrouble = "The save file could not be read. A copy is kept when the next run is saved.";
 			else if (Saved.Run is null && SaveStore.LostSomething(SaveLoaded)) _saveTrouble = "The saved run could not be read. A copy of the file is kept when the next run is saved.";
 		}
-		string? path = SettingsFile ?? (mainScene ? UserSettingsPath : null);
-		if (path == null) return;
-		SettingsLoaded = MenuSettings.Attach(new SettingsStore(path));
-		GD.Print($"GameFlow: settings {path}: {SettingsLoaded.Status}");
-		if (SettingsLoaded.Status is not (SettingsLoadStatus.Loaded or SettingsLoadStatus.Missing))
-			GD.PushWarning($"GameFlow: settings {path}: {SettingsLoaded.Status} ({string.Join("; ", SettingsLoaded.Problems)})");
+	}
+
+	public const string PendingWriteReason = "The last save could not be written yet; dev mode can be switched once it is (check the disk, then try again).";
+
+	/// <summary>
+	/// <see cref="DevMode.SwitchBlocker"/>: retries a refused write in the current slot, and refuses the switch while it
+	/// is still refused, so swapping slots can never drop a pending write (e.g. an ended run still in the player's file, M5).
+	/// </summary>
+	private string? DevSwitchBlocker()
+	{
+		RetryPendingWrite();
+		return _writePending ? PendingWriteReason : null;
+	}
+
+	/// <summary>
+	/// Dev mode switched (only possible with no write pending, see <see cref="DevSwitchBlocker"/>): open the other slot.
+	/// A run in progress at that moment is not saved again in either slot (its earlier saves stay in the old one).
+	/// </summary>
+	private void OnDevModeChanged()
+	{
+		_unsavedSession = Session;
+		AttachSaves();
+		if (Router.Current == Screen.Title) RefreshContinue();
+		RefreshDevButton();
+	}
+
+	/// <summary>
+	/// YOK-123: opens the dev menu on the title or the map (F11 or the title's Dev menu button). False when the
+	/// shell refuses (dev mode unavailable, or off away from the title) or on any other screen.
+	/// </summary>
+	public bool OpenDevMenu()
+	{
+		DevPlace? place = Router.Current switch { Screen.Title => DevPlace.Title, Screen.Map => DevPlace.Map, _ => null };
+		if (place is not { } at || DevShell.Instance is not { } shell) return false;
+		Control? back = at == DevPlace.Title ? Title.StartButton : null;
+		return shell.OpenMenu(new DevContext(at, this), () => { if (back != null && IsInstanceValid(back) && back.IsVisibleInTree()) back.GrabFocus(); });
+	}
+
+	private void AddDevButton()
+	{
+		if (!DevMode.Available) return;
+		DevMenuButton = new Button { Name = "DevMenuButton", FocusMode = Control.FocusModeEnum.None };
+		DevMenuButton.AddThemeFontSizeOverride("font_size", 22);
+		DevMenuButton.Position = new Vector2(16, 12);
+		DevMenuButton.Size = new Vector2(220, 44);
+		DevMenuButton.Pressed += () => OpenDevMenu();
+		Title.AddChild(DevMenuButton);
+		RefreshDevButton();
+	}
+
+	private void RefreshDevButton()
+	{
+		if (DevMenuButton != null) DevMenuButton.Text = DevMode.On ? "Dev menu (F11)" : "Dev mode (F11)";
+	}
+
+	public override void _UnhandledInput(InputEvent e)
+	{
+		if (e is InputEventKey { Pressed: true, Echo: false } k && k.PhysicalKeycode == DevMode.MenuKey && OpenDevMenu())
+			GetViewport().SetInputAsHandled();
 	}
 
 	public override void _Ready()
@@ -136,6 +220,9 @@ public partial class GameFlow : Node
 		// One scheme value for the whole menu side: the settings sheet and control select both write MenuSettings.
 		Router.ChooseScheme(MenuSettings.Scheme);
 		MenuSettings.Changed += OnSettingsChanged;
+		DevMode.Changed += OnDevModeChanged;
+		DevMode.SwitchBlocker = DevSwitchBlocker;
+		AddDevButton();
 
 		ControlScheme? direct = DirectFight ?? DirectFightFromArgs(OS.GetCmdlineUserArgs());
 		if (direct is { } scheme) Router.StartFightDirect(scheme);
@@ -144,6 +231,8 @@ public partial class GameFlow : Node
 	public override void _ExitTree()
 	{
 		MenuSettings.Changed -= OnSettingsChanged;
+		DevMode.Changed -= OnDevModeChanged;
+		if (DevMode.SwitchBlocker == DevSwitchBlocker) DevMode.SwitchBlocker = null;
 		RetryPendingWrite();
 		if (SettingsLoaded != null) MenuSettings.Detach(); // every change is already on disk
 	}
@@ -186,10 +275,38 @@ public partial class GameFlow : Node
 		return MapResult.Done;
 	}
 
+	/// <summary>
+	/// YOK-126: the dev menu's Run state page puts a run it built (<see cref="Dev.DevRunEditor"/>) in place of the
+	/// current one. Only on the title (the run then shows on the map) or the map, between nodes, with dev mode on, so
+	/// the save it writes goes to the dev slot. Call it through <see cref="DevContext.TryChangeRun"/>. False, with the
+	/// reason, anywhere else; nothing changes then.
+	/// </summary>
+	public bool AdoptDevSession(RunSession session, out string? refusal)
+	{
+		refusal = !DevMode.On ? DevContext.DevOffReason
+			: Router.Current is not (Screen.Title or Screen.Map) ? DevContext.MidFightReason
+			: session.Map.InNode || session.IsOver ? "the run must stand between nodes"
+			: Router.Current == Screen.Map && Session is { } cur && cur.Map.Graph.Fingerprint != session.Map.Graph.Fingerprint
+				? "on the map a dev run keeps the current run's map" : null;
+		if (refusal != null) return false;
+		// The map file the session's graph came from: on the map the current run's (Continue may have used the saved
+		// run's own map_file); on the title the page built the run on MapFile.
+		if (Router.Current == Screen.Title || _runMapFile is null) _runMapFile = MapFile;
+		Session = session;
+		_freshRun = false;
+		GD.Print($"GameFlow: dev run state on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
+		Adopt(session);
+		SaveRun(session);
+		if (Router.Current == Screen.Title) Router.ContinueRun();
+		else Map.SetView(new SessionMapView(session));
+		return true;
+	}
+
 	/// <summary>A new run from inside a fight (Restart on the lose screen, the end card or the pause menu): back to the map on a fresh session.</summary>
 	public bool RestartRun()
 	{
 		if (Router.Current != Screen.Fight) return false;
+		if (IsDevJumpSession) return Router.ReturnToTitle(); // YOK-125: a dev jump's run is not restarted into a new (saved) run
 		_freshRun = true;
 		return Router.ReturnToMap();
 	}
@@ -232,13 +349,13 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
-			if (session == Session && Saves is not null) Write(Saved.WithRun(null));
+			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
 		};
 	}
 
 	private void SaveRun(RunSession session)
 	{
-		if (Saves is null || session != Session) return;
+		if (Saves is null || session != Session || session == _unsavedSession) return;
 		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile)));
 	}
 
@@ -277,7 +394,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			reason = "";
 			return session;
@@ -342,11 +459,13 @@ public partial class GameFlow : Node
 				Title.Visible = false;
 				ControlSelect.Close();
 				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
+				DevMap.Apply(Session); // YOK-124: the dev full map (off unless dev mode is on and the toggle is set)
 				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
 				Map.Visible = true;
 				break;
 			case Screen.Title:
 				Session = null; // the run stays in the save file as of its last node boundary (YOK-87)
+				Router.ChooseScheme(MenuSettings.Scheme); // YOK-125: a dev jump's scheme never outlives it (E18)
 				ControlSelect.Close();
 				Title.Open();
 				RefreshContinue();
@@ -381,12 +500,13 @@ public partial class GameFlow : Node
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
 			ConfigureFight?.Invoke(fight);
+			ApplyDevStage(fight); // YOK-125: a dev jump's stage choice
 			Fight = fight;
 		}
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) stop.TitleRequested += () => Router.ReturnToTitle(); // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
@@ -394,8 +514,31 @@ public partial class GameFlow : Node
 		MoveChild(scene, 0); // under the menu layer
 	}
 
+	/// <summary>YOK-104: the merchant's shop over the rest stop: the router says it is open, the stop hides, Back brings it back used.</summary>
+	public ShopScreen? Shop { get; private set; }
+
+	private void OpenShop(RestStopScreen stop)
+	{
+		if (Session == null || !Router.OpenShop()) return;
+		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
+		shop.Bind(Session);
+		shop.MerchantLine = stop.MerchantLine;
+		shop.Closed += () =>
+		{
+			Router.CloseShop();
+			if (Shop == shop) { RemoveChild(shop); shop.QueueFree(); Shop = null; } // not Free: this runs inside the shop's own input
+			if (IsInstanceValid(stop)) { stop.Visible = true; stop.ShopClosed(); }
+		};
+		stop.Visible = false;
+		Shop = shop;
+		AddChild(shop);
+		MoveChild(shop, 1); // over the stop, under the menu layer
+	}
+
 	private void EndFight()
 	{
+		if (Shop is { } shop && IsInstanceValid(shop)) { RemoveChild(shop); shop.Free(); }
+		Shop = null;
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run
 		if (NodeScene is { } scene && IsInstanceValid(scene)) { RemoveChild(scene); scene.QueueFree(); }
 		Fight = null;
