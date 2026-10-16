@@ -120,10 +120,22 @@ public partial class FighterModel : Node3D
 	/// <summary>
 	/// YOK-130: the factor on a clip's <c>Hips</c> Y keys for this rig = this rig's rest hips Y / the clip rig's rest
 	/// hips Y, both in their own bone space (the keys' space). Node scale (e.g. the Oni's 1.1 on <c>Armature</c>) applies
-	/// after the keys, so it is not in the ratio. 1 when either rest is unknown or not above the root.
+	/// after the keys, so it is not in the ratio. 1 when either rest is unknown or not above the root, and exactly 1
+	/// within <see cref="HipScaleSnap"/> of 1 (same-size rigs such as Ryo and Kitsune keep the clip's hips untouched).
 	/// </summary>
-	public static float HipScale(float rigHipRestY, float clipHipRestY) =>
-		rigHipRestY > 0f && clipHipRestY > 0f ? rigHipRestY / clipHipRestY : 1f;
+	public static float HipScale(float rigHipRestY, float clipHipRestY)
+	{
+		if (rigHipRestY <= 0f || clipHipRestY <= 0f) return 1f;
+		float k = rigHipRestY / clipHipRestY;
+		return Mathf.Abs(k - 1f) < HipScaleSnap ? 1f : k;
+	}
+
+	/// <summary>Hip ratios closer to 1 than this are taken as 1: rest-height noise between rigs of the same size
+	/// (Kitsune on Ryo's clips is 1.0105), not a different body. The Oni (1.19) and Kappa (0.77) are far outside.</summary>
+	public const float HipScaleSnap = 0.015f;
+
+	/// <summary>The clip GLB's rest <c>Hips</c> Y in its bone space; 0 when the clip has no skeleton or no Hips (tests).</summary>
+	public static float ClipHipRestY(ClipInfo clip) => Source(clip.ResPath).HipRestY;
 
 	/// <summary>The factor this model's library uses for one clip (tests): <see cref="HipScale"/> from the two rests.</summary>
 	public float HipScaleFor(ClipInfo clip) =>
@@ -146,6 +158,8 @@ public partial class FighterModel : Node3D
 					if (cand.Length > 0.1f) { found = cand; break; } // skip a rig's one-key T-pose clip
 				}
 			node.Free();
+			if (found is not null && hipY <= 0f)
+				GD.PushWarning($"YOK-130: clip {path} has no Skeleton3D Hips rest; its hips height is not scaled to the rig");
 		}
 		SourceCache[path] = (found, hipY);
 		return (found, hipY);

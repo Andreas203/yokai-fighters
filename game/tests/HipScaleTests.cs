@@ -27,7 +27,25 @@ public static class HipScaleTests
 	}
 
 	[Test]
-	public static void HipScale_RyoAndKitsuneAreAboutOne(Node runner)
+	public static void HipScale_SnapsNearOneToExactlyOne()
+	{
+		Assert.Equal(1f, FighterModel.HipScale(95.9f, 94.9f), "1.0105 (Kitsune on Ryo's clips) snaps to 1");
+		Assert.Equal(1f, FighterModel.HipScale(94.0f, 94.9f), "0.990 (Ryo on kitsune-jump) snaps to 1");
+		Assert.True(FighterModel.HipScale(97.0f, 94.9f) > 1.02f, "a real size difference is kept");
+	}
+
+	[Test]
+	public static void EveryCataloguedClip_HasAHipsRest()
+	{
+		foreach (var (id, info) in Cat.Clips)
+		{
+			float y = FighterModel.ClipHipRestY(info);
+			Assert.True(y > 0f, $"{id}: clip rest Hips Y {y} > 0 (else its hips would not be scaled)");
+		}
+	}
+
+	[Test]
+	public static void HipScale_RyoAndKitsuneAreExactlyOne(Node runner)
 	{
 		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })
 		{
@@ -36,7 +54,7 @@ public static class HipScaleTests
 			foreach (var (id, info) in Cat.Clips)
 			{
 				float k = model!.HipScaleFor(info);
-				Assert.True(Math.Abs(k - 1f) < 0.02f, $"{set.Fighter} on {id}: hip scale {k:0.000} is about 1");
+				Assert.Equal(1f, k, $"{set.Fighter} on {id}: hip scale {k:0.0000} is exactly 1 (unchanged)");
 			}
 			model!.Free();
 		}
