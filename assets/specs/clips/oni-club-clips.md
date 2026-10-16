@@ -148,7 +148,7 @@ Own = a take made for the Oni. Shared = an existing Ryo clip, club-clean per the
 | MK | `oni-medium-kick` | `oni-swing-club.glb` | own (97) | same take, 28 frames, 15/6/7 |
 | HP | `oni-heavy-punch` | `oni-heavy-club.glb` | own (128) | 45 frames, 16/4/25, WARN foot shuffle |
 | HK | `ryo-heavy-kick` | `clips/ryo/ryo-hk.glb` | shared | club-clean |
-| Throw | `ryo-generic-throw` | `clips/ryo/ryo-grab-2.glb` | shared | club-clean (C4) |
+| Throw | `ryo-generic-throw` | `clips/ryo-grab-2.glb` | shared | club-clean (C4) |
 | Quake (special) | `oni-quake` | `oni-heavy-club.glb` | own, reuse of HP | 56 frames, 27/4/25 |
 | Iron-Club Charge | `oni-iron-club-charge` | `oni-charge-club.glb` | own (654) | 14-frame clean half stride, no loop, WARN |
 | Hit high | `oni-hit-high` | `oni-hit-low-club.glb` | own, F5 substitute for hit low | 33 frames, flinch |
