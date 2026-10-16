@@ -25,7 +25,6 @@ Club check = `prop_clearance.py --clip` on `oni-rigged.glb` with `club-grip.glb`
 |---|---|---|---|
 | Walk forward and back | **611** `Carry_Heavy_Object_Walk_inplace` (WalkAndRun/Walking) | Preview: both forearms held steady out in front while the legs walk, no arm swing and no torso twist, so the club should stay ahead of him. One take serves both: walk back is the same clip played in reverse in move data (as the Kitsune walk back). Unseen with a club, so the check after the take decides | 3 |
 | Walk forward fallback | **689** `Walk_Fight_Forward_inplace` (+ **688** `Walk_Fight_Back_inplace`) | Guard walks; but the same guard walks on Ryo's clips fail the club check (up to 22 cm), so a lower chance | 3 + 3 |
-| Walk back fallback | 688 as above, or 546's inplace twin 687 retrimmed (no: it fails everywhere) | | |
 
 This is take 2 of 3 for the walks. After a second rejection propose a mechanically equivalent move on an approved clip (F5), for example the idle clip played as the walk with the movement in data, which is a designer call.
 
