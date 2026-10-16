@@ -114,8 +114,12 @@ public sealed class DevPresetStore
 			foreach (var sn in o["slots"] as JsonArray ?? throw new FormatException($"{name}: no slots list"))
 			{
 				if (sn is not JsonObject so) throw new FormatException($"{name}: a slot is not an object");
-				if (!Enum.TryParse(so["slot"]?.GetValue<string>(), out SpecialSlot slot) || slot is < SpecialSlot.A or > SpecialSlot.D)
-					throw new FormatException($"{name}: '{so["slot"]}' is not a slot A-D");
+				// Exact names only (as RunSave reads slots): Enum.TryParse would also take "2" or "A,B".
+				SpecialSlot slot = (so["slot"] as JsonValue)?.TryGetValue(out string? sv) == true ? sv switch
+				{
+					"A" => SpecialSlot.A, "B" => SpecialSlot.B, "C" => SpecialSlot.C, "D" => SpecialSlot.D, _ => SpecialSlot.None,
+				} : SpecialSlot.None;
+				if (slot == SpecialSlot.None) throw new FormatException($"{name}: '{so["slot"]}' is not a slot A-D");
 				slots.Add(new DevSlotEdit(slot, so["special"]?.GetValue<string>() ?? throw new FormatException($"{name}: slot {slot} has no special"),
 					so["level"]?.GetValue<int>() ?? 1, so["modifier"]?.GetValue<string>(), so["levelled_order"]?.GetValue<int>() ?? 0,
 					so["borrowed"]?.GetValue<bool>() ?? false, so["modifier_borrowed"]?.GetValue<bool>() ?? false));
