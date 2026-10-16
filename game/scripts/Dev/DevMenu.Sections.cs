@@ -31,9 +31,9 @@ public partial class DevMenu
 	static DevMenu()
 	{
 		AddSection(ToolsId, "Debug tools", _ => ToolsPage(), needsDevMode: false);
-		AddSection(MapId, "Map", ctx => new DevMapPage(ctx));
-		AddSection(JumpId, "Jump", _ => StubPage("Jump", "YOK-125: jump straight to any fight or screen."));
-		AddSection(RunId, "Run state", ctx => new DevRunStatePage(ctx));
+		AddSection(MapId, "Map", ctx => new DevMapPage(ctx)); // YOK-124
+		AddSection(JumpId, "Jump", ctx => new DevJumpPage(ctx)); // YOK-125
+		AddSection(RunId, "Run state", ctx => new DevRunStatePage(ctx)); // YOK-126
 	}
 
 	/// <summary>Rows of key, what it does, where. The keys work in debug builds only, as before.</summary>
