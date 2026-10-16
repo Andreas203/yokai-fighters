@@ -326,6 +326,16 @@ public static class MapScreenTests
 	}
 
 	[Test]
+	public static void BossOnlyGraphHasAStatusWithNoPlayRows()
+	{
+		var graph = new MapGraph("boss-only", new[] { new MapNodeData("b", 1, NodeTypeRegistry.Boss, "tanuki") }, System.Array.Empty<MapRoute>(), NodeTypeRegistry.Default());
+		var run = RunState.NewRun(YokaiFighters.Fight.FightScene.LoadAbilityPool(), graph);
+		var st = new RunMapView(run.Map!, run).Status!;
+		Assert.Equal(0, st.RowsTotal, "no play rows");
+		Assert.Equal(0, st.LastPlayRow, "no crash, no row");
+	}
+
+	[Test]
 	public static void RestStopLinesDoNotNameABase()
 	{
 		var sess = StartSession();
