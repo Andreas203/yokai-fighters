@@ -61,6 +61,10 @@ public sealed class AiSetup
 	public string ProfileFp { get; set; } = "";
 	public int ReactionFrames { get; set; }
 	public uint Seed { get; set; }
+	/// <summary>YOK-57: "elder" / "tanuki" (meter use on, E22); left out of the file for a standard fight, so a
+	/// recording made before the field existed reads as standard and still replays.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public string? FightTier { get; set; }
 }
 
 /// <summary>A mid-fight change applied before step <see cref="Tick"/> (0-based step index): scheme flip (F4) or AI rebuild/toggle (F6/F7).</summary>
@@ -171,6 +175,11 @@ public sealed class ReplayRecording
 /// Stable content fingerprint (FNV-1a 64) of a data object: public instance properties in declaration order,
 /// recursing into lists and nested records; JsonNode as its JSON text. Same data = same fingerprint across runs.
 /// </summary>
+/// <summary>YOK-57: a property added after recordings existed; when null it is left out of the fingerprint, so
+/// data without it fingerprints as before and older recordings still replay.</summary>
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class FingerprintOmitWhenNullAttribute : Attribute { }
+
 public static class Fingerprint
 {
 	public static string Of(object? o)
@@ -213,8 +222,10 @@ public static class Fingerprint
 		foreach (var p in props)
 		{
 			if (p.GetIndexParameters().Length > 0) continue;
+			object? v = p.GetValue(o);
+			if (v is null && p.IsDefined(typeof(FingerprintOmitWhenNullAttribute), false)) continue;
 			Bytes(ref h, p.Name);
-			Mix(ref h, p.GetValue(o), depth + 1);
+			Mix(ref h, v, depth + 1);
 		}
 	}
 }

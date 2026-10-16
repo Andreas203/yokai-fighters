@@ -54,16 +54,16 @@ public static class AiMeterTests
 	}
 
 	static bool IsEx(FighterInput o) => o.IsSpecialRequest(out _, out bool ex) && ex;
-	static bool IsBurst(FighterInput o) => (o.Bits & ProfileAi.BurstButtons) == ProfileAi.BurstButtons;
+	static bool IsBurst(FighterInput o) => (o.Bits & Match.BurstButtons) == Match.BurstButtons;
 
 	/// <summary>Sum of harness results over seeds (each seed its own fights).</summary>
 	static (int exRolls, int exAsked, int exStarted, int exNoMeter, int bRolls, int bPressed, int bFired, int maxPerRound, int bThrown, int rounds)
-		Over(BehaviourProfile p, P1Script script, int seeds, int ticks, Func<Match>? newMatch = null)
+		Over(BehaviourProfile p, P1Script script, int seeds, int ticks, Func<Match>? newMatch = null, AiFightTier tier = AiFightTier.Elder)
 	{
 		var t = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		for (uint s = 1; s <= seeds; s++)
 		{
-			var r = AiHarness.Run(newMatch ?? NewMatch, p, script, s, ticks);
+			var r = AiHarness.Run(newMatch ?? NewMatch, p, script, s, ticks, tier: tier);
 			t = (t.Item1 + r.ExRolls, t.Item2 + r.ExAsked, t.Item3 + r.ExStarted, t.Item4 + r.ExWithoutMeter,
 				t.Item5 + r.BurstRolls, t.Item6 + r.BurstPressed, t.Item7 + r.BurstsFired, Math.Max(t.Item8, r.MaxBurstsInRound),
 				t.Item9 + r.BurstWhileThrown, t.Item10 + r.Rounds + 1);
@@ -103,6 +103,28 @@ public static class AiMeterTests
 		}
 	}
 
+	/// <summary>
+	/// E22 gate: the same yokai profile with ex_use and burst_use never spends meter in a standard fight (no rolls at
+	/// all, so standard fights and their replays are unchanged), and does in elder and Tanuki fights.
+	/// </summary>
+	[Test]
+	public static void MeterUse_OnlyInElderAndTanukiFights()
+	{
+		var p = MeterProfile(new ExUse(100), new BurstUse(100));
+		var std = Over(p, P1Script.Random, 6, 6000, LongMatch, AiFightTier.Standard);
+		Assert.Equal(0, std.exRolls + std.exStarted + std.bRolls + std.bFired, "standard fight: no EX, no burst, no rolls (E22)");
+		var plain = AiHarness.Run(LongMatch, MeterProfile(), P1Script.Random, 4, 6000);
+		var gated = AiHarness.Run(LongMatch, p, P1Script.Random, 4, 6000);
+		Assert.Equal(plain.FinalHash, gated.FinalHash, "standard fight with the fields = the same fight without them");
+		Assert.Equal(plain.DecisionsCsv(), gated.DecisionsCsv(), "and the same decisions");
+		foreach (var tier in new[] { AiFightTier.Elder, AiFightTier.Tanuki })
+		{
+			var r = Over(p, P1Script.Random, 6, 6000, LongMatch, tier);
+			Assert.True(r.exStarted > 0 && r.bFired > 0, $"{tier} fight: spends meter (EX {r.exStarted}, bursts {r.bFired})");
+		}
+		Assert.Equal(AiFightTier.Standard, FightScene.TierOf(null), "no node = standard");
+	}
+
 	/// <summary>E22: a profile without ex_use/burst_use never asks for EX nor presses the burst, whatever it sees.</summary>
 	[Test]
 	public static void StandardProfiles_NeverSpendMeter()
@@ -110,7 +132,7 @@ public static class AiMeterTests
 		foreach (var p in new[] { Aggressive, Patient })
 		{
 			var m = NewMatch();
-			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 3);
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 3, tier: AiFightTier.Tanuki);
 			var p1Rng = new SimRng(77);
 			InputBits held = InputBits.None; int hold = 0;
 			for (int k = 0; k < 6000; k++)
@@ -135,7 +157,7 @@ public static class AiMeterTests
 		foreach (int meter in new[] { 0, 99, 100, 300 })
 		{
 			var m = NewMatch();
-			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5) { Log = new() };
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, tier: AiFightTier.Elder) { Log = new() };
 			int exStarted = 0, specials = 0, exAsked = 0;
 			m.SpecialStarted += (_, e) => { if (e.Fighter == 1) { specials++; if (e.Ex) exStarted++; } };
 			for (int k = 0; k < 2400; k++)
@@ -158,7 +180,7 @@ public static class AiMeterTests
 		// keep_meter: with 1 bar showing and 1 bar to keep back, no EX.
 		var keep = BehaviourProfile.Parse(Json("\"ex_use\": { \"chance_pct\": 100, \"keep_meter\": 100 },"));
 		var m2 = NewMatch();
-		var ai2 = new ProfileAi(keep, 1, AiLoadout.From(m2.P2), 5);
+		var ai2 = new ProfileAi(keep, 1, AiLoadout.From(m2.P2), 5, tier: AiFightTier.Elder);
 		for (int k = 0; k < 1200; k++) { m2.P2.Meter = 150; var o = ai2.Next(AiView.Capture(m2)); Assert.True(!IsEx(o), "keep_meter holds the reserve"); m2.Step(FighterInput.None, o); }
 	}
 
@@ -210,9 +232,9 @@ public static class AiMeterTests
 	public static void MeterAi_IsDeterministic()
 	{
 		var p = MeterProfile(new ExUse(50), new BurstUse(50));
-		var a = AiHarness.Run(NewMatch, p, P1Script.Random, 21, 5000);
-		var b = AiHarness.Run(NewMatch, p, P1Script.Random, 21, 5000);
-		var c = AiHarness.Run(NewMatch, p, P1Script.Random, 22, 5000);
+		var a = AiHarness.Run(NewMatch, p, P1Script.Random, 21, 5000, tier: AiFightTier.Elder);
+		var b = AiHarness.Run(NewMatch, p, P1Script.Random, 21, 5000, tier: AiFightTier.Elder);
+		var c = AiHarness.Run(NewMatch, p, P1Script.Random, 22, 5000, tier: AiFightTier.Elder);
 		Assert.Equal(a.FinalHash, b.FinalHash, "same seed, same hash");
 		Assert.Equal(a.DecisionsCsv(), b.DecisionsCsv(), "same seed, same decisions");
 		Assert.True(a.ExRolls + a.BurstRolls > 0, "meter decisions were made");

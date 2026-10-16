@@ -59,8 +59,14 @@ class ValidateDataTest(unittest.TestCase):
             return run(path)
 
     def test_profile_ex_and_burst_use_optional_and_checked(self):
-        # YOK-57 (E16, C6): both blocks optional (absent = no meter use, E22), shape checked when present.
+        # YOK-57 (E16, C6): both blocks optional (absent = no meter use), shape checked when present.
         self.assertEqual(self._profile(lambda d: None)[0], 0)
+        # The Tanuki profile carries them (applied in its boss fight).
+        code, out = run(ROOT / "data" / "profiles" / "tanuki-boss.json")
+        self.assertEqual(code, 0, out)
+        # Allowed on a yokai profile too: elder fights reuse yokai-tier profiles, and the game applies the blocks
+        # only in elder and Tanuki fights (E22 gate at runtime: ProfileAi's AiFightTier, AiMeterTests), so a
+        # standard-row fight with this profile still spends no meter.
         def full(d):
             d["ex_use"] = {"chance_pct": 40, "keep_meter": 100}
             d["burst_use"] = {"chance_pct": 50, "min_combo_hits": 3, "max_health_pct": 60}

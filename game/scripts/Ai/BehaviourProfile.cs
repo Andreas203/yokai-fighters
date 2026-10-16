@@ -39,6 +39,13 @@ public sealed record Behaviour(Observation When, AiAction Do, int Weight);
 /// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
 /// <see cref="KeepMeter"/>, it asks for the EX version with <see cref="ChancePct"/>. Absent = never (E22 standard tier).
 /// </summary>
+/// <summary>
+/// YOK-57: which kind of fight the AI is in. E22: "The standard-tier AI doesn't use EX or burst yet", so a profile's
+/// <see cref="ExUse"/> / <see cref="BurstUse"/> apply only in elder and Tanuki fights; elder fights reuse yokai-tier
+/// profiles, so the gate is the fight (the node), not the profile.
+/// </summary>
+public enum AiFightTier { Standard, Elder, Tanuki }
+
 public sealed record ExUse(int ChancePct, int KeepMeter = 0);
 
 /// <summary>
@@ -63,10 +70,10 @@ public sealed record BehaviourProfile
 	public required IReadOnlyList<Behaviour> Behaviours { get; init; }
 	/// <summary>0–100: chance a habit that rolled true is suppressed anyway (harder opponents hide the tell).</summary>
 	public int TellCoverPct { get; init; }
-	/// <summary>YOK-57: EX use (E16); null = the AI never asks for EX.</summary>
-	public ExUse? ExUse { get; init; }
-	/// <summary>YOK-57: burst use (C6); null = the AI never bursts.</summary>
-	public BurstUse? BurstUse { get; init; }
+	/// <summary>YOK-57: EX use (E16); null = the AI never asks for EX. Applied only in elder and Tanuki fights (E22).</summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public ExUse? ExUse { get; init; }
+	/// <summary>YOK-57: burst use (C6); null = the AI never bursts. Applied only in elder and Tanuki fights (E22).</summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public BurstUse? BurstUse { get; init; }
 
 	/// <summary>Observations that happen at a moment (rolled once each time they start), not standing conditions.</summary>
 	public static bool IsEvent(Observation o) => o is not (Observation.Neutral or Observation.AtCloseRange

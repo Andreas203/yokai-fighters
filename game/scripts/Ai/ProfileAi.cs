@@ -29,6 +29,9 @@ public sealed class ProfileAi
 	public int Self { get; }
 	public int ReactionFrames { get; }
 	public List<AiDecision>? Log { get; set; }
+	/// <summary>YOK-57: the fight this AI is in. E22: ex_use / burst_use apply only in elder and Tanuki fights.</summary>
+	public AiFightTier Tier { get; }
+	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
 	private readonly SimRng _rng;
@@ -39,12 +42,12 @@ public sealed class ProfileAi
 	private int _blockedInRow;
 	private string? _oppLastSpecial;
 	private int _comboHits, _burstPressTick = -1;
-	/// <summary>E13: the burst is LP+MP+HP pressed together (the same raw buttons a player presses).</summary>
-	public const InputBits BurstButtons = InputBits.LightPunch | InputBits.MediumPunch | InputBits.HeavyPunch;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
-	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null)
+	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
+		AiFightTier tier = AiFightTier.Standard)
 	{
+		Tier = tier;
 		Profile = profile;
 		Self = self;
 		_kit = kit;
@@ -170,14 +173,14 @@ public sealed class ProfileAi
 	}
 
 	/// <summary>
-	/// YOK-57 (E16, C5): a special the AI decided on comes out as EX with the profile's chance, only when its own
+	/// YOK-57 (E16, C5), elder and Tanuki fights only (E22): a special the AI decided on comes out as EX with the profile's chance, only when its own
 	/// meter on screen covers the EX cost plus the reserve. The sim still checks the live meter: without it the plain
 	/// version comes out and nothing is spent.
 	/// </summary>
 	private FighterInput MaybeEx(AiAction a, FighterInput plain, AiView view, int tick)
 	{
 		var e = Profile.ExUse;
-		if (e is null || e.ChancePct <= 0 || !_kit.TryGetEx(a, out var ex, out int cost)) return plain;
+		if (!SpendsMeter || e is null || e.ChancePct <= 0 || !_kit.TryGetEx(a, out var ex, out int cost)) return plain;
 		if (view.Fighter(Self).Meter < cost + e.KeepMeter) return plain;
 		int roll = _rng.Next(100);
 		bool use = roll < e.ChancePct;
@@ -186,7 +189,7 @@ public sealed class ProfileAi
 	}
 
 	/// <summary>
-	/// YOK-57 (C6, E13): on each hit the AI sees itself take, roll the profile's burst chance once the combo is long
+	/// YOK-57 (C6, E13), elder and Tanuki fights only (E22): on each hit the AI sees itself take, roll the profile's burst chance once the combo is long
 	/// enough, its health low enough and its burst seal still lit, and only if the hitstun it sees will still run on
 	/// the tick the press lands (view tick + hitstop + stun left). A thrown fighter is never in hitstun, so it never
 	/// rolls (and the sim refuses a burst outside hitstun anyway).
@@ -198,7 +201,7 @@ public sealed class ProfileAi
 		if (s.State != FighterState.Hitstun) _comboHits = 0;
 		else if (hit) _comboHits++;
 		var b = Profile.BurstUse;
-		if (!hit || b is null || b.ChancePct <= 0 || s.BurstUsed || s.KnockedOut) return null;
+		if (!hit || !SpendsMeter || b is null || b.ChancePct <= 0 || s.BurstUsed || s.KnockedOut) return null;
 		if (_burstPressTick >= 0 && view.Tick < _burstPressTick) return null; // our press has not shown yet
 		if (_comboHits < b.MinComboHits) return null;
 		if (s.MaxHealth > 0 && (long)s.Health * 100 > (long)b.MaxHealthPct * s.MaxHealth) return null;
@@ -208,7 +211,7 @@ public sealed class ProfileAi
 		Record(tick, view, fire ? "burst" : "burst_no", "self_in_combo", "burst", roll, b.ChancePct);
 		if (!fire) return null;
 		_burstPressTick = tick;
-		return new Plan(false, (new FighterInput(BurstButtons), 1), (FighterInput.None, SimConfig.Default.BurstFrames));
+		return new Plan(false, (new FighterInput(Match.BurstButtons), 1), (FighterInput.None, Math.Max(1, view.BurstFrames)));
 	}
 
 	private void Events(AiView prev, AiView view, bool[] rose)

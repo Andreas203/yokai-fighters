@@ -38,12 +38,15 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 	/// <summary>Get-up frames after a knockdown ends (SimConfig.WakeUpFrames): a fixed, visible animation length.</summary>
 	public int WakeUpFrames { get; init; }
 
+	/// <summary>YOK-57: burst length (SimConfig.BurstFrames), a fixed visible animation length.</summary>
+	public int BurstFrames { get; init; }
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
 		var shots = new ProjectileView[m.Projectiles.Count];
 		for (int i = 0; i < shots.Length; i++) shots[i] = new(m.Projectiles[i].Owner, m.Projectiles[i].X, m.Projectiles[i].Dir);
-		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames };
+		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames };
 	}
 
 	private static FighterView Of(Fighter f)
