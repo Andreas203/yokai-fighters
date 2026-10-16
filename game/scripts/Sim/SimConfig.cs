@@ -3,7 +3,7 @@ namespace YokaiFighters.Sim;
 /// <summary>
 /// Fight-wide constants for the simulation. Pure C#, no Godot types, integers only (F3).
 /// Positions are centi-units, so 100 = one gameplay unit; 200 units per metre, and 1,440 units span the 1,920 px
-/// screen at the fight camera (E1, AM7).
+/// screen at the fight camera (E1, AM8).
 /// Defaults are placeholders until a data loader (YOK-40) feeds stage and fighter data.
 /// </summary>
 public sealed partial record SimConfig
@@ -13,13 +13,13 @@ public sealed partial record SimConfig
 
 	/// <summary>
 	/// Half the stage width; the corners sit at +/- this. 3,840 units wide (E1): two of the original 1,920-unit screens,
-	/// kept when AM7 brought the camera in, so the stage art and the visible stage (<see cref="FightCamera.VisibleHalfWidth"/>)
+	/// kept when AM8 brought the camera in, so the stage art and the visible stage (<see cref="FightCamera.VisibleHalfWidth"/>)
 	/// do not change; it is now 2.67 of the closer 1,440-unit screens.
 	/// </summary>
 	public int StageHalfWidth { get; init; } = 1920 * Scale;
 
 	/// <summary>
-	/// Visible width of the side-on camera at the gameplay plane, in centi-units. AM7 (YOK-120): 1,440 (was 1,920), the
+	/// Visible width of the side-on camera at the gameplay plane, in centi-units. AM8 (YOK-120): 1,440 (was 1,920), the
 	/// camera sits closer at the same ~25 deg FOV (F4; <c>FightScene.CameraDistance</c> derives the distance from this).
 	/// Tune with <see cref="MaxSeparation"/>: MaxSeparation + 2 x the larger model reach (front/back) must not exceed it; MaxSeparation derives from this unless set (CameraTests).
 	/// </summary>
@@ -31,7 +31,7 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// Screen walls: the farthest two fighters may be apart so both models stay in view whichever way each faces.
 	/// Derived, so it cannot drift: <see cref="ViewWidth"/> - 2 x the larger model reach (front 240 / back 200), because
-	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM7 (YOK-120):
+	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM8 (YOK-120):
 	/// 960 + 2 x 240 = 1,440 (was 1,520 for the 1,920 view, YOK-39, which only budgeted the 200 back reach).
 	/// Setting it in an initializer overrides the derivation (tests). Trial start distances are capped at this
 	/// (TrialData.MaxStartDistance, trial.schema.json).
@@ -53,7 +53,7 @@ public sealed partial record SimConfig
 	public int ModelBackReach { get; init; } = 200 * Scale;
 
 	/// <summary>
-	/// C2: walk crosses the original 1,920-unit screen in ~2.5 s (150 ticks) = 12.8 units/tick. AM7 keeps the speed, so
+	/// C2: walk crosses the original 1,920-unit screen in ~2.5 s (150 ticks) = 12.8 units/tick. AM8 keeps the speed, so
 	/// the closer 1,440-unit screen takes ~1.9 s (designer to confirm at review).
 	/// </summary>
 	public int WalkSpeed { get; init; } = 1280;

@@ -31,7 +31,7 @@
       "required": ["distance", "attempt_frames", "dummy"],
       "additionalProperties": false,
       "properties": {
-        "distance": { "type": "integer", "minimum": 120, "maximum": 960, "description": "Start distance between the fighters' centres, gameplay units (body width 120 .. max separation 960, SimConfig, AM7)." },
+        "distance": { "type": "integer", "minimum": 120, "maximum": 960, "description": "Start distance between the fighters' centres, gameplay units (body width 120 .. max separation 960, SimConfig, AM8)." },
         "attempt_frames": { "type": "integer", "minimum": 60, "maximum": 3600, "description": "Ticks one attempt lasts before it counts as failed." },
         "dummy": { "$ref": "#/$defs/dummy" }
       }

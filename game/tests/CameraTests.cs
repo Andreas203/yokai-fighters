@@ -70,7 +70,7 @@ public static class CameraTests
 	[Test]
 	public static void Camera_ShakeStaysTwoToFourScreenPx_AtAnyViewWidth()
 	{
-		// V3 (YOK-120): the 2-4 px shake is screen px; the camera offset goes through ViewWidth, so AM7's closer
+		// V3 (YOK-120): the 2-4 px shake is screen px; the camera offset goes through ViewWidth, so AM8's closer
 		// 1,440-unit view (1 unit = 1.33 px) does not push the (4, -2) frame to 5.3 px.
 		foreach (var c in new[] { SimConfig.Default, SimConfig.Default with { ViewWidth = 1920 * SimConfig.Scale } })
 		{

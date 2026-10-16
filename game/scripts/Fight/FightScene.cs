@@ -17,7 +17,7 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class FightScene : Node3D
 {
-	/// <summary>200 gameplay units per metre: the 1,440-unit screen (AM7) is 7.2 m wide, a 1.8 m fighter is 360 units.</summary>
+	/// <summary>200 gameplay units per metre: the 1,440-unit screen (AM8) is 7.2 m wide, a 1.8 m fighter is 360 units.</summary>
 	public const float UnitsPerMeter = 200f;
 	public const float CameraFovDegrees = 25f; // F4
 	public const float CameraHeight = 1.5f;
@@ -239,8 +239,8 @@ public partial class FightScene : Node3D
 	public const int DesignCanvasWidthPx = 1920;
 
 	/// <summary>
-	/// V3 (YOK-120 / AM7): a shake offset in screen px as a camera offset in metres at the Z = 0 plane. ViewWidth units
-	/// span DesignCanvasWidthPx px, so 1 px = ViewWidth / 1920 units (0.75 units at AM7's 1,440), and the 2-4 px
+	/// V3 (YOK-120 / AM8): a shake offset in screen px as a camera offset in metres at the Z = 0 plane. ViewWidth units
+	/// span DesignCanvasWidthPx px, so 1 px = ViewWidth / 1920 units (0.75 units at AM8's 1,440), and the 2-4 px
 	/// pattern stays 2-4 px on screen whatever the view width.
 	/// </summary>
 	public static (float H, float V) ShakeOffsetMeters(SimConfig c, (int x, int y) px) =>

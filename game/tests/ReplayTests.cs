@@ -163,7 +163,7 @@ public static class ReplayTests
 	static void RandomCoverage()
 	{
 		FightScene.Run = null;
-		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (8, ControlScheme.Kihon, ControlScheme.Kata), (6, ControlScheme.Kata, ControlScheme.Kata) }) // coverage seeds, re-picked when a sim change stops one bursting: YOK-120 (AM7 walls, 960) stopped seeds 4 and 5 bursting, so 8 and 6 (earlier: 3 -> 5 for wake-ups, 2 -> 4 for the YOK-39 walls)
+		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (8, ControlScheme.Kihon, ControlScheme.Kata), (6, ControlScheme.Kata, ControlScheme.Kata) }) // coverage seeds, re-picked when a sim change stops one bursting: YOK-120 (AM8 walls, 960) stopped seeds 4 and 5 bursting, so 8 and 6 (earlier: 3 -> 5 for wake-ups, 2 -> 4 for the YOK-39 walls)
 		{
 			var m = FightScene.NewMatch();
 			m.P1.Input.Scheme = s1;

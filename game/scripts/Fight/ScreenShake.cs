@@ -7,7 +7,7 @@ namespace YokaiFighters.Fight;
 /// <see cref="ImpactEvent"/> with Shake set (heavy hits and EX, never lights) and stepped once per
 /// sim tick, so it lasts exactly ShakeFrames ticks at any render rate. Offsets are a fixed
 /// pattern of 2-4 screen px per axis on the 1920-px canvas; FightScene.ShakeOffsetMeters converts px to
-/// gameplay units through the view width (1 px = 0.75 units at AM7's 1,440-unit screen); no RNG.
+/// gameplay units through the view width (1 px = 0.75 units at AM8's 1,440-unit screen); no RNG.
 /// </summary>
 public sealed class ScreenShake
 {

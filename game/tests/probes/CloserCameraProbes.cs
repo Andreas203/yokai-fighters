@@ -8,7 +8,7 @@ using YokaiFighters.Sim;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>Test Breaker probes for YOK-120 (AM7 closer camera). Expected values come from rules.md E1, V3, F4, R7.</summary>
+/// <summary>Test Breaker probes for YOK-120 (AM8 closer camera). Expected values come from rules.md E1, V3, F4, R7.</summary>
 public static class CloserCameraProbes
 {
 	static FighterInput In(InputBits b) => new(b);

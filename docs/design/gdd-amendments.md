@@ -145,7 +145,7 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
-## AM7 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
+## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
 
 **Status.** Approved by the designer on 2026-10-16 (merge of PR #133). The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15).
 
