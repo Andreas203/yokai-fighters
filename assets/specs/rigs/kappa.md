@@ -3,15 +3,59 @@
 Ticket: YOK-102 (rig follow-up), on the rigger the YOK-112 trial chose (Meshy). Owner: rig-specialist. Rules: F5, F6, G4, T0, E15, AM5.
 Model spec and acceptance: `assets/specs/kappa.md` (asset-smith, K3 and K5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`. Trial: `assets/specs/rigs/oni.md`.
 
-**Verdict: NOT ACCEPTED YET. The raw rig check FAILs, and still FAILs after the shell is cut off.**
-- Next step: a free scripted weight repair (K-R4), not a retake.
-- The skeleton, scale, axes and origin PASS. The rest pose FAILs on leg splay (see below).
-- With the shell cut off, the body still FAILs the kick, the crouch (both shins collapse) and the arm raise. The cause is 1,243 torso verts carrying arm and leg weight together.
-- That is the same fault raw Kitsune had (886 bleed verts, crouch 324 failing edges), and her free repair took her to WARN.
-- A Meshy retake would give the same auto-skin for 5 credits, so a retake is not recommended.
-- **Not ready for G4** until K-R4 reaches WARN, the shell clearance is re-run on the repaired rig, and the `Hips` height fix is in code.
-- The shell is cut, capped, fitted and mounted.
+**Verdict: ACCEPT (rig, weights, shell), 2026-10-16.** The rest-pose check still flags the 18-19 degree leg splay of the generated stance. The feet sink 3-8 cm on the shared clips (G4 WARN).
 
+## Status 2026-10-16 (repair, props, scene, G4)
+This section supersedes the take-1 verdict and the work list further down.
+
+**Build chain.** All free and scripted. `kappa-rigged.glb` is now the game file, rebuilt from the raw take-1 rig (at `d7b0999`) by:
+1. `cut_shell.py --colour-band 0.0,0.45,0.75,1.36`;
+2. `repair_weights.py --fighter kappa`.
+
+Two runs give the same bytes. The old `kappa-rigged.glb (shell cut)` has been removed. Logs: `logs/kappa-shellcut.json`, `logs/kappa-repair.json`, `logs/kappa-rig-check.json`.
+
+**Cut.**
+- The depth box behind y 0.17 m, as before.
+- A colour band (new): every shell-coloured vert (dark pine or ochre) behind the back in z 0.75-1.36. It removes the ochre rim strip the depth cut left at the flanks.
+- 1,421 verts removed, 204 cap triangles in skin teal.
+- The rope belt's back middle went with the shell. It was always under the shell.
+
+**Repair (K-R4).** Ryo's pelvis rules are off for the Kappa. Steps:
+- T2 leg strip and T6 trunk-by-height over the whole torso, from 0.58 to 0.92 m;
+- C: crotch verts within |x| 0.12 m move from `Leg` to `UpLeg`;
+- K: within 0.20 m of each knee, `UpLeg`/`Leg` split by height over ±0.05 m;
+- shin clean: the calf backs' `UpLeg` weight goes to `Leg` below the knee, over 0.14 m.
+
+The loincloth is cloth (`cloth/kappa.md`).
+
+| Check | Raw (shell baked) | Repaired, shell cut |
+|---|---|---|
+| skeleton, scale, axes, origin | PASS | PASS |
+| rest pose | FAIL (legs splayed 18-19 deg, limit 15) | FAIL (same: the mesh's stance, not a weight fault) |
+| weights | WARN, 1,777 arm-and-leg bleed | **PASS**, 0 bleed, 0 cross-side |
+| kick / crouch / arm raise / twist / grab | FAIL 134 / FAIL 296 + shin collapse / FAIL 68 / FAIL 71 / WARN 28 | **WARN 8 / WARN 29 / WARN 22 / PASS 0 / WARN 6** (limit 55, no collapse) |
+
+Stills: `stills/kappa-repaired-*-{front,side}.png`, `stills/kappa-cloth-mask-*.png`, `stills/kappa-shellcut-cap-back.png`.
+
+**Shell.**
+- `prep_prop.py --mode fit`, target box x ±0.34, depth -0.04 to 0.40 m, z 0.74-1.32 m. The result is 0.68 x 0.44 x 0.58 m, at scale (0.39, 0.45, 0.31).
+- The dome is now 0.44 m deep, against 0.27 before. Its underside sinks 4 cm into the back, so no gap shows from the side. Its lower edge sits above the seat, at 0.74 m.
+- Mount on **`Spine01`**. `Spine02` was compared: it matches everywhere except the torso twist, where it is worse (586 against 313 shell verts inside, gap up to 14 cm against 9).
+- Log: `logs/kappa-shell-fit.json`. Clearance: `logs/kappa-shell-clearance.json`.
+- Stills: `stills/kappa-shell-{rest,high-kick,deep-crouch,arm-raise,torso-twist,grab,arms-down}-{front,side,back}.png`.
+- The deep crouch no longer flaps: 2 verts, 2.5 cm. The figures left in the kick, twist, arm raise and arms-down are the sunk underside meeting the shoulder blades and back, hidden under the dome in every still.
+
+**Scene.** `game/scenes/fighters/kappa.tscn`:
+- `FighterModel` with Fighter `kappa`;
+- `Shell`, a BoneAttachment3D on `Spine01` → `ShellPivot` → `shell-fit.glb`.
+
+Godot 4 headless loads it with 24 bones and the shell exactly on the target box. **Not yet wired in `FighterAnimSet`** (gameplay-programmer).
+
+**G4 gate** (full report in `assets/specs/clips/retarget_gate.md`):
+- Body: **GO**. Skin worst failing edges per frame are 11 / 42 / 17 (walk / heavy / throw).
+- Shell: **GO**, no visible clipping.
+- Feet: with the hip fix (0.775) they sink 3.0-7.8 cm below the rest contact (WARN, from the splayed stance). Fixes, open: a scripted leg re-pose to the shared T-pose (free; changes the bind, so it needs the designer's approval), or a per-rig ground offset in code.
+- Reach: the throw push lands at 0.56 m forward, 0.91 m high, against Ryo's 0.51 m at 1.06 m.
 ## Designer decisions (2026-10-16, relayed by the main session)
 - **Rigger:** Meshy ("try meshy"). The designer approved K-R1 directly to the main session, which ran it. AccuRIG 2 is the fallback.
 - **Shell:** cut the baked shell off by script and attach `shell.glb` on a spine BoneAttachment3D. The designer gave the scale as about 0.38, from the earlier measurement. The final fit is per axis, and its height matches that (below).
@@ -23,7 +67,7 @@ Model spec and acceptance: `assets/specs/kappa.md` (asset-smith, K3 and K5 ACCEP
 | Rigger | Meshy auto-rig (`meshy_rig`, `height_meters: 1.5`), input K3 `01a144a2-d17a-7618-abc4-bddb7911d700` |
 | Rig task id | `01a144ad-ca9c-7370-b2e3-c7b2f9e3aa11` (SUCCEEDED, 5 credits, run by the main session) |
 | Raw file | `game/assets/generated/characters/kappa/kappa-rigged.glb`, sha256 `43456030534e…`. Free walk and run: `kappa-walk.glb`, `kappa-run.glb` |
-| Game file | `game/assets/generated/characters/kappa/kappa-rigged-shellcut.glb`, the raw rig with the shell cut and the back capped. sha256 `78ed9719285d…`, the same on a rerun |
+| Game file | `game/assets/generated/characters/kappa/kappa-rigged.glb (shell cut)`, the raw rig with the shell cut and the back capped. sha256 `78ed9719285d…`, the same on a rerun |
 | Import | `godot --headless --path game --import` runs clean for every Kappa file. Godot sees 24 bones |
 | Skeleton | The shared 24 bones: names, parents and skin order identical (PASS), no bone map |
 | Height, frame | 1.500 m, Y-up, +Z facing, feet at 0, centred. Bones in cm under the 0.01 `Armature`. `Hips` rest Y 73.5 cm (Ryo 94.9) |
@@ -46,7 +90,7 @@ Command: `Blender -b --python tools/blender/rig_check.py -- --rig <rig> --skelet
 
 A pose FAILs above 0.2% of its edges (59 raw, 55 cut) or on a collapsed bone.
 
-| Pose | Raw (shell baked) | Shell cut off (`kappa-rigged-shellcut.glb`) |
+| Pose | Raw (shell baked) | Shell cut off (`kappa-rigged.glb (shell cut)`) |
 |---|---|---|
 | high kick | **FAIL** 134, max 13.6x (`RightShoulder` 56, `UpLeg` 82) | **FAIL** 71, max 5.1x (`UpLeg` 82, `RightShoulder` 10) |
 | deep crouch | **FAIL** 296, max 17.5x; `LeftLeg` (0.80, p5 0.34) and `RightLeg` (0.78, p5 0.19) collapse | **FAIL** 165, max 10.1x; the same shin collapse |
@@ -63,7 +107,7 @@ What the stills show:
 - **Dish:** rigid. The beak clears the chest.
 
 **K-R4, the proposed repair (free, needs the designer's go-ahead):**
-- A `FIGHTERS["kappa"]` entry in `repair_weights.py`, run on `kappa-rigged-shellcut.glb`.
+- A `FIGHTERS["kappa"]` entry in `repair_weights.py`, run on `kappa-rigged.glb (shell cut)`.
 - Kitsune's T1 arm strip, T2 leg strip and T4 bleed steps over the torso. This also covers the cap and the rim ring left on the back.
 - Ryo's pelvis steps 1-3, with the band scaled to the Kappa's hips at 0.735 m.
 - A smoothing pass on the `Leg` columns for the shin collapse.
@@ -131,7 +175,7 @@ No new bones.
 
 ## G4 gate plan (not run; the rig is not ready yet)
 - **Clips:** the walk `characters/ryo/ryo-walk.glb`, the heavy `clips/ryo-heavy.glb` (preset 194) and the throw `clips/ryo-grab-2.glb` (preset 259, from tick 30, E15).
-- **Tools:** `skin_clip_check.py` with `--rig kappa=kappa-rigged-shellcut.glb --rig ryo=...`, plus `prop_clearance.py` with the shell. Stills go to `assets/specs/clips/stills/retarget-gate/kappa-*.png`, and the verdict to `retarget_gate.md`.
+- **Tools:** `skin_clip_check.py` with `--rig kappa=kappa-rigged.glb (shell cut) --rig ryo=...`, plus `prop_clearance.py` with the shell. Stills go to `assets/specs/clips/stills/retarget-gate/kappa-*.png`, and the verdict to `retarget_gate.md`.
 - **Hip height: a code fix, needed before G4.**
   - `FighterModel.BuildLibrary` keeps the clip's `Hips` Y, Ryo's 94.9 cm. The Kappa's rest is 73.5 cm, so it would **float 21 cm**.
   - Fix: scale the `Hips` Y keys by `rest.Y / clipRest.Y` = 73.5 / 94.9 = **0.77**. This is the same code change as the Oni's and belongs to gameplay-programmer.
