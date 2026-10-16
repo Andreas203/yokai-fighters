@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Godot;
 using YokaiFighters.Flow;
 using YokaiFighters.Sim;
@@ -57,7 +58,7 @@ public partial class RestStopScreen : Control, INodeScene
 		SecondCard = GetNode<KitCard>("SecondCard");
 		ContinueButton = GetNode<Button>("ContinueButton");
 		FreeCard.Activated += () => TakeFree();
-		SecondCard.Activated += () => { }; // the shop (YOK-104) and the trial (YOK-98) wire in here; both cards start closed
+		SecondCard.Activated += () => OpenSecond(); // the shop (YOK-104); the trial (YOK-98) wires in here too
 		ContinueButton.Pressed += () => Leave();
 		foreach (string state in new[] { "normal", "hover", "pressed", "focus", "disabled" }) // the kit's RedButton has no fill of its own
 			ContinueButton.AddThemeStyleboxOverride(state, new StyleBoxFlat { BgColor = FightHudSeal, ContentMarginLeft = 24, ContentMarginRight = 24, ContentMarginTop = 6, ContentMarginBottom = 6, BorderColor = new Color("1D1B21"), BorderWidthBottom = state == "focus" ? 4 : 2, BorderWidthTop = 2, BorderWidthLeft = 2, BorderWidthRight = 2 });
@@ -73,6 +74,32 @@ public partial class RestStopScreen : Control, INodeScene
 		Refresh();
 		if (ok) ContinueButton.GrabFocus();
 		return ok;
+	}
+
+	/// <summary>
+	/// The merchant's second card: spends the stop's choice on the shop (which closes the free heal, R6) and asks the flow
+	/// to show the shop screen (<see cref="ShopRequested"/>, routed by GameFlow/ScreenRouter). Refused, changing nothing, when the heal was taken.
+	/// </summary>
+	public bool OpenSecond()
+	{
+		if (Model is not { Kind: RestStopKind.Merchant } m || _session == null) return false;
+		if (!m.OpenShop().Ok) { Refresh(); return false; }
+		Refresh(); // the used state first, so nothing under the shop changes while it is open
+		ShopRequested?.Invoke();
+		return true;
+	}
+
+	/// <summary>Raised after the shop was chosen: the flow shows the shop over this stop (and hides it).</summary>
+	public event Action? ShopRequested;
+
+	/// <summary>The line the merchant is speaking, for the shop screen to repeat.</summary>
+	public string MerchantLine => L("LineBox/Box/Line").Text;
+
+	/// <summary>The flow calls this when the shop closed and the stop shows again: the used state, focus on Continue.</summary>
+	public void ShopClosed()
+	{
+		Refresh();
+		if (ContinueButton.Visible) ContinueButton.GrabFocus();
 	}
 
 	/// <summary>Continue: completes the node. Refused before a choice is made.</summary>
@@ -91,7 +118,7 @@ public partial class RestStopScreen : Control, INodeScene
 
 	public override void _Input(InputEvent e)
 	{
-		if (!IsVisibleInTree()) return;
+		if (!IsVisibleInTree()) return; // hidden while the shop is open: the shop answers its own keys
 		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
 		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
 	}
@@ -204,10 +231,11 @@ public partial class RestStopScreen : Control, INodeScene
 		{
 			RestStopOption.ComingSoon => "Coming soon",
 			RestStopOption.Closed => "Closed: the other option was taken.",
-			RestStopOption.Taken => "Chosen",
+			RestStopOption.Taken => dojo ? "Chosen" : "Chosen · Enter to browse again",
 			_ => "",
 		};
-		SecondCard.CardDisabled = m.Second != RestStopOption.Ready;
+		// The shop stays open for the stop (R6: buying more is allowed): once chosen the card goes back in, as "Chosen".
+		SecondCard.CardDisabled = !(m.Second == RestStopOption.Ready || (m.Second == RestStopOption.Taken && !dojo));
 	}
 
 	private void BindForecast(RestStopScreenModel m)
