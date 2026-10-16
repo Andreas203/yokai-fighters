@@ -8,8 +8,8 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-128: a run captured after a won node that offers no draft (a non-binding fight, the last node) and
-/// restored. M5: Continue restarts that node with the health, coins and slots Ryo entered it with, so finishing it
-/// pays its coins once (R8) and heals once (R3). Pure: sessions and saves in memory, no scene, no file store.
+/// restored keeps the node paid (<see cref="RunSession.NodePaid"/>), so finishing it after Continue pays its coins
+/// once (R8) and heals once (R3). Pure: sessions and saves in memory, no scene, no file store.
 /// </summary>
 public static class RunSavePaidNodeTests
 {
@@ -50,23 +50,23 @@ public static class RunSavePaidNodeTests
 		RunSave.Capture(s).Restore(FightScene.LoadAbilityPool(), g, scenes);
 
 	[Test]
-	public static void NonBindingNode_SavedAfterWin_RestartsUnpaid_AndPaysOnce() => OnFixtures(() =>
+	public static void NonBindingNode_SavedAfterWin_FinishingPaysOnce() => OnFixtures(() =>
 	{
 		var g = TwoRows();
 		var scenes = NonBinding();
 		var s = RunSession.Start(FightScene.LoadAbilityPool(), g, scenes, 3);
 		Assert.True(s.Enter("a").Ok, "entered a");
-		ulong entry = s.StateHash();
-		Assert.True(s.WinFight(600) == null && s.Run.Coins == 25 && s.Run.Health == 600, "setup: no draft, paid 25, no heal");
+		Assert.True(s.WinFight(600) == null && s.Run.Coins == 25 && s.Run.Health == 600 && s.NodePaid, "setup: no draft, paid 25, no heal");
 
 		var back = Back(s, g, scenes);
-		Assert.True(back.Node?.NodeId == "a" && back.Draft == null, "Continue is at node a");
-		Assert.True(back.Run.Coins == 0 && back.Run.Health == RunState.MaxHealth, $"M5: entry coins and health (coins {back.Run.Coins}, health {back.Run.Health})");
-		Assert.True(back.StateHash() == entry, "M5: the node restarts at its entry state");
+		Assert.True(back.Node?.NodeId == "a" && back.Draft == null && back.NodePaid && back.CoinsWon == 25, "Continue is at node a, already paid");
+		Assert.True(back.StateHash() == s.StateHash() && back.Run.Coins == 25 && back.Run.Health == 600, "the save restores exactly");
 
-		Assert.True(back.WinFight(600) == null && back.CompleteNode().Ok, "won and finished after Continue");
-		Assert.True(back.Run.Coins == 25, $"R8: the node paid once (coins {back.Run.Coins})");
+		Assert.True(back.WinFight(400) == null, "the win reported again after Continue");
+		Assert.True(back.Run.Coins == 25 && back.Run.Health == 600, $"R8: the node paid once (coins {back.Run.Coins}, health {back.Run.Health})");
+		Assert.True(back.CompleteNode().Ok && !back.NodePaid && back.CoinsWon == 0, "finished; the next node starts unpaid");
 		Assert.True(s.CompleteNode().Ok && back.StateHash() == s.StateHash(), "same run as the one never saved");
+		Assert.True(back.Enter("b").Ok && !back.NodePaid && back.WinFight(600) == null && back.Run.Coins == 50, "the next node pays its own 25");
 	});
 
 	[Test]
@@ -80,17 +80,29 @@ public static class RunSavePaidNodeTests
 		Assert.True(s.WinFight(300) == null && s.Run.Coins == 25 && s.Run.Health == 350, "setup: R3 heal, R8 25, no draft on the last node");
 
 		var back = Back(s, g, scenes);
-		Assert.True(back.Run.Health == 400 && back.Run.Coins == 0, $"M5: entry health and coins, the R3 heal not kept (health {back.Run.Health}, coins {back.Run.Coins})");
-		Assert.True(back.WinFight(300) == null && back.Run.Health == 350 && back.Run.Coins == 25, $"R3 once, R8 once (health {back.Run.Health}, coins {back.Run.Coins})");
-		Assert.True(back.CompleteNode().Ok && back.Ended is { Won: true }, "the run is won");
+		Assert.True(back.Run.Health == 350 && back.Run.Coins == 25 && back.NodePaid, "restored after the win");
+		Assert.True(back.WinFight(350) == null && back.Run.Health == 350 && back.Run.Coins == 25, $"R3 once, R8 once (health {back.Run.Health}, coins {back.Run.Coins})");
+		Assert.True(back.CompleteNode().Ok && back.Ended is { Outcome: RunOutcome.Won }, "the run is won");
 	});
 
 	[Test]
-	public static void SavedAtEntry_Unchanged_AndCompletedNodeKeepsItsPay() => OnFixtures(() =>
+	public static void LiveSession_SecondWinReport_ChangesNothing() => OnFixtures(() =>
+	{
+		var s = RunSession.Start(FightScene.LoadAbilityPool(), Single(), Binding(), 3);
+		s.Run.SetHealth(400);
+		s.Enter("only");
+		s.WinFight(300);
+		ulong h = s.StateHash();
+		Assert.True(s.WinFight(900) == null && s.StateHash() == h && s.Run.Health == 350 && s.Run.Coins == 25, "R3, R8: counted once");
+	});
+
+	[Test]
+	public static void SaveBoundaries_AreNeverPaid() => OnFixtures(() =>
 	{
 		var g = TwoRows();
 		var scenes = NonBinding();
 		var s = RunSession.Start(FightScene.LoadAbilityPool(), g, scenes, 3);
+		Assert.True(!RunSave.Capture(s).NodePaid, "run start");
 		RunSave? entered = null, completed = null;
 		s.NodeEntered += _ => entered = RunSave.Capture(s);
 		s.NodeCompleted += _ => completed = RunSave.Capture(s);
@@ -98,11 +110,24 @@ public static class RunSavePaidNodeTests
 		ulong entry = s.StateHash();
 		s.WinFight(600);
 		Assert.True(s.CompleteNode().Ok, "completed a");
-		var atEntry = entered!.Restore(FightScene.LoadAbilityPool(), g, scenes);
-		Assert.True(atEntry.StateHash() == entry && atEntry.Run.Coins == 0, "the entry save is the entry state");
-		var atEnd = completed!.Restore(FightScene.LoadAbilityPool(), g, scenes);
-		Assert.True(atEnd.StateHash() == s.StateHash() && atEnd.Run.Coins == 25 && atEnd.Run.Health == 600, "the completed node's pay and health are kept");
-		Assert.True(atEnd.Enter("b").Ok && atEnd.WinFight(600) == null && atEnd.Run.Coins == 50, "the next node pays its own 25");
+		Assert.True(!entered!.NodePaid && !completed!.NodePaid, "entry and completion saves are unpaid");
+		var atEntry = entered.Restore(FightScene.LoadAbilityPool(), g, scenes);
+		Assert.True(atEntry.StateHash() == entry && atEntry.Run.Coins == 0 && !atEntry.NodePaid, "M5: the entry save restarts the node unpaid");
+		Assert.True(atEntry.WinFight(600) == null && atEntry.Run.Coins == 25, "and its win pays once");
+		var atEnd = completed.Restore(FightScene.LoadAbilityPool(), g, scenes);
+		Assert.True(atEnd.StateHash() == s.StateHash() && atEnd.Run.Coins == 25, "the completed node's pay is kept");
+	});
+
+	[Test]
+	public static void PaidFlag_WithNoNodeEntered_IsRefused() => OnFixtures(() =>
+	{
+		var g = TwoRows();
+		var scenes = NonBinding();
+		var s = RunSession.Start(FightScene.LoadAbilityPool(), g, scenes, 3);
+		var bad = RunSave.Capture(s) with { NodePaid = true };
+		bool refused = false;
+		try { bad.Restore(FightScene.LoadAbilityPool(), g, scenes); } catch (FormatException) { refused = true; }
+		Assert.True(refused, "R8: a paid node needs an entered node");
 	});
 
 	[Test]

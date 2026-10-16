@@ -37,10 +37,10 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 3,
+/// { "version": 4,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
-///                   "copy_locked": false, "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
+///                   "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
 ///   "story": { "seen": ["intro"] } }
@@ -64,7 +64,8 @@ public sealed class SaveStore
 {
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
-	public const int CurrentVersion = 3;
+	/// <remarks>4 (YOK-128): <c>run.node_paid</c> (R8: the entered node's win is already paid and healed; missing = false), so older files load unpaid, as before.</remarks>
+	public const int CurrentVersion = 4;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -171,6 +172,8 @@ public sealed class SaveStore
 			else if (OptionalInt(run, "coins", out int coins) is { } coinProblem) why = coinProblem;
 			else if (OptionalBool(run, "copy_locked", out bool? copyLocked) is { } lockProblem) why = lockProblem;
 			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
+			// Version 4 (YOK-128, R8): the entered node already paid; missing (version 3 and older) = not paid.
+			else if (OptionalBool(run, "node_paid", out bool? nodePaid) is { } paidProblem) why = paidProblem;
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
@@ -179,6 +182,7 @@ public sealed class SaveStore
 					Coins = coins,
 					CopyLocked = copyLocked,
 					LockedCopy = copy,
+					NodePaid = nodePaid ?? false,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -322,6 +326,7 @@ public sealed class SaveStore
 				w.WriteNumber("health", run.Health);
 				w.WriteNumber("coins", run.Coins);
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
+				if (run.NodePaid) w.WriteBoolean("node_paid", true); // only after a won node, before it is completed
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
 				{

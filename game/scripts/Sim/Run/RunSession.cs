@@ -52,6 +52,11 @@ public sealed class RunSession
 	/// <summary>R8: the coins the entered node's won fight paid; 0 before the win, on the map and for a node that pays none.</summary>
 	public int CoinsWon { get; private set; }
 	bool _paid; // R8: a node pays once, however often its win is reported
+	/// <summary>
+	/// R8, R3: the entered node's fight is won and paid (its coins and bind heal are in the run state). Part of the
+	/// run save (YOK-128), so a run saved after the win and continued is not paid or healed again. False on the map.
+	/// </summary>
+	public bool NodePaid => _paid;
 	public bool IsOver => Ended is not null;
 	/// <summary>1 for the first node of the walk, 2 for the second... (completed nodes + the one entered).</summary>
 	public int Step => Map.Visited.Count + (Map.InNode ? 1 : 0);
@@ -89,7 +94,8 @@ public sealed class RunSession
 	public RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, MerchantChoice merchantChoice = MerchantChoice.None)
 		: this(run, pool, scenes, seed, false, null, merchantChoice) { }
 
-	RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy, MerchantChoice merchantChoice)
+	RunSession(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy, MerchantChoice merchantChoice,
+		bool nodePaid = false)
 	{
 		Run = run;
 		Map = run.Map ?? throw new ArgumentException("the run has no map (RunState.StartMap)", nameof(run));
@@ -120,6 +126,11 @@ public sealed class RunSession
 		Merchant = MerchantAt(Node);
 		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
 			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
+		if (nodePaid)
+		{
+			if (Entered is null) throw new ArgumentException("a paid node with no node entered (R8)", nameof(nodePaid));
+			(_paid, CoinsWon) = (true, Entered.Context.Coins); // YOK-128: the saved win, already in health and coins
+		}
 	}
 
 	/// <summary>
@@ -128,10 +139,12 @@ public sealed class RunSession
 	/// special). The lock is never worked out again from the slots. Throws ArgumentException when the lock and
 	/// the walk disagree (locked before the walk entered the Tanuki's node, or not locked after it, T1), or the
 	/// copy can't be a target: a special that is not this pool's, in a slot not its own, at a level it lacks.
+	/// <paramref name="nodePaid"/> (YOK-128, R8): the entered node's fight was won and paid before the save
+	/// (<see cref="NodePaid"/>); refused when no node is entered.
 	/// </summary>
 	public static RunSession Restore(RunState run, AbilityPool pool, INodeSceneResolver scenes, uint seed, bool copyLocked, CopyTarget? lockedCopy,
-		MerchantChoice merchantChoice = MerchantChoice.None) =>
-		new(run, pool, scenes, seed, copyLocked, lockedCopy, merchantChoice);
+		MerchantChoice merchantChoice = MerchantChoice.None, bool nodePaid = false) =>
+		new(run, pool, scenes, seed, copyLocked, lockedCopy, merchantChoice, nodePaid);
 
 	/// <summary>T1: is this the Tanuki's node? Decided by the node's type from the map data, never by a yokai or node id.</summary>
 	public static bool IsCopyLockNode(NodeContext node) => node.Type == NodeTypeRegistry.Boss;
@@ -182,20 +195,19 @@ public sealed class RunSession
 	/// <summary>
 	/// Ryo won the entered node's fight with <paramref name="healthLeft"/>. Health carries (C1); a node that binds
 	/// heals 50 (R3) and, unless it is the last node, offers its cards (A7). The node's coins are paid once (R8).
-	/// Returns the offer, or null for none.
+	/// Returns the offer, or null for none. A win reported again on a node already paid (<see cref="NodePaid"/>, a
+	/// repeat or a run continued after the win, YOK-128) changes nothing: health, heal and coins were counted once.
 	/// </summary>
 	public RewardDraft? WinFight(int healthLeft)
 	{
 		var node = Node ?? throw new InvalidOperationException("no node is entered");
 		if (IsOver) throw new InvalidOperationException("the run is over");
 		if (Draft is not null) throw new InvalidOperationException($"node '{node.NodeId}' is already won");
+		if (_paid) return null; // R3, R8: already counted (a draft-less node: a node with a draft threw above)
 		Run.AfterDuel(healthLeft, node.Binds);
-		if (!_paid)
-		{
-			_paid = true;
-			CoinsWon = node.Coins;
-			Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
-		}
+		_paid = true;
+		CoinsWon = node.Coins;
+		Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
 			Draft = RewardDraft.Build(Run, Pool, node.Fighter, Seed + (uint)Step, node.Elder);
 		return Draft;

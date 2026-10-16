@@ -837,6 +837,38 @@ public static class SaveTests
 		Throws<FormatException>(() => (before with { CopyLocked = true, LockedCopy = saved.LockedCopy }).Restore(pool, DefaultMap(), Table()), "a copy before the Tanuki's node (T1)");
 	});
 
+	/// <summary>YOK-128, R8: the paid flag of a won, uncompleted no-draft node in the file (version 4), and files without it.</summary>
+	[Test]
+	public static void Version4_NodePaid_RoundTrips_OlderFilesLoadUnpaid_DamageDropsTheRun() => WithFixtures(() =>
+	{
+		string mapPath = Path.Combine(Path.GetTempPath(), $"yok128-save-{Guid.NewGuid():N}.json");
+		File.WriteAllText(mapPath, "{\"kind\":\"run_map\",\"id\":\"single\",\"schema_version\":1,\"name\":\"one\",\"status\":\"final\",\"rules\":[],\"nodes\":[{\"id\":\"only\",\"row\":1,\"type\":\"duel\",\"yokai\":\"kitsune\",\"label\":\"K\"}],\"routes\":[]}");
+		MapGraph g;
+		try { g = new FileMapSource(mapPath).Load(); } finally { File.Delete(mapPath); }
+		var pool = FightScene.LoadAbilityPool();
+		var s = RunSession.Start(pool, g, Table(), 9);
+		Assert.True(!SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s))).Contains("node_paid"), "not written unless set");
+		s.Enter("only");
+		Assert.True(s.WinFight(500) == null && s.Run.Coins == 25, "setup: won, paid, no draft (last node)");
+
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)));
+		Assert.True(text.Contains("\"node_paid\": true") && text.Contains(Current + ","), "written, current version: " + text);
+		var load = SaveStore.Parse(text);
+		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "loads");
+		var back = load.Data.Run!.Restore(pool, g, Table());
+		Assert.True(back.NodePaid && back.StateHash() == s.StateHash(), "restored paid, same hash");
+		back.WinFight(500);
+		Assert.True(back.Run.Coins == 25, $"R8: paid once after Continue (coins {back.Run.Coins})");
+
+		// A version 3 file has no flag: it loads unpaid, as it did before (those files were only written at node boundaries by the game).
+		var v3 = SaveStore.Parse(text.Replace(Current, "\"version\": 3").Replace("\"node_paid\": true,", ""));
+		Assert.True(v3.Status == SaveLoadStatus.OlderVersion && v3.Data.Run is { NodePaid: false }, "version 3 loads, unpaid");
+
+		// A flag of the wrong kind is damage: the run is dropped, the rest kept.
+		var bad = SaveStore.Parse(text.Replace("\"node_paid\": true", "\"node_paid\": \"yes\""));
+		Assert.True(bad.Data.Run is null, "a non-boolean node_paid drops the run");
+	});
+
 	[Test]
 	public static void Version1_Files_StillLoad_NoCoins_LockWorkedOutOnlyWhenExact() => WithFixtures(() =>
 	{
