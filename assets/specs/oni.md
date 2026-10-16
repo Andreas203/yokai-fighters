@@ -62,7 +62,14 @@ Bulk risk: the thick arms and torso will overlap on the shared clips (hands-on-h
 - Licence: plan tier unknown, flagged.
 
 ## Takes
-None yet.
+Run 2026-10-16 under the designer's YOK-102 approval (first take only). Balance 800 before.
+- **O3 take 1** body: `meshy_multi_image_to_3d`, task `01a144a2-bfe8-72a2-a861-d9eb1b3979dc`, meshy-7.1, 3 Astra views, textured 2K, no PBR, remesh 15000, t-pose, auto_size, origin bottom. 30 credits. File `game/assets/generated/characters/oni/oni-mesh.glb` (+ `oni-mesh_base_color.png`).
+- **O5 take 1** club: `meshy_image_to_3d` from `oni-club-astra.png`, task `01a144a2-cb1d-7742-b9e3-e01c176e257a`, meshy-6-lite, textured 2K, no PBR, remesh 4000. 15 credits. File `game/assets/generated/characters/oni/club.glb`.
+Credits spent for Oni: 45.
 
 ## Acceptance
-Not run.
+Stills: `assets/specs/stills/yok102-oni-mesh-{front,side,back}.png`, `yok102-club-{front,side,back}.png` (Blender Workbench, flat, texture colour).
+
+**O3 body: ACCEPT.** 15,623 tris (target 15k). Height 2.000 m, feet at Z=0, glTF Y-up (Blender Z-up after import), centred. Clean T-pose, arms level, hands open with fingers apart, legs apart; one mesh, one 2K texture. Palette matches sheet (red skin, ink-navy trousers, bone-white wraps and belt, black hair, ivory horns). Flat cel look, no baked PBR or painterly noise. Silhouette reads. No missing limbs, no stray geometry. Risk for rig-specialist G4: loose hair mass and the wide trouser legs share volume with the thighs (no gap for a split); hair is fused to the head and shoulders (fine for a head bone). Horns fused to head. Club is NOT in hand (separate mesh).
+**O5 club: ACCEPT.** 4,156 tris, one piece, 1.90 m long (longer than the 1.2 m in the job list; scale in-engine to fit the hand), long axis along Z, origin at its centre, NOT at the grip: rig-specialist re-pivots to the grip when parenting to the hand bone. Black head with ochre studs, bone-white grip wrap, matches palette. No baked shading.
+Licence: plan tier still unknown, flagged.

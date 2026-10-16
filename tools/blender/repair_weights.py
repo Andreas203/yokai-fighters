@@ -46,7 +46,10 @@ Every step is logged (verts changed, weight moved per bone) to --log.
 
 Per-fighter settings (--fighter, default ryo; YOK-117): FIGHTERS below. "ryo" runs exactly the
 steps above (output byte-identical to YOK-116). "kitsune" adds torso steps T1-T5 for the back
-hair, coat back and sash bell; see the comment on FIGHTERS["kitsune"]. Run:
+hair, coat back and sash bell; see the comment on FIGHTERS["kitsune"]. "oni" and "kappa" (YOK-112,
+YOK-102) switch the pelvis steps off and use the optional steps T6 (trunk by height), C (crotch),
+K (knee split, shin clean) and S (band smoothing, unused); every new step defaults to off, so
+"ryo" and "kitsune" give the same bytes as before. Run:
   ... repair_weights.py -- --fighter kitsune \
       --in game/assets/generated/characters/kitsune/kitsune-rigged.glb --out <dir>/kitsune-rigged-repaired.glb
 """
@@ -78,6 +81,35 @@ PARAMS = {
     "min_weight": 0.01,
     "max_influences": 4,
     "torso_fix": 0,             # 1 = run the torso steps T1-T5 (off for Ryo)
+    "side_on": 1,               # 0 = skip step 2 (side separation)       (YOK-112)
+    "falloff_on": 1,            # 0 = skip step 3 (UpLeg falloff to Hips) (YOK-112)
+    "legstrip_all": 0,          # 1 = step T2 strips leg weight from the whole torso above
+                                #     hairleg_z0..z1, not only the hair layer (YOK-102 Kappa)
+    "pure_on": 0,               # 1 = run step T6 (back zone follows the trunk alone)
+    "pure_y0_m": 0.08, "pure_y1_m": 0.14,      # T6: behind the Hips head by this much ...
+    "pure_x0_m": 0.40, "pure_x1_m": 0.46,      # ... within this half-width ...
+    "pure_zbot0_m": 0.70, "pure_zbot1_m": 0.78,  # ... above this ...
+    "pure_ztop_band_m": 0.05,   # T6: half-width of the blend at ztop
+    "pure_ztop_m": 1.25, "pure_xflat_m": 0.20, "pure_zslope": 1.8,  # ... below ztop, lowered
+                                #     by zslope per metre of |x| past xflat (keeps the armpits)
+    "band_smooth_iters": 0,     # > 0 = run step S (final smoothing of every bone column) ...
+    "band_z0_m": 0.0, "band_z1_m": 0.0,  # ... for verts between these heights (YOK-102 Kappa)
+    "band_x_m": 9.0,            # ... and within this half-width (keeps the arms out)
+    "knee_iters": 0,            # > 0 = run step K (knee smoothing), this many iterations
+    "knee_band_m": 0.10,        # step K: verts within this height of the knee heads
+    "knee_radius_m": 0.0,       # step K: > 0 = select verts within this distance of the knee head
+                                #     (not a height band), fading the change out over the outer
+                                #     knee_fade_m; keeps the crotch out when knees and crotch share
+                                #     a height (Kappa)
+    "knee_fade_m": 0.06,
+    "shin_clean_m": 0.0,        # step K: > 0 = on each leg's side, verts more than this below the
+                                #     knee head give their UpLeg weight to Leg, blended over
+    "shin_blend_m": 0.04,       #     shin_blend_m above that line
+    "crotch_x_m": 0.0,          # step C: > 0 = verts within this |x| of the midline and below the
+                                #     hip joint give their Leg weight to the same side's UpLeg
+    "knee_split": 0,            # step K mode: 1 = after smoothing, split the [UpLeg, Leg] pair by
+                                #     height across the knee (UpLeg above, Leg below, smoothstep
+                                #     over +-knee_band_m); 0 = smoothing only
 }
 
 # Per-fighter settings. "ryo" is PARAMS as it stands (YOK-116; its output must stay
@@ -113,6 +145,55 @@ FIGHTERS = {
         # bell on the sash front: |x| < 4.5 cm, more than 11 cm in front of the Hips head,
         # z 0.87-0.97 m -> Hips only
         "rigid_x_m": 0.045, "rigid_y_max_m": -0.11, "rigid_z0_m": 0.87, "rigid_z1_m": 0.97,
+    },
+    # YOK-112. Oni, on the 2.2 m rig (scale_rig.py x1.1 first; heights below are in that frame:
+    # hip joints 1.128 m, knees 0.678 m, arm heads 1.755 m at x 0.295). Ryo's pelvis rules made
+    # him worse (the baggy trousers are cloth, exempt by cloth/oni.md, and the seat needs a much
+    # wider blend), so they are off. Instead, the whole torso between the seat and the armpits
+    # follows the trunk by height (T6 over the full depth), and the leg weight fades out over
+    # a 0.38 m band from just below the hip joint (T2 over the whole torso). The armpit line
+    # drops 1.6 m per metre of |x| past 0.12 m, blended over +-0.16 m. Removes the 189 mane and
+    # upper-back bleed verts and the seat sheet in the crouch.
+    "oni": {
+        "torso_fix": 1, "side_on": 0, "falloff_on": 0, "smooth_pre_iters": 0,
+        # pelvis band (bounds the verts the tidy step may touch; its rules are off)
+        "region_bottom_m": 0.18, "region_top_m": 0.17, "side_band_m": 0.06,
+        "falloff_front_hi_m": 0.10, "falloff_back_lo_m": 0.04, "falloff_back_hi_m": 0.15,
+        # T1 arm strip and T3 off (zero-width strip); T2 leg strip over the whole torso
+        "trunk_x0_m": 0.0, "trunk_x1_m": 0.001, "hair_x0_m": 0.0, "hair_x1_m": 0.001,
+        "torso_smooth_iters": 0, "legstrip_all": 1, "hairleg_z0_m": 1.04, "hairleg_z1_m": 1.42,
+        # T1 limits as tuned (with the zero-width strip they reach only verts on the midline)
+        "hair_y0_m": 0.14, "hair_y1_m": 0.20, "trunk_z0_m": 1.25, "trunk_z1_m": 1.38,
+        "hair_z0_m": 1.53, "hair_z1_m": 1.65,
+        "rigid_x_m": 0.0, "rigid_y_max_m": -9.0, "rigid_z0_m": 0.0, "rigid_z1_m": 0.0,
+        "pure_on": 1, "pure_y0_m": -1.0, "pure_y1_m": -0.9, "pure_x0_m": 0.45, "pure_x1_m": 0.52,
+        "pure_zbot0_m": 1.04, "pure_zbot1_m": 1.42, "pure_ztop_m": 1.82, "pure_xflat_m": 0.12,
+        "pure_zslope": 1.6, "pure_ztop_band_m": 0.16,
+    },
+    # YOK-102. Kappa, after cut_shell.py (1.5 m; hip joints 0.672 m, knees 0.419 m, arm heads
+    # 1.198 m at x 0.268). The auto-skin gave the short torso, the capped back and the shell rim
+    # to the arms and legs at once (1,243 bleed verts), the flanks 0.5 UpLeg 20 cm above the hip
+    # joint, the crotch to the shins (the splayed knees sit at crotch height) and the calf backs
+    # 0.4-0.5 UpLeg, so the shins collapsed in the crouch. Ryo's pelvis rules off (they made it
+    # worse). Steps: T2 leg strip over the whole torso and T6 trunk-by-height over the full
+    # depth, both from 0.58 to 0.92 m; C crotch (|x| < 0.12 m: Leg -> UpLeg); K knee: within
+    # 0.20 m of each knee head (0.08 m fade) the UpLeg/Leg pair splits by height over +-0.05 m,
+    # and below the knee line - 0.02 m the leg's own UpLeg weight goes to Leg, blended over 0.14 m.
+    "kappa": {
+        "torso_fix": 1, "side_on": 0, "falloff_on": 0, "smooth_pre_iters": 0,
+        "region_bottom_m": 0.12, "region_top_m": 0.12, "side_band_m": 0.05,
+        "falloff_front_hi_m": 0.07, "falloff_back_lo_m": 0.02, "falloff_back_hi_m": 0.10,
+        "trunk_x0_m": 0.0, "trunk_x1_m": 0.001, "hair_x0_m": 0.0, "hair_x1_m": 0.001,
+        "torso_smooth_iters": 0, "legstrip_all": 1, "hairleg_z0_m": 0.58, "hairleg_z1_m": 0.92,
+        "hair_y0_m": 0.17, "hair_y1_m": 0.22, "trunk_z0_m": 0.89, "trunk_z1_m": 0.99,
+        "hair_z0_m": 1.15, "hair_z1_m": 1.25,
+        "rigid_x_m": 0.0, "rigid_y_max_m": -9.0, "rigid_z0_m": 0.0, "rigid_z1_m": 0.0,
+        "pure_on": 1, "pure_y0_m": -1.0, "pure_y1_m": -0.9,
+        "pure_zbot0_m": 0.58, "pure_zbot1_m": 0.92, "pure_ztop_m": 1.25, "pure_xflat_m": 0.15,
+        "pure_zslope": 1.4, "pure_ztop_band_m": 0.10,
+        "crotch_x_m": 0.12,
+        "knee_split": 1, "knee_band_m": 0.05, "knee_radius_m": 0.20, "knee_fade_m": 0.08,
+        "shin_clean_m": 0.02, "shin_blend_m": 0.14,
     },
 }
 TRUNK = ("Hips", "Spine02", "Spine01", "Spine", "neck")
@@ -361,7 +442,8 @@ def main():
         stats("armstrip", W0, WA, names, log)
         # T2. leg strip in the hair layer above the seat
         WB = WA.copy()
-        lcut = WB[:, LI] * (hair * smoothstep(p["hairleg_z0_m"], p["hairleg_z1_m"], z))[:, None]
+        layer = np.ones_like(hair) if p["legstrip_all"] else hair
+        lcut = WB[:, LI] * (layer * smoothstep(p["hairleg_z0_m"], p["hairleg_z1_m"], z))[:, None]
         WB[:, LI] -= lcut
         WB[:, TI] += lcut.sum(1)[:, None] * trunk_split(z)
         stats("legstrip", WA, WB, names, log)
@@ -394,7 +476,7 @@ def main():
     # 2. side separation (UpLeg and Leg pairs): each half of the crotch follows its own leg
     W1 = Ws.copy()
     s_left = smoothstep(-p["side_band_m"], p["side_band_m"], x)
-    for lc, rc in ((L, R), (LL, RL)):
+    for lc, rc in (((L, R), (LL, RL)) if p["side_on"] else ()):
         u = W1[:, lc] + W1[:, rc]
         sel = region & (u > 0)
         W1[sel, lc] = u[sel] * s_left[sel]
@@ -406,7 +488,7 @@ def main():
     lo = np.where(y < 0, p["falloff_front_lo_m"], p["falloff_back_lo_m"])
     hi = np.where(y < 0, p["falloff_front_hi_m"], p["falloff_back_hi_m"])
     keep = 1 - smoothstep(uz + lo, uz + hi, z)
-    for c in (L, R):
+    for c in ((L, R) if p["falloff_on"] else ()):
         cut = W3[:, c] * (1 - keep) * region
         W3[:, c] -= cut
         W3[:, H] += cut
@@ -436,6 +518,95 @@ def main():
             log["rigid_verts"] = int(rig.sum())
             edit |= rig
             W3 = W2
+
+    # C. crotch (off unless crotch_x_m > 0): near the midline below the hip joint the auto-skin can
+    # give the crotch to the shins (Leg) when the knees sit at crotch height; that weight goes to
+    # the same side's UpLeg.
+    if p["crotch_x_m"] > 0:
+        WC = W3.copy()
+        cz = (np.abs(x) < p["crotch_x_m"]) & (z < uz)
+        for up, lo_ in ((L, LL), (R, RL)):
+            WC[cz, up] += WC[cz, lo_]
+            WC[cz, lo_] = 0
+        stats("crotch", W3, WC, names, log)
+        edit |= cz
+        W3 = WC
+
+    # T6. pure trunk zone (off unless pure_on; YOK-102 Kappa): behind the back, inside the zone,
+    # the weights blend to the trunk height split alone (no arms, no legs, no per-vert noise),
+    # so folded or thin geometry there (the Kappa's capped back and the shell rim left at its
+    # edge, both under the mounted shell) moves as one smooth plate with the spine.
+    if p["pure_on"]:
+        ztop = p["pure_ztop_m"] - p["pure_zslope"] * np.maximum(np.abs(x) - p["pure_xflat_m"], 0)
+        zone = (smoothstep(p["pure_y0_m"], p["pure_y1_m"], y)
+                * (1 - smoothstep(p["pure_x0_m"], p["pure_x1_m"], np.abs(x)))
+                * smoothstep(p["pure_zbot0_m"], p["pure_zbot1_m"], z)
+                * (1 - smoothstep(ztop - p["pure_ztop_band_m"], ztop + p["pure_ztop_band_m"], z)))
+        zone = to_weld(zone[:, None])[rep][:, 0]
+        WP = W3.copy() * (1 - zone)[:, None]
+        WP[:, TI] += zone[:, None] * trunk_split(to_weld(z[:, None])[rep][:, 0])
+        stats("pure", W3, WP, names, log)
+        log["pure_verts"] = int((zone > 1e-3).sum())
+        edit |= zone > 1e-3
+        W3 = WP
+
+    # K. knee smoothing (off unless knee_iters > 0; YOK-102 Kappa): the auto-skin splits the knee
+    # between UpLeg and Leg in steps, so the back of the knee and the calf top collapse in a deep
+    # crouch. Laplacian smoothing of each side's [UpLeg, Leg] pair over the verts within
+    # knee_band_m of that knee head (the pair's per-vert total is kept; other bones untouched).
+    if p["knee_iters"] > 0 or p["knee_split"]:
+        WK = to_weld(W3)
+        for up, lo_, kn in ((L, LL, "LeftLeg"), (R, RL, "RightLeg")):
+            if p["knee_radius_m"] > 0:
+                dk = np.linalg.norm(co - heads[kn][None, :], axis=1)
+                kfade = 1 - smoothstep(p["knee_radius_m"] - p["knee_fade_m"], p["knee_radius_m"], dk)
+                kb = kfade > 1e-3
+            else:
+                kfade = (np.abs(z - heads[kn][2]) < p["knee_band_m"]).astype(np.float64)
+                kb = kfade > 0
+            Wbefore = WK[:, [up, lo_]].copy()
+            kw = np.zeros(nw, bool)
+            np.logical_or.at(kw, rep, kb)
+            sub = WK[:, [up, lo_]]
+            tot = sub.sum(1, keepdims=True)
+            sm = laplacian(sub, edges, kw & (tot[:, 0] > 1e-6), p["knee_iters"], p["smooth_lambda"])
+            st = sm.sum(1, keepdims=True)
+            WK[:, [up, lo_]] = np.where(st > 1e-9, sm / np.maximum(st, 1e-9) * tot, sub)
+            if p["knee_split"]:
+                zw = to_weld(z[:, None])[:, 0]
+                kz_ = heads[kn][2]
+                share = smoothstep(kz_ - p["knee_band_m"], kz_ + p["knee_band_m"], zw)
+                pair = WK[:, up] + WK[:, lo_]
+                ksel = kw & (pair > 1e-6)
+                WK[ksel, up] = pair[ksel] * share[ksel]
+                WK[ksel, lo_] = pair[ksel] * (1 - share[ksel])
+            kf = to_weld(kfade[:, None])[:, 0]
+            WK[:, [up, lo_]] = kf[:, None] * WK[:, [up, lo_]] + (1 - kf[:, None]) * Wbefore
+            edit |= kb
+            if p["shin_clean_m"] > 0:
+                side = np.sign(heads[kn][0] - mid_x)
+                zs = heads[kn][2] - p["shin_clean_m"]
+                f = (1 - smoothstep(zs - p["shin_blend_m"], zs, z)) * ((x * side) > 0.03)
+                fw = to_weld(f[:, None])[:, 0]
+                mv = WK[:, up] * fw
+                WK[:, up] -= mv
+                WK[:, lo_] += mv
+                edit |= f > 1e-3
+        stats("knee", W3, WK[rep], names, log)
+        W3 = WK[rep]
+
+    # S. band smoothing (off unless band_smooth_iters > 0): Laplacian smoothing of the whole weight
+    # vector (every bone; rows stay normalised) over the verts between band_z0_m and band_z1_m.
+    # Takes the per-vert noise of the auto-skin out of a transition (the Kappa's seat and back,
+    # where neighbours differ by 0.3 UpLeg) after the rules above have set its shape.
+    if p["band_smooth_iters"] > 0:
+        bsel = (z > p["band_z0_m"]) & (z < p["band_z1_m"]) & (np.abs(x) < p["band_x_m"])
+        bw = np.zeros(nw, bool)
+        np.logical_or.at(bw, rep, bsel)
+        WS = laplacian(to_weld(W3), edges, bw, p["band_smooth_iters"], p["smooth_lambda"])
+        stats("bandsm", W3, WS[rep], names, log)
+        edit |= bsel
+        W3 = WS[rep]
 
     # 4. props: the charm, pouch and rope sash are baked rigid to Hips (rig plan, ryo.md). They
     # are painted parts of the one body mesh, so they are found by base colour inside the
