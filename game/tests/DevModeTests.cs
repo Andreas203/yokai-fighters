@@ -259,8 +259,9 @@ public static class DevModeTests
 			Assert.True(DevMenu.DebugTools.Select(t => t.Key).Distinct().Count() == DevMenu.DebugTools.Count, "no key listed twice");
 			Press(menu.ModeToggle);
 			Assert.True(menu.ShowSection(DevMenu.MapId) && menu.Page is DevMapPage, "dev on: the Map page (YOK-124)");
-			foreach (string id in new[] { DevMenu.JumpId, DevMenu.RunId })
+			foreach (string id in new[] { DevMenu.JumpId })
 				Assert.True(menu.ShowSection(id) && menu.Page!.Name == "Page_" + id && FindLabel(menu.Page, "Stub") != null, "dev on: stub page " + id);
+			Assert.True(menu.ShowSection(DevMenu.RunId) && menu.Page is DevRunStatePage && menu.Page.Name == "Page_" + DevMenu.RunId, "dev on: the Run state page (YOK-126)");
 			menu.Close();
 			Assert.True(!menu.IsOpen && menu.Page == null, "closed, page freed");
 		});
