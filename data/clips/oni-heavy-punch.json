@@ -1,0 +1,23 @@
+{
+  "kind": "clip",
+  "id": "oni-heavy-punch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Heavy_Hammer_Swing",
+  "frames_total": 45,
+  "trim_start": 0,
+  "trim_end": 52,
+  "retime": [
+    { "frames": [1, 9], "ticks": [0, 16], "note": "startup snaps: arms rise to the overhead peak at 2x" },
+    { "frames": [9, 17], "ticks": [16, 32], "note": "the slam falls at 2x" },
+    { "frames": [17, 21], "ticks": [32, 36], "note": "strike pose, club low in front, plays at 1x through the active frames" },
+    { "frames": [21, 29], "ticks": [36, 44], "note": "recovery, 1x" },
+    { "frames": [29, 45], "ticks": [44, 52], "note": "recovery eases out at 0.5x" }
+  ],
+  "file": "assets/generated/clips/oni/oni-heavy-club.glb",
+  "hit_start": 17,
+  "hit_end": 20,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. Club clearance PASS (prop_clearance.py --clip, every 2nd tick of all 53 ticks: 0 new club vertices inside the body or head; club tip stays 0.42 m or more above the floor). Foot slide WARN 1.04 cm per frame (limit 1.0, left foot net 14 cm over the slam).",
+  "rules": ["F2", "F5", "F6"],
+  "notes": "Meshy preset 128 on task 01a14515-ba26-7266-bea2-b233e1d2f6e2, raw take game/assets/generated/characters/oni/takes/oni-heavy-128.glb (113 ticks). Cleaned with clean_clip.py: trim raw ticks 60-112 (file tick 0 = raw 60), strip-root horizontal, no smoothing, hit 33-37 protected. Retimed frames: startup 16, active 4 (17-20), recovery 25. Two-handed preset on a one-handed mount: the left hand grips nothing. Skin check not run. Rejected as a straight 1x play: 53 frames."
+}

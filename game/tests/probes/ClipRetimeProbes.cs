@@ -92,7 +92,7 @@ public static class ClipRetimeProbes
 		Assert.Equal(a.ComputedFrames, b.ComputedFrames, "ComputedFrames ignores speed");
 	}
 
-	// No curve: every clip in data/clips matches the pre-YOK-113 formula for every frame, -2..FramesTotal+2.
+	// No curve: every clip in data/clips without a retime curve matches the pre-YOK-113 formula for every frame, -2..FramesTotal+2.
 	[Test]
 	public static void Probe_NoCurveClipsMatchOldFormula()
 	{
@@ -103,8 +103,7 @@ public static class ClipRetimeProbes
 		{
 			string id = System.IO.Path.GetFileNameWithoutExtension(path);
 			var c = cat[id];
-			if (c == null) continue;
-			Assert.True(c.Retime == null, $"{id}: no curve");
+			if (c == null || c.Retime != null) continue; // clips with a curve map frames by it (YOK-102 Oni kit)
 			for (int f = -2; f <= c.FramesTotal + 2; f++)
 			{
 				int n = Math.Clamp(f, 1, c.FramesTotal);

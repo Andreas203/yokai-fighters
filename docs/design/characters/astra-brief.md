@@ -55,7 +55,7 @@ Palette: skin kappa teal `#3E8C84` PROPOSED; shell dark pine `#34483B` with rim 
 
 ### Kappa front (copy-paste)
 
-[style block] Full-body concept art of a squat river-spirit fighter, front view, neutral standing pose with the arms slightly away from the body and the feet apart, plain flat white background. Hunched wide shoulders, short thick legs, large webbed hands and feet, a beaked mouth, round calm stubborn eyes, a flat pale dish on the top of the head (empty, no water), a round dark green shell #34483B with an ochre rim #8A6A3A on the back visible beside the shoulders, skin in teal #3E8C84, a rice-paper sash with a rope tie and a small cucumber charm at the hip. No held items, no water, no effects. [negative block]
+[style block] Full-body concept art of a squat river-spirit fighter, front view, neutral standing pose with the arms slightly away from the body and the feet apart, plain flat white background. Hunched wide shoulders, short thick legs, large webbed hands and feet, a beaked mouth, round calm stubborn eyes, a flat pale dish on the top of the head (empty, no water), a round dark green shell #34483B with an ochre rim #8A6A3A on the back visible beside the shoulders, skin in teal #3E8C84, a rice-paper sash with a rope tie, nothing hanging from it. No held items, no water, no effects. [negative block]
 
 ### Kappa turnaround (copy-paste, attach the chosen front)
 

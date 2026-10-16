@@ -149,3 +149,65 @@ Rendered headless-free in Godot 4.7.2 (Forward+, AMD 7900 XT): runtime `GLTFDocu
 - Contact frames are read from hand speed and reach; the strike is a swing, not a fist, because the rig has no fingers.
 - The tail proxy is an assumption (no mount scene exists); sway and the real tail texture were not tested.
 - Preset names/ids come from Meshy's public library table; 194 and 389 returned the clips named in the GLBs (`Right_Uppercut_from_Guard`, `Grip_and_Throw_Down`).
+
+## YOK-102 / YOK-112 gate: Oni and Kappa (2026-10-16)
+Owner: rig-specialist. Rules: G4, F5, F6, E15, AM5. No credits spent; no clip was made or keyed.
+
+- **Rigs:** the repaired Meshy rigs, `oni-rigged.glb` (2.2 m) and `kappa-rigged.glb` (1.5 m, shell cut). See `assets/specs/rigs/oni.md` and `kappa.md`.
+- **Props:** club `club-grip.glb` on `RightHand`, shell `shell-fit.glb` on `Spine01`.
+- **Clips:** the existing gate clips over their game trims: walk `ryo-walk-fwd` (ticks 0-64), heavy `ryo-heavy-punch` (28-61, hit 38-41), throw `ryo-generic-throw` (30-59, hit 35-41).
+- **Hip fix:** YOK-130 (PR #146, `b52afe9`, not merged) was tested on a throwaway local merge with this branch. It was not pushed or committed.
+
+### Results
+| Check | Ryo (reference) | Oni | Kappa |
+|---|---|---|---|
+| Skin, worst failing edges per frame (walk / heavy / throw; `skin_clip_check.py --fps 60 --rotations-only 1`) | 12 / 18 / 16 | 9 / 24 / 45 | 11 / 42 / 17 |
+| Hip scale (YOK-130) | 1.000 | 1.188 | 0.775 |
+| Lowest toe/foot joint in the game, against the rig's own rest contact (Ryo 3.1, Oni 5.0, Kappa 5.4 cm): walk / heavy / throw / idle | +3.7 / +1.3 / +3.4 / +0.6 cm | **-1.6 / -2.7 / -2.4 / -4.9 cm** | **-4.3 / -7.8 / -3.0 / -3.6 cm** |
+| Right-hand reach forward of the hips, at height: heavy | 0.40 m @ 1.29 m | 0.57 m @ 1.65 m | 0.46 m @ 1.11 m |
+| Same, throw push | 0.51 m @ 1.06 m | 0.68 m @ 1.41 m | 0.56 m @ 0.91 m |
+| Props through the body (`prop_clearance.py --clip`, every 3rd tick) | - | **Club: walk ticks 29-59, up to 15 cm into the near shin and trousers; heavy recovery 55-61, up to 11 cm through the back of the head and horns.** Throw clean; heavy hit frames clean | Shell: no visible clipping. The figures count the shell's sunk underside meeting the back as the spine leans, up to 29 cm in the walk, all hidden under the dome |
+
+Without YOK-130 the clip hips sit at Ryo's 94.9 cm in bone space: the Oni would sink about 20 cm and the Kappa would float about 21 cm. With it, both stand within 8 cm of the floor.
+
+### Verdict
+- **Oni body: GO.**
+  - The skin holds through all three clips.
+  - With the hip fix the feet sink 2-5 cm below his rest contact. The cause is his different leg proportions. It reads as slightly sunk feet, not as floating.
+- **Oni club: NO-GO in the shared walk and the heavy's recovery.**
+  - The designer asked for the club always in hand. A 1.32 m club in the hand of the shared, bare-handed walk swings through his near leg on every back-swing, at any grip angle (30, 45, 60, 75 and 90 degrees forward, and outward tilts, were all tried).
+  - The heavy's recovery lifts it through his head.
+  - Throw and the heavy's hit frames are clean.
+  - Proposed fixes, for the designer to choose:
+    - (a) Oni-specific walk and idle clips that carry the club: a library or text-to-motion take by animator, about 3-10 credits each.
+    - (b) A shorter club, about 0.9 m: a free script change, which reduces the walk clipping but does not remove it.
+    - (c) Stow the club on the back outside club moves. The designer ruled this out earlier.
+    - The heavy recovery needs the Oni's own heavy take, or a trim that ends before tick 55.
+- **Kappa body: GO, with a WARN on the feet.**
+  - The skin holds.
+  - The feet sink 3-8 cm in the heavy, because the rest stance is splayed 18-19 deg and the clips carry Ryo's narrower stance.
+  - Fixes, both still open: the scripted leg re-pose (free; changes the bind, so it needs the designer's approval), or a per-rig ground offset in code.
+- **Kappa shell: GO.** It stays seated on the back through all three clips, with no visible clipping.
+- **Reach and contact height (move data, not mesh):**
+  - The Oni's hands land about 40% further and 30% higher than Ryo's.
+  - The Kappa reaches about 10% further than Ryo (long arms), but its push lands lower, at 0.91 m (an opponent's belly).
+  - The throw range and hitbox heights belong to movesmith.
+
+Stills, `assets/specs/clips/stills/retarget-gate/`:
+- body: `oni-{walk-f48,heavy-f40,throw-f40}-side.png`, `oni-{heavy,throw}-f40-front.png`, and the same for the Kappa;
+- props: `oni-club-{walk-f50,heavy-f40,throw-f39}-side.png`, `kappa-shell-{walk-f50-side,heavy-f40-back,throw-f39-side}.png`.
+
+Method limits:
+- The skin and prop checks play only the clip's rotations, as the game does. Hip translation is a whole-body offset there.
+- The toe heights come from Godot 4 on the merged tree. They are joint heights, compared against each rig's rest joint height.
+- Reach is the `RightHand` joint, not the fingertips.
+
+### Kappa after the leg re-pose (2026-10-16)
+The designer approved a free scripted leg re-pose (`tools/blender/repose_legs.py`; details in `assets/specs/rigs/kappa.md`, "Leg re-pose").
+- Splay: 18-19 deg → 4.2/4.5 deg. Height: 1.551 m. Hip scale: 0.828.
+- Re-run on a throwaway merge with YOK-130:
+  - toe joints against the rest contact: walk +0.5, heavy -3.2, throw +1.9, idle +0.4 cm (before: -4.3 / -7.8 / -3.0 / -3.6);
+  - skin worst failing edges per frame: 20 / 53 / 35;
+  - shell: no visible clipping.
+- **Kappa: GO** (feet WARN cleared except the heavy's deepest tick, 1.2 cm past ±2).
+- The Kappa stills in this folder were re-rendered on the re-posed rig.
