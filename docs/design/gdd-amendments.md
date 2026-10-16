@@ -145,9 +145,9 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
-## AM7 — Closer fight camera, screen walls brought in (2026-10-15) — PROPOSED, designer approves at PR review
+## AM7 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
 
-**Status.** Proposed on branch `YOK-120-closer-camera-walls`. The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15); the numbers below are a first try and become approved only when the designer approves the PR.
+**Status.** Approved by the designer on 2026-10-16 (merge of PR #133). The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15).
 
 **Decision.** The fight camera sits closer to the fighters and stays fixed in distance. One screen at the gameplay plane is **1,440 units** (7.2 m), was 1,920 (9.6 m). The screen walls come in with it: fighters are at most **960 units** apart, was 1,520, so both rigged models stay in frame whichever way each faces. A model reaches up to 240 units ahead of its position and 200 behind; a fighter facing away from the other (after a cross-up, a throw or a back dash) shows its 240-unit front reach on the outside, so the walls budget the larger reach on both sides: 960 + 2 × 240 = 1,440. (The YOK-39 walls, 1,520 + 2 × 200 = 1,920, budgeted only the back reach, and a fighter facing away could clip by up to 40 units; test-breaker probes on YOK-120 found it.) `SimConfig` derives the walls from the screen width and the model reach, so the two cannot drift apart. The stage stays **3,840 units** wide (two of the old 1,920-unit screens, now about 2.7 of the new ones), so the stage art and the part of it the camera can ever show are unchanged. The camera still follows the fighters' midpoint and stops where a cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge. The screen width and stage width are tunable in one place (`SimConfig`); the walls follow from the screen width.
 
