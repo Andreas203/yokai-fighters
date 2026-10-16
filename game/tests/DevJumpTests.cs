@@ -234,23 +234,49 @@ public static class DevJumpTests
 	// ---- the Tanuki's copy (T1-T4, AM6) ----
 
 	[Test]
-	public static void ShapeCopy_MakesTheChosenSpecialAndLevelTheTarget_ForEverySpecial()
+	public static void ShapeCopy_MakesTheChosenSpecialAndLevelTheTarget_OrRefusesWhenOnlyReleasingAStarterWould()
 	{
 		var pool = FightScene.LoadAbilityPool();
 		foreach (var s in pool.Specials)
 			for (int lv = 1; lv <= Math.Min(3, s.MaxLevel); lv++)
 			{
 				var run = RunState.NewRun(pool);
-				var t = DevJump.ShapeCopy(run, pool, s.Id, lv);
+				CopyTarget t;
+				try { t = DevJump.ShapeCopy(run, pool, s.Id, lv); }
+				catch (ArgumentException e)
+				{
+					Assert.True(e.Message.Contains("not reachable with Ryo's starters"), $"{s.Id} Lv {lv}: refused only for a starter: {e.Message}");
+					continue;
+				}
 				Assert.True(t.Data.Id == s.Id && t.Level == lv && t.Slot == s.Slot, $"{s.Id} Lv {lv}: target");
 				Assert.True(CopyRule.Target(run) == t, $"{s.Id} Lv {lv}: the copy rule agrees");
 				Assert.Equal(Math.Min(lv, CopyRule.HighestUnevolvedLevel), t.MoveLevel, $"{s.Id} Lv {lv}: T4 move level");
+				foreach (var st in pool.Starters.Where(st => st.Slot != s.Slot))
+					Assert.True(run.Owns(st.Id), $"{s.Id} Lv {lv}: starter {st.Id} is never released (A1, R6)");
 			}
-		// From a run already past the chosen level.
-		var starter = pool.Starters.First();
+		// A2 cases from the critic: each needs a starter released, so each is refused, and nothing is chosen for it.
+		foreach (var (id, lv) in new[] { ("rising-talisman", 1), ("foxfire", 1) })
+		{
+			if (pool.Special(id) is not { } sp) continue;
+			var run = RunState.NewRun(pool);
+			var natural = CopyRule.Target(run);
+			bool reachable = natural?.Data.Id == id || pool.Starters.Where(st => st.Slot != sp.Slot).All(st => st.Slot > sp.Slot);
+			bool threw = false;
+			try { DevJump.ShapeCopy(run, pool, id, lv); } catch (ArgumentException) { threw = true; }
+			Assert.True(threw != reachable, $"{id} Lv {lv}: refused exactly when a starter would have to go (T3 tie keeps the lower slot)");
+			Assert.True(pool.Starters.Where(st => st.Slot != sp.Slot).All(st => run.Owns(st.Id)), $"{id} Lv {lv}: every other starter still held");
+		}
+		Assert.True(pool.Special("rising-talisman") is null || Throws(() => DevJump.ShapeCopy(RunState.NewRun(pool), pool, "rising-talisman", 1)), "Rising Talisman Lv 1: T3 picks Spirit Wave, refused");
+		// From a run already past the chosen level (the lowest-slot starter wins a Lv 1 tie).
+		var starter = pool.Starters.OrderBy(st => st.Slot).First();
 		var high = RunState.NewRun(pool);
 		while (high.CanLevelUp(starter.Slot)) high.LevelUp(starter.Slot);
 		Assert.True(DevJump.ShapeCopy(high, pool, starter.Id, 1) is { Level: 1 } low && low.Data.Id == starter.Id, "a special above the chosen level comes back down");
+	}
+
+	static bool Throws(Action a)
+	{
+		try { a(); return false; } catch (ArgumentException) { return true; }
 	}
 
 	[Test]

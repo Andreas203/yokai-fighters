@@ -318,7 +318,14 @@ public partial class DevJumpPage : VBoxContainer
 			{
 				var s = Load<StartScreen>("res://scenes/ui/start_screen.tscn");
 				screen = s;
-				wire = h => { s.Open(); s.Started += h.Finish; s.BackRequested += h.Finish; };
+				var keep = MenuSettings.Scheme; // the real screen sets the scheme; a dev view must not change the player's setting
+				wire = h =>
+				{
+					s.Open();
+					s.Started += h.Finish;
+					s.BackRequested += h.Finish;
+					h.Closed += () => { if (MenuSettings.Scheme != keep) MenuSettings.SetScheme(keep); };
+				};
 				break;
 			}
 			case DevJumpKind.MoveList:

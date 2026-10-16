@@ -191,7 +191,13 @@ public static class DevJump
 		}
 		if (run[slot]?.Data.Id != specialId) run.Equip(data);
 		while (run[slot]!.Level < level) run.LevelUp(slot);
-		while (CopyRule.Target(run) is { } t && t.Slot != slot) run.Release(t.Slot);
+		while (CopyRule.Target(run) is { } t && t.Slot != slot)
+		{
+			// A1/R6: starters are never released (the merchant refuses it), so a run that would need it is unreachable.
+			if (t.Data.Starter)
+				throw new ArgumentException($"T3 picks {t.Data.Name} (Lv {t.Level}) over {data.Name} Lv {level}: not reachable with Ryo's starters");
+			run.Release(t.Slot);
+		}
 		return CopyRule.Target(run)!;
 	}
 
