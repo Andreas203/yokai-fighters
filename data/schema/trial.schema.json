@@ -31,7 +31,7 @@
       "required": ["distance", "attempt_frames", "dummy"],
       "additionalProperties": false,
       "properties": {
-        "distance": { "type": "integer", "minimum": 120, "maximum": 960, "description": "Start distance between the fighters' centres, gameplay units (body width 120 .. max separation 960, SimConfig, AM8)." },
+        "distance": { "type": "integer", "minimum": 120, "maximum": 1060, "description": "Start distance between the fighters' centres, gameplay units (body width 120 .. max separation 1,060, SimConfig, AM9 proposed)." },
         "attempt_frames": { "type": "integer", "minimum": 60, "maximum": 3600, "description": "Ticks one attempt lasts before it counts as failed." },
         "dummy": { "$ref": "#/$defs/dummy" }
       }
@@ -68,8 +68,8 @@
           "additionalProperties": false,
           "minProperties": 1,
           "properties": {
-            "min": { "type": "integer", "minimum": 0, "maximum": 960 },
-            "max": { "type": "integer", "minimum": 0, "maximum": 960 }
+            "min": { "type": "integer", "minimum": 0, "maximum": 1060 },
+            "max": { "type": "integer", "minimum": 0, "maximum": 1060 }
           },
           "description": "hit/throw: distance between the fighters' centres on the sampled tick (hit: when it connects; throw: when the grab connects, before the land's slide), gameplay units."
         },

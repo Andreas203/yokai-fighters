@@ -16,12 +16,16 @@ public static class ModelExtentTests
 	public const int FleshPad = 20;
 
 	/// <summary>(front, back) reach in units for one model, facing +X, over every frame of every clip in its library.</summary>
-	public static (int Front, int Back, string FrontClip, string BackClip) Measure(FighterModel model)
+	public static (int Front, int Back, string FrontClip, string BackClip) Measure(FighterModel model) => Measure(model, out _, out _);
+
+	/// <summary>YOK-129: also the highest bone above the model's feet, in metres (no pad), over every frame of every clip.</summary>
+	public static (int Front, int Back, string FrontClip, string BackClip) Measure(FighterModel model, out float top, out string topClip)
 	{
 		model.Position = Vector3.Zero;
 		model.Mirror.Scale = Vector3.One;
 		var lib = model.Player.GetAnimationLibrary(FighterModel.LibraryName);
 		float front = 0, back = 0; string fc = "", bc = "";
+		top = 0; topClip = "";
 		foreach (var name in lib.GetAnimationList())
 		{
 			var anim = lib.GetAnimation(name);
@@ -35,7 +39,9 @@ public static class ModelExtentTests
 				var xf = skel.GlobalTransform;
 				for (int b = 0; b < skel.GetBoneCount(); b++)
 				{
-					float x = (xf * skel.GetBoneGlobalPose(b)).Origin.X;
+					var o = (xf * skel.GetBoneGlobalPose(b)).Origin;
+					float x = o.X;
+					if (o.Y > top) { top = o.Y; topClip = name; }
 					if (x > front) { front = x; fc = name; }
 					if (-x > back) { back = -x; bc = name; }
 				}
@@ -64,8 +70,11 @@ public static class ModelExtentTests
 		{
 			var model = scene.ModelOf(i);
 			if (model is null) continue; // no model: the capsule (BodyWidth) is what shows
-			var (front, back, fc, bc) = Measure(model);
-			GD.Print($"YOK-39 reach {model.Name}: front {front} ({fc}), back {back} ({bc})");
+			var (front, back, fc, bc) = Measure(model, out float top, out string tc);
+			GD.Print($"YOK-39 reach {model.Name}: front {front} ({fc}), back {back} ({bc}); YOK-129 top bone {top:0.000} m ({tc})");
+			// YOK-129: the dynamic camera keeps the top bone + the HUD test's 15 cm hair allowance below the HUD band.
+			Assert.True(top + 0.15f <= YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters,
+				$"{model.Name}: top bone {top:0.000} m + 0.15 > CameraConfig.ModelTopMeters {YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters}");
 			Assert.True(front * SimConfig.Scale <= c.ModelFrontReach, $"{model.Name}: front reach {front} ({fc}) > {c.ModelFrontReach / SimConfig.Scale}");
 			Assert.True(back * SimConfig.Scale <= c.ModelBackReach, $"{model.Name}: back reach {back} ({bc}) > {c.ModelBackReach / SimConfig.Scale}");
 		}

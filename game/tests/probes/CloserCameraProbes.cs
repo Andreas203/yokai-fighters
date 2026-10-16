@@ -45,6 +45,7 @@ public static class CloserCameraProbes
 				m.P1.X = Math.Clamp(m.P1.X, -corner, corner); m.P2.X = Math.Clamp(m.P2.X, -corner, corner);
 				var rng = new Random(seed * 7919 + start);
 				int lastSide = Math.Sign(m.P2.X - m.P1.X);
+				var cam = new DynamicCamera(c); cam.Snap(DynamicCamera.SubjectOf(m)); // YOK-129: the current view, at every zoom
 				for (int t = 0; t < 2500; t++)
 				{
 					var inp = new FighterInput[2];
@@ -58,11 +59,13 @@ public static class CloserCameraProbes
 					int sep = Math.Abs(m.P2.X - m.P1.X);
 					Assert.True(sep <= c.MaxSeparation, $"start {start} seed {seed} tick {t}: separation {sep} > {c.MaxSeparation}");
 					Assert.True(FightCamera.BothInView(m), $"start {start} seed {seed} tick {t}: a model is out of frame (P1 {m.P1.X} {m.P1.State}, P2 {m.P2.X} {m.P2.State})");
+					cam.Step(DynamicCamera.SubjectOf(m));
+					Assert.True(cam.InFrame(DynamicCamera.SubjectOf(m)) && cam.OnStage(), $"start {start} seed {seed} tick {t}: out of the dynamic view (width {cam.Width}, cx {cam.CenterX}, P1 {m.P1.X}, P2 {m.P2.X})");
 					Assert.True(Math.Abs(m.P1.X) <= corner && Math.Abs(m.P2.X) <= corner, "stays on the stage");
 					int side = Math.Sign(m.P2.X - m.P1.X);
 					if (side != 0 && lastSide != 0 && side != lastSide) switches++;
 					if (side != 0) lastSide = side;
-					if (m.Phase == MatchPhase.Over) m.Reset();
+					if (m.Phase == MatchPhase.Over) { m.Reset(); cam.Snap(DynamicCamera.SubjectOf(m)); }
 				}
 			}
 		Assert.True(switches > 0, $"the fuzz covered side switches ({switches})");
@@ -82,7 +85,7 @@ public static class CloserCameraProbes
 			var m2 = NewMatch();
 			m2.P1.X = -sign * 100; m2.P2.X = sign * (c.MaxSeparation - 100) ;
 			for (int t = 0; t < 30; t++) m2.Step(In(sign > 0 ? InputBits.Left : InputBits.Right), In(sign > 0 ? InputBits.Right : InputBits.Left));
-			Assert.Equal(c.MaxSeparation, Math.Abs(m2.P2.X - m2.P1.X), "walking apart holds at exactly 960 (not 1,039, not 961)");
+			Assert.Equal(c.MaxSeparation, Math.Abs(m2.P2.X - m2.P1.X), "walking apart holds at exactly MaxSeparation (not one more)");
 		}
 	}
 
@@ -91,8 +94,10 @@ public static class CloserCameraProbes
 	public static void Camera_ExactCornerExtents_BothFacingsAndSides()
 	{
 		var c = SimConfig.Default;
-		Assert.Equal(1440 * SimConfig.Scale, c.ViewWidth, "E1: one screen is 1,440 units");
-		Assert.Equal(960 * SimConfig.Scale, c.MaxSeparation, "E1: 960 apart");
+		// YOK-129: reads the config (AM9 proposed: widest screen 1,540, walls 1,060) instead of AM8's fixed 1,440 / 960.
+		Assert.Equal(c.ViewWidth - 2 * FightCamera.ModelReach(c), c.MaxSeparation, "E1: walls = widest screen - 2 x the larger reach");
+		Assert.Equal(1540 * SimConfig.Scale, c.ViewWidth, "E1 (AM9): widest screen 1,540 units");
+		Assert.Equal(1060 * SimConfig.Scale, c.MaxSeparation, "E1 (AM9): 1,060 apart");
 		Assert.Equal(3840 * SimConfig.Scale, c.StageHalfWidth * 2, "E1: stage 3,840 wide");
 		int corner = c.StageHalfWidth - c.BodyWidth / 2;
 		foreach (int side in new[] { -1, 1 })
@@ -137,19 +142,23 @@ public static class CloserCameraProbes
 	public static void Shake_TwoToFourPx_AllFrames_IncludingNegativeAxes()
 	{
 		var c = SimConfig.Default;
-		float mPerPx = FightScene.ToMeters(c.ViewWidth) / FightScene.DesignCanvasWidthPx;
+		var cam = new DynamicCamera(c); // YOK-129: read the current view; checked at the closest and the widest zoom
+		foreach (float width in new[] { cam.MinWidth, cam.MaxWidth })
+		{
+		float mPerPx = width / FightScene.UnitsPerMeter / FightScene.DesignCanvasWidthPx;
 		var s = new ScreenShake(60);
 		s.Start();
 		for (int t = 0; t < 60; t++, s.Advance())
 		{
-			var (h, v) = FightScene.ShakeOffsetMeters(c, s.OffsetPx);
+			var (h, v) = FightScene.ShakeOffsetMeters(width, s.OffsetPx);
 			float px = Math.Abs(h) / mPerPx, py = Math.Abs(v) / mPerPx;
 			Assert.True(px >= 2f - 1e-3f && px <= 4f + 1e-3f && py >= 2f - 1e-3f && py <= 4f + 1e-3f, $"frame {t}: {px:0.00} x {py:0.00} px");
 			Assert.True(Math.Sign(h) == Math.Sign(s.OffsetPx.x) && Math.Sign(v) == Math.Sign(s.OffsetPx.y), "sign preserved");
 		}
 		// idle gives exactly zero
 		s.Stop();
-		Assert.Equal(0f, FightScene.ShakeOffsetMeters(c, s.OffsetPx).H, "idle shake is zero");
+		Assert.Equal(0f, FightScene.ShakeOffsetMeters(width, s.OffsetPx).H, "idle shake is zero");
+		}
 	}
 
 	// F4: camera distance gives a visible width of ViewWidth at the plane: a narrower view is closer.
@@ -158,7 +167,8 @@ public static class CloserCameraProbes
 	{
 		var wide = SimConfig.Default with { ViewWidth = 1920 * SimConfig.Scale };
 		float dn = FightScene.CameraDistance(SimConfig.Default), dw = FightScene.CameraDistance(wide);
-		Assert.True(Math.Abs(dn / dw - 0.75f) < 1e-3f, $"distance ratio {dn / dw} should be 1440/1920 = 0.75 (same FOV)");
+		float want = SimConfig.Default.ViewWidth / (float)wide.ViewWidth; // YOK-129: reads the config's widest view
+		Assert.True(Math.Abs(dn / dw - want) < 1e-3f, $"distance ratio {dn / dw} should be {want} (same FOV)");
 	}
 
 	// R7 / E1: trial start distance 960 accepted, 961 rejected; also in a goal-step distance bound.
@@ -166,16 +176,17 @@ public static class CloserCameraProbes
 	public static void Trial_StartDistanceBoundary_960In_961Out()
 	{
 		string f = File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "trials", "test-spirit-wave-trial.json"));
-		Assert.Equal(960, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 960,")).Distance, "960 accepted");
+		int max = SimConfig.Default.MaxSeparation / SimConfig.Scale; // YOK-129: reads the walls (AM9: 1,060)
+		Assert.Equal(max, TrialLoader.Parse(f.Replace("\"distance\": 600,", $"\"distance\": {max},")).Distance, $"{max} accepted");
 		Assert.Equal(120, TrialLoader.Parse(f.Replace("\"distance\": 600,", "\"distance\": 120,")).Distance, "120 accepted");
-		foreach (int bad in new[] { 961, 1520, 119, 0, -1 })
+		foreach (int bad in new[] { max + 1, 1540, 119, 0, -1 })
 		{
 			bool threw = false;
 			try { TrialLoader.Parse(f.Replace("\"distance\": 600,", $"\"distance\": {bad},")); } catch (FormatException) { threw = true; }
 			Assert.True(threw, $"start distance {bad} rejected");
 		}
-		TrialLoader.Parse(f.Replace("\"max\": 900", "\"max\": 960"));
-		foreach (string repl in new[] { "\"max\": 961", "\"min\": 961", "\"max\": 1520" })
+		TrialLoader.Parse(f.Replace("\"max\": 900", $"\"max\": {max}"));
+		foreach (string repl in new[] { $"\"max\": {max + 1}", $"\"min\": {max + 1}", "\"max\": 1540" })
 		{
 			bool threw = false;
 			string src = repl.StartsWith("\"max") ? f.Replace("\"max\": 900", repl) : f.Replace("\"min\": 400", repl);
@@ -189,9 +200,10 @@ public static class CloserCameraProbes
 	public static void Trial_StartAtMaxDistance_InFrameAndLegal()
 	{
 		var m = NewMatch();
-		m.P1.X = -480 * SimConfig.Scale; m.P2.X = 480 * SimConfig.Scale;
+		int max = m.Config.MaxSeparation; // YOK-129: reads the walls
+		m.P1.X = -max / 2; m.P2.X = max / 2;
 		for (int t = 0; t < 20; t++) m.Step(FighterInput.None, FighterInput.None);
-		Assert.Equal(960 * SimConfig.Scale, m.P2.X - m.P1.X, "start separation survives");
+		Assert.Equal(max, m.P2.X - m.P1.X, "start separation survives");
 		Assert.True(FightCamera.BothInView(m), "in frame");
 	}
 
@@ -253,6 +265,7 @@ public static class CloserCameraProbes
 				m.P1.Facing = Math.Sign(m.P2.X - m.P1.X) is var f1 && f1 != 0 ? f1 : 1; m.P2.Facing = -m.P1.Facing;
 				var rng = new Random(seed * 31 + start);
 				int last = Math.Sign(m.P2.X - m.P1.X);
+				var cam = new DynamicCamera(c); cam.Snap(DynamicCamera.SubjectOf(m)); // YOK-129: the current view, at every zoom
 				for (int t = 0; t < 1500; t++)
 				{
 					var inp = new FighterInput[2];
@@ -267,10 +280,12 @@ public static class CloserCameraProbes
 					int sep = Math.Abs(m.P2.X - m.P1.X);
 					Assert.True(sep <= c.MaxSeparation, $"start {start} seed {seed} t {t}: sep {sep}");
 					Assert.True(FightCamera.BothInView(m), $"start {start} seed {seed} t {t}: clipped (P1 {m.P1.X} f{m.P1.Facing} {m.P1.State}, P2 {m.P2.X} f{m.P2.Facing} {m.P2.State})");
+					cam.Step(DynamicCamera.SubjectOf(m));
+					Assert.True(cam.InFrame(DynamicCamera.SubjectOf(m)) && cam.OnStage(), $"start {start} seed {seed} t {t}: out of the dynamic view (width {cam.Width}, cx {cam.CenterX})");
 					int side = Math.Sign(m.P2.X - m.P1.X);
 					if (side != 0 && last != 0 && side != last) switches++;
 					if (side != 0) last = side;
-					if (m.Phase == MatchPhase.Over) m.Reset();
+					if (m.Phase == MatchPhase.Over) { m.Reset(); cam.Snap(DynamicCamera.SubjectOf(m)); }
 				}
 			}
 		Assert.True(switches > 20, $"side switches covered ({switches})");

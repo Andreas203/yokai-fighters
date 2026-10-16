@@ -169,7 +169,7 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 **Why.** Bigger fighters on screen: at 1,920 units a 1.8 m fighter filled about a third of the screen height; at 1,440 units, about 44%. A fixed closer camera keeps V7 (no zoom with distance); bringing the walls in is what keeps both fighters in view.
 
-**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
+**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. E17's "on screen" means the sim's screen: the widest view (1,540 units) centred on the fighters, so when the camera is zoomed in a projectile can leave the visible view before it despawns. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
 
 ### Sections replaced
 
@@ -178,3 +178,26 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | rules.md E1 (scale; written rule, not in the PDF) | "one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart … 1,520 + 2 × 200 = 1,920" | "one screen is 1,440 units (7.2 m); the stage is 3,840 units wide; fighters are at most 960 units apart … 960 + 2 × 240 = 1,440, either facing" |
 | §3.2 Fight basics, Movement row | "Walk crosses the screen in about 2.5 seconds" | Walk speed unchanged: about 2.5 seconds across 1,920 units, about 1.9 seconds across the closer 1,440-unit screen. Rule C2. |
 | §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera is closer to the plane. |
+
+---
+
+## AM9 — Dynamic fight camera in the style of Guilty Gear Strive (2026-10-16, approved 2026-10-16)
+
+**Status.** Approved by the designer on 2026-10-16 (PR #145, after reviewing the captures). Drafted for YOK-129 after the designer said on 2026-10-16: "I still don't love the camera, I want a view closer to Marvel Tokon or Guilty Gear Strive." It amends V7 and E1 and supersedes AM8's fixed camera; AM8's screen-wall derivation stays.
+
+**Decision.** The fight camera zooms with the distance between the fighters, as in Arc System Works games. It eases in when they are close and out as they separate. It never snaps, and both models stay in frame whichever way each faces. Close in, the view is **1,060 units** wide and Ryo's fighting stance fills about 52% of the screen height. At the screen walls the view is **1,540 units** wide and he fills about 36%. The camera stays at chest height, 1.2 m, at every zoom. Its pitch goes from 0.5° down close in to 3° up at the widest zoom, so the fighters' feet sit about 88–90% of the way down the frame at every distance: a low, slightly heroic angle with no empty band of floor (designer review of the captures, 2026-10-16). On a jump it rises partway: 45% of the jump height, plus whatever keeps the higher fighter's head below the HUD strip. It also eases out a little, 1 unit of width per unit of height. The floor may leave the bottom of the frame. The screen walls follow the widest zoom: fighters are at most **1,060 units** apart, because 1,060 + 2 × 240 = 1,540 (AM8 had 960 + 2 × 240 = 1,440). The camera still follows the fighters' midpoint and stops at the stage edge. At the widest zoom the stage art covers the view at both edges, with the camera raised for a jump. The stage stays 3,840 units wide. The V7 push-ins layer on top of the zoom: the round-ending blow pushes in 12% over the KO slow-down, and the Tanuki reveal has a hook. Neither push-in can crop a model. Every value is in one place (`CameraConfig`), apart from the widest view, which is the sim's screen (`SimConfig.ViewWidth`).
+
+**Why.** The designer wants tall fighters, a low horizon and a tight frame when close. A fixed camera can't give that and also show both fighters at the screen walls: AM8's 1,440 units put a fighter at about 44% of the screen height at every distance. With the zoom, close-range play reads much bigger and the walls can go back out from 960 to 1,060. The walls could go further, toward the ~1,520 the brief allowed, but the fighters would then shrink below the 35–40% target at full separation. 1,060 is the widest wall that keeps about 36%.
+
+The first draft looked down 1° and rose to 1.4 m when zoomed out, which left the bottom ~20% of the frame as empty floor at the screen walls; the designer asked for the feet lower.
+
+**What does not change.** F4: perspective camera, ~25° FOV. The camera dollies; the lens does not narrow. The camera is presentation only. It uses floats, but only in presentation code; it eases by a fixed amount per sim tick, never by frame time, so replays and captures reproduce. Nothing in the sim, the AI or the replay reads it. The sim keeps its integer screen (the widest view) for the screen walls and for where projectiles leave the screen, so `StateHash` changes only through the wall value. V3: the shake is still 2–4 screen pixels at every zoom, converted through the current view width. Walk speed stays 12.8 units per tick (about 2.0 s across the widest 1,540-unit view). E1's 200 units per metre stays.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md V7 | "Camera steady except slow push-in on Tanuki reveal and round-ending blow." | The camera zooms with the fighters' separation (eased, deterministic per tick, both models always in frame), rises partway on jumps without cropping heads, and stops at the stage edge. The slow push-ins on the Tanuki reveal and the round-ending blow layer on top. |
+| rules.md E1 (scale) | AM8: "one screen is 1,440 units … fighters are at most 960 units apart … 960 + 2 × 240 = 1,440. The camera stays at a fixed distance" | "The camera's view is 1,060 units close in and 1,540 at the widest; fighters are at most 1,060 units apart … 1,060 + 2 × 240 = 1,540, either facing." |
+| AM8 Decision | "The fight camera sits closer to the fighters and stays fixed in distance. One screen … is 1,440 units" | Superseded by the dynamic zoom above. AM8's derivation of the walls from the widest screen and the model reach stays. |
+| §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera dollies between two distances at 1.2 m and tilts from 0.5° down to 3° up as it pulls back. |

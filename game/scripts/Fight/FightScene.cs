@@ -17,10 +17,11 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class FightScene : Node3D
 {
-	/// <summary>200 gameplay units per metre: the 1,440-unit screen (AM8) is 7.2 m wide, a 1.8 m fighter is 360 units.</summary>
+	/// <summary>200 gameplay units per metre: the widest 1,540-unit screen (AM9) is 7.7 m wide, a 1.8 m fighter is 360 units.</summary>
 	public const float UnitsPerMeter = 200f;
 	public const float CameraFovDegrees = 25f; // F4
-	public const float CameraHeight = 1.5f;
+	/// <summary>YOK-129: chest height of the dynamic camera at rest (<see cref="CameraConfig.BaseHeightMeters"/>).</summary>
+	public static float CameraHeight => CameraConfig.Default.BaseHeightMeters;
 	public const float BodyHeight = 1.8f;
 
 	/// <summary>When true, the clock and keyboard are bypassed and the owner calls Step() (tests, harness).</summary>
@@ -36,6 +37,27 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-39: the camera (scenes/camera_rig.tscn, "CameraRig/Camera" in fight.tscn); its rig is moved from the sim each render.</summary>
 	public Camera3D Camera => _camera;
 	public Node3D CameraRig => _cameraRig;
+
+	/// <summary>YOK-129 / AM9: the dynamic camera (presentation only; the sim never reads it). Stepped in StepSim, snapped on a new match or reset.</summary>
+	public DynamicCamera Cam { get; private set; } = new(SimConfig.Default);
+	/// <summary>V7 Tanuki reveal push-in (0..0.5 of the view width), layered on the dynamic zoom; set by the reveal flow.</summary>
+	public float CameraPushIn { get; set; }
+	private Match? _camMatch;
+	private int _camTick;
+
+	/// <summary>Steps the camera one tick, or snaps it when the match is new or was reset.</summary>
+	private void StepCamera()
+	{
+		var s = DynamicCamera.SubjectOf(Match, CameraPushIn);
+		if (!ReferenceEquals(_camMatch, Match) || Match.Tick < _camTick || !Cam.Ready)
+		{
+			if (!ReferenceEquals(Cam.Sim, Match.Config)) Cam = new DynamicCamera(Match.Config);
+			Cam.Snap(s);
+			_camMatch = Match;
+		}
+		else Cam.Step(s);
+		_camTick = Match.Tick;
+	}
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
@@ -228,6 +250,7 @@ public partial class FightScene : Node3D
 		HideFlowScreens(); // YOK-48
 		Stage = DemoStage.Fighting;
 		Match.Reset();
+		_camMatch = null; // YOK-129: the camera snaps to the reset positions
 		RebuildAi(); // YOK-27: fresh delay buffer
 		StartRecording(); // YOK-49
 		Shake.Stop();
@@ -235,16 +258,16 @@ public partial class FightScene : Node3D
 		Render();
 	}
 
-	/// <summary>Width of the design canvas in px: the screen <see cref="SimConfig.ViewWidth"/> spans (UI canvas, 1920x1080).</summary>
+	/// <summary>Width of the design canvas in px: the screen the camera's current view width spans (UI canvas, 1920x1080).</summary>
 	public const int DesignCanvasWidthPx = 1920;
 
 	/// <summary>
-	/// V3 (YOK-120 / AM8): a shake offset in screen px as a camera offset in metres at the Z = 0 plane. ViewWidth units
-	/// span DesignCanvasWidthPx px, so 1 px = ViewWidth / 1920 units (0.75 units at AM8's 1,440), and the 2-4 px
-	/// pattern stays 2-4 px on screen whatever the view width.
+	/// V3 (YOK-120, generalised in YOK-129): a shake offset in screen px as a camera offset in metres at the Z = 0 plane.
+	/// The current view width (units, <see cref="DynamicCamera.Width"/>) spans DesignCanvasWidthPx px, so 1 px =
+	/// width / 1920 units, and the 2-4 px pattern stays 2-4 px on screen at every zoom.
 	/// </summary>
-	public static (float H, float V) ShakeOffsetMeters(SimConfig c, (int x, int y) px) =>
-		(ToMeters(px.x * c.ViewWidth / DesignCanvasWidthPx), ToMeters(px.y * c.ViewWidth / DesignCanvasWidthPx));
+	public static (float H, float V) ShakeOffsetMeters(float viewWidthUnits, (int x, int y) px) =>
+		(px.x * viewWidthUnits / DesignCanvasWidthPx / UnitsPerMeter, px.y * viewWidthUnits / DesignCanvasWidthPx / UnitsPerMeter);
 
 	public static float ToMeters(int centiUnits) => centiUnits / (SimConfig.Scale * UnitsPerMeter);
 
@@ -265,9 +288,12 @@ public partial class FightScene : Node3D
 		}
 		RenderModels(); // YOK-53
 
-		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen; the rig carries the camera.
-		_cameraRig.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, CameraDistance(c));
-		var (hx, vy) = ShakeOffsetMeters(c, Shake.OffsetPx); // V3: 2-4 screen px, converted through the view width
+		// YOK-129: the dynamic camera (eased per sim tick in StepSim); the rig carries position and pitch.
+		if (!ReferenceEquals(_camMatch, Match) || !Cam.Ready) StepCamera(); // a new or reset match renders before its first tick
+		var (camX, camY, camZ, pitch) = Cam.Transform;
+		_cameraRig.Position = new Vector3(camX, camY, camZ);
+		_cameraRig.Rotation = new Vector3(pitch, 0f, 0f);
+		var (hx, vy) = ShakeOffsetMeters(Cam.Width, Shake.OffsetPx); // V3: 2-4 screen px at the current zoom
 		_camera.HOffset = hx;
 		_camera.VOffset = vy;
 
