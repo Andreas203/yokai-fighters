@@ -4,7 +4,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-129 / AM9 (proposed): the Arc System Works-style fight camera. Presentation only: it reads the sim after each
+/// YOK-129 / AM9: the Arc System Works-style fight camera. Presentation only: it reads the sim after each
 /// tick and nothing in Sim/, Ai/ or the replay reads it back. Pure C# (no Godot types), so tests do the camera maths
 /// without booting a scene.
 ///

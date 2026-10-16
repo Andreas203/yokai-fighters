@@ -3,7 +3,7 @@ namespace YokaiFighters.Sim;
 /// <summary>
 /// Fight-wide constants for the simulation. Pure C#, no Godot types, integers only (F3).
 /// Positions are centi-units, so 100 = one gameplay unit; 200 units per metre, and 1,540 units span the 1,920 px
-/// screen at the fight camera's widest zoom (E1, AM9 proposed).
+/// screen at the fight camera's widest zoom (E1, AM9).
 /// Defaults are placeholders until a data loader (YOK-40) feeds stage and fighter data.
 /// </summary>
 public sealed partial record SimConfig
@@ -19,7 +19,7 @@ public sealed partial record SimConfig
 	public int StageHalfWidth { get; init; } = 1920 * Scale;
 
 	/// <summary>
-	/// The sim's screen: the camera's widest view at the gameplay plane, in centi-units. AM9 (YOK-129, proposed): the
+	/// The sim's screen: the camera's widest view at the gameplay plane, in centi-units. AM9 (YOK-129): the
 	/// dynamic camera zooms between <c>CameraConfig.CloseViewWidth</c> (1,060) and this, 1,540 (AM8 had a fixed 1,440,
 	/// before it 1,920), at the same ~25 deg FOV (F4). The sim never reads the presentation camera: the screen walls
 	/// (<see cref="MaxSeparation"/>) derive from this and projectiles leave the screen at its edge (<see cref="FightCamera"/>).
@@ -33,7 +33,7 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// Screen walls: the farthest two fighters may be apart so both models stay in view whichever way each faces.
 	/// Derived, so it cannot drift: <see cref="ViewWidth"/> - 2 x the larger model reach (front 240 / back 200), because
-	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM9 (YOK-129, proposed):
+	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM9 (YOK-129):
 	/// 1,060 + 2 x 240 = 1,540 at the widest zoom (AM8: 960 + 2 x 240 = 1,440; YOK-39: 1,520 for the 1,920 view).
 	/// Setting it in an initializer overrides the derivation (tests). Trial start distances are capped at this
 	/// (TrialData.MaxStartDistance, trial.schema.json).

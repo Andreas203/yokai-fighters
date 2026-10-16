@@ -1,7 +1,7 @@
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-129 / AM9 (proposed): every tunable of the dynamic fight camera (<see cref="DynamicCamera"/>) in one place.
+/// YOK-129 / AM9: every tunable of the dynamic fight camera (<see cref="DynamicCamera"/>) in one place.
 /// Presentation only: floats, never read by Sim/, Ai/ or the replay. The widest view is the sim's
 /// <see cref="Sim.SimConfig.ViewWidth"/> (an integer, so the screen walls and projectile despawn stay in the sim);
 /// the closest is <see cref="CloseViewWidth"/>. Widths are gameplay units at the Z = 0 plane (200 per metre, E1).
