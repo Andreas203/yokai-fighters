@@ -36,16 +36,16 @@ public sealed record Habit(string Id, string Description, Observation When, AiAc
 public sealed record Behaviour(Observation When, AiAction Do, int Weight);
 
 /// <summary>
-/// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
-/// <see cref="KeepMeter"/>, it asks for the EX version with <see cref="ChancePct"/>. Absent = never (E22 standard tier).
-/// </summary>
-/// <summary>
 /// YOK-57: which kind of fight the AI is in. E22: "The standard-tier AI doesn't use EX or burst yet", so a profile's
 /// <see cref="ExUse"/> / <see cref="BurstUse"/> apply only in elder and Tanuki fights; elder fights reuse yokai-tier
 /// profiles, so the gate is the fight (the node), not the profile.
 /// </summary>
 public enum AiFightTier { Standard, Elder, Tanuki }
 
+/// <summary>
+/// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
+/// <see cref="KeepMeter"/>, it asks for the EX version with <see cref="ChancePct"/>. Absent = never (E22 standard tier).
+/// </summary>
 public sealed record ExUse(int ChancePct, int KeepMeter = 0);
 
 /// <summary>
