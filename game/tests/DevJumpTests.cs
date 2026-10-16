@@ -136,7 +136,7 @@ public static class DevJumpTests
 			CheckOpened(flow, t);
 			Leave(flow);
 		}
-		foreach (var t in built.GroupBy(t => t.Kind).Select(g => g.First())) // from the map: one of each kind (the suite shares one message queue)
+		foreach (var t in built)
 		{
 			Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm() && flow.Router.Current == Screen.Map, "a run on the map");
 			var page = OpenJump(flow);
@@ -195,11 +195,9 @@ public static class DevJumpTests
 			foreach (bool elder in DevJump.ElderOf(foe.Yokai) is null ? new[] { false } : new[] { false, true })
 			{
 				var probe = new DevFightSetup(foe.Yokai, Elder: elder);
-				var temps = DevJump.Temperaments(DevJump.FighterOf(probe));
-				for (int i = 0; i < Math.Max(2, temps.Count); i++)
+				foreach (string temp in DevJump.Temperaments(DevJump.FighterOf(probe)))
+					foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
 					{
-						string temp = temps[i % temps.Count];
-						var scheme = i % 2 == 0 ? ControlScheme.Kihon : ControlScheme.Kata; // every temperament and both schemes, without the full cross product
 						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Grove };
 						var jump = DevJump.BuildFight(setup, pool);
 						string what = $"{foe.Yokai} elder={elder} {temp} {scheme}";
@@ -283,7 +281,7 @@ public static class DevJumpTests
 	public static void TanukiJump_LocksTheChosenCopy_AndTheHudShowsItLocked(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
 	{
 		var pool = FightScene.LoadAbilityPool();
-		foreach (var s in pool.Specials.GroupBy(s => s.Slot).Select(g => g.Last())) // one per slot (ShapeCopy's own test covers every special)
+		foreach (var s in pool.Specials)
 		{
 			int lv = Math.Min(2, s.MaxLevel);
 			var setup = new DevFightSetup(DevJump.TanukiId, CopySpecial: s.Id, CopyLevel: lv);
@@ -324,7 +322,7 @@ public static class DevJumpTests
 				var f = flow.Fight!;
 				ulong start = f.Match.StateHash() ^ jump.Session.StateHash();
 				var rng = new SimRng(3);
-				for (int t = 0; t < 300; t++) f.StepWithAi(new FighterInput((InputBits)(rng.Next(1 << 10))));
+				for (int t = 0; t < 600; t++) f.StepWithAi(new FighterInput((InputBits)(rng.Next(1 << 10))));
 				ulong end = f.Match.StateHash();
 				flow.ReturnToTitle();
 				return start * 31 + end;
@@ -388,6 +386,60 @@ public static class DevJumpTests
 		}
 		finally { try { Directory.Delete(dir, true); } catch (IOException) { } }
 	}
+
+	// ---- code-critic round 1: the jump leaves nothing behind ----
+
+	[Test]
+	public static void JumpScheme_DoesNotOutliveTheJump_NormalPlayUsesTheSavedScheme(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var saved = MenuSettings.Scheme;
+		var other = saved == ControlScheme.Kata ? ControlScheme.Kihon : ControlScheme.Kata;
+		var pool = FightScene.LoadAbilityPool();
+		var jump = DevJump.BuildFight(new DevFightSetup(Scheme: other), pool);
+		Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, other).Ok && flow.Fight!.SchemeOf(0) == other, "the jump plays its own scheme");
+		Assert.True(flow.ReturnToTitle() && flow.Router.Scheme == saved, $"back on the title: the saved scheme ({saved}) again (E18)");
+		Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm(), "a normal run");
+		Assert.True(flow.ChooseNode("r1-apprentice").Ok && flow.Fight!.SchemeOf(0) == saved, "the normal run plays the saved scheme");
+		flow.ReturnToTitle();
+	}));
+
+	[Test]
+	public static void RestartAfterAJump_GoesToTheTitle_NotANewRun(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var jump = DevJump.BuildFight(new DevFightSetup(), FightScene.LoadAbilityPool());
+		Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, ControlScheme.Kihon).Ok, "jumped");
+		jump.Session.LoseFight();
+		Assert.True(flow.RestartRun() && flow.Router.Current == Screen.Title && flow.Session == null, "Restart: the title, no new run");
+		// A normal run still restarts into a new run.
+		Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm() && flow.ChooseNode("r1-apprentice").Ok, "a normal fight");
+		var before = flow.Session;
+		Assert.True(flow.RestartRun() && flow.Router.Current == Screen.Map && flow.Session != before, "a normal Restart: a fresh run on the map");
+		flow.ReturnToTitle();
+	}));
+
+	[Test]
+	public static void RefusedJump_ChangesNothing(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm(), "a run on the map");
+		var run = flow.Session;
+		var bad = DevJump.BuildRestStop(NodeTypeRegistry.Merchant, FightScene.LoadAbilityPool());
+		Assert.True(!flow.StartDevRun(bad.Session, DevJump.AfterStopNodeId, ControlScheme.Kata).Ok, "a node the map does not allow yet: refused");
+		Assert.True(flow.Router.Current == Screen.Map && flow.Session == run && flow.Map.Visible && flow.Router.Scheme == MenuSettings.Scheme, "still on the same run's map, scheme unchanged");
+		Assert.True(bad.Session.Node is null, "the refused session entered nothing");
+		flow.ReturnToTitle();
+	}));
+
+	[Test]
+	public static void ControlSelectView_RestoresThePlayersScheme(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var saved = MenuSettings.Scheme;
+		Assert.True(DevJumpPage.Perform(flow, DevJump.Targets().First(t => t.Id == "control-select"), new DevFightSetup(), new DevDraftSetup(), null, out _), "control select in the viewer");
+		var screen = (StartScreen)flow.DevScreen!.Screen;
+		(saved == ControlScheme.Kata ? screen.KihonButton : screen.KataButton).EmitSignal(BaseButton.SignalName.Pressed);
+		Assert.True(MenuSettings.Scheme != saved, "the real screen switches the scheme while open");
+		flow.DevScreen!.Finish();
+		Assert.Equal(saved, MenuSettings.Scheme, "closing the dev view puts the player's scheme back");
+	}));
 
 	// ---- reward draft ----
 
