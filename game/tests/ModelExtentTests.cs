@@ -28,6 +28,8 @@ public static class ModelExtentTests
 		top = 0; topClip = "";
 		foreach (var name in lib.GetAnimationList())
 		{
+			// PLAYTEST: the Oni's own club takes (oni-*) play only on the Oni body; the fight scene's Ryo and Kitsune never show them.
+			if (name.ToString().StartsWith("oni-")) continue;
 			var anim = lib.GetAnimation(name);
 			string full = FighterModel.LibraryName + "/" + name;
 			model.Player.Play(full);

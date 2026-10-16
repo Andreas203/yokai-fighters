@@ -2,6 +2,7 @@ using System.Linq;
 using Godot;
 using YokaiFighters.Dev;
 using YokaiFighters.Fight;
+using YokaiFighters.Sim;
 
 namespace YokaiFighters.Tests;
 
@@ -28,16 +29,66 @@ public static class OniKappaBodyTests
 	}
 
 	[Test]
-	public static void OniAndKappa_LoadAndShareTheKitsuneClips()
+	public static void OniAndKappa_ModelsLoad_KappaSharesTheKitsuneClips()
 	{
 		foreach (var set in new[] { FighterAnimSet.Oni, FighterAnimSet.Kappa })
 		{
 			Assert.True(ResourceLoader.Exists(set.ModelPath), $"{set.Fighter}: rigged model {set.ModelPath}");
-			Assert.True(ReferenceEquals(set.Clips, FighterAnimSet.Kitsune.Clips), $"{set.Fighter}: the Kitsune's shared clips");
 			var model = FighterModel.Create(set, Cat);
 			Assert.True(model != null, $"{set.Fighter}: model scene sets up on the catalog");
 			model!.Free();
 		}
+		Assert.True(ReferenceEquals(FighterAnimSet.Kappa.Clips, FighterAnimSet.Kitsune.Clips), "kappa: the Kitsune's shared clips");
+	}
+
+	/// <summary>The Oni plays his own club kit (oni-club-clips.md final summary) on the Kitsune stand-in moves.</summary>
+	[Test]
+	public static void Oni_PlaysHisOwnClubKit()
+	{
+		var oni = FighterAnimSet.Oni;
+		foreach (var (k, clip) in new[]
+		{
+			(PoseKind.Idle, "oni-idle"), (PoseKind.WalkFwd, "oni-walk-fwd"), (PoseKind.WalkBack, "oni-walk-fwd"),
+			(PoseKind.HitHigh, "oni-hit-high"), (PoseKind.HitLow, "oni-hit-low"), (PoseKind.BlockLow, "oni-block-low"),
+			(PoseKind.BlockHigh, "ryo-block-high"), (PoseKind.Crouch, "ryo-crouch"), (PoseKind.Knockdown, "ryo-knockdown"),
+			(PoseKind.GetUp, "ryo-get-up"),
+		})
+			Assert.Equal(clip, oni.ClipFor(k), $"oni {k}");
+		Assert.True(oni.ReversedPoses.Contains(PoseKind.WalkBack), "oni walk back is the forward walk reversed");
+		foreach (var (kit, clip) in new[]
+		{
+			("kitsune-light-punch", "ryo-light-punch"), ("kitsune-medium-punch", "oni-medium-punch"),
+			("kitsune-medium-kick", "oni-medium-kick"), ("kitsune-heavy-punch", "oni-heavy-punch"),
+			("kitsune-heavy-kick", "ryo-heavy-kick"), ("kitsune-throw", "ryo-generic-throw"),
+		})
+		{
+			Assert.Equal(clip, oni.MoveClip(kit), $"oni plays {kit} as {clip}");
+			Assert.True(Cat.Has(clip), $"{clip} is catalogued");
+		}
+		Assert.True(Cat["oni-medium-punch"]!.Retime != null && Cat["oni-heavy-punch"]!.Retime != null, "MP and HP carry their retime curves");
+	}
+
+	/// <summary>The Oni walking back (P2 walking right, away from P1) steps his forward walk backwards, frame by frame.</summary>
+	[Test]
+	public static void Oni_WalkBackPlaysTheForwardWalkReversed()
+	{
+		var m = FightScene.NewMatch();
+		var p = new FighterPresenter(FighterAnimSet.Oni, Cat, FightScene.MoveClips);
+		p.Observe(m, 1);
+		int total = Cat["oni-walk-fwd"]!.FramesTotal;
+		int checkedTicks = 0;
+		for (int t = 1; t <= total + 5; t++)
+		{
+			int x0 = m.P2.X;
+			m.Step(FighterInput.None, new FighterInput(InputBits.Right));
+			p.Observe(m, 1);
+			if (m.P2.X == x0) break;
+			Assert.Equal(PoseKind.WalkBack, p.Sample.Kind, $"tick {t}: walking back");
+			Assert.Equal("oni-walk-fwd", p.Sample.Clip, $"tick {t}: on the forward walk clip");
+			Assert.Equal(total - (t - 1) % total, p.Sample.Frame, $"tick {t}: reversed loop frame");
+			checkedTicks++;
+		}
+		Assert.True(checkedTicks > 10, $"walked back for a while ({checkedTicks} ticks)");
 	}
 
 	[Test]

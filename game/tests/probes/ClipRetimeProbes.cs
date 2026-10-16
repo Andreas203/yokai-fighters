@@ -103,8 +103,7 @@ public static class ClipRetimeProbes
 		{
 			string id = System.IO.Path.GetFileNameWithoutExtension(path);
 			var c = cat[id];
-			if (c == null) continue;
-			Assert.True(c.Retime == null, $"{id}: no curve");
+			if (c == null || c.Retime != null) continue; // PLAYTEST: the Oni's MP/MK/HP/Quake data now carry curves
 			for (int f = -2; f <= c.FramesTotal + 2; f++)
 			{
 				int n = Math.Clamp(f, 1, c.FramesTotal);

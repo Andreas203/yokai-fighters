@@ -53,6 +53,7 @@ public static class HipScaleTests
 			Assert.True(model != null, $"{set.Fighter} loads");
 			foreach (var (id, info) in Cat.Clips)
 			{
+				if (id.StartsWith("oni-")) continue; // PLAYTEST: the Oni's takes are on his own rig (hip 112.8), never played by Ryo or Kitsune
 				float k = model!.HipScaleFor(info);
 				Assert.Equal(1f, k, $"{set.Fighter} on {id}: hip scale {k:0.0000} is exactly 1 (unchanged)");
 			}

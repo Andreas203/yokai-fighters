@@ -121,7 +121,8 @@ public sealed class FighterPresenter
 				return Math.Clamp(total - f.StunLeft, 1, total);
 		}
 		int n = _frameBase + elapsed;
-		return _loop ? ((n - 1) % total + total) % total + 1 : Math.Clamp(n, 1, total);
+		int frame = _loop ? ((n - 1) % total + total) % total + 1 : Math.Clamp(n, 1, total);
+		return _loop && _set.ReversedPoses.Contains(_kind) ? total + 1 - frame : frame;
 	}
 
 	private (PoseKind, string?, int, bool, bool) Classify(Match m, Fighter f, Fighter opp, bool fresh)
