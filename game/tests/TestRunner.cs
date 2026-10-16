@@ -37,6 +37,8 @@ public partial class TestRunner : Node
 	{
 		int pass = 0, fail = 0;
 		Type? last = null;
+		// YOK-129: optional "-- only=<text>" runs just the tests whose Class.Method contains it (iteration aid; CI runs all).
+		string? only = OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("only="))?[5..];
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
 		// YOK-125: one process frame between test classes, so nodes the last class freed (QueueFree) and its
@@ -48,6 +50,7 @@ public partial class TestRunner : Node
 			if (m.GetCustomAttribute<TestAttribute>() == null) continue;
 			if (last != type) { last = type; await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); } // let queued frees and redraws drain between classes
 			string name = $"{type.Name}.{m.Name}";
+			if (only != null && !name.Contains(only)) continue;
 			try
 			{
 				m.Invoke(null, m.GetParameters().Length == 1 ? new object[] { this } : null);
@@ -61,6 +64,7 @@ public partial class TestRunner : Node
 			}
 		}
 		}
+		if (only != null && pass + fail == 0) { GD.PrintErr($"FAIL TestRunner: only={only} matches no tests"); fail++; }
 		GD.Print($"TESTS {pass} passed, {fail} failed");
 		GetTree().Quit(fail == 0 && pass > 0 ? 0 : 1);
 	}
