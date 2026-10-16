@@ -242,7 +242,7 @@ public partial class RestStopScreen : Control, INodeScene
 	{
 		var f = m.Forecast;
 		var f0 = "Forecast/";
-		GetNode<TextureRect>(f0 + "IconGlow/IconBox/Icon").Texture = f == null ? null : PauseMoveArt.ForId(f.SpecialId);
+		GetNode<TextureRect>(f0 + "IconGlow/IconBox/Icon").Texture = f == null ? null : AbilityArt.ForId(f.SpecialId);
 		var nameLabel = L(f0 + "SpecialName");
 		nameLabel.Text = f?.Name ?? "Nothing yet";
 		nameLabel.AddThemeFontSizeOverride("font_size", NameFontSize(nameLabel.GetThemeFont("font"), nameLabel.Text, nameLabel.Size.X, nameLabel.Size.Y));
