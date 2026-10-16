@@ -1,0 +1,17 @@
+{
+  "kind": "clip",
+  "id": "oni-iron-club-charge",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Rifle_Charge_inplace",
+  "frames_total": 14,
+  "trim_start": 0,
+  "trim_end": 13,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/oni/oni-charge-club.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. WARN: only the clean window of the take is kept. The raw 33-tick stride cycle puts the club into the shoulder and chest at ticks 14-19 (up to 32 cm); raw ticks 20-33 are clean (0 vertices inside the body on all 14 poses, club lowest point 1.19 m). It cannot loop: it is a 14-frame half stride, played once or held at the last pose.",
+  "rules": ["F2", "F5", "F6"],
+  "notes": "Meshy preset 654 Rifle_Charge_inplace on task 01a14549-1b6d-74b5-b5e4-74abde45ab3d (one take), raw take game/assets/generated/characters/oni/takes/oni-charge-654.glb (33 ticks). Cleaned with clean_clip.py: trim raw ticks 20-33 (file tick 0 = raw 20), strip-root horizontal, no smoothing. The run's feet travel about 9 cm per tick as measured on the treadmill: the rush distance and speed are move data, so there is no foot slide to judge. Max joint acceleration 20.4 deg per frame squared (left toe, frame 3), just over the 20 warn level. The move's window is movesmith's: at 14 frames it needs a hold of the last pose (at most 4 frames) or a slower curve (0.5x gives 28 frames)."
+}

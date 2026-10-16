@@ -67,6 +67,38 @@ First pass **15 credits** (5 x 3). Worst case at the F5 cap (3 takes each): 45 c
 ### Kit (designer, 2026-10-16)
 Oni plays LP, MP, MK, HP, HK and the throw, as the Kitsune does. No light kick, no jumping, no dash back, no air normals, no other fighters' specials, so those clips need no take. Status of each clip for him: idle (accepted take), walk (accepted take), HP (accepted take), MP and MK (swing pick 4), LP (shared light punch, clean), HK (shared heavy kick, clean), throw (shared, clean), crouch (shared, clean), knockdown (shared, clean), get-up (shared, small overlap up to 6.6 cm, a movesmith/designer call), block high (shared, 2.4 cm at one tick), hit high, hit low, block low (picks 1-3), charge (pick 5).
 
+## Oni-specific takes, run 2026-10-16 (take 1 of 3 each, 15 credits, balance 682 to 667)
+Raw takes (uncommitted) in `game/assets/generated/characters/oni/takes/`. Club check as before (rotations only, `--ignore-radius 0.12`, fail above 2 cm newly inside the body); every tick or every 2nd or 4th tick as noted. Reject stills (one worst tick each) in `assets/specs/clips/stills/oni/*-reject_f*-side.png`.
+
+| Clip | Preset | Task id | Raw ticks | Poses over 2 cm | Worst | Verdict |
+|---|---|---|---|---|---|---|
+| Hit high | 175 | `01a14549-133a-745d-b957-afbf6bbcee5e` | 273 | 55 of 69 | 22 cm | **RETAKE** |
+| Hit low | 179 | `01a14549-15c8-765a-a6e5-8c0f4beb6294` | 75 | 34 of 38 | 23 cm | **RETAKE** |
+| Block low | 146 | `01a14549-17f4-71ff-8857-59a082011581` | 35 | 18 of 35 | 32 cm | **RETAKE** (free alternative below) |
+| Club swing | 219 | `01a14549-19b5-717f-adba-e0b7ba686525` | 93 | 37 of 47 | 52 cm | **RETAKE** (no MP/MK data written) |
+| Charge | 654 | `01a14549-1b6d-74b5-b5e4-74abde45ab3d` | 33 | 5 of 33 (ticks 14-19) | 32 cm | **WARN, kept as a 14-frame clean window** |
+
+What the club check showed:
+- **Hit high 175 and hit low 179 start from a fists-up guard**, and that guard itself puts the club through his chest: tick 1-93 of 175 is the same 16 cm overlap before the hit even starts. Any preset that starts with the forearms folded up fails the same way, which also explains the old shared hit high, hit low and block low. Presets that start with the arms down or out in front clear (the carry walk 611, the idle).
+- **Block low 146** fails on its first 8 ticks and its final hold (29-32 cm at ticks 1-8 and 34-35), so the held pose is the part that fails.
+- **Swing 219** is a guard-to-cross slash; the arm crosses the body and the club goes through the torso for most of it (11-52 cm).
+- **Charge 654**: the raw cycle is 33 ticks, a full stride; the club touches the shoulder at 14-19, nothing else. Cleaned raw 20-33 (`clean_clip.py --trim 20 33 --strip-root horizontal`, 14 frames, stripped file `game/assets/generated/clips/oni/oni-charge-club.glb`): 0 of 14 poses over 2 cm, club lowest 1.19 m, jitter 20.4 deg per frame squared (just over warn), feet travel is move data. Raw measures: hit high PASS (jitter 5.8), hit low PASS (9.1), block low PASS (3.6), swing WARN (jitter 32.8, 8 reversals), charge WARN.
+- `data/clips/oni-iron-club-charge.json` is written (proposed, validates). Nothing written for the rejected four.
+
+### Retakes proposed (take 2 of 3, not run, need approval)
+Picked from preview sheets for a start with the arms down; the club check after the take decides.
+
+| Clip | Preset | Why | Risk | Fallback | Credits |
+|---|---|---|---|---|---|
+| Hit high | **173** `Slap_Reaction` (Fighting/GettingHit, 118 frames) | Starts neutral with the arms down; a head snap with the arms staying low | Long (118 frames): trim to the snap; the torso turn may carry the club arm | 178 `Hit_Reaction` (arms hang and flail, 41 frames) | 3 |
+| Hit low | **177** `Gunshot_Reaction` (Fighting/GettingHit, 73 frames) | Arms down, the torso hunches and turns to the side with a hand to the hip | The hunch bends the club arm toward the thigh | 178 `Hit_Reaction`, or 172 `Electrocution_Reaction` (arms out, reads big) | 3 |
+| Club swing | **97** `Left_Slash` (Fighting/AttackingwithWeapon, 97 frames) | A sword-and-shield slash with the weapon in the right hand held out wide, arm not across the chest | The shield arm is empty-handed on him; long clip, head-trim | 240 `Thrust_Slash` (73 frames, a wide one-arm sweep from a relaxed start) | 3 |
+| Block low | **none: reuse the shared crouch** (free) | `ryo-crouch` (the deep squat, held frame) is club-clean (0 poses over 2 cm), so a held crouch with a short blend is the block low | Reads as a crouch, not a guarded block; all guard-hands-up blocks (138-146) would fail like 146 | If the designer wants a real block take: 258-style crouch with the arms low, a retake at 3 credits | 0 |
+
+Total if the three takes are approved: **9 credits** (take 2 of 3; worst case with the 3-take cap another 9 each). After a second failure on a move, F5 applies (a mechanically equivalent move on an approved clip).
+
+MP and MK curves: the swing is not usable yet, so the two retiming curves wait for the retake.
+
 ## Cleanup
 Scripts under `tools/blender/` (Blender 4.1.1 headless), scratch outputs only; the GLBs committed are mesh-stripped with `tools/strip_clip.py`.
 - Heavy: `clean_clip.py --clip takes/oni-heavy-128.glb --out oni-heavy-clean.glb --trim 60 112 --strip-root horizontal --hit 33 37` (no smoothing: jitter was under the warn level; file tick 0 = raw tick 60; 53 frames at 60 fps). Result: `game/assets/generated/clips/oni/oni-heavy-club.glb` (stripped, 76 KB).
