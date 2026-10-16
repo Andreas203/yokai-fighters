@@ -204,7 +204,7 @@ public static class CopyHudProbes
     }
     var strip = Find<Control>(hud, "TwistStrip");
     var paper = Find<Control>(strip, "Paper");
-    Assert.True(paper is TalismanPanel && paper.Visible, "strip has a paper plate");
+    Assert.True(paper is TwistStripDecor && paper.Visible, "strip has a paper plate");
     foreach (string n in new[] { "Kicker", "TwistText" })
      Assert.True(paper.GetGlobalRect().Encloses(Find<Label>(strip, n).GetGlobalRect()), $"{name}: {n} on strip paper");
     Assert.True(Find<Label>(strip, "Kicker").Modulate.A >= 1f && strip.Modulate.A >= 1f, $"{name}: strip not faded");

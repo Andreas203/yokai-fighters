@@ -40,14 +40,14 @@ public static class PauseLayoutTests
 				Assert.True(text.GetThemeFontSize("font_size") * 2f / 3 >= 17, "720p text size");
 			}
 		}
-		Assert.Equal(PauseMoveArt.ForId("foxfire"), UiFind.Get<TextureRect>(slots.GetChild(0), "MoveIcon").Texture, "A can show Foxfire");
-		Assert.Equal(PauseMoveArt.ForId("spirit-wave"), UiFind.Get<TextureRect>(slots.GetChild(1), "MoveIcon").Texture, "B can show Spirit Wave");
-		Assert.Equal(PauseMoveArt.ForId(null), PauseMoveArt.ForId("unmapped"), "unknown identity fallback");
+		Assert.Equal(AbilityArt.ForId("foxfire"), UiFind.Get<TextureRect>(slots.GetChild(0), "MoveIcon").Texture, "A can show Foxfire");
+		Assert.Equal(AbilityArt.ForId("spirit-wave"), UiFind.Get<TextureRect>(slots.GetChild(1), "MoveIcon").Texture, "B can show Spirit Wave");
+		Assert.Equal(AbilityArt.ForId(null), AbilityArt.ForId("unmapped"), "unknown identity fallback");
 		p.SetRunSummary(new(new("RYO", 0, 0), new("Other", 1, 1), "Caller position",
 			new[] { new PauseSlotSummary("A", "Unknown move", 1, "") }));
 		Assert.Equal("—", UiFind.Get<Label>(p, "RunPercent").Text, "zero max has no invalid percentage");
 		Assert.Equal(1, slots.GetChildCount(), "rebind removes old cards");
-		Assert.Equal(PauseMoveArt.ForId(null), UiFind.Get<TextureRect>(slots.GetChild(0), "MoveIcon").Texture, "legacy caller gets generic icon");
+		Assert.Equal(AbilityArt.ForId(null), UiFind.Get<TextureRect>(slots.GetChild(0), "MoveIcon").Texture, "legacy caller gets generic icon");
 		p.Close(); p.QueueFree();
 	}
 }
