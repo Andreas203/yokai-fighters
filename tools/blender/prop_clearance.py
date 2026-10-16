@@ -19,6 +19,9 @@ stills and the report.
 Run (Blender 4.x, headless):
   Blender -b --python tools/blender/prop_clearance.py -- --rig <rig.glb> --prop <prop.glb> --log <prep_prop log.json> \
       --out <dir> --tag kappa-shell [--ignore-radius 0.0] [--depth 0.01] [--prop ... --log ... (repeat)]
+      [--fps 60 --clip <clip.glb> --frames f1,f2,...]   # clip mode: play an existing clip, check those frames
+                                                       # instead of the stress poses (G4 gate clips); rotations
+                                                       # only, as the game plays it (--rotations-only 0: raw)
 """
 
 import json
@@ -35,6 +38,19 @@ import rig_check  # noqa: E402  (STRESS_POSES, apply_pose, reset_pose)
 import prep_prop  # noqa: E402  (read_gltf_json, bone_rest_in_skeleton)
 
 C = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))  # glTF -> Blender axes
+
+def game_tracks(act):
+    """YOK-102 G4: the game (FighterModel.BuildLibrary) keeps a clip's rotations only on the shared skeleton:
+    per-bone translation and scale are dropped (bones keep the rig's own lengths) and the hips only carry a
+    height, scaled per rig (YOK-130). A whole-body offset changes neither skin stretch nor prop clearance, so
+    for these checks every location and scale curve is removed from a copy of the action."""
+    cp = act.copy()
+    cp.use_fake_user = True
+    for fc in list(cp.fcurves):
+        if fc.data_path.endswith(".location") or fc.data_path.endswith(".scale"):
+            cp.fcurves.remove(fc)
+    return cp
+
 
 EXTRA_POSES = {"arms_down": [("LeftArm", "Y", 75), ("RightArm", "Y", -75)]}
 VIEWS = {"front": ((0, -10, 0), (90, 0, 0)), "side": ((10, 0, 0), (90, 0, 90)), "back": ((0, 10, 0), (90, 0, 180))}
@@ -84,6 +100,8 @@ def main():
     a = parse()
     os.makedirs(a["out"], exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    if a.get("fps"):
+        bpy.context.scene.render.fps = int(a["fps"])
     bpy.ops.import_scene.gltf(filepath=a["rig"])
     arm = [o for o in bpy.context.scene.objects if o.type == "ARMATURE"][0]
     if arm.animation_data:
@@ -116,12 +134,40 @@ def main():
 
     cam = setup_render()
     poses = {"rest": []}
-    poses.update(rig_check.STRESS_POSES)
-    poses.update(EXTRA_POSES)
+    act = None
+    if a.get("clip"):
+        # clip mode: the rig plays an existing clip (its action, as imported) and each listed frame is a "pose";
+        # with --fps 60 a frame is a game tick, so the frames can be the clip data's raw ticks (F5: nothing keyed)
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=a["clip"])
+        new = [o for o in bpy.data.objects if o not in before]
+        carm = [o for o in new if o.type == "ARMATURE"][0]
+        act = carm.animation_data.action
+        act.use_fake_user = True  # keep the action when its own armature is removed
+        if a.get("rotations-only", "1") == "1":
+            act = game_tracks(act)
+        for o in new:
+            bpy.data.objects.remove(o, do_unlink=True)
+        arm.animation_data_create()
+        arm.animation_data.action = act
+        cname = os.path.splitext(os.path.basename(a["clip"]))[0]
+        for f in (int(x) for x in a["frames"].split(",")):
+            poses["%s_f%03d" % (cname, f)] = ("FRAME", f)
+    else:
+        poses.update(rig_check.STRESS_POSES)
+        poses.update(EXTRA_POSES)
     report = {"tool": "prop_clearance.py", "rig": a["rig"], "props": a["props"], "depth_m": a["depth"],
               "ignore_radius_m": a["ignore"], "poses": {}}
     for name, pose in poses.items():
-        rig_check.apply_pose(arm, body, pose, lambda n: n)
+        if isinstance(pose, tuple) and pose and pose[0] == "FRAME":
+            rig_check.reset_pose(arm)
+            arm.animation_data.action = act
+            bpy.context.scene.frame_set(pose[1])
+        else:
+            if arm.animation_data:
+                arm.animation_data.action = None
+            rig_check.apply_pose(arm, body, pose, lambda n: n)
+
         bpy.context.view_layer.update()
         dg = bpy.context.evaluated_depsgraph_get()
         bvhs = [BVHTree.FromObject(o.evaluated_get(dg), dg, deform=True) for o in body]

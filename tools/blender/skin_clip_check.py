@@ -8,7 +8,13 @@ and of any frames asked for are rendered side by side per rig, framed on the pel
 Run (Blender 4.x, headless):
   /Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender/skin_clip_check.py -- \
       --rig before=<a.glb> --rig after=<b.glb> \
-      --clip <clip.glb>[:f1,f2,...] [--clip ...]  --out <dir> [--no-render]
+      --clip <clip.glb>[:f1,f2,...][@a-b] [--clip ...]  --out <dir> [--no-render] [--fps 60]
+
+  --rotations-only 1 plays only the clip's rotation curves, as the game does on rigs of other proportions
+  (default off, so the YOK-116 runs repeat exactly).
+  --fps sets the scene frame rate before any import (default: Blender's 24). With --fps 60 a frame is
+  one game tick, so the frames and the @a-b range (inclusive) can be the clip data's raw trim ticks:
+  only frames a..b are measured (YOK-102 G4: the game plays trim_start..trim_end, not the whole take).
 
 F5: the clips are existing generated clips, played as they are; nothing is keyed or saved, and the
 rig files are never written. Writes <out>/clip_report.json and <out>/<clip>_f<frame>_<rig>_<view>.png.
@@ -23,6 +29,19 @@ import numpy as np
 from mathutils import Vector
 
 STRETCH_FAIL, SQUASH_FAIL, STRETCH_WARN = 3.0, 0.25, 1.8
+
+
+def game_tracks(act):
+    """YOK-102 G4: the game (FighterModel.BuildLibrary) keeps a clip's rotations only on the shared skeleton:
+    per-bone translation and scale are dropped (bones keep the rig's own lengths) and the hips only carry a
+    height, scaled per rig (YOK-130). A whole-body offset changes neither skin stretch nor prop clearance, so
+    for these checks every location and scale curve is removed from a copy of the action."""
+    cp = act.copy()
+    cp.use_fake_user = True
+    for fc in list(cp.fcurves):
+        if fc.data_path.endswith(".location") or fc.data_path.endswith(".scale"):
+            cp.fcurves.remove(fc)
+    return cp
 
 
 def args():
@@ -88,6 +107,8 @@ def main():
     out = os.path.abspath(a["out"])
     os.makedirs(out, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    if a.get("fps"):
+        bpy.context.scene.render.fps = int(a["fps"])
     rigs = {}
     for spec in a["rig"]:
         tag, path = spec.split("=", 1)
@@ -121,6 +142,7 @@ def main():
                                                                   zip(tags, a["rig"])}, "clips": {}}
     for cspec in a["clip"]:
         path, _, fr = cspec.partition(":")
+        fr, _, rng = fr.partition("@")
         want = [int(f) for f in fr.split(",") if f]
         name = os.path.splitext(os.path.basename(path))[0]
         carm, cmesh = import_glb(path, "clip")
@@ -134,9 +156,14 @@ def main():
         rest_d = max((carm.matrix_world @ b.head_local - ra.matrix_world @ ra.data.bones[b.name].head_local).length
                      for b in carm.data.bones if b.name in ra.data.bones)
         f0, f1 = (int(round(x)) for x in act.frame_range)
+        if rng:
+            r0, r1 = (int(x) for x in rng.split("-"))
+            f0, f1 = max(f0, r0), min(f1, r1)
         res = {"action": act.name, "frames": [f0, f1], "clip_rest_vs_rig_max_m": round(rest_d, 4),
                "per_rig": {}}
         per_frame = {t: [] for t in tags}
+        if a.get("rotations-only") == "1":
+            act = game_tracks(act)
         for t in tags:
             rigs[t]["arm"].animation_data_create()
             rigs[t]["arm"].animation_data.action = act

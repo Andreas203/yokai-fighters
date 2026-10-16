@@ -18,12 +18,12 @@
    -0.0545,
    0.0152
   ],
-  "tilt_deg": 45.0,
+  "tilt_deg": 75.0,
   "tilt_toward": "0,0,1",
   "axis_gltf": [
-   -0.6952,
-   -0.0379,
-   0.7178
+   -0.2437,
+   -0.0133,
+   0.9698
   ]
  },
  "long_axis": "Z",
@@ -75,5 +75,5 @@
   "note": "BoneAttachment3D(bone) > child Node3D with this transform > prop scene. Basis is written row by row (Godot's Transform3D text order)."
  },
  "sha256_in": "2378ab746fc55a7bd66fda7e4368fb5c6b1040bc356e841bb9a02bb034ae74b5",
- "sha256_out": "cef14678014e623aefc065c896f2c1f2a38d714e6f01eb4f1aaaa719a7f6c61d"
+ "sha256_out": "9d019e737dfea8af3a29f5ebf1bc3bcc1ded3141556094e1b57d36794d514366"
 }
