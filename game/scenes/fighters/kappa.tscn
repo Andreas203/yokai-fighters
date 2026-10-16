@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/kappa/kappa-rigged.glb" id="2_rig"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/kappa/shell-fit.glb" id="3_prop"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="4_toon"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="5_toonmat"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="6_outline"]
+
+[node name="Kappa" type="Node3D" unique_id=491881952]
+script = ExtResource("1_model")
+Fighter = "kappa"
+
+[node name="Mirror" type="Node3D" parent="." unique_id=925358445]
+
+[node name="Yaw" type="Node3D" parent="Mirror" unique_id=728789964]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=1426066066 instance=ExtResource("2_rig")]
+
+[node name="Shell" type="BoneAttachment3D" parent="Mirror/Yaw" unique_id=1021507340]
+bone_name = "Spine01"
+use_external_skeleton = true
+external_skeleton = NodePath("../Model/Armature/Skeleton3D")
+
+[node name="ShellPivot" type="Node3D" parent="Mirror/Yaw/Shell" unique_id=1316017846]
+transform = Transform3D(100.0, 0.0, -7e-06, -0.0, 99.9935, 1.140931, 7e-06, -1.140931, 99.9935, 2e-06, 5.192045, -2.23373)
+
+[node name="ShellMesh" type="Node3D" parent="Mirror/Yaw/Shell/ShellPivot" unique_id=1348361293 instance=ExtResource("3_prop")]
+
+[node name="Animator" type="AnimationPlayer" parent="." unique_id=192819085]
+deterministic = true
+root_node = NodePath("../Mirror/Yaw/Model")
+callback_mode_process = 2
+
+[node name="Toon" type="Node" parent="." unique_id=1655420227]
+script = ExtResource("4_toon")
+Toon = ExtResource("5_toonmat")
+Outline = ExtResource("6_outline")
