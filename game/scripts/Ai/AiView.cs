@@ -18,6 +18,10 @@ public readonly record struct FighterView(
 	public bool Threatening => Attacking && MoveFrame <= MoveLastActive;
 	/// <summary>Recovery frames of a visible move.</summary>
 	public bool Recovering => Attacking && MoveFrame > MoveLastActive;
+	/// <summary>YOK-57: the health bar's full length (the HUD draws health against it).</summary>
+	public int MaxHealth { get; init; }
+	/// <summary>YOK-57: the burst seal is spent (the HUD shows it, C6).</summary>
+	public bool BurstUsed { get; init; }
 }
 
 public readonly record struct ProjectileView(int Owner, int X, int Dir);
@@ -34,12 +38,15 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 	/// <summary>Get-up frames after a knockdown ends (SimConfig.WakeUpFrames): a fixed, visible animation length.</summary>
 	public int WakeUpFrames { get; init; }
 
+	/// <summary>YOK-57: burst length (SimConfig.BurstFrames), a fixed visible animation length.</summary>
+	public int BurstFrames { get; init; }
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
 		var shots = new ProjectileView[m.Projectiles.Count];
 		for (int i = 0; i < shots.Length; i++) shots[i] = new(m.Projectiles[i].Owner, m.Projectiles[i].X, m.Projectiles[i].Dir);
-		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames };
+		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames };
 	}
 
 	private static FighterView Of(Fighter f)
@@ -47,6 +54,6 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 		MoveData? mv = f.CurrentMove;
 		return new FighterView(f.X, f.Y, f.Facing, f.State, f.StunLeft, f.Airborne, f.KnockedOut, f.Health, f.Meter,
 			mv?.Id, mv is not null && f.ActiveSpecial != SpecialSlot.None, mv is null ? 0 : f.MoveFrame,
-			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected);
+			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected) { MaxHealth = f.MaxHealth, BurstUsed = f.BurstUsed };
 	}
 }

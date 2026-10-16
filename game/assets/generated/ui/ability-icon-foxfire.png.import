@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bmc66wve3rhje"
-path="res://.godot/imported/pause-icon-fallback.png-95da006306cc390fd7119c2fa790d76b.ctex"
+uid="uid://4imdfkn6krtp"
+path="res://.godot/imported/ability-icon-foxfire.png-5fc18d0d9e9002067febc44099bd55ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/generated/ui/pause-icon-fallback.png"
-dest_files=["res://.godot/imported/pause-icon-fallback.png-95da006306cc390fd7119c2fa790d76b.ctex"]
+source_file="res://assets/generated/ui/ability-icon-foxfire.png"
+dest_files=["res://.godot/imported/ability-icon-foxfire.png-5fc18d0d9e9002067febc44099bd55ac.ctex"]
 
 [params]
 

@@ -171,6 +171,7 @@ public sealed class SaveStore
 			else if (OptionalInt(run, "coins", out int coins) is { } coinProblem) why = coinProblem;
 			else if (OptionalBool(run, "copy_locked", out bool? copyLocked) is { } lockProblem) why = lockProblem;
 			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
+			else if (OptionalBool(run, "off_route", out bool? offRoute) is { } routeProblem) why = routeProblem; // YOK-124, dev slot only
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
@@ -179,6 +180,7 @@ public sealed class SaveStore
 					Coins = coins,
 					CopyLocked = copyLocked,
 					LockedCopy = copy,
+					OffRoute = offRoute ?? false,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -322,6 +324,7 @@ public sealed class SaveStore
 				w.WriteNumber("health", run.Health);
 				w.WriteNumber("coins", run.Coins);
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
+				if (run.OffRoute) w.WriteBoolean("off_route", true); // YOK-124: only a dev walk off the routes has it
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
 				{

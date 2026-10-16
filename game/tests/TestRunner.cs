@@ -36,6 +36,7 @@ public partial class TestRunner : Node
 	public override async void _Ready()
 	{
 		int pass = 0, fail = 0;
+		Type? last = null;
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
 		// YOK-125: one process frame between test classes, so nodes the last class freed (QueueFree) and its
@@ -45,6 +46,7 @@ public partial class TestRunner : Node
 		foreach (var m in type.GetMethods(BindingFlags.Public | BindingFlags.Static))
 		{
 			if (m.GetCustomAttribute<TestAttribute>() == null) continue;
+			if (last != type) { last = type; await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); } // let queued frees and redraws drain between classes
 			string name = $"{type.Name}.{m.Name}";
 			try
 			{

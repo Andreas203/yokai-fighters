@@ -53,6 +53,8 @@ public static class InputGlyphs
 		("scheme", InputDevice.Pad) => "X",
 		("choose", InputDevice.Keyboard) => "LEFT / RIGHT",
 		("choose", InputDevice.Pad) => "D-PAD",
+		("route", InputDevice.Keyboard) => "ARROWS",
+		("route", InputDevice.Pad) => "D-PAD",
 		("move", InputDevice.Keyboard) => "UP / DOWN",
 		("move", InputDevice.Pad) => "D-PAD",
 		("tab", InputDevice.Keyboard) => "Q / E",

@@ -275,6 +275,33 @@ public partial class GameFlow : Node
 		return MapResult.Done;
 	}
 
+	/// <summary>
+	/// YOK-126: the dev menu's Run state page puts a run it built (<see cref="Dev.DevRunEditor"/>) in place of the
+	/// current one. Only on the title (the run then shows on the map) or the map, between nodes, with dev mode on, so
+	/// the save it writes goes to the dev slot. Call it through <see cref="DevContext.TryChangeRun"/>. False, with the
+	/// reason, anywhere else; nothing changes then.
+	/// </summary>
+	public bool AdoptDevSession(RunSession session, out string? refusal)
+	{
+		refusal = !DevMode.On ? DevContext.DevOffReason
+			: Router.Current is not (Screen.Title or Screen.Map) ? DevContext.MidFightReason
+			: session.Map.InNode || session.IsOver ? "the run must stand between nodes"
+			: Router.Current == Screen.Map && Session is { } cur && cur.Map.Graph.Fingerprint != session.Map.Graph.Fingerprint
+				? "on the map a dev run keeps the current run's map" : null;
+		if (refusal != null) return false;
+		// The map file the session's graph came from: on the map the current run's (Continue may have used the saved
+		// run's own map_file); on the title the page built the run on MapFile.
+		if (Router.Current == Screen.Title || _runMapFile is null) _runMapFile = MapFile;
+		Session = session;
+		_freshRun = false;
+		GD.Print($"GameFlow: dev run state on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
+		Adopt(session);
+		SaveRun(session);
+		if (Router.Current == Screen.Title) Router.ContinueRun();
+		else Map.SetView(new SessionMapView(session));
+		return true;
+	}
+
 	/// <summary>A new run from inside a fight (Restart on the lose screen, the end card or the pause menu): back to the map on a fresh session.</summary>
 	public bool RestartRun()
 	{
@@ -367,7 +394,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes);
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			reason = "";
 			return session;
@@ -432,6 +459,7 @@ public partial class GameFlow : Node
 				Title.Visible = false;
 				ControlSelect.Close();
 				if ((from == Screen.ControlSelect || _freshRun || Session is null) && !StartRun()) { Router.ReturnToTitle(); break; }
+				DevMap.Apply(Session); // YOK-124: the dev full map (off unless dev mode is on and the toggle is set)
 				Map.SetView(new SessionMapView(Session!)); // a fresh view each time: current node states, pick lock cleared
 				Map.Visible = true;
 				break;
@@ -478,7 +506,7 @@ public partial class GameFlow : Node
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) stop.TitleRequested += () => Router.ReturnToTitle(); // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
@@ -486,8 +514,31 @@ public partial class GameFlow : Node
 		MoveChild(scene, 0); // under the menu layer
 	}
 
+	/// <summary>YOK-104: the merchant's shop over the rest stop: the router says it is open, the stop hides, Back brings it back used.</summary>
+	public ShopScreen? Shop { get; private set; }
+
+	private void OpenShop(RestStopScreen stop)
+	{
+		if (Session == null || !Router.OpenShop()) return;
+		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
+		shop.Bind(Session);
+		shop.MerchantLine = stop.MerchantLine;
+		shop.Closed += () =>
+		{
+			Router.CloseShop();
+			if (Shop == shop) { RemoveChild(shop); shop.QueueFree(); Shop = null; } // not Free: this runs inside the shop's own input
+			if (IsInstanceValid(stop)) { stop.Visible = true; stop.ShopClosed(); }
+		};
+		stop.Visible = false;
+		Shop = shop;
+		AddChild(shop);
+		MoveChild(shop, 1); // over the stop, under the menu layer
+	}
+
 	private void EndFight()
 	{
+		if (Shop is { } shop && IsInstanceValid(shop)) { RemoveChild(shop); shop.Free(); }
+		Shop = null;
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run
 		if (NodeScene is { } scene && IsInstanceValid(scene)) { RemoveChild(scene); scene.QueueFree(); }
 		Fight = null;

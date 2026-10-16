@@ -37,6 +37,7 @@ public sealed class ReplayRecorder
 	{
 		ProfileId = ai.Profile.Id, Temperament = ai.Profile.Temperament, ProfileFp = Fingerprint.Of(ai.Profile),
 		ReactionFrames = ai.ReactionFrames, Seed = seed,
+		FightTier = ai.Tier == AiFightTier.Standard ? null : ai.Tier.ToString().ToLowerInvariant(),
 	};
 
 	static FighterSetup Capture(Fighter f)
