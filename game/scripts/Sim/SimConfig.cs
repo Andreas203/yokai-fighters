@@ -2,8 +2,8 @@ namespace YokaiFighters.Sim;
 
 /// <summary>
 /// Fight-wide constants for the simulation. Pure C#, no Godot types, integers only (F3).
-/// Positions are centi-units, so 100 = one gameplay unit; 200 units per metre, and 1,440 units span the 1,920 px
-/// screen at the fight camera (E1, AM8).
+/// Positions are centi-units, so 100 = one gameplay unit; 200 units per metre, and 1,720 units span the 1,920 px
+/// screen at the fight camera's widest zoom (E1, AM9 proposed).
 /// Defaults are placeholders until a data loader (YOK-40) feeds stage and fighter data.
 /// </summary>
 public sealed partial record SimConfig
@@ -14,16 +14,18 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// Half the stage width; the corners sit at +/- this. 3,840 units wide (E1): two of the original 1,920-unit screens,
 	/// kept when AM8 brought the camera in, so the stage art and the visible stage (<see cref="FightCamera.VisibleHalfWidth"/>)
-	/// do not change; it is now 2.67 of the closer 1,440-unit screens.
+	/// do not change; AM9's dynamic camera stops at the same edge (2.2 of its widest 1,720-unit screens).
 	/// </summary>
 	public int StageHalfWidth { get; init; } = 1920 * Scale;
 
 	/// <summary>
-	/// Visible width of the side-on camera at the gameplay plane, in centi-units. AM8 (YOK-120): 1,440 (was 1,920), the
-	/// camera sits closer at the same ~25 deg FOV (F4; <c>FightScene.CameraDistance</c> derives the distance from this).
-	/// Tune with <see cref="MaxSeparation"/>: MaxSeparation + 2 x the larger model reach (front/back) must not exceed it; MaxSeparation derives from this unless set (CameraTests).
+	/// The sim's screen: the camera's widest view at the gameplay plane, in centi-units. AM9 (YOK-129, proposed): the
+	/// dynamic camera zooms between <c>CameraConfig.CloseViewWidth</c> (1,200) and this, 1,720 (AM8 had a fixed 1,440,
+	/// before it 1,920), at the same ~25 deg FOV (F4). The sim never reads the presentation camera: the screen walls
+	/// (<see cref="MaxSeparation"/>) derive from this and projectiles leave the screen at its edge (<see cref="FightCamera"/>).
+	/// MaxSeparation + 2 x the larger model reach (front/back) must not exceed it (CameraTests).
 	/// </summary>
-	public int ViewWidth { get; init; } = 1440 * Scale;
+	public int ViewWidth { get; init; } = 1720 * Scale;
 
 	/// <summary>Push-box width: two fighters' centres never get closer than this on the ground.</summary>
 	public int BodyWidth { get; init; } = 120 * Scale;
@@ -31,8 +33,8 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// Screen walls: the farthest two fighters may be apart so both models stay in view whichever way each faces.
 	/// Derived, so it cannot drift: <see cref="ViewWidth"/> - 2 x the larger model reach (front 240 / back 200), because
-	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM8 (YOK-120):
-	/// 960 + 2 x 240 = 1,440 (was 1,520 for the 1,920 view, YOK-39, which only budgeted the 200 back reach).
+	/// a fighter facing away from the other shows its 240 front reach on the outside. E1/AM9 (YOK-129, proposed):
+	/// 1,240 + 2 x 240 = 1,720 at the widest zoom (AM8: 960 + 2 x 240 = 1,440; YOK-39: 1,520 for the 1,920 view).
 	/// Setting it in an initializer overrides the derivation (tests). Trial start distances are capped at this
 	/// (TrialData.MaxStartDistance, trial.schema.json).
 	/// </summary>

@@ -46,10 +46,13 @@ public static class EditableSceneTests
 		Assert.True(Math.Abs(scene.Camera.Fov - FightScene.CameraFovDegrees) < 1e-4, $"camera_rig.tscn FOV {scene.Camera.Fov} = {FightScene.CameraFovDegrees} (F4)");
 		Assert.True(scene.Camera.Current, "the rig's camera is current");
 		for (int t = 0; t < 400; t++) scene.Step(new FighterInput(InputBits.Left), new FighterInput(InputBits.Left));
-		var c = scene.Match.Config;
-		var want = new Vector3(FightScene.ToMeters(FightCamera.CenterX(scene.Match)), FightScene.CameraHeight, FightScene.CameraDistance(c));
-		Assert.True(scene.CameraRig.Position.IsEqualApprox(want), $"rig at {scene.CameraRig.Position}, sim camera {want}");
-		Assert.True(FightCamera.CenterX(scene.Match) < 0, "walked left: the camera followed");
+		// YOK-129: the rig carries the dynamic camera's transform (position and pitch).
+		var (x, y, z, pitch) = scene.Cam.Transform;
+		var want = new Vector3(x, y, z);
+		Assert.True(scene.CameraRig.Position.IsEqualApprox(want), $"rig at {scene.CameraRig.Position}, dynamic camera {want}");
+		Assert.True(Math.Abs(scene.CameraRig.Rotation.X - pitch) < 1e-5f && pitch < 0f, $"rig pitched down {scene.CameraRig.Rotation.X} = {pitch}");
+		Assert.True(scene.Cam.CenterX < 0, "walked left: the camera followed");
+		Assert.True(scene.Cam.InFrame(DynamicCamera.SubjectOf(scene.Match)), "both models in the dynamic view");
 		scene.QueueFree();
 	}
 
