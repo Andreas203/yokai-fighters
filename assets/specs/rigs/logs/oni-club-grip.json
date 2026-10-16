@@ -1,0 +1,61 @@
+{
+ "tool": "prep_prop.py",
+ "mode": "club",
+ "in": "game/assets/generated/characters/oni/club.glb",
+ "out": "game/assets/generated/characters/oni/club-grip.glb",
+ "in_extent_blender_m": [
+  0.3425,
+  0.3419,
+  1.8975
+ ],
+ "long_axis": "Z",
+ "length_in_m": 1.8975,
+ "scale": 0.63241,
+ "length_out_m": 1.2,
+ "head_end": "+",
+ "outer_radius_ends_m": [
+  0.0784,
+  0.1712
+ ],
+ "grip_frac": 0.13,
+ "grip_in_m": [
+  -0.002,
+  0.0015,
+  -0.7035
+ ],
+ "axis_gltf": "0,0,1",
+ "hand_centre_verts": 583,
+ "mount": {
+  "rig": "game/assets/generated/characters/oni/oni-rigged.glb",
+  "bone": "RightHand",
+  "point_gltf_m": [
+   -0.8626,
+   1.5167,
+   -0.0094
+  ],
+  "child_matrix_rows_bone_space_cm": [
+   [
+    -19.636593,
+    82.52919,
+    52.946537,
+    2.943158
+   ],
+   [
+    -96.107491,
+    -5.496515,
+    -27.076351,
+    13.373433
+   ],
+   [
+    -19.435675,
+    -56.202465,
+    80.396095,
+    3.974909
+   ]
+  ],
+  "godot_child_transform": "Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, 2.943158, 13.373433, 3.974909)",
+  "note": "BoneAttachment3D(bone) > child Node3D with this transform > prop scene. Basis is written row by row (Godot's Transform3D text order)."
+ },
+ "sha256_in": "2378ab746fc55a7bd66fda7e4368fb5c6b1040bc356e841bb9a02bb034ae74b5",
+ "sha256_out": "195c41710fd2d13886c2aa56aa95950abd48682db4066e47ffb5307db5893847"
+}

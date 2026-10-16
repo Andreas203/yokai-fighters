@@ -1,0 +1,39 @@
+{
+ "tool": "cut_shell.py",
+ "in": "game/assets/generated/characters/kappa/kappa-rigged.glb",
+ "out": "game/assets/generated/characters/kappa/kappa-rigged-shellcut.glb",
+ "box": {
+  "y_min": 0.17,
+  "z_min": 0.58,
+  "z_max": 1.29,
+  "x_max": 0.37
+ },
+ "verts_before": 11695,
+ "open_edges_before": 8848,
+ "open_edges_after_weld": 28,
+ "verts_cut": 647,
+ "loose_island_verts": 0,
+ "verts_after": 7132,
+ "cap_faces": 102,
+ "boundary_edges_filled": 104,
+ "open_edges_left_elsewhere": 28,
+ "cap_uv": [
+  0.5526260137557983,
+  0.7087730169296265
+ ],
+ "cap_uv_sample_dist_m": 0.0443,
+ "cut_bbox_blender_m": {
+  "min": [
+   -0.337,
+   0.17,
+   0.6115
+  ],
+  "max": [
+   0.3352,
+   0.3591,
+   1.2858
+  ]
+ },
+ "sha256_in": "43456030534ebc8199479f9f009472b08df703ddd51188f6d89162303c671b3c",
+ "sha256_out": "78ed9719285d5aff58e890798a3d17130e945bd84ca3e73d440832641b78b946"
+}

@@ -3,75 +3,98 @@
 Ticket: YOK-112 ("Rig trial on Oni: generator auto-rig vs AccuRIG 2"), following YOK-102. Owner: rig-specialist. Rules: F5, F6, G4, T0, E15, AM5.
 Model spec and acceptance: `assets/specs/oni.md` (asset-smith, O3 and O5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`.
 
-**Status: SPEC, awaiting the designer's approval. No rig job has been run and no credits have been spent.** Meshy balance was 707 on 2026-10-16 (`meshy_check_balance`). The O3 task `01a144a2-bfe8-72a2-a861-d9eb1b3979dc` is SUCCEEDED (multi-image-to-3d, textured), so `meshy_rig` can use it as `input_task_id`.
+**Verdict: NOT ACCEPTED YET. The raw rig check FAILs the high kick and deep crouch on the pelvis.**
+- Next step: a free scripted weight repair (R4), not a retake.
+- Skeleton, rest pose, scale (2.2 m), axes, origin and weight hygiene all PASS.
+- The pelvis failures are the ones raw Ryo had, and his free repair took him to WARN.
+- A Meshy retake would give the same auto-skin for 5 credits, so a retake is not recommended.
+- **Not ready for G4** until R4 reaches WARN on every pose, and until the `Hips` height fix in code (below) is in.
+- The club is prepared and mounted. It clears the body in every stress pose.
 
-Note, 2026-10-16: the coordinating agent relayed "try meshy" from the designer, as approval for R1 and K-R1 (10 credits). An agent's message is not the designer's approval under the crew rules, so nothing was run. The designer can confirm directly, and then R1 runs as written below.
+## Designer decisions (2026-10-16, relayed by the main session)
+- **Rigger:** the YOK-112 trial went with **Meshy** ("try meshy"). The designer approved R1 directly to the main session, which ran it. AccuRIG 2 was not run and stays the fallback if the Meshy rig cannot be repaired to WARN.
+- **Size: 2.2 m.** A uniform x1.1 on the 2.0 m rig, by script, with no re-rig and no credits (below).
+- **Club: always in hand,** on a `RightHand` BoneAttachment3D in every clip. No stow or idle-on-back variant.
+- **Human guise (G1): not used.** If G4 fails, the fixes are weight repair, a simpler part, or AccuRIG 2.
+
+## Rig (take 1)
+| Field | Value |
+|---|---|
+| Rigger | Meshy auto-rig (`meshy_rig`, `height_meters: 2.0`), input O3 `01a144a2-bfe8-72a2-a861-d9eb1b3979dc` |
+| Rig task id | `01a144ad-b98d-7520-8376-c776c414a476` (SUCCEEDED, 5 credits, run by the main session) |
+| Raw file | `game/assets/generated/characters/oni/oni-rigged.glb`, 2.0 m, sha256 `e504c26ba236…`. Free walk and run: `oni-walk.glb`, `oni-run.glb` |
+| Game file | `game/assets/generated/characters/oni/oni-rigged-220.glb`: the raw rig with the `Armature` node scale 0.01 → 0.011 (`tools/blender/scale_rig.py --factor 1.1`). JSON chunk only; mesh, skin and texture are byte-identical. Log: `assets/specs/rigs/logs/oni-scale-220.json` |
+| Import | `godot --headless --path game --import` runs clean for every Oni file |
+| Skeleton | The shared 24 bones: names, parents and skin order identical (`rig_check` skeleton PASS), no bone map. Godot sees 24 bones |
+| Height, frame | 2.200 m after scaling (`rig_check --height 2.2` PASS), Y-up, +Z facing, feet at 0, feet centre 0.3 / 6.3 cm off the origin. Bones stay in cm with their own lengths: `Hips` rest Y is 112.8 cm in bone space (Ryo 94.9), which is 1.24 m in the world |
+| Rest | T-pose, rest == bind. Arms 8.9 / 9.8 deg below level; legs 15.0 / 12.3 deg apart (limit 15) |
+| Mesh | `char1`, 18,330 verts, one material |
+| Weights | Max 4 influences, all normalised, 0 unweighted, 0 cross-side. **189 verts with arm-and-leg bleed** at z 1.32-1.41 m (2.0 m frame), where the back of the mane and the upper back carry `UpLeg` and arm weight together (WARN) |
+| Fingers | Five modelled fingers and no finger bones: they ride `LeftHand` / `RightHand` rigid (E15) |
 
 ## Input
 | Field | Value |
 |---|---|
-| Body | `game/assets/generated/characters/oni/oni-mesh.glb`, O3 task `01a144a2-bfe8-72a2-a861-d9eb1b3979dc` |
-| Size | 2.000 m tall, arm span 1.91 m (T-pose, arms level at about 1.50 m), Y-up, feet at 0, centred. 15,623 tris, one 2K texture |
-| Hands | Five separate open fingers (no finger bones on the shared skeleton: they ride the hand bone as a rigid mitt, E15) |
-| Club | `game/assets/generated/characters/oni/club.glb`, O5 task `01a144a2-cb1d-7742-b9e3-e01c176e257a`. 1.90 m long along Z, origin at its centre, head at +Z (radius up to 0.17 m), handle at -Z (radius 0.03-0.06 m), knob at -0.86 m |
+| Body | `game/assets/generated/characters/oni/oni-mesh.glb`, O3 task `01a144a2-bfe8-72a2-a861-d9eb1b3979dc`. 2.000 m, arm span 1.91 m, 15,623 tris, one 2K texture |
+| Club | `game/assets/generated/characters/oni/club.glb`, O5 task `01a144a2-cb1d-7742-b9e3-e01c176e257a`. 1.90 m long and upright, origin at its centre. Head at the top (radius 0.17 m), handle below (0.03-0.06 m), knob at the bottom |
 
-Measured on the mesh (Blender read-only import, 2026-10-16; Blender axes, +Y = behind):
-- The mane fills the neck and upper shoulders: at z 1.60-1.90 it runs 0.23-0.29 m behind the centre line, against 0.17-0.22 m for the chest and back below. It is fused to the head and the tops of the shoulders.
-- The trousers are baggy from z 0.55 to 1.00: 0.84 m wide across both legs at z 0.70, front to back -0.29 to +0.24 m. The left and right legs share volume up to the crotch (asset-smith: no gap for a clean split).
+Measured on the mesh (Blender axes, +Y = behind, 2.0 m frame):
+- The mane fills the neck and upper shoulders, 0.23-0.29 m behind the centre line at z 1.60-1.90.
+- The trousers are baggy from z 0.55 to 1.00, 0.84 m across both legs at z 0.70. The legs share volume up to the crotch.
 
-## Rig job options
-| Option | Rigger | Settings | Cost | Who runs it |
-|---|---|---|---|---|
-| A | Meshy auto-rig (the generator that made the model) | `meshy_rig`, `input_task_id: 01a144a2-bfe8-72a2-a861-d9eb1b3979dc`, `height_meters: 2.0` | 5 credits (includes the free walk and run GLBs) | rig-specialist, after `meshy_check_balance` |
-| B | AccuRIG 2 (desktop, free) | Settings below | 0 credits, about 30-45 min of designer time | Designer runs it and puts the FBX in `game/assets/generated/characters/oni/` |
+## Check run (2026-10-16, raw take 1)
+Command: `Blender -b --python tools/blender/rig_check.py -- --rig <rig> --skeleton assets/specs/rigs/skeleton.md --height <2.0|2.2> --out <dir>`.
+- The 2.0 m raw rig and the 2.2 m game file give identical pose figures, as a uniform scale should.
+- There is no `--cloth` file yet, so the trouser folds are checked as body.
+- An edge fails above 3x stretch or below 0.25x squash. A pose FAILs above 63 failing edges (0.2% of 31,639) or on a collapsed bone.
 
-Tripo's auto-rig is not an option here: the model came from Meshy, so the generator's own rig is Meshy's.
-
-### Option B: AccuRIG 2 settings
-1. **Input.** AccuRIG takes FBX or OBJ. A scripted step exports `oni-mesh.glb` to `oni-mesh-accurig.fbx`, with no change to the geometry: T-pose, Y-up, metres, base-colour texture embedded. That step is the first part of `tools/blender/bone_map_accurig.py` (to write; see the bone map below). The designer opens the FBX in AccuRIG 2.
-2. **Rig Body.** Use the auto marker placement, then check:
-   - Chin marker at the jaw line, below the beard and tusks. If the mane pulls it too high, the mane gets neck weight.
-   - Wrist and elbow markers at the joints, not at the wrap edges.
-   - Knee markers at the knee, not at the trouser cuff: the cuff sits about 0.05 m above it.
-   - Crotch marker at the real crotch inside the trousers, about 0.55-0.60 m up. AccuRIG tends to place it at the trouser hem.
-3. **Rig Hand.** 5 fingers, auto markers. The finger bones stay at rest after the bone map (rule 4 in `skeleton.md`).
-4. **Pose check.** In AccuRIG's preview, try a high arm raise and a wide stance. Redo the markers if the mane follows the arm or the trousers tear at the crotch.
-5. **Export.** Export > FBX, target **Blender**, skeleton **CC3/CC4 standard** (`CC_Base_` names), **T-pose** as the bind pose, mesh and skin on, no motion, embed textures. File name: `oni-accurig.fbx`.
-
-### Recommended order for the YOK-112 trial
-1. **A first** (5 credits). It is already the shared skeleton, so it needs no bone map and the gate clips play on it unchanged.
-2. **B on the same Oni mesh** (free).
-3. **Both through the same checks.** Run `rig_check.py` (B after the bone map) and `skin_clip_check.py --rig meshy=... --rig accurig=...` on the walk, heavy and throw clips.
-4. **The winner** is the rig with fewer failing edges and no collapse at the mane, shoulders, crotch and wrists. A tie goes to Meshy, because it needs no bone map and no twist-bone merge.
-5. **The Kappa uses only the winner** (see `rigs/kappa.md`).
-6. The verdict and the reason are written under "Trial result" below, so the next fighter uses one rigger.
-
-## Extra parts
-| Part | Treatment |
+| Check | Result |
 |---|---|
-| Mane | Baked; weighted to `Head` / `neck` / `Spine` |
-| Horns, tusks, beard | Baked to `Head`. Rigid by weight (check that `Head` is near 1.0 on the horns) |
-| Trousers (baggy) | Baked into the body skin. A cloth region file `assets/specs/rigs/cloth/oni.md` (same format as `cloth/kitsune.md`) exempts the outer folds from the tear check, with `UpLeg`, `min_radius_m` about 0.14, z 0.55-0.95. The crotch and waist band stay checked |
-| Rope belt, forearm and shin wraps | Baked, no sway |
-| Kanabo club | **Separate rigid mesh** on a hand attachment (plan below). No extra bones |
+| skeleton, rest pose, scale, up axis, origin | PASS |
+| weights | WARN: 189 verts with arm-and-leg bleed (mane back, upper back) |
+| high kick | **FAIL**: 81 failing edges, max 7.08x. `RightUpLeg` 34, `LeftUpLeg` 18, `Spine02` 9, mixed 101. No collapse |
+| deep crouch | **FAIL**: 158, max 8.98x. `Spine02` 45, `UpLeg` 24, `Leg` 11, mixed 236. No collapse |
+| arm raise | WARN: 11, max 5.03x |
+| torso twist | WARN: 9, max 4.04x |
+| grab | WARN: 8, max 3.38x (shoulders and arms) |
 
-No `X_` extra bones are needed.
+Baseline: raw Ryo had crouch FAIL at 68 failing edges and the kick at 35. Raw Kitsune had crouch 324, kick 115, arm raise 146 and grab 120. Both reached WARN with the free `repair_weights.py`.
 
-## Club attachment plan
-1. **Rescale and re-pivot by script.** `tools/blender/prep_prop.py` (to write; prop prep, a mesh edit, not animation):
-   - Import `club.glb` and scale it uniformly by 1.2 / 1.90 = **0.632**, which gives 1.20 m long and a head radius of about 0.11 m.
-   - Find the grip. It is the thinnest section of the lower half, measured as a radius profile along Z (handle 0.03-0.05 m before scaling). Put the origin at the grip centre, about 0.12 m above the knob after scaling.
-   - Point the club along +Y from the grip, so its local up is the club axis.
-   - Write `club-grip.glb`. The original file is never written.
-   - Log the scale, the grip offset and the sha256.
-2. **Mount in Godot.** Add a `BoneAttachment3D` "Club" on `RightHand` in `game/scenes/fighters/oni.tscn`. Its child `ClubPivot` has scale 100, because the bone space is in cm, as on the Kitsune tails. The grip offset in hand space comes from the rig: the palm centre is about 8-10 cm past the `RightHand` head along the hand, rotated so the club stands up out of the fist. The offset is data on the node, read from the rig in Blender (the hand's mean vert position), never hand-tuned per clip.
-3. **Clearance.** Check the club in the stress poses and gate clips: no passing through the head, horns or thigh in the heavy and throw.
-4. **Visibility: not decided here.** The shared clips are bare-handed, and an open-hand push (E15 throw) holding a club reads badly. The options:
-   - (a) always visible;
-   - (b) visible only in the club moves (Iron-Club Charge and its normals), with a show/hide flag in move data stepped on the tick;
-   - (c) on the back (a `BoneAttachment3D` on `Spine`) when idle, in the hand in club moves.
+What the stills show:
+- **Crouch:** the back and seat skin is dragged down into a sheet behind the trousers. The trouser fronts balloon round the knees.
+- **Kick:** the crease tears at the crotch and seat on the kicking side.
+- **Mane:** it stays with the head in the arm raise and the grab. Unlike Kitsune's hair, it is not hung on the arms.
+- **Shoulders, fingers, horns:** the shoulders hold, and the fingers and horns stay rigid.
 
-   This is **the animator's or the designer's call**. The rig works for all three.
+**R4, the proposed repair (free, needs the designer's go-ahead):**
+- A `FIGHTERS["oni"]` entry in `repair_weights.py`.
+- Ryo's pelvis steps 1-3 (smooth, ±5 cm side split, UpLeg falloff), with the band scaled to the Oni's hips (`Hips` 1.128 m in the 2.0 m frame).
+- Kitsune's T2 leg strip and T4 bleed steps, for the 189 mane and back verts.
+- `cloth/oni.md` for the trouser folds (`UpLeg`, `min_radius_m` about 0.14, z 0.55-0.95).
+- Target: WARN on every pose.
+- Order of the build: raw → `repair_weights.py` → `scale_rig.py --factor 1.1` → `oni-rigged-220.glb`.
+
+Stills, raw take 1: `assets/specs/rigs/stills/oni-raw-{rest,high-kick,deep-crouch,arm-raise,torso-twist,grab}-{front,side}.png`.
+
+## Club (done, 2026-10-16)
+**Prep.** `tools/blender/prep_prop.py --mode club --length 1.2 --grip-frac 0.13 --axis 0,0,1 --rig oni-rigged.glb --bone RightHand` writes `game/assets/generated/characters/oni/club-grip.glb` (sha256 `195c41710fd2…`; log `assets/specs/rigs/logs/oni-club-grip.json`).
+- Scale 0.632: from 1.90 m to 1.20 m in rig space.
+- The head end is picked by its outer radius (0.17 against 0.08 m at the knob).
+- The pivot is the grip, 0.156 m above the knob end.
+- Handle to head points forward (glTF +Z). With the arm down, the club points ahead out of the fist.
+
+**Mount (for the fighter scene, owned by gameplay-programmer).** `BoneAttachment3D` on `RightHand` → child `Node3D` → `club-grip.glb`, with this child transform (from the 2.0 m rest):
+```
+Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, 2.943158, 13.373433, 3.974909)
+```
+- The grip sits at the hand centre: the mean of the 583 verts weighted mostly to `RightHand`.
+- At rest, the club is upright in the world.
+- Do not recompute the transform on the scaled file. It lives in bone space, so the 1.1 on `Armature` scales the club with him.
+
+**Checked in Godot 4** (headless, `oni-rigged-220.glb`): the club's global basis is 1.1 x identity, its grip is at (-0.949, 1.668, -0.010) m, and it is **1.32 m** long.
+
+**Clearance.** `tools/blender/prop_clearance.py --ignore-radius 0.12` ran the five stress poses plus arms-down. **0 club verts inside the body in every pose.** Stills: `assets/specs/rigs/stills/oni-club-{rest-front,arms-down-side,high-kick-side,grab-front,deep-crouch-front,torso-twist-front}.png`.
+- The hand is an open mitt with no finger bones (E15), so the handle passes through open fingers rather than a fist. This reads as holding at 720p, and it is the accepted rig limit.
 
 ## Attachment bones
 - Club on `RightHand`.
@@ -81,67 +104,52 @@ No `X_` extra bones are needed.
 
 No new bones.
 
-## Blender checks after rigging
-Run them on the raw rig GLB first. A repaired copy is only made if a check fails (weights only, as `repair_weights.py` does).
-1. **`rig_check.py`**: `Blender -b --python tools/blender/rig_check.py -- --rig game/assets/generated/characters/oni/oni-rigged.glb --skeleton assets/specs/rigs/skeleton.md --height 2.0 --cloth assets/specs/rigs/cloth/oni.md --out <scratch>/oni-meshy`. Add `--bone-map accurig` for option B. It checks:
-   - names, parents and skin order against the 24 shared bones;
-   - T-pose rest, Y-up, +Z facing, origin at the feet;
-   - at most 4 influences, normalised weights, no verts weighted to the wrong side;
-   - the five stress poses: high kick, deep crouch, full arm raise, torso twist, grab.
-2. **Watch-list**, judged from the stills:
-   - **Mane**: must not follow `LeftArm` / `RightArm` in the arm raise. Kitsune's Meshy skin hung her hair on both arms (`kitsune-weight-repair.md`), and the same fault is likely here, because the mane rests on the shoulders. Fix: the Kitsune T1 arm strip, as a new `FIGHTERS["oni"]` entry in `repair_weights.py`.
-   - **Trousers and thighs**: crotch tear in the high kick and deep crouch. The legs share volume, so expect the crossed-side bleed Ryo had (YOK-116). Fix: Ryo's pelvis steps 1-3 (smooth, ±5 cm side split, UpLeg falloff), with the band scaled to the Oni's hips.
-   - **Shoulders**: very big deltoids and pecs. Check for collapse in the arm raise and the grab, through the `LeftArm` / `RightArm` volume ratio.
-   - **Wrists and fingers**: fingers rigid on the hand and no candy-wrap in the torso twist or the grab. The Meshy rig has no twist bones. On option B, the CC twist bones are merged into their parents (bone map rule 3).
-   - **Horns and beard**: rigid on `Head`, with no `neck` stretch in the high kick.
-3. **Stills**: `assets/specs/rigs/stills/oni-{rest,high-kick,deep-crouch,arm-raise,torso-twist,grab}-{front,side}.png`. For the trial, prefix the files `oni-meshy-` or `oni-accurig-`.
-4. **Export check**: the glTF imports into Godot 4 with `Model/Armature/Skeleton3D` and the 24 bones intact.
-
-## Bone map
-- **Option A (Meshy):** the shared skeleton itself. No map: the 24 names, order and parents are expected to be identical, and `rig_check.py` verifies them.
-- **Option B (AccuRIG 2):** fill `### Bone map: AccuRIG 2 (oni)` in `skeleton.md` from the first file, starting from the CC column already there:
-  - `CC_Base_Hip` → `Hips`, with `CC_Base_Pelvis` kept at rest.
-  - `Waist` / `Spine01` / `Spine02` → `Spine02` / `Spine01` / `Spine` (the spine-order trap).
-  - `NeckTwist01` → `neck`, and `Head` → `Head`.
-  - Clavicle, upper arm, forearm and hand map to the matching arm bones.
-  - Thigh, calf, foot and toe base map to the matching leg bones.
-  - Twist bones are merged into their parent by script.
-  - Fingers stay at rest.
-  - `head_end` and `headfront` are added by script, at the skull top and 0.15 m in front of `Head`.
-  - The CC root is removed.
-  - The A-pose or roll delta is re-posed to the shared T-pose and the rest is re-applied by script, so the delta is zero.
-
-  The script is `tools/blender/bone_map_accurig.py` (to write). It must play the walk, heavy and throw clips before any new clip is made (AM5).
-
-## G4 gate plan (after the rig passes; not run)
+## G4 gate plan (not run; the rig is not ready yet)
 - **Clips:** `characters/ryo/ryo-walk.glb`, `clips/ryo-heavy.glb` (preset 194) and `clips/ryo-grab-2.glb` (preset 259, head-trimmed from tick 30, E15).
-- **Tools:** `skin_clip_check.py` with `--rig oni=... --rig ryo=...`, plus stills at the hit frames into `assets/specs/clips/stills/retarget-gate/oni-*.png`. The verdict goes in `assets/specs/clips/retarget_gate.md`.
-- **Height:** the clips were authored on 1.65-1.75 m rigs, and the Oni is 2.0 m (x1.14 Ryo):
-  - **Reach.** Rotations carry across proportions, so the Oni's hands land about 14% further and higher. On the heavy and the throw, measure where the hand ends up against a Ryo-sized target. The throw push should meet the chest, not the head.
-  - **Hips height.** If the clip keeps a `Hips` translation track in absolute cm, ground contact needs checking. Ryo's hips sit at about 0.95 m, and the Oni's will be about 1.05-1.10 m, so an absolute track sinks his feet about 0.1-0.15 m into the floor. Check the toe height against Y=0 in each clip (`measure_clip.py` planted feet). The fix is scaling the `Hips` position track by the hip-height ratio at import or in clip data, not a mesh change. This never showed up before, because Ryo's and Kitsune's hips differ by only 1 cm.
-  - **Bulk.** Arms against the torso in the throw and the guard. Record the overlap at the hit frames.
-- **NO-GO fallback** (designer's choice): an extra bone or a slimmer mane retake, or the folklore human guise (G1, 48 credits per take, in `yok-102-job-list.md`).
+- **Tools:** `skin_clip_check.py` with `--rig oni=oni-rigged-220.glb --rig ryo=...`, plus `prop_clearance.py` with the club. Stills go to `assets/specs/clips/stills/retarget-gate/oni-*.png`, and the verdict to `retarget_gate.md`.
+- **Hip height: a code fix, needed before G4.**
+  - `FighterModel.BuildLibrary` (`game/scripts/Fight/Presentation/FighterModel.cs`) drops per-bone translation, so the bones keep their lengths, and pins `Hips` X/Z. It **keeps the clip's `Hips` Y as it is**: Ryo's 94.9 cm in bone space.
+  - The Oni's rest is 112.8 cm in bone space, so he sinks 17.9 cm in bone units, **about 20 cm on screen at 2.2 m**, with his feet through the floor.
+  - Fix: scale the `Hips` Y keys by `rest.Y / clipRest.Y` = 112.8 / 94.9 = **1.19**. The 1.1 rides on the `Armature` node, so it must not be applied twice.
+  - This belongs to gameplay-programmer and the designer's code review. It applies to the Kappa too.
+- **Reach.** The clips are rotations, so the Oni's hands land in proportion to his size: about **26% further and higher** than Ryo's (2.2 / 1.75). On the heavy and the throw, measure the hand, and the club tip, at contact against a Ryo-sized target. The throw push should meet the chest, not the head. Any gap is fixed in move data (range, the throw's step, hitboxes, E15), not on the mesh.
+- **Bulk and club.** Arms against the torso in the throw and the guard, and the club against the head, horns and thigh at the hit frames. Record the overlap.
+- **NO-GO fallback** (designer's choice): weight repair, a simpler part (a slimmer mane, shorter trousers), or AccuRIG 2. The human guise is out.
 
-## Approval table (designer)
-| # | Job | Tool | Settings | Credits | Who runs it |
-|---|---|---|---|---|---|
-| R1 | Oni auto-rig, trial arm A | `meshy_rig` | `input_task_id 01a144a2-bfe8-72a2-a861-d9eb1b3979dc`, `height_meters 2.0` | 5 | rig-specialist |
-| R2 | Oni auto-rig, trial arm B | AccuRIG 2 desktop | Settings above; FBX in from the scripted export, CC FBX out | 0 | designer |
-| R3 | Club rescale and re-pivot | Blender script `prep_prop.py` | scale 0.632, origin at the grip | 0 | rig-specialist |
-| R4 | Weight repair, if a check fails | `repair_weights.py --fighter oni` | mane arm strip, pelvis steps | 0 | rig-specialist |
+## AccuRIG 2 (fallback; not run)
+1. A scripted export of `oni-mesh.glb` to FBX: T-pose, Y-up, metres, texture embedded.
+2. Rig Body markers:
+   - chin below the beard;
+   - wrists and elbows at the joints;
+   - knees at the knee, not at the trouser cuff;
+   - crotch at the real crotch, about 0.55-0.60 m.
+3. Rig Hand: 5 fingers.
+4. Preview an arm raise and a wide stance.
+5. Export an FBX for Blender with CC3/CC4 names, T-pose bind and no motion.
+6. Bone map onto the shared skeleton:
+   - spine by chain position (`Waist` / `Spine01` / `Spine02` → `Spine02` / `Spine01` / `Spine`);
+   - twist bones merged into their parents;
+   - fingers held at rest;
+   - `head_end` and `headfront` added by script;
+   - the rest re-posed to the T-pose.
 
-- **First pass: 5 credits.**
-- **Worst case, 3 takes: 15 credits** (R1 x3; AccuRIG and the scripts are free).
-- A Meshy retake changes its input, not just a re-roll: for example `model_url` set to a scripted copy with the mane thinned off the shoulders, still 5 credits.
-- After 3 failed takes: the other rigger, a shorter mane (asset-smith retake), or the human guise.
+   The mapping script `bone_map_accurig.py` is still to write. Cost 0; the designer runs the app.
 
-## Trial result
-Pending: neither rig has been run.
+## Work list
+| # | Item | Tool | Credits | State |
+|---|---|---|---|---|
+| R1 | Meshy auto-rig, 2.0 m | `meshy_rig` | 5 | **Done** (main session) |
+| R2 | AccuRIG 2 | desktop | 0 | Fallback, not run |
+| R3 | Club rescale, re-pivot, mount transform, clearance | `prep_prop.py`, `prop_clearance.py` | 0 | **Done** |
+| R4 | Weight repair to WARN | `repair_weights.py --fighter oni` (new entry), `cloth/oni.md` | 0 | **Proposed, needs go-ahead** |
+| R5 | Scale to 2.2 m | `scale_rig.py --factor 1.1` | 0 | **Done** on the raw rig; rerun after R4 |
+| R6 | `Hips` Y scaling in `FighterModel.BuildLibrary` | code (gameplay-programmer) | 0 | Needed before G4 |
+| R7 | Fighter scene: model, club mount | `oni.tscn` (gameplay-programmer) | 0 | After R4 |
+| R8 | G4 gate | `skin_clip_check.py`, `prop_clearance.py` | 0 | After R4 and R6 |
 
-## Check run
-Pending.
+Spent on the Oni rig: 5 credits (R1). Worst case if R4 fails and Meshy is retried: 2 more takes, 10 credits. Then AccuRIG 2 (free).
 
 ## Takes
 | # | Date | Job | Task id | Credits |
 |---|---|---|---|---|
-| - | - | none run | - | 0 |
+| 1 | 2026-10-16 | `meshy_rig`, 2.0 m (run by the main session on the designer's approval) | `01a144ad-b98d-7520-8376-c776c414a476` | 5 |
