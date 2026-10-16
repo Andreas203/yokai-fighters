@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Left_Slash",
+  "trim_start": 0,
+  "trim_end": 29,
+  "file": "assets/generated/clips/oni/oni-swing-club.glb",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "id": "oni-medium-kick",
+  "frames_total": 28,
+  "retime": [
+    {
+      "frames": [
+        1,
+        14
+      ],
+      "ticks": [
+        0,
+        14
+      ],
+      "note": "a slower, heavier wind-up at about 1x"
+    },
+    {
+      "frames": [
+        14,
+        22
+      ],
+      "ticks": [
+        14,
+        26
+      ],
+      "note": "the sweep at 1.5x, hit pose through the active frames"
+    },
+    {
+      "frames": [
+        22,
+        28
+      ],
+      "ticks": [
+        26,
+        29
+      ],
+      "note": "recovery eases out at 0.5x"
+    }
+  ],
+  "hit_start": 16,
+  "hit_end": 21,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. WARN: one pose of the 30 puts the club 15 cm into the hip (file frame 21, in the sweep at peak hand speed, inside the active frames); every other pose is clean. The take's follow-through (raw 67-73, up to 25 cm) is cut by the trim. Jitter 33.9 deg per frame squared (warn 20, reject 40).",
+  "notes": "Meshy preset 97 Left_Slash on task 01a1454f-9d18-72b6-9771-dd7fb3fddfae (take 2 of 3 for the swing), raw take game/assets/generated/characters/oni/takes/oni-swing-97.glb (193 ticks). Cleaned with clean_clip.py: trim raw ticks 24-53 (file tick 0 = raw 24, 30 frames), strip-root horizontal, no smoothing, hit frames protected. One right-hand horizontal club swing: wind-up file ticks 0-14, the sweep in front of the body 16-26 (raw 40-50, hand peak speed 8.8 m/s at raw 46), the club coming round to the head at 27-29. MEDIUM KICK curve (the kick is a club strike for the Oni): 28 frames, startup 15, active 6 (16-21), recovery 7. Same take as oni-medium-punch."
+}

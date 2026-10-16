@@ -99,6 +99,36 @@ Total if the three takes are approved: **9 credits** (take 2 of 3; worst case wi
 
 MP and MK curves: the swing is not usable yet, so the two retiming curves wait for the retake.
 
+## Retakes, run 2026-10-16 (take 2 of 3, 9 credits, balance 667 to 658) and the crouch block
+Raw takes (uncommitted) in `game/assets/generated/characters/oni/takes/`. Same club check (2 cm). Clean runs below are raw ticks (prop_clearance's frame numbering).
+
+| Clip | Preset | Task id | Raw ticks | Result | Verdict |
+|---|---|---|---|---|---|
+| Hit high | 173 | `01a1454f-9867-7735-9864-464ba218cb23` | 293 | 36 of 100 poses over 2 cm, up to 62 cm; the head-snap itself (raw 58-67) puts the club through the head and body (39-62 cm), and the stagger after it fails too (112-118, 211-274, up to 33 cm). Clean only 1-55 and 70-109, which leave out the snap | **RETAKE** (take 3, text_to_motion, below) |
+| Hit low | 177 | `01a1454f-9b2a-7566-8c68-58331f22c1ae` | 183 | 24 of 92 poses over 2 cm (raw 1-21, 57-63, 103-125, 157-183, up to 36 cm), clean 23-55 and 65-101. The reaction is a left-shoulder flinch with the club held up beside the head | **ACCEPT (WARN)**, trimmed raw 23-55, 33 frames: 0 of 33 poses over 2 cm, club lowest 1.61 m, jitter 5.9. Reads as a flinch more than a low hit (height is hitstun data); blend about 6 ticks in and out |
+| Swing (MP and MK) | 97 | `01a1454f-9d18-72b6-9771-dd7fb3fddfae` | 193 | 10 of 120 poses over 2 cm: raw 45 (15 cm, in the sweep at peak hand speed), 54 and 56 (2-3 cm), and 67-73 (up to 25 cm, the follow-through around the head). Everything else clean, including the wind-up and the sweep | **ACCEPT (WARN)**, trimmed raw 24-53, 30 frames: 1 of 30 poses over 2 cm (15 cm into the hip, one tick inside the active frames), jitter 33.9 (warn 20, reject 40), 11 reversals |
+| Block low | shared `ryo-crouch` | none (0 credits) | 1 hold frame (raw 100) | Club clean (the shared check: 0 poses over 2 cm) | **ACCEPT**, designer-approved |
+
+Cleanup (scripted, `clean_clip.py ... --strip-root horizontal`, no smoothing): hit low `--trim 23 55`; swing `--trim 24 53 --hit 17 27`. Stripped files `game/assets/generated/clips/oni/oni-hit-low-club.glb` and `oni-swing-club.glb`. Measured with `measure_clip.py`: hit low PASS (slide 0.48), swing WARN (jitter only).
+
+### Swing curves (data written, proposed)
+Take file ticks 0-29 = raw 24-53; the sweep in front of the body is file ticks 16-26 (raw 40-50), the hand's peak speed 8.8 m/s at raw 46.
+
+| Move | Frames | Curve (frames to file ticks) | Startup / active / recovery |
+|---|---|---|---|
+| MP `oni-medium-punch` | 20 | 1-8 to 0-14 (2x); 8-14 to 14-26 (2x); 14-20 to 26-29 (0.5x) | 8 / 5 (9-13) / 7 |
+| MK `oni-medium-kick` | 28 | 1-14 to 0-14 (about 1x); 14-22 to 14-26 (1.5x); 22-28 to 26-29 (0.5x) | 15 / 6 (16-21) / 7 |
+
+Both play the same file, one swing, so the medium kick is a club strike with a slower, heavier wind-up. No hold; every segment is between 0.5x and 2x.
+
+### Data written
+`data/clips/oni-hit-low.json`, `oni-medium-punch.json`, `oni-medium-kick.json`, `oni-block-low.json` (all proposed; `tools/validate_data.py`: 108 files valid, 0 invalid). Nothing for hit high.
+
+### Hit high, take 3 of 3: text_to_motion, not run, needs approval
+- **Tool:** `meshy_text_to_motion`, swift, **3 credits** (prime would be 10). Biped, on the same rig.
+- **Prompt (exact):** "A huge ogre warrior holds a heavy spiked club in his right hand with the arm hanging low and out to his side, the club pointing forward and down away from his body. He is hit in the face from the front: his head snaps back and to the side, his torso leans back a little and he staggers half a step back, then steadies and returns to the same stance. His right arm and the club stay low and out to the side the whole time and never cross his chest or rise behind his head; his left arm flinches up toward his face. In place, no travel, about 1.5 seconds."
+- **Risk:** a text prompt can still swing the right arm; the club check decides. If this also fails, F5 applies: a mechanically equivalent move on an approved clip, for example the accepted hit low (177 trimmed) for both hit heights (a free substitute that the designer may prefer to spending the take).
+
 ## Cleanup
 Scripts under `tools/blender/` (Blender 4.1.1 headless), scratch outputs only; the GLBs committed are mesh-stripped with `tools/strip_clip.py`.
 - Heavy: `clean_clip.py --clip takes/oni-heavy-128.glb --out oni-heavy-clean.glb --trim 60 112 --strip-root horizontal --hit 33 37` (no smoothing: jitter was under the warn level; file tick 0 = raw tick 60; 53 frames at 60 fps). Result: `game/assets/generated/clips/oni/oni-heavy-club.glb` (stripped, 76 KB).
