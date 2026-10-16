@@ -1,7 +1,7 @@
 {
  "tool": "cut_shell.py",
- "in": "game/assets/generated/characters/kappa/kappa-rigged.glb",
- "out": "game/assets/generated/characters/kappa/kappa-rigged-shellcut.glb",
+ "in": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/kappa-raw.glb",
+ "out": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/kappa-cut.glb",
  "box": {
   "y_min": 0.17,
   "z_min": 0.58,

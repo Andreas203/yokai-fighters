@@ -1,7 +1,7 @@
 {
  "tool": "scale_rig.py",
- "in": "game/assets/generated/characters/oni/oni-rigged.glb",
- "out": "game/assets/generated/characters/oni/oni-rigged-220.glb",
+ "in": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/oni-raw.glb",
+ "out": "/private/tmp/claude-501/-Users-whash-yokai-fighters/1e1cad67-cdf8-4c17-a9de-5d2d5aca0bfc/scratchpad/final/oni-220.glb",
  "node": "Armature",
  "factor": 1.1,
  "scale_before": [

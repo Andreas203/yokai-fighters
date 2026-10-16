@@ -1,13 +1,17 @@
 """Clearance of rigid props mounted on a fighter, through the stress poses (rules F5, F6, G4; YOK-102).
 
 A prop from prep_prop.py (club, shell) rides a bone rigidly, as the Godot BoneAttachment3D does: its
-world transform is the bone's rest-to-pose change applied to the prop's rest placement (the prep_prop log's
-mount point, prop upright in world at rest). The rig is put through rig_check.py's stress poses (same
+rest placement is the rig's Armature node x the bone's rest x the BoneAttachment3D child transform from
+the prep_prop log (exactly what Godot builds, so a fighter scaled on its Armature node scales the prop),
+and in a pose the bone's rest-to-pose change is applied on top. The rig is put through rig_check.py's stress poses (same
 definitions, imported from it) plus an arms-down pose (the G4 risk for a back shell), and for each pose:
   inside   prop verts more than --depth m inside the body surface (nearest body face, against its normal),
            ignoring prop verts within --ignore-radius m of the mount point (the grip inside the fist)
   new      of those, the verts that were not inside at rest (a shell's underside sits against the back by
            design, so the change from rest is the clipping the pose causes); the verdict reads this one
+  floor    the prop's lowest point (the poses put the body's lowest point on the ground, z 0)
+  contact  prop verts within --contact m (default 0.03) of the body at rest; per pose their mean and max
+           distance from the body (how far a shell stands off the back)
   stills   front, side and back Workbench renders, <out>/<tag>-<pose>-<view>.png
 F5: the poses are transient check poses from rig_check.py; nothing is keyed and no file is saved but the
 stills and the report.
@@ -28,6 +32,9 @@ from mathutils.bvhtree import BVHTree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rig_check  # noqa: E402  (STRESS_POSES, apply_pose, reset_pose)
+import prep_prop  # noqa: E402  (read_gltf_json, bone_rest_in_skeleton)
+
+C = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))  # glTF -> Blender axes
 
 EXTRA_POSES = {"arms_down": [("LeftArm", "Y", 75), ("RightArm", "Y", -75)]}
 VIEWS = {"front": ((0, -10, 0), (90, 0, 0)), "side": ((10, 0, 0), (90, 0, 90)), "back": ((0, 10, 0), (90, 0, 180))}
@@ -35,7 +42,8 @@ VIEWS = {"front": ((0, -10, 0), (90, 0, 0)), "side": ((10, 0, 0), (90, 0, 90)), 
 
 def parse():
     argv = sys.argv[sys.argv.index("--") + 1:]
-    a = {"props": [], "logs": [], "ignore": 0.0, "depth": 0.01, "tag": "prop", "out": "prop_clearance_out"}
+    a = {"props": [], "logs": [], "ignore": 0.0, "depth": 0.01, "contact": 0.03, "tag": "prop",
+         "out": "prop_clearance_out"}
     i = 0
     while i < len(argv):
         k, v = argv[i].lstrip("-"), argv[i + 1]
@@ -47,6 +55,8 @@ def parse():
             a["ignore"] = float(v)
         elif k == "depth":
             a["depth"] = float(v)
+        elif k == "contact":
+            a["contact"] = float(v)
         else:
             a[k] = v
         i += 2
@@ -87,8 +97,15 @@ def main():
         before = set(bpy.data.objects)
         bpy.ops.import_scene.gltf(filepath=path)
         objs = [o for o in bpy.data.objects if o not in before and o.type == "MESH"]
-        mount = gltf_to_blender(log["mount"]["point_gltf_m"])
-        rest_world = Matrix.Translation(mount)
+        # rest placement exactly as Godot builds it: Armature node x bone rest x the BoneAttachment3D
+        # child transform from the prep_prop log (so a fighter scaled on its Armature node scales the
+        # prop too)
+        gj = prep_prop.read_gltf_json(a["rig"])
+        G, A = prep_prop.bone_rest_in_skeleton(gj, bone)
+        rows = log["mount"]["child_matrix_rows_bone_space_cm"]
+        child = Matrix([rows[0], rows[1], rows[2], [0, 0, 0, 1]])
+        rest_world = C @ (A @ G @ child) @ C.inverted()
+        mount = rest_world.to_translation()
         for o in objs:
             o.data.transform(o.matrix_world)
             o.matrix_world = Matrix.Identity(4)
@@ -141,7 +158,25 @@ def main():
                 o.data.update()
             if rest_in is None:
                 p["rest_inside"] = now_in
+            # floor and contact: the prop's lowest point, and how far the verts that touch the body at
+            # rest (within --contact m) stand off it now (a shell lifting off the back)
+            wv = [M @ co for rest in p["rest_co"] for co in rest]
+            zmin = min(w.z for w in wv)
+            dists = []
+            for i, w in enumerate(wv):
+                dmin = 9.0
+                for bvh, mw in zip(bvhs, mws):
+                    loc, _n, _i, _d = bvh.find_nearest(mw.inverted() @ w)
+                    if loc is not None:
+                        dmin = min(dmin, (w - mw @ loc).length)
+                dists.append(dmin)
+            if "contact" not in p:
+                p["contact"] = [i for i, d in enumerate(dists) if d < a["contact"]]
+            cd = [dists[i] for i in p["contact"]] or [0.0]
+            entry_extra = {"prop_min_z_m": round(zmin, 4), "contact_verts": len(p["contact"]),
+                           "contact_gap_mean_m": round(sum(cd) / len(cd), 4), "contact_gap_max_m": round(max(cd), 4)}
             entry[os.path.basename(p["path"])] = {"verts_inside": inside, "worst_depth_m": round(worst, 4),
+                                                  **entry_extra,
                                                   "new_vs_rest": new, "new_worst_depth_m": round(new_worst, 4),
                                                   "verts_total": sum(len(o.data.vertices) for o in p["objs"])}
         stills = []

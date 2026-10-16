@@ -9,8 +9,10 @@ rig file is never written.
 Modes (Blender world axes after glTF import: +Z up, the character faces -Y, its left is +X):
   club  The long axis is the prop's longest extent; the head is the end with the larger outer radius.
         Uniform scale to --length. The pivot is the grip: --grip-frac of the length from the handle end.
-        The prop is turned so the handle -> head direction is --axis (glTF axes; default 0,0,1 = forward,
-        so with the arm hanging the club points ahead out of the fist; in T-pose it points forward too).
+        The prop is turned so the handle -> head direction is --axis (glTF axes; default 0,0,1 = forward),
+        or, with --axis-bones A,B, the rig's own rest direction from bone A to bone B (the forearm:
+        RightForeArm,RightHand) tilted by --tilt-deg toward --tilt-toward (forward), so the club runs on
+        from the forearm in every pose and its tip clears the floor with the arm hanging.
         Mount point: the hand centre, the mean rest position of the verts whose top weight is --bone.
   fit   The prop is turned so its longest extent is up (Z), the middle one across (X) and the thinnest is
         depth (Y), with the dome (the side whose extreme verts bunch near the axis) facing +Y, behind
@@ -39,6 +41,7 @@ Run (Blender 4.x, headless):
 import argparse
 import hashlib
 import json
+import math
 import struct
 import sys
 
@@ -55,6 +58,10 @@ def args():
     ap.add_argument("--length", type=float, default=1.2)
     ap.add_argument("--grip-frac", type=float, default=0.13)
     ap.add_argument("--axis", default="0,0,1")
+    ap.add_argument("--axis-bones", help="club: A,B = point handle->head along bone A's head -> bone B's head "
+                                         "(rest, from --rig), then tilt it by --tilt-deg toward --tilt-toward")
+    ap.add_argument("--tilt-deg", type=float, default=0.0)
+    ap.add_argument("--tilt-toward", default="0,0,1")
     ap.add_argument("--target-min")
     ap.add_argument("--target-max")
     ap.add_argument("--uniform", action="store_true")
@@ -192,7 +199,26 @@ def main():
         grip[ax] = handle_end + head_sign * a.grip_frac * L
         d_src = Vector((0, 0, 0))
         d_src[ax] = head_sign
-        d_dst = gltf_to_blender(vec(a.axis)).normalized()
+        if a.axis_bones:
+            if not a.rig:
+                raise SystemExit("--axis-bones needs --rig")
+            gj = read_gltf_json(a.rig)
+            b0, b1 = a.axis_bones.split(",")
+            G0, A0 = bone_rest_in_skeleton(gj, b0)
+            G1, _ = bone_rest_in_skeleton(gj, b1)
+            p0 = A0 @ G0.to_translation()
+            p1 = A0 @ G1.to_translation()
+            d = (p1 - p0).normalized()
+            t = vec(a.tilt_toward)
+            t = (t - t.dot(d) * d).normalized()
+            th = math.radians(a.tilt_deg)
+            d_gltf = (math.cos(th) * d + math.sin(th) * t).normalized()
+            log["axis_from_bones"] = {"bones": [b0, b1], "forearm_gltf": [round(x, 4) for x in d],
+                                      "tilt_deg": a.tilt_deg, "tilt_toward": a.tilt_toward,
+                                      "axis_gltf": [round(x, 4) for x in d_gltf]}
+            d_dst = gltf_to_blender(d_gltf).normalized()
+        else:
+            d_dst = gltf_to_blender(vec(a.axis)).normalized()
         R = d_src.rotation_difference(d_dst).to_matrix().to_4x4()
         M = R @ Matrix.Scale(s, 4) @ Matrix.Translation(-grip)
         bake(meshes, M)
