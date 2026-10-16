@@ -167,6 +167,8 @@ public static class DevRunStateTests
 
 		File.WriteAllText(path, "{ not json");
 		Assert.True(store.Load().Count == 0 && store.Problem != null, "a broken file reads as none, with the problem");
+		File.WriteAllText(path, "{\"version\": 1, \"presets\": []}" + new string(' ', (int)DevPresetStore.MaxBytes));
+		Assert.True(store.Load().Count == 0 && store.Problem!.Contains("cap"), "a file over 1 MB is not read: " + store.Problem);
 		var only = Directory.GetFiles(dir).Select(Path.GetFileName).ToArray();
 		Assert.True(only.SequenceEqual(new[] { DevPresetStore.FileName }), "nothing else written: " + string.Join(", ", only));
 	});
@@ -297,6 +299,63 @@ public static class DevRunStateTests
 				var other = DevRunEditor.For(session).Check(b with { Coins = 1 }).Session!;
 				Assert.True(!flow.AdoptDevSession(other, out string? why) && why == DevContext.DevOffReason, "dev mode off: refused");
 			});
+		}));
+	});
+
+	[Test]
+	public static void Page_LoadPreset_RefusesWhatTheSimRefusesOrAControlWouldClamp(Node runner) => WithTempDir(dir =>
+	{
+		string player = Path.Combine(dir, "progress.json");
+		var store = new DevPresetStore(DevPresetStore.PathFor(player));
+		var good = Starters(91);
+		var bad = new (string Name, DevRunBuild Build)[]
+		{
+			("health 0", good with { Health = 0 }),
+			("level 4", good.WithSlot(SpecialSlot.A, new DevSlotEdit(SpecialSlot.A, Sw, 4))),
+			("unknown id", good.WithSlot(SpecialSlot.C, new DevSlotEdit(SpecialSlot.C, "gone-move"))),
+			("coins over the box", good with { Coins = 100_000 }),
+			("depth too deep", good with { Depth = 99 }),
+			("T3 order over the box", good.WithSlot(SpecialSlot.A, new DevSlotEdit(SpecialSlot.A, Sw, 2, null, 9))),
+			("no special", good with { Slots = Array.Empty<DevSlotEdit>() }),
+		};
+		foreach (var (name, b) in bad) store.Save(new DevPreset(name, b));
+		WithMode(DevOn, () => WithBoot(runner, player, flow =>
+		{
+			var page = OpenPage(flow);
+			page.Coins.Value = 42;
+			string Controls() => DevPresetStore.Serialize(new[] { new DevPreset("x", page.CurrentBuild()) });
+			string before = Controls();
+			foreach (var (name, _) in bad)
+			{
+				int i = page.ShownPresets.ToList().FindIndex(p => p.Name == name);
+				Assert.True(i >= 0, "listed: " + name);
+				Assert.True(!page.LoadPreset(i) && page.StatusLabel.Text.Contains("not loaded"), $"{name}: refused with the reason: {page.StatusLabel.Text}");
+				Assert.Equal(before, Controls(), name + ": the controls are unchanged");
+			}
+			Assert.True(page.LastCheck is { Ok: true }, "the build on the page is still the valid one");
+		}));
+	});
+
+	[Test]
+	public static void Apply_OnTheMap_KeepsTheRunsMapFile_ForContinue(Node runner) => WithTempDir(dir =>
+	{
+		string player = Path.Combine(dir, "progress.json"), dev = DevMode.SavePathFor(player);
+		WithMode(DevOn, () => WithBoot(runner, player, flow =>
+		{
+			flow.MapFile = "demo-map.json";
+			flow.Router.Select(TitleEntry.Start);
+			flow.Router.Confirm();
+			string demoId = flow.Session!.Map.Graph.Id;
+			Assert.True(flow.ReturnToTitle(), "back to the title; the demo-map run waits in the dev slot");
+			flow.MapFile = "default-map.json";
+			Assert.True(flow.ContinueRun() && flow.Session!.Map.Graph.Id == demoId, "Continue brings back the run on its own map file");
+			var page = OpenPage(flow);
+			page.Coins.Value = 33;
+			Assert.True(page.Apply(), "applied on the map: " + page.StatusLabel.Text);
+			Assert.True(File.ReadAllText(dev).Contains("\"map_file\": \"demo-map.json\""), "saved under the run's own map file: " + File.ReadAllText(dev));
+			DevShell.Instance!.Menu.Close();
+			Assert.True(flow.ReturnToTitle() && flow.ContinueRun(), "Continue again works");
+			Assert.True(flow.Session!.Map.Graph.Id == demoId && flow.Session.Run.Coins == 33, "on the demo map with the edited purse");
 		}));
 	});
 }

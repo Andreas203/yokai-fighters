@@ -20,6 +20,8 @@ public sealed class DevPresetStore
 {
 	public const string FileName = "run-presets.dev.json";
 	public const int Version = 1;
+	/// <summary>A preset file larger than this is not read (a handful of builds is a few KB).</summary>
+	public const long MaxBytes = 1024 * 1024;
 
 	public string Path { get; }
 	/// <summary>Why the last <see cref="Load"/> found no usable presets in an existing file (null = fine).</summary>
@@ -39,7 +41,12 @@ public sealed class DevPresetStore
 	{
 		Problem = null;
 		if (!File.Exists(Path)) return Array.Empty<DevPreset>();
-		try { return Parse(File.ReadAllText(Path)); }
+		try
+		{
+			long size = new FileInfo(Path).Length;
+			if (size > MaxBytes) { Problem = $"{FileName} is {size} bytes, over the {MaxBytes}-byte cap: not read."; return Array.Empty<DevPreset>(); }
+			return Parse(File.ReadAllText(Path));
+		}
 		catch (Exception e) when (e is JsonException or FormatException or IOException or InvalidOperationException or UnauthorizedAccessException)
 		{
 			Problem = $"{FileName} can't be read: {e.Message}";

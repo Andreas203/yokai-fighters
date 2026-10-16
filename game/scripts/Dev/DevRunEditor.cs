@@ -167,18 +167,18 @@ public sealed class DevRunEditor
 	}
 
 	/// <summary>
-	/// Built-in presets on this pool: "all starters Lv1" (A1, a new run) and, when Foxfire is in the data,
-	/// "Lv3 Foxfire evolved" (by id, else by name; the starters at Lv 1 plus Foxfire at Lv 3, A4). Both keep <paramref name="seed"/>.
+	/// Built-in presets on this pool: "all starters Lv1" (A1, a new run) and "Lv3 &lt;special&gt; evolved" = the starters at
+	/// Lv 1 plus the first drafted special in the data (pool order) that has a Lv 3 evolution (A4), when there is one
+	/// (Foxfire on today's data). Chosen by data, never by id. Both keep <paramref name="seed"/>.
 	/// </summary>
 	public IReadOnlyList<DevPreset> BuiltInPresets(uint seed)
 	{
 		var starters = Pool.Starters.Select(s => new DevSlotEdit(s.Slot, s.Id)).GroupBy(e => e.Slot).Select(g => g.First()).ToArray();
 		var list = new List<DevPreset> { new("all starters Lv1", new DevRunBuild(starters, 0, RunState.MaxHealth, 0, seed), true) };
-		if ((Pool.Special("foxfire") ?? Pool.Specials.FirstOrDefault(s => s.Name == "Foxfire")) is { } fox)
+		if (Pool.Specials.FirstOrDefault(s => !s.Starter && s.MaxLevel >= 3 && s.Slot is >= SpecialSlot.A and <= SpecialSlot.D) is { } evo)
 		{
-			var b = new DevRunBuild(starters, 0, RunState.MaxHealth, 0, seed)
-				.WithSlot(fox.Slot, new DevSlotEdit(fox.Slot, fox.Id, Math.Min(3, fox.MaxLevel)));
-			list.Add(new DevPreset("Lv3 Foxfire evolved", b, true));
+			var b = new DevRunBuild(starters, 0, RunState.MaxHealth, 0, seed).WithSlot(evo.Slot, new DevSlotEdit(evo.Slot, evo.Id, 3));
+			list.Add(new DevPreset($"Lv3 {(evo.Name.Length > 0 ? evo.Name : evo.Id)} evolved", b, true));
 		}
 		return list;
 	}

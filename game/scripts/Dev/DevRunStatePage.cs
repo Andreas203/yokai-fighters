@@ -248,11 +248,34 @@ public partial class DevRunStatePage : VBoxContainer
 		return true;
 	}
 
+	/// <summary>
+	/// Loads a preset into the controls only when the sim accepts it and every value fits a control as it is (nothing
+	/// clamped or dropped); otherwise the status line gives the reason and the controls are left unchanged.
+	/// </summary>
 	public bool LoadPreset(int index)
 	{
-		if (index < 0 || index >= _shownPresets.Count) return false;
-		Show(_shownPresets[index].Build);
+		if (Editor is null || index < 0 || index >= _shownPresets.Count) return false;
+		var p = _shownPresets[index];
+		string? why = Editor.Check(p.Build).Refusal ?? Unshowable(p.Build);
+		if (why != null) { StatusLabel.Text = $"Preset '{p.Name}' not loaded: {why}"; return false; }
+		Show(p.Build);
 		return true;
+	}
+
+	/// <summary>Why <paramref name="b"/> can't be shown without a control clamping or dropping a value; null when it can.</summary>
+	string? Unshowable(DevRunBuild b)
+	{
+		foreach (var (label, value, box) in new[] { ("Coins", (double)b.Coins, Coins), ("Health", b.Health, Health), ("Depth", b.Depth, Depth), ("Seed", b.Seed, Seed) })
+			if (value < box.MinValue || value > box.MaxValue) return $"{label} {value} is outside {box.MinValue}-{box.MaxValue}.";
+		foreach (var e in b.Slots)
+		{
+			if (!_rows.TryGetValue(e.Slot, out var r)) return $"slot {e.Slot} is not on this page.";
+			if (!Enumerable.Range(1, r.Special.ItemCount - 1).Any(i => r.Special.GetItemText(i) == e.Special)) return $"slot {e.Slot}: {e.Special} is not offered here.";
+			if (e.Level < r.Level.MinValue || e.Level > r.Level.MaxValue) return $"slot {e.Slot}: level {e.Level} is outside {r.Level.MinValue}-{r.Level.MaxValue}.";
+			if (e.LevelledOrder < r.Order.MinValue || e.LevelledOrder > r.Order.MaxValue) return $"slot {e.Slot}: T3 order {e.LevelledOrder} is outside {r.Order.MinValue}-{r.Order.MaxValue}.";
+			if (e.Modifier != null && !Editor!.ModifiersFor(e.Special).Any(m => m.Id == e.Modifier)) return $"slot {e.Slot}: {e.Modifier} is not offered for {e.Special}.";
+		}
+		return null;
 	}
 
 	public bool DeletePreset(int index)
