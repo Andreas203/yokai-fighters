@@ -83,7 +83,7 @@ public sealed record RunSave(
 			Coins = session.Run.Coins,
 			CopyLocked = session.CopyLocked,
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
-			NodePaid = session.NodePaid,
+			NodePaid = session.NodePaid && session.Draft is null, // A7: a draft node is never saved paid
 		};
 	}
 

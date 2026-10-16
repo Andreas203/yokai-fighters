@@ -129,6 +129,10 @@ public sealed class RunSession
 		if (nodePaid)
 		{
 			if (Entered is null) throw new ArgumentException("a paid node with no node entered (R8)", nameof(nodePaid));
+			// A7: a won node that binds and has a next row owes a draft, which a save never holds (Capture refuses an
+			// open offer), so a paid flag there would skip the offer: refused.
+			if (Entered.Context.Binds && Map.Graph.Next(Entered.Context.NodeId).Count > 0)
+				throw new ArgumentException($"node '{Entered.Context.NodeId}' offers a draft when won: it can't be saved paid (A7)", nameof(nodePaid));
 			(_paid, CoinsWon) = (true, Entered.Context.Coins); // YOK-128: the saved win, already in health and coins
 		}
 	}

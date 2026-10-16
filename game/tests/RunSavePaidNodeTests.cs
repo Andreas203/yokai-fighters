@@ -147,4 +147,34 @@ public static class RunSavePaidNodeTests
 		try { RunSave.Capture(s); } catch (InvalidOperationException) { refused = true; }
 		Assert.True(refused, "a picked offer before completion is still not saved");
 	});
+
+	[Test]
+	public static void DraftNode_HandMadePaidSave_IsRefused_NotRestoredWithoutItsOffer() => OnFixtures(() =>
+	{
+		var g = TwoRows();
+		var s = RunSession.Start(FightScene.LoadAbilityPool(), g, Binding(), 3);
+		s.Enter("a");
+		var entry = RunSave.Capture(s);
+		Assert.True(!entry.NodePaid, "the entry save is unpaid");
+		Assert.True(s.WinFight(500) is not null && s.NodePaid, "won, paid, the draft is open (A7)");
+		bool refused = false;
+		try { (entry with { NodePaid = true }).Restore(FightScene.LoadAbilityPool(), g, Binding()); } catch (FormatException) { refused = true; }
+		Assert.True(refused, "A7: a paid flag on a node that owes a draft is refused");
+		var back = entry.Restore(FightScene.LoadAbilityPool(), g, Binding());
+		Assert.True(back.WinFight(500) is { } d && d.Offer.Cards.Count > 0 && back.Run.Coins == 25, "the unpaid entry save offers the draft and pays once");
+	});
+
+	[Test]
+	public static void PaidFlag_RoundTripsWithTheSession() => OnFixtures(() =>
+	{
+		var g = TwoRows();
+		var scenes = NonBinding();
+		var s = RunSession.Start(FightScene.LoadAbilityPool(), g, scenes, 3);
+		s.Enter("a");
+		s.WinFight(600);
+		var paid = RunSave.Capture(s);
+		Assert.True(paid.NodePaid && paid.Restore(FightScene.LoadAbilityPool(), g, scenes).NodePaid, "R8: saved and restored paid");
+		Assert.True(!(paid with { NodePaid = false }).Restore(FightScene.LoadAbilityPool(), g, scenes).NodePaid, "and unpaid when the file says so");
+		Assert.True(s.CompleteNode().Ok && !RunSave.Capture(s).NodePaid, "after completion the flag is gone");
+	});
 }
