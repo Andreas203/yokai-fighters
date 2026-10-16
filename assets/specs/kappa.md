@@ -63,7 +63,16 @@ Short stature: the shared clips are authored for 1.65-1.75 m humans. Hand and re
 - Licence: plan tier unknown, flagged.
 
 ## Takes
-None yet.
+Run 2026-10-16 under the designer's YOK-102 approval (first take only). Balance 800 before.
+- **K3 take 1** body: `meshy_multi_image_to_3d`, task `01a144a2-d17a-7618-abc4-bddb7911d700`, meshy-7.1, 3 Astra views, textured 2K, no PBR, remesh 15000, t-pose, auto_size, origin bottom. 30 credits. File `game/assets/generated/characters/kappa/kappa-mesh.glb`.
+- **K4 take 1** shell image: `meshy_image_to_image`, nano-banana, ref `kappa-astra-view-back.png`, task `01a144a2-d90c-744c-ba50-4aa08403dea4`. 3 credits. File `docs/design/characters/kappa/kappa-shell-meshy.png`.
+- **K5 take 1** shell mesh: `meshy_image_to_3d` from the K4 image, task `01a144a3-55e5-73e9-822e-4871952aa76f`, meshy-6-lite, textured 2K, no PBR, remesh 4000. 15 credits. File `game/assets/generated/characters/kappa/shell.glb`.
+Credits spent for Kappa: 48.
 
 ## Acceptance
-Not run.
+Stills: `assets/specs/stills/yok102-kappa-mesh-{front,side,back}.png`, `yok102-shell-{front,side,back}.png`.
+
+**K3 body: ACCEPT, with the shell baked in.** 15,556 tris. Height 1.500 m, feet at Z=0, centred, one mesh, one 2K texture. Palette matches (teal skin, pale belly, off-white loincloth, rope belt, ochre shell rim, pale dish). Flat toon look, no baked PBR. Arms out in a T, hands and webbed fingers open, feet splayed wide. The shell is baked onto the back of the body as expected; it cannot move independently. Options for rig-specialist: bind it to the spine as rigid cloth-like volume, or cut it from the body and replace it with `shell.glb`. Risks for G4: the baked shell sits directly behind the arms and shoulders (arm-down and throw poses will clip it), the head dish is thin and fused to the head, a small stray white sliver of texture by the rope end on the loincloth (cosmetic). Wide stance is fine for walk.
+**K5 shell: ACCEPT.** 4,129 tris, one piece, one 2K texture, dark pine plates with ochre rim and seams as specified. It is a closed dome with an underside plate (1.72 x 1.90 x 0.98 m, flat side on Z), origin at centre; not scaled to the body (needs about 0.8 scale and placing on the back by rig-specialist). Slight faceted look in places; reads fine under toon shader.
+**K4 shell image: ACCEPT.** Single shell, white background, palette correct.
+Licence: plan tier still unknown, flagged.

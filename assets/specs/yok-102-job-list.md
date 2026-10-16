@@ -75,3 +75,17 @@ Flags for any Astra art: T-pose, white background, no weapon or held items, same
 6. Kappa shell: baked (default) or separate mesh (K4-K5, +18)?
 7. Whether human-guise fallbacks (G1, G2) are pre-approved or only after a failed G4 gate.
 8. Licence: Meshy plan tier and commercial terms of output still unknown (rules.md open question).
+
+
+## Takes (mesh pass run 2026-10-16, first takes only, approved 93 credits)
+Balance before 800. Spent 93; balance after 707. Output GLB; files under `game/assets/generated/characters/{oni,kappa}/`; stills `assets/specs/stills/yok102-*`.
+
+| ID | Task id | Credits | Verdict |
+|---|---|---|---|
+| O3 | 01a144a2-bfe8-72a2-a861-d9eb1b3979dc | 30 | ACCEPT (15.6k tris, 2.0 m, clean T) |
+| O5 | 01a144a2-cb1d-7742-b9e3-e01c176e257a | 15 | ACCEPT (4.2k tris; 1.9 m long, origin at centre not grip) |
+| K3 | 01a144a2-d17a-7618-abc4-bddb7911d700 | 30 | ACCEPT (15.6k tris, 1.5 m; shell baked on body) |
+| K4 | 01a144a2-d90c-744c-ba50-4aa08403dea4 | 3 | ACCEPT |
+| K5 | 01a144a3-55e5-73e9-822e-4871952aa76f | 15 | ACCEPT (4.1k tris, closed dome) |
+
+Note: auto_size and origin_at bottom were set to meet "about 2.0 / 1.5 m, origin at feet". No retakes recommended.
