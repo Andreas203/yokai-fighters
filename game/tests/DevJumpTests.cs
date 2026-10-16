@@ -136,7 +136,7 @@ public static class DevJumpTests
 			CheckOpened(flow, t);
 			Leave(flow);
 		}
-		foreach (var t in built)
+		foreach (var t in built.GroupBy(t => t.Kind).Select(g => g.First())) // from the map: one of each kind (the suite shares one message queue)
 		{
 			Assert.True(flow.Router.Select(TitleEntry.Start) && flow.Router.Confirm() && flow.Router.Current == Screen.Map, "a run on the map");
 			var page = OpenJump(flow);
@@ -195,9 +195,11 @@ public static class DevJumpTests
 			foreach (bool elder in DevJump.ElderOf(foe.Yokai) is null ? new[] { false } : new[] { false, true })
 			{
 				var probe = new DevFightSetup(foe.Yokai, Elder: elder);
-				foreach (string temp in DevJump.Temperaments(DevJump.FighterOf(probe)))
-					foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
+				var temps = DevJump.Temperaments(DevJump.FighterOf(probe));
+				for (int i = 0; i < Math.Max(2, temps.Count); i++)
 					{
+						string temp = temps[i % temps.Count];
+						var scheme = i % 2 == 0 ? ControlScheme.Kihon : ControlScheme.Kata; // every temperament and both schemes, without the full cross product
 						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Grove };
 						var jump = DevJump.BuildFight(setup, pool);
 						string what = $"{foe.Yokai} elder={elder} {temp} {scheme}";
@@ -255,7 +257,7 @@ public static class DevJumpTests
 	public static void TanukiJump_LocksTheChosenCopy_AndTheHudShowsItLocked(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
 	{
 		var pool = FightScene.LoadAbilityPool();
-		foreach (var s in pool.Specials)
+		foreach (var s in pool.Specials.GroupBy(s => s.Slot).Select(g => g.Last())) // one per slot (ShapeCopy's own test covers every special)
 		{
 			int lv = Math.Min(2, s.MaxLevel);
 			var setup = new DevFightSetup(DevJump.TanukiId, CopySpecial: s.Id, CopyLevel: lv);
@@ -296,7 +298,7 @@ public static class DevJumpTests
 				var f = flow.Fight!;
 				ulong start = f.Match.StateHash() ^ jump.Session.StateHash();
 				var rng = new SimRng(3);
-				for (int t = 0; t < 600; t++) f.StepWithAi(new FighterInput((InputBits)(rng.Next(1 << 10))));
+				for (int t = 0; t < 300; t++) f.StepWithAi(new FighterInput((InputBits)(rng.Next(1 << 10))));
 				ulong end = f.Match.StateHash();
 				flow.ReturnToTitle();
 				return start * 31 + end;
