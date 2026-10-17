@@ -42,7 +42,8 @@ public partial class AiHarnessMain : Node
 
 		foreach (var (script, reaction) in runs)
 		{
-			var res = AiHarness.Run(FightScene.NewMatch, profile, script, seed, ticks, reaction, trace: args.ContainsKey("trace"));
+			var res = AiHarness.Run(FightScene.NewMatch, profile, script, seed, ticks, reaction, trace: args.ContainsKey("trace"),
+				tier: Enum.Parse<AiFightTier>(args.GetValueOrDefault("tier", "standard"), true)); // YOK-57: --tier elder|tanuki turns meter use on (E22)
 			string name = $"{profile.Id}-{script.ToString().ToLowerInvariant()}-r{res.ReactionFrames}-s{seed}";
 			File.WriteAllText(Path.Combine(outDir, name + ".decisions.csv"), res.DecisionsCsv());
 			File.WriteAllText(Path.Combine(outDir, name + ".summary.json"), res.SummaryJson() + "\n");

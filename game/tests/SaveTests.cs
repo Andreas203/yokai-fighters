@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
+using YokaiFighters.Ai;
 using YokaiFighters.Fight;
 using YokaiFighters.Flow;
 using YokaiFighters.SaveGame;
@@ -143,12 +144,12 @@ public static class SaveTests
 		Assert.Equal(current, SaveStore.Serialize(older.Data), "an older file's fields are all kept and rewritten as the current version");
 		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse(current.Replace(Current, "\"version\": 0")).Status, "version 0");
 
-		string newer = current.Replace(Current, "\"version\": 7, \"from_the_future\": { \"x\": [1] }");
+		string newer = current.Replace(Current, "\"version\": " + (SaveStore.CurrentVersion + 1) + ", \"from_the_future\": { \"x\": [1] }");
 		File.WriteAllText(path, newer);
 		var store = new SaveStore(path);
 		SaveLoad load = store.Load();
 		Assert.Equal(SaveLoadStatus.NewerVersion, load.Status, "newer");
-		Assert.True(load.Problems[0].Contains("version 7"), "says which version");
+		Assert.True(load.Problems[0].Contains("version " + (SaveStore.CurrentVersion + 1)), "says which version");
 		Assert.Equal(current, SaveStore.Serialize(load.Data), "the fields this build knows are kept");
 		Assert.True(store.Save(load.Data), "saved over it");
 		Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the newer build's file survives as a backup");
@@ -161,9 +162,9 @@ public static class SaveTests
 		string extra = """
 			{ "version": 2, "coins": 75,
 			  "run": { "seed": 9, "map": "default-map", "visited": [], "health": 1000, "coins": 50, "copy_lock": { "slot": "A" },
-			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "borrowed": true } ], "merchant": "heal" },
+			           "slots": [ { "slot": "A", "special": "spirit-wave", "level": 1, "ink": "grey" } ], "merchant": "heal" },
 			  "unlocks": [], "story": { "seen": [], "tanuki": 2 }, "carry": { "special": "foxfire" } }
-			""";
+			""".Replace("\"version\": 2", Current); // this build's version, with fields it does not know
 		SaveLoad load = SaveStore.Parse(extra);
 		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "unknown fields are not a problem: " + string.Join("; ", load.Problems));
 		var run = load.Data.Run!;
@@ -511,6 +512,51 @@ public static class SaveTests
 		}, seed: 9);
 	});
 
+	/// <summary>YOK-97, M3: version 6 saves the carry-over at top level; older files carry nothing.</summary>
+	[Test]
+	public static void Store_CarryOver_SavedAtTopLevel_OlderFilesCarryNothing_BadValuesAreReported()
+	{
+		Assert.Equal(7, SaveStore.CurrentVersion, "M3 raised the format to 6 (5 is YOK-106's elder flags); YOK-99 then to 7");
+		var data = SaveData.Empty.WithStory("intro").WithCarryOver("foxfire");
+		string text = SaveStore.Serialize(data);
+		Assert.True(text.Contains("\"carry_over\": \"foxfire\""), "written: " + text);
+		var back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Data.CarryOver == "foxfire" && back.Data.Story.Has("intro"), "read back");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+		Assert.True(SaveStore.Parse(SaveStore.Serialize(SaveData.Empty)).Data.CarryOver is null, "null round trip");
+		Assert.True(SaveData.Empty.WithCarryOver("x").WithCarryOver(null).CarryOver is null, "cleared");
+
+		var v4 = SaveStore.Parse("{ \"version\": 4, \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] } }");
+		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.CarryOver is null, "version 4: nothing carried");
+		var bad = SaveStore.Parse("{ \"version\": " + SaveStore.CurrentVersion + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }, \"carry_over\": 3 }");
+		Assert.True(bad.Status == SaveLoadStatus.Partial && bad.Data.CarryOver is null && bad.Problems.Any(p => p.Contains("carry_over")), "not an id: reported, none");
+	}
+
+	/// <summary>YOK-97, M3: a won run's best special is saved as the carry-over and the next run starts with it at Lv 2.</summary>
+	[Test]
+	public static void Boot_CarryOver_AWonRunCarriesItsBest_IntoTheNextRun(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			while (!flow.Session!.IsOver)
+			{
+				Assert.True(flow.ChooseNode(flow.Session.Reachable()[0]).Ok, "entered");
+				WinEnteredNode(flow, 600);
+			}
+			string best = CarryOver.Best(flow.Session.Run)!.Data.Id;
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data: { Run: null } d } && d.CarryOver == best,
+				"the won run is gone and its best special is saved as the carry-over");
+			Assert.True(flow.RestartRun(), "a new run");
+			var next = flow.Session!;
+			var slot = flow.Session.Run.Owned.Single(o => o.Special.Data.Id == best);
+			Assert.True(slot.Special.Level == CarryOver.Level && slot.Special.Modifier is null, "carried at Lv 2");
+			Assert.Equal(best, new SaveStore(path).Load().Data.CarryOver, "kept in the file while the run is in progress");
+			Assert.True(next.Run.Owned.Count(o => o.Special.Level > 1) == 1, "nothing else above Lv 1");
+		}, seed: 9);
+	});
+
 	[Test]
 	public static void Boot_ASavedRunThisBuildCannotHold_IsNotContinued_AndNotDestroyed(Node runner) => WithTempFile(path =>
 	{
@@ -837,6 +883,38 @@ public static class SaveTests
 		Throws<FormatException>(() => (before with { CopyLocked = true, LockedCopy = saved.LockedCopy }).Restore(pool, DefaultMap(), Table()), "a copy before the Tanuki's node (T1)");
 	});
 
+	/// <summary>YOK-128, R8: the paid flag of a won, uncompleted no-draft node in the file (version 4), and files without it.</summary>
+	[Test]
+	public static void Version4_NodePaid_RoundTrips_OlderFilesLoadUnpaid_DamageDropsTheRun() => WithFixtures(() =>
+	{
+		string mapPath = Path.Combine(Path.GetTempPath(), $"yok128-save-{Guid.NewGuid():N}.json");
+		File.WriteAllText(mapPath, "{\"kind\":\"run_map\",\"id\":\"single\",\"schema_version\":1,\"name\":\"one\",\"status\":\"final\",\"rules\":[],\"nodes\":[{\"id\":\"only\",\"row\":1,\"type\":\"duel\",\"yokai\":\"kitsune\",\"label\":\"K\"}],\"routes\":[]}");
+		MapGraph g;
+		try { g = new FileMapSource(mapPath).Load(); } finally { File.Delete(mapPath); }
+		var pool = FightScene.LoadAbilityPool();
+		var s = RunSession.Start(pool, g, Table(), 9);
+		Assert.True(!SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s))).Contains("node_paid"), "not written unless set");
+		s.Enter("only");
+		Assert.True(s.WinFight(500) == null && s.Run.Coins == 25, "setup: won, paid, no draft (last node)");
+
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)));
+		Assert.True(text.Contains("\"node_paid\": true") && text.Contains(Current + ","), "written, current version: " + text);
+		var load = SaveStore.Parse(text);
+		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "loads");
+		var back = load.Data.Run!.Restore(pool, g, Table());
+		Assert.True(back.NodePaid && back.StateHash() == s.StateHash(), "restored paid, same hash");
+		back.WinFight(500);
+		Assert.True(back.Run.Coins == 25, $"R8: paid once after Continue (coins {back.Run.Coins})");
+
+		// A version 3 file has no flag: it loads unpaid, as it did before (those files were only written at node boundaries by the game).
+		var v3 = SaveStore.Parse(text.Replace(Current, "\"version\": 3").Replace("\"node_paid\": true,", ""));
+		Assert.True(v3.Status == SaveLoadStatus.OlderVersion && v3.Data.Run is { NodePaid: false }, "version 3 loads, unpaid");
+
+		// A flag of the wrong kind is damage: the run is dropped, the rest kept.
+		var bad = SaveStore.Parse(text.Replace("\"node_paid\": true", "\"node_paid\": \"yes\""));
+		Assert.True(bad.Data.Run is null, "a non-boolean node_paid drops the run");
+	});
+
 	[Test]
 	public static void Version1_Files_StillLoad_NoCoins_LockWorkedOutOnlyWhenExact() => WithFixtures(() =>
 	{
@@ -947,5 +1025,436 @@ public static class SaveTests
 			}
 		}
 		Assert.True(levelledSeeds > 0, "some seed reached the boss with a levelled special");
+	});
+
+	// ---- YOK-106: elders met (Y3), story progress on its own flag (M4), set at the node-entered save (M5) ----
+
+	/// <summary>The file as an older build wrote it: no <c>story.elders_met</c>, no <c>run.first_meeting</c>.</summary>
+	static string AsOlderVersion(SaveData d, int version)
+	{
+		var root = System.Text.Json.Nodes.JsonNode.Parse(SaveStore.Serialize(d))!.AsObject();
+		root["version"] = version;
+		root["story"]!.AsObject().Remove(StoryProgress.EldersMetField);
+		root["run"]?.AsObject().Remove("first_meeting");
+		return root.ToJsonString();
+	}
+
+	[Test]
+	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFiveReadsOlderFiles_M4()
+	{
+		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4); YOK-97 then 6, YOK-99 7");
+		SaveData d = Sample.WithElderMet("elder-oni").WithElderMet("elder-kappa").WithElderMet("elder-oni").WithElderMet(" ");
+		Assert.True(d.Story.EldersMet.SequenceEqual(new[] { "elder-kappa", "elder-oni" }), "a set: once each, ordinal order, blank ignored");
+		Assert.True(d.Story.HasMetElder("elder-oni") && !d.Story.HasMetElder("nine-tailed-kitsune"), "has met");
+		Assert.True(d.Story.Seen.SequenceEqual(Sample.Story.Seen) && d.Unlocks.SequenceEqual(Sample.Unlocks) && d.Run == Sample.Run, "meeting an elder touches no other flag, unlocks or the run");
+		Assert.True(d.WithStory(StoryProgress.FirstLoss).Story.EldersMet.SequenceEqual(d.Story.EldersMet) && d.WithUnlock("x").Story == d.Story && d.WithRun(null).Story == d.Story, "nor do they touch it");
+		Assert.True(d.Story != Sample.Story, "elders met are part of story progress' equality");
+
+		// Round trip, with the run saved at a first meeting.
+		SaveData atMeeting = d.WithRun(Sample.Run! with { FirstMeeting = true });
+		string text = SaveStore.Serialize(atMeeting);
+		SaveLoad back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Problems.Count == 0, "loads clean: " + string.Join("; ", back.Problems));
+		Assert.True(back.Data.Story == atMeeting.Story && back.Data.Run!.FirstMeeting, "elders met and the first meeting come back");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+		Assert.True(text.Contains("\"elders_met\": [") && text.Contains("\"first_meeting\": true"), "named fields: " + text);
+
+		// Versions 1-4: nothing met, not a first meeting, and nothing lost (no backup needed).
+		foreach (int v in new[] { 1, 2, 3, 4 })
+		{
+			SaveLoad old = SaveStore.Parse(AsOlderVersion(atMeeting, v));
+			Assert.True(old.Status == SaveLoadStatus.OlderVersion && !SaveStore.LostSomething(old), $"version {v}: older, nothing lost: " + string.Join("; ", old.Problems));
+			Assert.True(old.Data.Story.EldersMet.Count == 0 && old.Data.Run is { FirstMeeting: false }, $"version {v}: no elder met");
+			Assert.True(old.Data.Story.Seen.SequenceEqual(Sample.Story.Seen) && old.Data.Unlocks.SequenceEqual(Sample.Unlocks), $"version {v}: the rest of the story and unlocks kept");
+		}
+
+		// Damage: a broken elders list loses only itself (M4); bad entries are skipped; an id no map names is kept and harmless.
+		SaveLoad notList = SaveStore.Parse(text.Replace("\"elders_met\": [", "\"elders_met\": 3, \"x\": ["));
+		Assert.True(notList.Status == SaveLoadStatus.Partial && notList.Data.Story.EldersMet.Count == 0, "elders_met not a list: empty, reported");
+		Assert.True(notList.Data.Story.Seen.SequenceEqual(Sample.Story.Seen) && notList.Data.Unlocks.SequenceEqual(Sample.Unlocks) && notList.Data.Run is { FirstMeeting: true }, "seen flags, unlocks and the run are kept");
+		SaveLoad noStory = SaveStore.Parse(text.Replace("\"story\": {", "\"story\": [], \"x\": {"));
+		Assert.True(noStory.Status == SaveLoadStatus.Partial && noStory.Data.Story == StoryProgress.None && noStory.Data.Unlocks.SequenceEqual(Sample.Unlocks), "a broken story section: unlocks kept");
+		SaveLoad junk = SaveStore.Parse("{ " + Current + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [], \"elders_met\": [\"elder-oni\", 4, \"\", null, \"no-such-elder\", \"elder-oni\"] } }");
+		Assert.True(junk.Status == SaveLoadStatus.Partial && junk.Data.Story.EldersMet.SequenceEqual(new[] { "elder-oni", "no-such-elder" }), "bad entries skipped and reported, ids kept");
+		Assert.True(ElderMeetings.ElderOf(DefaultMap().Nodes.FirstOrDefault(n => n.Yokai == "no-such-elder")) == null, "an id no node names never answers for a node");
+		SaveLoad badFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true", "\"first_meeting\": \"yes\""));
+		Assert.True(badFlag.Status == SaveLoadStatus.Partial && badFlag.Data.Run == null && badFlag.Data.Story == atMeeting.Story, "first_meeting not true/false: the run is dropped (existing policy), story kept");
+		SaveLoad noFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true,", ""));
+		Assert.True(noFlag.Status == SaveLoadStatus.Loaded && noFlag.Data.Run is { FirstMeeting: false }, "first_meeting missing: false");
+	}
+
+	[Test]
+	public static void ElderMeetings_TheElderComesFromTheMapData_FirstMeetingOncePerSave()
+	{
+		var graph = DefaultMap();
+		foreach (var n in graph.Nodes)
+			Assert.Equal(n.Elder ? n.Yokai : null, ElderMeetings.ElderOf(n), n.Id + ": the elder is the node's flag and its yokai");
+		Assert.True(graph.Nodes.Count(n => ElderMeetings.ElderOf(n) == "elder-oni") == 2, "the Elder Oni waits on two nodes: one elder");
+		Assert.True(ElderMeetings.ElderOf(new MapNodeData("x", 1, "duel", "oni", Elder: true)) == "oni" && ElderMeetings.ElderOf(new MapNodeData("y", 1, "elder", "elder-oni")) == null, "the data's flag decides, not an id or a type name");
+
+		SaveData s = SaveData.Empty.WithStory(StoryProgress.Intro).WithUnlock("u");
+		SaveData same = ElderMeetings.Enter(s, graph.Node("r4-merchant"), out bool first);
+		Assert.True(ReferenceEquals(same, s) && !first, "a node with no elder changes nothing");
+		SaveData met = ElderMeetings.Enter(s, graph.Node("r5-elder-oni"), out first);
+		Assert.True(first && met.Story.HasMetElder("elder-oni") && met.Story.Has(StoryProgress.Intro) && met.Unlocks.SequenceEqual(s.Unlocks), "first meeting: marked, nothing else touched");
+		SaveData again = ElderMeetings.Enter(met, graph.Node("r8-elder-oni"), out first);
+		Assert.True(!first && again.Story == met.Story, "the same elder on another node is not a first meeting, and is not added twice");
+		ElderMeetings.Enter(again, graph.Node("r8-elder-kappa"), out first);
+		Assert.True(first, "another elder is");
+	}
+
+	static void FinishEnteredNode(GameFlow flow, int healthLeft)
+	{
+		if (flow.Session!.Map.CurrentNode!.Type is "merchant" or "dojo") Assert.True(flow.Session.CompleteNode().Ok, "left the stop");
+		else WinEnteredNode(flow, healthLeft);
+	}
+
+	[Test]
+	public static void Boot_ElderMet_SavedOnEntering_SurvivesQuitAndContinue_AndLaterRuns_M5(Node runner) => WithTempFile(path =>
+	{
+		string atEntry = "";
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" })
+			{
+				Assert.True(flow.ChooseNode(id).Ok, "entered " + id);
+				Assert.True(!flow.FirstMeeting && new SaveStore(path).Load().Data.Run is { FirstMeeting: false }, id + ": no elder, no meeting");
+				FinishEnteredNode(flow, 900);
+			}
+			Assert.True(!flow.HasMetElder("elder-oni") && new SaveStore(path).Load().Data.Story.EldersMet.Count == 0, "no elder met before row 5");
+
+			Assert.True(flow.ChooseNode("r5-elder-oni").Ok, "row 5: the Elder Oni");
+			Assert.True(flow.FirstMeeting && flow.HasMetElder("elder-oni"), "first meeting, and met");
+			SaveLoad entered = new SaveStore(path).Load();
+			Assert.True(entered.Data.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }) && entered.Data.Run is { Current: "r5-elder-oni", FirstMeeting: true }, "written by the node-entered save");
+			atEntry = File.ReadAllText(path);
+			for (int t = 0; t < 6; t++) flow.Fight!.Step(FighterInput.None, new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+			Assert.Equal(atEntry, File.ReadAllText(path), "nothing written mid-fight");
+			Assert.True(flow.ReturnToTitle(), "quit inside the elder node");
+			Assert.True(!flow.FirstMeeting, "no meeting off a node");
+		});
+
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == "r5-elder-oni", "Continue goes back into the elder node");
+			Assert.True(flow.FirstMeeting && flow.Saved.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }), "still the first meeting, the flag neither lost nor doubled");
+			Assert.Equal(atEntry, File.ReadAllText(path), "continuing writes nothing");
+			WinEnteredNode(flow, 800);
+			Assert.True(!flow.FirstMeeting && new SaveStore(path).Load().Data is { Run.FirstMeeting: false } done && done.Story.HasMetElder("elder-oni"), "completed: the meeting is over, the elder stays met");
+
+			// Same run, row 8: the Elder Oni again is not a first meeting.
+			foreach (string id in new[] { flow.Session!.Reachable()[0], "r7-dojo" }) { Assert.True(flow.ChooseNode(id).Ok, "entered " + id); FinishEnteredNode(flow, 800); }
+			Assert.True(flow.ChooseNode("r8-elder-oni").Ok && !flow.FirstMeeting, "row 8: the Elder Oni again, not a first meeting");
+			Assert.True(flow.Session!.LoseFight().Ok && flow.ReturnToTitle(), "lose; back to the title");
+			Assert.True(new SaveStore(path).Load().Data is { Run: null } after && after.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }), "the run ends, the elder stays met (M4)");
+
+			// A new run: the elder is still met (per save, across runs).
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			Assert.True(!flow.FirstMeeting && flow.HasMetElder("elder-oni"), "a new run remembers the meeting");
+		});
+	});
+
+	[Test]
+	public static void Boot_AVersion4FileSavedInsideAnElderNode_ContinuesAsTheFirstMeeting(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" }) { Assert.True(flow.ChooseNode(id).Ok, id); FinishEnteredNode(flow, 900); }
+			Assert.True(flow.ChooseNode("r5-nine-tails").Ok && flow.FirstMeeting, "entered an elder node");
+			Assert.True(flow.ReturnToTitle(), "quit");
+		});
+		File.WriteAllText(path, AsOlderVersion(new SaveStore(path).Load().Data, 4));
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "a version 4 file");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session!.Node?.NodeId == "r5-nine-tails" && flow.FirstMeeting && flow.HasMetElder("nine-tailed-kitsune"), "no elder in the file: this is the first meeting");
+			WinEnteredNode(flow, 700);
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded } l && l.Data.Story.HasMetElder("nine-tailed-kitsune"), "written as version 5 at the next save point");
+		});
+	});
+
+	/// <summary>YOK-124 (M5): a walk taken off the routes by dev mode's full map is saved with <c>off_route</c> and comes back only in a dev session.</summary>
+	[Test]
+	public static void OffRouteWalk_ComesBackOnlyInADevSession() => WithFixtures(() =>
+	{
+		var s = NewSession(124);
+		s.Map.FreeTravel = true;
+		Assert.True(s.Enter("r4-merchant").Ok, "jumped to row 4");
+		var save = RunSave.Capture(s);
+		Assert.True(save.OffRoute, "the save records the off-route walk");
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(save));
+		Assert.True(text.Contains("\"off_route\": true"), "written as off_route: " + text);
+		var back = SaveStore.Parse(text).Data.Run!;
+		Assert.True(back.OffRoute, "read back");
+		var pool = FightScene.LoadAbilityPool();
+		Throws<FormatException>(() => back.Restore(pool, DefaultMap(), Table()), "outside a dev session the walk is not one the map allows");
+		var again = back.Restore(pool, DefaultMap(), Table(), allowOffRoute: true);
+		Assert.True(again.Map.Current == "r4-merchant" && again.Map.InNode && again.Map.OffRoute && !again.Map.FreeTravel, "dev slot: restored at the node, free travel off until the toggle applies");
+		Assert.True(again.Merchant is { Open: true }, "the stop comes back open");
+		Assert.Equal(s.StateHash(), again.StateHash(), "same run state");
+
+		var onRoute = NewSession(124);
+		Assert.True(onRoute.Enter("r1-apprentice").Ok, "a normal step");
+		string plain = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(onRoute)));
+		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
+		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
+	});
+
+	// ---- YOK-73: the title's Continue through the real boot and its buttons ----
+	// No save: greyed with the accurate reason. A saved run: lit, and Continue loads the node it was saved in, from its
+	// entry state (M5: health, coins, slots). Older, newer and corrupt files by the save file's own conventions, with
+	// story progress kept apart from the run (M4). Practice stays greyed with its own reason whatever the save holds.
+
+	static void PracticeStaysGreyed(GameFlow flow, string what) =>
+		Assert.True(flow.Title.PracticeButton.Disabled && flow.Title.DisabledReason(TitleEntry.Practice) == ScreenRouter.NoPracticeReason, $"{what}: Practice stays greyed with its reason");
+
+	/// <summary>Plays row 1 through the boot (won, first card drafted), then enters row 2: the file now holds the run inside that node.</summary>
+	static (string node, int health, int coins, string slots) SaveInsideRow2(GameFlow flow)
+	{
+		Press(flow.Title.StartButton);
+		Press(flow.ControlSelect.Start);
+		var s = flow.Session!;
+		Assert.True(flow.ChooseNode(s.Reachable()[0]).Ok, "row 1 entered");
+		WinEnteredNode(flow, 610);
+		Assert.True(flow.Router.Current == Screen.Map, "row 1 done, back on the map");
+		string next = s.Reachable()[0];
+		Assert.True(flow.ChooseNode(next).Ok && flow.Router.Current == Screen.Fight, "row 2 entered");
+		return (next, s.Run.Health, s.Run.Coins, Slots(s));
+	}
+
+	[Test]
+	public static void Title_NoSave_ContinueIsGreyed_WithAnAccurateReason(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+			Assert.True(flow.Title.ContinueButton.Disabled && !flow.Router.Entry(TitleEntry.Continue).Enabled, "no save: Continue is greyed");
+			Assert.Equal(ScreenRouter.NoSaveReason, reason, "with the no-save reason");
+			Assert.True(!reason.Contains("not built", StringComparison.OrdinalIgnoreCase), "saving exists: the reason does not say it is not built: " + reason);
+			PracticeStaysGreyed(flow, "no save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null && !File.Exists(path), "pressing it does nothing and writes nothing");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_SavedInsideANode_ContinueIsLit_AndRestartsThatNodeFromItsEntryState_M5(Node runner) => WithTempFile(path =>
+	{
+		(string node, int health, int coins, string slots) entry = default;
+		WithBoot(runner, path, flow =>
+		{
+			entry = SaveInsideRow2(flow);
+			Assert.True(entry.coins > 0, $"row 1 paid coins, so M5's coins are tested (coins {entry.coins})");
+			for (int t = 0; t < 6; t++) flow.Fight!.Step(FighterInput.None, new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+			Assert.True(flow.Fight!.Match.P1.Health < entry.health, "Ryo took damage inside the node");
+			Assert.True(flow.ReturnToTitle(), "quit inside the node");
+		}, seed: 73);
+
+		// A new process on the same file.
+		WithBoot(runner, path, flow =>
+		{
+			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a save: Continue is lit");
+			PracticeStaysGreyed(flow, "with a save");
+			Press(flow.Title.ContinueButton);
+			var s = flow.Session!;
+			Assert.True(flow.Router.Current == Screen.Fight && s.Node?.NodeId == entry.node, $"Continue loads the node it was saved in ({entry.node})");
+			Assert.True(flow.Fight!.Match.Tick == 0 && flow.Fight.Match.P1.Health == entry.health, "the fight restarts with the health Ryo entered with");
+			Assert.True(s.Run.Health == entry.health && s.Run.Coins == entry.coins && Slots(s) == entry.slots, $"and the coins and slots he entered with (M5): coins {s.Run.Coins}, slots {Slots(s)}");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_OlderVersionSave_IsContinued_OnTheRightNode(Node runner) => WithTempFile(path =>
+	{
+		string node = "";
+		int health = 0;
+		WithBoot(runner, path, flow =>
+		{
+			(node, health, _, _) = SaveInsideRow2(flow);
+			flow.ReturnToTitle();
+		}, seed: 73);
+		// Rewritten as a version-1 file: no coins, no copy lock (version 1 had neither).
+		string text = File.ReadAllText(path).Replace(Current, "\"version\": 1");
+		text = System.Text.RegularExpressions.Regex.Replace(text, "\\s*\"(coins|copy_locked|locked_copy|node_paid)\": [^,\\n]*,", "");
+		text = System.Text.RegularExpressions.Regex.Replace(text, ",?\\s*\"(modifier_)?borrowed\": (true|false)", "");
+		Assert.True(!text.Contains("\"coins\"") && !text.Contains("borrowed") && text.Contains("\"version\": 1"), "a version-1 file: " + text);
+		File.WriteAllText(path, text);
+
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "read as an older file");
+			Assert.True(!flow.Title.ContinueButton.Disabled, "an older save is still offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
+			PracticeStaysGreyed(flow, "older save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "Continue loads the saved node");
+			Assert.True(flow.Fight!.Match.P1.Health == health && flow.Session.Run.Coins == 0, "with the entry health, and no coins (version 1 had none)");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_NewerVersionSave_IsContinued_KeepsStory_AndIsBackedUpBeforeItIsRewritten_M4(Node runner) => WithTempFile(path =>
+	{
+		string node = "";
+		WithBoot(runner, path, flow =>
+		{
+			(node, _, _, _) = SaveInsideRow2(flow);
+			flow.Write(flow.Saved.WithStory(StoryProgress.Intro));
+			flow.ReturnToTitle();
+		}, seed: 73);
+		string newer = File.ReadAllText(path).Replace(Current, "\"version\": " + (SaveStore.CurrentVersion + 1));
+		File.WriteAllText(path, newer);
+
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.NewerVersion, flow.SaveLoaded!.Status, "read as a newer file");
+			Assert.True(flow.Saved.Story.Has(StoryProgress.Intro), "story progress is read on its own (M4)");
+			Assert.Equal(newer, File.ReadAllText(path), "booting leaves the newer file as it is");
+			PracticeStaysGreyed(flow, "newer save");
+			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a newer file with a valid run is offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "the known fields continue on the saved node");
+			WinEnteredNode(flow, 500); // a node boundary: the file is written
+			Assert.True(File.Exists(path + SaveStore.BackupSuffix), "the newer file was backed up");
+			Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the backup is the newer file, byte for byte");
+			SaveLoad rewritten = new SaveStore(path).Load();
+			Assert.True(rewritten.Status == SaveLoadStatus.Loaded && File.ReadAllText(path).Contains(Current), "the main file now has the current version");
+			Assert.True(rewritten.Data.Story.Has(StoryProgress.Intro), "and still holds the story progress (M4)");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_CorruptSave_ContinueIsGreyed_SaysSo_AndTheFileIsKept(Node runner) => WithTempFile(path =>
+	{
+		const string corrupt = "{ \"version\": 4, \"run\": { broken";
+		File.WriteAllText(path, corrupt);
+		WithBoot(runner, path, flow =>
+		{
+			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+			Assert.True(flow.Title.ContinueButton.Disabled && reason.StartsWith("The save file could not be read"), "corrupt: greyed with its own reason: " + reason);
+			PracticeStaysGreyed(flow, "corrupt save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null, "nothing starts");
+			Assert.Equal(corrupt, File.ReadAllText(path), "the file is left as it was");
+		}, seed: 73);
+	});
+
+	// ---- YOK-98, R7 / M5: a dojo trial never reaches the file ----
+
+	[Test]
+	public static void DojoTrial_NothingOfAMidTrialReachesTheFile()
+	{
+		var s = DojoTrialTests.AtDojo(500);
+		string entry = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
+		var offer = s.Dojo!.Trials[0];
+		Assert.True(s.Dojo.ChooseTrial(offer.Trial.Id).Ok && s.Dojo.RecordAttempt(false).Ok, "one miss, mid-trial");
+		string mid = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
+		Assert.Equal(entry, mid, "a mid-trial capture is the entry save byte for byte: M5, Continue restarts the node");
+		Assert.True(!mid.Contains("\"dojo\"") && !mid.Contains("trial"), "no dojo or trial field (the node id r7-dojo is the walk)");
+		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-98 adds no saved state, so no version bump (7 = YOK-99, the last bump)");
+	}
+
+	// ---- YOK-99, Y5: Tanuki wins across runs (version 7) ----
+
+	[Test]
+	public static void TanukiWins_RoundTrip_AndOtherSectionsAlone()
+	{
+		var d = SaveData.Empty.WithUnlock("foxfire").WithStory(StoryProgress.Intro).WithTanukiWin().WithTanukiWin();
+		Assert.True(d.TanukiWins == 2 && d.Unlocks.Single() == "foxfire" && d.Story.Has(StoryProgress.Intro), "two wins; unlocks and story untouched");
+		string text = SaveStore.Serialize(d);
+		Assert.True(text.Contains("\"tanuki_wins\": 2") && text.Contains(Current), "written: " + text);
+		var back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Data.TanukiWins == 2, $"read back ({back.Status}: {string.Join("; ", back.Problems)})");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same data, same bytes");
+		Assert.Equal(int.MaxValue, (d with { TanukiWins = int.MaxValue }).WithTanukiWin().TanukiWins, "never wraps");
+		Assert.Equal(1, (d with { TanukiWins = -5 }).WithTanukiWin().TanukiWins, "a bad negative count restarts at 1");
+		Assert.True(SaveStore.Serialize(d with { TanukiWins = -5 }).Contains("\"tanuki_wins\": 0"), "never writes a negative count");
+		Assert.True(SaveStore.CurrentVersion >= 7, "YOK-99 raised the version (5 = YOK-90, 6 = YOK-97 by merge order)");
+		Assert.True(d.WithRun(Sample.Run).TanukiWins == 2 && d.WithRun(null).TanukiWins == 2, "a new or ended run keeps the count");
+	}
+
+	[Test]
+	public static void TanukiWins_MissingIsZero_ABadCountIsZeroAndPartial()
+	{
+		var v4 = SaveStore.Parse("""{ "version": 4, "run": null, "unlocks": [], "story": { "seen": [] } }""");
+		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.TanukiWins == 0 && !SaveStore.LostSomething(v4),
+			$"a version 4 file: no wins, nothing lost ({string.Join("; ", v4.Problems)})");
+
+		// Versions 5 (YOK-90) and 6 (YOK-97) come before this one: older, every field this build knows kept.
+		foreach (int older in new[] { 5, 6 })
+		{
+			var l = SaveStore.Parse("{ \"version\": " + older + ", \"run\": null, \"unlocks\": [\"foxfire\"], \"story\": { \"seen\": [\"intro\"] }, \"carry_over\": { \"special\": \"foxfire\" } }");
+			Assert.True(l.Status == SaveLoadStatus.OlderVersion && l.Data.Unlocks.Single() == "foxfire" && l.Data.Story.Has(StoryProgress.Intro) && l.Data.TanukiWins == 0,
+				$"version {older}: older, known fields kept ({string.Join("; ", l.Problems)})");
+		}
+		// A newer file (fields this build cannot know): never silently written over, it is backed up first.
+		var newer = SaveStore.Parse("{ \"version\": " + (SaveStore.CurrentVersion + 1) + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }, \"tanuki_wins\": 2, \"later\": 1 }");
+		Assert.True(newer.Status == SaveLoadStatus.NewerVersion && SaveStore.LostSomething(newer) && newer.Data.TanukiWins == 2, "newer: kept what it can read, backed up before the next write");
+
+		string Now(string wins) => "{ " + Current + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }" + wins + " }";
+		Assert.True(SaveStore.Parse(Now("")) is { Status: SaveLoadStatus.Loaded, Data.TanukiWins: 0 }, "missing: 0, like any later-added field");
+		foreach (string bad in new[] { "-1", "\"2\"", "1.5", "true", "null", "[1]", "2147483648" })
+		{
+			var l = SaveStore.Parse(Now(", \"tanuki_wins\": " + bad));
+			Assert.True(l.Status == SaveLoadStatus.Partial && l.Data.TanukiWins == 0 && l.Problems.Any(p => p.StartsWith("tanuki_wins")), $"{bad}: taken as 0 and reported");
+		}
+		Assert.Equal(100, SaveStore.Parse(Now(", \"tanuki_wins\": 1e2")).Data.TanukiWins, "1e2 is a whole number (YOK-87)");
+		Assert.Equal(7, SaveStore.Parse(Now(", \"tanuki_wins\": 7")).Data.TanukiWins, "the count is kept past 3 (only the effect stops)");
+	}
+
+	[Test]
+	public static void Boot_ATanukiWin_IsCounted_Saved_AndPressesTheNextRun(Node runner) => WithTempFile(path =>
+	{
+		void NewRun(GameFlow flow)
+		{
+			if (flow.Session is not null) flow.ReturnToTitle();
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+		}
+		void Next(GameFlow flow) { Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered"); WinEnteredNode(flow, 600); }
+
+		WithBoot(runner, path, flow =>
+		{
+			NewRun(flow);
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 1");
+			var first = flow.Fight!;
+			int baseFrames = first.Node!.ReactionFrames;
+			Assert.True(first.TanukiWins == 0 && first.P2Ai!.ReactionFrames == baseFrames && first.P2Ai.AggressionBonus == 0, "no wins yet: Y4 as written");
+
+			// Lose to the Tanuki: no win.
+			WinEnteredNode(flow, 600);
+			while (flow.Session!.Reachable()[0] != "boss-tanuki") Next(flow);
+			Assert.True(flow.ChooseNode("boss-tanuki").Ok, "entered the Tanuki's node");
+			Assert.True(flow.Session.LoseFight().Ok, "lost");
+			Assert.True(flow.Saved.TanukiWins == 0 && new SaveStore(path).Load().Data.TanukiWins == 0, "a loss to the Tanuki is not a win");
+
+			// Beat the Tanuki.
+			NewRun(flow);
+			while (!flow.Session!.IsOver) Next(flow);
+			Assert.True(flow.Session.Ended!.BeatTanuki, "beat the Tanuki");
+			var file = new SaveStore(path).Load();
+			Assert.True(file.Status == SaveLoadStatus.Loaded && file.Data.TanukiWins == 1 && file.Data.Run is null, "one win saved, the run cleared");
+
+			// The next run: the apprentice stays as Y4 wrote it (Y6 tutorial), the row-2 yokai is pressed (Y5).
+			NewRun(flow);
+			Assert.True(new SaveStore(path).Load().Data.TanukiWins == 1, "a new run keeps the count");
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 1");
+			var row1 = flow.Fight!;
+			Assert.True(row1.TanukiWins == 1 && row1.P2Ai!.ReactionFrames == baseFrames && row1.P2Ai.AggressionBonus == 0, "the apprentice is never pressed");
+			WinEnteredNode(flow, 600);
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 2");
+			var pressed = flow.Fight!;
+			Assert.True(pressed.TanukiWins == 1, "the count reached the fight");
+			Assert.Equal(pressed.Node!.ReactionFrames - 1, pressed.P2Ai!.ReactionFrames, "Y5: one frame faster");
+			Assert.Equal(TanukiPressure.AggressionPerWin, pressed.P2Ai.AggressionBonus, "Y5: pushed toward aggressive");
+		}, seed: 9);
+
+		WithBoot(runner, path, flow => Assert.Equal(1, flow.Saved.TanukiWins, "kept across a reboot"), seed: 9);
 	});
 }

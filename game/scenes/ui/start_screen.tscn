@@ -11,6 +11,25 @@
 [ext_resource type="Texture2D" path="res://assets/generated/ui/selection-frame.png" id="selection"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="line"]
 
+[sub_resource type="StyleBoxFlat" id="radio_ring"]
+draw_center = false
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.114, 0.106, 0.129, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_left = 30
+corner_radius_bottom_right = 30
+
+[sub_resource type="StyleBoxFlat" id="radio_dot"]
+bg_color = Color(0.710, 0.200, 0.169, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_left = 24
+corner_radius_bottom_right = 24
+
 [node name="Title" type="Control"]
 layout_mode = 1
 anchors_preset = 15
@@ -34,9 +53,9 @@ mouse_filter = 2
 [node name="Heading" parent="." instance=ExtResource("heading")]
 layout_mode = 0
 offset_left = 240.0
-offset_top = 170.0
+offset_top = 195.0
 offset_right = 1540.0
-offset_bottom = 330.0
+offset_bottom = 355.0
 Text = "Controls"
 UnderlineWidth = 1300.0
 
@@ -48,14 +67,31 @@ offset_right = 1640.0
 offset_bottom = 515.0
 text = "Kata"
 alignment = 0
+theme_override_constants/outline_size = 0
 theme_override_font_sizes/font_size = 52
+
+[node name="Radio" type="Panel" parent="Kata"]
+offset_left = 30.0
+offset_top = 40.0
+offset_right = 90.0
+offset_bottom = 100.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("radio_ring")
+
+[node name="Dot" type="Panel" parent="Kata/Radio"]
+offset_left = 9.0
+offset_top = 9.0
+offset_right = 51.0
+offset_bottom = 51.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("radio_dot")
 
 [node name="Selected" type="NinePatchRect" parent="Kata"]
 layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1355.0
-offset_bottom = 140.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 1349.0
+offset_bottom = 134.0
 texture = ExtResource("selection")
 patch_margin_left = 32
 patch_margin_top = 32
@@ -77,11 +113,12 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 390.0
 offset_top = 40.0
-offset_right = 1330.0
+offset_right = 1250.0
 offset_bottom = 100.0
 text = "Motions: +10% precision bonus on motion-input specials."
 mouse_filter = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 25
+autowrap_mode = 3
 vertical_alignment = 1
 
 [node name="Kihon" parent="." instance=ExtResource("ghost")]
@@ -92,14 +129,31 @@ offset_right = 1640.0
 offset_bottom = 680.0
 text = "Kihon"
 alignment = 0
+theme_override_constants/outline_size = 0
 theme_override_font_sizes/font_size = 52
+
+[node name="Radio" type="Panel" parent="Kihon"]
+offset_left = 30.0
+offset_top = 40.0
+offset_right = 90.0
+offset_bottom = 100.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("radio_ring")
+
+[node name="Dot" type="Panel" parent="Kihon/Radio"]
+offset_left = 9.0
+offset_top = 9.0
+offset_right = 51.0
+offset_bottom = 51.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("radio_dot")
 
 [node name="Selected" type="NinePatchRect" parent="Kihon"]
 layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1355.0
-offset_bottom = 140.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 1349.0
+offset_bottom = 134.0
 texture = ExtResource("selection")
 patch_margin_left = 32
 patch_margin_top = 32
@@ -121,19 +175,20 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 390.0
 offset_top = 40.0
-offset_right = 1330.0
+offset_right = 1250.0
 offset_bottom = 100.0
 text = "Special + direction picks slots A–D. Easier to learn, 100% damage."
 mouse_filter = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 25
+autowrap_mode = 3
 vertical_alignment = 1
 
 [node name="Rule" type="TextureRect" parent="."]
 layout_mode = 0
 offset_left = 275.0
-offset_top = 720.0
+offset_top = 710.0
 offset_right = 1660.0
-offset_bottom = 732.0
+offset_bottom = 722.0
 texture = ExtResource("line")
 expand_mode = 1
 stretch_mode = 5
@@ -142,18 +197,18 @@ mouse_filter = 2
 [node name="Start" parent="." instance=ExtResource("red")]
 layout_mode = 0
 offset_left = 650.0
-offset_top = 825.0
+offset_top = 765.0
 offset_right = 1270.0
-offset_bottom = 925.0
+offset_bottom = 865.0
 text = "Start Game"
 theme_override_font_sizes/font_size = 58
 
 [node name="ReferenceToggle" parent="." instance=ExtResource("ghost")]
 layout_mode = 0
 offset_left = 1315.0
-offset_top = 854.0
+offset_top = 784.0
 offset_right = 1690.0
-offset_bottom = 916.0
+offset_bottom = 846.0
 custom_minimum_size = Vector2(0, 62)
 text = "Controls reference"
 theme_override_font_sizes/font_size = 28

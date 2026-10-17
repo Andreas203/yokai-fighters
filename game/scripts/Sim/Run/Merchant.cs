@@ -7,8 +7,9 @@ public enum MerchantChoice { None = 0, Heal = 1, Shop = 2 } // explicit: RunSess
 
 /// <summary>
 /// YOK-83: one merchant stop (pure C#, deterministic, no Godot). R6 gives Ryo one choice here, the free heal or
-/// the shop; this class records it (<see cref="Choice"/>) and gives the heal. The shop (YOK-95) spends the same
-/// choice through <see cref="Choose"/> with <see cref="MerchantChoice.Shop"/>, so the two can never both happen.
+/// the shop; this class records it (<see cref="Choice"/>) and gives the heal. The shop (YOK-95, <see cref="Shop"/>)
+/// spends the same choice through <see cref="Choose"/> with <see cref="MerchantChoice.Shop"/>, so the two can never
+/// both happen: the shop sells only after that choice, and the heal is refused once it is made.
 /// <para>
 /// A <see cref="RunSession"/> makes one when Ryo enters a <c>merchant</c> node (<see cref="RunSession.Merchant"/>)
 /// and drops it when the node is completed. A stop only acts while it is the session's current one, so a
@@ -25,11 +26,14 @@ public sealed class Merchant
 
 	public string NodeId { get; }
 	public MerchantChoice Choice { get; private set; }
+	/// <summary>YOK-95: this stop's shop (R6). Its shelf can be read any time; it buys and releases only after <c>Choose(Shop)</c>.</summary>
+	public MerchantShop Shop { get; }
 
 	internal Merchant(RunSession session, string nodeId)
 	{
 		_session = session;
 		NodeId = nodeId;
+		Shop = new MerchantShop(session, this);
 	}
 
 	/// <summary>Ryo's health after the free heal from <paramref name="health"/>: +250, capped at full health (C1).</summary>

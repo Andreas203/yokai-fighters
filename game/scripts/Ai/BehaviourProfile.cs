@@ -35,6 +35,41 @@ public sealed record Habit(string Id, string Description, Observation When, AiAc
 /// </summary>
 public sealed record Behaviour(Observation When, AiAction Do, int Weight);
 
+/// <summary>
+/// YOK-57: which kind of fight the AI is in. E22: "The standard-tier AI doesn't use EX or burst yet", so a profile's
+/// <see cref="ExUse"/> / <see cref="BurstUse"/> apply only in elder and Tanuki fights; elder fights reuse yokai-tier
+/// profiles, so the gate is the fight (the node), not the profile.
+/// </summary>
+public enum AiFightTier { Standard, Elder, Tanuki }
+
+/// <summary>
+/// YOK-57, E22: the fight the AI is in, from the entered node. The boss node (the copy-lock node,
+/// <see cref="YokaiFighters.Sim.RunSession.IsCopyLockNode"/>) or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder;
+/// anything else, or no node, = Standard (no EX, no burst whatever the profile says). Pure, so the fight scene and the
+/// whole-run harness (YOK-26) gate meter the same way.
+/// </summary>
+public static class AiFightTiers
+{
+	public static AiFightTier Of(YokaiFighters.Sim.NodeContext? node) =>
+		node is null ? AiFightTier.Standard
+		: YokaiFighters.Sim.RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
+		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
+		: AiFightTier.Standard;
+}
+
+/// <summary>
+/// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
+/// <see cref="KeepMeter"/>, it asks for the EX version with <see cref="ChancePct"/>. Absent = never (E22 standard tier).
+/// </summary>
+public sealed record ExUse(int ChancePct, int KeepMeter = 0);
+
+/// <summary>
+/// YOK-57 (C6, E13): each hit the AI sees itself take, once it has taken <see cref="MinComboHits"/> in a row, its
+/// health shows at most <see cref="MaxHealthPct"/>% and its burst seal is still lit, it bursts with
+/// <see cref="ChancePct"/>, if the hitstun it sees will still be running when the press lands. Absent = never.
+/// </summary>
+public sealed record BurstUse(int ChancePct, int MinComboHits = 1, int MaxHealthPct = 100);
+
 /// <summary>One yokai temperament (Y1, Y2) as loaded from kind "profile" JSON. Difficulty = ReactionFrames (Y4)
 /// and TellCoverPct (how often a rolled habit is held back).</summary>
 public sealed record BehaviourProfile
@@ -50,6 +85,10 @@ public sealed record BehaviourProfile
 	public required IReadOnlyList<Behaviour> Behaviours { get; init; }
 	/// <summary>0–100: chance a habit that rolled true is suppressed anyway (harder opponents hide the tell).</summary>
 	public int TellCoverPct { get; init; }
+	/// <summary>YOK-57: EX use (E16); null = the AI never asks for EX. Applied only in elder and Tanuki fights (E22).</summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public ExUse? ExUse { get; init; }
+	/// <summary>YOK-57: burst use (C6); null = the AI never bursts. Applied only in elder and Tanuki fights (E22).</summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public BurstUse? BurstUse { get; init; }
 
 	/// <summary>Observations that happen at a moment (rolled once each time they start), not standing conditions.</summary>
 	public static bool IsEvent(Observation o) => o is not (Observation.Neutral or Observation.AtCloseRange
@@ -79,6 +118,15 @@ public sealed record BehaviourProfile
 		return o.ToString();
 	}
 
+	/// <summary>
+	/// YOK-94, T0: <c>special:copied</c> names the Tanuki's copied special, whose id is known only at the copy lock
+	/// (T1). It parses like any special id and resolves in <see cref="AiLoadout"/> to the fighter's
+	/// <see cref="YokaiFighters.Sim.Fighter.CopiedSlot"/>; a literal <c>special:&lt;id&gt;</c> is unchanged. Reserved:
+	/// no special may have this id (tools/validate_data.py).
+	/// </summary>
+	public const string CopiedSpecial = "copied";
+
+	/// <summary>Parses "walk_forward", "normal:&lt;id&gt;", "special:&lt;id&gt;" or "special:copied" (<see cref="CopiedSpecial"/>).</summary>
 	public static AiAction ParseAction(string s)
 	{
 		int colon = s.IndexOf(':');
@@ -129,6 +177,15 @@ public sealed record BehaviourProfile
 				ParseAction((string)h["do"]!), Int(h["chance_pct"], $"{id} habit.chance_pct", 1, 100)),
 			Behaviours = behaviours,
 			TellCoverPct = o["tell_cover_pct"] is null ? 0 : Int(o["tell_cover_pct"], $"{id} tell_cover_pct", 0, 100),
+			ExUse = o["ex_use"] is { } ex
+				? new ExUse(Int(ex["chance_pct"], $"{id} ex_use.chance_pct", 0, 100),
+					ex["keep_meter"] is null ? 0 : Int(ex["keep_meter"], $"{id} ex_use.keep_meter", 0, 300))
+				: null,
+			BurstUse = o["burst_use"] is { } bu
+				? new BurstUse(Int(bu["chance_pct"], $"{id} burst_use.chance_pct", 0, 100),
+					bu["min_combo_hits"] is null ? 1 : Int(bu["min_combo_hits"], $"{id} burst_use.min_combo_hits", 1, 20),
+					bu["max_health_pct"] is null ? 100 : Int(bu["max_health_pct"], $"{id} burst_use.max_health_pct", 1, 100))
+				: null,
 		};
 	}
 

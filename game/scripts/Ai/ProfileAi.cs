@@ -6,7 +6,7 @@ namespace YokaiFighters.Ai;
 
 /// <summary>One logged AI decision. Tick = the sim tick the resulting input first applies to; ViewTick = the
 /// screen it was decided from (Tick - ViewTick = reaction frames). Kind: habit / habit_covered / habit_no /
-/// react / neutral / unavailable.</summary>
+/// react / neutral / unavailable; YOK-57: ex / ex_no (trigger self_meter), burst / burst_no (trigger self_in_combo).</summary>
 public readonly record struct AiDecision(int Tick, int ViewTick, string Kind, string Trigger, string Action, int Roll, int Pct);
 
 /// <summary>
@@ -29,6 +29,13 @@ public sealed class ProfileAi
 	public int Self { get; }
 	public int ReactionFrames { get; }
 	public List<AiDecision>? Log { get; set; }
+	/// <summary>YOK-57: the fight this AI is in. E22: ex_use / burst_use apply only in elder and Tanuki fights.</summary>
+	public AiFightTier Tier { get; }
+	/// <summary>YOK-99, Y5: aggression-bias points added by Tanuki wins (<see cref="TanukiPressure.AggressionBonus"/>); 0 = none.</summary>
+	public int AggressionBonus { get; }
+	/// <summary>The bias the neutral weights use: the profile's own plus <see cref="AggressionBonus"/>, within 0-100.</summary>
+	public int Aggression => (int)Math.Clamp((long)Profile.AggressionBias + AggressionBonus, 0, 100); // long: no overflow before the clamp
+	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
 	private readonly SimRng _rng;
@@ -38,10 +45,14 @@ public sealed class ProfileAi
 	private Plan? _plan;
 	private int _blockedInRow;
 	private string? _oppLastSpecial;
+	private int _comboHits, _burstPressTick = -1;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
-	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null)
+	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
 	{
+		Tier = tier;
+		AggressionBonus = aggressionBonus;
 		Profile = profile;
 		Self = self;
 		_kit = kit;
@@ -66,7 +77,12 @@ public sealed class ProfileAi
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
 		bool[] rose = _rose;
 		Array.Clear(rose);
-		if (prev is not null && prev.Tick != view.Tick) Events(prev, view, rose);
+		if (prev is not null && prev.Tick != view.Tick)
+		{
+			Events(prev, view, rose);
+			// YOK-57 (C6, E13): a burst out of a combo the AI sees itself in comes before everything else.
+			if (Burst(prev, view, s, tick) is { } burst) { _plan = burst; return _plan.Emit(); }
+		}
 
 		// The habit (Y2) first. A wake-up habit is rolled when the AI sees itself go down and pre-holds its
 		// direction through the knockdown and the wake-up, so it comes out on the first actionable frame (and is punishable).
@@ -115,7 +131,7 @@ public sealed class ProfileAi
 		{
 			var b = Profile.Behaviours[i];
 			bool holds = b.When == Observation.Neutral || b.When == range || (b.When == Observation.OpponentBlocking && o.State == FighterState.Blockstun);
-			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Profile.AggressionBias : 150 - Profile.AggressionBias) / 100);
+			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Aggression : 150 - Aggression) / 100);
 			total += w[i];
 		}
 		int roll = _rng.Next(total);
@@ -150,7 +166,7 @@ public sealed class ProfileAi
 			ActionKind.Block => new[] { (new FighterInput(back), BlockTicks) },
 			ActionKind.CrouchBlock => new[] { (new FighterInput(back | InputBits.Down), BlockTicks) },
 			ActionKind.Throw => _kit.ThrowButtons == InputBits.None ? null : new[] { (new FighterInput(_kit.ThrowButtons), 1), (none, _kit.ThrowFrames) },
-			_ => _kit.TryGet(a, out var input, out int frames) ? new[] { (input, 1), (none, Math.Max(1, frames - 1)) } : null,
+			_ => _kit.TryGet(a, out var input, out int frames) ? new[] { (MaybeEx(a, input, view, tick), 1), (none, Math.Max(1, frames - 1)) } : null,
 		};
 		if (steps is null) return null;
 		if (preHold <= 0) return new Plan(habit, steps);
@@ -159,6 +175,48 @@ public sealed class ProfileAi
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
 		Array.Copy(steps, 0, all, 1, steps.Length);
 		return new Plan(habit, all);
+	}
+
+	/// <summary>
+	/// YOK-57 (E16, C5), elder and Tanuki fights only (E22): a special the AI decided on comes out as EX with the profile's chance, only when its own
+	/// meter on screen covers the EX cost plus the reserve. The sim still checks the live meter: without it the plain
+	/// version comes out and nothing is spent.
+	/// </summary>
+	private FighterInput MaybeEx(AiAction a, FighterInput plain, AiView view, int tick)
+	{
+		var e = Profile.ExUse;
+		if (!SpendsMeter || e is null || e.ChancePct <= 0 || !_kit.TryGetEx(a, out var ex, out int cost)) return plain;
+		if (view.Fighter(Self).Meter < cost + e.KeepMeter) return plain;
+		int roll = _rng.Next(100);
+		bool use = roll < e.ChancePct;
+		Record(tick, view, use ? "ex" : "ex_no", "self_meter", a.ToString(), roll, e.ChancePct);
+		return use ? ex : plain;
+	}
+
+	/// <summary>
+	/// YOK-57 (C6, E13), elder and Tanuki fights only (E22): on each hit the AI sees itself take, roll the profile's burst chance once the combo is long
+	/// enough, its health low enough and its burst seal still lit, and only if the hitstun it sees will still run on
+	/// the tick the press lands (view tick + hitstop + stun left). A thrown fighter is never in hitstun, so it never
+	/// rolls (and the sim refuses a burst outside hitstun anyway).
+	/// </summary>
+	private Plan? Burst(AiView prev, AiView view, FighterView s, int tick)
+	{
+		FighterView ps = prev.Fighter(Self);
+		bool hit = s.State == FighterState.Hitstun && (ps.State != FighterState.Hitstun || s.StunLeft > ps.StunLeft);
+		if (s.State != FighterState.Hitstun) _comboHits = 0;
+		else if (hit) _comboHits++;
+		var b = Profile.BurstUse;
+		if (!hit || !SpendsMeter || b is null || b.ChancePct <= 0 || s.BurstUsed || s.KnockedOut) return null;
+		if (_burstPressTick >= 0 && view.Tick < _burstPressTick) return null; // our press has not shown yet
+		if (_comboHits < b.MinComboHits) return null;
+		if (s.MaxHealth > 0 && (long)s.Health * 100 > (long)b.MaxHealthPct * s.MaxHealth) return null;
+		if (view.Tick + view.HitstopLeft + s.StunLeft - 1 < tick) return null; // that hitstun is over by then
+		int roll = _rng.Next(100);
+		bool fire = roll < b.ChancePct;
+		Record(tick, view, fire ? "burst" : "burst_no", "self_in_combo", "burst", roll, b.ChancePct);
+		if (!fire) return null;
+		_burstPressTick = tick;
+		return new Plan(false, (new FighterInput(Match.BurstButtons), 1), (FighterInput.None, Math.Max(1, view.BurstFrames)));
 	}
 
 	private void Events(AiView prev, AiView view, bool[] rose)
@@ -215,7 +273,10 @@ public sealed class ProfileAi
 	}
 
 	private void Record(int tick, AiView view, string kind, Observation when, string action, int roll, int pct) =>
-		Log?.Add(new AiDecision(tick, view.Tick, kind, BehaviourProfile.ObservationName(when), action, roll, pct));
+		Record(tick, view, kind, BehaviourProfile.ObservationName(when), action, roll, pct);
+
+	private void Record(int tick, AiView view, string kind, string trigger, string action, int roll, int pct) =>
+		Log?.Add(new AiDecision(tick, view.Tick, kind, trigger, action, roll, pct));
 
 	/// <summary>A queued sequence of inputs; a slot request is sent on the first tick of its step only.</summary>
 	private sealed class Plan

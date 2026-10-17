@@ -1,0 +1,20 @@
+{
+ "tool": "scale_rig.py",
+ "in": "oni-raw.glb",
+ "out": "oni-220.glb",
+ "node": "Armature",
+ "factor": 1.1,
+ "scale_before": [
+  0.01,
+  0.01,
+  0.01
+ ],
+ "scale_after": [
+  0.011000000000000001,
+  0.011000000000000001,
+  0.011000000000000001
+ ],
+ "sha256_in": "e504c26ba236f133b52803996e676a0a8a81955b1a095edc5118ebe5d23c22a5",
+ "sha256_out": "9bd1bcb57b23e387b0be4989ea23c9f503e89f621748ad930f407c242f66f058",
+ "bin_chunk_identical": true
+}

@@ -1,17 +1,36 @@
 using System.Collections.Generic;
 using System.Linq;
+using YokaiFighters.Sim;
 
 namespace YokaiFighters.Ui;
 
-/// <summary>Where a node stands for the player right now (YOK-78).</summary>
-public enum MapNodeState { Visited, Current, Reachable, Locked }
+/// <summary>
+/// Where a node stands for the player right now (YOK-78). <see cref="PassedOver"/> (YOK-108): a row Ryo has already
+/// left, so this node was not chosen and can never be entered (R1); it is a kind of not-reachable, never selectable.
+/// </summary>
+public enum MapNodeState { Visited, Current, Reachable, Locked, PassedOver }
+
+/// <summary>The run's numbers for the map's status panel (C1 health, R8 coins, R1 rows done). RowsTotal excludes the boss's row.</summary>
+public sealed record MapStatusView(int Health, int MaxHealth, int Coins, int RowsDone, int RowsTotal)
+{
+	/// <summary>The highest play-row value (the boss's row is past it). RowsTotal is a count, so it is not this when row values skip. 0 = use RowsTotal.</summary>
+	public int LastPlayRow { get; init; }
+	public int PlayRowLimit => LastPlayRow > 0 ? LastPlayRow : RowsTotal;
+}
+
+/// <summary>What the detail panel adds to a node's own data: the reward line, and the elder twist line when the twist data exists (Y3, YOK-90).</summary>
+public sealed record MapNodeDetail(string? Reward, string? Twist = null);
 
 /// <summary>
 /// One node as the map screen shows it. <see cref="Type"/> is an open string (a lookup key into the map node styles resource,
 /// never a switch in code); <see cref="Yokai"/> is the display name of whoever waits there (R2), null for a stop with no yokai;
 /// <see cref="Elder"/> is Y3's marker.
 /// </summary>
-public sealed record MapNodeView(string Id, int Row, string Type, string? Yokai, bool Elder, MapNodeState State);
+public sealed record MapNodeView(string Id, int Row, string Type, string? Yokai, bool Elder, MapNodeState State)
+{
+	/// <summary>YOK-139 (Y3): the icon id of this elder node's twist (data/twists/*.json <c>icon</c>); null = no twist data for it.</summary>
+	public string? TwistIcon { get; init; }
+}
 
 /// <summary>A route between two node ids; goes from the lower row to the higher.</summary>
 public sealed record MapRouteView(string From, string To);
@@ -26,6 +45,19 @@ public interface IMapView
 {
 	IReadOnlyList<MapNodeView> Nodes { get; }
 	IReadOnlyList<MapRouteView> Routes { get; }
+	/// <summary>YOK-108: health, coins and rows done; null = no run behind this view (the panel hides).</summary>
+	MapStatusView? Status => null;
+	/// <summary>YOK-108, T6: what the Tanuki would copy right now (read-only, <c>CopyRule.Target</c>); null = no slot holds a special (T2).</summary>
+	CopyTarget? CopyTarget => null;
+	/// <summary>True once the copy is locked (T1): the chip then shows <see cref="CopyTarget"/> as the locked copy.</summary>
+	bool CopyLocked => false;
+	/// <summary>
+	/// YOK-119: who this view belongs to (the run). The screen forgets what the copy chip last showed when it changes, so a new run
+	/// starts with no pulse or toast. Null = unknown (the chip then carries over between views, as the tests' stubs do).
+	/// </summary>
+	object? RunKey => null;
+	/// <summary>YOK-108: the reward line (and twist line) for one node; null = nothing to add.</summary>
+	MapNodeDetail? Detail(string nodeId) => null;
 	/// <summary>Try to enter the node. False = refused (not reachable, or the view says no); nothing changes then.</summary>
 	bool Select(string nodeId);
 }
@@ -42,14 +74,22 @@ public sealed class StubMapView : IMapView
 	readonly List<MapRouteView> _routes = new();
 
 	public List<string> Selected { get; } = new();
+	public MapStatusView? Status { get; set; }
+	public CopyTarget? CopyTarget { get; set; }
+	public bool CopyLocked { get; set; }
+	public Dictionary<string, MapNodeDetail> Details { get; } = new();
+	public MapNodeDetail? Detail(string nodeId) => Details.GetValueOrDefault(nodeId);
 	public string? Current { get; private set; }
 
 	public IReadOnlyList<MapRouteView> Routes => _routes;
-	public IReadOnlyList<MapNodeView> Nodes => _defs.Select(d => new MapNodeView(d.Id, d.Row, d.Type, d.Yokai, d.Elder, _state[d.Id])).ToList();
+	public IReadOnlyList<MapNodeView> Nodes => _defs.Select(d => new MapNodeView(d.Id, d.Row, d.Type, d.Yokai, d.Elder, _state[d.Id]) { TwistIcon = TwistIcons.GetValueOrDefault(d.Id) }).ToList();
 
-	public StubMapView Add(string id, int row, string type, string? yokai = null, bool elder = false)
+	public Dictionary<string, string> TwistIcons { get; } = new();
+
+	public StubMapView Add(string id, int row, string type, string? yokai = null, bool elder = false, string? twistIcon = null)
 	{
 		_defs.Add((id, row, type, yokai, elder));
+		if (twistIcon != null) TwistIcons[id] = twistIcon;
 		_state[id] = MapNodeState.Locked;
 		return this;
 	}

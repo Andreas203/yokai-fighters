@@ -46,7 +46,7 @@
       "maxItems": 2
     },
     "rect": {
-      "description": "2D rectangle in gameplay units (1 unit = 1 px at 1920x1080), relative to the character origin at the feet, x toward the opponent, y up (F3, F4).",
+      "description": "2D rectangle in gameplay units (200 units per metre; the camera's view is 1,060-1,540 units wide, AM9), relative to the character origin at the feet, x toward the opponent, y up (F3, F4).",
       "type": "object",
       "required": ["x", "y", "w", "h"],
       "additionalProperties": false,
@@ -73,13 +73,13 @@
     "effectTarget": {
       "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
       "type": "string",
-      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln))$"
+      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln))$"
     },
     "effectShape": {
       "description": "YOK-103: the op and value each kind of target takes, as the loader checks them (Effects.Check).",
       "allOf": [
         {
-          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health)|ex\\.meter_cost)$" } } },
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|ex\\.meter_cost)$" } } },
           "then": { "properties": { "value": { "type": "integer" } } }
         },
         {

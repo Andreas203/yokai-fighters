@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/oni/oni-rigged.glb" id="2_rig"]
+[ext_resource type="PackedScene" path="res://assets/generated/characters/oni/club-grip.glb" id="3_prop"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="4_toon"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="5_toonmat"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="6_outline"]
+
+[node name="Oni" type="Node3D" unique_id=418195238]
+script = ExtResource("1_model")
+Fighter = "oni"
+
+[node name="Mirror" type="Node3D" parent="." unique_id=1552329123]
+
+[node name="Yaw" type="Node3D" parent="Mirror" unique_id=1422775391]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=869311305 instance=ExtResource("2_rig")]
+
+[node name="Club" type="BoneAttachment3D" parent="Mirror/Yaw" unique_id=464397534]
+bone_name = "RightHand"
+use_external_skeleton = true
+external_skeleton = NodePath("../Model/Armature/Skeleton3D")
+
+[node name="ClubPivot" type="Node3D" parent="Mirror/Yaw/Club" unique_id=1290598854]
+transform = Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, 2.943158, 13.373433, 3.974909)
+
+[node name="ClubMesh" type="Node3D" parent="Mirror/Yaw/Club/ClubPivot" unique_id=1630097023 instance=ExtResource("3_prop")]
+
+[node name="Animator" type="AnimationPlayer" parent="." unique_id=1519306145]
+deterministic = true
+root_node = NodePath("../Mirror/Yaw/Model")
+callback_mode_process = 2
+
+[node name="Toon" type="Node" parent="." unique_id=1405310349]
+script = ExtResource("4_toon")
+Toon = ExtResource("5_toonmat")
+Outline = ExtResource("6_outline")

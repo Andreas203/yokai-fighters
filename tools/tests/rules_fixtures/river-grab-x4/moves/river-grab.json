@@ -1,0 +1,144 @@
+{
+  "kind": "special",
+  "id": "river-grab",
+  "name": "River Grab",
+  "status": "proposed",
+  "source": "kappa",
+  "starter": false,
+  "rarity": "common",
+  "locked": false,
+  "clip": "ryo-rising-talisman-strike",
+  "rules": [
+    "A1",
+    "A3",
+    "A4",
+    "A5",
+    "C5",
+    "E1",
+    "E16",
+    "E21",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "V8"
+  ],
+  "input": {
+    "kata": {
+      "slot": "B",
+      "motion": "623"
+    },
+    "kihon": {
+      "slot": "B",
+      "direction": "forward"
+    }
+  },
+  "card": {
+    "plain": "A rising talisman strike that beats jumps.",
+    "frames": "5 / 8 / 28 frames, 90 damage, air-invulnerable frames 1-5"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "damage",
+        "op": "mul_pct",
+        "value": 130
+      },
+      {
+        "target": "properties.knockdown",
+        "op": "set",
+        "value": true
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 5,
+        "active": 8,
+        "recovery": 28,
+        "damage": 90,
+        "hitstun": 24,
+        "blockstun": 16,
+        "hitboxes": [
+          {
+            "frames": [
+              6,
+              13
+            ],
+            "rect": {
+              "x": 65,
+              "y": 225,
+              "w": 75,
+              "h": 55
+            }
+          }
+        ],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              41
+            ],
+            "rect": {
+              "x": -40,
+              "y": 0,
+              "w": 80,
+              "h": 335
+            }
+          },
+          {
+            "frames": [
+              5,
+              17
+            ],
+            "rect": {
+              "x": 55,
+              "y": 210,
+              "w": 85,
+              "h": 70
+            }
+          }
+        ],
+        "properties": {
+          "throw": true
+        }
+      },
+      "preset": "rising-talisman-lv1"
+    },
+    "2": {
+      "status": "final",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -6
+      },
+      "card": {
+        "plain": "Lv 1 → Lv 2: Rising Talisman recovers 6 frames faster, so a missed anti-air costs less.",
+        "frames": "5 / 8 / 22 frames (recovery -6), 90 damage, air-invulnerable frames 1-5"
+      }
+    },
+    "3": {
+      "evolution": {
+        "id": "heaven-seal",
+        "name": "Heaven Seal",
+        "status": "proposed",
+        "preset": "heaven-seal",
+        "changes": [
+          {
+            "target": "properties.launch",
+            "op": "set",
+            "value": true
+          }
+        ],
+        "card": {
+          "plain": "The strike launches the opponent for a follow-up.",
+          "frames": "Launches on hit"
+        }
+      }
+    }
+  },
+  "notes": "YOK-35 passing fixture: a command grab is not a successful throw for cancels (game: IsThrow)."
+}

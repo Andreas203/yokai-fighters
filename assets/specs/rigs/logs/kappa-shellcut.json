@@ -1,0 +1,41 @@
+{
+ "tool": "cut_shell.py",
+ "in": "kappa-raw.glb",
+ "out": "kappa-cut.glb",
+ "box": {
+  "y_min": 0.17,
+  "z_min": 0.58,
+  "z_max": 1.29,
+  "x_max": 0.37
+ },
+ "verts_before": 11695,
+ "open_edges_before": 8848,
+ "open_edges_after_weld": 28,
+ "verts_cut": 1421,
+ "verts_cut_by_colour": 1268,
+ "colour_band": "0.0,0.45,0.75,1.36",
+ "loose_island_verts": 3,
+ "verts_after": 6355,
+ "cap_faces": 204,
+ "boundary_edges_filled": 221,
+ "open_edges_left_elsewhere": 26,
+ "cap_uv": [
+  0.5526260137557983,
+  0.7087730169296265
+ ],
+ "cap_uv_sample_dist_m": 0.0443,
+ "cut_bbox_blender_m": {
+  "min": [
+   -0.3936,
+   0.0029,
+   0.6115
+  ],
+  "max": [
+   0.3922,
+   0.3591,
+   1.3599
+  ]
+ },
+ "sha256_in": "43456030534ebc8199479f9f009472b08df703ddd51188f6d89162303c671b3c",
+ "sha256_out": "12178f5721456c27979f05d3eade6fd2f9db418ef86b022a4005b7f9c53314dd"
+}

@@ -17,10 +17,11 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class FightScene : Node3D
 {
-	/// <summary>200 gameplay units per metre: the 1920-unit screen is 9.6 m wide, a 1.8 m fighter is 360 units.</summary>
+	/// <summary>200 gameplay units per metre: the widest 1,540-unit screen (AM9) is 7.7 m wide, a 1.8 m fighter is 360 units.</summary>
 	public const float UnitsPerMeter = 200f;
 	public const float CameraFovDegrees = 25f; // F4
-	public const float CameraHeight = 1.5f;
+	/// <summary>YOK-129: chest height of the dynamic camera at rest (<see cref="CameraConfig.BaseHeightMeters"/>).</summary>
+	public static float CameraHeight => CameraConfig.Default.BaseHeightMeters;
 	public const float BodyHeight = 1.8f;
 
 	/// <summary>When true, the clock and keyboard are bypassed and the owner calls Step() (tests, harness).</summary>
@@ -36,6 +37,27 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-39: the camera (scenes/camera_rig.tscn, "CameraRig/Camera" in fight.tscn); its rig is moved from the sim each render.</summary>
 	public Camera3D Camera => _camera;
 	public Node3D CameraRig => _cameraRig;
+
+	/// <summary>YOK-129 / AM9: the dynamic camera (presentation only; the sim never reads it). Stepped in StepSim, snapped on a new match or reset.</summary>
+	public DynamicCamera Cam { get; private set; } = new(SimConfig.Default);
+	/// <summary>V7 Tanuki reveal push-in (0..0.5 of the view width), layered on the dynamic zoom; set by the reveal flow.</summary>
+	public float CameraPushIn { get; set; }
+	private Match? _camMatch;
+	private int _camTick;
+
+	/// <summary>Steps the camera one tick, or snaps it when the match is new or was reset.</summary>
+	private void StepCamera()
+	{
+		var s = DynamicCamera.SubjectOf(Match, CameraPushIn);
+		if (!ReferenceEquals(_camMatch, Match) || Match.Tick < _camTick || !Cam.Ready)
+		{
+			if (!ReferenceEquals(Cam.Sim, Match.Config) || !ReferenceEquals(Cam.Config, CameraFraming)) Cam = new DynamicCamera(Match.Config, CameraFraming);
+			Cam.Snap(s);
+			_camMatch = Match;
+		}
+		else Cam.Step(s);
+		_camTick = Match.Tick;
+	}
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
@@ -58,6 +80,17 @@ public partial class FightScene : Node3D
 
 	/// <summary>YOK-56: whom P2 (the AI) fights as; its kit loads from data like Ryo's.</summary>
 	public static string Opponent { get; set; } = "kitsune";
+
+	/// <summary>
+	/// YOK-90: every elder's twist, from data/twists/ (loaded on first use; a test may set its own). An elder node's
+	/// fight puts its twist on P2, whoever stands in (<see cref="ElderTwists.Apply"/>).
+	/// </summary>
+	public static ElderTwists Twists
+	{
+		get => _twists ??= ElderTwists.LoadDir(ContentPaths.Data(ElderTwists.Folder));
+		set => _twists = value;
+	}
+	static ElderTwists? _twists;
 
 	/// <summary>
 	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
@@ -94,18 +127,11 @@ public partial class FightScene : Node3D
 	public static Match NewMatch() => NewMatch(Run);
 
 	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
-	public static Match NewMatch(RunState? run)
-	{
-		var cfg = run?.MatchConfig();
-		var ryo = LoadKit(Kit.Ryo);
-		var foe = LoadKit(Opponent);
-		var m = new Match(cfg, ryo.Moves, foe.Moves);
-		ryo.Equip(m.P1);
-		foe.Equip(m.P2);
-		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
-		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
-		return m;
-	}
+	/// <remarks>YOK-94, T0: the Tanuki's node fights with Ryo's kit + the copy locked on entering it (T1).
+	/// YOK-26: built by <see cref="NodeFight.NewMatch"/>, the same code the headless whole-run harness uses.</remarks>
+	/// <param name="shape">YOK-98: reshapes the fight config (a dojo trial's start distance); null = as the run gives it.</param>
+	public static Match NewMatch(RunState? run, RunSession? session = null, System.Func<SimConfig, SimConfig>? shape = null) =>
+		NodeFight.NewMatch(Sources, run, session, Opponent, DefaultScheme, n => GD.Print("FightScene: " + n), shape);
 
 	/// <summary>YOK-56: one fighter's kit from <see cref="Sources"/>; fixture fallbacks are logged.</summary>
 	public static Kit LoadKit(string fighter)
@@ -168,12 +194,15 @@ public partial class FightScene : Node3D
 		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
 		_hud.ShowOpponent(Opponent); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.TitleRequested += () => LeaveForTitle();
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		SetUpAi(); // YOK-27
+		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
+		SetUpTrialLabel(); // YOK-98: a dojo trial has no recording and shows its prompt
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
@@ -193,6 +222,7 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
+		PollTutorialKeys(); // YOK-92: Tab / pad Back skips a lesson
 		if (FlowPaused) { _clock.Restart(); Render(); return; }
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
@@ -217,12 +247,25 @@ public partial class FightScene : Node3D
 		HideFlowScreens(); // YOK-48
 		Stage = DemoStage.Fighting;
 		Match.Reset();
+		_camMatch = null; // YOK-129: the camera snaps to the reset positions
+		SetUpTutorial(); // YOK-92: lessons start over with the duel
 		RebuildAi(); // YOK-27: fresh delay buffer
 		StartRecording(); // YOK-49
 		Shake.Stop();
 		_clock.Restart();
 		Render();
 	}
+
+	/// <summary>Width of the design canvas in px: the screen the camera's current view width spans (UI canvas, 1920x1080).</summary>
+	public const int DesignCanvasWidthPx = 1920;
+
+	/// <summary>
+	/// V3 (YOK-120, generalised in YOK-129): a shake offset in screen px as a camera offset in metres at the Z = 0 plane.
+	/// The current view width (units, <see cref="DynamicCamera.Width"/>) spans DesignCanvasWidthPx px, so 1 px =
+	/// width / 1920 units, and the 2-4 px pattern stays 2-4 px on screen at every zoom.
+	/// </summary>
+	public static (float H, float V) ShakeOffsetMeters(float viewWidthUnits, (int x, int y) px) =>
+		(px.x * viewWidthUnits / DesignCanvasWidthPx / UnitsPerMeter, px.y * viewWidthUnits / DesignCanvasWidthPx / UnitsPerMeter);
 
 	public static float ToMeters(int centiUnits) => centiUnits / (SimConfig.Scale * UnitsPerMeter);
 
@@ -242,12 +285,16 @@ public partial class FightScene : Node3D
 			body.Rotation = new Vector3(0f, 0f, tilt * f.Facing);
 		}
 		RenderModels(); // YOK-53
+		RenderTutorial(); // YOK-92
 
-		// Visible width ViewWidth at FOV 25 deg (vertical, keep-height) on a 16:9 screen; the rig carries the camera.
-		_cameraRig.Position = new Vector3(ToMeters(FightCamera.CenterX(Match)), CameraHeight, CameraDistance(c));
-		var (sx, sy) = Shake.OffsetPx; // V3: px = gameplay units at the Z = 0 plane
-		_camera.HOffset = ToMeters(sx * SimConfig.Scale);
-		_camera.VOffset = ToMeters(sy * SimConfig.Scale);
+		// YOK-129: the dynamic camera (eased per sim tick in StepSim); the rig carries position and pitch.
+		if (!ReferenceEquals(_camMatch, Match) || !Cam.Ready) StepCamera(); // a new or reset match renders before its first tick
+		var (camX, camY, camZ, pitch) = Cam.Transform;
+		_cameraRig.Position = new Vector3(camX, camY, camZ);
+		_cameraRig.Rotation = new Vector3(pitch, 0f, 0f);
+		var (hx, vy) = ShakeOffsetMeters(Cam.Width, Shake.OffsetPx); // V3: 2-4 screen px at the current zoom
+		_camera.HOffset = hx;
+		_camera.VOffset = vy;
 
 		RenderProjectiles();
 		_hud.Refresh(Match);

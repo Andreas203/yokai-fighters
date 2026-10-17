@@ -16,16 +16,17 @@
     "duel": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": true, "coins": 25 },
     "elder": { "scene": "res://scenes/fight.tscn", "tier": "elder", "binds": true, "coins": 50 },
     "boss": { "scene": "res://scenes/fight.tscn", "tier": "tanuki", "binds": false },
-    "merchant": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" },
-    "dojo": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" }
+    "merchant": { "scene": "res://scenes/ui/rest_stop.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" },
+    "dojo": { "scene": "res://scenes/ui/rest_stop.tscn", "tier": "yokai", "binds": false, "opponent": "kitsune" }
   },
   "opponents": {
     "kitsune": { "fighter": "kitsune" },
+    "tanuki": { "fighter": "tanuki", "kit": "copy_of_ryo" },
     "apprentice": { "tier": "apprentice" }
   },
   "rows": {
     "8": { "types": { "elder": { "coins": 0 } } }
   },
   "nodes": {},
-  "notes": "YOK-77 first pass, awaiting the designer. Every node type runs in the fight scene for now; a scene of its own for a type ('types') or for one node ('nodes', or the node's payload.scene in the map file) is an edit here. Stand-ins, both open questions: (1) merchant and dojo have no behaviour yet, so entering one is a fight against 'opponent' with no heal and no draft; (2) only the Kitsune has a kit, so every yokai not listed with a 'fighter' under 'opponents' fights as 'fallback_fighter' (logged). Giving the Oni its kit later = add an 'oni' entry with 'fighter': 'oni'. Tiers are Y4's reaction delays; the apprentice's half damage and the per-tier damage targets are not applied here. YOK-85, R8: 'coins' is what a won fight on the node pays (types: a duel 25, an elder 50); 'rows' replaces a type's amount on one row, so the row-8 elder pays no coins (its reward is the rare in its draft). The boss, merchant and dojo name none and pay 0."
+  "notes": "YOK-77 first pass, awaiting the designer. Duels, elders and the boss run in the fight scene; YOK-96: merchant and dojo run in the rest-stop screen (scenes/ui/rest_stop.tscn), which needs no opponent (the 'opponent' and 'tier' there are now unused); a scene of its own for a type ('types') or for one node ('nodes', or the node's payload.scene in the map file) is an edit here. Stand-ins, both open questions: (1) [done by YOK-96] merchant and dojo used to be stand-in fights; (2) only the Kitsune has a kit, so every yokai not listed with a 'fighter' under 'opponents' fights as 'fallback_fighter' (logged). Giving the Oni its kit later = add an 'oni' entry with 'fighter': 'oni'. Tiers are Y4's reaction delays; the apprentice's half damage and the per-tier damage targets are not applied here. YOK-85, R8: 'coins' is what a won fight on the node pays (types: a duel 25, an elder 50); 'rows' replaces a type's amount on one row, so the row-8 elder pays no coins (its reward is the rare in its draft). The boss, merchant and dojo name none and pay 0."
 }

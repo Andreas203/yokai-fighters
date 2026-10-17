@@ -36,6 +36,12 @@ public static class AiHarness
 		public int WakeJumpsPunished;
 		public readonly List<string> Trace = new();
 		public ulong FinalHash;
+		/// <summary>YOK-57: EX rolls (ex + ex_no decisions) and EX asked for; EX specials the sim started for the AI,
+		/// and of those, any started without the meter for it (must stay 0).</summary>
+		public int ExRolls, ExAsked, ExStarted, ExWithoutMeter;
+		/// <summary>YOK-57: burst rolls and presses decided; bursts the sim fired for the AI; most bursts in one round
+		/// (C6: at most 1); bursts fired while the AI was thrown (must stay 0).</summary>
+		public int BurstRolls, BurstPressed, BurstsFired, MaxBurstsInRound, BurstWhileThrown;
 
 		public double MeanResponse => AntiAirResponse.Count == 0 ? -1 : Average(AntiAirResponse);
 		private static double Average(List<int> v) { long s = 0; foreach (int x in v) s += x; return (double)s / v.Count; }
@@ -51,7 +57,7 @@ public static class AiHarness
 		{
 			var inv = CultureInfo.InvariantCulture;
 			return string.Create(inv, $$"""
-				{"profile":"{{Profile}}","reaction_frames":{{ReactionFrames}},"seed":{{Seed}},"p1":"{{Script.ToString().ToLowerInvariant()}}","ticks":{{Ticks}},"rounds":{{Rounds}},"ai_wins":{{AiWins}},"p1_wins":{{P1Wins}},"p1_jumps":{{P1Jumps}},"anti_air_answered":{{AntiAirResponse.Count}},"anti_air_mean_response":{{MeanResponse:0.00}},"anti_air_min_response":{{(AntiAirResponse.Count == 0 ? -1 : AntiAirResponse.Min())}},"knockdowns":{{Knockdowns}},"wake_ups":{{WakeUps}},"wake_jumps":{{WakeJumps}},"habit_fired":{{HabitFired}},"habit_covered":{{HabitCovered}},"habit_no":{{HabitNo}},"wake_jumps_punished":{{WakeJumpsPunished}},"decisions":{{Decisions.Count}},"final_hash":"{{FinalHash:x16}}"}
+				{"profile":"{{Profile}}","reaction_frames":{{ReactionFrames}},"seed":{{Seed}},"p1":"{{Script.ToString().ToLowerInvariant()}}","ticks":{{Ticks}},"rounds":{{Rounds}},"ai_wins":{{AiWins}},"p1_wins":{{P1Wins}},"p1_jumps":{{P1Jumps}},"anti_air_answered":{{AntiAirResponse.Count}},"anti_air_mean_response":{{MeanResponse:0.00}},"anti_air_min_response":{{(AntiAirResponse.Count == 0 ? -1 : AntiAirResponse.Min())}},"knockdowns":{{Knockdowns}},"wake_ups":{{WakeUps}},"wake_jumps":{{WakeJumps}},"habit_fired":{{HabitFired}},"habit_covered":{{HabitCovered}},"habit_no":{{HabitNo}},"wake_jumps_punished":{{WakeJumpsPunished}},"ex_rolls":{{ExRolls}},"ex_asked":{{ExAsked}},"ex_started":{{ExStarted}},"ex_without_meter":{{ExWithoutMeter}},"burst_rolls":{{BurstRolls}},"burst_pressed":{{BurstPressed}},"bursts_fired":{{BurstsFired}},"max_bursts_in_round":{{MaxBurstsInRound}},"burst_while_thrown":{{BurstWhileThrown}},"decisions":{{Decisions.Count}},"final_hash":"{{FinalHash:x16}}"}
 				""");
 		}
 	}
@@ -59,10 +65,10 @@ public static class AiHarness
 	private static int Min(this List<int> v) { int m = int.MaxValue; foreach (int x in v) m = Math.Min(m, x); return m; }
 
 	public static Result Run(Func<Match> newMatch, BehaviourProfile profile, P1Script script, uint seed, int ticks,
-		int? reactionFrames = null, bool trace = false)
+		int? reactionFrames = null, bool trace = false, AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
 	{
 		var match = newMatch();
-		ProfileAi NewAi(int round) => new(profile, 1, AiLoadout.From(match.P2), seed + (uint)round * 7919u, reactionFrames);
+		ProfileAi NewAi(int round) => new(profile, 1, AiLoadout.From(match.P2), seed + (uint)round * 7919u, reactionFrames, tier, aggressionBonus); // YOK-99
 		var ai = NewAi(0);
 		var r = new Result { Profile = profile.Id, ReactionFrames = ai.ReactionFrames, Seed = seed, Script = script };
 		ai.Log = r.Decisions;
@@ -73,10 +79,29 @@ public static class AiHarness
 		bool p1WasAir = false, inWakeJump = false;
 		void OnHit(Match m, HitEvent e) { if (e.Attacker == 0 && !e.Blocked && inWakeJump) { r.WakeJumpsPunished++; inWakeJump = false; } }
 		match.Hit += OnHit;
+		int meterBefore = 0, burstsThisRound = 0;
+		FighterState stateBefore = match.P2.State;
+		void OnSpecial(Match m, SpecialEvent e)
+		{
+			if (e.Fighter != 1 || !e.Ex) return;
+			r.ExStarted++;
+			if (meterBefore < (m.P2.Specials[(int)e.Slot]?.Data.ExCost ?? 0)) r.ExWithoutMeter++;
+		}
+		void OnBurst(Match m, int i)
+		{
+			if (i != 1) return;
+			r.BurstsFired++;
+			r.MaxBurstsInRound = Math.Max(r.MaxBurstsInRound, ++burstsThisRound);
+			if (stateBefore == FighterState.Thrown) r.BurstWhileThrown++;
+		}
+		match.SpecialStarted += OnSpecial;
+		match.BurstFired += OnBurst;
 
 		for (int t = 0; t < ticks; t++)
 		{
 			var p2In = ai.Next(AiView.Capture(match));
+			meterBefore = match.P2.Meter;
+			stateBefore = match.P2.State;
 			FighterInput p1In = script switch
 			{
 				P1Script.Random => RandomInput(p1Rng, ref held, ref holdLeft),
@@ -114,6 +139,7 @@ public static class AiHarness
 				if (match.Winner == 0) r.P1Wins++; else if (match.Winner == 1) r.AiWins++;
 				r.FinalHash = Fnv.Mix(r.FinalHash == 0 ? Fnv.Offset : r.FinalHash, (int)(match.StateHash() & 0x7FFFFFFF));
 				match.Reset();
+				burstsThisRound = 0;
 				ai = NewAi(r.Rounds);
 				ai.Log = r.Decisions;
 				aiPrev = match.P2.State;
@@ -127,6 +153,8 @@ public static class AiHarness
 			if (d.Kind == "habit") r.HabitFired++;
 			else if (d.Kind == "habit_covered") r.HabitCovered++;
 			else if (d.Kind == "habit_no") r.HabitNo++;
+			else if (d.Kind is "ex" or "ex_no") { r.ExRolls++; if (d.Kind == "ex") r.ExAsked++; }
+			else if (d.Kind is "burst" or "burst_no") { r.BurstRolls++; if (d.Kind == "burst") r.BurstPressed++; }
 		}
 		return r;
 	}

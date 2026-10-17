@@ -13,6 +13,7 @@ You **never edit** files. You judge them against `docs/design/rules.md` and retu
 1. Read `docs/design/rules.md` fully every time.
 2. Read each file you were given (or `git diff --name-only` for changed files under `data/`).
 3. If `data/schema/` exists, validate against it (e.g. with a script in `tools/` if one exists). A schema failure is a FAIL.
+   Then run `python -I tools/check_rules.py` (static rules: slots, modifiers, cancel cap and loops, levels, EX meter, both schemes, trial moves); any violation it prints is a FAIL, and its "harness must confirm" lines go in your verdict as harness items.
 4. Check every applicable rule. Common checks:
    - **A8 source fidelity**: the ability's source yokai matches the tables; a Kappa never offers a projectile.
    - **A7/A9 offers**: commons vs rares, rares only from elders, cancel rules only from elders (X1).
@@ -28,6 +29,14 @@ You **never edit** files. You judge them against `docs/design/rules.md` and retu
    - **S**: tone never horror, cards ≤ 2 sentences, schedule and templates as in S3/S4.
    - Numbers match rules.md unless the file cites a designer-approved change.
 5. Do not judge taste or invent rules. If something seems wrong but no written rule covers it, PASS it and list it under "Designer attention".
+
+## Vault notes
+For card and story text, read each of these in full as well as `docs/design/rules.md`, and quote the line a draft breaks. Skip each note's "Open questions" section: it is undecided design. `tools/content_pipeline/` loads this same list when it runs your role as its critic.
+- `vault/01-vibe/Tone.md`
+- `vault/01-vibe/Story.md`
+- `vault/01-vibe/Characters.md`
+- `vault/02-mechanics/Yokai.md`
+- `vault/02-mechanics/Abilities.md`
 
 ## Verdict format
 ```

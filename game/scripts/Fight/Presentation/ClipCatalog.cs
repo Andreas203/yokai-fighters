@@ -16,12 +16,24 @@ public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int Trim
 	/// <summary>Optional <c>yaw_offset</c> (degrees) from the clip file; presentation does not apply it yet.</summary>
 	public double YawOffsetDeg { get; init; }
 
+	/// <summary>YOK-113: optional retiming curve (F2, AM5); when set it replaces <see cref="Speed"/>. Contiguous,
+	/// frame 1..FramesTotal, checked by <see cref="ClipCatalog.CheckRetime"/> before a clip gets one.</summary>
+	public IReadOnlyList<RetimeSegment>? Retime { get; init; }
+
 	public const double RawTicksPerSecond = 60.0;
 
-	/// <summary>Raw tick shown on game frame <paramref name="frame"/> (clamped to 1..FramesTotal and the trim end).</summary>
+	/// <summary>Raw tick shown on game frame <paramref name="frame"/> (clamped to 1..FramesTotal and the trim end).
+	/// With a curve: the segment holding the frame, <c>ta + (tb-ta)(f-a)/(b-a)</c> from an exact integer numerator,
+	/// so the same frame always gives the same tick (F3).</summary>
 	public double RawTickAt(int frame)
 	{
 		int n = Math.Clamp(frame, 1, FramesTotal);
+		if (Retime is { Count: > 0 } curve)
+		{
+			foreach (var seg in curve)
+				if (n <= seg.LastFrame) return Math.Min(seg.TickAt(n), TrimEnd);
+			return Math.Min(curve[^1].LastTick, TrimEnd);
+		}
 		return Math.Min(TrimStart + (n - 1) * Speed, TrimEnd);
 	}
 
@@ -29,7 +41,20 @@ public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int Trim
 	public double TimeAt(int frame) => RawTickAt(frame) / RawTicksPerSecond;
 
 	/// <summary>Frames the trim and speed give (the clip file's frames_total should agree within one).</summary>
-	public int ComputedFrames => (int)Math.Floor((TrimEnd - TrimStart) / Speed + 1e-9) + 1;
+	public int ComputedFrames => Retime is { Count: > 0 } curve
+		? curve[^1].LastFrame
+		: (int)Math.Floor((TrimEnd - TrimStart) / Speed + 1e-9) + 1;
+}
+
+/// <summary>YOK-113: one retiming segment: game frames <c>FirstFrame..LastFrame</c> (inclusive) show raw ticks
+/// <c>FirstTick..LastTick</c> linearly; neighbours share their boundary frame and tick.</summary>
+public readonly record struct RetimeSegment(int FirstFrame, int LastFrame, int FirstTick, int LastTick)
+{
+	public double TickAt(int frame)
+	{
+		int f = Math.Clamp(frame, FirstFrame, LastFrame);
+		return FirstTick + (double)(((long)LastTick - FirstTick) * ((long)f - FirstFrame)) / ((long)LastFrame - FirstFrame);
+	}
 }
 
 /// <summary>
@@ -106,9 +131,20 @@ public sealed class ClipCatalog
 				v = default;
 				return !notesOnly && root.TryGetProperty(key, out v) && v.ValueKind == JsonValueKind.Number;
 			}
+			// YOK-113: a retime curve replaces speed_scale; without trim fields its first/last tick is the trim.
+			List<RetimeSegment>? retime = null;
+			if (!notesOnly && root.TryGetProperty("retime", out var rt))
+			{
+				(int, int)? trimFields = Num("trim_start", out var rts) && Num("trim_end", out var rte)
+					&& rts.TryGetInt32(out int rs) && rte.TryGetInt32(out int re) ? (rs, re) : null;
+				string? why = ParseRetime(rt, out retime) ?? CheckRetime(retime!, total, trimFields);
+				if (why != null) { cat.Problems.Add($"{id}: retime {why}"); continue; }
+			}
 			(int Start, int End, double Speed)? trim;
 			if (Num("trim_start", out var ts) && Num("trim_end", out var te))
 				trim = (ts.GetInt32(), te.GetInt32(), Num("speed_scale", out var sp) ? sp.GetDouble() : 1.0);
+			else if (retime != null)
+				trim = (retime[0].FirstTick, retime[^1].LastTick, 1.0);
 			else
 			{
 				trim = ParseTrim(notes);
@@ -126,9 +162,74 @@ public sealed class ClipCatalog
 			if (rel is null) { cat.Problems.Add($"{id}: GLB not found (fields or notes)"); continue; }
 			var (s, e, speed) = trim.Value;
 			double yaw = Num("yaw_offset", out var yw) ? yw.GetDouble() : 0.0;
-			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total) { YawOffsetDeg = yaw };
+			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total) { YawOffsetDeg = yaw, Retime = retime };
 		}
 		return cat;
+	}
+
+	/// <summary>YOK-113 first-pass limits (F2): a segment plays 0.5x-2x or holds; a held tick shows on at most
+	/// 4 game frames. Kept in step with tools/validate_data.py (RETIME_*).</summary>
+	public const int RetimeMaxHoldFrames = 4;
+
+	/// <summary>Reads a <c>retime</c> JSON array; returns why it is malformed, or null.</summary>
+	public static string? ParseRetime(JsonElement arr, out List<RetimeSegment>? segs)
+	{
+		segs = null;
+		if (arr.ValueKind != JsonValueKind.Array || arr.GetArrayLength() == 0) return "must be a non-empty list of segments";
+		var list = new List<RetimeSegment>();
+		int i = 0;
+		foreach (var el in arr.EnumerateArray())
+		{
+			if (el.ValueKind != JsonValueKind.Object
+				|| !Pair(el, "frames", out int a, out int b) || !Pair(el, "ticks", out int ta, out int tb))
+				return $"segment {i} needs frames [a, b] and ticks [ta, tb] as integers";
+			list.Add(new RetimeSegment(a, b, ta, tb));
+			i++;
+		}
+		segs = list;
+		return null;
+
+		static bool Pair(JsonElement o, string key, out int x, out int y)
+		{
+			x = y = 0;
+			if (!o.TryGetProperty(key, out var p) || p.ValueKind != JsonValueKind.Array || p.GetArrayLength() != 2) return false;
+			return p[0].ValueKind == JsonValueKind.Number && p[0].TryGetInt32(out x)
+				&& p[1].ValueKind == JsonValueKind.Number && p[1].TryGetInt32(out y);
+		}
+	}
+
+	/// <summary>Contiguous from frame 1 to <paramref name="framesTotal"/>, each segment 0.5x-2x (exact integer
+	/// compare) or a hold, a held tick on at most <see cref="RetimeMaxHoldFrames"/> frames, and every tick inside
+	/// <paramref name="trim"/> (the trim_start/trim_end fields) when set; returns why not, or null.</summary>
+	public static string? CheckRetime(IReadOnlyList<RetimeSegment> segs, int framesTotal, (int Start, int End)? trim = null)
+	{
+		if (segs.Count == 0) return "must be a non-empty list of segments";
+		if (segs[0].FirstFrame != 1) return $"must start on game frame 1, starts on {segs[0].FirstFrame}";
+		if (segs[^1].LastFrame != framesTotal) return $"must end on frames_total {framesTotal}, ends on {segs[^1].LastFrame}";
+		int holdFrom = -1;
+		for (int i = 0; i < segs.Count; i++)
+		{
+			var s = segs[i];
+			if (s.FirstTick < 0 || s.LastTick < 0) return $"segment {i}: negative tick";
+			if (trim is { } t && (Math.Min(s.FirstTick, s.LastTick) < t.Start || Math.Max(s.FirstTick, s.LastTick) > t.End))
+				return $"segment {i}: ticks {s.FirstTick}-{s.LastTick} fall outside trim {t.Start}-{t.End}";
+			long df = (long)s.LastFrame - s.FirstFrame, dt = (long)s.LastTick - s.FirstTick; // long: no int32 overflow on huge segments
+			if (df <= 0) return $"segment {i}: last frame must be after first ({s.FirstFrame}-{s.LastFrame})";
+			if (i > 0 && (s.FirstFrame != segs[i - 1].LastFrame || s.FirstTick != segs[i - 1].LastTick))
+				return $"segment {i}: not contiguous with segment {i - 1}";
+			if (dt == 0)
+			{
+				if (holdFrom < 0) holdFrom = s.FirstFrame;
+				if (((long)s.LastFrame - holdFrom + 1) > RetimeMaxHoldFrames)
+					return $"segment {i}: held tick {s.FirstTick} shows on {((long)s.LastFrame - holdFrom + 1)} frames (max {RetimeMaxHoldFrames})";
+			}
+			else
+			{
+				holdFrom = -1;
+				if (2L * dt < df || dt > 2L * df) return $"segment {i}: plays at {(double)dt / df:0.###}x, outside 0.5x-2x";
+			}
+		}
+		return null;
 	}
 
 	/// <summary>Move id → clip id from data/moves/*.json (kind normal, throw or special).</summary>

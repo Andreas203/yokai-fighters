@@ -113,6 +113,7 @@
           }
         },
         "low": { "type": "boolean", "description": "Must be blocked crouching (C3)." },
+        "aftershock_delay": { "type": "integer", "minimum": 1, "description": "YOK-136 (Oni Quake Lv 3 Aftershock, A5): frames after the move's first active frame that a second quake replays the move's hitboxes, anchored where the first struck. Needs the move's own hitboxes; one connect, with the move's numbers." },
         "throw": {
           "description": "Generic throw (C4): grab clip + standard knockdown, never paired animation.",
           "type": "object",

@@ -3,8 +3,13 @@ using System.Collections.Generic;
 
 namespace YokaiFighters.Sim;
 
-/// <summary>A special Ryo owns this run: its level (A3) and its one modifier (A2).</summary>
-public sealed record OwnedSpecial(SpecialData Data, int Level, ModifierData? Modifier);
+/// <summary>
+/// A special Ryo owns this run: its level (A3) and its one modifier (A2). <paramref name="Borrowed"/> (YOK-95, R6):
+/// bought at the merchant, shown in grey "borrowed ink" and never carried over to the next run (M3).
+/// <paramref name="ModifierBorrowed"/>: the same for its modifier, bought at the merchant and attached here; it is
+/// only ever true while <paramref name="Modifier"/> is set, and goes with the modifier (A6).
+/// </summary>
+public sealed record OwnedSpecial(SpecialData Data, int Level, ModifierData? Modifier, bool Borrowed = false, bool ModifierBorrowed = false);
 
 /// <summary>
 /// YOK-47: Ryo's run state between duels (pure C#, deterministic): health (C1 carries across the run),
@@ -130,6 +135,8 @@ public sealed class RunState
 			if (run._slots[(int)slot] is not null) throw new ArgumentException($"slot {slot} is listed twice");
 			if (s.Level < 1 || s.Level > Math.Min(3, s.Data.MaxLevel)) throw new ArgumentException($"{s.Data.Id} has no level {s.Level}");
 			if (s.Modifier is { } m && !m.AppliesTo(s.Data)) throw new ArgumentException($"{m.Id} can't attach to {s.Data.Id}");
+			if (s.Borrowed && s.Data.Starter) throw new ArgumentException($"{s.Data.Id} is a starter: the merchant never sells it (R6, A1)");
+			if (s.ModifierBorrowed && s.Modifier is null) throw new ArgumentException($"{s.Data.Id} has no modifier to be borrowed (R6)");
 			run._slots[(int)slot] = s;
 		}
 		return run;
@@ -146,6 +153,63 @@ public sealed class RunState
 		_levelledAt[(int)data.Slot] = 0; // T2/T3: the replaced special's level-up no longer counts
 		CompactLevelled();
 		return data.Slot;
+	}
+
+	/// <summary>
+	/// YOK-95, R6: a special bought at the merchant goes in its own (empty) slot at Lv 1 (A3), in borrowed ink.
+	/// Throws, changing nothing, when that slot holds a special: the shop sells into a free slot only (release first).
+	/// </summary>
+	public SpecialSlot Borrow(SpecialData data)
+	{
+		if (data.Slot is < SpecialSlot.A or > SpecialSlot.D) throw new ArgumentException($"{data.Id}: '{data.Slot}' is not a slot");
+		if (_slots[(int)data.Slot] is { } cur) throw new InvalidOperationException($"slot {data.Slot} holds {cur.Data.Id}: release it first (R6)");
+		_slots[(int)data.Slot] = new OwnedSpecial(data, 1, null, Borrowed: true);
+		_levelledAt[(int)data.Slot] = 0;
+		CompactLevelled();
+		return data.Slot;
+	}
+
+	/// <summary>
+	/// YOK-95, R6: empties <paramref name="slot"/> (the merchant's release). The special goes with its levels and
+	/// modifier (A6) and its level-up no longer counts for the copy target (T2). Throws, changing nothing, on an
+	/// empty slot or when it holds Ryo's last special (T5).
+	/// </summary>
+	public void Release(SpecialSlot slot)
+	{
+		var s = this[slot] ?? throw new InvalidOperationException($"slot {slot} is empty");
+		if (SpecialCount == 1) throw new InvalidOperationException($"{s.Data.Id} is Ryo's last special (T5)");
+		_slots[(int)slot] = null;
+		_levelledAt[(int)slot] = 0; // T2: a released move's level-up no longer counts
+		CompactLevelled();
+	}
+
+	/// <summary>How many slots hold a special.</summary>
+	public int SpecialCount
+	{
+		get
+		{
+			int n = 0;
+			for (int i = 1; i < _slots.Length; i++) if (_slots[i] is not null) n++;
+			return n;
+		}
+	}
+
+	/// <summary>
+	/// M3 / R6: the specials the next run may carry over from, slot order A-D. Borrowed ink never carries over;
+	/// choosing the best of these and the row-6 condition is M3's own code (not built yet). A special of Ryo's own
+	/// that wears a borrowed modifier is listed without that modifier.
+	/// </summary>
+	public IEnumerable<(SpecialSlot Slot, OwnedSpecial Special)> CarryOverCandidates
+	{
+		get
+		{
+			foreach (var o in Owned)
+			{
+				if (o.Special.Borrowed) continue;
+				// A borrowed modifier never carries over either: the special is offered without it.
+				yield return o.Special.ModifierBorrowed ? (o.Slot, o.Special with { Modifier = null, ModifierBorrowed = false }) : o;
+			}
+		}
 	}
 
 	public bool CanLevelUp(SpecialSlot slot) => this[slot] is { } s && s.Level < Math.Min(3, s.Data.MaxLevel);
@@ -168,10 +232,18 @@ public sealed class RunState
 	public bool CanAttach(SpecialSlot slot, ModifierData modifier) =>
 		this[slot] is { } s && s.Modifier is null && modifier.AppliesTo(s.Data);
 
-	public void Attach(SpecialSlot slot, ModifierData modifier)
+	/// <summary><paramref name="borrowed"/> (YOK-95, R6): the modifier was bought at the merchant (borrowed ink).</summary>
+	public void Attach(SpecialSlot slot, ModifierData modifier, bool borrowed = false)
 	{
 		if (!CanAttach(slot, modifier)) throw new InvalidOperationException($"{modifier.Id} can't attach to slot {slot}");
-		_slots[(int)slot] = this[slot]! with { Modifier = modifier };
+		_slots[(int)slot] = this[slot]! with { Modifier = modifier, ModifierBorrowed = borrowed };
+	}
+
+	/// <summary>One of Ryo's specials wears this modifier.</summary>
+	public bool HasModifier(string modifierId)
+	{
+		foreach (var (_, s) in Owned) if (s.Modifier?.Id == modifierId) return true;
+		return false;
 	}
 
 	/// <summary>R3: after a won duel the yokai is bound: health left + 50, capped at 1,000.</summary>
@@ -248,6 +320,13 @@ public sealed class RunState
 			h = Fnv.Mix(h, unchecked((int)(m >> 32)));
 		}
 		if (Coins != 0) h = Fnv.Mix(Fnv.MixString(h, "coins"), Coins); // R8: a run with an empty purse keeps the hash it had before YOK-85
+		// R6: borrowed ink is run state (it decides M3's carry-over). A run that never bought keeps the hash it had before YOK-95.
+		int borrowed = 0;
+		for (int i = 1; i < _slots.Length; i++) if (_slots[i] is { Borrowed: true }) borrowed |= 1 << i;
+		if (borrowed != 0) h = Fnv.Mix(Fnv.MixString(h, "borrowed"), borrowed);
+		int borrowedMods = 0;
+		for (int i = 1; i < _slots.Length; i++) if (_slots[i] is { ModifierBorrowed: true }) borrowedMods |= 1 << i;
+		if (borrowedMods != 0) h = Fnv.Mix(Fnv.MixString(h, "borrowed-modifier"), borrowedMods);
 		return h;
 	}
 }

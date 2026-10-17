@@ -68,6 +68,27 @@ public static class CameraTests
 	}
 
 	[Test]
+	public static void Camera_ShakeStaysTwoToFourScreenPx_AtAnyViewWidth()
+	{
+		// V3 (YOK-120, YOK-129): the 2-4 px shake is screen px; the camera offset goes through the current view width,
+		// so it holds at the closest zoom, the widest, anything between and the old 1,920.
+		var cam = new YokaiFighters.Fight.DynamicCamera(SimConfig.Default);
+		foreach (float width in new[] { cam.MinWidth, (cam.MinWidth + cam.MaxWidth) / 2f, cam.MaxWidth, 1920f, 1003.7f })
+		{
+			float metresPerPx = width / YokaiFighters.Fight.FightScene.UnitsPerMeter / YokaiFighters.Fight.FightScene.DesignCanvasWidthPx;
+			var s = new YokaiFighters.Fight.ScreenShake(6);
+			s.Start();
+			for (int t = 0; t < 6; t++, s.Advance())
+			{
+				var (h, v) = YokaiFighters.Fight.FightScene.ShakeOffsetMeters(width, s.OffsetPx);
+				float px = Math.Abs(h) / metresPerPx, py = Math.Abs(v) / metresPerPx; // vertical: 16:9 keeps the same px per metre
+				Assert.True(px >= 2f - 1e-3f && px <= 4f + 1e-3f && py >= 2f - 1e-3f && py <= 4f + 1e-3f,
+					$"view {width}: shake frame {t} is {px:0.00} x {py:0.00} screen px (V3: 2-4)");
+			}
+		}
+	}
+
+	[Test]
 	public static void Camera_MaxSeparationFitsBothBackReaches()
 	{
 		var c = SimConfig.Default;
@@ -89,7 +110,10 @@ public static class CameraTests
 			InputBits.Up | InputBits.Left, InputBits.Up | InputBits.Right, InputBits.Up, InputBits.Down, InputBits.Down | InputBits.Left };
 		InputBits[] buttons = { InputBits.LightPunch, InputBits.MediumPunch, InputBits.HeavyPunch, InputBits.LightKick, InputBits.MediumKick, InputBits.HeavyKick };
 		int knockdowns = 0, corners = 0, walls = 0;
-		for (int t = 0; t < 5000; t++)
+		var cam = new YokaiFighters.Fight.DynamicCamera(m.Config);
+		cam.Snap(YokaiFighters.Fight.DynamicCamera.SubjectOf(m));
+		float minW = float.MaxValue, maxW = 0f;
+		for (int t = 0; t < 7000; t++) // YOK-129: 7,000 ticks in 1,400-tick drifts (was 5,000 / 1,000) so the wider 1,060 walls still reach the corners
 		{
 			var input = new FighterInput[2];
 			for (int i = 0; i < 2; i++)
@@ -97,7 +121,7 @@ public static class CameraTests
 				if (left[i]-- <= 0)
 				{
 					// Long holds, mostly toward this phase's side (left then right every 1,000 ticks) so the run reaches corners.
-					var drift = t / 1000 % 2 == 0 ? InputBits.Left : InputBits.Right;
+					var drift = t / 1400 % 2 == 0 ? InputBits.Left : InputBits.Right;
 					held[i] = rng.Next(3) < 2 ? drift : dirs[rng.Next(dirs.Length)];
 					left[i] = 10 + rng.Next(120);
 				}
@@ -107,11 +131,17 @@ public static class CameraTests
 			}
 			m.Step(input[0], input[1]);
 			AssertFramed(m, $"tick {t}");
+			// YOK-129: the dynamic camera, stepped each tick, keeps both models (and heads under the HUD) in its current view.
+			var s = YokaiFighters.Fight.DynamicCamera.SubjectOf(m);
+			cam.Step(s);
+			Assert.True(cam.InFrame(s) && cam.OnStage(), $"tick {t}: out of the dynamic view (width {cam.Width:0.0}, cx {cam.CenterX:0.0}, h {cam.HeightMeters:0.00}; P1 {m.P1.X} y{m.P1.Y}, P2 {m.P2.X} y{m.P2.Y})");
+			minW = Math.Min(minW, cam.Width); maxW = Math.Max(maxW, cam.Width);
 			if (m.Fighters.Any(f => f.State == FighterState.Knockdown)) knockdowns++;
 			if (m.Fighters.Any(f => Math.Abs(f.X) == m.Config.StageHalfWidth - m.Config.BodyWidth / 2)) corners++;
 			if (Math.Abs(m.P2.X - m.P1.X) == m.Config.MaxSeparation) walls++;
-			if (m.Phase == MatchPhase.Over) m.Reset();
+			if (m.Phase == MatchPhase.Over) { m.Reset(); cam.Snap(YokaiFighters.Fight.DynamicCamera.SubjectOf(m)); }
 		}
 		Assert.True(knockdowns > 0 && corners > 0 && walls > 0, $"the run covers knockdowns ({knockdowns}), corners ({corners}) and screen walls ({walls})");
+		Assert.True(minW < cam.MinWidth + 60f && maxW > cam.MaxWidth - 30f, $"the run covers the zoom range ({minW:0} .. {maxW:0} of {cam.MinWidth} .. {cam.MaxWidth})");
 	}
 }

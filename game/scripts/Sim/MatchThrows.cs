@@ -118,6 +118,11 @@ public sealed partial class Match
 			MoveData? m = att.CurrentMove;
 			if (m is null || !m.IsThrow) continue;
 			if (!ThrowPressed(d.Input.Buffer, m.ThrowButtons)) continue; // same E12 leniency as the throw
+			if (Unbreakable(1 - i)) // YOK-90: the elder's throws can't be broken; the press is not used up either
+			{
+				TwistTriggered?.Invoke(this, new TwistEvent(1 - i, TwistEffect.UnbreakableThrows, m.Id));
+				continue;
+			}
 			d.Input.TryConsume(out _); // the break press must not come out as a normal afterwards
 			BreakApart(1 - i, m, ThrowOutcome.Break);
 		}
@@ -185,11 +190,10 @@ public sealed partial class Match
 	{
 		int dir = Math.Sign(def.X - att.X);
 		if (dir == 0) dir = att.Facing;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
 		int want = defPush * SimConfig.Scale;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
+		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
 		int lost = want - Math.Abs(target - def.X);
 		def.X = target;
-		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), lo, hi);
+		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), CornerLo(att), CornerHi(att));
 	}
 }

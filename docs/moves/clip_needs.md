@@ -1,8 +1,8 @@
 # Yokai Fighters: Clip Needs (YOK-14)
 
-For Clip Matcher's Meshy clip specs (F6, AM1). Lengths are rough clip lengths at 60 fps, derived from the rules.md first-pass targets (startup + active + recovery) where they exist. Per F2, a matched clip's real timing overrides these numbers; Movesmith keeps the clip's truth and flags the delta.
+For the Animator's clip specs (F6, AM1, AM5). Lengths are rough clip lengths at 60 fps, derived from the rules.md first-pass targets (startup + active + recovery) where they exist. Per F2, a matched clip's real timing overrides these numbers; Movesmith keeps the clip's truth and flags the delta.
 
-Rig: all clips are generated on the Meshy humanoid skeleton and applied to Ryo and to each yokai's auto-rig. Requirement: in place (no root motion) unless noted, clean on the hit frames, toon-shader friendly.
+Rig: all clips play on the shared humanoid skeleton (today Meshy's) and reach Ryo and each yokai's rig through the Rig Specialist's bone map. Requirement: in place (no root motion) unless noted, clean on the hit frames, toon-shader friendly.
 
 Demo column: `D` = needed by the YOK-39 Ryo-vs-Kitsune demo (priority 1 for generation). Fighters: R = Ryo (and the Tanuki when shapeshifted, T0), K = Kitsune, O = Oni, B = Kappa.
 
@@ -77,7 +77,7 @@ Yokai normals clip IDs: Kitsune D (N01-N06), Oni and Kappa use N01-N06 not for t
 | E07 | Whirlpool Grab | T01 | No | Teal water swirl; range is data |
 | E08 | Torrent Spin | S07 | No | Water ribbon trail; forward travel via root-motion data |
 
-All 8 only need a visual preset reference for Clip Matcher.
+All 8 only need a visual preset reference for Asset Smith.
 
 ## 6. Tanuki boss
 

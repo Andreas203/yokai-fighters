@@ -12,8 +12,9 @@ namespace YokaiFighters.Fight;
 /// </summary>
 public partial class DemoCompleteScreen : Control
 {
-	public event Action? RestartRequested;
+	public event Action? RestartRequested, TitleRequested;
 	public Button Restart { get; private set; } = null!;
+	public Button BackToTitle { get; private set; } = null!;
 	/// <summary>Placeholders until <see cref="SetText"/> fills them from data/story/demo-complete.json.</summary>
 	public const string PlaceholderTitle = "Demo complete", PlaceholderText = "Thanks for playing.";
 	public string TitleText { get; private set; } = PlaceholderTitle;
@@ -31,12 +32,14 @@ public partial class DemoCompleteScreen : Control
 
 	public override void _Ready()
 	{
-		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Restart"));
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Select"));
 		_title = UiFind.Get<Label>(this, "Title");
 		_sub = UiFind.Get<Label>(this, "Sub");
 		Restart = UiFind.Get<Button>(this, "Restart");
 		_title.Text = TitleText; _sub.Text = BodyText;
+		BackToTitle = UiFind.Get<Button>(this, "BackToTitle");
 		Restart.Pressed += () => RestartRequested?.Invoke();
+		BackToTitle.Pressed += () => TitleRequested?.Invoke();
 		Visible = false;
 	}
 

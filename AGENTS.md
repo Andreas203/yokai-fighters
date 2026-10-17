@@ -19,7 +19,8 @@ The crew exists in three places, from the same role definitions in `.claude/agen
 | Lead | Producer | [`producer`](.claude/agents/producer.md) | `ceo` | `claude-sonnet-5-5` |
 | Assets | Asset Smith | [`asset-smith`](.claude/agents/asset-smith.md) | `designer` | not hired yet |
 | Assets | Sound Scout | [`sound-scout`](.claude/agents/sound-scout.md) | `researcher` | unset → Opus 5 (hired as Asset Scout; instructions need re-applying) |
-| Assets | Clip Matcher | [`clip-matcher`](.claude/agents/clip-matcher.md) | `designer` | unset → Opus 5 |
+| Assets | Rig Specialist | [`rig-specialist`](.claude/agents/rig-specialist.md) | `designer` | not hired yet |
+| Assets | Animator | [`animator`](.claude/agents/animator.md) | `designer` | unset → Opus 5 (hired as Clip Matcher; instructions need re-applying) |
 | Content | Movesmith | [`movesmith`](.claude/agents/movesmith.md) | `designer` | unset → Opus 5 |
 | Content | Habit Writer | [`habit-writer`](.claude/agents/habit-writer.md) | `designer` | unset → Opus 5 |
 | Content | Rules Lawyer | [`rules-lawyer`](.claude/agents/rules-lawyer.md) | `qa` | unset → Opus 5 |
@@ -31,7 +32,7 @@ The crew exists in three places, from the same role definitions in `.claude/agen
 
 The **Paperclip model** column is the hired agent's `adapterConfig.model`. Where it is unset the `claude_local` adapter falls back to `claude-opus-5`, so those seven all run on Opus 5 today regardless of what their role file asks for. Setting one needs the `agents:configure` permission, which only the board holds.
 
-This is separate from the `model:` frontmatter in `.claude/agents/<slug>.md` (`sonnet` for everyone except `gameplay-programmer`, `sparring-partner` and `code-critic`, which ask for `opus`). That frontmatter governs the **Claude Code subagent** only — it does not reach the hired Paperclip agent.
+This is separate from the `model:` frontmatter in `.claude/agents/<slug>.md` (`sonnet` for everyone except `gameplay-programmer`, `sparring-partner`, `code-critic` and `rig-specialist`, which ask for `opus`). That frontmatter governs the **Claude Code subagent** only — it does not reach the hired Paperclip agent.
 
 Everyone reports to the Producer. Paperclip's `role` field is a fixed enum (`ceo`, `cto`, `cmo`, `cfo`, `security`, `engineer`, `designer`, `pm`, `qa`, `devops`, `researcher`, `general`), so each crew role maps to its nearest option; the real role is the job title and the instruction bundle.
 

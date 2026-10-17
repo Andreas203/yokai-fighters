@@ -1,0 +1,71 @@
+{
+  "kind": "normal",
+  "id": "oni-medium-punch",
+  "name": "Oni club swing",
+  "status": "proposed",
+  "source": "oni",
+  "clip": "oni-medium-punch",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2",
+    "A8"
+  ],
+  "input": {
+    "button": "MP"
+  },
+  "frame_data": {
+    "startup": 8,
+    "active": 5,
+    "recovery": 7,
+    "damage": 50,
+    "hitstun": 17,
+    "blockstun": 13,
+    "strength": "medium",
+    "hitboxes": [
+      {
+        "frames": [
+          9,
+          13
+        ],
+        "rect": {
+          "x": 70,
+          "y": 170,
+          "w": 230,
+          "h": 100
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          20
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 110,
+          "h": 415
+        }
+      },
+      {
+        "frames": [
+          7,
+          15
+        ],
+        "rect": {
+          "x": 60,
+          "y": 250,
+          "w": 110,
+          "h": 70
+        }
+      }
+    ]
+  },
+  "notes": "Clip oni-medium-punch (20 frames via retime curve, hit 9-13): 8/5/7. Delta against the rules.md first-pass 6/3/12: +2 startup, +2 active, -5 recovery; clip timing kept (F2), flagged for the designer. Hitbox is one horizontal club sweep in front of the body: x 70-300 (the club is 1.32 m on screen = 264 units; arm plus club reach about 1.5 m from the origin), y 170-270 (club height in the sweep, chest to hip). WARN carried from the clip: one tick (file frame 21) puts the club 15 cm into the hip inside the active frames. Hitstun and blockstun are placeholders at the Kitsune MP scale. Boxes estimated from clip notes and rig measurements, not yet re-placed from the posed rig."
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "oni-hit-high",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Gunshot_Reaction",
+  "frames_total": 33,
+  "trim_start": 0,
+  "trim_end": 32,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/oni/oni-hit-low-club.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "F5 substitute: the cap of 3 takes for hit high is spent (175, 173, and a text_to_motion take all failed the club check), so the accepted hit low (preset 177 trimmed to raw 23-55) serves both hit heights; the height difference is hitstun and hitbox data. WARN: only the clean window of the take is kept. Club check PASS on the 33 trimmed poses (0 vertices inside the body, club lowest 1.61 m); the raw take fails at raw ticks 1-21 and 57-63 (up to 36 cm). The reaction is a left-shoulder flinch with the club held up beside the head, so it reads as a flinch more than a low hit: the low height is hitstun and hitbox data.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Same file and trim as oni-hit-low (Meshy preset 177 on task 01a1454f-9b2a-7566-8c68-58331f22c1ae). Meshy preset 177 on task 01a1454f-9b2a-7566-8c68-58331f22c1ae (take 2 of 3 for hit low), raw take game/assets/generated/characters/oni/takes/oni-hit-low-177.glb (183 ticks). Cleaned with clean_clip.py: trim raw ticks 23-55 (file tick 0 = raw 23), strip-root horizontal, no smoothing. Jitter 5.9 deg per frame squared. The club is held up, not forward as in the idle: blend about 6 ticks in and out. A hit reaction, so hit_start and hit_end are null."
+}

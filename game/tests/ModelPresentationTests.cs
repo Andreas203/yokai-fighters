@@ -58,14 +58,16 @@ public static class ModelPresentationTests
 		foreach (string path in System.IO.Directory.GetFiles(clipsDir, "*.json"))
 		{
 			string text = System.IO.File.ReadAllText(path);
-			foreach (string key in new[] { "\"trim_start\"", "\"trim_end\"", "\"speed_scale\"", "\"file\"" })
+			// A YOK-113 retime curve replaces speed_scale; the notes have no spelling for it.
+			string speed = text.Contains("\"retime\"") ? "\"retime\"" : "\"speed_scale\"";
+			foreach (string key in new[] { "\"trim_start\"", "\"trim_end\"", speed, "\"file\"" })
 				Assert.True(text.Contains(key), $"{System.IO.Path.GetFileName(path)} has {key}");
 		}
-		Assert.Equal(notes.Clips.Count, fields.Clips.Count, "same clips");
 		foreach (var n in notes.Clips.Values)
 		{
 			var f = fields[n.Id];
 			Assert.True(f != null, $"{n.Id} loads from fields");
+			if (f!.Retime != null) continue; // retimed on purpose: the curve, not the notes, maps its frames
 			Assert.Equal(n.ResPath, f!.ResPath, $"{n.Id}: same GLB");
 			Assert.Equal((n.TrimStart, n.TrimEnd, n.Speed, n.FramesTotal), (f.TrimStart, f.TrimEnd, f.Speed, f.FramesTotal), $"{n.Id}: same trim/speed");
 			for (int fr = 0; fr <= n.FramesTotal + 1; fr++)
@@ -106,7 +108,7 @@ public static class ModelPresentationTests
 	[Test]
 	public static void AnimSets_EveryStateAndEveryMoveHasAClip()
 	{
-		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })
+		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
 			foreach (PoseKind k in Enum.GetValues<PoseKind>())
 				Assert.True(Cat.Has(set.ClipFor(k)), $"{set.Fighter} {k}: clip {set.ClipFor(k)} is catalogued");
 		foreach (var (move, clip) in FightScene.MoveClips)

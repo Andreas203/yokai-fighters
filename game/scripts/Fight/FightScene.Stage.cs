@@ -45,7 +45,7 @@ public partial class FightScene
 		StageKind = stage.Kind;
 	}
 
-	/// <summary>Camera distance from the Z = 0 plane so <see cref="SimConfig.ViewWidth"/> fills a 16:9 screen at FOV 25 (F4).</summary>
+	/// <summary>Camera distance from the Z = 0 plane at the widest zoom: <see cref="SimConfig.ViewWidth"/> fills a 16:9 screen at FOV 25 (F4). YOK-129: the dynamic camera is at or closer than this.</summary>
 	public static float CameraDistance(SimConfig c)
 	{
 		float halfFovTan = Mathf.Tan(Mathf.DegToRad(CameraFovDegrees) / 2f);

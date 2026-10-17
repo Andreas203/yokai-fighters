@@ -10,7 +10,13 @@ namespace YokaiFighters.SaveGame;
 public sealed record LockedCopySave(string Slot, string Special, int Level);
 
 /// <summary>One slot of the saved run: the special by id, its level (A3), its modifier by id (A2) and its T3 level-up rank.</summary>
-public sealed record SlotSave(string Slot, string Special, int Level, string? Modifier, int Levelled);
+public sealed record SlotSave(string Slot, string Special, int Level, string? Modifier, int Levelled)
+{
+	/// <summary>R6: bought at the merchant, borrowed ink (version 3; false when the file has none).</summary>
+	public bool Borrowed { get; init; }
+	/// <summary>R6: the modifier was bought at the merchant, borrowed ink (version 3; false when the file has none).</summary>
+	public bool ModifierBorrowed { get; init; }
+}
 
 /// <summary>
 /// YOK-87: a run in progress as plain data (ids and numbers only), written at a node boundary: the run's seed,
@@ -40,6 +46,23 @@ public sealed record RunSave(
 	public bool? CopyLocked { get; init; }
 	/// <summary>T1: the locked copy; null before the lock, or a lock that found no special.</summary>
 	public LockedCopySave? LockedCopy { get; init; }
+	/// <summary>
+	/// Y3, M5 (version 5; false when the file has none): the run was saved at the entry of an elder node that was
+	/// Ryo's first meeting with that elder. The elder is already in <see cref="StoryProgress.EldersMet"/> by then, so
+	/// this is what lets a Continue into that node (M5: the node restarts as entered) still be the first meeting.
+	/// Not read by <see cref="Restore"/> and not part of <see cref="RunSession.StateHash"/>: see <see cref="ElderMeetings"/>.
+	/// </summary>
+	public bool FirstMeeting { get; init; }
+	/// <summary>
+	/// YOK-128, R8/R3: the entered node's fight was won and paid when saved (<see cref="RunSession.NodePaid"/>), so
+	/// its coins and heal are already in <see cref="Coins"/> and <see cref="Health"/> (version 4; false when missing).
+	/// </summary>
+	public bool NodePaid { get; init; }
+	/// YOK-124: the walk stepped off the routes (dev mode's full map). Written only when true (<c>off_route</c>), so
+	/// the version is unchanged; honoured on restore only with <c>allowOffRoute</c> (the dev slot), otherwise such
+	/// a walk is refused like any walk the map does not allow.
+	/// </summary>
+	public bool OffRoute { get; init; }
 
 	public static string Hex(ulong value) => value.ToString("x16", CultureInfo.InvariantCulture);
 
@@ -64,7 +87,7 @@ public sealed record RunSave(
 		var snap = session.Map.Snapshot();
 		var slots = new List<SlotSave>();
 		foreach (var (slot, s) in session.Run.Owned)
-			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)));
+			slots.Add(new SlotSave(slot.ToString(), s.Data.Id, s.Level, s.Modifier?.Id, session.Run.LevelledOrder(slot)) { Borrowed = s.Borrowed, ModifierBorrowed = s.ModifierBorrowed });
 		return new RunSave(session.Seed, snap.MapId, snap.Visited.ToArray(), snap.Current, session.Run.Health, slots)
 		{
 			MapFile = mapFile,
@@ -72,6 +95,8 @@ public sealed record RunSave(
 			Coins = session.Run.Coins,
 			CopyLocked = session.CopyLocked,
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
+			NodePaid = session.NodePaid && session.Draft is null, // A7: a draft node is never saved paid
+			OffRoute = snap.OffRoute,
 		};
 	}
 
@@ -98,9 +123,11 @@ public sealed record RunSave(
 	/// was read as saved. Otherwise the run is refused: the copy cannot be known exactly.
 	/// </para>
 	/// </summary>
-	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null)
+	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null, bool allowOffRoute = false)
 	{
 		if (graph.Id != MapId) throw new FormatException($"the run was saved on map '{MapId}', this is '{graph.Id}'");
+		// YOK-124: a walk off the routes (dev mode's full map) is only ever continued in a dev session.
+		if (OffRoute && !allowOffRoute) throw new FormatException("the saved walk left the map's routes (dev mode's full map): it continues only in a dev session");
 		if (MapFingerprint is { } print && !string.Equals(print, Hex(graph.Fingerprint), StringComparison.OrdinalIgnoreCase))
 			throw new FormatException($"map '{MapId}' has changed since the run was saved");
 		if (Health < 1 || Health > RunState.MaxHealth)
@@ -114,7 +141,7 @@ public sealed record RunSave(
 			SpecialData data = pool.Special(s.Special) ?? throw new FormatException($"special '{s.Special}' is not in this build's abilities");
 			ModifierData? modifier = null;
 			if (s.Modifier is { } id) modifier = pool.Modifier(id) ?? throw new FormatException($"modifier '{id}' is not in this build's abilities");
-			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier)));
+			owned.Add((slot, new OwnedSpecial(data, s.Level, modifier, s.Borrowed, s.ModifierBorrowed)));
 			order[(int)slot] = s.Levelled;
 		}
 
@@ -122,6 +149,7 @@ public sealed record RunSave(
 		if (owned.Count == 0) throw new FormatException("no slot holds a special: a run always owns at least one (A1, T5)");
 
 		if (Coins < 0) throw new FormatException($"coins {Coins}: a purse can't be negative (R8)");
+		if (NodePaid && Current is null) throw new FormatException("a paid node with no node entered (R8)");
 		if (CopyLocked is null && LockedCopy is not null) throw new FormatException("a locked copy without the copy lock (T1)");
 		if (CopyLocked == false && LockedCopy is not null) throw new FormatException("a locked copy while the copy is not locked (T1)");
 
@@ -142,7 +170,7 @@ public sealed record RunSave(
 			notes?.Add($"level-up order not usable ({e.Message}): lower slots taken as more recent");
 			orderRepaired = true;
 		}
-		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current));
+		RunMap map = RunMap.Restore(graph, new RunMapSnapshot(MapId, Visited, Current) { OffRoute = OffRoute }, allowOffRoute);
 		// A finished walk is a won run: it has ended, there is nothing to pick and nothing to continue.
 		if (map.IsFinished) throw new FormatException($"the saved walk is already at the end of map '{MapId}': that run is over");
 		run.SetMap(map);
@@ -180,7 +208,7 @@ public sealed record RunSave(
 		}
 		else throw new FormatException("the walk is past the Tanuki's node but the file has no copy lock, and it can't be worked out exactly (T1)");
 
-		try { return RunSession.Restore(run, pool, scenes, Seed, locked, copy); }
+		try { return RunSession.Restore(run, pool, scenes, Seed, locked, copy, nodePaid: NodePaid); }
 		catch (ArgumentException e) { throw new FormatException(e.Message); }
 	}
 
@@ -204,20 +232,48 @@ public sealed record StoryProgress
 	public const string Win1 = "win-1";
 	public const string Win2 = "win-2";
 	public const string Win3 = "win-3";
+	/// <summary>YOK-92, Y6: the guided apprentice fight has been played (finished, or its duel ended), so later runs are not guided.</summary>
+	public const string ApprenticeTutorial = "apprentice-tutorial";
+
+	/// <summary>The file's field (inside <c>story</c>) for <see cref="EldersMet"/> (version 4).</summary>
+	public const string EldersMetField = "elders_met";
 
 	public static readonly StoryProgress None = new(Array.Empty<string>());
 
 	/// <summary>Flags set, distinct, in ordinal order (so the same progress always writes the same file).</summary>
 	public IReadOnlyList<string> Seen { get; }
 
-	public StoryProgress(IEnumerable<string> seen) =>
-		Seen = seen.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToArray();
+	/// <summary>
+	/// Y3 (YOK-106): the elders Ryo has met, by the yokai id an elder node names (<see cref="ElderMeetings.ElderOf"/>),
+	/// distinct, in ordinal order. Kept per save, across runs (M4: story progress outlives the run). Ids are free-form
+	/// like <see cref="Seen"/>: one no map names is kept and simply never matches a node.
+	/// </summary>
+	public IReadOnlyList<string> EldersMet { get; }
+
+	public StoryProgress(IEnumerable<string> seen) : this(seen, Array.Empty<string>()) { }
+
+	public StoryProgress(IEnumerable<string> seen, IEnumerable<string> eldersMet)
+	{
+		Seen = Clean(seen);
+		EldersMet = Clean(eldersMet);
+	}
+
+	static string[] Clean(IEnumerable<string> ids) =>
+		ids.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToArray();
 
 	public bool Has(string flag) => Seen.Contains(flag, StringComparer.Ordinal);
-	public StoryProgress With(string flag) => Has(flag) ? this : new StoryProgress(Seen.Append(flag));
+	public StoryProgress With(string flag) => Has(flag) ? this : new StoryProgress(Seen.Append(flag), EldersMet);
 
-	public bool Equals(StoryProgress? other) => other is not null && Seen.SequenceEqual(other.Seen, StringComparer.Ordinal);
-	public override int GetHashCode() => Seen.Aggregate(17, (h, s) => unchecked(h * 31 + StringComparer.Ordinal.GetHashCode(s)));
+	/// <summary>Y3: Ryo has met this elder (in this run or an earlier one).</summary>
+	public bool HasMetElder(string elderId) => EldersMet.Contains(elderId, StringComparer.Ordinal);
+	/// <summary>Y3: marks one elder met. <see cref="Seen"/> is untouched; a blank id changes nothing.</summary>
+	public StoryProgress WithElderMet(string elderId) =>
+		string.IsNullOrWhiteSpace(elderId) || HasMetElder(elderId) ? this : new StoryProgress(Seen, EldersMet.Append(elderId));
+
+	public bool Equals(StoryProgress? other) =>
+		other is not null && Seen.SequenceEqual(other.Seen, StringComparer.Ordinal) && EldersMet.SequenceEqual(other.EldersMet, StringComparer.Ordinal);
+	public override int GetHashCode() =>
+		EldersMet.Aggregate(Seen.Aggregate(17, (h, s) => unchecked(h * 31 + StringComparer.Ordinal.GetHashCode(s))), (h, s) => unchecked(h * 37 + StringComparer.Ordinal.GetHashCode(s)));
 }
 
 /// <summary>
@@ -232,6 +288,18 @@ public sealed record SaveData
 	public RunSave? Run { get; init; }
 	public IReadOnlyList<string> Unlocks { get; init; } = Array.Empty<string>();
 	public StoryProgress Story { get; init; } = StoryProgress.None;
+	/// <summary>
+	/// YOK-99, Y5: runs won against the Tanuki, kept across runs (version 7; 0 when the file has none). Never
+	/// negative; the count is not capped (the S3 win cards and later wins read it), only its effect is
+	/// (<c>Ai.TanukiPressure.MaxWins</c>).
+	/// </summary>
+	public int TanukiWins { get; init; }
+	/// <summary>
+	/// YOK-97, M3: the special id the next run carries at Lv 2 (null = none). Set at every run end by
+	/// <see cref="Sim.CarryOver.FromRunEnd"/> (replacing the last one); kept while a run is in progress, so a run
+	/// abandoned for a new one does not lose it. Saved apart from the run, like unlocks and story.
+	/// </summary>
+	public string? CarryOver { get; init; }
 
 	public SaveData WithRun(RunSave? run) => this with { Run = run };
 	/// <summary>M1: unlocks keep their award order; one already held is not added twice. Story is untouched (M4).</summary>
@@ -239,4 +307,10 @@ public sealed record SaveData
 		Unlocks.Contains(abilityId, StringComparer.Ordinal) ? this : this with { Unlocks = Unlocks.Append(abilityId).ToArray() };
 	/// <summary>M4: sets one story flag. Unlocks and the run are untouched.</summary>
 	public SaveData WithStory(string flag) => this with { Story = Story.With(flag) };
+	/// <summary>Y3, M4: marks an elder met (story progress). Unlocks and the run are untouched.</summary>
+	public SaveData WithElderMet(string elderId) => this with { Story = Story.WithElderMet(elderId) };
+	/// <summary>M3: replaces the carry-over (null clears it). The run, unlocks and story are untouched.</summary>
+	public SaveData WithCarryOver(string? specialId) => this with { CarryOver = string.IsNullOrWhiteSpace(specialId) ? null : specialId };
+	/// <summary>YOK-99, Y5: one more Tanuki win (stops at <see cref="int.MaxValue"/>). The run, unlocks and story are untouched.</summary>
+	public SaveData WithTanukiWin() => this with { TanukiWins = TanukiWins == int.MaxValue ? int.MaxValue : Math.Max(0, TanukiWins) + 1 };
 }

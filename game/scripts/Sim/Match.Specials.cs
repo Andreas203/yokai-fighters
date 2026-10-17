@@ -6,7 +6,7 @@ namespace YokaiFighters.Sim;
 /// <summary>A special started (or upgraded to EX in its first frames).</summary>
 public readonly record struct SpecialEvent(int Fighter, SpecialSlot Slot, string MoveId, int Level, bool Ex, bool Precision);
 
-public enum ProjectileEventKind { Spawn, Hit, Blocked, Clash, Absorbed, OffScreen, Expired }
+public enum ProjectileEventKind { Spawn, Hit, Blocked, Clash, Absorbed, OffScreen, Expired, Reflected }
 
 public readonly record struct ProjectileEvent(int Owner, string MoveId, ProjectileEventKind Kind, int X);
 
@@ -27,6 +27,8 @@ public sealed class Projectile
 	public int AbsorbsLeft;
 	/// <summary>YOK-103: the owner's <see cref="Fighter.MoveSerial"/> when it fired: is the owner still in that use of the move?</summary>
 	public int FiredBy;
+	/// <summary>YOK-90: which use in a row of its special fired it (0 = not counted); see <see cref="Match"/> twists.</summary>
+	public int Repeat;
 
 	/// <summary>Hitbox in world centi-units, mirrored by the direction it flies.</summary>
 	public (int x0, int y0, int x1, int y1) WorldBox()
@@ -104,6 +106,7 @@ public sealed partial class Match
 		f.ActiveEx = isEx;
 		f.ActivePrecision = precision;
 		f.SpecialButtons = buttons & (InputBits.Attacks | InputBits.Special); // Special: Kihon (YOK-23)
+		CountSpecialUse(i, eq.Data.Id); // YOK-90: uses in a row, against a reflect twist
 		SpecialStarted?.Invoke(this, new SpecialEvent(i, slot, m.Id, eq.Level, isEx, precision));
 		return true;
 	}
@@ -226,7 +229,7 @@ public sealed partial class Match
 			var p = new Projectile
 			{
 				Owner = i, Serial = ++_projectileSerial, Move = f.ActiveBase ?? m, Data = pd, FiredBy = f.MoveSerial,
-				X = f.X, Y = f.Y, Dir = f.Facing, HitsLeft = pd.Hits, AbsorbsLeft = pd.AbsorbsProjectiles,
+				X = f.X, Y = f.Y, Dir = f.Facing, HitsLeft = pd.Hits, AbsorbsLeft = pd.AbsorbsProjectiles, Repeat = f.ActiveRepeat,
 			};
 			Projectiles.Add(p);
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(i, m.Id, ProjectileEventKind.Spawn, p.X));
@@ -250,6 +253,7 @@ public sealed partial class Match
 			if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) continue;
 			if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Projectile) == true) continue;
 			if (!HurtOverlaps(def, p.WorldBox())) continue;
+			if (Reflects(1 - p.Owner, p.Repeat)) { ReflectProjectile(p); continue; } // YOK-90: turned around, no hit
 			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p);
 			p.HitsLeft--;
 			any = true;
@@ -298,6 +302,7 @@ public sealed partial class Match
 			h = Fnv.Mix(h, p.AbsorbsLeft);
 			h = Fnv.Mix(h, p.FiredBy);
 			h = Fnv.Mix(h, p.Move.Damage);
+			if (p.Repeat != 0) h = Fnv.Mix(h, p.Repeat); // YOK-90: only in reflect fights
 		}
 		return h;
 	}

@@ -261,6 +261,7 @@ public static class Effects
 		["properties.counterhit_immune"] = ValueKind.Flag, ["properties.projectile_interrupt_immune"] = ValueKind.Flag,
 		["properties.armour"] = ValueKind.Armour, ["properties.throw_invuln"] = ValueKind.ThrowInvuln,
 		["properties.pull_on_hit"] = ValueKind.Int, ["properties.heal_pct_max_health"] = ValueKind.Int,
+		["properties.aftershock_delay"] = ValueKind.Int, // YOK-136: Oni Quake Lv 3 Aftershock (A5)
 	};
 
 	/// <summary>The modifier-only target that changes the special's EX cost (Ninefold Spark), not its frame data.</summary>

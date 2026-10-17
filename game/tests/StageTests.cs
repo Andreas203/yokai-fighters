@@ -75,24 +75,70 @@ public static class StageTests
 	public static void Stage_CoversCameraRangeAtBothCorners(Node runner)
 	{
 		var scene = Load(runner);
+		// YOK-129: the dynamic camera's extreme framings: closest and widest zoom (plus the pitch's 1% slack), at rest and
+		// raised for a jump apex at the top of the HUD clamp, pushed to either stage edge. Every screen corner's ray must
+		// land on the backdrop (above the floor) or on the floor.
 		var c = scene.Match.Config;
-		float tan = Mathf.Tan(Mathf.DegToRad(FightScene.CameraFovDegrees) / 2f), d = FightScene.CameraDistance(c);
-		float camLimit = FightScene.ToMeters(FightCamera.Limit(c)); // YOK-39: reaches the cornered model
+		var cam = new DynamicCamera(c);
 		var backdrop = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop");
 		var size = ((QuadMesh)backdrop.Mesh).Size;
-		float dist = d - backdrop.Position.Z, halfW = dist * tan * 16f / 9f, halfH = dist * tan;
-		foreach (float camX in new[] { -camLimit, camLimit })
-		{
-			Assert.True(backdrop.Position.X - size.X / 2 <= camX - halfW, $"backdrop left edge covers camera x {camX}");
-			Assert.True(backdrop.Position.X + size.X / 2 >= camX + halfW, $"backdrop right edge covers camera x {camX}");
-		}
-		Assert.True(backdrop.Position.Y + size.Y / 2 >= FightScene.CameraHeight + halfH, "backdrop reaches the top of the view");
-		Assert.True(backdrop.Position.Y - size.Y / 2 <= 0f, "backdrop meets the floor");
 		var floor = scene.StageRoot.GetNode<MeshInstance3D>("Floor");
 		var fs = ((PlaneMesh)floor.Mesh).Size;
-		Assert.True(floor.Position.Z + fs.Y / 2 >= d - FightScene.CameraHeight / tan, "floor reaches the bottom of the view");
+		Assert.True(backdrop.Position.Y - size.Y / 2 <= 0f, "backdrop meets the floor");
 		Assert.True(floor.Position.Z - fs.Y / 2 <= backdrop.Position.Z, "floor reaches the backdrop");
-		Assert.True(fs.X / 2 >= camLimit + halfW, "floor wide enough at the backdrop");
+		float apex = c.JumpY(c.JumpFrames / 2) / (float)SimConfig.Scale;
+		var air = new DynamicCamera.Subject(new DynamicCamera.Body(0, apex, -240, 240), new DynamicCamera.Body(0, 0, -240, 240), 0, 0);
+		var framings = new System.Collections.Generic.List<(DynamicCamera Cam, float W, float H)>();
+		foreach (float w in new[] { cam.MinWidth, cam.MaxWidth * 1.01f })
+			foreach (float h in new[] { cam.Config.BaseHeightMeters, cam.Config.WideHeightMeters, Mathf.Max(cam.TargetHeight(air, w), cam.MinHeight(w, air)) })
+				framings.Add((cam, w, h));
+		// YOK-133 / AM10: an Oni fight's camera (framed for his club) at the widest width and the highest height its feet floor
+		// reaches, over jumps (one or both fighters) at close range and at the walls, from either corner.
+		var oni = new DynamicCamera(c, CameraConfig.Default.ForBodies("ryo", "oni"));
+		float maxW = 0, hAtMaxW = 0, maxH = 0, wAtMaxH = 0;
+		int corner = c.StageHalfWidth - c.BodyWidth / 2;
+		foreach (int sep in new[] { c.BodyWidth, c.MaxSeparation })
+			foreach (int at in new[] { -corner, corner })
+				foreach (bool both in new[] { false, true })
+				{
+					var m = new Match();
+					m.P1.X = System.Math.Clamp(at - sep / 2, -corner, corner - sep); m.P2.X = m.P1.X + sep;
+					oni.Snap(DynamicCamera.SubjectOf(m));
+					for (int t = 0; t < c.JumpFrames * 3; t++)
+					{
+						m.Step(new FighterInput(InputBits.Up), both ? new FighterInput(InputBits.Up) : FighterInput.None);
+						oni.Step(DynamicCamera.SubjectOf(m));
+						if (oni.Width > maxW) { maxW = oni.Width; hAtMaxW = oni.HeightMeters; }
+						if (oni.HeightMeters > maxH) { maxH = oni.HeightMeters; wAtMaxH = oni.Width; }
+					}
+				}
+		GD.Print($"YOK-133 stage: Oni camera widest {maxW:0} (h {hAtMaxW:0.00} m), highest {maxH:0.00} m (w {wAtMaxH:0})");
+		Assert.True(maxW > cam.MaxWidth, "the Oni camera widens past the sim screen somewhere (else this pass proves nothing)");
+		framings.Add((oni, maxW, hAtMaxW));
+		framings.Add((oni, wAtMaxH, maxH));
+		framings.Add((oni, maxW, maxH));
+		foreach (var (fc, w, h) in framings)
+				foreach (int side in new[] { -1, 1 })
+				{
+					var cam2 = fc;
+					cam2.Place(w, h, side * (cam2.StageHalf - w / 2f));
+					foreach (var (nx, ny) in new[] { (-1f, -1f), (1f, -1f), (-1f, 1f), (1f, 1f) })
+					{
+						var (o, dir) = cam2.ScreenRay(nx, ny);
+						float t = (backdrop.Position.Z - o.Z) / dir.Z, x = o.X + dir.X * t, y = o.Y + dir.Y * t;
+						string at = $"width {w:0}, height {h:0.00}, side {side}, corner ({nx}, {ny})";
+						if (y >= 0f)
+						{
+							Assert.True(Mathf.Abs(x - backdrop.Position.X) <= size.X / 2, $"{at}: backdrop covers x {x:0.00}");
+							Assert.True(y <= backdrop.Position.Y + size.Y / 2, $"{at}: backdrop reaches the top ({y:0.00})");
+						}
+						else
+						{
+							float tf = -o.Y / dir.Y, fx = o.X + dir.X * tf, fz = o.Z + dir.Z * tf;
+							Assert.True(Mathf.Abs(fx - floor.Position.X) <= fs.X / 2 && Mathf.Abs(fz - floor.Position.Z) <= fs.Y / 2, $"{at}: floor covers ({fx:0.00}, {fz:0.00})");
+						}
+					}
+				}
 		scene.QueueFree();
 	}
 

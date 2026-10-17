@@ -77,6 +77,87 @@ public static class ReplayTests
 		return t % 20 == 0 ? new FighterInput(InputBits.HeavyPunch) : FighterInput.None;
 	}
 
+	/// <summary>YOK-94: the Tanuki (Ryo's fixture kit + a copy of Spirit Wave Lv 1) driven by data/profiles/tanuki-boss.json, P1 idle.</summary>
+	/// <param name="copy">The copy to fight with; null = the no-lock default.</param>
+	static ReplayRecording TanukiFight(out int copiedUses, CopyTarget? copy = null)
+	{
+		var src = FightScene.FixtureSources;
+		var ryo = Kit.Load(Kit.Ryo, src);
+		var kit = TanukiKit.Build(ryo, copy ?? TanukiKit.CopyAtFightStart(false, null, null, ryo.Specials));
+		var m = new Match(null, ryo.Moves, kit.Moves);
+		ryo.Equip(m.P1);
+		kit.Equip(m.P2);
+		int uses = 0;
+		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Slot == kit.CopiedSlot) uses++; };
+		var profile = BehaviourProfile.LoadFile(Path.Combine(RepoRoot, "data", "profiles", "tanuki-boss.json"));
+		var rec = Play(m, (_, _) => FighterInput.None, null, 1800, new ProfileAi(profile, 1, AiLoadout.From(m.P2), 94), 94);
+		copiedUses = uses;
+		return rec;
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_ReplaysIdentically()
+	{
+		var rec = TanukiFight(out int uses);
+		Assert.True(uses > 0, "the recorded Tanuki used special:copied");
+		Assert.Equal((int)SpecialSlot.A, rec.Header.Fighters[1].CopiedSlot, "the copied slot is in the recording");
+		Assert.Equal(0, rec.Header.Fighters[0].CopiedSlot, "Ryo has none");
+		AssertReplays(rec, "tanuki fight");
+
+		// The slot is what makes it replay: without it special:copied presses nothing and the AI check reports it.
+		var stripped = ReplayRecording.FromBytes(rec.ToBytes());
+		stripped.Header.Fighters[1].CopiedSlot = 0;
+		Assert.True(!Replayer.Run(stripped, Catalog).Ok, "a Tanuki recording with the slot taken out is reported, not passed");
+		var bad = ReplayRecording.FromBytes(rec.ToBytes());
+		bad.Header.Fighters[1].CopiedSlot = (int)SpecialSlot.D;
+		Assert.True(!Replayer.Run(bad, Catalog).Ok, "a copied slot holding no special is refused");
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_SlotClash_ReplaysIdentically()
+	{
+		// Ryo's starter in A is the fixture Spirit Wave; the copy is another special whose own slot is A (the real
+		// spirit-wave from data/moves/), as when a drafted special took a starter's slot. It replaces the starter.
+		var other = SpecialLoader.LoadDirectory(Path.Combine(RepoRoot, "data", "moves")).First(s => s.Id == "spirit-wave");
+		Assert.Equal(SpecialSlot.A, other.Slot, "the stand-in for a drafted special sits in A");
+		var rec = TanukiFight(out int uses, new CopyTarget(SpecialSlot.A, other, 1));
+		var p2 = rec.Header.Fighters[1];
+		Assert.True(uses > 0, "the recorded Tanuki used special:copied");
+		Assert.Equal((int)SpecialSlot.A, p2.CopiedSlot, "the copied slot is Ryo's slot for the copy");
+		Assert.True(p2.Specials.Single(s => s.Slot == (int)SpecialSlot.A).Id == "spirit-wave" && p2.Specials.All(s => s.Id != "test-spirit-wave"), "the copy replaced the starter in A");
+		Assert.True(p2.Specials.Count == 2 && p2.Specials.Any(s => s.Slot == (int)SpecialSlot.B && s.Id == "test-rising-talisman"), "the other starter stays in B");
+		AssertReplays(rec, "tanuki fight, slot clash");
+	}
+
+	[Test]
+	public static void PushWidth_IsRecorded_AndReplaysIdentically()
+	{
+		// YOK-136: a fighter's own push box (data/fighters/) is part of the fight as recorded.
+		var m = FightScene.NewMatch();
+		m.P2.PushWidth = 150 * SimConfig.Scale;
+		var rec = Play(m, Bully, (_, _) => FighterInput.None, 6000);
+		Assert.Equal(150 * SimConfig.Scale, rec.Header.Fighters[1].PushWidth, "P2's push width is in the recording");
+		Assert.Equal(0, rec.Header.Fighters[0].PushWidth, "Ryo keeps the default (not written)");
+		AssertReplays(rec, "wide push box");
+		var stripped = ReplayRecording.FromBytes(rec.ToBytes());
+		stripped.Header.Fighters[1].PushWidth = 0;
+		Assert.True(!Replayer.Run(stripped, Catalog).Ok, "the same inputs with the default push box do not replay as recorded");
+
+		var plain = Play(FightScene.NewMatch(), Bully, (_, _) => FighterInput.None, 600);
+		Assert.True(!System.Text.Json.JsonSerializer.Serialize(plain.Header).Contains("PushWidth"), "default push boxes: the field is not written (older headers)");
+	}
+
+	[Test]
+	public static void TanukiCopiedSpecial_RecordingWithoutTheFieldStillReplays()
+	{
+		// A fight with no copy writes its header as recordings did before YOK-94: no CopiedSlot at all.
+		var rec = Play(FightScene.NewMatch(), Bully, (_, _) => FighterInput.None, 6000);
+		string header = System.Text.Json.JsonSerializer.Serialize(rec.Header);
+		Assert.True(!header.Contains("CopiedSlot"), "no copy: the field is not written (the pre-YOK-94 header)");
+		Assert.Equal(0, ReplayRecording.FromBytes(rec.ToBytes()).Header.Fighters[1].CopiedSlot, "a header without the field reads as no copy");
+		AssertReplays(rec, "recording without a copied slot");
+	}
+
 	[Test]
 	public static void ScriptedFightToKo_ReplaysIdentically()
 	{
@@ -100,7 +181,7 @@ public static class ReplayTests
 	static void RandomCoverage()
 	{
 		FightScene.Run = null;
-		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (4, ControlScheme.Kihon, ControlScheme.Kata), (5, ControlScheme.Kata, ControlScheme.Kata) }) // seed 5: seed 3 stopped bursting once wake-ups lengthened knockdowns; seed 4: seed 2 stopped bursting with the YOK-39 screen walls (1520)
+		foreach (var (seed, s1, s2) in new[] { (1, ControlScheme.Kata, ControlScheme.Kihon), (8, ControlScheme.Kihon, ControlScheme.Kata), (7, ControlScheme.Kata, ControlScheme.Kata) }) // coverage seeds, re-picked when a sim change stops one bursting: YOK-129 (AM9 walls, 1,060) stopped seed 6 bursting, so 7; YOK-120 (AM8 walls, 960) stopped seeds 4 and 5 bursting, so 8 and 6 (earlier: 3 -> 5 for wake-ups, 2 -> 4 for the YOK-39 walls)
 		{
 			var m = FightScene.NewMatch();
 			m.P1.Input.Scheme = s1;
@@ -144,6 +225,41 @@ public static class ReplayTests
 			Assert.True(!rb.Ok && rb.FirstAiMismatchStep == 300, $"tampered AI input reported at 300: {rb}");
 			Assert.Equal(-1, rb.FirstDivergentStep, "the AI re-run, not the tampered input, drives P2 (state still identical)");
 		}
+	}
+
+	/// <summary>YOK-57: an elder fight with EX and burst in play records its fight tier and replays identically;
+	/// the same recording read as a standard fight (tier stripped) no longer matches the AI.</summary>
+	[Test]
+	public static void ElderAiWithExAndBurst_ReplaysIdentically()
+	{
+		FightScene.Run = null;
+		var m = FightScene.NewMatch();
+		// The opponent kit's own EX special (fixture or data), thrown often from neutral.
+		string? special = null;
+		foreach (var eq in m.P2.Specials) if (eq is not null && eq.Data.HasEx) { special = eq.Data.Id; break; }
+		Assert.True(special is not null, "the opponent kit has a special with an EX version");
+		var prof = Profile("test-kitsune-aggressive") with
+		{
+			Id = "test-meter-elder",
+			Behaviours = new System.Collections.Generic.List<Behaviour>(Profile("test-kitsune-aggressive").Behaviours)
+				{ new(Observation.Neutral, BehaviourProfile.ParseAction("special:" + special), 40) },
+			ExUse = new ExUse(100), BurstUse = new BurstUse(100),
+		};
+		var cat = ReplayCatalog.FromRepo(RepoRoot);
+		cat.Profiles.Add(prof);
+		int ex = 0, bursts = 0;
+		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Ex) ex++; };
+		m.BurstFired += (_, i) => { if (i == 1) bursts++; };
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 57, tier: AiFightTier.Elder);
+		var rec = Play(m, Chaos(57), null, 5400, ai, 57, stopAtOver: false);
+		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");
+		var back = ReplayRecording.FromBytes(rec.ToBytes());
+		Assert.Equal("elder", back.Header.Ai!.FightTier, "the fight tier is in the file");
+		var r = Replayer.Run(back, cat);
+		Assert.True(r.Ok && r.AiStepsChecked == rec.Steps, $"elder fight replays with every AI input re-derived: {r}");
+		back.Header.Ai.FightTier = null;
+		var std = Replayer.Run(back, cat);
+		Assert.True(!std.Ok, "read as a standard fight, the AI no longer spends meter, so the replay differs");
 	}
 
 	[Test]
