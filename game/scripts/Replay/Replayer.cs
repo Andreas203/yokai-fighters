@@ -17,6 +17,7 @@ public sealed class ReplayCatalog
 	public List<SpecialData> Specials { get; } = new();
 	public List<ModifierData> Modifiers { get; } = new();
 	public List<BehaviourProfile> Profiles { get; } = new();
+	public List<ElderTwist> Twists { get; } = new(); // YOK-90
 
 	/// <summary>Scans <c>data/</c> and <c>game/tests/fixtures/</c> under the repo root, every *.json, by its kind.</summary>
 	public static ReplayCatalog FromRepo(string repoRoot)
@@ -41,6 +42,7 @@ public sealed class ReplayCatalog
 					case "special": Specials.Add(SpecialLoader.LoadFile(path)); break;
 					case "modifier": Modifiers.Add(ModifierLoader.LoadFile(path)); break;
 					case "profile": Profiles.Add(BehaviourProfile.LoadFile(path)); break;
+					case ElderTwistLoader.Kind: Twists.Add(ElderTwistLoader.LoadFile(path)); break;
 					default: Moves.Add(MoveLoader.LoadFile(path)); break; // non-move kinds fail to parse and are skipped
 				}
 			}
@@ -161,9 +163,18 @@ public static class Replayer
 			f.PushWidth = s.PushWidth; // YOK-136: part of the fight as recorded
 			foreach (var c in s.CancelRules) f.HoldCancelRule(new CancelRule(c.Id, c.From, c.Into, c.OnHit, c.OnBlock, c.OnWhiff));
 			f.Input.Scheme = Enum.Parse<ControlScheme>(s.Scheme);
+			f.Twist = s.Twist is null ? null : TwistOf(s, cat, $"P{p + 1}"); // YOK-90
 		}
 		m.Reset(); // health from config, as at fight start (Reset keeps specials and cancel rules)
 		return m;
+	}
+
+	static ElderTwist TwistOf(FighterSetup s, ReplayCatalog cat, string who)
+	{
+		var same = cat.Twists.Where(t => t.Id == s.Twist).ToList();
+		if (same.Count == 0) throw new ReplaySetupException($"{who} elder twist '{s.Twist}' no longer exists in data/twists/");
+		return same.FirstOrDefault(t => Fingerprint.Of(t) == s.TwistFp)
+			?? throw new ReplaySetupException($"{who} elder twist '{s.Twist}' changed since the recording");
 	}
 
 	static MoveData[] Kit(FighterSetup s, ReplayCatalog cat, string who) => s.Moves.Select((k, slot) =>

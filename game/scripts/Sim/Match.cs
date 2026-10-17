@@ -70,6 +70,7 @@ public sealed partial class Match
 		ResetMeterState(); // YOK-20
 		Projectiles.Clear(); // YOK-21
 		_projectileSerial = 0;
+		ResetTwistState(); // YOK-90
 		ResetAftershocks(); // YOK-136
 	}
 
@@ -309,8 +310,9 @@ public sealed partial class Match
 		// Snapshot both moves before either hit applies: a trade interrupts both (C7: both counterhit).
 		MoveData? m0 = P1.CurrentMove, m1 = P2.CurrentMove;
 		int f0 = P1.MoveFrame, f1 = P2.MoveFrame;
-		if (hit0) ApplyHit(0, m0!, f0, m1 != null);
-		if (hit1) ApplyHit(1, m1!, f1, m0 != null);
+		// YOK-90: a repeated special the elder reflects lands on its user instead.
+		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0); else ApplyHit(0, m0!, f0, m1 != null); }
+		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1); else ApplyHit(1, m1!, f1, m0 != null); }
 		ResolvePositions(stackalloc int[2]);
 	}
 
@@ -354,19 +356,23 @@ public sealed partial class Match
 
 	/// <param name="projectile">YOK-21: the hit came from this projectile, not the attacker's body: the attacker's
 	/// move doesn't count as connected, the push follows the projectile and a cornered defender hands none back.</param>
+	/// <param name="reflected">YOK-90: an elder's reflect: <paramref name="attIndex"/> is the elder and <paramref name="m"/>
+	/// the defender's own move turned back on it; like a projectile, the elder's own move is untouched and the push
+	/// is away from the elder.</param>
 	/// <param name="remoteDir">YOK-136: non-zero = the hit came from an aftershock facing this way; handled like a projectile's.</param>
-	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, int remoteDir = 0)
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, bool reflected = false, int remoteDir = 0)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
-		bool remote = projectile is not null || remoteDir != 0;
-		if (!remote)
+		bool body = projectile is null && !reflected && remoteDir == 0;
+		if (body)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
 		}
 
 		bool counter = !blocked && defenderWasAttacking;           // C7
+		bool armoured = !blocked && TwistArmourTakes(1 - attIndex); // YOK-90: the elder's special plays on
 		int push, damage = 0;
 		if (blocked)
 		{
@@ -377,20 +383,22 @@ public sealed partial class Match
 		{
 			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
 			def.PendingDamage += damage;
-			if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
+			if (armoured) { } // the damage lands, the special is not interrupted
+			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
 		}
 		def.Guarding = false;
 		def.Crouching = false;
-		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
+		if (!armoured) def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
-		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : att.Facing), want = push * SimConfig.Scale;
+		int away = Math.Sign(def.X - att.X);
+		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : reflected && away != 0 ? away : att.Facing), want = push * SimConfig.Scale;
 		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
 		int got = Math.Abs(target - def.X);
 		def.X = target;
-		if (!remote) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
+		if (body) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
@@ -499,6 +507,6 @@ public sealed partial class Match
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
 		h = P2.Hash(h);
-		return HashAftershocks(HashProjectiles(HashMeterState(h)));
+		return HashAftershocks(HashTwistState(HashProjectiles(HashMeterState(h))));
 	}
 }

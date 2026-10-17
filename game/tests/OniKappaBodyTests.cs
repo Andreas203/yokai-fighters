@@ -131,6 +131,7 @@ public static class OniKappaBodyTests
 				Assert.Equal(yokai, scene.ModelOf(1)?.Fighter, $"{yokai}: P2 shows the {yokai} body");
 				Assert.Equal("kitsune", FightScene.Opponent, $"{yokai}: P2 still fights the Kitsune stand-in kit");
 				var bare = FightScene.NewMatch(jump.Session.Run, jump.Session);
+				FightScene.Twists.Apply(bare, scene.Node); // YOK-90: an elder node's twist is part of the sim, body or not
 				Assert.Equal(bare.StateHash(), scene.Match.StateHash(), $"{yokai}: same match at the start");
 				var rng = new SimRng(5);
 				for (int t = 0; t < 400; t++)

@@ -108,6 +108,11 @@ public sealed partial class Match
 			MoveData? m = att.CurrentMove;
 			if (m is null || !m.IsThrow) continue;
 			if (!ThrowPressed(d.Input.Buffer, m.ThrowButtons)) continue; // same E12 leniency as the throw
+			if (Unbreakable(1 - i)) // YOK-90: the elder's throws can't be broken; the press is not used up either
+			{
+				TwistTriggered?.Invoke(this, new TwistEvent(1 - i, TwistEffect.UnbreakableThrows, m.Id));
+				continue;
+			}
 			d.Input.TryConsume(out _); // the break press must not come out as a normal afterwards
 			BreakApart(1 - i, m, ThrowOutcome.Break);
 		}
