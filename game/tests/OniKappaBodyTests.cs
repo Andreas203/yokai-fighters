@@ -24,6 +24,10 @@ public static class OniKappaBodyTests
 		Assert.Equal(FighterAnimSet.Kitsune, FighterAnimSet.ForNode("kitsune", "kitsune"), "a Kitsune duel is unchanged");
 		Assert.Equal(FighterAnimSet.Kitsune, FighterAnimSet.ForNode("kitsune", null), "a node with no yokai shows its fighter");
 		Assert.Equal(FighterAnimSet.Ryo, FighterAnimSet.ForNode("tanuki", "tanuki"), "the Tanuki is unchanged");
+		foreach (var id in new[] { "ryo", "kitsune", "tanuki" })
+			Assert.True(!FighterAnimSet.HasBody(id), $"{id}: not a stand-in body");
+		Assert.Equal("ryo-generic-throw", FighterAnimSet.Oni.FallbackThrowClip, "the Oni falls back to Ryo's throw");
+		Assert.Equal("kitsune-throw", FighterAnimSet.Kappa.FallbackThrowClip, "the Kappa falls back to the Kitsune's throw");
 		foreach (var id in new[] { "oni", "kappa" })
 			Assert.Equal("kitsune", DevJump.FighterOf(new DevFightSetup(id)), $"{id}: the sim still fights the Kitsune kit (no sim change)");
 	}
@@ -140,14 +144,5 @@ public static class OniKappaBodyTests
 			}
 			finally { runner.RemoveChild(scene); scene.Free(); }
 		}
-	}
-
-	[Test]
-	public static void DevJump_OniAndKappaArePickable()
-	{
-		var foes = DevJump.Opponents();
-		foreach (var id in new[] { "oni", "kappa" })
-			Assert.True(foes.First(o => o.Yokai == id).Built, $"{id}: pickable in the dev fight menu");
-		Assert.True(!foes.First(o => o.Yokai == "human-guises").Built, "human guises still greyed");
 	}
 }

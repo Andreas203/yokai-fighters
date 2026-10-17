@@ -199,7 +199,7 @@ public sealed class FighterPresenter
 		return (PoseKind.Idle, C(PoseKind.Idle), m.WorldFrame % idleTotal + 1, true, false);
 	}
 
-	private string? FallbackThrow() => _set.Fighter is "kitsune" or "kappa" ? "kitsune-throw" : "ryo-generic-throw"; // the Oni throws with Ryo's take
+	private string? FallbackThrow() => _set.FallbackThrowClip;
 
 	private int BlendInto(PoseKind from, PoseKind to, Fighter f)
 	{

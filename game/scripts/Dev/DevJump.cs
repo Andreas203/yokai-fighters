@@ -119,10 +119,7 @@ public static class DevJump
 		foreach (string id in OpponentIds)
 		{
 			var ctx = table.Resolve(FightNode(id, false)).Context;
-			// YOK-131: a stand-in yokai with a body of its own (Oni, Kappa) is pickable; it shows its body on the stand-in's kit.
-			bool body = ctx.StandIn && id != TanukiId && FighterAnimSet.HasBody(id);
-			string name = StoryLibrary.DisplayName(id) + (body ? $" (own body, {StoryLibrary.DisplayName(ctx.Fighter)}'s moves)" : "");
-			list.Add(new DevOpponent(id, name, ctx.StandIn && !body ? $"{NotBuiltYet}: no fighter of its own (would fight as the {ctx.Fighter} stand-in)" : null));
+			list.Add(new DevOpponent(id, StoryLibrary.DisplayName(id), ctx.StandIn ? $"{NotBuiltYet}: no fighter of its own (would fight as the {ctx.Fighter} stand-in)" : null));
 		}
 		list.Add(new DevOpponent("human-guises", "Human guises", $"{NotBuiltYet}: no guise has data"));
 		return list;

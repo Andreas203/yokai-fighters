@@ -37,6 +37,8 @@ public sealed class FighterAnimSet
 	public ISet<string> AirClips { get; init; } = new HashSet<string>();
 	/// <summary>Looping poses whose clip plays backwards (the Oni walks back on his forward walk reversed).</summary>
 	public ISet<PoseKind> ReversedPoses { get; init; } = new HashSet<PoseKind>();
+	/// <summary>Throw clip shown when a throw move's own clip is not catalogued.</summary>
+	public string FallbackThrowClip { get; init; } = "ryo-generic-throw";
 	public string? ClipFor(PoseKind kind) => Clips.TryGetValue(kind, out var c) ? c : null;
 
 	public string MoveClip(string clip) => ClipOverrides.TryGetValue(clip, out var o) ? o : clip;
@@ -86,6 +88,7 @@ public sealed class FighterAnimSet
 		LandingFrame = 37,
 		BurstFrame = 10,
 		AirClips = SharedAir,
+		FallbackThrowClip = "kitsune-throw",
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "kitsune-idle",
@@ -172,6 +175,7 @@ public sealed class FighterAnimSet
 		LandingFrame = from.LandingFrame,
 		BurstFrame = from.BurstFrame,
 		AirClips = from.AirClips,
+		FallbackThrowClip = from.FallbackThrowClip,
 		ClipOverrides = from.ClipOverrides,
 		Clips = from.Clips,
 	};
@@ -189,8 +193,10 @@ public sealed class FighterAnimSet
 	/// Kitsune stand-in kit shows the Oni or Kappa), else the fighter's. Presentation only; the sim never reads it.
 	/// </summary>
 	public static FighterAnimSet ForNode(string fighter, string? yokai) =>
-		yokai is "oni" or "elder-oni" or "kappa" or "elder-kappa" ? For(yokai) : For(fighter);
+		yokai != null && HasBody(yokai) ? For(yokai) : For(fighter);
 
-	/// <summary>True when the yokai has a body of its own (a dev-jump opponent worth picking even on a stand-in kit).</summary>
-	public static bool HasBody(string yokai) => For(yokai) != Ryo;
+	private static readonly HashSet<string> StandInBodies = new() { "oni", "elder-oni", "kappa", "elder-kappa" };
+
+	/// <summary>True for a yokai whose node runs a stand-in kit but shows a body of its own (Oni, Kappa and their elders).</summary>
+	public static bool HasBody(string yokai) => StandInBodies.Contains(yokai);
 }
