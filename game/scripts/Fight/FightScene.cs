@@ -51,7 +51,7 @@ public partial class FightScene : Node3D
 		var s = DynamicCamera.SubjectOf(Match, CameraPushIn);
 		if (!ReferenceEquals(_camMatch, Match) || Match.Tick < _camTick || !Cam.Ready)
 		{
-			if (!ReferenceEquals(Cam.Sim, Match.Config)) Cam = new DynamicCamera(Match.Config);
+			if (!ReferenceEquals(Cam.Sim, Match.Config) || !ReferenceEquals(Cam.Config, CameraFraming)) Cam = new DynamicCamera(Match.Config, CameraFraming);
 			Cam.Snap(s);
 			_camMatch = Match;
 		}
