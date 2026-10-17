@@ -236,6 +236,22 @@ class ScopeAndVerdictTest(unittest.TestCase):
             (r / "data" / "notes.txt").write_text("x\n")
             self.assertEqual(dmc.uncommitted_outside_data(r), ["data/notes.txt", "game/tests/Moved.cs"])
 
+    def test_uncommitted_symlink_or_folder_named_json_is_listed(self):
+        import os
+        tmp, r = self._repo_with_rename("game/tests/GuardTests.cs", "game/tests/Moved.cs")
+        with tmp:
+            os.symlink("../../game/tests/Moved.cs", r / "data" / "moves" / "evil.json")
+            sub = r / "data" / "moves" / "sub.json"    # a nested repository (gitlink) named like content
+            sub.mkdir()
+            git = ["git", "-C", str(sub), "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
+            subprocess.run(git + ["init", "-q"], check=True)
+            (sub / "x.json").write_text("{}\n")
+            subprocess.run(git + ["add", "-A"], check=True)
+            subprocess.run(git + ["commit", "-q", "-m", "x"], check=True)
+            dirty = dmc.uncommitted_outside_data(r)
+        self.assertIn("data/moves/evil.json", dirty)
+        self.assertTrue(any(p.startswith("data/moves/sub.json") for p in dirty), dirty)
+
     def test_data_only_change_is_mergeable(self):
         code, text = self._verdict(["data/moves/spirit-wave.json"])
         self.assertEqual(code, dmc.MERGEABLE, text)

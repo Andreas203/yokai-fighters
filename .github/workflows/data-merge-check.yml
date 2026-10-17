@@ -87,8 +87,10 @@ jobs:
         run: |
           base="origin/${GITHUB_BASE_REF:-main}"
           set +e
-          python "$TOOLS/data_merge_check.py" --root "$GITHUB_WORKSPACE" --tools "$TOOLS" --base "$base" \
-            --report "$OUT_DIR/data-merge-report.txt" --suite-log "$OUT_DIR/data-merge-suite.log"
+          # -I: the checker imports nothing from the checkout. No GITHUB_STEP_SUMMARY here: the PR's game code
+          # runs inside this step (harness, suite), so the summary is written in its own step below.
+          env -u GITHUB_STEP_SUMMARY python -I "$TOOLS/data_merge_check.py" --root "$GITHUB_WORKSPACE" --tools "$TOOLS" \
+            --base "$base" --report "$OUT_DIR/data-merge-report.txt" --suite-log "$OUT_DIR/data-merge-suite.log"
           code=$?
           set -e
           if [ "$CHECKER" = pr ] && [ "$code" = 0 ]; then code=3; fi
@@ -98,6 +100,15 @@ jobs:
             5) echo "::notice::Data merge check: nothing to merge (no file changed)";;
             *) echo "::error::Data merge check did not pass (exit $code); see the report"; exit 1;;
           esac
+
+      - name: Job summary from the report
+        if: always()
+        run: |
+          if [ -f "$OUT_DIR/data-merge-report.txt" ]; then
+            { echo '```'; cat "$OUT_DIR/data-merge-report.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Data merge check wrote no report." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()

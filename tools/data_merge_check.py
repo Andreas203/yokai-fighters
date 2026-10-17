@@ -48,6 +48,7 @@ import argparse
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -162,7 +163,18 @@ def uncommitted_outside_data(root: Path) -> list[str]:
                 if i < len(fields) and fields[i]:
                     paths.append(fields[i])
         i += 1
-    return sorted(p for p in set(paths) if not is_content(p))
+    def plain_content(p: str) -> bool:
+        """Content by name, and on disk a regular file or gone (a deletion). A symlink, a folder or a nested
+        repository named like a JSON file is code, as it is in a commit (scope_of)."""
+        if not is_content(p):
+            return False
+        try:
+            st = os.lstat(root / p)
+        except FileNotFoundError:
+            return True
+        return stat.S_ISREG(st.st_mode)
+
+    return sorted(p for p in set(paths) if not plain_content(p))
 
 
 def changed_files(root: Path, base: str) -> list[str]:
