@@ -103,7 +103,7 @@ public static class AbilityIconScreensTests
 		foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories).Where(f => !f.EndsWith("AbilityArt.cs")))
 		{
 			string text = File.ReadAllText(f);
-			if (!f.EndsWith("CopyTalisman.cs")) Assert.True(!text.Contains("RewardArt."), Path.GetFileName(f) + " uses RewardArt instead of AbilityArt");
+			Assert.True(!text.Contains("RewardArt."), Path.GetFileName(f) + " uses RewardArt instead of AbilityArt");
 			Assert.True(!text.Contains("pause-icon") && !text.Contains("ability-icon") && !text.Contains("ability_art"), Path.GetFileName(f) + " has its own ability art path");
 		}
 	}
