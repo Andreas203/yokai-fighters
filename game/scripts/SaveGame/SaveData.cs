@@ -30,12 +30,6 @@ public sealed record SlotSave(string Slot, string Special, int Level, string? Mo
 /// what makes an older build back the file up before it writes one without the new field.
 /// </para>
 /// </summary>
-/// <summary>
-/// YOK-98, R7 (version 6): the entered dojo stop's choice. <c>Choice</c> "rest" or "trial"; a trial adds its id,
-/// the slot it levels, the attempts used and <c>Result</c> "running", "landed" or "failed".
-/// </summary>
-public sealed record DojoSave(string Choice, string? Trial, string? Slot, int Attempts, string? Result);
-
 public sealed record RunSave(
 	uint Seed, string MapId, IReadOnlyList<string> Visited, string? Current, int Health, IReadOnlyList<SlotSave> Slots)
 {
@@ -57,12 +51,6 @@ public sealed record RunSave(
 	/// its coins and heal are already in <see cref="Coins"/> and <see cref="Health"/> (version 4; false when missing).
 	/// </summary>
 	public bool NodePaid { get; init; }
-	/// <summary>
-	/// YOK-98, R7: the entered dojo stop's choice (version 6; null = none made, or not at a dojo). On restore a rest
-	/// or a finished trial is put back without healing again; M5: a trial still running is dropped, so the node
-	/// restarts with no choice and attempts at 0.
-	/// </summary>
-	public DojoSave? Dojo { get; init; }
 	/// YOK-124: the walk stepped off the routes (dev mode's full map). Written only when true (<c>off_route</c>), so
 	/// the version is unchanged; honoured on restore only with <c>allowOffRoute</c> (the dev slot), otherwise such
 	/// a walk is refused like any walk the map does not allow.
@@ -102,44 +90,7 @@ public sealed record RunSave(
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
 			NodePaid = session.NodePaid && session.Draft is null, // A7: a draft node is never saved paid
 			OffRoute = snap.OffRoute,
-			Dojo = CaptureDojo(session.Dojo),
 		};
-	}
-
-	static DojoSave? CaptureDojo(Dojo? d) => d?.Choice switch
-	{
-		DojoChoice.Rest => new DojoSave("rest", null, null, 0, null),
-		DojoChoice.Trial => new DojoSave("trial", d.TrialId, d.TrialSlot.ToString(), d.Attempts, d.TrialResult switch
-		{
-			DojoTrialResult.Landed => "landed",
-			DojoTrialResult.Failed => "failed",
-			_ => "running",
-		}),
-		_ => null,
-	};
-
-	/// <summary>Puts the saved dojo choice back on the restored session (R7, M5).</summary>
-	void RestoreDojo(RunSession session, List<string>? notes)
-	{
-		if (Dojo is not { } d) return;
-		if (session.Dojo is not { } stop) throw new FormatException("a dojo choice saved off a dojo node (R7)");
-		try
-		{
-			if (d.Choice == "rest") { stop.Restore(DojoChoice.Rest); return; }
-			if (d.Result == "running")
-			{
-				notes?.Add($"dojo trial '{d.Trial}' was not finished when saved: the node starts again, attempts reset (M5)");
-				return;
-			}
-			var result = d.Result switch
-			{
-				"landed" => DojoTrialResult.Landed,
-				"failed" => DojoTrialResult.Failed,
-				_ => throw new FormatException($"dojo trial result '{d.Result}' is not running, landed or failed"),
-			};
-			stop.RestoreTrial(d.Trial!, ParseSlot(d.Slot!), d.Attempts, result);
-		}
-		catch (ArgumentException e) { throw new FormatException(e.Message); }
 	}
 
 	static SpecialSlot ParseSlot(string name) => name switch
@@ -165,17 +116,7 @@ public sealed record RunSave(
 	/// was read as saved. Otherwise the run is refused: the copy cannot be known exactly.
 	/// </para>
 	/// </summary>
-	/// <param name="trials">YOK-98: this build's trials (data/trials/), given to the session for its dojo stops; a saved finished trial must be one of them.</param>
-	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null, bool allowOffRoute = false,
-		IReadOnlyList<TrialData>? trials = null)
-	{
-		var session = RestoreSession(pool, graph, scenes, notes, allowOffRoute);
-		session.Trials = trials ?? Array.Empty<TrialData>();
-		RestoreDojo(session, notes);
-		return session;
-	}
-
-	RunSession RestoreSession(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes, bool allowOffRoute)
+	public RunSession Restore(AbilityPool pool, MapGraph graph, INodeSceneResolver scenes, List<string>? notes = null, bool allowOffRoute = false)
 	{
 		if (graph.Id != MapId) throw new FormatException($"the run was saved on map '{MapId}', this is '{graph.Id}'");
 		// YOK-124: a walk off the routes (dev mode's full map) is only ever continued in a dev session.

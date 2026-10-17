@@ -169,69 +169,29 @@ public static class DojoTrialTests
 		Assert.True(s.CompleteNode().Ok, "the finished trial lets Ryo leave");
 	}
 
-	// ---- save and M5 ----
-
-	static RunSession RoundTrip(RunSession s, System.Collections.Generic.List<string>? notes = null)
-	{
-		// In memory only (the file's text round trip is SaveTests.DojoTrial_*: only the save tests may name the store).
-		var save = RunSave.Capture(s, "default-map.json");
-		return save.Restore(Pool, FileMapSource.Default(MapDir).Load(), NodeSceneTable.Default(MapDir), notes, trials: Library);
-	}
-
-	[Test]
-	public static void Save_FinishedTrialComesBackWithoutHealingTwice()
-	{
-		var s = AtDojo(500);
-		var stop = s.Dojo!;
-		var offer = stop.Trials[0];
-		Assert.True(stop.ChooseTrial(offer.Trial.Id).Ok && stop.RecordAttempt(false).Ok && stop.RecordAttempt(true).Ok, "landed on attempt 2");
-		var save = RunSave.Capture(s, "default-map.json");
-		Assert.Equal(new DojoSave("trial", offer.Trial.Id, offer.Slot.ToString(), 2, "landed"), save.Dojo, "the trial and its attempts are in the save");
-		var back = RoundTrip(s);
-		Assert.Equal(650, back.Run.Health, "the heal is in the saved health, not given again");
-		Assert.Equal(DojoChoice.Trial, back.Dojo!.Choice, "the choice is back");
-		Assert.Equal(2, back.Dojo.Attempts, "the attempts are back");
-		Assert.Equal(DojoTrialResult.Landed, back.Dojo.TrialResult, "landed");
-		Assert.Equal(s.StateHash(), back.StateHash(), "same hash after the round trip");
-		Assert.True(!back.Dojo.Rest().Ok && !back.Dojo.RecordAttempt(true).Ok, "nothing more to take");
-	}
+	// ---- M5: the game saves at node boundaries only ----
 
 	[Test]
 	public static void M5_QuitMidTrial_ContinueRestartsTheNode_AttemptsReset()
 	{
 		var s = AtDojo(500);
-		var entry = RunSave.Capture(s, "default-map.json");
+		var entry = RunSave.Capture(s, "default-map.json"); // GameFlow's NodeEntered save point
 		var stop = s.Dojo!;
 		var offer = stop.Trials[0];
 		Assert.True(stop.ChooseTrial(offer.Trial.Id).Ok && stop.RecordAttempt(false).Ok && stop.RecordAttempt(false).Ok, "two misses, then quit");
-		Assert.Equal(new DojoSave("trial", offer.Trial.Id, offer.Slot.ToString(), 2, "running"), RunSave.Capture(s).Dojo, "a running trial is captured as running");
-		var notes = new System.Collections.Generic.List<string>();
-		var back = RoundTrip(s, notes);
+		// Quit: nothing is written mid-node, so Continue loads the entry save.
+		var back = entry.Restore(Pool, FileMapSource.Default(MapDir).Load(), NodeSceneTable.Default(MapDir));
+		back.Trials = Library; // GameFlow.RestoreSavedRun gives the restored session data/trials/
+		Assert.True(back.Map.InNode && back.Node!.NodeId == DojoNode, "Continue goes back into the dojo node");
 		Assert.Equal(DojoChoice.None, back.Dojo!.Choice, "M5: the node restarts with no choice");
 		Assert.Equal(0, back.Dojo.Attempts, "attempts reset");
 		Assert.True(back.Dojo.CanRest && back.Dojo.CanTrial, "rest and trial both open again");
 		Assert.Equal(500, back.Run.Health, "the health Ryo entered with");
-		Assert.True(notes.Any(n => n.Contains("M5")), "the restore says why");
-		// The game's own save point for this quit is the node's entry save: the same restart.
-		var fromEntry = entry.Restore(Pool, FileMapSource.Default(MapDir).Load(), NodeSceneTable.Default(MapDir), null, trials: Library);
-		Assert.Equal(fromEntry.StateHash(), back.StateHash(), "same as Continue from the entry save");
+		Assert.Equal(offer.Slot, back.Dojo.Trials[0].Slot, "the same trial is offered");
 		Assert.True(back.Dojo.ChooseTrial(offer.Trial.Id).Ok && back.Dojo.Attempts == 0, "the trial starts again from attempt 0");
+		Assert.True(Throws<ArgumentException>(() => NewStop(out _).Restore(DojoChoice.Trial)), "a trial is never put back by Restore (M5)");
 	}
 
-	[Test]
-	public static void Save_RejectsATrialThatCantBe()
-	{
-		var s = AtDojo(500);
-		var save = RunSave.Capture(s, "default-map.json");
-		var graph = FileMapSource.Default(MapDir).Load();
-		var scenes = NodeSceneTable.Default(MapDir);
-		var slot = s.Dojo!.Trials[0].Slot.ToString();
-		Assert.True(Throws<FormatException>(() => (save with { Dojo = new DojoSave("trial", WaveTrial, slot, 2, "failed") }).Restore(Pool, graph, scenes, trials: Library)), "failed needs 3 attempts");
-		Assert.True(Throws<FormatException>(() => (save with { Dojo = new DojoSave("trial", "no-such-trial", slot, 1, "landed") }).Restore(Pool, graph, scenes, trials: Library)), "unknown trial");
-		Assert.True(Throws<FormatException>(() => (save with { Dojo = new DojoSave("trial", WaveTrial, slot, 1, "won") }).Restore(Pool, graph, scenes, trials: Library)), "unknown result");
-		var rest = (save with { Dojo = new DojoSave("rest", null, null, 0, null) }).Restore(Pool, graph, scenes, trials: Library);
-		Assert.True(rest.Dojo!.Choice == DojoChoice.Rest && !rest.Dojo.CanTrial, "a saved rest comes back and closes the trial");
-	}
 
 	// ---- the trial fight on the real fight loop ----
 

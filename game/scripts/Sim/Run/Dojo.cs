@@ -19,9 +19,10 @@ public sealed record DojoTrialOffer(SpecialSlot Slot, TrialData Trial);
 /// <para>
 /// The stop is plain data: <see cref="NodeId"/>, <see cref="Choice"/> and, for a trial, <see cref="TrialId"/>,
 /// <see cref="TrialSlot"/>, <see cref="Attempts"/> and <see cref="TrialResult"/>. <see cref="RunSession"/> opens one
-/// when a dojo node is entered and drops it when the node is completed; a save writes the choice and puts it back
-/// with <see cref="Restore"/> / <see cref="RestoreTrial"/> (the heal and level are already in the saved run). M5: a
-/// trial still running when saved is not put back, so Continue restarts the node with attempts at 0.
+/// when a dojo node is entered and drops it when the node is completed. The game saves only at node boundaries
+/// (entry: no choice yet; completion: the stop is gone), so no choice is ever in the save file: M5, a quit
+/// mid-trial and Continue restart the node from its entry save, attempts at 0. <see cref="Restore"/> puts a rest
+/// back for a caller that rebuilds a stop by hand (a trial has no restore: nothing saves one).
 /// A stop the session opened is <see cref="IsOpen"/> only while it is that session's entered stop and the run is
 /// not over: a reference kept past the node, or past a lost fight, refuses everything and changes nothing.
 /// </para>
@@ -171,44 +172,17 @@ public sealed class Dojo
 
 	/// <summary>
 	/// Puts back the choice of a saved stop without healing again, on a stop just opened. Throws, changing nothing,
-	/// for a value that is not a <see cref="DojoChoice"/> (a trial goes through <see cref="RestoreTrial"/>), once a
+	/// for a value that is not a <see cref="DojoChoice"/> or is a trial (never saved, M5), once a
 	/// choice has been made or restored here (it can't be taken back, R7), or at a stop Ryo has left.
 	/// <see cref="Healed"/> is not saved state and reads 0 after this.
 	/// </summary>
 	public void Restore(DojoChoice choice)
 	{
-		if (choice == DojoChoice.Trial) throw new ArgumentException($"dojo '{NodeId}': a trial is restored with RestoreTrial", nameof(choice));
+		if (choice == DojoChoice.Trial) throw new ArgumentException($"dojo '{NodeId}': a trial is never restored: Continue restarts the node (M5)", nameof(choice));
 		if (!Enum.IsDefined(choice)) throw new ArgumentException($"dojo '{NodeId}': unknown choice {(int)choice}", nameof(choice));
 		if (!IsOpen) throw new InvalidOperationException($"dojo '{NodeId}': Ryo is no longer at this stop (R7)");
 		if (Choice != DojoChoice.None) throw new InvalidOperationException($"dojo '{NodeId}': the choice is already made ({Choice}) (R7)");
 		Choice = choice;
 		Healed = 0;
-	}
-
-	/// <summary>
-	/// Puts back a finished trial of a saved stop (its heal and level are already in the saved health and slots),
-	/// on a stop just opened. M5: a trial still running when saved is NOT put back (the node restarts with no
-	/// choice and attempts at 0), so <paramref name="result"/> Running or None throws, as do an attempt count that
-	/// can't end that way (landed on 1-3, failed on exactly 3), a trial this build does not have, a slot that does
-	/// not hold the trial's special, or a stop whose choice is already made or that Ryo has left.
-	/// </summary>
-	public void RestoreTrial(string trialId, SpecialSlot slot, int attempts, DojoTrialResult result)
-	{
-		if (!IsOpen) throw new InvalidOperationException($"dojo '{NodeId}': Ryo is no longer at this stop (R7)");
-		if (Choice != DojoChoice.None) throw new InvalidOperationException($"dojo '{NodeId}': the choice is already made ({Choice}) (R7)");
-		if (result is not (DojoTrialResult.Landed or DojoTrialResult.Failed))
-			throw new ArgumentException($"dojo '{NodeId}': only a finished trial is restored, not {result} (M5)", nameof(result));
-		bool fits = result == DojoTrialResult.Failed ? attempts == TrialLoader.Attempts : attempts >= 1 && attempts <= TrialLoader.Attempts;
-		if (!fits) throw new ArgumentException($"dojo '{NodeId}': a {result} trial can't end after {attempts} attempts (R7)", nameof(attempts));
-		var trial = Trial(trialId) ?? throw new ArgumentException($"dojo '{NodeId}': trial '{trialId}' is not in this build (R7)", nameof(trialId));
-		if (slot == SpecialSlot.None || !Enum.IsDefined(slot) || _run[slot]?.Data.Id != trial.Special)
-			throw new ArgumentException($"dojo '{NodeId}': slot {slot} does not hold {trial.Special} (R7)", nameof(slot));
-		Choice = DojoChoice.Trial;
-		TrialId = trialId;
-		TrialSlot = slot;
-		Attempts = attempts;
-		TrialResult = result;
-		Healed = 0;
-		LevelBefore = LevelAfter = _run[slot]!.Level;
 	}
 }

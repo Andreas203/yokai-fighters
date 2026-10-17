@@ -394,8 +394,9 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On, trials: FightScene.LoadTrials()); // YOK-124: a walk off the routes comes back only in a dev session
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
+			session.Trials = FightScene.LoadTrials(); // YOK-98: the dojo's trials (not saved state: data/trials/)
 			reason = "";
 			return session;
 		}
