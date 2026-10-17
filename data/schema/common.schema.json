@@ -46,7 +46,7 @@
       "maxItems": 2
     },
     "rect": {
-      "description": "2D rectangle in gameplay units (1 unit = 1 px at 1920x1080), relative to the character origin at the feet, x toward the opponent, y up (F3, F4).",
+      "description": "2D rectangle in gameplay units (200 units per metre; the camera's view is 1,060-1,540 units wide, AM9), relative to the character origin at the feet, x toward the opponent, y up (F3, F4).",
       "type": "object",
       "required": ["x", "y", "w", "h"],
       "additionalProperties": false,

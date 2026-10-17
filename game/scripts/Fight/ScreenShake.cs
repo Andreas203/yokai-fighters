@@ -6,7 +6,8 @@ namespace YokaiFighters.Fight;
 /// V3 screen shake, presentation only (YOK-20; pure C#, no Godot). Started by a sim
 /// <see cref="ImpactEvent"/> with Shake set (heavy hits and EX, never lights) and stepped once per
 /// sim tick, so it lasts exactly ShakeFrames ticks at any render rate. Offsets are a fixed
-/// pattern of 2-4 px per axis (1 px = 1 gameplay unit at 1920x1080, E1); no RNG.
+/// pattern of 2-4 screen px per axis on the 1920-px canvas; FightScene.ShakeOffsetMeters converts px to
+/// gameplay units through the view width (the current zoom's width, YOK-129: 1 px = 0.55 units close in, 0.80 at the widest); no RNG.
 /// </summary>
 public sealed class ScreenShake
 {
@@ -40,7 +41,7 @@ public sealed class ScreenShake
 		_index++;
 	}
 
-	/// <summary>Current camera offset in px (gameplay units); (0, 0) when idle.</summary>
+	/// <summary>Current camera offset in screen px (1920-px canvas); (0, 0) when idle.</summary>
 	public (int x, int y) OffsetPx => _left > 0 ? Pattern[_index % Pattern.Length] : (0, 0);
 
 	public void Stop() => _left = 0;

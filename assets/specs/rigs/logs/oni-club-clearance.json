@@ -1,0 +1,151 @@
+{
+ "tool": "prop_clearance.py",
+ "rig": "game/assets/generated/characters/oni/oni-rigged.glb",
+ "props": [
+  "game/assets/generated/characters/oni/club-grip.glb"
+ ],
+ "depth_m": 0.01,
+ "ignore_radius_m": 0.12,
+ "poses": {
+  "rest": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 1.5379,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0115,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-rest-front.png",
+    "oni-club-rest-side.png",
+    "oni-club-rest-back.png"
+   ]
+  },
+  "high_kick": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 2.0346,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0115,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-high-kick-front.png",
+    "oni-club-high-kick-side.png",
+    "oni-club-high-kick-back.png"
+   ]
+  },
+  "deep_crouch": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": -0.1824,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0115,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-deep-crouch-front.png",
+    "oni-club-deep-crouch-side.png",
+    "oni-club-deep-crouch-back.png"
+   ]
+  },
+  "arm_raise": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 2.4081,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0115,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-arm-raise-front.png",
+    "oni-club-arm-raise-side.png",
+    "oni-club-arm-raise-back.png"
+   ]
+  },
+  "torso_twist": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 0.6457,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0119,
+     "contact_gap_max_m": 0.0505,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-torso-twist-front.png",
+    "oni-club-torso-twist-side.png",
+    "oni-club-torso-twist-back.png"
+   ]
+  },
+  "grab": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 0.4931,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.0121,
+     "contact_gap_max_m": 0.0566,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-grab-front.png",
+    "oni-club-grab-side.png",
+    "oni-club-grab-back.png"
+   ]
+  },
+  "arms_down": {
+   "props": {
+    "club-grip.glb": {
+     "verts_inside": 0,
+     "worst_depth_m": 0.0,
+     "prop_min_z_m": 0.7346,
+     "contact_verts": 395,
+     "contact_gap_mean_m": 0.01,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 5681
+    }
+   },
+   "stills": [
+    "oni-club-arms-down-front.png",
+    "oni-club-arms-down-side.png",
+    "oni-club-arms-down-back.png"
+   ]
+  }
+ }
+}

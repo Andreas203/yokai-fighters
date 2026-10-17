@@ -46,11 +46,42 @@ public static class EditableSceneTests
 		Assert.True(Math.Abs(scene.Camera.Fov - FightScene.CameraFovDegrees) < 1e-4, $"camera_rig.tscn FOV {scene.Camera.Fov} = {FightScene.CameraFovDegrees} (F4)");
 		Assert.True(scene.Camera.Current, "the rig's camera is current");
 		for (int t = 0; t < 400; t++) scene.Step(new FighterInput(InputBits.Left), new FighterInput(InputBits.Left));
-		var c = scene.Match.Config;
-		var want = new Vector3(FightScene.ToMeters(FightCamera.CenterX(scene.Match)), FightScene.CameraHeight, FightScene.CameraDistance(c));
-		Assert.True(scene.CameraRig.Position.IsEqualApprox(want), $"rig at {scene.CameraRig.Position}, sim camera {want}");
-		Assert.True(FightCamera.CenterX(scene.Match) < 0, "walked left: the camera followed");
+		// YOK-129: the rig carries the dynamic camera's transform (position and pitch).
+		var (x, y, z, pitch) = scene.Cam.Transform;
+		var want = new Vector3(x, y, z);
+		Assert.True(scene.CameraRig.Position.IsEqualApprox(want), $"rig at {scene.CameraRig.Position}, dynamic camera {want}");
+		Assert.True(Math.Abs(scene.CameraRig.Rotation.X - pitch) < 1e-5f, $"rig pitch {scene.CameraRig.Rotation.X} = {pitch}");
+		Assert.True(scene.Cam.CenterX < 0, "walked left: the camera followed");
+		Assert.True(scene.Cam.InFrame(DynamicCamera.SubjectOf(scene.Match)), "both models in the dynamic view");
 		scene.QueueFree();
+	}
+
+	[Test]
+	public static void DynamicCameraProjection_MatchesTheRenderedCamera_DownAndUpPitch(Node runner)
+	{
+		// YOK-129: the pure camera maths (Cam.ScreenYPx, used by every in-frame and HUD-line check) must agree with
+		// Godot's Camera3D within 1 px, for a feet point and a top point, looking down (close) and up (widest).
+		var scene = Load(runner);
+		try
+		{
+			float hPx = scene.GetViewport().GetVisibleRect().Size.Y;
+			foreach (var (name, p1, p2, wantDown) in new[] { ("close", InputBits.Right, InputBits.Left, true), ("widest", InputBits.Left, InputBits.Right, false) })
+			{
+				for (int t = 0; t < 400; t++) scene.Step(new FighterInput(p1), new FighterInput(p2));
+				for (int t = 0; t < 120; t++) scene.Step(FighterInput.None, FighterInput.None);
+				var cam = scene.Cam;
+				Assert.True(wantDown ? cam.PitchDegrees > 0f : cam.PitchDegrees < 0f, $"{name}: pitch {cam.PitchDegrees} deg ({(wantDown ? "down" : "up")})");
+				foreach (var f in scene.Match.Fighters)
+					foreach (float h in new[] { 0f, cam.Config.ModelTopMeters })
+					{
+						float x = f.X / (float)SimConfig.Scale;
+						float godot = scene.Camera.UnprojectPosition(new Vector3(x / DynamicCamera.UnitsPerMeter, h, 0f)).Y * 1080f / hPx;
+						float pure = cam.ScreenYPx(x, h);
+						Assert.True(Math.Abs(godot - pure) <= 1f, $"{name}: x {x}, h {h}: pure {pure:0.00} px vs rendered {godot:0.00} px");
+					}
+			}
+		}
+		finally { scene.QueueFree(); }
 	}
 
 	[Test]

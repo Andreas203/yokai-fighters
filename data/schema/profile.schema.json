@@ -61,6 +61,27 @@
       "maximum": 100,
       "description": "Difficulty knob (YOK-27): chance a habit that rolled true is held back anyway, so harder opponents show their tell less. Default 0."
     },
+    "ex_use": {
+      "description": "YOK-57 (E16, C5): when the AI picks a special and its own meter on screen covers the EX cost plus keep_meter, it asks for the EX version with chance_pct. Absent = never. E22: \"The standard-tier AI doesn't use EX or burst yet.\" Applied only in elder and Tanuki fights (the node decides, not the profile).",
+      "type": "object",
+      "required": ["chance_pct"],
+      "additionalProperties": false,
+      "properties": {
+        "chance_pct": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "keep_meter": { "type": "integer", "minimum": 0, "maximum": 300, "description": "Meter (100 = 1 bar) kept back after paying for the EX. Default 0." }
+      }
+    },
+    "burst_use": {
+      "description": "YOK-57 (C6, E13): on each hit the AI sees itself take, once it has taken min_combo_hits in a row and its health shows at most max_health_pct of the bar, it bursts with chance_pct (once per fight, from hitstun only: a thrown fighter breaks instead). Absent = never. E22: \"The standard-tier AI doesn't use EX or burst yet.\" Applied only in elder and Tanuki fights (the node decides, not the profile).",
+      "type": "object",
+      "required": ["chance_pct"],
+      "additionalProperties": false,
+      "properties": {
+        "chance_pct": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "min_combo_hits": { "type": "integer", "minimum": 1, "maximum": 20, "description": "Hits in a row seen before it considers bursting. Default 1." },
+        "max_health_pct": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Only bursts at or below this share of its health bar. Default 100." }
+      }
+    },
     "elder_twist": {
       "type": "object",
       "required": ["id", "description"],
@@ -86,8 +107,8 @@
     },
     "action": {
       "type": "string",
-      "description": "A move id (normal or special) or a generic action.",
-      "pattern": "^(walk_forward|walk_back|dash_forward|dash_back|jump|block|crouch_block|throw|special:[a-z0-9-]+|normal:[a-z0-9-]+)$"
+      "description": "A move id (normal or special), a generic action, or special:copied = the Tanuki's copied special, resolved when the copy locks (T0, T1; YOK-94). 'copied' is reserved and is no special's id.",
+      "pattern": "^(walk_forward|walk_back|dash_forward|dash_back|jump|block|crouch_block|throw|special:copied|special:[a-z0-9-]+|normal:[a-z0-9-]+)$"
     }
   }
 }

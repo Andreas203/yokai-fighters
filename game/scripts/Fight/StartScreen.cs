@@ -33,6 +33,7 @@ public partial class StartScreen : Control
 	private string _kihonSpecials = "";
 	private Control _reference = null!;
 	private Button _referenceToggle = null!;
+	private readonly Dictionary<string, StyleBox> _schemeStyles = new();
 	public bool ReferenceVisible => _reference.Visible;
 	public const string KataDescription = "Motions: +10% precision bonus on motion-input specials.";
 
@@ -106,6 +107,8 @@ public partial class StartScreen : Control
 		_kihonSpecials = _specialsLine.Text; // the scene's copy is the Kihon line
 		KataButton = UiFind.Get<Button>(this, "Kata");
 		KihonButton = UiFind.Get<Button>(this, "Kihon");
+		foreach (string state in new[] { "normal", "hover", "pressed", "focus" })
+			_schemeStyles[state] = KataButton.GetThemeStylebox(state);
 		KataButton.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kata);
 		KihonButton.Pressed += () => MenuSettings.SetScheme(ControlScheme.Kihon);
 		Start = UiFind.Get<Button>(this, "Start");
@@ -133,8 +136,21 @@ public partial class StartScreen : Control
 	private void ShowScheme()
 	{
 		bool kata = Scheme == ControlScheme.Kata;
-		KataButton.Text = (kata ? "● " : "○ ") + "Kata";
-		KihonButton.Text = (kata ? "○ " : "● ") + "Kihon";
+		KataButton.Text = "Kata";
+		KihonButton.Text = "Kihon";
+		foreach (var button in new[] { KataButton, KihonButton })
+		{
+			bool selected = button == KataButton ? kata : !kata;
+			button.GetNode<Control>("Radio/Dot").Visible = selected;
+			foreach (string state in new[] { "normal", "hover", "pressed", "focus" })
+			{
+				// Preserve the same text inset when the brush replaces the selected row's box.
+				StyleBox style = selected || state == "focus" ? new StyleBoxEmpty() : (StyleBox)_schemeStyles[state].Duplicate();
+				style.ContentMarginLeft = 100;
+				style.ContentMarginRight = 40;
+				button.AddThemeStyleboxOverride(state, style);
+			}
+		}
 		KataButton.GetNode<Control>("Selected").Visible = kata;
 		KihonButton.GetNode<Control>("Selected").Visible = !kata;
 		var rows = Rows(Scheme);
@@ -180,6 +196,8 @@ public partial class StartScreen : Control
 	public void SetReferenceVisible(bool visible)
 	{
 		_reference.Visible = visible;
+		Start.Position = new Vector2(Start.Position.X, visible ? 825 : 765);
+		_referenceToggle.Position = new Vector2(_referenceToggle.Position.X, visible ? 854 : 784);
 		KataButton.Visible = KihonButton.Visible = !visible;
 		_referenceToggle.Text = visible ? "Hide controls" : "Controls reference";
 		_referenceToggle.GrabFocus();

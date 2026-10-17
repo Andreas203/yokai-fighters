@@ -67,3 +67,137 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Where | Was | Now |
 |---|---|---|
 | GDD §6 run structure (save behaviour) | Not specified | As above. Rule M5 in `docs/design/rules.md`. |
+
+---
+
+## AM4 — Rulings on the Tanuki, the shop and coins (2026-10-11 and 2026-10-12)
+
+**Decisions.** Answers the designer gave where the PDF was silent or could be read two ways.
+
+- **The Tanuki's copy mirrors Ryo's slot.** The copied special sits in the slot it has on Ryo's side. If a starter sits in that slot on the Tanuki's side, the copy replaces it; the other starter stays in its own slot. So when Ryo has drafted a special over a starter and that special is the copy, the Tanuki does not keep the starter Ryo replaced. A copied starter replaces its own Lv 1 version.
+- **The Tanuki's habit.** It throws when the player keeps blocking, 60% of the time. The counter is to break the throw.
+- **The shop sells modifiers as well as specials.** "Common abilities" in the shop means common specials and common modifiers. A bought modifier attaches to one of Ryo's specials, chosen by the player, under the same rule as a drafted modifier, and is borrowed ink like a bought special.
+- **Releasing a binding costs Ryo 40 coins.** It is a paid service to free a slot, not a sale.
+- **Coins are not capped,** for now.
+
+### GDD text affected
+
+| Topic | Was | Now |
+|---|---|---|
+| The Tanuki's kit | "Ryo's normals, his starters and the one copied special" | The same, with the copy in Ryo's slot for it and replacing a starter there. Rule T0. |
+| Yokai habits | No habit named for the Tanuki | Throws at a blocking player, 60%. Rule Y2. |
+| The merchant | "sells common abilities … (50 coins); release a binding (40)" | Common specials and common modifiers, 50 each; releasing costs Ryo 40. Rule R6. |
+| Coins | No cap stated | No cap, for now. Rule R8. |
+
+---
+
+## AM5 — Rigging and animation get their own specialists and tools (2026-10-15)
+
+**Decision.** A fighting game feels good only when its rigs and clips are very clean, so rigging and animation each get a specialist, and the pipeline gains tools beyond one generator. It amends AM1 where AM1 names the Meshy MCP as the only route.
+
+**The crew.**
+- **Rig Specialist** (`rig-specialist`, new) owns every rig: the auto-rig job and its settings, rig checks in Blender, extra bones for tails, sleeves, coat tail, shell and club, attachment bones, the bone map onto the shared skeleton, and the G4 retarget gate. Rigging moves out of Asset Smith.
+- **Animator** (`animator`, was Clip Matcher) owns every clip: the clip spec, the take, the scripted cleanup pass, measuring it, its retiming curve and its frame-timed sound cues.
+- **Asset Smith** keeps models, stages and textures, and takes over the level presets (V8), which are VFX work.
+
+**Tools.**
+- **Generators**: **Tripo** or **Meshy**, the designer's choice per job; Tripo is the likely default. Either runs through its MCP when one is installed, otherwise the designer runs the approved job in the generator's own app and drops the files in the repo for the specialist to check.
+- **Auto-rigging**: the generator's own auto-rig (Tripo or Meshy) and **AccuRIG 2** (Reallusion, free) are both tried on the next fighter, and the Rig Specialist's acceptance check picks the better rig. AccuRIG 2 is a desktop app, so the designer runs it from the specialist's settings.
+- **Blender** (4.1, headless Python): rig checks, weight repair, extra bones, retargeting, cleanup (strip root motion, resample to 60 fps, Butterworth smoothing on hit frames, trim) and glTF export. Scripted only: no hand-placed keys.
+- **Auto-Rig Pro** (Blender add-on, bought by the designer): retargeting clips between skeletons and game-ready export.
+- **Clip measurement**: a scripted check that reports foot slide and joint jitter per 60-tick frame and renders the hit-frame stills, so a take's verdict rests on numbers.
+- **Clip sources** beyond the generators: **video motion capture** (Rokoko Vision, Move.ai Move One, DeepMotion or Plask) of a performance the designer records, and **ActorCore** motion-capture packs bought by the designer. **Cascadeur** may be used only for its automatic physics pass on an existing clip, never to pose keys.
+
+**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
+
+**Retiming curves (F2).** A measured clip may carry a **retiming curve**: a short list of segments mapping game frames onto clip time, so startup can be snappy, the pose holds through the active frames and recovery eases out. Each segment plays between 0.5× and 2× the clip's speed (first pass, designer may change), and a held pose lasts at most 4 frames. Frame data is written from the clip *as retimed*. Retiming stays data, played through `AnimationPlayer.Seek()` (F3).
+
+**What "hand-keyed" means now (F5).** Allowed: generated clips, motion capture of a real performance, bought motion-capture packs, scripted cleanup and retiming, and Cascadeur's automatic physics pass. Not allowed: posing or editing keys by hand. The take cap of 3 counts takes from every source together.
+
+**What does not change.** Every generation job, capture session and purchase needs the designer's approval and its cost. Clips are in place. No paired throws (C4). The Tanuki uses Ryo's model and clips (T0). G4 still gates each yokai with the folklore human guise as its fallback. Every tool's output must be cleared for commercial use on the plan the designer uses.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1 pipeline, 3D models and animation | Meshy only, Meshy auto-rig, Meshy animation tools | Tripo or Meshy; generator auto-rig or AccuRIG 2; Blender cleanup and retargeting; motion capture and ActorCore as clip sources. Rules F5, F6. |
+| §3.4 Frame data / rule F2 | Frame data from the clip's real timing | Frame data from the clip's real timing as retimed by its curve. |
+| §9 Agents table | Clip Matcher: "Specs each move's clip and measures the generated take, then adds level presets and frame-timed sound." | **Rig Specialist**: "Rigs every fighter, checks it, and keeps every rig on the shared skeleton." **Animator**: "Specs, cleans, measures and retimes each move's clip, then adds frame-timed sound." Asset Smith adds level presets. |
+| §12 Risks | — | **New:** "Rigs from different tools disagree" → one shared skeleton and a bone map; a new rig must play the existing gate clips first. |
+
+---
+
+## AM6 — The copy-target talisman shows only in the Tanuki fight (2026-10-15)
+
+**Decision.** The fight HUD shows the copy-target talisman only in the Tanuki's fight. In every other fight (the yokai, the elders) the HUD carries no copy target. Outside fights the target stays visible all run: the map still shows the glowing copy-target talisman, and the rest-stop forecast still names the move, its level and its expected cost.
+
+**Why.** In a yokai fight the copy plays no part: only the Tanuki uses it. Showing it there reads as if the copy rule were active in that fight. The map and the rest stop are where the player plans around the copy, so the warning stays there.
+
+**What does not change.** The copy rule itself (T0–T5): the lock on entering the Tanuki's node, the target, ties, strength and "always defined". The row 4 story card stays templated to the copy target (S3). In the Tanuki fight the talisman shows the locked copy (T1).
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| §5.3 The Tanuki, point 6 | "Visible all run: the target's talisman glows in the HUD, and the rest-stop forecast names it." | "Visible all run outside fights: the map shows the target's glowing talisman and the rest-stop forecast names it. In fights, the HUD shows it only against the Tanuki." Rule T6. |
+| Figure 4, Fight HUD mockup | "glowing: copy target" in a fight against a patient Kitsune | No copy target in a yokai fight; the talisman appears in the Tanuki fight only. |
+| §8 Screens, Fight HUD row | "Health, meter, burst, copy target, elder twist reminder (Figure 4)." | "Health, meter, burst, elder twist reminder; the copy target in the Tanuki fight only (Figure 4, AM6)." |
+
+---
+
+## AM7 — Fighter concept art and turnarounds may come from Astra (2026-10-16)
+
+**Decision.** A fighter's concept front and its front/side/back turnaround may be made in **Astra** (`gpt-6-astra`, run by the designer in Codex) instead of a generator's 2D image model. The designer chooses the source per character. For Oni, Kappa and the Tanuki the designer chose Astra (YOK-102). Asset Smith writes the settled brief (`docs/design/characters/astra-brief.md`), the designer runs it and drops the sheets in `docs/design/characters/<name>/`, and Asset Smith checks them before any mesh job is listed for approval. Meshes, rigs and clips still come from the tools AM1 and AM5 name.
+
+**Why.** Astra's character art is much stronger than the generators' 2D models, and the turnaround is the image every later step copies. Astra is expensive, so it runs only from a settled brief, never for exploration.
+
+**What does not change.** Every generation job and its cost still needs the designer's approval. The sheet must be flat-lit with no baked shading, on a plain background, in T-pose, with no held items, so it can feed Image-to-3D; baked shading is a retake reason. The style block (`assets/specs/style.md`) and the V1 palette still apply. The output must be cleared for commercial use on the designer's plan.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1 pipeline, 3D models | Concept turnaround from Meshy's 2D image models | From a generator's 2D image model or from Astra, the designer's choice per character. Rule F6. |
+
+---
+
+## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
+
+**Status.** Approved by the designer on 2026-10-16 (merge of PR #133). The designer asked to "try bringing the walls in" (YOK-120, 2026-10-15).
+
+**Decision.** The fight camera sits closer to the fighters and stays fixed in distance. One screen at the gameplay plane is **1,440 units** (7.2 m), was 1,920 (9.6 m). The screen walls come in with it: fighters are at most **960 units** apart, was 1,520, so both rigged models stay in frame whichever way each faces. A model reaches up to 240 units ahead of its position and 200 behind; a fighter facing away from the other (after a cross-up, a throw or a back dash) shows its 240-unit front reach on the outside, so the walls budget the larger reach on both sides: 960 + 2 × 240 = 1,440. (The YOK-39 walls, 1,520 + 2 × 200 = 1,920, budgeted only the back reach, and a fighter facing away could clip by up to 40 units; test-breaker probes on YOK-120 found it.) `SimConfig` derives the walls from the screen width and the model reach, so the two cannot drift apart. The stage stays **3,840 units** wide (two of the old 1,920-unit screens, now about 2.7 of the new ones), so the stage art and the part of it the camera can ever show are unchanged. The camera still follows the fighters' midpoint and stops where a cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge. The screen width and stage width are tunable in one place (`SimConfig`); the walls follow from the screen width.
+
+**Why.** Bigger fighters on screen: at 1,920 units a 1.8 m fighter filled about a third of the screen height; at 1,440 units, about 44%. A fixed closer camera keeps V7 (no zoom with distance); bringing the walls in is what keeps both fighters in view.
+
+**What does not change.** V7: the camera is steady except the slow push-in on the Tanuki reveal and the round-ending blow. F4: perspective camera, ~25° FOV; the camera moves closer (distance follows from the screen width at that FOV), the FOV is not narrowed. E1's 200 units per metre. E17's "on screen" means the sim's screen: the widest view (1,540 units) centred on the fighters, so when the camera is zoomed in a projectile can leave the visible view before it despawns. Walk speed stays 12.8 units per tick (C2's "~2.5 s" now refers to the original 1,920-unit width; across the closer screen a walk takes ~1.9 s). Dash and jump distances, hitboxes and pushback stay in units, so they now cover a larger share of the screen.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md E1 (scale; written rule, not in the PDF) | "one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart … 1,520 + 2 × 200 = 1,920" | "one screen is 1,440 units (7.2 m); the stage is 3,840 units wide; fighters are at most 960 units apart … 960 + 2 × 240 = 1,440, either facing" |
+| §3.2 Fight basics, Movement row | "Walk crosses the screen in about 2.5 seconds" | Walk speed unchanged: about 2.5 seconds across 1,920 units, about 1.9 seconds across the closer 1,440-unit screen. Rule C2. |
+| §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera is closer to the plane. |
+
+---
+
+## AM9 — Dynamic fight camera in the style of Guilty Gear Strive (2026-10-16, approved 2026-10-16)
+
+**Status.** Approved by the designer on 2026-10-16 (PR #145, after reviewing the captures). Drafted for YOK-129 after the designer said on 2026-10-16: "I still don't love the camera, I want a view closer to Marvel Tokon or Guilty Gear Strive." It amends V7 and E1 and supersedes AM8's fixed camera; AM8's screen-wall derivation stays.
+
+**Decision.** The fight camera zooms with the distance between the fighters, as in Arc System Works games. It eases in when they are close and out as they separate. It never snaps, and both models stay in frame whichever way each faces. Close in, the view is **1,060 units** wide and Ryo's fighting stance fills about 52% of the screen height. At the screen walls the view is **1,540 units** wide and he fills about 36%. The camera stays at chest height, 1.2 m, at every zoom. Its pitch goes from 0.5° down close in to 3° up at the widest zoom, so the fighters' feet sit about 88–90% of the way down the frame at every distance: a low, slightly heroic angle with no empty band of floor (designer review of the captures, 2026-10-16). On a jump it rises partway: 45% of the jump height, plus whatever keeps the higher fighter's head below the HUD strip. It also eases out a little, 1 unit of width per unit of height. The floor may leave the bottom of the frame. The screen walls follow the widest zoom: fighters are at most **1,060 units** apart, because 1,060 + 2 × 240 = 1,540 (AM8 had 960 + 2 × 240 = 1,440). The camera still follows the fighters' midpoint and stops at the stage edge. At the widest zoom the stage art covers the view at both edges, with the camera raised for a jump. The stage stays 3,840 units wide. The V7 push-ins layer on top of the zoom: the round-ending blow pushes in 12% over the KO slow-down, and the Tanuki reveal has a hook. Neither push-in can crop a model. Every value is in one place (`CameraConfig`), apart from the widest view, which is the sim's screen (`SimConfig.ViewWidth`).
+
+**Why.** The designer wants tall fighters, a low horizon and a tight frame when close. A fixed camera can't give that and also show both fighters at the screen walls: AM8's 1,440 units put a fighter at about 44% of the screen height at every distance. With the zoom, close-range play reads much bigger and the walls can go back out from 960 to 1,060. The walls could go further, toward the ~1,520 the brief allowed, but the fighters would then shrink below the 35–40% target at full separation. 1,060 is the widest wall that keeps about 36%.
+
+The first draft looked down 1° and rose to 1.4 m when zoomed out, which left the bottom ~20% of the frame as empty floor at the screen walls; the designer asked for the feet lower.
+
+**What does not change.** F4: perspective camera, ~25° FOV. The camera dollies; the lens does not narrow. The camera is presentation only. It uses floats, but only in presentation code; it eases by a fixed amount per sim tick, never by frame time, so replays and captures reproduce. Nothing in the sim, the AI or the replay reads it. The sim keeps its integer screen (the widest view) for the screen walls and for where projectiles leave the screen, so `StateHash` changes only through the wall value. V3: the shake is still 2–4 screen pixels at every zoom, converted through the current view width. Walk speed stays 12.8 units per tick (about 2.0 s across the widest 1,540-unit view). E1's 200 units per metre stays.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md V7 | "Camera steady except slow push-in on Tanuki reveal and round-ending blow." | The camera zooms with the fighters' separation (eased, deterministic per tick, both models always in frame), rises partway on jumps without cropping heads, and stops at the stage edge. The slow push-ins on the Tanuki reveal and the round-ending blow layer on top. |
+| rules.md E1 (scale) | AM8: "one screen is 1,440 units … fighters are at most 960 units apart … 960 + 2 × 240 = 1,440. The camera stays at a fixed distance" | "The camera's view is 1,060 units close in and 1,540 at the widest; fighters are at most 1,060 units apart … 1,060 + 2 × 240 = 1,540, either facing." |
+| AM8 Decision | "The fight camera sits closer to the fighters and stays fixed in distance. One screen … is 1,440 units" | Superseded by the dynamic zoom above. AM8's derivation of the walls from the widest screen and the model reach stays. |
+| §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera dollies between two distances at 1.2 m and tilts from 0.5° down to 3° up as it pulls back. |

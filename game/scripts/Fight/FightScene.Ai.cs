@@ -57,10 +57,21 @@ public partial class FightScene
 	public void RebuildAi()
 	{
 		P2Ai = P2AiEnabled && Profiles.Length > 0
-			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed, Node?.ReactionFrames) // Y4: the node's row
+			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed, Node?.ReactionFrames, TierOf(Node)) // Y4: the node's row
 			: null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
 	}
+
+	/// <summary>
+	/// YOK-57, E22: the fight the AI is in. The boss node (the copy-lock node, <see cref="RunSession.IsCopyLockNode"/>)
+	/// or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder; anything else, or no node, = Standard
+	/// (no EX, no burst whatever the profile says).
+	/// </summary>
+	public static AiFightTier TierOf(NodeContext? node) =>
+		node is null ? AiFightTier.Standard
+		: RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
+		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
+		: AiFightTier.Standard;
 
 	public void SwapTemperament()
 	{

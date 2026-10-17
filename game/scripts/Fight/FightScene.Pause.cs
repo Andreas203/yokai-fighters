@@ -48,6 +48,7 @@ public partial class FightScene
 		PauseMenu.FreezeTree = false; // the scene gates its own stepping
 		PauseMenu.ResumeRequested += EndPause;
 		PauseMenu.RestartRequested += RestartRun; // masks everything held, like Restart on the end screens
+		PauseMenu.DevMenuRequested += () => OpenDevMenu();
 		PauseMenu.QuitToTitleRequested += () =>
 		{
 			if (RequestTitle()) return;
@@ -67,7 +68,22 @@ public partial class FightScene
 		{
 			GD.PushWarning($"pause: move list not refreshed: {e.Message}");
 		}
+		PauseMenu.SetDevMenuEntry(Dev.DevShell.CanOpen(Dev.DevPlace.Fight));
 		PauseMenu.Open();
+		return true;
+	}
+
+	/// <summary>
+	/// YOK-123: the dev menu over the open pause menu. The fight stays paused underneath (no tick runs) and the menu's
+	/// context is <see cref="Dev.DevPlace.Fight"/>, so no dev action can change the run mid-fight. False when the pause
+	/// menu is not open or the shell refuses (dev mode off).
+	/// </summary>
+	public bool OpenDevMenu()
+	{
+		if (!Paused || Dev.DevShell.Instance is not { } shell) return false;
+		var context = new Dev.DevContext(Dev.DevPlace.Fight, GetParentOrNull<Flow.GameFlow>(), this);
+		if (!shell.OpenMenu(context, PauseMenu!.ReleaseOverlay)) return false;
+		PauseMenu.LockForOverlay();
 		return true;
 	}
 

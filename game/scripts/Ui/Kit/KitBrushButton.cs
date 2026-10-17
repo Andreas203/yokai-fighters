@@ -66,7 +66,10 @@ public partial class KitBrushButton : Button
 	private void ApplyPinned(KitState s)
 	{
 		if (!IsInsideTree() || _applied == (_preview, s)) return; // the theme variation is not resolved before the node is in the tree; overrides re-notify, so only act on a change
+		bool wasPinned = _applied.Item1 != KitState.Auto;
 		_applied = (_preview, s);
+		// Live screens may own normal-style overrides; only clear styles installed by a pinned preview.
+		if (_preview == KitState.Auto && !wasPinned) return;
 		RemoveThemeStyleboxOverride("normal"); RemoveThemeColorOverride("font_color"); // read the theme's own values, not our last override
 		if (_preview == KitState.Auto) return;
 		string style = s switch { KitState.Focused => "focus", KitState.Disabled => "disabled", KitState.Pressed => "pressed", _ => "normal" };

@@ -29,6 +29,14 @@ You **never edit** files. You judge them against `docs/design/rules.md` and retu
    - Numbers match rules.md unless the file cites a designer-approved change.
 5. Do not judge taste or invent rules. If something seems wrong but no written rule covers it, PASS it and list it under "Designer attention".
 
+## Vault notes
+For card and story text, read each of these in full as well as `docs/design/rules.md`, and quote the line a draft breaks. Skip each note's "Open questions" section: it is undecided design. `tools/content_pipeline/` loads this same list when it runs your role as its critic.
+- `vault/01-vibe/Tone.md`
+- `vault/01-vibe/Story.md`
+- `vault/01-vibe/Characters.md`
+- `vault/02-mechanics/Yokai.md`
+- `vault/02-mechanics/Abilities.md`
+
 ## Verdict format
 ```
 VERDICT: PASS | FAIL

@@ -155,6 +155,10 @@ public static class Replayer
 			var s = h.Fighters[p];
 			for (int i = 1; i < f.Specials.Length; i++) f.Unequip((SpecialSlot)i);
 			foreach (var sp in s.Specials) Equip(f, sp, cat, cfg, $"P{p + 1}");
+			// YOK-94: the AI loadout reads it for special:copied, so it is part of the fight as recorded.
+			if (s.CopiedSlot != 0 && (s.CopiedSlot < 1 || s.CopiedSlot >= f.Specials.Length || f.Specials[s.CopiedSlot] is null))
+				throw new ReplaySetupException($"P{p + 1} copied slot {s.CopiedSlot} holds no special in the recording");
+			f.CopiedSlot = (SpecialSlot)s.CopiedSlot;
 			foreach (var c in s.CancelRules) f.HoldCancelRule(new CancelRule(c.Id, c.From, c.Into, c.OnHit, c.OnBlock, c.OnWhiff));
 			f.Input.Scheme = Enum.Parse<ControlScheme>(s.Scheme);
 			f.Twist = s.Twist is null ? null : TwistOf(s, cat, $"P{p + 1}"); // YOK-90
@@ -209,7 +213,12 @@ public static class Replayer
 		if (ps.Count == 0) throw new ReplaySetupException($"AI profile '{a.ProfileId}' no longer exists");
 		var prof = ps.FirstOrDefault(p => Fingerprint.Of(p) == a.ProfileFp)
 			?? throw new ReplaySetupException($"AI profile '{a.ProfileId}' changed since the recording");
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames);
+		var tier = a.FightTier switch
+		{
+			null or "standard" => AiFightTier.Standard, "elder" => AiFightTier.Elder, "tanuki" => AiFightTier.Tanuki,
+			_ => throw new ReplaySetupException($"unknown AI fight tier '{a.FightTier}'"),
+		};
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier);
 	}
 }
 

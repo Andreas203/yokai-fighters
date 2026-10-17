@@ -45,22 +45,23 @@ public static class RunFlowTests
 	// ---- the node-scene table ----
 
 	[Test]
-	public static void Table_DefaultMap_EveryNodeRunsInTheFightScene_WithItsY4Row()
+	public static void Table_DefaultMap_EveryNodeHasItsScene_WithItsY4Row()
 	{
 		var table = Table();
 		var frames = new Dictionary<string, int> { ["apprentice"] = 30, ["yokai"] = 22, ["elder"] = 18, ["tanuki"] = 15 }; // Y4
 		foreach (var node in DefaultMap().Nodes)
 		{
 			var (scene, ctx) = table.Resolve(node);
-			Assert.Equal("res://scenes/fight.tscn", scene, $"{node.Id}: every node uses the fight scene for now");
+			string expected = node.Type is "merchant" or "dojo" ? "res://scenes/ui/rest_stop.tscn" : "res://scenes/fight.tscn"; // YOK-96: stops have their own screen
+			Assert.Equal(expected, scene, $"{node.Id}: the fight scene, or the rest stop for a merchant or dojo");
 			Assert.True(ResourceLoader.Exists(scene), $"{node.Id}: {scene} exists");
 			string tier = node.Row == 1 ? "apprentice" : node.Type switch { "elder" => "elder", "boss" => "tanuki", _ => "yokai" };
 			Assert.Equal(tier, ctx.Tier, $"{node.Id}: Y4 row");
 			Assert.Equal(frames[tier], ctx.ReactionFrames, $"{node.Id}: Y4 reaction frames");
 			Assert.Equal(node.Type is "duel" or "elder", ctx.Binds, $"{node.Id}: only duels and elders bind (R3, A7)");
 			Assert.True(ctx.NodeId == node.Id && ctx.Type == node.Type && ctx.Row == node.Row && ctx.Yokai == node.Yokai && ctx.Elder == node.Elder, $"{node.Id}: the node's own data is carried");
-			Assert.Equal("kitsune", ctx.Fighter, $"{node.Id}: the only kit today");
-			Assert.Equal(node.Yokai != "kitsune", ctx.StandIn, $"{node.Id}: stand-in unless the node is a Kitsune");
+			Assert.Equal(node.Yokai == "tanuki" ? "tanuki" : "kitsune", ctx.Fighter, $"{node.Id}: the Kitsune's kit, the Tanuki's (YOK-94, T0) on the boss node");
+			Assert.Equal(node.Yokai is not ("kitsune" or "tanuki"), ctx.StandIn, $"{node.Id}: stand-in unless the node is a Kitsune or the Tanuki (YOK-94)");
 			Assert.Equal(ctx.StandIn, ctx.Notes.Count > 0, $"{node.Id}: a stand-in is always explained for the log");
 		}
 	}

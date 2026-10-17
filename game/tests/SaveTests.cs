@@ -837,6 +837,38 @@ public static class SaveTests
 		Throws<FormatException>(() => (before with { CopyLocked = true, LockedCopy = saved.LockedCopy }).Restore(pool, DefaultMap(), Table()), "a copy before the Tanuki's node (T1)");
 	});
 
+	/// <summary>YOK-128, R8: the paid flag of a won, uncompleted no-draft node in the file (version 4), and files without it.</summary>
+	[Test]
+	public static void Version4_NodePaid_RoundTrips_OlderFilesLoadUnpaid_DamageDropsTheRun() => WithFixtures(() =>
+	{
+		string mapPath = Path.Combine(Path.GetTempPath(), $"yok128-save-{Guid.NewGuid():N}.json");
+		File.WriteAllText(mapPath, "{\"kind\":\"run_map\",\"id\":\"single\",\"schema_version\":1,\"name\":\"one\",\"status\":\"final\",\"rules\":[],\"nodes\":[{\"id\":\"only\",\"row\":1,\"type\":\"duel\",\"yokai\":\"kitsune\",\"label\":\"K\"}],\"routes\":[]}");
+		MapGraph g;
+		try { g = new FileMapSource(mapPath).Load(); } finally { File.Delete(mapPath); }
+		var pool = FightScene.LoadAbilityPool();
+		var s = RunSession.Start(pool, g, Table(), 9);
+		Assert.True(!SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s))).Contains("node_paid"), "not written unless set");
+		s.Enter("only");
+		Assert.True(s.WinFight(500) == null && s.Run.Coins == 25, "setup: won, paid, no draft (last node)");
+
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s)));
+		Assert.True(text.Contains("\"node_paid\": true") && text.Contains(Current + ","), "written, current version: " + text);
+		var load = SaveStore.Parse(text);
+		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "loads");
+		var back = load.Data.Run!.Restore(pool, g, Table());
+		Assert.True(back.NodePaid && back.StateHash() == s.StateHash(), "restored paid, same hash");
+		back.WinFight(500);
+		Assert.True(back.Run.Coins == 25, $"R8: paid once after Continue (coins {back.Run.Coins})");
+
+		// A version 3 file has no flag: it loads unpaid, as it did before (those files were only written at node boundaries by the game).
+		var v3 = SaveStore.Parse(text.Replace(Current, "\"version\": 3").Replace("\"node_paid\": true,", ""));
+		Assert.True(v3.Status == SaveLoadStatus.OlderVersion && v3.Data.Run is { NodePaid: false }, "version 3 loads, unpaid");
+
+		// A flag of the wrong kind is damage: the run is dropped, the rest kept.
+		var bad = SaveStore.Parse(text.Replace("\"node_paid\": true", "\"node_paid\": \"yes\""));
+		Assert.True(bad.Data.Run is null, "a non-boolean node_paid drops the run");
+	});
+
 	[Test]
 	public static void Version1_Files_StillLoad_NoCoins_LockWorkedOutOnlyWhenExact() => WithFixtures(() =>
 	{
@@ -962,9 +994,9 @@ public static class SaveTests
 	}
 
 	[Test]
-	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFourReadsOlderFiles_M4()
+	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFiveReadsOlderFiles_M4()
 	{
-		Assert.Equal(4, SaveStore.CurrentVersion, "YOK-106 raised the format to 4");
+		Assert.Equal(5, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4)");
 		SaveData d = Sample.WithElderMet("elder-oni").WithElderMet("elder-kappa").WithElderMet("elder-oni").WithElderMet(" ");
 		Assert.True(d.Story.EldersMet.SequenceEqual(new[] { "elder-kappa", "elder-oni" }), "a set: once each, ordinal order, blank ignored");
 		Assert.True(d.Story.HasMetElder("elder-oni") && !d.Story.HasMetElder("nine-tailed-kitsune"), "has met");
@@ -981,8 +1013,8 @@ public static class SaveTests
 		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
 		Assert.True(text.Contains("\"elders_met\": [") && text.Contains("\"first_meeting\": true"), "named fields: " + text);
 
-		// Versions 1-3: nothing met, not a first meeting, and nothing lost (no backup needed).
-		foreach (int v in new[] { 1, 2, 3 })
+		// Versions 1-4: nothing met, not a first meeting, and nothing lost (no backup needed).
+		foreach (int v in new[] { 1, 2, 3, 4 })
 		{
 			SaveLoad old = SaveStore.Parse(AsOlderVersion(atMeeting, v));
 			Assert.True(old.Status == SaveLoadStatus.OlderVersion && !SaveStore.LostSomething(old), $"version {v}: older, nothing lost: " + string.Join("; ", old.Problems));
@@ -1081,7 +1113,7 @@ public static class SaveTests
 	});
 
 	[Test]
-	public static void Boot_AVersion3FileSavedInsideAnElderNode_ContinuesAsTheFirstMeeting(Node runner) => WithTempFile(path =>
+	public static void Boot_AVersion4FileSavedInsideAnElderNode_ContinuesAsTheFirstMeeting(Node runner) => WithTempFile(path =>
 	{
 		WithBoot(runner, path, flow =>
 		{
@@ -1091,14 +1123,41 @@ public static class SaveTests
 			Assert.True(flow.ChooseNode("r5-nine-tails").Ok && flow.FirstMeeting, "entered an elder node");
 			Assert.True(flow.ReturnToTitle(), "quit");
 		});
-		File.WriteAllText(path, AsOlderVersion(new SaveStore(path).Load().Data, 3));
+		File.WriteAllText(path, AsOlderVersion(new SaveStore(path).Load().Data, 4));
 		WithBoot(runner, path, flow =>
 		{
-			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "a version 3 file");
+			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "a version 4 file");
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Session!.Node?.NodeId == "r5-nine-tails" && flow.FirstMeeting && flow.HasMetElder("nine-tailed-kitsune"), "no elder in the file: this is the first meeting");
 			WinEnteredNode(flow, 700);
-			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded } l && l.Data.Story.HasMetElder("nine-tailed-kitsune"), "written as version 4 at the next save point");
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded } l && l.Data.Story.HasMetElder("nine-tailed-kitsune"), "written as version 5 at the next save point");
 		});
+	});
+
+	/// <summary>YOK-124 (M5): a walk taken off the routes by dev mode's full map is saved with <c>off_route</c> and comes back only in a dev session.</summary>
+	[Test]
+	public static void OffRouteWalk_ComesBackOnlyInADevSession() => WithFixtures(() =>
+	{
+		var s = NewSession(124);
+		s.Map.FreeTravel = true;
+		Assert.True(s.Enter("r4-merchant").Ok, "jumped to row 4");
+		var save = RunSave.Capture(s);
+		Assert.True(save.OffRoute, "the save records the off-route walk");
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(save));
+		Assert.True(text.Contains("\"off_route\": true"), "written as off_route: " + text);
+		var back = SaveStore.Parse(text).Data.Run!;
+		Assert.True(back.OffRoute, "read back");
+		var pool = FightScene.LoadAbilityPool();
+		Throws<FormatException>(() => back.Restore(pool, DefaultMap(), Table()), "outside a dev session the walk is not one the map allows");
+		var again = back.Restore(pool, DefaultMap(), Table(), allowOffRoute: true);
+		Assert.True(again.Map.Current == "r4-merchant" && again.Map.InNode && again.Map.OffRoute && !again.Map.FreeTravel, "dev slot: restored at the node, free travel off until the toggle applies");
+		Assert.True(again.Merchant is { Open: true }, "the stop comes back open");
+		Assert.Equal(s.StateHash(), again.StateHash(), "same run state");
+
+		var onRoute = NewSession(124);
+		Assert.True(onRoute.Enter("r1-apprentice").Ok, "a normal step");
+		string plain = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(onRoute)));
+		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
+		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
 	});
 }

@@ -23,7 +23,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## C — Combat basics
 
 - **C1** One round, 60 ticks/s, deterministic. Ryo has 1,000 health that carries across the run.
-- **C2** Movement: walk crosses the screen in ~2.5 s; dash 18 frames; jump 40 frames airtime.
+- **C2** Movement: walk crosses the screen in ~2.5 s (measured on the original 1,920-unit screen: 12.8 units/tick; ~1.9 s across AM8's 1,440-unit screen); dash 18 frames; jump 40 frames airtime.
 - **C3** Block by holding back. Lows must be blocked crouching (Oni Quake hits low).
 - **C4** Throws are generic: attacker plays a grab clip, defender a standard knockdown. Startup 5, break window 7 frames (press throw), 120 damage. **No paired throw animations anywhere.**
 - **C5** Meter: 3 bars × 100. +6 per hit landed, +3 per hit blocked or taken. EX special costs 1 bar.
@@ -50,17 +50,17 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## F — Frame data and engine constraints
 
 - **F1** Every move has startup, active and recovery frames.
-- **F2** Clip first: Clip Matcher specs the move's clip, the designer approves the take, Clip Matcher runs it through the Meshy MCP and measures it, then Movesmith writes frame data from that clip's real timing. Frame data that doesn't match its clip is invalid.
+- **F2** Clip first: the Animator specs the move's clip, the designer approves the take, the Animator makes it (generator, motion capture or a bought pack), cleans it, measures it and may give it a retiming curve [AM5]; then Movesmith writes frame data from that clip's real timing as retimed. A retiming segment plays between 0.5× and 2× the clip's speed and a held pose lasts at most 4 frames (first pass). Frame data that doesn't match its clip is invalid.
 - **F3** Animations step by exact frames via `AnimationPlayer.Seek()`. Hitboxes are 2D rectangles stored in move data, not physics shapes.
 - **F4** Gameplay lives on a flat 2D plane (fixed Z); 3D is presentation only. Perspective camera, ~25° FOV.
-- **F5** No hand-keyed animation: every clip comes from the Meshy animation pipeline (F6). A move gets at most 3 generation takes; if none is usable, it becomes a mechanically equivalent move on an approved clip.
-- **F6** Visual assets are generated, sound is sourced [AM1]. Every job runs through the Meshy MCP. Models: turnaround from Meshy's 2D image models → Meshy Image-to-3D → Meshy auto-rig (shared humanoid skeleton) → glTF into Godot. Clips: Meshy animation library or prompt generation, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: Meshy 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs the designer has approved at the approved credit cost.
+- **F5** No hand-keyed animation [AM5]: clips come from a generator, motion capture of a real performance, or a bought motion-capture pack, plus scripted cleanup and retiming and Cascadeur's automatic physics pass; nobody poses or edits keys by hand. A move gets at most 3 takes across all sources; if none is usable, it becomes a mechanically equivalent move on an approved clip.
+- **F6** Visual assets are generated, sound is sourced [AM1, AM5, AM7]. Generators: Tripo or Meshy, the designer's choice per job. Models: turnaround (a generator's 2D image model, or Astra run by the designer from Asset Smith's brief [AM7]) → Image-to-3D → auto-rig (the generator's or AccuRIG 2, whichever passes the Rig Specialist's check) → Blender check and extra bones → glTF into Godot. Every rig plays clips on one shared humanoid skeleton (today Meshy's) through the Rig Specialist's bone map. Clips: generator library or prompt, video motion capture, or ActorCore packs; cleaned and retargeted in Blender by script, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: generator 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs, capture sessions and purchases the designer has approved at the approved cost.
 
-## E — Engine defaults (designer-approved 2026-10-06)
+## E — Engine defaults (designer-approved 2026-10-06; E1's screen and wall numbers changed by AM8, approved 2026-10-16)
 
 Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by the designer. Tunable like every other number here.
 
-- **E1** Scale: 200 units per metre; one screen is 1,920 units (9.6 m); the stage is two screens wide; fighters are at most 1,520 units apart (screen walls; was 1,600, lowered in YOK-39 so both rigged models, up to 200 units behind their position, stay in frame: 1,520 + 2 × 200 = 1,920; designer-approved 2026-10-06). The camera follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
+- **E1** Scale: 200 units per metre; the camera's view is 1,060 units wide close in and 1,540 units (7.7 m) at the widest zoom, which is the sim's screen [AM9; AM8 had a fixed 1,440, before it 1,920]; the stage is 3,840 units wide (two of the old 1,920-unit screens); fighters are at most 1,060 units apart (screen walls, so both rigged models, up to 240 units ahead of and 200 behind their position, stay in frame at the widest zoom whichever way each faces: 1,060 + 2 × 240 = 1,540) [AM9; 960 under AM8, 1,520 from YOK-39, 1,600 before]. The camera (~25° FOV, F4) zooms with separation (V7), follows the fighters' midpoint and stops where the cornered fighter's model (up to 240 units ahead, 200 behind) meets the screen edge.
 - **E2** KO slow-down (V4): the world plays the 30 frames over 60 real ticks; inputs are ignored meanwhile.
 - **E3** Every yokai has 1,000 health until the yokai rules give its own figure.
 - **E4** Standard knockdown (C4): 40 frames.
@@ -148,7 +148,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 ## Y — Yokai
 
 - **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 7 profiles: 3 yokai × 2 temperaments + Tanuki.
-- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit.
+- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws when the player keeps blocking (60%) [AM4].
 
   | Yokai | Aggressive | Patient | Habit to punish | Elder twist |
   |---|---|---|---|---|
@@ -171,13 +171,13 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## T — The Tanuki copy rule (never cut)
 
-- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's model and clips (no new animation).
+- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's model and clips (no new animation). The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
 - **T1** Lock point: when Ryo enters the Tanuki's node.
 - **T2** Target: highest-level special currently in a slot, throws included. Sold/replaced moves don't count.
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run: target talisman glows in the HUD; rest-stop forecast names it, its level and expected cost.
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
 
 ## R — The run
 
@@ -186,9 +186,9 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).
-- **R6** Merchant: free heal 25% **or** shop. Shop sells common abilities from yokai not bound this run (50 coins); release a binding (40). Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
+- **R6** Merchant: free heal 25% **or** shop. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
 - **R7** Dojo: rest (heal 30%) **or** training trial. Trial heals 15% either way, levels the special if landed within 3 attempts. Trials are hand-authored and Kihon-completable.
-- **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead.
+- **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead. No cap on coins held, for now [AM4].
 - **R9** Target run length 25–40 minutes for a first-time player.
 
 ## M — Between runs
@@ -214,7 +214,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **V4** Round-ending blow: 30 frames at half speed, then the ink-stroke binding.
 - **V5** Hit sparks: foxfire orange, oni red, kappa teal, Ryo ink black.
 - **V6** Every hit layers impact thud + short yokai sting, timed to the impact frame.
-- **V7** Camera steady except slow push-in on Tanuki reveal and round-ending blow.
+- **V7** Camera zooms with the fighters' separation [AM9; was "steady"]: eased with no snapping, a fixed step per sim tick, both models always in frame; chest height (1.2 m) with a slight pitch (0.5° down close in to 3° up at the widest zoom, feet ~90% down the frame); rises partway on jumps and never puts the higher fighter's head under the HUD; stops at the stage edge. The slow push-ins on the Tanuki reveal and the round-ending blow layer on top. Presentation only: the sim never reads it.
 - **V8** Moves change colour/effects as they level (level presets).
 - **V9** Stages: bamboo grove at dusk (Kitsune), snowbound shrine gate (Oni), lantern riverbank (Kappa), Tanuki's tea house with season-flickering screens. Music: shamisen, shakuhachi, taiko, intensity rising by row; Tanuki theme detunes the merchant's melody.
 
@@ -233,3 +233,11 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - Generator plan tier (commercial licence for generated output).
 - Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.
+- Merchant heal 25% and dojo rest 30%: a share of max health (as built: flat 250 and 300) or of something else (R6, R7).
+- Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
+- The shop's shelf: how many items, and how they are picked (R6). Whether binding an elder counts as binding its yokai for the shop.
+- The formula behind the forecast's "expected cost" (T6), and what the first rest stop shows before any fight data exists.
+- Slippery Skin ("throw-invulnerable during startup", GDD modifier table) against E12/E17 as written, which would make it do nothing.
+- What "holding charge" means for Sumo Stance without a new animation (A10, E7).
+- In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
+- Whether a command grab (River Grab) counts as a throw or a hit, for trials and cancels (C4, R7).

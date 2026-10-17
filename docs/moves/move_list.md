@@ -52,7 +52,7 @@ Source fidelity [A8]: each special belongs only to its source yokai (or Ryo). Th
 
 Every evolution is a property change plus a visual preset on the base clip. None needs a new clip.
 
-| ID | Evolution | Base | Property change | Preset need (for Clip Matcher) |
+| ID | Evolution | Base | Property change | Preset need (for Asset Smith) |
 |---|---|---|---|---|
 | E01 | Great Wave | Spirit Wave | Absorbs one projectile | Larger, brighter wave projectile; absorb flash |
 | E02 | Heaven Seal | Rising Talisman | Launches for follow-up | Gold seal trail. Needs an air-hit result: reuse knockdown R11 (see risk notes) |

@@ -1,0 +1,151 @@
+{
+ "tool": "prop_clearance.py",
+ "rig": "game/assets/generated/characters/kappa/kappa-rigged.glb",
+ "props": [
+  "game/assets/generated/characters/kappa/shell-fit.glb"
+ ],
+ "depth_m": 0.01,
+ "ignore_radius_m": 0.0,
+ "poses": {
+  "rest": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1308,
+     "worst_depth_m": 0.2716,
+     "prop_min_z_m": 0.79,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0163,
+     "contact_gap_max_m": 0.0297,
+     "new_vs_rest": 0,
+     "new_worst_depth_m": 0.0,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-rest-front.png",
+    "kappa-shell-rest-side.png",
+    "kappa-shell-rest-back.png"
+   ]
+  },
+  "high_kick": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1219,
+     "worst_depth_m": 0.2638,
+     "prop_min_z_m": 0.7617,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0166,
+     "contact_gap_max_m": 0.033,
+     "new_vs_rest": 23,
+     "new_worst_depth_m": 0.1093,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-high-kick-front.png",
+    "kappa-shell-high-kick-side.png",
+    "kappa-shell-high-kick-back.png"
+   ]
+  },
+  "deep_crouch": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1224,
+     "worst_depth_m": 0.2443,
+     "prop_min_z_m": 0.4722,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0174,
+     "contact_gap_max_m": 0.047,
+     "new_vs_rest": 1,
+     "new_worst_depth_m": 0.0246,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-deep-crouch-front.png",
+    "kappa-shell-deep-crouch-side.png",
+    "kappa-shell-deep-crouch-back.png"
+   ]
+  },
+  "arm_raise": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1070,
+     "worst_depth_m": 0.2244,
+     "prop_min_z_m": 0.79,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0174,
+     "contact_gap_max_m": 0.0407,
+     "new_vs_rest": 108,
+     "new_worst_depth_m": 0.1305,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-arm-raise-front.png",
+    "kappa-shell-arm-raise-side.png",
+    "kappa-shell-arm-raise-back.png"
+   ]
+  },
+  "torso_twist": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1205,
+     "worst_depth_m": 0.2231,
+     "prop_min_z_m": 0.79,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0296,
+     "contact_gap_max_m": 0.0854,
+     "new_vs_rest": 451,
+     "new_worst_depth_m": 0.2231,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-torso-twist-front.png",
+    "kappa-shell-torso-twist-side.png",
+    "kappa-shell-torso-twist-back.png"
+   ]
+  },
+  "grab": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 910,
+     "worst_depth_m": 0.2068,
+     "prop_min_z_m": 0.8651,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0184,
+     "contact_gap_max_m": 0.0449,
+     "new_vs_rest": 6,
+     "new_worst_depth_m": 0.0923,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-grab-front.png",
+    "kappa-shell-grab-side.png",
+    "kappa-shell-grab-back.png"
+   ]
+  },
+  "arms_down": {
+   "props": {
+    "shell-fit.glb": {
+     "verts_inside": 1014,
+     "worst_depth_m": 0.2669,
+     "prop_min_z_m": 0.79,
+     "contact_verts": 220,
+     "contact_gap_mean_m": 0.0161,
+     "contact_gap_max_m": 0.0299,
+     "new_vs_rest": 89,
+     "new_worst_depth_m": 0.2143,
+     "verts_total": 4832
+    }
+   },
+   "stills": [
+    "kappa-shell-arms-down-front.png",
+    "kappa-shell-arms-down-side.png",
+    "kappa-shell-arms-down-back.png"
+   ]
+  }
+ }
+}

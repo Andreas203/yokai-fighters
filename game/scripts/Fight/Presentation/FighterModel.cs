@@ -30,9 +30,9 @@ public partial class FighterModel : Node3D
 	private readonly List<Node3D> _tails = new();
 	private int _hips = -1;
 
-	/// <summary>Imported clip animations by GLB path, shared by every model in the process.</summary>
-	private static readonly Dictionary<string, Animation?> SourceCache = new();
-	/// <summary>Built (root-motion-stripped) library per fighter id.</summary>
+	/// <summary>Imported clip animations by GLB path, with the clip rig's rest <c>Hips</c> Y in its bone space (0 when unknown), shared by every model in the process.</summary>
+	private static readonly Dictionary<string, (Animation? Anim, float HipRestY)> SourceCache = new();
+	/// <summary>Built (root-motion-stripped) library per fighter id and rig rest hips (a rig with other proportions builds its own).</summary>
 	private static readonly Dictionary<string, AnimationLibrary> LibraryCache = new();
 
 	/// <summary>Instances the fighter's scene and sets it up; null when the model or its skeleton can't load (the fight keeps the capsule).</summary>
@@ -58,10 +58,12 @@ public partial class FighterModel : Node3D
 		// F3: never self-advance (also set in the scene; enforced here because determinism depends on it).
 		player.CallbackModeProcess = AnimationMixer.AnimationCallbackModeProcess.Manual;
 		player.Deterministic = true;
-		if (!LibraryCache.TryGetValue(set.Fighter, out var lib))
+		var hipRest = _hips >= 0 ? skel.GetBoneRest(_hips).Origin : Vector3.Zero;
+		string key = FormattableString.Invariant($"{set.Fighter}@{hipRest.X:R},{hipRest.Y:R},{hipRest.Z:R}");
+		if (!LibraryCache.TryGetValue(key, out var lib))
 		{
 			lib = BuildLibrary(set, catalog, skel, _hips);
-			LibraryCache[set.Fighter] = lib;
+			LibraryCache[key] = lib;
 		}
 		if (player.HasAnimationLibrary(LibraryName)) player.RemoveAnimationLibrary(LibraryName);
 		player.AddAnimationLibrary(LibraryName, lib);
@@ -77,16 +79,22 @@ public partial class FighterModel : Node3D
 	/// <summary>
 	/// Every catalogued clip onto this skeleton (one shared Meshy skeleton, so track paths match): rotations kept,
 	/// per-bone translation and scale dropped (bones keep this rig's rest lengths), hips X/Z pinned to rest
-	/// (root motion stripped: movement is move data), hips Y kept except above rest in air clips (the sim draws the arc).
+	/// (root motion stripped: movement is move data), hips Y scaled by <see cref="HipScale"/> (YOK-130: a taller or
+	/// shorter rig keeps its feet on the floor) and capped at rest in air clips (the sim draws the arc).
 	/// </summary>
 	private static AnimationLibrary BuildLibrary(FighterAnimSet set, ClipCatalog catalog, Skeleton3D skel, int hips)
 	{
 		var lib = new AnimationLibrary();
 		Vector3 rest = hips >= 0 ? skel.GetBoneRest(hips).Origin : Vector3.Zero;
+		if (!(rest.Y > 0f) || !float.IsFinite(rest.Y)) // once per rig
+			GD.PushWarning($"YOK-130: {set.Fighter} rig rest Hips Y {rest.Y} is not a positive finite height; clip hips are not scaled to it");
 		foreach (var (id, info) in catalog.Clips)
 		{
-			var src = Source(info.ResPath);
+			var (src, clipHipY) = Source(info.ResPath);
 			if (src is null) continue;
+			float hipScale = HipScale(rest.Y, clipHipY);
+			if (hipScale < HipScaleWarnMin || hipScale > HipScaleWarnMax)
+				GD.PushWarning($"YOK-130: {set.Fighter} on clip {id}: hip scale {hipScale} (rig {rest.Y} / clip {clipHipY}) is outside [{HipScaleWarnMin}, {HipScaleWarnMax}]; units mismatch between rig and clip?");
 			var anim = (Animation)src.Duplicate(true);
 			anim.LoopMode = Animation.LoopModeEnum.None;
 			bool air = set.AirClips.Contains(id);
@@ -103,7 +111,8 @@ public partial class FighterModel : Node3D
 				for (int k = 0; k < anim.TrackGetKeyCount(t); k++)
 				{
 					var p = (Vector3)anim.TrackGetKeyValue(t, k);
-					float y = air ? Mathf.Min(p.Y, rest.Y) : p.Y;
+					float y = p.Y * hipScale;
+					if (air) y = Mathf.Min(y, rest.Y);
 					anim.TrackSetKeyValue(t, k, new Vector3(rest.X, y, rest.Z));
 				}
 			}
@@ -112,13 +121,46 @@ public partial class FighterModel : Node3D
 		return lib;
 	}
 
-	private static Animation? Source(string path)
+	/// <summary>
+	/// YOK-130: the factor on a clip's <c>Hips</c> Y keys for this rig = this rig's rest hips Y / the clip rig's rest
+	/// hips Y, both in their own bone space (the keys' space). Node scale (e.g. the Oni's 1.1 on <c>Armature</c>) applies
+	/// after the keys, so it is not in the ratio. 1 when either rest is unknown or not above the root, and exactly 1
+	/// within <see cref="HipScaleSnap"/> of 1 (same-size rigs such as Ryo and Kitsune keep the clip's hips untouched).
+	/// </summary>
+	public static float HipScale(float rigHipRestY, float clipHipRestY)
+	{
+		// NaN or infinite rests would write NaN/inf into every Hips key: treat them as unknown.
+		if (!float.IsFinite(rigHipRestY) || !float.IsFinite(clipHipRestY) || !(rigHipRestY > 0f) || !(clipHipRestY > 0f)) return 1f;
+		float k = rigHipRestY / clipHipRestY;
+		if (!float.IsFinite(k) || !(k > 0f)) return 1f; // overflow, or a denormal rest underflowing to 0
+		return Mathf.Abs(k - 1f) < HipScaleSnap ? 1f : k;
+	}
+
+	/// <summary>Hip ratios closer to 1 than this are taken as 1: rest-height noise between rigs of the same size
+	/// (Kitsune on Ryo's clips is 1.0105), not a different body. The Oni (1.19) and Kappa (0.77) are far outside.</summary>
+	public const float HipScaleSnap = 0.015f;
+
+	/// <summary>A hip ratio outside this band is still applied but warned about: no fighter differs from the clip rig by
+	/// more than about 3x, so it is likely a units mismatch (a cm clip on a metre rig gives 0.01).</summary>
+	public const float HipScaleWarnMin = 0.3f, HipScaleWarnMax = 3f;
+
+	/// <summary>The clip GLB's rest <c>Hips</c> Y in its bone space; 0 when the clip has no skeleton or no Hips (tests).</summary>
+	public static float ClipHipRestY(ClipInfo clip) => Source(clip.ResPath).HipRestY;
+
+	/// <summary>The factor this model's library uses for one clip (tests): <see cref="HipScale"/> from the two rests.</summary>
+	public float HipScaleFor(ClipInfo clip) =>
+		HipScale(_hips >= 0 ? Skeleton.GetBoneRest(_hips).Origin.Y : 0f, Source(clip.ResPath).HipRestY);
+
+	private static (Animation? Anim, float HipRestY) Source(string path)
 	{
 		if (SourceCache.TryGetValue(path, out var a)) return a;
 		Animation? found = null;
+		float hipY = 0f;
 		if (ResourceLoader.Exists(path))
 		{
 			var node = GD.Load<PackedScene>(path).Instantiate();
+			if (node.FindChild("Skeleton3D", true, false) is Skeleton3D cs && cs.FindBone("Hips") is int h and >= 0)
+				hipY = cs.GetBoneRest(h).Origin.Y;
 			if (node.FindChild("AnimationPlayer", true, false) is AnimationPlayer ap)
 				foreach (string name in ap.GetAnimationList())
 				{
@@ -126,9 +168,11 @@ public partial class FighterModel : Node3D
 					if (cand.Length > 0.1f) { found = cand; break; } // skip a rig's one-key T-pose clip
 				}
 			node.Free();
+			if (found is not null && (!(hipY > 0f) || !float.IsFinite(hipY)))
+				GD.PushWarning($"YOK-130: clip {path} has no Skeleton3D Hips rest; its hips height is not scaled to the rig");
 		}
-		SourceCache[path] = found;
-		return found;
+		SourceCache[path] = (found, hipY);
+		return (found, hipY);
 	}
 
 	/// <summary>Poses the body: exact clip frames, blended from the previous clip's frame when the sample says so.</summary>

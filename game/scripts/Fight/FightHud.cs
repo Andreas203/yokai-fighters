@@ -51,8 +51,78 @@ public partial class FightHud : CanvasLayer
 		_burstLetter = UiFind.Get<Label>(this, "BurstLetter");
 		_portrait = UiFind.Get<TextureRect>(this, "P2Portrait");
 		_temperament = UiFind.Get<Label>(this, "Temperament");
+		_copyTalisman = UiFind.Get<CopyTalisman>(this, "CopyTalisman");
+		_twistStrip = UiFind.Get<Control>(this, "TwistStrip");
+		_twistKicker = UiFind.Get<Label>(this, "Kicker");
+		_twistText = UiFind.Get<Label>(this, "TwistText");
 		_banner.Text = "";
 		_ready = true;
+	}
+
+	/// <summary>Placeholder until the twist data lands (YOK-90); the strip shows for every elder fight.</summary>
+	public const string TwistPlaceholder = "This elder fights with a twist.";
+
+	private CopyTalisman _copyTalisman = null!;
+	private Control _twistStrip = null!;
+	private Label _twistKicker = null!, _twistText = null!;
+	private IHudRunView? _runView;
+
+	/// <summary>Copy target, lock and node kind (YOK-74). Defaults to the hosting <see cref="FightScene"/>'s session; null session = no target.</summary>
+	public IHudRunView? RunView
+	{
+		get
+		{
+			if (_runView != null) return _runView;
+			if (GetParent() is not FightScene f) return null;
+			if (_sessionView == null || !ReferenceEquals(_viewSession, f.Session))
+			{
+				if (_sessionView != null) _copyTalisman.Reset(); // a restart or a new run: its first target is not a "change"
+				_viewSession = f.Session;
+				_sessionView = new SessionHudRunView(f.Session);
+			}
+			return _sessionView;
+		}
+		set { _runView = value; _copyTalisman?.Reset(); }
+	}
+
+	private RunSession? _viewSession;
+	private SessionHudRunView? _sessionView;
+
+	public CopyTalisman CopyTarget => _copyTalisman;
+	/// <summary>YOK-121: 10 s at 60 ticks/s; the last <see cref="TwistFadeTicks"/> fade the strip out.</summary>
+	public const int TwistStripTicks = 600, TwistFadeTicks = 30;
+	public float TwistStripAlpha => _twistStrip.Modulate.A;
+	private Match? _match;
+	public bool TwistStripVisible => _twistStrip.Visible;
+	public string TwistKicker => _twistKicker.Text;
+	public string TwistLine => _twistText.Text;
+
+	private void ShowRun()
+	{
+		var run = RunView;
+		// AM6, T6: the copy-target talisman shows only in the Tanuki fight (the locked copy, T1); hidden in yokai and elder fights, and with no run.
+		bool showCopy = run?.InTanukiFight ?? false;
+		_copyTalisman.Visible = showCopy;
+		if (showCopy) _copyTalisman.Apply(run?.Copy, run?.CopyLocked ?? false);
+		else _copyTalisman.Reset();
+		var copy = run?.Copy;
+		bool tanuki = (run?.InTanukiFight ?? false) && copy != null; // nothing locked = nothing to say (the strip stays hidden)
+		bool hasStrip = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
+		// YOK-121: the strip is a reminder shown for the first TwistStripTicks of unpaused fight time. Match.Tick only
+		// advances in the sim step, so a pause freezes the timer and a reset/restart/new fight (Tick 0) shows it again.
+		int tick = _match?.Tick ?? 0;
+		_twistStrip.Visible = hasStrip && tick < TwistStripTicks;
+		_twistStrip.Modulate = new Color(1, 1, 1, Mathf.Clamp((TwistStripTicks - tick) / (float)TwistFadeTicks, 0f, 1f));
+		if (tanuki)
+		{
+			_twistKicker.Text = "THE TANUKI COPIES";
+			_twistText.Text = $"{copy!.Data.Name} at Lv {copy.MoveLevel}, no modifiers"; // T4
+		}
+		else
+		{
+			_twistKicker.Text = "ELDER TWIST";
+			_twistText.Text = TwistPlaceholder;
+		}
 	}
 
 	/// <summary>The lose screen's story card, already filled with the run's names (S4). Null title keeps the current one.</summary>
@@ -65,6 +135,7 @@ public partial class FightHud : CanvasLayer
 	{
 		if (!_ready) return; // before _Ready
 		View ??= new MatchHudView(m);
+		_match = m;
 		ShowOpponent(FightScene.Opponent);
 		_temperament.Text = GetParent() is FightScene fight ? fight.Temperament.ToUpperInvariant() : "";
 		for (int i = 0; i < 2; i++)
@@ -81,6 +152,7 @@ public partial class FightHud : CanvasLayer
 			label.AddThemeFontSizeOverride("font_size", size);
 		}
 		if (View != null) ShowMeter(View);
+		ShowRun();
 		bool ryoLost = m.Phase == MatchPhase.Over && m.Winner != 0;
 		_banner.Text = m.Phase switch
 		{

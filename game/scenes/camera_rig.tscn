@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [node name="CameraRig" type="Node3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 12.178913)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 9.134185)
 
 [node name="Camera" type="Camera3D" parent="."]
 current = true

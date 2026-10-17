@@ -145,7 +145,7 @@ public partial class FightScene
 	/// <summary>The next duel of <see cref="DemoRun"/>, with P1 on the scheme chosen for this run.</summary>
 	private Match NewDuel()
 	{
-		Match m = NewMatch(DemoRun); // P2 = Opponent, set from the node in BeginNode
+		Match m = NewMatch(DemoRun, Session); // P2 = Opponent, set from the node in BeginNode
 		if (PlayerScheme is { } scheme) m.P1.Input.Scheme = scheme;
 		if (Twists.Apply(m, Node) is { } twist) // YOK-90: from the node's elder, whoever stands in
 			GD.Print($"FightScene: elder twist '{twist.Id}' ({twist.Effect}) on {Node.Fighter}{(Node.StandIn ? " [stand-in]" : "")}");

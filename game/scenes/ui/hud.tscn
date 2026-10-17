@@ -3,6 +3,9 @@
 [ext_resource type="Script" path="res://scripts/Fight/FightHud.cs" id="1_FightHud"]
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="2_talisman_theme"]
 [ext_resource type="PackedScene" path="res://scenes/ui/lose_screen.tscn" id="3_lose_screen"]
+[ext_resource type="Script" path="res://scripts/Ui/CopyTalisman.cs" id="4_copy"]
+[ext_resource type="Script" path="res://scripts/Ui/TalismanPanel.cs" id="5_panel"]
+[ext_resource type="Script" path="res://scripts/Ui/TwistStripDecor.cs" id="twist_decor"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ryo-portrait.png" id="ryo"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/burst-blank.png" id="burst"]
 
@@ -267,5 +270,141 @@ horizontal_alignment = 2
 theme_override_colors/font_color = Color(0.945, 0.910, 0.831, 1)
 theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
 theme_override_constants/outline_size = 6
+
+[node name="CopyTalisman" type="Control" parent="Strip"]
+layout_mode = 0
+offset_left = 898
+offset_top = 10
+offset_right = 1146
+offset_bottom = 124
+mouse_filter = 2
+script = ExtResource("4_copy")
+
+[node name="Caption" type="Label" parent="Strip/CopyTalisman"]
+layout_mode = 0
+offset_left = 0
+offset_top = 10
+offset_right = 248
+offset_bottom = 40
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.72, 0.16, 0.14, 1)
+horizontal_alignment = 1
+text = "COPY TARGET"
+
+[node name="Icon" type="TextureRect" parent="Strip/CopyTalisman"]
+layout_mode = 0
+offset_left = 22
+offset_top = 38
+offset_right = 52
+offset_bottom = 68
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IconLetter" type="Label" parent="Strip/CopyTalisman"]
+layout_mode = 0
+offset_left = 22
+offset_top = 36
+offset_right = 52
+offset_bottom = 70
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.72, 0.16, 0.14, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+text = ""
+
+[node name="MoveName" type="Label" parent="Strip/CopyTalisman"]
+layout_mode = 0
+offset_left = 70
+offset_top = 40
+offset_right = 242
+offset_bottom = 106
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.13, 0.14, 0.25, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+max_lines_visible = 2
+clip_text = true
+text = "-"
+
+[node name="Level" type="Label" parent="Strip/CopyTalisman"]
+layout_mode = 0
+offset_left = 10
+offset_top = 72
+offset_right = 66
+offset_bottom = 104
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.72, 0.16, 0.14, 1)
+horizontal_alignment = 1
+text = ""
+
+[node name="Toast" type="Label" parent="Strip"]
+layout_mode = 0
+offset_left = 40
+offset_top = 986
+offset_right = 880
+offset_bottom = 1040
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.945, 0.91, 0.831, 1)
+theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
+theme_override_constants/outline_size = 8
+clip_text = true
+text_overrun_behavior = 3
+text = ""
+
+[node name="TwistStrip" type="Control" parent="Strip"]
+visible = false
+layout_mode = 0
+offset_left = 1000
+offset_top = 984
+offset_right = 1890
+offset_bottom = 1064
+mouse_filter = 2
+
+[node name="Paper" type="Control" parent="Strip/TwistStrip"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("twist_decor")
+
+[node name="Kicker" type="Label" parent="Strip/TwistStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 8
+offset_right = 860
+offset_bottom = 42
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.72, 0.16, 0.14, 1)
+text = "ELDER TWIST"
+
+[node name="TwistText" type="Label" parent="Strip/TwistStrip"]
+layout_mode = 0
+offset_left = 30
+offset_top = 40
+offset_right = 860
+offset_bottom = 76
+mouse_filter = 2
+theme_type_variation = &"BodyLabel"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.13, 0.14, 0.25, 1)
+clip_text = true
+text = ""
 
 [node name="LoseScreen" parent="." instance=ExtResource("3_lose_screen")]

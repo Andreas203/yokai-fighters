@@ -19,8 +19,9 @@ Every feature the design requires is in the codebase by feature freeze (G5, week
 ## The crew you dispatch to
 | Team | Agent | Takes tickets for |
 |---|---|---|
-| Assets | `asset-smith` | Generation specs and acceptance checks for models, rigs, stages, UI and VFX textures |
-| Assets | `clip-matcher` | Each move's clip spec and take measurement, level presets, frame-timed sound cues |
+| Assets | `asset-smith` | Generation specs and acceptance checks for models, stages, UI and VFX textures; level presets |
+| Assets | `rig-specialist` | Rig specs, Blender rig checks, extra bones, the shared-skeleton bone map, the G4 retarget gate |
+| Assets | `animator` | Each move's clip spec, cleanup, measurement and retiming; frame-timed sound cues |
 | Assets | `sound-scout` | Shortlisting sound-effect and music packs |
 | Content | `movesmith` | Move list, frame data from matched clips, hitboxes, card text, dojo trials |
 | Content | `habit-writer` | Temperament profiles, story-card text |
@@ -32,10 +33,11 @@ Every feature the design requires is in the codebase by feature freeze (G5, week
 | Engineering | `test-breaker` | Gate: probe tests that try to break every code branch |
 
 ## Workflows
-- **content**: `clip-matcher` (if a clip is needed) → `movesmith` or `habit-writer` → `rules-lawyer` (fail returns to author with reason) → harness check → merge. Data merges after schema, Rules Lawyer and harness checks.
-- **generate** (visuals): `asset-smith` spec → designer approves the job and credits → `asset-smith` runs it via the Meshy MCP → acceptance check (RETAKE returns to the designer for approval; 3 takes, then fallback). Rigged fighters unblock `clip-matcher`.
-- **clip**: `clip-matcher` spec → designer approves the take → `clip-matcher` runs it via the Meshy MCP and measures it → content workflow. Generated walk, heavy and throw on every yokai rig form the G4 gate.
-- **sound**: `sound-scout` shortlist → designer purchase decision → `clip-matcher` sound cues.
+- **content**: `animator` (if a clip is needed) → `movesmith` or `habit-writer` → `rules-lawyer` (fail returns to author with reason) → harness check → merge. Data merges after schema, Rules Lawyer and harness checks.
+- **generate** (visuals): `asset-smith` spec → designer approves the job and credits → `asset-smith` runs it (Meshy MCP, or the designer in Tripo) → acceptance check (RETAKE returns to the designer for approval; 3 takes, then fallback). Accepted models unblock `rig-specialist`.
+- **rig**: `rig-specialist` spec → designer approves the job (generator auto-rig or AccuRIG 2) → job runs → Blender checks and, for a yokai, the G4 retarget gate → ACCEPT or RETAKE. Passed rigs unblock `animator`.
+- **clip**: `animator` spec → designer approves the take (generator, motion capture or bought pack) → take runs → `animator` cleans, measures and retimes it → content workflow. Walk, heavy and throw on every yokai rig form the G4 gate, run by `rig-specialist`.
+- **sound**: `sound-scout` shortlist → designer purchase decision → `animator` sound cues.
 - **code**: `gameplay-programmer` or `ui-designer` on its own branch, closed build-and-test loop → `code-critic` → `test-breaker` (a FAIL from either returns to the author with the findings) → designer review. Code merges **only** with designer approval. A gap the report marks as one the goal agent can write (`eligible`) may instead be run with `python tools/goal_agent/run.py build`, which applies the same two gates itself; its output still goes to designer review.
 - **balance**: `sparring-partner` report → tuning tickets for `movesmith`/`habit-writer` → content workflow.
 
@@ -52,7 +54,7 @@ Every branch and pull-request title is `YOK-<number>-<brief-name>` for the Linea
 1. Run the gap report, then read the Linear board, recent git log, open PRs and any new reports. Ticket gaps in score order: every gap with no ticket gets one (its `owner` is the agent, its `unmet` list is the acceptance criteria, its `rules` are the rule IDs), `blocked_by` becomes Linear blocking relations, and a ticket whose feature the report now finds present is ready to close.
 2. Check the week's milestone (rules G5). The plan totals ~85 code tickets: combat 20, AI 12, run 20, harness 10, UI 10, save 4, overlay+practice 3, pipeline 6. Keep the engineering backlog consistent with that split.
 3. Protect the never-cut list (G1). If velocity slips, propose the next cut from the fixed order in G2/G3 to the designer — never cut on your own.
-4. Respect order dependencies: fighter model rigged before its clips; clip measured before frame data (F2); copy rule built in week 2; placeholder screens for all 8 screens by end of week 2.
+4. Respect order dependencies: model accepted before its rig, rig passed before its clips; clip measured before frame data (F2); copy rule built in week 2; placeholder screens for all 8 screens by end of week 2.
 5. Keep tickets small enough for one agent session. Split anything that touches two agents.
 6. Batch code review: designer has ~60 h of code review across the build, so group engineering tickets into one daily review queue.
 
