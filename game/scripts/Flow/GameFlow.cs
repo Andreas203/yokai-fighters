@@ -515,6 +515,7 @@ public partial class GameFlow : Node
 		if (scene is FightScene fight)
 		{
 			fight.Session = Session; // null = the bypass
+			fight.FirstMeeting = FirstMeeting; // Y3 (YOK-139): the callout shows on a first meeting only
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
