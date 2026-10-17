@@ -215,6 +215,18 @@ class TuningStepTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn(("A4", "levels"), hits)
 
+    def test_padded_meter_cost_target_still_spends_meter(self):
+        # C5: ' meter_cost ' with spaces is the same target; only an `ex.` cost change is allowed
+        import tempfile
+        d = json.loads((DATA / "modifiers" / "fox-patience.json").read_text())
+        for target, expect in ((" meter_cost ", 1), (" EX.meter_cost ", 0)):
+            with self.subTest(target=target):
+                d["effects"] = [{"target": target, "op": "mul_pct", "value": 50}]
+                with tempfile.TemporaryDirectory() as tmp:
+                    Path(tmp, "fox-patience.json").write_text(json.dumps(d))
+                    code, rep = violations(DATA, tmp)
+                self.assertEqual(code, expect, rep["violations"])
+
     def test_one_non_damage_target_passes(self):
         code, hits = self._lv2({"target": "recovery", "op": "add", "value": -4})
         self.assertEqual(code, 0, hits)
