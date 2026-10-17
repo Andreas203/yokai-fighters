@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "nine-tails-reflect-callout",
+  "status": "proposed",
+  "trigger": "First-meeting callout (Y3): the first time Ryo meets the Nine-Tails",
+  "text": "Use the same special twice in a row and the Nine-Tails reflects it. Change your trick.",
+  "placeholders": [],
+  "speaker": "Narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "Y3"
+  ],
+  "notes": "Plain rule statement. Shown once per save."
+}
