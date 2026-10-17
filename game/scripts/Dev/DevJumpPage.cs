@@ -67,7 +67,7 @@ public partial class DevJumpPage : VBoxContainer
 		var grid = new GridContainer { Name = "FightSetup", Columns = 2 };
 		grid.AddThemeConstantOverride("h_separation", 16);
 		grid.AddThemeConstantOverride("v_separation", 4);
-		_opponent = Options(grid, "Opponent", _opponents.Select(o => (o.Name + (o.Built ? "" : " (" + o.NotBuilt + ")"), o.Built)));
+		_opponent = Options(grid, "Opponent", _opponents.Select(o => (o.Label, o.Built)));
 		_opponent.Selected = _opponents.ToList().FindIndex(o => o.Yokai == Fight.Opponent);
 		_opponent.ItemSelected += i => { Fight = Fight with { Opponent = _opponents[(int)i].Yokai, Elder = false }; RefreshFight(); };
 		_temperament = Options(grid, "Temperament", Array.Empty<(string, bool)>());

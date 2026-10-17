@@ -117,10 +117,60 @@ public static class DevJumpTests
 		foreach (var o in foes.Where(o => DevJump.OpponentIds.Contains(o.Yokai)))
 		{
 			bool standIn = table.Resolve(new MapNodeData("probe", 2, o.Yokai == DevJump.TanukiId ? NodeTypeRegistry.Boss : NodeTypeRegistry.Duel, o.Yokai)).Context.StandIn;
-			Assert.Equal(!standIn, o.Built, o.Yokai + ": built exactly when node-scenes gives it its own fighter");
+			Assert.Equal(!standIn || FighterAnimSet.HasBody(o.Yokai), o.Built,
+				o.Yokai + ": built exactly when node-scenes gives it its own fighter or the stand-in has its own body");
 		}
 		Assert.True(foes.Any(o => o.Yokai == "human-guises" && !o.Built), "human guises greyed");
 		Assert.Equal(3, DevJump.Elders.Length, "one elder per yokai (Y table)");
+	}
+
+	// ---- opponents: own fighter, or own body on a stand-in kit (YOK-135) ----
+
+	/// <summary>A table with no opponents: every yokai stands in on the Kitsune fallback.</summary>
+	const string AllStandIn = """
+	{ "kind": "node_scenes", "id": "t", "schema_version": 1,
+	  "default_scene": "res://scenes/fight.tscn", "fallback_fighter": "kitsune",
+	  "tiers": { "yokai": { "reaction_frames": 18 } },
+	  "types": { "duel": { "tier": "yokai" }, "boss": { "tier": "yokai" } },
+	  "rows": {} }
+	""";
+
+	[Test]
+	public static void Opponents_OwnFighter_IsBuiltWithNoNote()
+	{
+		var foes = DevJump.Opponents();
+		foreach (string id in new[] { "kitsune", DevJump.TanukiId })
+		{
+			var o = foes.First(f => f.Yokai == id);
+			Assert.True(o.Built && o.Note == null && o.Label == o.Name, id + ": own fighter, plain label");
+		}
+	}
+
+	[Test]
+	public static void Opponents_StandInWithOwnBody_IsBuilt_LabelledOwnBodyKitsunesMoves()
+	{
+		var foes = DevJump.Opponents();
+		foreach (var (id, name) in new[] { ("oni", "Oni"), ("kappa", "Kappa") })
+		{
+			var o = foes.First(f => f.Yokai == id);
+			Assert.True(DevJump.Table().Resolve(new MapNodeData("probe", 2, NodeTypeRegistry.Duel, id)).Context.StandIn, id + ": still a stand-in kit");
+			Assert.True(o.Built, id + ": pickable");
+			Assert.Equal(name + " (own body, Kitsune's moves)", o.Label, id + ": label");
+			Assert.Equal("kitsune", DevJump.FighterOf(new DevFightSetup(id)), id + ": fights on the Kitsune kit");
+		}
+	}
+
+	[Test]
+	public static void Opponents_StandInWithoutBody_StaysGreyed()
+	{
+		var foes = DevJump.Opponents(NodeSceneTable.Parse(AllStandIn));
+		foreach (string id in new[] { "kitsune", DevJump.TanukiId })
+		{
+			var o = foes.First(f => f.Yokai == id);
+			Assert.True(!o.Built && o.NotBuilt!.Contains(DevJump.NotBuiltYet), id + ": a stand-in with no body of its own is greyed");
+		}
+		foreach (string id in new[] { "oni", "kappa" })
+			Assert.True(foes.First(f => f.Yokai == id).Built, id + ": a stand-in with its own body stays pickable");
 	}
 
 	// ---- every target opens ----

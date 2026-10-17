@@ -45,12 +45,21 @@ public sealed class FighterSetup
 	public List<KitEntry> Moves { get; set; } = new();
 	public List<SpecialEntry> Specials { get; set; } = new();
 	public List<CancelEntry> CancelRules { get; set; } = new();
+	/// <summary>YOK-90: the elder twist this fighter held (id + fingerprint), or null. Older recordings: null.</summary>
+	public string? Twist { get; set; }
+	public string? TwistFp { get; set; }
 	/// <summary>
 	/// YOK-94: <see cref="Fighter.CopiedSlot"/> (1-4 = slot A-D), what the AI's <c>special:copied</c> presses. Left out
 	/// of the file when 0 (no copy), so a recording made before the field existed reads as none and still replays.
 	/// </summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public int CopiedSlot { get; set; }
+	/// <summary>
+	/// YOK-136: <see cref="Fighter.PushWidth"/> (centi-units) from the fighter's data/fighters/ file, as recorded.
+	/// Left out when 0 (the config's BodyWidth), so older recordings read as the default and still replay.
+	/// </summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public int PushWidth { get; set; }
 }
 
 /// <summary>P2's AI as built: profile (with fingerprint), reaction frames (Y4) and seed. Null = devices/recorded input.</summary>
@@ -67,11 +76,26 @@ public sealed class AiSetup
 	public string? FightTier { get; set; }
 }
 
+/// <summary>
+/// YOK-92, Y6: the guided apprentice fight's setup, so a replay rebuilds <c>ApprenticeTutorial</c> and
+/// <c>TutorialCoach</c> and gets P2's input as the scene did. Null (left out of the file) = not guided.
+/// A lent cancel rule needs no field: it is already in the player's recorded cancel rules at tick 0.
+/// </summary>
+public sealed class TutorialSetup
+{
+	public int Player { get; set; }
+	public int BlocksToPass { get; set; }
+	public int MinPromptTicks { get; set; }
+	public int AttackEvery { get; set; }
+	public int ThrowRetryTicks { get; set; }
+	public int ReactionFrames { get; set; }
+}
+
 /// <summary>A mid-fight change applied before step <see cref="Tick"/> (0-based step index): scheme flip (F4) or AI rebuild/toggle (F6/F7).</summary>
 public sealed class ReplayEvent
 {
 	public int Tick { get; set; }
-	public string Kind { get; set; } = ""; // "scheme" | "ai"
+	public string Kind { get; set; } = ""; // "scheme" | "ai" | "tutorial-skip" (YOK-92: the lesson on screen is skipped)
 	public int Player { get; set; }
 	public string? Scheme { get; set; }
 	public AiSetup? Ai { get; set; }
@@ -99,6 +123,8 @@ public sealed class ReplayHeader
 	public int? P2StartHealth { get; set; }
 	public FighterSetup[] Fighters { get; set; } = Array.Empty<FighterSetup>();
 	public AiSetup? Ai { get; set; }
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public TutorialSetup? Tutorial { get; set; }
 	public List<ReplayEvent> Events { get; set; } = new();
 	/// <summary>Informational: the RunState hash when the fight came from a run (YOK-47).</summary>
 	public string? RunHash { get; set; }

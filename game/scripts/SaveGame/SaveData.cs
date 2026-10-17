@@ -47,6 +47,13 @@ public sealed record RunSave(
 	/// <summary>T1: the locked copy; null before the lock, or a lock that found no special.</summary>
 	public LockedCopySave? LockedCopy { get; init; }
 	/// <summary>
+	/// Y3, M5 (version 5; false when the file has none): the run was saved at the entry of an elder node that was
+	/// Ryo's first meeting with that elder. The elder is already in <see cref="StoryProgress.EldersMet"/> by then, so
+	/// this is what lets a Continue into that node (M5: the node restarts as entered) still be the first meeting.
+	/// Not read by <see cref="Restore"/> and not part of <see cref="RunSession.StateHash"/>: see <see cref="ElderMeetings"/>.
+	/// </summary>
+	public bool FirstMeeting { get; init; }
+	/// <summary>
 	/// YOK-128, R8/R3: the entered node's fight was won and paid when saved (<see cref="RunSession.NodePaid"/>), so
 	/// its coins and heal are already in <see cref="Coins"/> and <see cref="Health"/> (version 4; false when missing).
 	/// </summary>
@@ -225,20 +232,48 @@ public sealed record StoryProgress
 	public const string Win1 = "win-1";
 	public const string Win2 = "win-2";
 	public const string Win3 = "win-3";
+	/// <summary>YOK-92, Y6: the guided apprentice fight has been played (finished, or its duel ended), so later runs are not guided.</summary>
+	public const string ApprenticeTutorial = "apprentice-tutorial";
+
+	/// <summary>The file's field (inside <c>story</c>) for <see cref="EldersMet"/> (version 4).</summary>
+	public const string EldersMetField = "elders_met";
 
 	public static readonly StoryProgress None = new(Array.Empty<string>());
 
 	/// <summary>Flags set, distinct, in ordinal order (so the same progress always writes the same file).</summary>
 	public IReadOnlyList<string> Seen { get; }
 
-	public StoryProgress(IEnumerable<string> seen) =>
-		Seen = seen.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToArray();
+	/// <summary>
+	/// Y3 (YOK-106): the elders Ryo has met, by the yokai id an elder node names (<see cref="ElderMeetings.ElderOf"/>),
+	/// distinct, in ordinal order. Kept per save, across runs (M4: story progress outlives the run). Ids are free-form
+	/// like <see cref="Seen"/>: one no map names is kept and simply never matches a node.
+	/// </summary>
+	public IReadOnlyList<string> EldersMet { get; }
+
+	public StoryProgress(IEnumerable<string> seen) : this(seen, Array.Empty<string>()) { }
+
+	public StoryProgress(IEnumerable<string> seen, IEnumerable<string> eldersMet)
+	{
+		Seen = Clean(seen);
+		EldersMet = Clean(eldersMet);
+	}
+
+	static string[] Clean(IEnumerable<string> ids) =>
+		ids.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal).OrderBy(s => s, StringComparer.Ordinal).ToArray();
 
 	public bool Has(string flag) => Seen.Contains(flag, StringComparer.Ordinal);
-	public StoryProgress With(string flag) => Has(flag) ? this : new StoryProgress(Seen.Append(flag));
+	public StoryProgress With(string flag) => Has(flag) ? this : new StoryProgress(Seen.Append(flag), EldersMet);
 
-	public bool Equals(StoryProgress? other) => other is not null && Seen.SequenceEqual(other.Seen, StringComparer.Ordinal);
-	public override int GetHashCode() => Seen.Aggregate(17, (h, s) => unchecked(h * 31 + StringComparer.Ordinal.GetHashCode(s)));
+	/// <summary>Y3: Ryo has met this elder (in this run or an earlier one).</summary>
+	public bool HasMetElder(string elderId) => EldersMet.Contains(elderId, StringComparer.Ordinal);
+	/// <summary>Y3: marks one elder met. <see cref="Seen"/> is untouched; a blank id changes nothing.</summary>
+	public StoryProgress WithElderMet(string elderId) =>
+		string.IsNullOrWhiteSpace(elderId) || HasMetElder(elderId) ? this : new StoryProgress(Seen, EldersMet.Append(elderId));
+
+	public bool Equals(StoryProgress? other) =>
+		other is not null && Seen.SequenceEqual(other.Seen, StringComparer.Ordinal) && EldersMet.SequenceEqual(other.EldersMet, StringComparer.Ordinal);
+	public override int GetHashCode() =>
+		EldersMet.Aggregate(Seen.Aggregate(17, (h, s) => unchecked(h * 31 + StringComparer.Ordinal.GetHashCode(s))), (h, s) => unchecked(h * 37 + StringComparer.Ordinal.GetHashCode(s)));
 }
 
 /// <summary>
@@ -266,6 +301,8 @@ public sealed record SaveData
 		Unlocks.Contains(abilityId, StringComparer.Ordinal) ? this : this with { Unlocks = Unlocks.Append(abilityId).ToArray() };
 	/// <summary>M4: sets one story flag. Unlocks and the run are untouched.</summary>
 	public SaveData WithStory(string flag) => this with { Story = Story.With(flag) };
+	/// <summary>Y3, M4: marks an elder met (story progress). Unlocks and the run are untouched.</summary>
+	public SaveData WithElderMet(string elderId) => this with { Story = Story.WithElderMet(elderId) };
 	/// <summary>M3: replaces the carry-over (null clears it). The run, unlocks and story are untouched.</summary>
 	public SaveData WithCarryOver(string? specialId) => this with { CarryOver = string.IsNullOrWhiteSpace(specialId) ? null : specialId };
 }
