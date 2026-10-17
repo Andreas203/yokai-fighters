@@ -335,6 +335,25 @@ public static class RewardDraftTests
 	}
 
 	[Test]
+	public static void DescribeReadsWholeNumbersInAnyNotation()
+	{
+		// YOK-103 critic round 3: a level-2 tuning value written -4.0 passes the validator and the loader, so the
+		// upgrade card's wording must read it the same way (Effects.Whole) instead of throwing mid-draft.
+		static System.Text.Json.Nodes.JsonNode? E(string json) => System.Text.Json.Nodes.JsonNode.Parse(json);
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4 }""")), "int");
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4.0 }""")), "-4.0");
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4e0 }""")), "-4e0");
+		Assert.Equal("damage +10%", RewardDraft.Describe(E("""{ "target": "damage", "op": "mul_pct", "value": 110.0 }""")), "mul_pct 110.0");
+		Assert.Equal("projectile speed +1", RewardDraft.Describe(E("""{ "target": "projectile.speed", "op": "add", "value": 1e0 }""")), "1e0");
+		Assert.Equal("damage add 1.5", RewardDraft.Describe(E("""{ "target": "damage", "op": "add", "value": 1.5 }""")), "no throw on a fraction");
+		// End to end: the fixture special's own Lv 2 step written -4.0 loads, and the upgrade card's wording reads it.
+		var node = E(System.IO.File.ReadAllText(System.IO.Path.Combine(ContentPaths.FixturesDir, "specials", "test-spirit-wave.json")))!;
+		node["levels"]!["2"]!["tuning"]!["value"] = System.Text.Json.Nodes.JsonValue.Create(-4.0);
+		var wave = SpecialLoader.Parse(node.ToJsonString(), "test-spirit-wave");
+		Assert.Equal("recovery -4", RewardDraft.Describe(wave.Level2Step), "Lv 2 tuning -4.0 on the upgrade card");
+	}
+
+	[Test]
 	public static void DraftAndNextFightAreDeterministic()
 	{
 		(string, ulong, ulong) RunOnce()

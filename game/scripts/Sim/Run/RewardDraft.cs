@@ -161,11 +161,15 @@ public sealed class RewardDraft : IRewardDraft
 		string target = (effect["target"]?.GetValue<string>() ?? "").Replace('_', ' ').Replace('.', ' ');
 		string op = effect["op"]?.GetValue<string>() ?? "";
 		var v = effect["value"];
+		// YOK-103: numbers read as the loader reads them (Effects.Whole): -4, -4.0 and -4e0 are all -4. A value that is
+		// not a whole number never reaches a card (the loader refuses it), but the wording falls back to the raw JSON
+		// rather than throwing mid-draft.
+		bool whole = Effects.Whole(v, out int n);
 		return op switch
 		{
-			"add" => $"{target} {v!.GetValue<int>():+0;-0}",
-			"mul_pct" => $"{target} {v!.GetValue<int>() - 100:+0;-0}%",
-			_ => $"{target} = {v?.ToJsonString()}",
+			"add" when whole => $"{target} {n:+0;-0}",
+			"mul_pct" when whole => $"{target} {n - 100:+0;-0}%",
+			_ => $"{target} {(op == "set" ? "=" : op)} {v?.ToJsonString()}",
 		};
 	}
 
