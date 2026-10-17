@@ -56,7 +56,7 @@ rule, a loop through rules held at once.
 | 0 | MERGEABLE | Every step passed and the change touches only content in `data/`. Ready for the designer's review. |
 | 1 | FAIL | A step failed. The report's first line names it (`DATA MERGE CHECK: FAIL at step 2 (rules: ...)`), with the failing files and rule IDs below. |
 | 2 | SETUP | The check could not run (no Godot, no jsonschema, build or import failed, bad `--base`). Says nothing about the change. |
-| 3 | REVIEW | Every step passed, but the change also touches code: anything outside `data/`, or `data/schema/` (the schemas are the C# loader's contract). Code goes through Code Critic, Test Breaker and designer review as before. |
+| 3 | REVIEW | Every step passed, but the change also touches code: anything but a `.json` file under `data/`, or anything in `data/schema/` (the schemas are the C# loader's contract). A rename counts both paths, so moving a test from `game/` into `data/` is a code change. Code goes through Code Critic, Test Breaker and designer review as before. |
 | 4 | INCOMPLETE | `--only` skipped steps; no merge verdict. |
 
 ## CI hook
@@ -66,6 +66,13 @@ rule, a loop through rules held at once.
 `data-merge-report` artifact and writes the report to the job summary. FAIL and SETUP fail the job;
 REVIEW passes with a warning; MERGEABLE passes with a notice. The workflow has read-only permissions and
 never merges.
+
+The checker never comes from the PR itself. A second checkout of the base branch supplies `tools/`
+(the checker, `validate_data.py`, `check_rules.py`), which replaces the PR's `tools/` before the check
+runs on the PR's `data/`, so a PR cannot edit the checker to call itself mergeable. A PR that changes
+`tools/` or `game/` is a code change anyway and gets REVIEW at best. While the base has no checker yet
+(the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW. Every action is
+pinned to a commit SHA, with its version tag in a comment.
 
 ## Samples
 

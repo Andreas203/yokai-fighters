@@ -6,6 +6,7 @@ the harness cases need Godot (GODOT or godot on PATH) and a built, imported game
 import io
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -127,9 +128,42 @@ class SampleChangesTest(unittest.TestCase):
 class ScopeAndVerdictTest(unittest.TestCase):
     def test_classify(self):
         content, code = dmc.classify(["data/moves/a.json", "data/schema/special.schema.json", "game/x.cs",
-                                      "docs/pipeline.md", "data/story/b.json"])
+                                      "docs/pipeline.md", "data/story/b.json", "data/attic/GuardTests.cs",
+                                      "data/tools/run.py", "data/moves/README.md"])
         self.assertEqual(content, ["data/moves/a.json", "data/story/b.json"])
-        self.assertEqual(code, ["data/schema/special.schema.json", "docs/pipeline.md", "game/x.cs"])
+        self.assertEqual(code, ["data/attic/GuardTests.cs", "data/moves/README.md", "data/schema/special.schema.json",
+                                "data/tools/run.py", "docs/pipeline.md", "game/x.cs"])
+
+    def _repo_with_rename(self, src, dest):
+        """A temp git repo whose branch `pr` moves `src` to `dest` (git mv) off `main`."""
+        tmp = tempfile.TemporaryDirectory(prefix="yok34-git-")
+        r = Path(tmp.name)
+        git = ["git", "-C", str(r), "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
+        subprocess.run(git + ["init", "-q", "-b", "main"], check=True)
+        for rel in (src, "data/moves/a.json"):
+            (r / rel).parent.mkdir(parents=True, exist_ok=True)
+            (r / rel).write_text('{"kind": "x"}\n' if rel.endswith(".json") else "public static class GuardTests {}\n")
+        subprocess.run(git + ["add", "-A"], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "base"], check=True)
+        subprocess.run(git + ["switch", "-q", "-c", "pr"], check=True)
+        (r / dest).parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(git + ["mv", src, dest], check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "move"], check=True)
+        return tmp, r
+
+    def test_rename_out_of_game_into_data_goes_to_review(self):
+        # A rename lists both paths (--no-renames): removing a test by moving it into data/ is a code change.
+        for src, dest in (("game/tests/GuardTests.cs", "data/attic/GuardTests.cs"),
+                          ("game/tests/fixtures/guard.json", "data/moves/guard.json")):
+            with self.subTest(src=src, dest=dest):
+                tmp, r = self._repo_with_rename(src, dest)
+                with tmp:
+                    changed = dmc.changed_files(r, "main")
+                self.assertIn(src, changed)
+                self.assertIn(dest, changed)
+                code, text = self._verdict(changed)
+                self.assertEqual(code, dmc.REVIEW, text)
+                self.assertIn(f"code (goes to review): {src}", text)
 
     def _verdict(self, changed):
         """Every step passes (stubbed); only the change scope decides."""

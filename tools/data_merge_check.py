@@ -20,8 +20,8 @@ Verdicts (exit code):
   0 MERGEABLE   every step passed and the change touches only content in data/
   1 FAIL        a step failed; the report names it and why
   2 SETUP       the check could not run (no Godot, no jsonschema, build failed, bad --base)
-  3 REVIEW      every step passed but the change also touches code (anything outside data/,
-                or data/schema/): it goes to code review (Code Critic, Test Breaker, designer)
+  3 REVIEW      every step passed but the change also touches code (anything but a .json file in data/,
+                or data/schema/; a rename counts both paths): it goes to code review (Code Critic, Test Breaker, designer)
   4 INCOMPLETE  every step that ran passed, but --only skipped some: not a merge verdict
 
 MERGEABLE is a verdict only. Nothing here merges: the designer still reviews and merges every
@@ -72,22 +72,30 @@ def tail(text: str, n: int = MAX_LINES) -> list[str]:
     return lines[-n:]
 
 
-def run(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[int, str]:
+def run_split(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[int, str, str]:
+    """(exit code, stdout, stderr)."""
     try:
         p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError as e:
-        return 127, f"{e}"
+        return 127, "", f"{e}"
     except subprocess.TimeoutExpired:
-        return 124, f"timed out after {timeout} s: {' '.join(cmd)}"
-    return p.returncode, (p.stdout or "") + (p.stderr or "")
+        return 124, "", f"timed out after {timeout} s: {' '.join(cmd)}"
+    return p.returncode, p.stdout or "", p.stderr or ""
+
+
+def run(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[int, str]:
+    """(exit code, stdout + stderr), for output that is shown, never parsed."""
+    code, out, err = run_split(cmd, cwd, timeout)
+    return code, out + err
 
 
 # --- scope: data-only or code ----------------------------------------------------------------
 
 def is_content(path: str) -> bool:
-    """Content the data path may carry: anything under data/ except the schemas (the C# loader's contract)."""
+    """Content the data path may carry: a JSON file under data/, outside data/schema/ (the C# loader's
+    contract). Anything else under data/ (scripts, binaries, other text) goes to review like code."""
     p = path.replace("\\", "/")
-    return p.startswith("data/") and not p.startswith("data/schema/")
+    return p.startswith("data/") and not p.startswith("data/schema/") and p.endswith(".json")
 
 
 def classify(paths: list[str]) -> tuple[list[str], list[str]]:
@@ -97,10 +105,12 @@ def classify(paths: list[str]) -> tuple[list[str], list[str]]:
 
 
 def changed_files(root: Path, base: str) -> list[str]:
-    code, out = run(["git", "-C", str(root), "diff", "--name-only", f"{base}...HEAD"])
+    # --no-renames: a rename is a delete plus an add, so both paths are classified (a test moved out of
+    # game/ into data/ is a code change). -z: paths come raw, never quoted.
+    code, out, err = run_split(["git", "-C", str(root), "diff", "--no-renames", "--name-only", "-z", f"{base}...HEAD"])
     if code != 0:
-        raise RuntimeError(f"git diff {base}...HEAD failed: {out.strip()[:300]}")
-    return [ln.strip() for ln in out.splitlines() if ln.strip()]
+        raise RuntimeError(f"git diff {base}...HEAD failed: {(err or out).strip()[:300]}")
+    return [p for p in out.split("\0") if p]
 
 
 # --- steps -------------------------------------------------------------------------------------
@@ -120,11 +130,11 @@ def step_schema(root: Path, st: Step, py: str) -> None:
 
 
 def step_rules(root: Path, st: Step, py: str) -> None:
-    code, out = run([py, "-I", str(root / "tools" / "check_rules.py"), "--json", str(root / "data")], cwd=root)
+    code, out, err = run_split([py, "-I", str(root / "tools" / "check_rules.py"), "--json", str(root / "data")], cwd=root)
     try:
-        rep = json.loads(out[out.index("{"):])
+        rep = json.loads(out)   # stdout only: --json prints one object there; stderr is shown, never parsed
     except ValueError:
-        st.status, st.summary, st.details = "setup", f"check_rules gave no JSON (exit {code})", tail(out)
+        st.status, st.summary, st.details = "setup", f"check_rules gave no JSON on stdout (exit {code})", tail(out + err)
         return
     vs, confirm = rep.get("violations", []), rep.get("harness_must_confirm", [])
 
