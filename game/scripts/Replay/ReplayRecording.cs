@@ -45,6 +45,9 @@ public sealed class FighterSetup
 	public List<KitEntry> Moves { get; set; } = new();
 	public List<SpecialEntry> Specials { get; set; } = new();
 	public List<CancelEntry> CancelRules { get; set; } = new();
+	/// <summary>YOK-90: the elder twist this fighter held (id + fingerprint), or null. Older recordings: null.</summary>
+	public string? Twist { get; set; }
+	public string? TwistFp { get; set; }
 	/// <summary>
 	/// YOK-94: <see cref="Fighter.CopiedSlot"/> (1-4 = slot A-D), what the AI's <c>special:copied</c> presses. Left out
 	/// of the file when 0 (no copy), so a recording made before the field existed reads as none and still replays.

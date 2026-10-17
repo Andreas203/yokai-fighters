@@ -53,6 +53,7 @@ public sealed class ReplayRecorder
 				});
 		foreach (var c in f.CancelRules)
 			s.CancelRules.Add(new CancelEntry { Id = c.Id, From = c.From, Into = c.Into, OnHit = c.OnHit, OnBlock = c.OnBlock, OnWhiff = c.OnWhiff });
+		if (f.Twist is { } t) { s.Twist = t.Id; s.TwistFp = Fingerprint.Of(t); } // YOK-90
 		return s;
 	}
 
