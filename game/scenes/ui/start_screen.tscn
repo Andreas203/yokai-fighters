@@ -88,10 +88,10 @@ theme_override_styles/panel = SubResource("radio_dot")
 
 [node name="Selected" type="NinePatchRect" parent="Kata"]
 layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1355.0
-offset_bottom = 140.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 1349.0
+offset_bottom = 134.0
 texture = ExtResource("selection")
 patch_margin_left = 32
 patch_margin_top = 32
@@ -113,7 +113,7 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 390.0
 offset_top = 40.0
-offset_right = 1295.0
+offset_right = 1250.0
 offset_bottom = 100.0
 text = "Motions: +10% precision bonus on motion-input specials."
 mouse_filter = 2
@@ -150,10 +150,10 @@ theme_override_styles/panel = SubResource("radio_dot")
 
 [node name="Selected" type="NinePatchRect" parent="Kihon"]
 layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1355.0
-offset_bottom = 140.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 1349.0
+offset_bottom = 134.0
 texture = ExtResource("selection")
 patch_margin_left = 32
 patch_margin_top = 32
@@ -175,7 +175,7 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 390.0
 offset_top = 40.0
-offset_right = 1295.0
+offset_right = 1250.0
 offset_bottom = 100.0
 text = "Special + direction picks slots A–D. Easier to learn, 100% damage."
 mouse_filter = 2

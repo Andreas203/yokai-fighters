@@ -110,9 +110,9 @@ mouse_filter = 2
 script = ExtResource("seal")
 
 [node name="Plain" type="Label" parent="Body"]
-offset_left = 32
+offset_left = 40
 offset_top = 414
-offset_right = 418
+offset_right = 410
 offset_bottom = 566
 mouse_filter = 2
 theme_override_font_sizes/font_size = 28
@@ -120,9 +120,9 @@ autowrap_mode = 3
 
 
 [node name="TargetPrompt" type="Label" parent="Body"]
-offset_left = 32
+offset_left = 40
 offset_top = 570
-offset_right = 418
+offset_right = 410
 offset_bottom = 610
 mouse_filter = 2
 theme_override_font_sizes/font_size = 26
