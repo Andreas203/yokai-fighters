@@ -142,4 +142,18 @@ public static class AbilityIconScreensProbes
 		Assert.True(UiFind.Get<TextureRect>(cards[3], "Icon").Texture == AbilityArt.Fallback, "case-different id falls back");
 		foreach (var c in cards) c.Free();
 	}
+
+	// YOK-81: with frame data on, a rebind to an unknown id shows neither icon, letter fallback nor pips; off again, exactly one of icon/letter shows.
+	[Test]
+	public static void RebindUnknownIdWhileFrameDataShowsNoArtLayer(Node host)
+	{
+		var c = Card(host);
+		c.Bind(Up(3)); c.SetState(true, true);
+		c.Bind(new CardView(CardKind.Upgrade, "zzz", "Zed", "s", "p", "f", "UPGRADE", null, 3));
+		Assert.True(!UiFind.Get<Control>(c, "Illustration").Visible && !UiFind.Get<Control>(c, "Fallback").Visible && !UiFind.Get<Control>(c, "Pips").Visible, "art layer over frame data");
+		c.SetState(false, false);
+		Assert.True(UiFind.Get<Control>(c, "Illustration").Visible != UiFind.Get<Control>(c, "Fallback").Visible, "exactly one of icon / letter");
+		Assert.True(UiFind.Get<Control>(c, "Pips").Visible, "pips restored");
+		c.Free();
+	}
 }
