@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "elder-kappa-unbreakable-throws-callout",
+  "status": "proposed",
+  "trigger": "First-meeting callout (Y3): the first time Ryo meets the Elder Kappa",
+  "text": "The Elder Kappa's throws cannot be broken. Do not let it take hold.",
+  "placeholders": [],
+  "speaker": "Narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "Y3"
+  ],
+  "notes": "Plain rule statement. Shown once per save."
+}

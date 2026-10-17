@@ -35,6 +35,8 @@ layer = 5
 
 [node name="BindingCard" parent="Flow" instance=ExtResource("3_story")]
 
+[node name="TwistCard" parent="Flow" instance=ExtResource("3_story")]
+
 [node name="Rewards" parent="Flow" instance=ExtResource("4_reward")]
 
 [node name="Complete" parent="Flow" instance=ExtResource("5_complete")]

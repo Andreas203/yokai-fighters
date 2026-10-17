@@ -108,7 +108,7 @@ public static class ModelPresentationTests
 	[Test]
 	public static void AnimSets_EveryStateAndEveryMoveHasAClip()
 	{
-		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })
+		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
 			foreach (PoseKind k in Enum.GetValues<PoseKind>())
 				Assert.True(Cat.Has(set.ClipFor(k)), $"{set.Fighter} {k}: clip {set.ClipFor(k)} is catalogued");
 		foreach (var (move, clip) in FightScene.MoveClips)

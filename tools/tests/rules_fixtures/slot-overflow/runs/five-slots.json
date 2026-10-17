@@ -1,0 +1,37 @@
+{
+  "version": 3,
+  "run": {
+    "slots": [
+      {
+        "slot": "A",
+        "special": "spirit-wave",
+        "level": 1,
+        "modifier": null
+      },
+      {
+        "slot": "B",
+        "special": "rising-talisman",
+        "level": 1,
+        "modifier": null
+      },
+      {
+        "slot": "C",
+        "special": "foxfire",
+        "level": 1,
+        "modifier": null
+      },
+      {
+        "slot": "D",
+        "special": "foxfire",
+        "level": 1,
+        "modifier": null
+      },
+      {
+        "slot": "E",
+        "special": "spirit-wave",
+        "level": 4,
+        "modifier": null
+      }
+    ]
+  }
+}

@@ -19,6 +19,24 @@ public partial class FightScene
 	public uint AiSeed { get; set; } = 27;
 	public bool P2AiEnabled { get; private set; } = true;
 	public ProfileAi? P2Ai { get; private set; }
+	/// <summary>
+	/// YOK-99, Y5: Tanuki wins before this run (the host sets it from the save before the scene enters the tree;
+	/// 0 on its own). Every AI opponent but the apprentice reacts one frame faster per win and leans aggressive
+	/// (<see cref="TanukiPressure"/>, <see cref="PressureFor"/>).
+	/// </summary>
+	public int TanukiWins { get; set; }
+	/// <summary>The pressure this fight's AI gets (<see cref="PressureFor"/>).</summary>
+	public TanukiPressure Pressure => PressureFor(Node, TanukiWins);
+
+	// ApprenticeTier (Y4 tier name of the row-1 apprentice, data/map/node-scenes.json) is defined in FightScene.Tutorial.cs (YOK-92).
+
+	/// <summary>
+	/// YOK-99, Y5 with Y4/Y6: the Tanuki pressure for a node. The apprentice (Y4 tier "apprentice", row 1) is
+	/// exempt: Y4 fixes it at 30f and Y6 makes it the guided tutorial fight. Every other node, elders and the
+	/// Tanuki included, gets <paramref name="tanukiWins"/> in full (that reading is flagged to the designer).
+	/// </summary>
+	public static TanukiPressure PressureFor(NodeContext? node, int tanukiWins) =>
+		node?.Tier == ApprenticeTier ? TanukiPressure.None : new TanukiPressure(tanukiWins);
 	public BehaviourProfile[] Profiles { get; private set; } = Array.Empty<BehaviourProfile>();
 	private int _profileIndex;
 	private bool _swapHeld, _toggleHeld;
@@ -56,22 +74,21 @@ public partial class FightScene
 	/// <summary>New AI over the current match (fight start, reset, temperament swap): empty delay buffer.</summary>
 	public void RebuildAi()
 	{
-		P2Ai = P2AiEnabled && Profiles.Length > 0
-			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed, Node?.ReactionFrames, TierOf(Node)) // Y4: the node's row
-			: null;
+		if (P2AiEnabled && Profiles.Length > 0)
+		{
+			var profile = Profiles[_profileIndex % Profiles.Length];
+			var pressure = Pressure;
+			int reaction = pressure.ReactionFrames(Node?.ReactionFrames ?? profile.ReactionFrames); // Y4: the node's row, Y5: minus Tanuki wins
+			P2Ai = new ProfileAi(profile, 1, AiLoadout.From(Match.P2), AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
+		}
+		else P2Ai = null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
 	}
 
 	/// <summary>
-	/// YOK-57, E22: the fight the AI is in. The boss node (the copy-lock node, <see cref="RunSession.IsCopyLockNode"/>)
-	/// or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder; anything else, or no node, = Standard
-	/// (no EX, no burst whatever the profile says).
+	/// YOK-57, E22: the fight the AI is in; see <see cref="AiFightTiers.Of"/> (shared with the YOK-26 harness).
 	/// </summary>
-	public static AiFightTier TierOf(NodeContext? node) =>
-		node is null ? AiFightTier.Standard
-		: RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
-		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
-		: AiFightTier.Standard;
+	public static AiFightTier TierOf(NodeContext? node) => AiFightTiers.Of(node);
 
 	public void SwapTemperament()
 	{
@@ -89,7 +106,12 @@ public partial class FightScene
 	}
 
 	/// <summary>P2's input for the next tick: the AI from the screen as it is now (it delays itself), else devices.</summary>
-	private FighterInput P2Input() => P2Ai is { } ai ? ai.Next(AiView.Capture(Match)) : InputDevices.Read(1);
+	private FighterInput P2Input()
+	{
+		if (P2Ai is not { } ai) return InputDevices.Read(1);
+		AiView view = AiView.Capture(Match);
+		return CoachedP2(view, ai.Next(view)); // YOK-92: the tutorial coach overrides while a lesson needs the apprentice
+	}
 
 	/// <summary>ExternalDrive: one tick with P1's input and P2 from the AI (or devices when it is off).</summary>
 	public void StepWithAi(FighterInput p1) => Step(p1, P2Input());

@@ -1,0 +1,20 @@
+{
+  "kind": "elder_twist",
+  "id": "elder-kappa-unbreakable-throws",
+  "status": "proposed",
+  "elder": "elder-kappa",
+  "effect": {
+    "type": "unbreakable_throws"
+  },
+  "label_key": "twist.elder-kappa-unbreakable-throws",
+  "intro_card": "elder-kappa-unbreakable-throws-intro",
+  "callout_card": "elder-kappa-unbreakable-throws-callout",
+  "icon": "twist-grip",
+  "rules": [
+    "Y2",
+    "Y3",
+    "C4",
+    "E12"
+  ],
+  "notes": "Y2: 'throws can't be broken'. Proposed: the defender's throw-break press inside the C4 window does nothing against the elder's throws; a same-frame throw clash (E12, an automatic break) still clashes. Intro and callout text: habit-writer."
+}
