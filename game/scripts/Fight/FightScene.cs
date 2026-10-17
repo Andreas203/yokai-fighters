@@ -201,6 +201,7 @@ public partial class FightScene : Node3D
 		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
 		_hud.ShowOpponent(Opponent); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.TitleRequested += () => LeaveForTitle();
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
