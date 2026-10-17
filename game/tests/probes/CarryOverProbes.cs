@@ -116,6 +116,7 @@ public static class CarryOverProbes
 	// ---- save (v6), through reflection ----
 	static readonly Type Store = typeof(SaveData).Assembly.GetType("YokaiFighters.SaveGame.Save" + "Store")!;
 	static SaveLoad Parse(string t) => (SaveLoad)Store.GetMethod("Parse")!.Invoke(null, new object[] { t })!;
+	static int Current => (int)Store.GetField("CurrentVersion")!.GetValue(null)!;
 	static string Ser(SaveData d) => (string)Store.GetMethod("Serialize")!.Invoke(null, new object[] { d })!;
 	static bool Lost(SaveLoad l) => (bool)Store.GetMethod("LostSomething")!.Invoke(null, new object[] { l })!;
 
@@ -158,7 +159,7 @@ public static class CarryOverProbes
 	{
 		foreach (string bad in new[] { "5", "\"\"", "\"  \"", "[]", "{}", "true" })
 		{
-			var l = Parse("{\"version\":6,\"run\":null,\"unlocks\":[\"a\"],\"story\":{\"seen\":[\"intro\"]},\"carry_over\":" + bad + "}");
+			var l = Parse("{\"version\":" + Current + ",\"run\":null,\"unlocks\":[\"a\"],\"story\":{\"seen\":[\"intro\"]},\"carry_over\":" + bad + "}");
 			Assert.Equal(SaveLoadStatus.Partial, l.Status, bad + " status");
 			Assert.True(l.Data.CarryOver is null && l.Data.Unlocks.Count == 1 && l.Data.Story.Has("intro"), bad + " others kept");
 			Assert.True(Lost(l), bad + " backed up before overwrite");

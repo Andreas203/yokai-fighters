@@ -235,7 +235,10 @@ public static class Replayer
 			null or "standard" => AiFightTier.Standard, "elder" => AiFightTier.Elder, "tanuki" => AiFightTier.Tanuki,
 			_ => throw new ReplaySetupException($"unknown AI fight tier '{a.FightTier}'"),
 		};
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier);
+		// YOK-99, Y5: only Tanuki pressure makes a bonus, so anything outside 0..MaxWins × AggressionPerWin is not a recording this build made.
+		if (a.AggressionBonus < 0 || a.AggressionBonus > TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin)
+			throw new ReplaySetupException($"AI aggression bonus {a.AggressionBonus} is outside 0-{TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin}");
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus);
 	}
 }
 

@@ -375,12 +375,17 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
+			// A dev jump's run, or a run in progress when dev mode was switched (both `_unsavedSession`), is never
+			// written: neither its end nor a Tanuki win it scores reaches either save slot (intentional, YOK-99).
 			if (session == Session && session != _unsavedSession)
 			{
 				// M3: the carry-over is decided here, at run end, and replaces the last one (null below row 6).
 				string? carried = CarryOver.FromRunEnd(session.Run, end);
 				if (carried is not null) GD.Print($"GameFlow: '{carried}' carries to the next run at Lv {CarryOver.Level}");
-				Write(Saved.WithRun(null).WithCarryOver(carried));
+				SaveData after = Saved.WithRun(null).WithCarryOver(carried);
+				// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
+				if (end.BeatTanuki) after = after.WithTanukiWin();
+				Write(after);
 			}
 			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was lost
 		};
@@ -542,6 +547,7 @@ public partial class GameFlow : Node
 			fight.Session = Session; // null = the bypass
 			fight.FirstMeeting = FirstMeeting; // Y3 (YOK-139): the callout shows on a first meeting only
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
+			fight.TanukiWins = Saved.TanukiWins; // YOK-99, Y5: the pressure of earlier runs
 			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
 			fight.TutorialFinished += _ => MarkTutorialSeen();
 			fight.TitleRequested += () => Router.ReturnToTitle();

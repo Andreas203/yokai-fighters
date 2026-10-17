@@ -289,6 +289,12 @@ public sealed record SaveData
 	public IReadOnlyList<string> Unlocks { get; init; } = Array.Empty<string>();
 	public StoryProgress Story { get; init; } = StoryProgress.None;
 	/// <summary>
+	/// YOK-99, Y5: runs won against the Tanuki, kept across runs (version 7; 0 when the file has none). Never
+	/// negative; the count is not capped (the S3 win cards and later wins read it), only its effect is
+	/// (<c>Ai.TanukiPressure.MaxWins</c>).
+	/// </summary>
+	public int TanukiWins { get; init; }
+	/// <summary>
 	/// YOK-97, M3: the special id the next run carries at Lv 2 (null = none). Set at every run end by
 	/// <see cref="Sim.CarryOver.FromRunEnd"/> (replacing the last one); kept while a run is in progress, so a run
 	/// abandoned for a new one does not lose it. Saved apart from the run, like unlocks and story.
@@ -305,4 +311,6 @@ public sealed record SaveData
 	public SaveData WithElderMet(string elderId) => this with { Story = Story.WithElderMet(elderId) };
 	/// <summary>M3: replaces the carry-over (null clears it). The run, unlocks and story are untouched.</summary>
 	public SaveData WithCarryOver(string? specialId) => this with { CarryOver = string.IsNullOrWhiteSpace(specialId) ? null : specialId };
+	/// <summary>YOK-99, Y5: one more Tanuki win (stops at <see cref="int.MaxValue"/>). The run, unlocks and story are untouched.</summary>
+	public SaveData WithTanukiWin() => this with { TanukiWins = TanukiWins == int.MaxValue ? int.MaxValue : Math.Max(0, TanukiWins) + 1 };
 }
