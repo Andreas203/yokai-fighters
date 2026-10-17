@@ -117,7 +117,8 @@ public static class DevJumpTests
 		foreach (var o in foes.Where(o => DevJump.OpponentIds.Contains(o.Yokai)))
 		{
 			bool standIn = table.Resolve(new MapNodeData("probe", 2, o.Yokai == DevJump.TanukiId ? NodeTypeRegistry.Boss : NodeTypeRegistry.Duel, o.Yokai)).Context.StandIn;
-			Assert.Equal(!standIn, o.Built, o.Yokai + ": built exactly when node-scenes gives it its own fighter");
+			bool body = o.Yokai != DevJump.TanukiId && FighterAnimSet.HasBody(o.Yokai); // YOK-131: Oni/Kappa bodies on the stand-in kit
+			Assert.Equal(!standIn || body, o.Built, o.Yokai + ": built when node-scenes gives it its own fighter or it has a body of its own");
 		}
 		Assert.True(foes.Any(o => o.Yokai == "human-guises" && !o.Built), "human guises greyed");
 		Assert.Equal(3, DevJump.Elders.Length, "one elder per yokai (Y table)");

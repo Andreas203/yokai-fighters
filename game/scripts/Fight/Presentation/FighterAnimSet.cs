@@ -35,6 +35,8 @@ public sealed class FighterAnimSet
 	public int BurstFrame { get; init; } = 1;
 	/// <summary>Clips that play airborne: their hips are not allowed above the rest height (the sim draws the arc).</summary>
 	public ISet<string> AirClips { get; init; } = new HashSet<string>();
+	/// <summary>Looping poses whose clip plays backwards (the Oni walks back on his forward walk reversed).</summary>
+	public ISet<PoseKind> ReversedPoses { get; init; } = new HashSet<PoseKind>();
 	public string? ClipFor(PoseKind kind) => Clips.TryGetValue(kind, out var c) ? c : null;
 
 	public string MoveClip(string clip) => ClipOverrides.TryGetValue(clip, out var o) ? o : clip;
@@ -108,5 +110,87 @@ public sealed class FighterAnimSet
 		},
 	};
 
-	public static FighterAnimSet For(string fighter) => fighter == "kitsune" ? Kitsune : Ryo;
+	/// <summary>
+	/// YOK-131: the Oni's own club kit (assets/specs/clips/oni-club-clips.md, data/clips/oni-*.json)
+	/// plus the club-clean shared Ryo clips. Presentation only: the fight still runs the node's fighter (the Kitsune
+	/// stand-in kit, node-scenes.json), so the Kitsune's move clips are mapped onto the Oni's takes by override.
+	/// No Oni take yet for jump, landing, back dash or the burst cast: those stay on the Kitsune's / Ryo's clips.
+	/// Quake (oni-quake) and Iron-Club Charge (oni-iron-club-charge) have clips but no move data to hook them to.
+	/// </summary>
+	public static readonly FighterAnimSet Oni = new()
+	{
+		Fighter = "oni",
+		ModelPath = "res://assets/generated/characters/oni/oni-rigged.glb",
+		ScenePath = "res://scenes/fighters/oni.tscn",
+		JumpFrameOffset = Kitsune.JumpFrameOffset,
+		LandingFrame = Kitsune.LandingFrame,
+		BurstFrame = Kitsune.BurstFrame,
+		AirClips = SharedAir,
+		ReversedPoses = new HashSet<PoseKind> { PoseKind.WalkBack },
+		ClipOverrides = new Dictionary<string, string>
+		{
+			["kitsune-light-punch"] = "ryo-light-punch",
+			["kitsune-medium-punch"] = "oni-medium-punch",
+			["kitsune-medium-kick"] = "oni-medium-kick",
+			["kitsune-heavy-punch"] = "oni-heavy-punch",
+			["kitsune-heavy-kick"] = "ryo-heavy-kick",
+			["kitsune-throw"] = "ryo-generic-throw",
+		},
+		Clips = new Dictionary<PoseKind, string>
+		{
+			[PoseKind.Idle] = "oni-idle",
+			[PoseKind.WalkFwd] = "oni-walk-fwd",
+			[PoseKind.WalkBack] = "oni-walk-fwd", // played reversed (ReversedPoses)
+			[PoseKind.Dash] = "oni-walk-fwd",
+			[PoseKind.DashBack] = "ryo-dash-back", // borrowed: not in the Oni kit
+			[PoseKind.Jump] = "kitsune-jump", // borrowed: the Oni kit has no jump
+			[PoseKind.JumpBack] = "kitsune-jump",
+			[PoseKind.Crouch] = "ryo-crouch",
+			[PoseKind.BlockHigh] = "ryo-block-high",
+			[PoseKind.BlockLow] = "oni-block-low",
+			[PoseKind.HitHigh] = "oni-hit-high",
+			[PoseKind.HitLow] = "oni-hit-low",
+			[PoseKind.Knockdown] = "ryo-knockdown",
+			[PoseKind.GetUp] = "ryo-get-up",
+			[PoseKind.Thrown] = "oni-hit-high",
+			[PoseKind.Landing] = "kitsune-jump",
+			[PoseKind.Burst] = "kitsune-foxfire", // borrowed: no Oni cast take
+			[PoseKind.Ko] = "ryo-knockdown",
+			[PoseKind.Attack] = "ryo-light-punch",
+		},
+	};
+
+	/// <summary>YOK-131: the Kappa's body on the Kitsune's shared clips (see <see cref="Oni"/>). He keeps them until he has his own kit. Known: feet sink 3-8 cm.</summary>
+	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn");
+
+	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene) => new()
+	{
+		Fighter = fighter,
+		ModelPath = model,
+		ScenePath = scene,
+		JumpFrameOffset = from.JumpFrameOffset,
+		LandingFrame = from.LandingFrame,
+		BurstFrame = from.BurstFrame,
+		AirClips = from.AirClips,
+		ClipOverrides = from.ClipOverrides,
+		Clips = from.Clips,
+	};
+
+	public static FighterAnimSet For(string fighter) => fighter switch
+	{
+		"kitsune" => Kitsune,
+		"oni" or "elder-oni" => Oni,
+		"kappa" or "elder-kappa" => Kappa,
+		_ => Ryo,
+	};
+
+	/// <summary>
+	/// The body a fight shows for P2: the node's yokai when it has a body of its own (an Oni or Kappa node fought by the
+	/// Kitsune stand-in kit shows the Oni or Kappa), else the fighter's. Presentation only; the sim never reads it.
+	/// </summary>
+	public static FighterAnimSet ForNode(string fighter, string? yokai) =>
+		yokai is "oni" or "elder-oni" or "kappa" or "elder-kappa" ? For(yokai) : For(fighter);
+
+	/// <summary>True when the yokai has a body of its own (a dev-jump opponent worth picking even on a stand-in kit).</summary>
+	public static bool HasBody(string yokai) => For(yokai) != Ryo;
 }
