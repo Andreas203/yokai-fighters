@@ -1,0 +1,122 @@
+{
+  "kind": "normal",
+  "id": "oni-heavy-kick",
+  "name": "Oni heavy kick",
+  "status": "proposed",
+  "source": "oni",
+  "clip": "ryo-heavy-kick",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2",
+    "A8"
+  ],
+  "input": {
+    "button": "HK"
+  },
+  "frame_data": {
+    "startup": 11,
+    "active": 4,
+    "recovery": 23,
+    "damage": 90,
+    "hitstun": 27,
+    "blockstun": 24,
+    "strength": "heavy",
+    "hitboxes": [
+      {
+        "frames": [
+          12,
+          13
+        ],
+        "rect": {
+          "x": 100,
+          "y": 205,
+          "w": 105,
+          "h": 95
+        }
+      },
+      {
+        "frames": [
+          14,
+          15
+        ],
+        "rect": {
+          "x": 115,
+          "y": 275,
+          "w": 100,
+          "h": 100
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          38
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 110,
+          "h": 415
+        }
+      },
+      {
+        "frames": [
+          11,
+          13
+        ],
+        "rect": {
+          "x": 95,
+          "y": 175,
+          "w": 115,
+          "h": 125
+        }
+      },
+      {
+        "frames": [
+          14,
+          22
+        ],
+        "rect": {
+          "x": 90,
+          "y": 260,
+          "w": 125,
+          "h": 145
+        }
+      },
+      {
+        "frames": [
+          23,
+          26
+        ],
+        "rect": {
+          "x": 90,
+          "y": 150,
+          "w": 105,
+          "h": 140
+        }
+      },
+      {
+        "frames": [
+          27,
+          29
+        ],
+        "rect": {
+          "x": 80,
+          "y": 90,
+          "w": 80,
+          "h": 130
+        }
+      }
+    ],
+    "properties": {
+      "knockdown": true
+    }
+  },
+  "notes": "Shared clip ryo-heavy-kick (38 frames, hit 12-15): 11/4/23. Delta against the rules.md first-pass 12/4/22: -1 startup, +1 recovery (the same delta Ryo carries); clip kept. Club-clean per the Oni clip check. Boxes are Ryo's YOK-33 boxes scaled by 2.2/1.75 = 1.257; the body hurtbox is the Oni standing box. Knockdown as C8. Not re-placed from the Oni's posed rig: proposed. Hitstun and blockstun copy Ryo's HK."
+}
