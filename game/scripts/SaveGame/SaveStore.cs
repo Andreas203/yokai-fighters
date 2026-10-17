@@ -40,10 +40,11 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// { "version": 7,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
-///                   "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
+///                   "first_meeting": false, "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
-///   "story": { "seen": ["intro"] },
+///   "story": { "seen": ["intro"], "elders_met": ["elder-oni"] },
+///   "carry_over": null | "foxfire",
 ///   "tanuki_wins": 0 }
 /// </code>
 /// Each section is read on its own (M4): a missing or broken one is empty and the others are kept. Inside the
@@ -66,9 +67,9 @@ public sealed class SaveStore
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
 	/// <remarks>4 (YOK-128): <c>run.node_paid</c> (R8: the entered node's win is already paid and healed; missing = false), so older files load unpaid, as before.</remarks>
-	/// <remarks>7 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.
-	/// Planned merge order: 5 = elder flags (YOK-90, PR #149), 6 = <c>carry_over</c> (YOK-97), 7 = this; a branch that merges
-	/// before the others keeps its number, and the later ones rebase onto it, reading every earlier field.</remarks>
+	/// <remarks>5 (YOK-106, Y3/M4/M5): <c>story.elders_met</c> (elder ids Ryo has met, story progress) and <c>run.first_meeting</c> (the node saved at its entry is an elder met first on that entry); both missing = none, so version 4 and older files load with no elder met.</remarks>
+	/// <remarks>6 (YOK-97, M3): top-level <c>carry_over</c> (the special id the next run carries at Lv 2, or null; missing = none), so older files load with nothing carried.</remarks>
+	/// <remarks>7 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.</remarks>
 	public const int CurrentVersion = 7;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
@@ -144,6 +145,7 @@ public sealed class SaveStore
 				Run = Run(root, problems),
 				Unlocks = Ids(root, "unlocks", problems, sort: false),
 				Story = Story(root, problems),
+				CarryOver = CarryOver(root, problems),
 				TanukiWins = TanukiWins(root, problems),
 			};
 			SaveLoadStatus status =
@@ -176,6 +178,8 @@ public sealed class SaveStore
 			// Optional (missing = default), but a value of the wrong kind is damage, not absence: the run is dropped.
 			else if (OptionalInt(run, "coins", out int coins) is { } coinProblem) why = coinProblem;
 			else if (OptionalBool(run, "copy_locked", out bool? copyLocked) is { } lockProblem) why = lockProblem;
+			// Version 5 (YOK-106): missing (version 4 and older) = not a first meeting.
+			else if (OptionalBool(run, "first_meeting", out bool? firstMeeting) is { } meetingProblem) why = meetingProblem;
 			else if (OptionalCopy(run, out LockedCopySave? copy) is { } copyProblem) why = copyProblem;
 			// Version 4 (YOK-128, R8): the entered node already paid; missing (version 3 and older) = not paid.
 			else if (OptionalBool(run, "node_paid", out bool? nodePaid) is { } paidProblem) why = paidProblem;
@@ -188,6 +192,7 @@ public sealed class SaveStore
 					Coins = coins,
 					CopyLocked = copyLocked,
 					LockedCopy = copy,
+					FirstMeeting = firstMeeting ?? false,
 					NodePaid = nodePaid ?? false,
 					OffRoute = offRoute ?? false,
 				};
@@ -220,7 +225,22 @@ public sealed class SaveStore
 	{
 		if (!root.TryGetProperty("story", out JsonElement story)) { problems.Add("story: missing, no story progress"); return StoryProgress.None; }
 		if (story.ValueKind != JsonValueKind.Object) { problems.Add("story: not an object, no story progress"); return StoryProgress.None; }
-		return new StoryProgress(Ids(story, "seen", problems, sort: true, label: "story.seen"));
+		var seen = Ids(story, "seen", problems, sort: true, label: "story.seen");
+		// Version 5 (YOK-106, Y3): elders met. Missing (version 4 and older) = none met, not a problem; a list of the
+		// wrong kind is reported and taken as empty, without touching `seen` or any other section (M4).
+		var met = story.TryGetProperty(StoryProgress.EldersMetField, out _)
+			? Ids(story, StoryProgress.EldersMetField, problems, sort: true, label: "story." + StoryProgress.EldersMetField)
+			: Array.Empty<string>();
+		return new StoryProgress(seen, met);
+	}
+
+	/// <summary>Version 6 (YOK-97, M3): the carried special's id. Missing (older files) or null = none; anything but a non-empty string is reported and taken as none.</summary>
+	private static string? CarryOver(JsonElement root, List<string> problems)
+	{
+		if (!root.TryGetProperty("carry_over", out JsonElement c) || c.ValueKind == JsonValueKind.Null) return null;
+		string? id = c.ValueKind == JsonValueKind.String ? c.GetString() : null;
+		if (string.IsNullOrWhiteSpace(id)) { problems.Add("carry_over: not a special id, nothing carried"); return null; }
+		return id;
 	}
 
 	/// <summary>
@@ -345,6 +365,7 @@ public sealed class SaveStore
 				if (run.Current is null) w.WriteNull("current"); else w.WriteString("current", run.Current);
 				w.WriteNumber("health", run.Health);
 				w.WriteNumber("coins", run.Coins);
+				w.WriteBoolean("first_meeting", run.FirstMeeting);
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
 				if (run.NodePaid) w.WriteBoolean("node_paid", true); // only after a won node, before it is completed
 				if (run.OffRoute) w.WriteBoolean("off_route", true); // YOK-124: only a dev walk off the routes has it
@@ -380,7 +401,12 @@ public sealed class SaveStore
 			w.WriteStartArray("seen");
 			foreach (string flag in d.Story.Seen) w.WriteStringValue(flag);
 			w.WriteEndArray();
+			w.WriteStartArray(StoryProgress.EldersMetField);
+			foreach (string elder in d.Story.EldersMet) w.WriteStringValue(elder);
+			w.WriteEndArray();
 			w.WriteEndObject();
+			if (d.CarryOver is { } carried) w.WriteString("carry_over", carried);
+			else w.WriteNull("carry_over");
 			w.WriteNumber("tanuki_wins", Math.Max(0, d.TanukiWins)); // YOK-99, Y5
 			w.WriteEndObject();
 		}

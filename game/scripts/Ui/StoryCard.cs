@@ -33,7 +33,41 @@ public partial class StoryCard : Control
 	public void Display(string text)
 	{
 		Text = text; Showing = true; Visible = true;
+		ShowTwistHeader(null, null, "E");
 		ApplyText();
+	}
+
+	/// <summary>YOK-139 (Y3): the elder-twist intro card: <see cref="Display(string)"/> plus a header (the twist's seal and a kicker such as "ELDER TWIST · ROW 5").</summary>
+	public void Display(string text, string kicker, string? iconId, string fallbackGlyph = "E")
+	{
+		Text = text; Showing = true; Visible = true;
+		ShowTwistHeader(kicker, iconId ?? "", fallbackGlyph);
+		ApplyText();
+	}
+
+	public string KickerText => GetNodeOrNull<Label>("Panel/Kicker")?.Visible == true ? GetNode<Label>("Panel/Kicker").Text : "";
+	public string TwistIconId => GetNodeOrNull<TwistSeal>("Panel/TwistSeal") is { Visible: true } s ? s.Icon : "";
+
+	void ShowTwistHeader(string? kicker, string? icon, string fallback)
+	{
+		var panel = GetNode<Control>("Panel");
+		var label = panel.GetNodeOrNull<Label>("Kicker");
+		var seal = panel.GetNodeOrNull<TwistSeal>("TwistSeal");
+		if (kicker == null) { if (label != null) label.Visible = false; if (seal != null) seal.Visible = false; return; }
+		if (seal == null)
+		{
+			seal = new TwistSeal { Name = "TwistSeal", Position = new Vector2(140, 30), Size = new Vector2(66, 66) };
+			panel.AddChild(seal);
+		}
+		if (label == null)
+		{
+			label = new Label { Name = "Kicker", Position = new Vector2(226, 40), Size = new Vector2(880, 46), MouseFilter = MouseFilterEnum.Ignore, VerticalAlignment = VerticalAlignment.Center };
+			label.AddThemeFontSizeOverride("font_size", 34);
+			label.AddThemeColorOverride("font_color", MapNodePalette.ElderRed);
+			panel.AddChild(label);
+		}
+		label.Text = kicker; label.Visible = true;
+		seal.Icon = icon ?? ""; seal.Fallback = fallback; seal.Visible = true;
 	}
 
 

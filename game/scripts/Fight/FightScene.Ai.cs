@@ -28,8 +28,7 @@ public partial class FightScene
 	/// <summary>The pressure this fight's AI gets (<see cref="PressureFor"/>).</summary>
 	public TanukiPressure Pressure => PressureFor(Node, TanukiWins);
 
-	/// <summary>Y4 tier name of the row-1 apprentice (data/map/node-scenes.json).</summary>
-	public const string ApprenticeTier = "apprentice";
+	// ApprenticeTier (Y4 tier name of the row-1 apprentice, data/map/node-scenes.json) is defined in FightScene.Tutorial.cs (YOK-92).
 
 	/// <summary>
 	/// YOK-99, Y5 with Y4/Y6: the Tanuki pressure for a node. The apprentice (Y4 tier "apprentice", row 1) is
@@ -87,15 +86,9 @@ public partial class FightScene
 	}
 
 	/// <summary>
-	/// YOK-57, E22: the fight the AI is in. The boss node (the copy-lock node, <see cref="RunSession.IsCopyLockNode"/>)
-	/// or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder; anything else, or no node, = Standard
-	/// (no EX, no burst whatever the profile says).
+	/// YOK-57, E22: the fight the AI is in; see <see cref="AiFightTiers.Of"/> (shared with the YOK-26 harness).
 	/// </summary>
-	public static AiFightTier TierOf(NodeContext? node) =>
-		node is null ? AiFightTier.Standard
-		: RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
-		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
-		: AiFightTier.Standard;
+	public static AiFightTier TierOf(NodeContext? node) => AiFightTiers.Of(node);
 
 	public void SwapTemperament()
 	{
@@ -113,7 +106,12 @@ public partial class FightScene
 	}
 
 	/// <summary>P2's input for the next tick: the AI from the screen as it is now (it delays itself), else devices.</summary>
-	private FighterInput P2Input() => P2Ai is { } ai ? ai.Next(AiView.Capture(Match)) : InputDevices.Read(1);
+	private FighterInput P2Input()
+	{
+		if (P2Ai is not { } ai) return InputDevices.Read(1);
+		AiView view = AiView.Capture(Match);
+		return CoachedP2(view, ai.Next(view)); // YOK-92: the tutorial coach overrides while a lesson needs the apprentice
+	}
 
 	/// <summary>ExternalDrive: one tick with P1's input and P2 from the AI (or devices when it is off).</summary>
 	public void StepWithAi(FighterInput p1) => Step(p1, P2Input());

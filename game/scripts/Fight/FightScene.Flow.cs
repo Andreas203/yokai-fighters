@@ -50,6 +50,8 @@ public partial class FightScene
 	public bool OwnsSession { get; private set; }
 	/// <summary>The node being fought (opponent, Y4 row, binds).</summary>
 	public NodeContext Node { get; private set; } = null!;
+	/// <summary>YOK-90 (Y3): the twist of the fight on screen (the HUD reminder), or null off an elder node.</summary>
+	public ElderTwist? Twist => Match?.P2.Twist;
 	/// <summary>Hosted only: Restart was pressed (lose screen, end card, pause, debug menu); the host starts a new run.</summary>
 	public event Action? RunRestartRequested;
 	/// <summary>Fights in a whole walk of the run's map (2 for the demo).</summary>
@@ -100,9 +102,13 @@ public partial class FightScene
 	public DraftRewardSource? Draft { get; private set; }
 	/// <summary>Finished recordings of this run's duels, in order (cleared on Restart).</summary>
 	public List<ReplayRecording> DuelRecordings { get; } = new();
-	public bool FlowPaused => DebugMenu?.Visible == true || Paused;
+	public bool FlowPaused => DebugMenu?.Visible == true || Paused || TwistCard?.Showing == true;
 
 	public StoryCard BindingCard { get; private set; } = null!;
+	/// <summary>YOK-139 (Y3): the elder-twist intro card shown on entering an elder node; the fight waits behind it.</summary>
+	public StoryCard? TwistCard { get; private set; }
+	/// <summary>YOK-139 (Y3, YOK-106): this node is Ryo's first meeting with its elder (<c>GameFlow.FirstMeeting</c>); set by the host before the scene enters the tree. The callout shows only then.</summary>
+	public bool FirstMeeting { get; set; }
 	public RewardScreen Rewards { get; private set; } = null!;
 	public DemoCompleteScreen CompleteScreen { get; private set; } = null!;
 	public DemoDebugMenu? DebugMenu { get; private set; }
@@ -145,6 +151,8 @@ public partial class FightScene
 	{
 		Match m = NewMatch(DemoRun, Session); // P2 = Opponent, set from the node in BeginNode
 		if (PlayerScheme is { } scheme) m.P1.Input.Scheme = scheme;
+		if (Twists.Apply(m, Node) is { } twist) // YOK-90: from the node's elder, whoever stands in
+			GD.Print($"FightScene: elder twist '{twist.Id}' ({twist.Effect}) on {Node.Fighter}{(Node.StandIn ? " [stand-in]" : "")}");
 		return m;
 	}
 
@@ -175,12 +183,35 @@ public partial class FightScene
 		CompleteScreen = GetNode<DemoCompleteScreen>("Flow/Complete");
 		CompleteScreen.RestartRequested += RestartRun;
 		ApplyDemoCompleteCard();
+		TwistCard = GetNodeOrNull<StoryCard>("Flow/TwistCard");
+		if (TwistCard != null) TwistCard.Finished += OnTwistCardDone;
+		ShowTwistIntro();
 		if (!ExternalDrive) _suppress = HeldBits(); // entered from a menu: the Space/A that pressed Start Game must not fire a Special
 		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
 		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
 		DebugMenu.Bind(this);
 		foreach (string arg in OS.GetCmdlineUserArgs())
 			if (arg.StartsWith("--temperament=", StringComparison.Ordinal)) SetTemperament(arg["--temperament=".Length..]);
+	}
+
+	/// <summary>
+	/// Y3: entering an elder node (hosted by a run) shows the twist's intro card first, and the fight starts when it is
+	/// confirmed. The words come from story data through <see cref="TwistCopy"/>; the elder, its twist and whether this
+	/// is a first meeting are all read, never decided here.
+	/// </summary>
+	private void ShowTwistIntro()
+	{
+		if (TwistCard == null || OwnsSession || !Node.Elder || Twist is not { } twist) return;
+		string name = Story.StoryLibrary.DisplayName(Opponent);
+		var line = TwistCopy.Intro(twist, TwistCopy.Story, name);
+		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E");
+	}
+
+	private void OnTwistCardDone()
+	{
+		_suppress = HeldBits(); // the Enter/Space/A that closed the card must not fire a Special
+		if (!FirstMeeting || Twist is not { } twist) return;
+		_hud.ShowTwistCallout(TwistCopy.Callout(twist, TwistCopy.Story, Story.StoryLibrary.DisplayName(Opponent)).Text, twist.Icon);
 	}
 
 	/// <summary>The temperament P2's AI plays (from its profile), e.g. "aggressive".</summary>
@@ -303,6 +334,8 @@ public partial class FightScene
 	private void HideFlowScreens()
 	{
 		BindingCard.Dismiss();
+		TwistCard?.Dismiss();
+		_hud.ClearTwistCallout();
 		Rewards.Dismiss();
 		CompleteScreen.Hide();
 		DebugMenu?.Close();
@@ -311,10 +344,12 @@ public partial class FightScene
 	/// <summary>A new Match (rematch, restart): rewire the HUD and shake, rebuild the AI, start a new recording.</summary>
 	private void ReplaceMatch(Match m)
 	{
+		_hud.ClearTwistCallout(); // a new match's ticks restart at 0: the old callout must not come back
 		Match = m;
 		_lastP1 = InputBits.None;
 		_hud.View = new MatchHudView(m, 0);
 		m.Impact += (_, e) => Shake.OnImpact(e);
+		SetUpTutorial(); // YOK-92: the new node may or may not be guided
 		RebuildAi();
 		StartRecording();
 		Shake.Stop();

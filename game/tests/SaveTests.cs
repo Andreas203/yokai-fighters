@@ -512,6 +512,51 @@ public static class SaveTests
 		}, seed: 9);
 	});
 
+	/// <summary>YOK-97, M3: version 6 saves the carry-over at top level; older files carry nothing.</summary>
+	[Test]
+	public static void Store_CarryOver_SavedAtTopLevel_OlderFilesCarryNothing_BadValuesAreReported()
+	{
+		Assert.Equal(7, SaveStore.CurrentVersion, "M3 raised the format to 6 (5 is YOK-106's elder flags); YOK-99 then to 7");
+		var data = SaveData.Empty.WithStory("intro").WithCarryOver("foxfire");
+		string text = SaveStore.Serialize(data);
+		Assert.True(text.Contains("\"carry_over\": \"foxfire\""), "written: " + text);
+		var back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Data.CarryOver == "foxfire" && back.Data.Story.Has("intro"), "read back");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+		Assert.True(SaveStore.Parse(SaveStore.Serialize(SaveData.Empty)).Data.CarryOver is null, "null round trip");
+		Assert.True(SaveData.Empty.WithCarryOver("x").WithCarryOver(null).CarryOver is null, "cleared");
+
+		var v4 = SaveStore.Parse("{ \"version\": 4, \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] } }");
+		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.CarryOver is null, "version 4: nothing carried");
+		var bad = SaveStore.Parse("{ \"version\": " + SaveStore.CurrentVersion + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }, \"carry_over\": 3 }");
+		Assert.True(bad.Status == SaveLoadStatus.Partial && bad.Data.CarryOver is null && bad.Problems.Any(p => p.Contains("carry_over")), "not an id: reported, none");
+	}
+
+	/// <summary>YOK-97, M3: a won run's best special is saved as the carry-over and the next run starts with it at Lv 2.</summary>
+	[Test]
+	public static void Boot_CarryOver_AWonRunCarriesItsBest_IntoTheNextRun(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			while (!flow.Session!.IsOver)
+			{
+				Assert.True(flow.ChooseNode(flow.Session.Reachable()[0]).Ok, "entered");
+				WinEnteredNode(flow, 600);
+			}
+			string best = CarryOver.Best(flow.Session.Run)!.Data.Id;
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data: { Run: null } d } && d.CarryOver == best,
+				"the won run is gone and its best special is saved as the carry-over");
+			Assert.True(flow.RestartRun(), "a new run");
+			var next = flow.Session!;
+			var slot = flow.Session.Run.Owned.Single(o => o.Special.Data.Id == best);
+			Assert.True(slot.Special.Level == CarryOver.Level && slot.Special.Modifier is null, "carried at Lv 2");
+			Assert.Equal(best, new SaveStore(path).Load().Data.CarryOver, "kept in the file while the run is in progress");
+			Assert.True(next.Run.Owned.Count(o => o.Special.Level > 1) == 1, "nothing else above Lv 1");
+		}, seed: 9);
+	});
+
 	[Test]
 	public static void Boot_ASavedRunThisBuildCannotHold_IsNotContinued_AndNotDestroyed(Node runner) => WithTempFile(path =>
 	{
@@ -980,6 +1025,159 @@ public static class SaveTests
 			}
 		}
 		Assert.True(levelledSeeds > 0, "some seed reached the boss with a levelled special");
+	});
+
+	// ---- YOK-106: elders met (Y3), story progress on its own flag (M4), set at the node-entered save (M5) ----
+
+	/// <summary>The file as an older build wrote it: no <c>story.elders_met</c>, no <c>run.first_meeting</c>.</summary>
+	static string AsOlderVersion(SaveData d, int version)
+	{
+		var root = System.Text.Json.Nodes.JsonNode.Parse(SaveStore.Serialize(d))!.AsObject();
+		root["version"] = version;
+		root["story"]!.AsObject().Remove(StoryProgress.EldersMetField);
+		root["run"]?.AsObject().Remove("first_meeting");
+		return root.ToJsonString();
+	}
+
+	[Test]
+	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFiveReadsOlderFiles_M4()
+	{
+		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4); YOK-97 then 6, YOK-99 7");
+		SaveData d = Sample.WithElderMet("elder-oni").WithElderMet("elder-kappa").WithElderMet("elder-oni").WithElderMet(" ");
+		Assert.True(d.Story.EldersMet.SequenceEqual(new[] { "elder-kappa", "elder-oni" }), "a set: once each, ordinal order, blank ignored");
+		Assert.True(d.Story.HasMetElder("elder-oni") && !d.Story.HasMetElder("nine-tailed-kitsune"), "has met");
+		Assert.True(d.Story.Seen.SequenceEqual(Sample.Story.Seen) && d.Unlocks.SequenceEqual(Sample.Unlocks) && d.Run == Sample.Run, "meeting an elder touches no other flag, unlocks or the run");
+		Assert.True(d.WithStory(StoryProgress.FirstLoss).Story.EldersMet.SequenceEqual(d.Story.EldersMet) && d.WithUnlock("x").Story == d.Story && d.WithRun(null).Story == d.Story, "nor do they touch it");
+		Assert.True(d.Story != Sample.Story, "elders met are part of story progress' equality");
+
+		// Round trip, with the run saved at a first meeting.
+		SaveData atMeeting = d.WithRun(Sample.Run! with { FirstMeeting = true });
+		string text = SaveStore.Serialize(atMeeting);
+		SaveLoad back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Problems.Count == 0, "loads clean: " + string.Join("; ", back.Problems));
+		Assert.True(back.Data.Story == atMeeting.Story && back.Data.Run!.FirstMeeting, "elders met and the first meeting come back");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+		Assert.True(text.Contains("\"elders_met\": [") && text.Contains("\"first_meeting\": true"), "named fields: " + text);
+
+		// Versions 1-4: nothing met, not a first meeting, and nothing lost (no backup needed).
+		foreach (int v in new[] { 1, 2, 3, 4 })
+		{
+			SaveLoad old = SaveStore.Parse(AsOlderVersion(atMeeting, v));
+			Assert.True(old.Status == SaveLoadStatus.OlderVersion && !SaveStore.LostSomething(old), $"version {v}: older, nothing lost: " + string.Join("; ", old.Problems));
+			Assert.True(old.Data.Story.EldersMet.Count == 0 && old.Data.Run is { FirstMeeting: false }, $"version {v}: no elder met");
+			Assert.True(old.Data.Story.Seen.SequenceEqual(Sample.Story.Seen) && old.Data.Unlocks.SequenceEqual(Sample.Unlocks), $"version {v}: the rest of the story and unlocks kept");
+		}
+
+		// Damage: a broken elders list loses only itself (M4); bad entries are skipped; an id no map names is kept and harmless.
+		SaveLoad notList = SaveStore.Parse(text.Replace("\"elders_met\": [", "\"elders_met\": 3, \"x\": ["));
+		Assert.True(notList.Status == SaveLoadStatus.Partial && notList.Data.Story.EldersMet.Count == 0, "elders_met not a list: empty, reported");
+		Assert.True(notList.Data.Story.Seen.SequenceEqual(Sample.Story.Seen) && notList.Data.Unlocks.SequenceEqual(Sample.Unlocks) && notList.Data.Run is { FirstMeeting: true }, "seen flags, unlocks and the run are kept");
+		SaveLoad noStory = SaveStore.Parse(text.Replace("\"story\": {", "\"story\": [], \"x\": {"));
+		Assert.True(noStory.Status == SaveLoadStatus.Partial && noStory.Data.Story == StoryProgress.None && noStory.Data.Unlocks.SequenceEqual(Sample.Unlocks), "a broken story section: unlocks kept");
+		SaveLoad junk = SaveStore.Parse("{ " + Current + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [], \"elders_met\": [\"elder-oni\", 4, \"\", null, \"no-such-elder\", \"elder-oni\"] } }");
+		Assert.True(junk.Status == SaveLoadStatus.Partial && junk.Data.Story.EldersMet.SequenceEqual(new[] { "elder-oni", "no-such-elder" }), "bad entries skipped and reported, ids kept");
+		Assert.True(ElderMeetings.ElderOf(DefaultMap().Nodes.FirstOrDefault(n => n.Yokai == "no-such-elder")) == null, "an id no node names never answers for a node");
+		SaveLoad badFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true", "\"first_meeting\": \"yes\""));
+		Assert.True(badFlag.Status == SaveLoadStatus.Partial && badFlag.Data.Run == null && badFlag.Data.Story == atMeeting.Story, "first_meeting not true/false: the run is dropped (existing policy), story kept");
+		SaveLoad noFlag = SaveStore.Parse(text.Replace("\"first_meeting\": true,", ""));
+		Assert.True(noFlag.Status == SaveLoadStatus.Loaded && noFlag.Data.Run is { FirstMeeting: false }, "first_meeting missing: false");
+	}
+
+	[Test]
+	public static void ElderMeetings_TheElderComesFromTheMapData_FirstMeetingOncePerSave()
+	{
+		var graph = DefaultMap();
+		foreach (var n in graph.Nodes)
+			Assert.Equal(n.Elder ? n.Yokai : null, ElderMeetings.ElderOf(n), n.Id + ": the elder is the node's flag and its yokai");
+		Assert.True(graph.Nodes.Count(n => ElderMeetings.ElderOf(n) == "elder-oni") == 2, "the Elder Oni waits on two nodes: one elder");
+		Assert.True(ElderMeetings.ElderOf(new MapNodeData("x", 1, "duel", "oni", Elder: true)) == "oni" && ElderMeetings.ElderOf(new MapNodeData("y", 1, "elder", "elder-oni")) == null, "the data's flag decides, not an id or a type name");
+
+		SaveData s = SaveData.Empty.WithStory(StoryProgress.Intro).WithUnlock("u");
+		SaveData same = ElderMeetings.Enter(s, graph.Node("r4-merchant"), out bool first);
+		Assert.True(ReferenceEquals(same, s) && !first, "a node with no elder changes nothing");
+		SaveData met = ElderMeetings.Enter(s, graph.Node("r5-elder-oni"), out first);
+		Assert.True(first && met.Story.HasMetElder("elder-oni") && met.Story.Has(StoryProgress.Intro) && met.Unlocks.SequenceEqual(s.Unlocks), "first meeting: marked, nothing else touched");
+		SaveData again = ElderMeetings.Enter(met, graph.Node("r8-elder-oni"), out first);
+		Assert.True(!first && again.Story == met.Story, "the same elder on another node is not a first meeting, and is not added twice");
+		ElderMeetings.Enter(again, graph.Node("r8-elder-kappa"), out first);
+		Assert.True(first, "another elder is");
+	}
+
+	static void FinishEnteredNode(GameFlow flow, int healthLeft)
+	{
+		if (flow.Session!.Map.CurrentNode!.Type is "merchant" or "dojo") Assert.True(flow.Session.CompleteNode().Ok, "left the stop");
+		else WinEnteredNode(flow, healthLeft);
+	}
+
+	[Test]
+	public static void Boot_ElderMet_SavedOnEntering_SurvivesQuitAndContinue_AndLaterRuns_M5(Node runner) => WithTempFile(path =>
+	{
+		string atEntry = "";
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" })
+			{
+				Assert.True(flow.ChooseNode(id).Ok, "entered " + id);
+				Assert.True(!flow.FirstMeeting && new SaveStore(path).Load().Data.Run is { FirstMeeting: false }, id + ": no elder, no meeting");
+				FinishEnteredNode(flow, 900);
+			}
+			Assert.True(!flow.HasMetElder("elder-oni") && new SaveStore(path).Load().Data.Story.EldersMet.Count == 0, "no elder met before row 5");
+
+			Assert.True(flow.ChooseNode("r5-elder-oni").Ok, "row 5: the Elder Oni");
+			Assert.True(flow.FirstMeeting && flow.HasMetElder("elder-oni"), "first meeting, and met");
+			SaveLoad entered = new SaveStore(path).Load();
+			Assert.True(entered.Data.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }) && entered.Data.Run is { Current: "r5-elder-oni", FirstMeeting: true }, "written by the node-entered save");
+			atEntry = File.ReadAllText(path);
+			for (int t = 0; t < 6; t++) flow.Fight!.Step(FighterInput.None, new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+			Assert.Equal(atEntry, File.ReadAllText(path), "nothing written mid-fight");
+			Assert.True(flow.ReturnToTitle(), "quit inside the elder node");
+			Assert.True(!flow.FirstMeeting, "no meeting off a node");
+		});
+
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == "r5-elder-oni", "Continue goes back into the elder node");
+			Assert.True(flow.FirstMeeting && flow.Saved.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }), "still the first meeting, the flag neither lost nor doubled");
+			Assert.Equal(atEntry, File.ReadAllText(path), "continuing writes nothing");
+			WinEnteredNode(flow, 800);
+			Assert.True(!flow.FirstMeeting && new SaveStore(path).Load().Data is { Run.FirstMeeting: false } done && done.Story.HasMetElder("elder-oni"), "completed: the meeting is over, the elder stays met");
+
+			// Same run, row 8: the Elder Oni again is not a first meeting.
+			foreach (string id in new[] { flow.Session!.Reachable()[0], "r7-dojo" }) { Assert.True(flow.ChooseNode(id).Ok, "entered " + id); FinishEnteredNode(flow, 800); }
+			Assert.True(flow.ChooseNode("r8-elder-oni").Ok && !flow.FirstMeeting, "row 8: the Elder Oni again, not a first meeting");
+			Assert.True(flow.Session!.LoseFight().Ok && flow.ReturnToTitle(), "lose; back to the title");
+			Assert.True(new SaveStore(path).Load().Data is { Run: null } after && after.Story.EldersMet.SequenceEqual(new[] { "elder-oni" }), "the run ends, the elder stays met (M4)");
+
+			// A new run: the elder is still met (per save, across runs).
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			Assert.True(!flow.FirstMeeting && flow.HasMetElder("elder-oni"), "a new run remembers the meeting");
+		});
+	});
+
+	[Test]
+	public static void Boot_AVersion4FileSavedInsideAnElderNode_ContinuesAsTheFirstMeeting(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" }) { Assert.True(flow.ChooseNode(id).Ok, id); FinishEnteredNode(flow, 900); }
+			Assert.True(flow.ChooseNode("r5-nine-tails").Ok && flow.FirstMeeting, "entered an elder node");
+			Assert.True(flow.ReturnToTitle(), "quit");
+		});
+		File.WriteAllText(path, AsOlderVersion(new SaveStore(path).Load().Data, 4));
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "a version 4 file");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session!.Node?.NodeId == "r5-nine-tails" && flow.FirstMeeting && flow.HasMetElder("nine-tailed-kitsune"), "no elder in the file: this is the first meeting");
+			WinEnteredNode(flow, 700);
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded } l && l.Data.Story.HasMetElder("nine-tailed-kitsune"), "written as version 5 at the next save point");
+		});
 	});
 
 	/// <summary>YOK-124 (M5): a walk taken off the routes by dev mode's full map is saved with <c>off_route</c> and comes back only in a dev session.</summary>

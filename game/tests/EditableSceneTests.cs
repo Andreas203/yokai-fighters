@@ -87,7 +87,7 @@ public static class EditableSceneTests
 	[Test]
 	public static void FighterScenes_AreManualAndKitsuneHasNinePlacedTails()
 	{
-		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })
+		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
 		{
 			var model = GD.Load<PackedScene>(set.ScenePath).Instantiate<FighterModel>();
 			Assert.Equal(set.Fighter, model.Fighter, $"{set.ScenePath}: Fighter id");
@@ -104,7 +104,7 @@ public static class EditableSceneTests
 				foreach (Node t in tails.GetChildren())
 					Assert.True(t.FindChild("*", true, false) != null && ((Node3D)t).Rotation.IsZeroApprox(), $"{t.Name}: the pivot carries only the sway (fan pose on its child)");
 			}
-			else Assert.True(tails is null, "Ryo has no tails");
+			else Assert.True(tails is null, $"{set.Fighter} has no tails");
 			model.Free();
 		}
 	}
