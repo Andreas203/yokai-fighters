@@ -189,10 +189,10 @@ autowrap_mode = 3
 
 [node name="Slots" type="VBoxContainer" parent="."]
 offset_left = 1200
-offset_top = 454
+offset_top = 446
 offset_right = 1880
 offset_bottom = 966
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 mouse_filter = 2
 
 [node name="Footer" parent="." instance=ExtResource("footer")]
