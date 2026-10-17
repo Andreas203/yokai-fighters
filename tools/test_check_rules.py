@@ -165,6 +165,16 @@ class PassingSamplesTest(unittest.TestCase):
         code, hits, _ = rules_hit("ninefold-spark")
         self.assertEqual(code, 0, hits)
 
+    def test_harness_bot_config_is_a_known_kind(self):
+        # YOK-26 adds data/harness/<bot>.json (kind harness_bot); no rule here reads it, and it is not unknown
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "harness").mkdir()
+            Path(tmp, "harness", "newcomer-kihon-bot.json").write_text(json.dumps(
+                {"kind": "harness_bot", "id": "newcomer-kihon-bot", "schema_version": 1}))
+            code, rep = violations(DATA, tmp)
+        self.assertEqual(code, 0, rep["violations"])
+
 
 class GraphTest(unittest.TestCase):
     def test_find_loops_two_hop_and_self(self):

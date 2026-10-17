@@ -86,7 +86,7 @@ HEAVY_BUTTONS = ("HP", "HK")  # Match.Specials: CancelFrom.HeavyNormals = HP or 
 
 
 KINDS = ("special", "normal", "throw", "modifier", "cancel_rule", "profile", "clip", "story_card",
-         "run_map", "node_scenes", "trial")  # validate_data.KIND_SCHEMA
+         "run_map", "node_scenes", "trial", "harness_bot")  # validate_data.KIND_SCHEMA (harness_bot: YOK-26, no rule here)
 
 
 # Shape guards: this check reads files the schema would refuse, so every value read from a document goes
