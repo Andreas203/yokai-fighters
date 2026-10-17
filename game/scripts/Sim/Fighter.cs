@@ -52,6 +52,12 @@ public sealed partial class Fighter
 	/// the presenter uses it to tell walking from being pushed.
 	/// </summary>
 	public int WalkDir;
+	/// <summary>
+	/// YOK-136: this fighter's push-box width in centi-units, from its <c>data/fighters/</c> file; 0 = the fight-wide
+	/// <see cref="SimConfig.BodyWidth"/>. Identity, not round state: <see cref="Reset"/> keeps it. Read through
+	/// <see cref="Match.PushWidth"/>.
+	/// </summary>
+	public int PushWidth;
 
 	public bool Airborne => AirFrame > 0;
 	public MoveData? CurrentMove => State == FighterState.Attack ? ActiveMove : null;
@@ -108,6 +114,7 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, DashFrame);
 		h = Fnv.Mix(h, DashDir);
 		h = Fnv.Mix(h, (int)Input.Pending.Kind);
+		if (PushWidth != 0) h = Fnv.Mix(h, PushWidth); // YOK-136: only when set, so fights without one hash as before
 		return HashSpecialState(h);
 	}
 }

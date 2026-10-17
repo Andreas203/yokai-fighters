@@ -1,0 +1,8 @@
+{
+  "kind": "fighter",
+  "id": "oni",
+  "status": "proposed",
+  "rules": ["E1", "C2"],
+  "push_width": 150,
+  "notes": "YOK-136: provisional push box for the Oni's 2.2 m body, which overlaps Ryo at the default 120. 150 is movesmith's estimate (120 x 2.2 / 1.75, Ryo's height), not measured from the model; awaiting the designer. Ryo and the Kitsune have no file and keep SimConfig.BodyWidth (120)."
+}
