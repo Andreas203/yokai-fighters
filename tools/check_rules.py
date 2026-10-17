@@ -463,7 +463,7 @@ def _meter_keys(node, path=""):
 
 
 def _spends_meter(target) -> bool:
-    return isinstance(target, str) and bool(re.search(r"(^|\.)(meter_cost|meter_spend|meter\.cost)$", target.lower()))
+    return isinstance(target, str) and bool(re.search(r"(^|\.)(meter_cost|meter_spend|meter\.cost)$", target.strip().lower()))
 
 
 def check_meter(docs, rep: Report):
@@ -492,7 +492,7 @@ def check_meter(docs, rep: Report):
             effects += [("levels.3.evolution.changes", c) for c in L(D(D(lv.get("3")).get("evolution")).get("changes"))]
         for where, e in effects:
             for t in _targets(e):
-                if _spends_meter(t) and not str(t).startswith("ex."):
+                if _spends_meter(t) and not str(t).strip().lower().startswith("ex."):
                     rep.fail("meter", "C5", p, f"{where}: target '{t}' spends meter outside the EX version")
 
 
@@ -518,6 +518,19 @@ def check_schemes(docs, rep: Report):
 
 # --- R7 trials completable with Kihon inputs --------------------------------------------------
 
+def _kata_only_keys(node, path: str):
+    """Every Kata-only key (KATA_ONLY_KEYS) anywhere inside a trial step, with its dotted path."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            here = f"{path}.{k}"
+            if k in KATA_ONLY_KEYS:
+                yield here
+            yield from _kata_only_keys(v, here)
+    elif isinstance(node, list):
+        for j, v in enumerate(node):
+            yield from _kata_only_keys(v, f"{path}.{j}")
+
+
 def has_kihon(d: dict) -> bool:
     """Normals and throws are buttons in both schemes (K2, E12); a special needs its Kihon slot."""
     if d.get("kind") != "special":
@@ -541,9 +554,8 @@ def check_trials(docs, rep: Report):
             if not isinstance(st, dict):
                 rep.fail("trials", "R7", p, f"goal.steps.{i}: {st!r} is not a step")
                 continue
-            for key in KATA_ONLY_KEYS:
-                if key in st:
-                    rep.fail("trials", "K2", p, f"goal.steps.{i}.{key}: needs a Kata input; trials must be Kihon-completable")
+            for where in _kata_only_keys(st, f"goal.steps.{i}"):   # nested too, e.g. require.motion
+                rep.fail("trials", "K2", p, f"{where}: needs a Kata input; trials must be Kihon-completable")
             mid = st.get("move")
             if mid is None:
                 continue
