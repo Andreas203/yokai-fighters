@@ -82,7 +82,7 @@ public sealed class ApprenticeTutorial
 
 	private readonly LessonOutcome[] _outcomes = new LessonOutcome[Order.Count];
 	private bool _met, _detached, _lent;
-	private int _meterAtEntry;
+	private int _meterAtEntry, _cancelAtEntry;
 
 	public ApprenticeTutorial(Match match, TutorialOptions? options = null, int player = 0)
 	{
@@ -110,7 +110,13 @@ public sealed class ApprenticeTutorial
 		LessonTicks++;
 		Fighter p = Match.Fighters[Player];
 		if (Current == TutorialLesson.Meter && p.Meter >= Match.Config.ExCost && p.Meter > _meterAtEntry) _met = true; // C5: built during the lesson
-		if (Current == TutorialLesson.Cancel && p.CancelUsed != 0) _met = true;
+		if (Current == TutorialLesson.Cancel)
+		{
+			// Only a cancel made while the lesson is up counts: a mark carried in from an earlier combo does not. A bit the
+			// sim clears (back to Idle, X3's per-combo reset) leaves the baseline, so the next cancel on it counts again.
+			_cancelAtEntry &= p.CancelUsed;
+			if ((p.CancelUsed & ~_cancelAtEntry) != 0) _met = true;
+		}
 		if (_met && LessonTicks >= Options.MinPromptTicks) End(LessonOutcome.Done);
 	}
 
@@ -174,6 +180,7 @@ public sealed class ApprenticeTutorial
 		if (Finished || _detached) return;
 		Fighter p = Match.Fighters[Player];
 		_meterAtEntry = p.Meter;
+		_cancelAtEntry = p.CancelUsed;
 		bool unavailable = Current switch
 		{
 			TutorialLesson.Meter => p.Meter >= Match.Config.MeterMax, // full: nothing left to build
