@@ -51,6 +51,12 @@ public sealed class FighterSetup
 	/// </summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public int CopiedSlot { get; set; }
+	/// <summary>
+	/// YOK-136: <see cref="Fighter.PushWidth"/> (centi-units) from the fighter's data/fighters/ file, as recorded.
+	/// Left out when 0 (the config's BodyWidth), so older recordings read as the default and still replay.
+	/// </summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public int PushWidth { get; set; }
 }
 
 /// <summary>P2's AI as built: profile (with fingerprint), reaction frames (Y4) and seed. Null = devices/recorded input.</summary>
