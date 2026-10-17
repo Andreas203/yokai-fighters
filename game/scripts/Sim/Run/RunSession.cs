@@ -9,6 +9,10 @@ public enum RunOutcome { Won, Lost }
 public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 {
 	public bool Won => Outcome == RunOutcome.Won;
+	/// <summary>YOK-99: the run ended on the Tanuki's node (<see cref="RunSession.IsCopyLockNode"/>).</summary>
+	public bool AtTanuki { get; init; }
+	/// <summary>YOK-99, Y5: a Tanuki win, the one thing that raises the Tanuki pressure on later runs.</summary>
+	public bool BeatTanuki => Won && AtTanuki;
 }
 
 /// <summary>
@@ -230,7 +234,7 @@ public sealed class RunSession
 		_dojo = null;
 		Merchant = null;
 		(CoinsWon, _paid) = (0, false);
-		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
+		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId) { AtTanuki = IsCopyLockNode(node) };
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
 		return step;
@@ -265,7 +269,7 @@ public sealed class RunSession
 	{
 		if (IsOver) return MapResult.Fail("the run is over");
 		if (Node is not { } node) return MapResult.Fail("no node is entered");
-		Ended = new RunEnd(RunOutcome.Lost, node.Row, node.NodeId);
+		Ended = new RunEnd(RunOutcome.Lost, node.Row, node.NodeId) { AtTanuki = IsCopyLockNode(node) };
 		RunEnded?.Invoke(Ended);
 		return MapResult.Done;
 	}

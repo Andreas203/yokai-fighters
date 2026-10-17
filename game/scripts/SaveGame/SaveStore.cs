@@ -37,13 +37,14 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 4,
+/// { "version": 6,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
 ///                   "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
-///   "story": { "seen": ["intro"] } }
+///   "story": { "seen": ["intro"] },
+///   "tanuki_wins": 0 }
 /// </code>
 /// Each section is read on its own (M4): a missing or broken one is empty and the others are kept. Inside the
 /// run, <c>seed</c>, <c>map</c>, <c>visited</c>, <c>health</c> and <c>slots</c> are needed (without them there is
@@ -65,7 +66,9 @@ public sealed class SaveStore
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
 	/// <remarks>4 (YOK-128): <c>run.node_paid</c> (R8: the entered node's win is already paid and healed; missing = false), so older files load unpaid, as before.</remarks>
-	public const int CurrentVersion = 4;
+	/// <remarks>6 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.
+	/// Version 5 is taken by YOK-90 (PR #149); whichever merges second rebases onto the other's version.</remarks>
+	public const int CurrentVersion = 6;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -140,6 +143,7 @@ public sealed class SaveStore
 				Run = Run(root, problems),
 				Unlocks = Ids(root, "unlocks", problems, sort: false),
 				Story = Story(root, problems),
+				TanukiWins = TanukiWins(root, problems),
 			};
 			SaveLoadStatus status =
 				unknownVersion is not null ? SaveLoadStatus.NewerVersion :
@@ -216,6 +220,19 @@ public sealed class SaveStore
 		if (!root.TryGetProperty("story", out JsonElement story)) { problems.Add("story: missing, no story progress"); return StoryProgress.None; }
 		if (story.ValueKind != JsonValueKind.Object) { problems.Add("story: not an object, no story progress"); return StoryProgress.None; }
 		return new StoryProgress(Ids(story, "seen", problems, sort: true, label: "story.seen"));
+	}
+
+	/// <summary>
+	/// YOK-99, Y5: the Tanuki win count. Missing = 0 with no problem (like every field a later build adds: older
+	/// files have none); anything but a whole number 0 or above is taken as 0 and reported, so the load is partial
+	/// and the file is backed up before it is next written.
+	/// </summary>
+	private static int TanukiWins(JsonElement root, List<string> problems)
+	{
+		if (!root.TryGetProperty("tanuki_wins", out JsonElement w)) return 0;
+		if (Whole(w, out int n) && n >= 0) return n; // like every whole number in the file, 1e2 reads as 100 (YOK-87)
+		problems.Add($"tanuki_wins: {w.GetRawText()} is not a whole number 0 or above, taken as 0");
+		return 0;
 	}
 
 	/// <summary>A list of ids: entries that are not non-empty strings are skipped (and reported), the rest kept in order, once each.</summary>
@@ -363,6 +380,7 @@ public sealed class SaveStore
 			foreach (string flag in d.Story.Seen) w.WriteStringValue(flag);
 			w.WriteEndArray();
 			w.WriteEndObject();
+			w.WriteNumber("tanuki_wins", Math.Max(0, d.TanukiWins)); // YOK-99, Y5
 			w.WriteEndObject();
 		}
 		return Encoding.UTF8.GetString(stream.ToArray()) + "\n";

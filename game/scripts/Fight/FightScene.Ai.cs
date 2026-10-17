@@ -19,6 +19,12 @@ public partial class FightScene
 	public uint AiSeed { get; set; } = 27;
 	public bool P2AiEnabled { get; private set; } = true;
 	public ProfileAi? P2Ai { get; private set; }
+	/// <summary>
+	/// YOK-99, Y5: Tanuki wins before this run (the host sets it from the save before the scene enters the tree;
+	/// 0 on its own). Every AI opponent reacts one frame faster per win and leans aggressive (<see cref="TanukiPressure"/>).
+	/// </summary>
+	public int TanukiWins { get; set; }
+	public TanukiPressure Pressure => new(TanukiWins);
 	public BehaviourProfile[] Profiles { get; private set; } = Array.Empty<BehaviourProfile>();
 	private int _profileIndex;
 	private bool _swapHeld, _toggleHeld;
@@ -56,9 +62,14 @@ public partial class FightScene
 	/// <summary>New AI over the current match (fight start, reset, temperament swap): empty delay buffer.</summary>
 	public void RebuildAi()
 	{
-		P2Ai = P2AiEnabled && Profiles.Length > 0
-			? new ProfileAi(Profiles[_profileIndex % Profiles.Length], 1, AiLoadout.From(Match.P2), AiSeed, Node?.ReactionFrames, TierOf(Node)) // Y4: the node's row
-			: null;
+		if (P2AiEnabled && Profiles.Length > 0)
+		{
+			var profile = Profiles[_profileIndex % Profiles.Length];
+			var pressure = Pressure;
+			int reaction = pressure.ReactionFrames(Node?.ReactionFrames ?? profile.ReactionFrames); // Y4: the node's row, Y5: minus Tanuki wins
+			P2Ai = new ProfileAi(profile, 1, AiLoadout.From(Match.P2), AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
+		}
+		else P2Ai = null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
 	}
 

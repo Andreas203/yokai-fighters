@@ -31,6 +31,10 @@ public sealed class ProfileAi
 	public List<AiDecision>? Log { get; set; }
 	/// <summary>YOK-57: the fight this AI is in. E22: ex_use / burst_use apply only in elder and Tanuki fights.</summary>
 	public AiFightTier Tier { get; }
+	/// <summary>YOK-99, Y5: aggression-bias points added by Tanuki wins (<see cref="TanukiPressure.AggressionBonus"/>); 0 = none.</summary>
+	public int AggressionBonus { get; }
+	/// <summary>The bias the neutral weights use: the profile's own plus <see cref="AggressionBonus"/>, within 0-100.</summary>
+	public int Aggression => Math.Clamp(Profile.AggressionBias + AggressionBonus, 0, 100);
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -45,9 +49,10 @@ public sealed class ProfileAi
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
-		AiFightTier tier = AiFightTier.Standard)
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
 	{
 		Tier = tier;
+		AggressionBonus = aggressionBonus;
 		Profile = profile;
 		Self = self;
 		_kit = kit;
@@ -126,7 +131,7 @@ public sealed class ProfileAi
 		{
 			var b = Profile.Behaviours[i];
 			bool holds = b.When == Observation.Neutral || b.When == range || (b.When == Observation.OpponentBlocking && o.State == FighterState.Blockstun);
-			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Profile.AggressionBias : 150 - Profile.AggressionBias) / 100);
+			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Aggression : 150 - Aggression) / 100);
 			total += w[i];
 		}
 		int roll = _rng.Next(total);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
+using YokaiFighters.Ai;
 using YokaiFighters.Fight;
 using YokaiFighters.Flow;
 using YokaiFighters.SaveGame;
@@ -1006,5 +1007,88 @@ public static class SaveTests
 		string plain = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(onRoute)));
 		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
 		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
+	});
+
+	// ---- YOK-99, Y5: Tanuki wins across runs (version 6) ----
+
+	[Test]
+	public static void TanukiWins_RoundTrip_AndOtherSectionsAlone()
+	{
+		var d = SaveData.Empty.WithUnlock("foxfire").WithStory(StoryProgress.Intro).WithTanukiWin().WithTanukiWin();
+		Assert.True(d.TanukiWins == 2 && d.Unlocks.Single() == "foxfire" && d.Story.Has(StoryProgress.Intro), "two wins; unlocks and story untouched");
+		string text = SaveStore.Serialize(d);
+		Assert.True(text.Contains("\"tanuki_wins\": 2") && text.Contains(Current), "written: " + text);
+		var back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Data.TanukiWins == 2, $"read back ({back.Status}: {string.Join("; ", back.Problems)})");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same data, same bytes");
+		Assert.Equal(int.MaxValue, (d with { TanukiWins = int.MaxValue }).WithTanukiWin().TanukiWins, "never wraps");
+		Assert.Equal(1, (d with { TanukiWins = -5 }).WithTanukiWin().TanukiWins, "a bad negative count restarts at 1");
+		Assert.True(SaveStore.Serialize(d with { TanukiWins = -5 }).Contains("\"tanuki_wins\": 0"), "never writes a negative count");
+		Assert.True(SaveStore.CurrentVersion >= 6, "YOK-99 raised the version (5 is YOK-90's)");
+		Assert.True(d.WithRun(Sample.Run).TanukiWins == 2 && d.WithRun(null).TanukiWins == 2, "a new or ended run keeps the count");
+	}
+
+	[Test]
+	public static void TanukiWins_MissingIsZero_ABadCountIsZeroAndPartial()
+	{
+		var v4 = SaveStore.Parse("""{ "version": 4, "run": null, "unlocks": [], "story": { "seen": [] } }""");
+		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.TanukiWins == 0 && !SaveStore.LostSomething(v4),
+			$"a version 4 file: no wins, nothing lost ({string.Join("; ", v4.Problems)})");
+
+		string Now(string wins) => "{ " + Current + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }" + wins + " }";
+		Assert.True(SaveStore.Parse(Now("")) is { Status: SaveLoadStatus.Loaded, Data.TanukiWins: 0 }, "missing: 0, like any later-added field");
+		foreach (string bad in new[] { "-1", "\"2\"", "1.5", "true", "null", "[1]", "2147483648" })
+		{
+			var l = SaveStore.Parse(Now(", \"tanuki_wins\": " + bad));
+			Assert.True(l.Status == SaveLoadStatus.Partial && l.Data.TanukiWins == 0 && l.Problems.Any(p => p.StartsWith("tanuki_wins")), $"{bad}: taken as 0 and reported");
+		}
+		Assert.Equal(100, SaveStore.Parse(Now(", \"tanuki_wins\": 1e2")).Data.TanukiWins, "1e2 is a whole number (YOK-87)");
+		Assert.Equal(7, SaveStore.Parse(Now(", \"tanuki_wins\": 7")).Data.TanukiWins, "the count is kept past 3 (only the effect stops)");
+	}
+
+	[Test]
+	public static void Boot_ATanukiWin_IsCounted_Saved_AndPressesTheNextRun(Node runner) => WithTempFile(path =>
+	{
+		void NewRun(GameFlow flow)
+		{
+			if (flow.Session is not null) flow.ReturnToTitle();
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+		}
+		void Next(GameFlow flow) { Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered"); WinEnteredNode(flow, 600); }
+
+		WithBoot(runner, path, flow =>
+		{
+			NewRun(flow);
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 1");
+			var first = flow.Fight!;
+			int baseFrames = first.Node!.ReactionFrames;
+			Assert.True(first.TanukiWins == 0 && first.P2Ai!.ReactionFrames == baseFrames && first.P2Ai.AggressionBonus == 0, "no wins yet: Y4 as written");
+
+			// Lose to the Tanuki: no win.
+			WinEnteredNode(flow, 600);
+			while (flow.Session!.Reachable()[0] != "boss-tanuki") Next(flow);
+			Assert.True(flow.ChooseNode("boss-tanuki").Ok, "entered the Tanuki's node");
+			Assert.True(flow.Session.LoseFight().Ok, "lost");
+			Assert.True(flow.Saved.TanukiWins == 0 && new SaveStore(path).Load().Data.TanukiWins == 0, "a loss to the Tanuki is not a win");
+
+			// Beat the Tanuki.
+			NewRun(flow);
+			while (!flow.Session!.IsOver) Next(flow);
+			Assert.True(flow.Session.Ended!.BeatTanuki, "beat the Tanuki");
+			var file = new SaveStore(path).Load();
+			Assert.True(file.Status == SaveLoadStatus.Loaded && file.Data.TanukiWins == 1 && file.Data.Run is null, "one win saved, the run cleared");
+
+			// The next run's fights are pressed (Y5).
+			NewRun(flow);
+			Assert.True(new SaveStore(path).Load().Data.TanukiWins == 1, "a new run keeps the count");
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 1");
+			var pressed = flow.Fight!;
+			Assert.True(pressed.TanukiWins == 1, "the count reached the fight");
+			Assert.Equal(baseFrames - 1, pressed.P2Ai!.ReactionFrames, "Y5: one frame faster");
+			Assert.Equal(TanukiPressure.AggressionPerWin, pressed.P2Ai.AggressionBonus, "Y5: pushed toward aggressive");
+		}, seed: 9);
+
+		WithBoot(runner, path, flow => Assert.Equal(1, flow.Saved.TanukiWins, "kept across a reboot"), seed: 9);
 	});
 }

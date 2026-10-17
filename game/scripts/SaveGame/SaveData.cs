@@ -253,6 +253,12 @@ public sealed record SaveData
 	public RunSave? Run { get; init; }
 	public IReadOnlyList<string> Unlocks { get; init; } = Array.Empty<string>();
 	public StoryProgress Story { get; init; } = StoryProgress.None;
+	/// <summary>
+	/// YOK-99, Y5: runs won against the Tanuki, kept across runs (version 6; 0 when the file has none). Never
+	/// negative; the count is not capped (the S3 win cards and later wins read it), only its effect is
+	/// (<c>Ai.TanukiPressure.MaxWins</c>).
+	/// </summary>
+	public int TanukiWins { get; init; }
 
 	public SaveData WithRun(RunSave? run) => this with { Run = run };
 	/// <summary>M1: unlocks keep their award order; one already held is not added twice. Story is untouched (M4).</summary>
@@ -260,4 +266,6 @@ public sealed record SaveData
 		Unlocks.Contains(abilityId, StringComparer.Ordinal) ? this : this with { Unlocks = Unlocks.Append(abilityId).ToArray() };
 	/// <summary>M4: sets one story flag. Unlocks and the run are untouched.</summary>
 	public SaveData WithStory(string flag) => this with { Story = Story.With(flag) };
+	/// <summary>YOK-99, Y5: one more Tanuki win (stops at <see cref="int.MaxValue"/>). The run, unlocks and story are untouched.</summary>
+	public SaveData WithTanukiWin() => this with { TanukiWins = TanukiWins == int.MaxValue ? int.MaxValue : Math.Max(0, TanukiWins) + 1 };
 }

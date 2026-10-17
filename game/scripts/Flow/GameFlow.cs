@@ -349,7 +349,10 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
-			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
+			if (session != Session || session == _unsavedSession) return;
+			// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
+			SaveData after = end.BeatTanuki ? Saved.WithRun(null).WithTanukiWin() : Saved.WithRun(null);
+			if (Saves is not null || end.BeatTanuki) Write(after);
 		};
 	}
 
@@ -497,6 +500,7 @@ public partial class GameFlow : Node
 		{
 			fight.Session = Session; // null = the bypass
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
+			fight.TanukiWins = Saved.TanukiWins; // YOK-99, Y5: the pressure of earlier runs
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
 			ConfigureFight?.Invoke(fight);

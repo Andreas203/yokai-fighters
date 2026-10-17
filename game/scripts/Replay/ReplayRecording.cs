@@ -65,6 +65,9 @@ public sealed class AiSetup
 	/// recording made before the field existed reads as standard and still replays.</summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
 	public string? FightTier { get; set; }
+	/// <summary>YOK-99, Y5: aggression bonus from Tanuki wins; left out of the file when 0, so older recordings read as none.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public int AggressionBonus { get; set; }
 }
 
 /// <summary>A mid-fight change applied before step <see cref="Tick"/> (0-based step index): scheme flip (F4) or AI rebuild/toggle (F6/F7).</summary>
