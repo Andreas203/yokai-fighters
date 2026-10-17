@@ -70,6 +70,7 @@ public sealed partial class Match
 		ResetMeterState(); // YOK-20
 		Projectiles.Clear(); // YOK-21
 		_projectileSerial = 0;
+		ResetAftershocks(); // YOK-136
 	}
 
 	/// <summary>Queue damage on a fighter; applied at the end of the current world frame.</summary>
@@ -160,7 +161,7 @@ public sealed partial class Match
 				// Placeholder for a side-switching move (jump-over, Fox Mirage): land just behind the opponent.
 				int side = Math.Sign(o.X - before);
 				if (side == 0) side = f.Facing;
-				f.X = o.X + side * Config.BodyWidth;
+				f.X = o.X + side * PushGap(f, o);
 			}
 			if (f.Actionable && f.Pressed(input, InputBits.DebugStrike))
 				Fighters[1 - i].PendingDamage += Config.DebugStrikeDamage;
@@ -173,9 +174,11 @@ public sealed partial class Match
 		ResolvePositions(moved);
 		UpdateFacing();
 		StepProjectiles();    // YOK-21: travel, despawn, spawn on the move's spawn frame
+		StepAftershocks();    // YOK-136: age, expire, spawn on the move's first active frame
 		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
 		ResolveHits();
 		ResolveProjectiles(); // YOK-21: clashes, then projectile hits
+		ResolveAftershocks(); // YOK-136: second quakes
 		ApplyDamage();
 	}
 
@@ -351,11 +354,13 @@ public sealed partial class Match
 
 	/// <param name="projectile">YOK-21: the hit came from this projectile, not the attacker's body: the attacker's
 	/// move doesn't count as connected, the push follows the projectile and a cornered defender hands none back.</param>
-	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null)
+	/// <param name="remoteDir">YOK-136: non-zero = the hit came from an aftershock facing this way; handled like a projectile's.</param>
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, int remoteDir = 0)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
-		if (projectile is null)
+		bool remote = projectile is not null || remoteDir != 0;
+		if (!remote)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
@@ -381,12 +386,11 @@ public sealed partial class Match
 		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
-		int dir = projectile?.Dir ?? att.Facing, want = push * SimConfig.Scale;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
+		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : att.Facing), want = push * SimConfig.Scale;
+		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
 		int got = Math.Abs(target - def.X);
 		def.X = target;
-		if (projectile is null) att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+		if (!remote) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
@@ -417,31 +421,41 @@ public sealed partial class Match
 		}
 
 		// Push boxes: grounded fighters never overlap; each gives half. A jumper passes over (C2).
+		// YOK-136: the push is still 1-D; the gap between centres is the mean of the two push widths.
 		bool grounded = a.Y == 0 && b.Y == 0;
+		int gap = PushGap(a, b);
 		int dx = b.X - a.X;
-		if (grounded && Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < gap)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
-			int overlap = Config.BodyWidth - Math.Abs(dx);
+			int overlap = gap - Math.Abs(dx);
 			a.X -= side * ((overlap + 1) / 2);
 			b.X += side * (overlap / 2);
 		}
 
 		// Stage corners: clamp, then push the other fighter out so the cornered one stays put.
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2;
-		int hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		a.X = Math.Clamp(a.X, lo, hi);
-		b.X = Math.Clamp(b.X, lo, hi);
+		a.X = Math.Clamp(a.X, CornerLo(a), CornerHi(a));
+		b.X = Math.Clamp(b.X, CornerLo(b), CornerHi(b));
 		dx = b.X - a.X;
-		if (grounded && Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < gap)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
 			Fighter left = side > 0 ? a : b, right = side > 0 ? b : a;
 			// Only possible against a corner: the fighter nearest the wall keeps it.
-			if (left.X - lo < hi - right.X) right.X = left.X + Config.BodyWidth;
-			else left.X = right.X - Config.BodyWidth;
+			if (left.X - CornerLo(left) < CornerHi(right) - right.X) right.X = left.X + gap;
+			else left.X = right.X - gap;
 		}
 	}
+
+	/// <summary>YOK-136: a fighter's push-box width (centi-units): its own from data, else <see cref="SimConfig.BodyWidth"/>.</summary>
+	public int PushWidth(Fighter f) => f.PushWidth > 0 ? f.PushWidth : Config.BodyWidth;
+
+	/// <summary>Closest two grounded fighters' centres get: half of each push box (both default = BodyWidth, as before).</summary>
+	public int PushGap(Fighter a, Fighter b) => (PushWidth(a) + PushWidth(b)) / 2;
+
+	/// <summary>Stage corners for this fighter's centre: its push box stays on the stage.</summary>
+	public int CornerLo(Fighter f) => -Config.StageHalfWidth + PushWidth(f) / 2;
+	public int CornerHi(Fighter f) => Config.StageHalfWidth - PushWidth(f) / 2;
 
 	/// <summary>
 	/// Free fighters turn to face the opponent; on equal X they keep their last facing. Facing is held
@@ -485,6 +499,6 @@ public sealed partial class Match
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
 		h = P2.Hash(h);
-		return HashProjectiles(HashMeterState(h));
+		return HashAftershocks(HashProjectiles(HashMeterState(h)));
 	}
 }

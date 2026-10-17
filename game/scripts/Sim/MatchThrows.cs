@@ -175,11 +175,10 @@ public sealed partial class Match
 	{
 		int dir = Math.Sign(def.X - att.X);
 		if (dir == 0) dir = att.Facing;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
 		int want = defPush * SimConfig.Scale;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
+		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
 		int lost = want - Math.Abs(target - def.X);
 		def.X = target;
-		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), lo, hi);
+		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), CornerLo(att), CornerHi(att));
 	}
 }
