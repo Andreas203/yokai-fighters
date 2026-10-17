@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/fighter.schema.json",
+  "title": "Fighter",
+  "description": "data/fighters/<id>.json (YOK-136): body numbers of one fighter that are not a move's. The id is the fighter (kit) id that moves name as 'source'. A fighter without a file, or a field left out, keeps the fight-wide default.",
+  "type": "object",
+  "required": ["kind", "id"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "fighter" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "push_width": {
+      "description": "Push-box width in gameplay units (200 per metre, E1), centred on the fighter. Push is 1-D: two grounded fighters' centres stay at least the mean of their two widths apart. Left out = SimConfig.BodyWidth (120). At most the screen-wall separation (1,060, E1).",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1060
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

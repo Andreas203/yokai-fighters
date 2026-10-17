@@ -82,6 +82,21 @@ public partial class GameFlow : Node
 	private string? _runMapFile;
 	/// <summary>The last write was refused: the file is behind <see cref="Saved"/> (e.g. it still holds an ended run). Retried on the title and on exit.</summary>
 	private bool _writePending;
+	/// <summary>YOK-106: the node entered (or continued into) is Ryo's first meeting with its elder.</summary>
+	private bool _firstMeeting;
+
+	/// <summary>Y3 (YOK-106): Ryo has met this elder (the yokai id an elder node names), in this run or an earlier one. Story progress, per save (M4).</summary>
+	public bool HasMetElder(string elderId) => Saved.Story.HasMetElder(elderId);
+	/// <summary>
+	/// Y3 (YOK-106): the node Ryo is in is an elder's, met for the first time on this entry (the intro card and the
+	/// callout show). Set before <see cref="RunSession.NodeEntered"/> reaches handlers added after this flow's; stays
+	/// true when a quit inside that node is continued (M5). False off a node and on any later meeting.
+	/// </summary>
+	public bool FirstMeeting => _firstMeeting && Session is { Map.InNode: true };
+	/// <summary>YOK-90 (Y3): the twist of the elder node Ryo is in (intro card; the callout when <see cref="FirstMeeting"/>), else
+	/// null. A map node's own twist (its icon): <c>FightScene.Twists.ForNode(node)</c>.</summary>
+	public ElderTwist? CurrentTwist => Session is { Map.InNode: true } s ? FightScene.Twists.ForNode(s.Map.CurrentNode) : null;
+
 	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
 	private string? _saveTrouble;
 
@@ -315,7 +330,15 @@ public partial class GameFlow : Node
 	private bool StartRun()
 	{
 		_freshRun = false;
-		try { Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next()); }
+		_firstMeeting = false;
+		try
+		{
+			// YOK-97, M3: the last ended run's best special starts this one at Lv 2 (kept in the save until a run ends).
+			var pool = FightScene.LoadAbilityPool();
+			var run = CarryOver.NewRun(pool, Saved.CarryOver, null, out string? dropped);
+			if (dropped is not null) GD.PushWarning($"GameFlow: {dropped}");
+			Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next(), pool, run);
+		}
 		catch (Exception e) when (e is FormatException or System.IO.IOException)
 		{
 			GD.PushError($"GameFlow: no run: {e.Message}");
@@ -338,25 +361,50 @@ public partial class GameFlow : Node
 		session.NodeEntered += n =>
 		{
 			GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
+			if (session == Session) Saved = ElderMeetings.Enter(Saved, session.Map.CurrentNode, out _firstMeeting); // written by this save point (M5)
 			SaveRun(session);
 		};
 		session.NodeCompleted += n =>
 		{
+			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was won
 			GD.Print($"GameFlow: completed '{n.NodeId}', health {session.Run.Health}");
+			if (session == Session) _firstMeeting = false;
 			if (!session.IsOver) SaveRun(session);
 			if (session == Session && !session.IsOver) Router.ReturnToMap(); // the last node stays on its end card
 		};
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
-			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
+			// A dev jump's run, or a run in progress when dev mode was switched (both `_unsavedSession`), is never
+			// written: neither its end nor a Tanuki win it scores reaches either save slot (intentional, YOK-99).
+			if (session == Session && session != _unsavedSession)
+			{
+				// M3: the carry-over is decided here, at run end, and replaces the last one (null below row 6).
+				string? carried = CarryOver.FromRunEnd(session.Run, end);
+				if (carried is not null) GD.Print($"GameFlow: '{carried}' carries to the next run at Lv {CarryOver.Level}");
+				SaveData after = Saved.WithRun(null).WithCarryOver(carried);
+				// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
+				if (end.BeatTanuki) after = after.WithTanukiWin();
+				Write(after);
+			}
+			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was lost
 		};
+	}
+
+	/// <summary>
+	/// YOK-92, Y6: the guided apprentice fight is played once. Its story flag is set when its lessons finish or its
+	/// duel ends (won or lost); a quit mid-fight leaves it unset, so the next run is guided again.
+	/// </summary>
+	public void MarkTutorialSeen()
+	{
+		if (Saved.Story.Has(StoryProgress.ApprenticeTutorial)) return;
+		Write(Saved.WithStory(StoryProgress.ApprenticeTutorial));
 	}
 
 	private void SaveRun(RunSession session)
 	{
 		if (Saves is null || session != Session || session == _unsavedSession) return;
-		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile)));
+		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile) with { FirstMeeting = _firstMeeting }));
 	}
 
 	/// <summary>Replaces the save (and writes it when a file is attached). False when the disk refused; the value is kept either way.</summary>
@@ -396,6 +444,7 @@ public partial class GameFlow : Node
 			var notes = new System.Collections.Generic.List<string>();
 			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
+			session.Trials = FightScene.LoadTrials(); // YOK-98: the dojo's trials (not saved state: data/trials/)
 			reason = "";
 			return session;
 		}
@@ -441,6 +490,7 @@ public partial class GameFlow : Node
 		Session = session;
 		_freshRun = false;
 		_runMapFile = Saved.Run?.MapFile ?? MapFile;
+		Saved = ElderMeetings.Resume(Saved, session, out _firstMeeting); // not written here: the next save point writes it
 		GD.Print($"GameFlow: continued run on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
 		Adopt(session);
 		Router.ContinueRun();
@@ -496,7 +546,11 @@ public partial class GameFlow : Node
 		if (scene is FightScene fight)
 		{
 			fight.Session = Session; // null = the bypass
+			fight.FirstMeeting = FirstMeeting; // Y3 (YOK-139): the callout shows on a first meeting only
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
+			fight.TanukiWins = Saved.TanukiWins; // YOK-99, Y5: the pressure of earlier runs
+			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
+			fight.TutorialFinished += _ => MarkTutorialSeen();
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
 			ConfigureFight?.Invoke(fight);
@@ -506,7 +560,7 @@ public partial class GameFlow : Node
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); stop.TrialRequested += () => OpenTrial(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
@@ -535,8 +589,41 @@ public partial class GameFlow : Node
 		MoveChild(shop, 1); // over the stop, under the menu layer
 	}
 
+	/// <summary>
+	/// YOK-98, R7: the dojo's training trial on the fight scene (<see cref="FightScene.TrialStop"/>), over the hidden
+	/// rest stop. When the trial ends the fight scene goes and the stop comes back with the result. Nothing is
+	/// saved here: a quit mid-trial comes back at the node's entry save, so Continue restarts the node with the
+	/// trial's attempts reset (M5).
+	/// </summary>
+	public FightScene? TrialFight { get; private set; }
+
+	private void OpenTrial(RestStopScreen stop)
+	{
+		if (Session?.Dojo is not { TrialRunning: true } dojo || TrialFight != null) return;
+		var fight = GD.Load<PackedScene>(FightScenePath).Instantiate<FightScene>();
+		fight.Session = Session;
+		fight.PlayerScheme = Router.Scheme;
+		fight.TrialStop = dojo;
+		fight.TitleRequested += () => Router.ReturnToTitle();
+		fight.TrialFinished += () => CallDeferred(nameof(CloseTrial)); // not inside the fight's own _Process
+		ConfigureFight?.Invoke(fight);
+		stop.Visible = false;
+		TrialFight = fight;
+		AddChild(fight);
+		MoveChild(fight, 1); // over the stop, under the menu layer
+	}
+
+	private void CloseTrial()
+	{
+		if (TrialFight is { } fight && IsInstanceValid(fight)) { RemoveChild(fight); fight.QueueFree(); }
+		TrialFight = null;
+		if (NodeScene is RestStopScreen stop && IsInstanceValid(stop)) { stop.Visible = true; stop.TrialClosed(); }
+	}
+
 	private void EndFight()
 	{
+		if (TrialFight is { } trial && IsInstanceValid(trial)) { RemoveChild(trial); trial.Free(); }
+		TrialFight = null;
 		if (Shop is { } shop && IsInstanceValid(shop)) { RemoveChild(shop); shop.Free(); }
 		Shop = null;
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run

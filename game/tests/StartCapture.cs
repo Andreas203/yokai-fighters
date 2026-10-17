@@ -13,6 +13,7 @@ public partial class StartCapture : Node
 		var scene = GD.Load<PackedScene>("res://scenes/ui/start_screen.tscn").Instantiate<StartScreen>(); // the control-select step, on its own
 		foreach (string a in OS.GetCmdlineUserArgs()) if (a == "scheme=kata") YokaiFighters.Ui.MenuSettings.SetScheme(YokaiFighters.Sim.ControlScheme.Kata);
 		AddChild(scene);
+		foreach (string a in OS.GetCmdlineUserArgs()) if (a == "reference=1") scene.SetReferenceVisible(true);
 		for (int i = 0; i < 4; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 		GetViewport().GetTexture().GetImage().SavePng(path);

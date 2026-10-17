@@ -1,0 +1,20 @@
+{
+  "kind": "elder_twist",
+  "id": "nine-tails-reflect",
+  "status": "proposed",
+  "elder": "nine-tailed-kitsune",
+  "effect": {
+    "type": "reflect_repeated_special",
+    "repeat": 2
+  },
+  "label_key": "twist.nine-tails-reflect",
+  "intro_card": "nine-tails-reflect-intro",
+  "callout_card": "nine-tails-reflect-callout",
+  "icon": "twist-reflect",
+  "rules": [
+    "P5",
+    "Y2",
+    "Y3"
+  ],
+  "notes": "Y2: 'reflects any special used twice in a row'. Proposed reading (the rules are silent): Ryo's specials in this fight, in the order he starts them; normals, throws, jumps and dashes do not break the row, a different special does; EX is the same special. The repeat's projectile turns around when it would touch her; a repeated strike lands on Ryo instead of her. Intro and callout text: habit-writer."
+}
