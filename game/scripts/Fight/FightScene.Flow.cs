@@ -102,6 +102,16 @@ public partial class FightScene
 		TitleRequested.Invoke();
 		return true;
 	}
+	/// <summary>YOK-72: Back to title on the lose and demo-complete screens. Same route as the pause menu's Quit to title.
+	/// The run has already ended by then, so the boot flow cleared the saved run when it ended (YOK-87) and the title offers no Continue.
+	/// With no boot flow listening (scene on its own) nothing changes and the screen stays.</summary>
+	public bool LeaveForTitle()
+	{
+		if (Stage is not (DemoStage.Lost or DemoStage.Complete)) return false;
+		if (RequestTitle()) return true;
+		GD.Print("FightScene: Back to title with no boot flow listening (scene opened on its own); staying on the end screen");
+		return false;
+	}
 	/// <summary>Buttons held when the fight was entered (Start Game) or a Restart was pressed: ignored as P1 input until released, so Space does not fire a Special.</summary>
 	private InputBits _suppress;
 	/// <summary>Which fight of the walk this is: 1 = the first node (the demo: 1 = the first fight, 2 = the rematch).</summary>
@@ -193,6 +203,7 @@ public partial class FightScene
 		Rewards.Picked += (_, _) => FinishNode();
 		CompleteScreen = GetNode<DemoCompleteScreen>("Flow/Complete");
 		CompleteScreen.RestartRequested += RestartRun;
+		CompleteScreen.TitleRequested += () => LeaveForTitle();
 		ApplyDemoCompleteCard();
 		TwistCard = GetNodeOrNull<StoryCard>("Flow/TwistCard");
 		if (TwistCard != null) TwistCard.Finished += OnTwistCardDone;

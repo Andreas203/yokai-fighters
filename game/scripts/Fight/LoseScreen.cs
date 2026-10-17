@@ -14,19 +14,22 @@ public partial class LoseScreen : Control
 {
 	public const string PlaceholderTitle = "Ryo is defeated", PlaceholderText = "The yokai slips free.";
 
-	public event Action? RestartRequested;
+	public event Action? RestartRequested, TitleRequested;
 	public string Title { get; private set; } = PlaceholderTitle;
 	public string Text { get; private set; } = PlaceholderText;
 	public Button Restart { get; private set; } = null!;
+	public Button BackToTitle { get; private set; } = null!;
 	private Label? _title, _text;
 
 	public override void _Ready()
 	{
-		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Restart"));
+		UiFind.Get<KeyChipFooter>(this, "Footer").SetHints(new KeyHint("confirm", "Select"));
 		_title = UiFind.Get<Label>(this, "Title");
 		_text = UiFind.Get<Label>(this, "Sub");
 		Restart = UiFind.Get<Button>(this, "Restart");
+		BackToTitle = UiFind.Get<Button>(this, "BackToTitle");
 		Restart.Pressed += () => RestartRequested?.Invoke();
+		BackToTitle.Pressed += () => TitleRequested?.Invoke();
 		_title.Text = Title; _text.Text = Text;
 		Visible = false;
 	}

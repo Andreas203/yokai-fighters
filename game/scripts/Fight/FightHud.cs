@@ -26,6 +26,8 @@ public partial class FightHud : CanvasLayer
 
 	/// <summary>Raised by the lose screen's Restart button; the scene wires it to its reset path.</summary>
 	public event Action? RestartRequested;
+	/// <summary>Raised by the lose screen's Back to title button; the scene routes it to <c>LeaveForTitle</c>.</summary>
+	public event Action? TitleRequested;
 
 	private Label _banner = null!, _meterText = null!;
 	private LoseScreen _lose = null!;
@@ -39,6 +41,7 @@ public partial class FightHud : CanvasLayer
 		_banner = UiFind.Get<Label>(this, "Banner");
 		_lose = UiFind.Get<LoseScreen>(this, "LoseScreen");
 		_lose.RestartRequested += () => RestartRequested?.Invoke();
+		_lose.TitleRequested += () => TitleRequested?.Invoke();
 		for (int i = 0; i < 2; i++)
 		{
 			_health[i] = UiFind.Get<ProgressBar>(this, $"P{i + 1}Health");
