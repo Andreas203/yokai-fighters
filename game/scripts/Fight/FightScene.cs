@@ -116,29 +116,10 @@ public partial class FightScene : Node3D
 	public static Match NewMatch() => NewMatch(Run);
 
 	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
-	public static Match NewMatch(RunState? run, RunSession? session = null)
-	{
-		var cfg = run?.MatchConfig();
-		var ryo = LoadKit(Kit.Ryo);
-		Match m;
-		if (session?.Node?.Kit == TanukiKit.KitId) // YOK-94, T0: the node's opponent fights with Ryo's kit + the copy locked on entering the boss node (T1)
-		{
-			var tanuki = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(session?.CopyLocked ?? false, session?.LockedCopy, run, ryo.Specials));
-			foreach (var n in tanuki.Notes) GD.Print("FightScene: " + n);
-			m = new Match(cfg, ryo.Moves, tanuki.Moves);
-			tanuki.Equip(m.P2);
-		}
-		else
-		{
-			var foe = LoadKit(Opponent);
-			m = new Match(cfg, ryo.Moves, foe.Moves);
-			foe.Equip(m.P2);
-		}
-		ryo.Equip(m.P1);
-		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
-		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
-		return m;
-	}
+	/// <remarks>YOK-94, T0: the Tanuki's node fights with Ryo's kit + the copy locked on entering it (T1).
+	/// YOK-26: built by <see cref="NodeFight.NewMatch"/>, the same code the headless whole-run harness uses.</remarks>
+	public static Match NewMatch(RunState? run, RunSession? session = null) =>
+		NodeFight.NewMatch(Sources, run, session, Opponent, DefaultScheme, n => GD.Print("FightScene: " + n));
 
 	/// <summary>YOK-56: one fighter's kit from <see cref="Sources"/>; fixture fallbacks are logged.</summary>
 	public static Kit LoadKit(string fighter)
