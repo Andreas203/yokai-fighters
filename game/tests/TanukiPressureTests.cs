@@ -91,6 +91,39 @@ public static class TanukiPressureTests
 		Assert.True(!none.Contains("AggressionBonus"), "no pressure: the field is left out, so old recordings read the same: " + none);
 	}
 
+	[Test]
+	public static void ProfileAi_HugeBonus_DoesNotOverflow()
+	{
+		var kit = AiLoadout.From(NewMatch().P2);
+		Assert.Equal(100, new ProfileAi(Patient, 1, kit, 1, aggressionBonus: int.MaxValue).Aggression, "int.MaxValue bonus: capped, not wrapped");
+		Assert.Equal(0, new ProfileAi(Patient, 1, kit, 1, aggressionBonus: int.MinValue).Aggression, "int.MinValue bonus: floored, not wrapped");
+	}
+
+	[Test]
+	public static void Replay_ABonusNoPressureCanMake_IsRefused()
+	{
+		string root = Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
+		var m = FightScene.NewMatch();
+		var pr = new TanukiPressure(3);
+		var ai = new ProfileAi(Patient, 1, AiLoadout.From(m.P2), 5, pr.ReactionFrames(22), AiFightTier.Standard, pr.AggressionBonus);
+		var rec = ReplayRecorder.Begin(m, ai, 5);
+		for (int t = 0; t < 120; t++)
+		{
+			var b = ai.Next(AiView.Capture(m));
+			m.Step(FighterInput.None, b);
+			rec.Record(FighterInput.None, b, m.StateHash());
+		}
+		byte[] bytes = rec.Finish(m).ToBytes();
+		Assert.True(Replayer.Run(ReplayRecording.FromBytes(bytes), ReplayCatalog.FromRepo(root)).Ok, "the real bonus (30) replays");
+		foreach (int bad in new[] { -1, 31, int.MaxValue, int.MinValue })
+		{
+			var back = ReplayRecording.FromBytes(bytes);
+			back.Header.Ai!.AggressionBonus = bad;
+			var r = Replayer.Run(back, ReplayCatalog.FromRepo(root));
+			Assert.True(!r.Ok && r.Error!.Contains("aggression bonus"), $"bonus {bad}: refused at setup ({r})");
+		}
+	}
+
 	// ---- which fights ----
 
 	[Test]

@@ -34,7 +34,7 @@ public sealed class ProfileAi
 	/// <summary>YOK-99, Y5: aggression-bias points added by Tanuki wins (<see cref="TanukiPressure.AggressionBonus"/>); 0 = none.</summary>
 	public int AggressionBonus { get; }
 	/// <summary>The bias the neutral weights use: the profile's own plus <see cref="AggressionBonus"/>, within 0-100.</summary>
-	public int Aggression => Math.Clamp(Profile.AggressionBias + AggressionBonus, 0, 100);
+	public int Aggression => (int)Math.Clamp((long)Profile.AggressionBias + AggressionBonus, 0, 100); // long: no overflow before the clamp
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
