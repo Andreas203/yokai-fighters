@@ -315,6 +315,7 @@ public partial class FightScene
 		_lastP1 = InputBits.None;
 		_hud.View = new MatchHudView(m, 0);
 		m.Impact += (_, e) => Shake.OnImpact(e);
+		SetUpTutorial(); // YOK-92: the new node may or may not be guided
 		RebuildAi();
 		StartRecording();
 		Shake.Stop();

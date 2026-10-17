@@ -1,6 +1,7 @@
 using System;
 using YokaiFighters.Ai;
 using YokaiFighters.Sim;
+using YokaiFighters.Tutorial;
 
 namespace YokaiFighters.Replay;
 
@@ -75,6 +76,21 @@ public sealed class ReplayRecorder
 		if (Recording.Steps == 0) { Recording.Header.Ai = AiOf(ai, seed); return; }
 		Recording.Header.Events.Add(new ReplayEvent { Tick = Recording.Steps, Kind = "ai", Player = 1, Ai = AiOf(ai, seed) });
 	}
+
+	/// <summary>YOK-92: the fight is guided (call right after <see cref="Begin"/>; null tutorial or coach = not guided).</summary>
+	public void OnTutorial(ApprenticeTutorial? t, TutorialCoach? coach)
+	{
+		if (Recording.Steps != 0) throw new InvalidOperationException("the tutorial is part of the tick-0 setup");
+		Recording.Header.Tutorial = t is null || coach is null ? null : new TutorialSetup
+		{
+			Player = t.Player, BlocksToPass = t.Options.BlocksToPass, MinPromptTicks = t.Options.MinPromptTicks,
+			AttackEvery = t.Options.AttackEvery, ThrowRetryTicks = t.Options.ThrowRetryTicks, ReactionFrames = coach.ReactionFrames,
+		};
+	}
+
+	/// <summary>YOK-92: the player skipped the lesson on screen before the next step.</summary>
+	public void OnTutorialSkip() =>
+		Recording.Header.Events.Add(new ReplayEvent { Tick = Recording.Steps, Kind = "tutorial-skip" });
 
 	/// <summary>Stamps the result as it stands now (winner, health, ticks, final hash) and returns the recording.</summary>
 	public ReplayRecording Finish(Match m)

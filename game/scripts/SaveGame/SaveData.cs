@@ -225,6 +225,8 @@ public sealed record StoryProgress
 	public const string Win1 = "win-1";
 	public const string Win2 = "win-2";
 	public const string Win3 = "win-3";
+	/// <summary>YOK-92, Y6: the guided apprentice fight has been played (finished, or its duel ended), so later runs are not guided.</summary>
+	public const string ApprenticeTutorial = "apprentice-tutorial";
 
 	public static readonly StoryProgress None = new(Array.Empty<string>());
 

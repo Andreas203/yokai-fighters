@@ -206,6 +206,7 @@ public partial class FightScene : Node3D
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		SetUpAi(); // YOK-27
+		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
@@ -226,6 +227,7 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
+		PollTutorialKeys(); // YOK-92: Tab / pad Back skips a lesson
 		if (FlowPaused) { _clock.Restart(); Render(); return; }
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
@@ -251,6 +253,7 @@ public partial class FightScene : Node3D
 		Stage = DemoStage.Fighting;
 		Match.Reset();
 		_camMatch = null; // YOK-129: the camera snaps to the reset positions
+		SetUpTutorial(); // YOK-92: lessons start over with the duel
 		RebuildAi(); // YOK-27: fresh delay buffer
 		StartRecording(); // YOK-49
 		Shake.Stop();
@@ -287,6 +290,7 @@ public partial class FightScene : Node3D
 			body.Rotation = new Vector3(0f, 0f, tilt * f.Facing);
 		}
 		RenderModels(); // YOK-53
+		RenderTutorial(); // YOK-92
 
 		// YOK-129: the dynamic camera (eased per sim tick in StepSim); the rig carries position and pitch.
 		if (!ReferenceEquals(_camMatch, Match) || !Cam.Ready) StepCamera(); // a new or reset match renders before its first tick

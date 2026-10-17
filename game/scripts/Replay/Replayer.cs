@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using YokaiFighters.Ai;
 using YokaiFighters.Sim;
+using YokaiFighters.Tutorial;
 
 namespace YokaiFighters.Replay;
 
@@ -84,6 +85,16 @@ public static class Replayer
 		try { ai = MakeAi(rec.Header.Ai, catalog, m); }
 		catch (ReplaySetupException e) { report.Error = "setup: " + e.Message; return report; }
 
+		// YOK-92: a guided fight rebuilds its lessons and the coach, as FightScene.SetUpTutorial does.
+		ApprenticeTutorial? tut = null;
+		TutorialCoach? coach = null;
+		if (rec.Header.Tutorial is { } ts)
+		{
+			var opts = new TutorialOptions { BlocksToPass = ts.BlocksToPass, MinPromptTicks = ts.MinPromptTicks, AttackEvery = ts.AttackEvery, ThrowRetryTicks = ts.ThrowRetryTicks };
+			tut = new ApprenticeTutorial(m, opts, ts.Player);
+			coach = new TutorialCoach(m.Fighters[1 - ts.Player], 1 - ts.Player, m.Config, opts, ts.ReactionFrames);
+		}
+
 		var events = rec.Header.Events.OrderBy(e => e.Tick).ToList();
 		int ev = 0;
 		for (int i = 0; i < rec.Steps; i++)
@@ -97,12 +108,15 @@ public static class Replayer
 					try { ai = MakeAi(e.Ai, catalog, m); }
 					catch (ReplaySetupException ex) { report.Error = $"setup (step {i}): " + ex.Message; return report; }
 				}
+				else if (e.Kind == "tutorial-skip") tut?.SkipLesson();
 			}
 			var p1 = rec.P1[i];
 			var p2 = rec.P2[i];
 			if (ai is not null)
 			{
-				var mine = ai.Next(AiView.Capture(m));
+				var view = AiView.Capture(m);
+				var mine = ai.Next(view);
+				if (coach is not null && tut is not null) mine = coach.Next(view, tut.Current) ?? mine; // as FightScene.CoachedP2
 				report.AiStepsChecked++;
 				if (mine != p2 && report.FirstAiMismatchStep < 0)
 				{
@@ -112,6 +126,7 @@ public static class Replayer
 				p2 = mine;
 			}
 			m.Step(p1, p2);
+			if (tut is not null) { tut.Observe(); if (m.Phase == MatchPhase.Over) tut.Detach(); } // as FightScene.ObserveTutorial
 			report.StepsRun = i + 1;
 			ulong h = m.StateHash();
 			if (h != rec.Hashes[i])
