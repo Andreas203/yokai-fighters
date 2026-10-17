@@ -24,6 +24,7 @@ public partial class FightScene
 	private void StepSim(FighterInput p1, FighterInput p2)
 	{
 		Match.Step(p1, p2);
+		ObserveTutorial(); // YOK-92
 		_lastP1 = p1.Bits; // YOK-pause-flow-wiring: what was held going into a pause
 		ObservePresentation(); // YOK-53: clip frames follow the sim tick
 		StepCamera(); // YOK-129: the dynamic camera eases once per sim tick
