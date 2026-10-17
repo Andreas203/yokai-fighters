@@ -5,6 +5,7 @@
 [ext_resource type="StyleBox" path="res://ui/kit/paper_sheet_style.tres" id="paper"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/red_button.tscn" id="button"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/ghost_button.tscn" id="ghost"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="night"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/corner_ornament.tscn" id="corner"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/burst-blank.png" id="seal"]
@@ -98,12 +99,27 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -460.0
+offset_left = -650.0
 offset_top = 190.0
-offset_right = 260.0
+offset_right = -130.0
 offset_bottom = 308.0
-theme_override_font_sizes/font_size = 64
+focus_neighbor_right = NodePath("../BackToTitle")
+theme_override_font_sizes/font_size = 56
 text = "Restart"
+
+[node name="BackToTitle" parent="." instance=ExtResource("ghost")]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = 190.0
+offset_right = 450.0
+offset_bottom = 308.0
+focus_neighbor_left = NodePath("../Restart")
+theme_override_font_sizes/font_size = 56
+text = "Back to title"
 
 [node name="Footer" parent="Panel" instance=ExtResource("footer")]
 layout_mode = 0
