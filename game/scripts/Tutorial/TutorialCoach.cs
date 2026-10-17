@@ -30,7 +30,8 @@ public sealed class TutorialCoach
 	private readonly TutorialOptions _options;
 	private readonly FighterInput _attack;
 	private readonly InputBits _throw;
-	private readonly AiView?[] _ring;
+	/// <summary>Each tick's screen with the lesson on screen at that tick: both are acted on ReactionFrames later (P6, Y4).</summary>
+	private readonly (AiView View, TutorialLesson? Lesson)?[] _ring;
 	private int _head, _wait;
 	private TutorialLesson? _lesson;
 
@@ -39,7 +40,7 @@ public sealed class TutorialCoach
 		Self = selfIndex;
 		ReactionFrames = Math.Max(1, reactionFrames);
 		_options = options ?? new TutorialOptions();
-		_ring = new AiView?[ReactionFrames];
+		_ring = new (AiView, TutorialLesson?)?[ReactionFrames];
 		int hurtNear = -config.IdleHurtbox.X; // the defender's hurtbox edge toward the attacker, in units
 		MoveData? light = null, grab = null;
 		int lightIndex = -1;
@@ -69,24 +70,28 @@ public sealed class TutorialCoach
 	}
 
 	/// <summary>
-	/// Stores this tick's screen and decides from the one <see cref="ReactionFrames"/> old. Null = no lesson that
-	/// needs the apprentice (let the profile AI play).
+	/// Stores this tick's screen and lesson, and decides from the pair <see cref="ReactionFrames"/> old: a new lesson,
+	/// like anything else on screen, reaches the apprentice only after its reaction delay. Null = the delayed lesson
+	/// needs no apprentice, or nothing is that old yet and no lesson is up (let the profile AI play).
 	/// </summary>
 	public FighterInput? Next(AiView now, TutorialLesson? lesson)
 	{
-		AiView? seen = _ring[_head];
-		_ring[_head] = now;
+		var old = _ring[_head];
+		_ring[_head] = (now, lesson);
 		_head = (_head + 1) % _ring.Length;
-		if (lesson != _lesson) { _lesson = lesson; _wait = 0; }
-		if (lesson is null) return null;
+		if (old is not { } entry) return lesson is null ? null : FighterInput.None; // the first ReactionFrames ticks
+		AiView seen = entry.View;
+		TutorialLesson? seenLesson = entry.Lesson;
+		if (seenLesson != _lesson) { _lesson = seenLesson; _wait = 0; }
+		if (seenLesson is null) return null;
 		if (_wait > 0) { _wait--; return FighterInput.None; }
-		if (seen is null || seen.Phase != MatchPhase.Fighting) return FighterInput.None;
+		if (seen.Phase != MatchPhase.Fighting) return FighterInput.None;
 
 		FighterView me = seen.Fighter(Self), them = seen.Fighter(1 - Self);
 		int gap = Math.Abs(them.X - me.X);
 		InputBits forward = them.X >= me.X ? InputBits.Right : InputBits.Left;
 		bool free = me.State == FighterState.Idle && !me.Airborne;
-		switch (lesson)
+		switch (seenLesson)
 		{
 			case TutorialLesson.Block:
 			case TutorialLesson.Burst:

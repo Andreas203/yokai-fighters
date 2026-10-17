@@ -35,7 +35,7 @@ public sealed record TutorialOptions
 	public int ThrowRetryTicks { get; init; } = 120;
 	/// <summary>
 	/// OPEN (X1 vs Y6): X1 gives Ryo no cancel at run start, yet Y6 teaches one cancel. A rule set here is lent to
-	/// the player for the guided fight only and taken back when the tutorial ends. Null (the default) lends nothing,
+	/// the player for the whole guided fight (held from tick 0, taken back when the match ends). Null (the default) lends nothing,
 	/// so the cancel lesson is <see cref="LessonOutcome.Unavailable"/> unless Ryo already holds a rule.
 	/// </summary>
 	public CancelRule? LentCancel { get; init; }
@@ -50,7 +50,7 @@ public sealed record TutorialOptions
 /// Done means, for the player (fighter <see cref="Player"/>):
 /// Block = <see cref="TutorialOptions.BlocksToPass"/> opponent hits blocked; Throw = a throw landed (C4);
 /// ThrowBreak = an opponent throw broken inside the window (a clash does not count); Meter = one full bar (C5,
-/// the EX cost); Burst = the burst fired (C6); Cancel = a move cancelled through a held rule (X3's per-combo
+/// the EX cost, and more meter than on entry, so a bar carried in does not pass it); Burst = the burst fired (C6); Cancel = a move cancelled through a held rule (X3's per-combo
 /// mark set). Only what happens while a lesson is on screen counts for it.
 ///
 /// Call <see cref="Observe"/> once after every <see cref="Match.Step"/>; <see cref="Detach"/> when the fight ends.
@@ -82,6 +82,7 @@ public sealed class ApprenticeTutorial
 
 	private readonly LessonOutcome[] _outcomes = new LessonOutcome[Order.Count];
 	private bool _met, _detached, _lent;
+	private int _meterAtEntry;
 
 	public ApprenticeTutorial(Match match, TutorialOptions? options = null, int player = 0)
 	{
@@ -108,7 +109,7 @@ public sealed class ApprenticeTutorial
 		if (Finished || _detached) return;
 		LessonTicks++;
 		Fighter p = Match.Fighters[Player];
-		if (Current == TutorialLesson.Meter && p.Meter >= Match.Config.ExCost) _met = true;
+		if (Current == TutorialLesson.Meter && p.Meter >= Match.Config.ExCost && p.Meter > _meterAtEntry) _met = true; // C5: built during the lesson
 		if (Current == TutorialLesson.Cancel && p.CancelUsed != 0) _met = true;
 		if (_met && LessonTicks >= Options.MinPromptTicks) End(LessonOutcome.Done);
 	}
@@ -127,7 +128,10 @@ public sealed class ApprenticeTutorial
 		while (SkipLesson()) { }
 	}
 
-	/// <summary>Stops listening to the match and takes back a lent cancel rule. Lessons left stay Pending.</summary>
+	/// <summary>
+	/// Stops listening to the match and takes back a lent cancel rule. Lessons left stay Pending. Call only when the
+	/// match is over or being replaced (KO, reset, next duel): the rule must not vanish mid-fight (C1/F3).
+	/// </summary>
 	public void Detach()
 	{
 		if (_detached) return;
@@ -169,8 +173,10 @@ public sealed class ApprenticeTutorial
 		_met = false;
 		if (Finished || _detached) return;
 		Fighter p = Match.Fighters[Player];
+		_meterAtEntry = p.Meter;
 		bool unavailable = Current switch
 		{
+			TutorialLesson.Meter => p.Meter >= Match.Config.MeterMax, // full: nothing left to build
 			TutorialLesson.Burst => p.BurstUsed, // C6: once per fight
 			TutorialLesson.Cancel => p.CancelRules.Count == 0, // X1: nothing to cancel with
 			_ => false,
@@ -186,7 +192,8 @@ public sealed class ApprenticeTutorial
 		LessonEnded?.Invoke(lesson, outcome);
 		if (Finished)
 		{
-			Detach(); // the lent rule goes back with the last lesson
+			// A lent rule is NOT taken back here: removing it mid-match would change the fight with no input to
+			// replay it from (C1/F3). It goes back on Detach, which the scene calls at KO, reset or a new match.
 			Completed?.Invoke(this);
 			return;
 		}

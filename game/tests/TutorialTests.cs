@@ -6,6 +6,7 @@ using Godot;
 using YokaiFighters.Ai;
 using YokaiFighters.Fight;
 using YokaiFighters.Flow;
+using YokaiFighters.Replay;
 using YokaiFighters.SaveGame;
 using YokaiFighters.Sim;
 using YokaiFighters.Tutorial;
@@ -152,6 +153,94 @@ public static class TutorialTests
 	}
 
 	[Test]
+	public static void Meter_CarriedIn_DoesNotPassTheLesson_AFullGaugeMakesItUnavailable()
+	{
+		var m = NewMatch();
+		var t = new ApprenticeTutorial(m, Fast);
+		m.P1.Meter = m.Config.ExCost + 20; // a bar built before the lesson
+		for (int k = 0; k < 3; k++) t.SkipLesson();
+		for (int k = 0; k < 100; k++) { m.Step(FighterInput.None, FighterInput.None); t.Observe(); }
+		Assert.True(t.Current == TutorialLesson.Meter, "carried-in meter does not pass it");
+		m.P1.Meter += 6; // a hit landed during the lesson (C5)
+		t.Observe();
+		Assert.Equal(LessonOutcome.Done, t.Outcome(TutorialLesson.Meter), "meter built during the lesson passes it");
+
+		var full = NewMatch();
+		var u = new ApprenticeTutorial(full, Fast);
+		full.P1.Meter = full.Config.MeterMax;
+		for (int k = 0; k < 3; k++) u.SkipLesson();
+		Assert.Equal(LessonOutcome.Unavailable, u.Outcome(TutorialLesson.Meter), "a full gauge has nothing left to build");
+	}
+
+	static ReplayCatalog? _catalog;
+	static ReplayCatalog Catalog => _catalog ??= ReplayCatalog.FromRepo(Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + ".."));
+
+	/// <summary>A guided fight as the scene plays it (profile AI fed every tick, coach over it), recorded; skips before the given steps.</summary>
+	static (ReplayRecording rec, Match m) RecordGuided(int[] skipBefore, TutorialOptions? options = null, int ticks = 1500)
+	{
+		var m = NewMatch();
+		var t = new ApprenticeTutorial(m, options ?? Fast); // before Begin, as in FightScene: a lent rule is in the tick-0 setup
+		var coach = new TutorialCoach(m.P2, 1, m.Config, options ?? Fast, 30);
+		var prof = OnFixtures(() => FightScene.LoadProfiles("kitsune"))[0];
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 92, 30);
+		var rec = ReplayRecorder.Begin(m, ai, 92);
+		rec.OnTutorial(t, coach);
+		for (int i = 0; i < ticks && m.Phase != MatchPhase.Over; i++)
+		{
+			if (Array.IndexOf(skipBefore, i) >= 0 && t.SkipLesson()) rec.OnTutorialSkip();
+			var view = AiView.Capture(m);
+			var fromAi = ai.Next(view);
+			var p2 = coach.Next(view, t.Current) ?? fromAi;
+			var p1 = Player(m, t);
+			m.Step(p1, p2);
+			t.Observe();
+			if (m.Phase == MatchPhase.Over) t.Detach();
+			rec.Record(p1, p2, m.StateHash());
+		}
+		return (rec.Finish(m), m);
+	}
+
+	[Test]
+	public static void Replay_AGuidedFight_ReplaysExactly_WithItsSkips()
+	{
+		var (rec, _) = RecordGuided(new[] { 200, 400 });
+		Assert.True(rec.Header.Tutorial is { ReactionFrames: 30 } && rec.Header.Events.Count(e => e.Kind == "tutorial-skip") == 2, "the setup and both skips are recorded");
+		string path = ProjectSettings.GlobalizePath("user://yok92-guided-test.yfr");
+		rec.Save(path);
+		var loaded = ReplayRecording.Load(path);
+		File.Delete(path);
+		var report = Replayer.Run(loaded, Catalog);
+		Assert.True(report.Ok, "guided fight replays: " + report);
+
+		loaded.Header.Events.RemoveAll(e => e.Kind == "tutorial-skip");
+		Assert.True(!Replayer.Run(loaded, Catalog).Ok, "without its skips it does not (the skips change P2's coach)");
+		string temp = SaveTemp(rec);
+		var noTut = ReplayRecording.Load(temp);
+		File.Delete(temp);
+		noTut.Header.Tutorial = null;
+		Assert.True(!Replayer.Run(noTut, Catalog).Ok, "without the tutorial setup it does not (the coach drives P2)");
+	}
+
+	static string SaveTemp(ReplayRecording rec)
+	{
+		string path = ProjectSettings.GlobalizePath("user://yok92-guided-test-2.yfr");
+		rec.Save(path);
+		return path;
+	}
+
+	[Test]
+	public static void Replay_ALentCancelRule_StaysForTheWholeFight_AndReplays()
+	{
+		var rule = new CancelRule("test-lent", CancelFrom.HeavyNormals, CancelInto.Specials, true, true, false);
+		// Skip straight to the cancel lesson, then past it: the rule must still be held (no unrecorded change).
+		var (rec, m) = RecordGuided(new[] { 1, 2, 3, 4, 5, 6 }, Fast with { LentCancel = rule }, ticks: 300);
+		Assert.True(rec.Header.Fighters[0].CancelRules.Any(c => c.Id == "test-lent"), "the lent rule is in the tick-0 setup");
+		Assert.True(m.P1.CancelRules.Contains(rule), "still held after every lesson ended, the match not over");
+		var report = Replayer.Run(rec, Catalog);
+		Assert.True(report.Ok, "replays: " + report);
+	}
+
+	[Test]
 	public static void Burst_SpentBeforeItsLesson_IsUnavailable()
 	{
 		var m = NewMatch();
@@ -174,7 +263,9 @@ public static class TutorialTests
 		m.P1.CancelUsed = 1;
 		for (int k = 0; k < Fast.MinPromptTicks; k++) { t.Observe(); }
 		Assert.Equal(LessonOutcome.Done, t.Outcome(TutorialLesson.Cancel), "a cancel passes it");
-		Assert.True(t.Finished && !m.P1.CancelRules.Contains(rule), "the lent rule is taken back (X1: none outside the tutorial)");
+		Assert.True(t.Finished && m.P1.CancelRules.Contains(rule), "finished lessons keep the rule to the end of the match (no mid-fight change, F3)");
+		t.Detach(); // the scene does this at KO, reset or the next match
+		Assert.True(!m.P1.CancelRules.Contains(rule), "taken back with the match (X1: none outside the guided fight)");
 	}
 
 	[Test]
@@ -207,7 +298,10 @@ public static class TutorialTests
 			m.Step(FighterInput.None, FighterInput.None);
 		}
 		Assert.Equal(30, first, "nothing before the first screen is 30 ticks old");
-		Assert.True(coach.Next(AiView.Capture(m), null) == null, "no lesson: the profile AI plays");
+		FighterInput? last = FighterInput.None;
+		for (int k = 0; k < 30; k++) { last = coach.Next(AiView.Capture(m), null); m.Step(FighterInput.None, FighterInput.None); }
+		Assert.True(last != null, "the lesson ending reaches the apprentice only after its reaction delay too");
+		Assert.True(coach.Next(AiView.Capture(m), null) == null, "30 ticks later: no lesson, the profile AI plays");
 		Assert.True(coach.LightNormal != null && coach.ThrowRange > 0 && coach.StrikeRange > 0, "kit read from move data");
 	}
 
@@ -276,7 +370,10 @@ public static class TutorialTests
 		Assert.True(fight.TutorialPromptText.Contains(TutorialPrompts.For(TutorialLesson.Block)), "the prompt is on screen");
 		for (int k = 0; k < 300 && fight.Tutorial!.Blocks == 0; k++) fight.StepWithAi(new(InputBits.Left)); // the live P2 path
 		Assert.True(fight.Tutorial!.Blocks > 0, "the scene's P2 is the coach during a lesson: the apprentice came in and swung");
-		Assert.True(fight.SkipTutorialLesson() &&fight.Tutorial!.Current == TutorialLesson.Throw, "skip key action moves on");
+		Assert.True(fight.SkipTutorialLesson() && fight.Tutorial!.Current == TutorialLesson.Throw, "skip key action moves on");
+		for (int k = 0; k < 120; k++) fight.StepWithAi(FighterInput.None);
+		var replay = Replayer.Run(fight.Recorder!.Finish(fight.Match), Catalog);
+		Assert.True(replay.Ok, "the scene's guided fight, skip included, replays: " + replay);
 		fight.Tutorial!.SkipAll();
 		Assert.True(flow.Saved.Story.Has(StoryProgress.ApprenticeTutorial), "finished: the save remembers it");
 		fight.Step(FighterInput.None, FighterInput.None);

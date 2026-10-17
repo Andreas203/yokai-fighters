@@ -66,6 +66,7 @@ public partial class FightScene
 	public bool SkipTutorialLesson()
 	{
 		bool skipped = Tutorial?.SkipLesson() ?? false;
+		if (skipped) Recorder?.OnTutorialSkip(); // YOK-92: the skip changes P2's coach from the next step, so the replay needs it
 		RenderTutorial();
 		return skipped;
 	}
