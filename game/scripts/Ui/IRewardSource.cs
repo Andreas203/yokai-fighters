@@ -4,7 +4,7 @@ namespace YokaiFighters.Ui;
 
 public enum CardKind { NewMove, Upgrade, Modifier }
 
-/// <summary>One reward card as the UI shows it. All text comes from card data (A12): plain language first, frame data behind a toggle.</summary>
+/// <summary>One reward card as the UI shows it. <c>ToLevel</c> is the level an upgrade reaches (0 = unknown: a multi-target upgrade has no single level before the pick, so it shows no pips). All text comes from card data (A12): plain language first, frame data behind a toggle.</summary>
 public sealed record CardView(
 	CardKind Kind, string Id, string Name, string Source, string Plain, string Frames,
 	string Tag, string? TargetPrompt = null, int ToLevel = 0);

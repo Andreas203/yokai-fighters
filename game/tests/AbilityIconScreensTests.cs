@@ -51,6 +51,10 @@ public static class AbilityIconScreensTests
 		Assert.True(Art(c) == AbilityArt.ForId("foxfire"), "base icon");
 		var pips = UiFind.Get<LevelPips>(c, "Pips");
 		Assert.True(pips.Visible && pips.Level == 3, "pips show Lv 3");
+		c.SetState(false, true);
+		Assert.True(!pips.Visible, "frame data hides the pips with the art");
+		c.SetState(false, false);
+		Assert.True(pips.Visible, "pips return after the frame-data toggle is turned off");
 		c.Bind(new CardView(CardKind.Upgrade, "foxfire", "Foxfire", "Your special", "p", "f", "UPGRADE - Lv 1 to 2", null, 2));
 		Assert.True(!UiFind.Get<Control>(c, "Pips").Visible, "Lv 2 upgrade has no pips");
 		// A12: the icon sits above the plain-language text, never over it.
@@ -99,6 +103,7 @@ public static class AbilityIconScreensTests
 		foreach (var f in Directory.EnumerateFiles(dir, "*.cs", SearchOption.AllDirectories).Where(f => !f.EndsWith("AbilityArt.cs")))
 		{
 			string text = File.ReadAllText(f);
+			if (!f.EndsWith("CopyTalisman.cs")) Assert.True(!text.Contains("RewardArt."), Path.GetFileName(f) + " uses RewardArt instead of AbilityArt");
 			Assert.True(!text.Contains("pause-icon") && !text.Contains("ability-icon") && !text.Contains("ability_art"), Path.GetFileName(f) + " has its own ability art path");
 		}
 	}
