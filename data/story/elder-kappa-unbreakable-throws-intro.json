@@ -3,7 +3,7 @@
   "id": "elder-kappa-unbreakable-throws-intro",
   "status": "proposed",
   "trigger": "Intro card (Y3): entering the Elder Kappa elder node",
-  "text": "The Elder Kappa bows, slow and correct, and not a drop spills from its dish. \"Once I have taken hold, honoured guest, there is no breaking free. Please do not be taken.\"",
+  "text": "The Elder Kappa bows, not a drop spilled: \"Once I have taken hold, honoured guest, there is no breaking free.\"",
   "placeholders": [],
   "speaker": "Elder Kappa",
   "rules": [

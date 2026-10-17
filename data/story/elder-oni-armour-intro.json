@@ -3,7 +3,7 @@
   "id": "elder-oni-armour-intro",
   "status": "proposed",
   "trigger": "Intro card (Y3): entering the Elder Oni elder node",
-  "text": "The Elder Oni plants its club in the snow and does not bother to look up. \"Hit me while I swing,\" it says. \"I will finish the swing.\"",
+  "text": "The Elder Oni plants its club in the snow: \"Hit me mid-swing and I will finish the swing.\"",
   "placeholders": [],
   "speaker": "Elder Oni",
   "rules": [

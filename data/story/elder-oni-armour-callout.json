@@ -3,7 +3,7 @@
   "id": "elder-oni-armour-callout",
   "status": "proposed",
   "trigger": "First-meeting callout (Y3): the first time Ryo meets the Elder Oni",
-  "text": "The Elder Oni's specials have armour. A hit will not stop one, so wait for the recovery.",
+  "text": "The Elder Oni's specials shrug off the first hit. Wait for the recovery.",
   "placeholders": [],
   "speaker": "Narrator",
   "rules": [
