@@ -71,8 +71,16 @@ public static class ModelExtentTests
 	{
 		bool onOni = OnOniRig(FightScene.Catalog[clip]?.ResPath);
 		if (set.Fighter != "oni") return !onOni;
-		return onOni || set.Clips.Values.Contains(clip) || set.ClipOverrides.Values.Contains(clip);
+		return onOni || set.Clips.Values.Contains(clip) || set.ClipOverrides.Values.Contains(clip) || OniKitClips.Contains(clip);
 	}
+
+	/// <summary>Every clip the Oni body plays for his stand-in kit's moves (the node's fighter, YOK-131), through
+	/// <see cref="FighterAnimSet.MoveClip"/>, the way <see cref="FighterPresenter"/> picks them.</summary>
+	static System.Collections.Generic.HashSet<string> OniKitClips => _oniKitClips ??= FightScene
+		.LoadMoves(YokaiFighters.Dev.DevJump.FighterOf(new YokaiFighters.Dev.DevFightSetup("oni")))
+		.Select(m => FightScene.MoveClips.TryGetValue(m.Id, out var c) ? FighterAnimSet.Oni.MoveClip(c) : null)
+		.Where(c => c != null).Select(c => c!).ToHashSet();
+	static System.Collections.Generic.HashSet<string>? _oniKitClips;
 
 	/// <summary>Highest Y (m, feet = 0) of the meshes under a node that pass <paramref name="keep"/>: the 8 corners of each mesh AABB, posed by its global transform.</summary>
 	static float MeshTop(Node root, Func<MeshInstance3D, bool> keep)

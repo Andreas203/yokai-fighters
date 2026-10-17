@@ -201,3 +201,23 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 | rules.md E1 (scale) | AM8: "one screen is 1,440 units … fighters are at most 960 units apart … 960 + 2 × 240 = 1,440. The camera stays at a fixed distance" | "The camera's view is 1,060 units close in and 1,540 at the widest; fighters are at most 1,060 units apart … 1,060 + 2 × 240 = 1,540, either facing." |
 | AM8 Decision | "The fight camera sits closer to the fighters and stays fixed in distance. One screen … is 1,440 units" | Superseded by the dynamic zoom above. AM8's derivation of the walls from the widest screen and the model reach stays. |
 | §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera dollies between two distances at 1.2 m and tilts from 0.5° down to 3° up as it pulls back. |
+
+---
+
+## AM10 — The camera frames the tallest fighter in the fight (2026-10-17)
+
+**Status.** Decided by the designer on 2026-10-17 for YOK-133, after Code Critic's review: "frame for the tallest fighter in the fight", allow the wider view, amend E1 and V7, accept a 0.25 m rise per tick. It amends AM9 for fights with a tall body. Ryo vs the Kitsune (and every body no taller than 1.9 m) keeps AM9's camera exactly.
+
+**Decision.** The camera frames each fight for the highest point of its tallest body, over every clip that body plays, body mesh and props included. The Oni's is his club: 3.124 m in his heavy kick, 3.032 m in the HP overhead slam, so he is framed for 3.15 m (`CameraConfig.TallBodyTopMeters`). In such a tall-body fight:
+- The club stays below the HUD band. Where keeping it there would push the lower fighter's feet off the bottom of the frame, the camera dollies out instead. The feet then sit no lower than **1,040 px** of 1,080 (about 96% down the frame, against AM9's ~90%).
+- The view may widen past the sim's 1,540-unit screen, up to about **1,900 units** at a jump apex. Only the presentation widens: the sim's screen, the screen walls (1,060 units) and where projectiles leave the screen stay at 1,540.
+- The camera may sit above 1.2 m while the HUD floor binds, and may rise up to **0.25 m per sim tick** (the first tick of a jump lifts the club at once). The dolly-out is limited to 80 units per tick, except when a fight starts.
+
+**What does not change.** Everything else in AM9, F4 and E1. The camera is still presentation only, eased by a fixed step per sim tick. Nothing in the sim, the AI or the replay reads it, and `StateHash` does not change.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md E1 (scale) | "… 1,540 units (7.7 m) at the widest zoom, which is the sim's screen" | Same, except that in a tall-body fight the presentation view may widen to about 1,900 units; the sim's screen stays 1,540. |
+| rules.md V7 | "chest height (1.2 m) … feet ~90% down the frame" | Same, except that in a tall-body fight the camera frames the tallest body's highest point under the HUD, may sit above 1.2 m while that floor binds, rises up to 0.25 m per tick, and keeps the feet no lower than 1,040 px. |

@@ -90,7 +90,7 @@ public static class TallestFighterCameraTests
 
 	/// <summary>Per-tick height step allowed (m): the camera probes' 0.15, or 0.25 framing the Oni. His club keeps the HUD floor
 	/// binding at rest, so the first tick of a jump (the sim's arc rises ~0.24 m at once) lifts the camera with it instead
-	/// of into spare headroom as for Ryo vs the Kitsune. Designer review point (YOK-133).</summary>
+	/// of into spare headroom as for Ryo vs the Kitsune. Designer-approved 2026-10-17 (YOK-133, AM10, rules.md V7).</summary>
 	static float MaxHeightStep(CameraConfig cfg) => ReferenceEquals(cfg, CameraConfig.Default) ? 0.15f : 0.25f;
 
 	static void Sweep(CameraConfig cfg)
