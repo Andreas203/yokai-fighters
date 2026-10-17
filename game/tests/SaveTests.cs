@@ -1007,4 +1007,40 @@ public static class SaveTests
 		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
 		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
 	});
+
+	// ---- YOK-98, R7 / M5: the dojo's choice in the file (version 6) ----
+
+	[Test]
+	public static void DojoTrial_ChoiceAndAttemptsAreInTheFile_Version6()
+	{
+		var s = DojoTrialTests.AtDojo(500);
+		var offer = s.Dojo!.Trials[0];
+		string before = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
+		Assert.True(before.Contains("\"version\": 6") && !before.Contains("\"dojo\""), "version 6; no dojo field before a choice");
+		Assert.True(s.Dojo.ChooseTrial(offer.Trial.Id).Ok && s.Dojo.RecordAttempt(false).Ok && s.Dojo.RecordAttempt(true).Ok, "landed on attempt 2");
+		var save = RunSave.Capture(s, "default-map.json");
+		string text = SaveStore.Serialize(SaveData.Empty.WithRun(save));
+		var load = SaveStore.Parse(text);
+		Assert.Equal(SaveLoadStatus.Loaded, load.Status, "loads: " + string.Join("; ", load.Problems));
+		Assert.Equal(save.Dojo, load.Data.Run!.Dojo, "the trial, slot, attempts and result come back from the file");
+		Assert.Equal(text, SaveStore.Serialize(load.Data), "same data, same bytes");
+		var back = load.Data.Run.Restore(DojoTrialTests.Pool, FileMapSource.Default(DojoTrialTests.MapDir).Load(), NodeSceneTable.Default(DojoTrialTests.MapDir), trials: DojoTrialTests.Library);
+		Assert.Equal(s.StateHash(), back.StateHash(), "same hash after the file round trip");
+		Assert.True(SaveStore.Parse(text.Replace("\"choice\": \"trial\"", "\"choice\": \"nap\"")).Data.Run is null, "an unknown choice drops the run");
+		Assert.True(SaveStore.Parse(text.Replace("\"attempts\": 2", "\"attempts\": \"2\"")).Data.Run is null, "attempts not a number drops the run");
+		var rest = SaveStore.Parse(text.Replace("\"choice\": \"trial\"", "\"choice\": \"rest\"")).Data.Run;
+		Assert.Equal(new DojoSave("rest", null, null, 0, null), rest?.Dojo, "a rest reads with no trial fields");
+	}
+
+	[Test]
+	public static void DojoTrial_RunningTrialInTheFile_ContinueRestartsTheNode()
+	{
+		var s = DojoTrialTests.AtDojo(500);
+		var offer = s.Dojo!.Trials[0];
+		Assert.True(s.Dojo.ChooseTrial(offer.Trial.Id).Ok && s.Dojo.RecordAttempt(false).Ok, "one miss, then quit");
+		var load = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json"))));
+		Assert.Equal("running", load.Data.Run!.Dojo?.Result, "the running trial is written");
+		var back = load.Data.Run.Restore(DojoTrialTests.Pool, FileMapSource.Default(DojoTrialTests.MapDir).Load(), NodeSceneTable.Default(DojoTrialTests.MapDir), trials: DojoTrialTests.Library);
+		Assert.True(back.Dojo is { Choice: DojoChoice.None, Attempts: 0, CanTrial: true }, "M5: Continue restarts the node, attempts reset");
+	}
 }

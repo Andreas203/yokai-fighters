@@ -37,9 +37,10 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 4,
+/// { "version": 6,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
+///                   "dojo": { "choice": "trial", "trial": "spirit-wave-trial", "slot": "A", "attempts": 2, "result": "landed" } (only once chosen; "rest" has no other field),
 ///                   "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
@@ -65,7 +66,9 @@ public sealed class SaveStore
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
 	/// <remarks>4 (YOK-128): <c>run.node_paid</c> (R8: the entered node's win is already paid and healed; missing = false), so older files load unpaid, as before.</remarks>
-	public const int CurrentVersion = 4;
+	/// <remarks>5 is taken by PR #149 (not merged when YOK-98 was written): the two must be renumbered at merge.</remarks>
+	/// <remarks>6 (YOK-98): <c>run.dojo</c> (R7: the dojo stop's choice; for a trial its id, slot, attempts used and result; written only once a choice is made, missing = none), so older files load with no choice, as before.</remarks>
+	public const int CurrentVersion = 6;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -175,6 +178,8 @@ public sealed class SaveStore
 			// Version 4 (YOK-128, R8): the entered node already paid; missing (version 3 and older) = not paid.
 			else if (OptionalBool(run, "node_paid", out bool? nodePaid) is { } paidProblem) why = paidProblem;
 			else if (OptionalBool(run, "off_route", out bool? offRoute) is { } routeProblem) why = routeProblem; // YOK-124, dev slot only
+			// Version 6 (YOK-98, R7): the dojo stop's choice; missing (version 5 and older) = none made.
+			else if (OptionalDojo(run, out DojoSave? dojo) is { } dojoProblem) why = dojoProblem;
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
@@ -185,6 +190,7 @@ public sealed class SaveStore
 					LockedCopy = copy,
 					NodePaid = nodePaid ?? false,
 					OffRoute = offRoute ?? false,
+					Dojo = dojo,
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -288,6 +294,20 @@ public sealed class SaveStore
 		return null;
 	}
 
+	private static string? OptionalDojo(JsonElement run, out DojoSave? dojo)
+	{
+		dojo = null;
+		if (!run.TryGetProperty("dojo", out JsonElement e) || e.ValueKind == JsonValueKind.Null) return null;
+		const string shape = "dojo needs choice \"rest\", or choice \"trial\" with trial, slot, attempts and result";
+		if (e.ValueKind != JsonValueKind.Object || Text(e, "choice") is not { } choice) return shape;
+		if (choice == "rest") { dojo = new DojoSave("rest", null, null, 0, null); return null; }
+		if (choice != "trial" || Text(e, "trial") is not { } trial || Text(e, "slot") is not { } slot
+			|| !e.TryGetProperty("attempts", out JsonElement a) || !Whole(a, out int attempts) || Text(e, "result") is not { } result)
+			return shape;
+		dojo = new DojoSave("trial", trial, slot, attempts, result);
+		return null;
+	}
+
 	private static string? Text(JsonElement obj, string name) =>
 		obj.TryGetProperty(name, out JsonElement e) && e.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(e.GetString()) ? e.GetString() : null;
 
@@ -330,6 +350,19 @@ public sealed class SaveStore
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
 				if (run.NodePaid) w.WriteBoolean("node_paid", true); // only after a won node, before it is completed
 				if (run.OffRoute) w.WriteBoolean("off_route", true); // YOK-124: only a dev walk off the routes has it
+				if (run.Dojo is { } dojo) // YOK-98: only once a dojo choice is made
+				{
+					w.WriteStartObject("dojo");
+					w.WriteString("choice", dojo.Choice);
+					if (dojo.Trial is not null)
+					{
+						w.WriteString("trial", dojo.Trial);
+						w.WriteString("slot", dojo.Slot);
+						w.WriteNumber("attempts", dojo.Attempts);
+						w.WriteString("result", dojo.Result);
+					}
+					w.WriteEndObject();
+				}
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
 				{

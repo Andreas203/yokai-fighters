@@ -116,9 +116,11 @@ public partial class FightScene : Node3D
 	public static Match NewMatch() => NewMatch(Run);
 
 	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
-	public static Match NewMatch(RunState? run, RunSession? session = null)
+	/// <param name="shape">YOK-98: reshapes the fight config (a dojo trial's start distance); null = as the run gives it.</param>
+	public static Match NewMatch(RunState? run, RunSession? session = null, System.Func<SimConfig, SimConfig>? shape = null)
 	{
 		var cfg = run?.MatchConfig();
+		if (shape is not null) cfg = shape(cfg ?? SimConfig.Default);
 		var ryo = LoadKit(Kit.Ryo);
 		Match m;
 		if (session?.Node?.Kit == TanukiKit.KitId) // YOK-94, T0: the node's opponent fights with Ryo's kit + the copy locked on entering the boss node (T1)
@@ -207,6 +209,7 @@ public partial class FightScene : Node3D
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		SetUpAi(); // YOK-27
 		StartRecording(); // YOK-49
+		SetUpTrialLabel(); // YOK-98: a dojo trial has no recording and shows its prompt
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.

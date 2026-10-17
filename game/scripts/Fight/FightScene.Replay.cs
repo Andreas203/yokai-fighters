@@ -23,7 +23,8 @@ public partial class FightScene
 	/// <summary>The one place the scene advances the sim: step, then record what the sim saw.</summary>
 	private void StepSim(FighterInput p1, FighterInput p2)
 	{
-		Match.Step(p1, p2);
+		if (Trial is { } trial) { trial.Step(p1); p2 = trial.LastDummyInput; } // YOK-98: the dummy's scripted input, not P2's
+		else Match.Step(p1, p2);
 		_lastP1 = p1.Bits; // YOK-pause-flow-wiring: what was held going into a pause
 		ObservePresentation(); // YOK-53: clip frames follow the sim tick
 		StepCamera(); // YOK-129: the dynamic camera eases once per sim tick

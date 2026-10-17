@@ -394,7 +394,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
+			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On, trials: FightScene.LoadTrials()); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			reason = "";
 			return session;
@@ -506,7 +506,7 @@ public partial class GameFlow : Node
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); stop.TrialRequested += () => OpenTrial(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;
@@ -535,8 +535,41 @@ public partial class GameFlow : Node
 		MoveChild(shop, 1); // over the stop, under the menu layer
 	}
 
+	/// <summary>
+	/// YOK-98, R7: the dojo's training trial on the fight scene (<see cref="FightScene.TrialStop"/>), over the hidden
+	/// rest stop. When the trial ends the fight scene goes and the stop comes back with the result. Nothing is
+	/// saved here: a quit mid-trial comes back at the node's entry save, so Continue restarts the node with the
+	/// trial's attempts reset (M5).
+	/// </summary>
+	public FightScene? TrialFight { get; private set; }
+
+	private void OpenTrial(RestStopScreen stop)
+	{
+		if (Session?.Dojo is not { TrialRunning: true } dojo || TrialFight != null) return;
+		var fight = GD.Load<PackedScene>(FightScenePath).Instantiate<FightScene>();
+		fight.Session = Session;
+		fight.PlayerScheme = Router.Scheme;
+		fight.TrialStop = dojo;
+		fight.TitleRequested += () => Router.ReturnToTitle();
+		fight.TrialFinished += () => CallDeferred(nameof(CloseTrial)); // not inside the fight's own _Process
+		ConfigureFight?.Invoke(fight);
+		stop.Visible = false;
+		TrialFight = fight;
+		AddChild(fight);
+		MoveChild(fight, 1); // over the stop, under the menu layer
+	}
+
+	private void CloseTrial()
+	{
+		if (TrialFight is { } fight && IsInstanceValid(fight)) { RemoveChild(fight); fight.QueueFree(); }
+		TrialFight = null;
+		if (NodeScene is RestStopScreen stop && IsInstanceValid(stop)) { stop.Visible = true; stop.TrialClosed(); }
+	}
+
 	private void EndFight()
 	{
+		if (TrialFight is { } trial && IsInstanceValid(trial)) { RemoveChild(trial); trial.Free(); }
+		TrialFight = null;
 		if (Shop is { } shop && IsInstanceValid(shop)) { RemoveChild(shop); shop.Free(); }
 		Shop = null;
 		GetTree().Paused = false; // the pause menu pauses the tree; the title must run
