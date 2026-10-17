@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "elder-kappa-unbreakable-throws-intro",
+  "status": "proposed",
+  "trigger": "Intro card (Y3): entering the Elder Kappa elder node",
+  "text": "The Elder Kappa bows, not a drop spilled: \"Once I have taken hold, honoured guest, there is no breaking free.\"",
+  "placeholders": [],
+  "speaker": "Elder Kappa",
+  "rules": [
+    "S1",
+    "S2",
+    "Y3"
+  ],
+  "notes": "Voice for Oni/Kappa is a proposal (vault Characters open question): Oni proud and blunt, Kappa formal and polite."
+}
