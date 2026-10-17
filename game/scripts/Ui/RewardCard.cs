@@ -26,7 +26,7 @@ public partial class RewardCard : Control
 	private NinePatchRect _selection = null!;
 	private Label _name = null!, _source = null!, _tag = null!, _plain = null!, _prompt = null!, _frames = null!;
 	private LevelPips _pips = null!;
-	private bool _showPips;
+	private bool _showPips, _frameData;
 	private Control _tagPanel = null!, _frameBox = null!;
 
 	public override void _Ready()
@@ -59,8 +59,9 @@ public partial class RewardCard : Control
 		_fallback.Glyph = _crest.Glyph;
 		// Modifier cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
 		_illustration.Texture = c.Kind == CardKind.Modifier ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);
-		_showPips = c.Kind == CardKind.Upgrade && c.ToLevel == 3; _pips.Visible = _showPips; // Lv 3 evolution: base icon plus level pips
+		_showPips = c.Kind == CardKind.Upgrade && c.ToLevel == 3; // Lv 3 evolution: base icon plus level pips
 		_pips.Level = c.ToLevel; _pips.Max = 3;
+		ApplyArtVisibility(); // a rebind while frame data is on must not bring art or pips back over the frame box
 		_crest.Fill = c.Kind switch { CardKind.Modifier => Color.FromHtml("2D3A5E"), CardKind.Upgrade => Color.FromHtml("34483B"), _ => Color.FromHtml("B5332B") };
 		_fallback.Fill = _crest.Fill;
 		_tagPanel.SelfModulate = _crest.Fill;
@@ -79,9 +80,15 @@ public partial class RewardCard : Control
 		_body.Position = new Vector2(0f, selected ? 0f : RaiseWhenSelected);
 		_body.Size = new Vector2(Size.X, frameData ? BodyHeightWithFrames : BodyHeight);
 		_selection.Visible = selected;
-		_illustration.Visible = !frameData && _illustration.Texture != null;
-		_fallback.Visible = !frameData && _illustration.Texture == null;
-		_pips.Visible = _showPips && !frameData;
+		_frameData = frameData;
+		ApplyArtVisibility();
 		_frameBox.Visible = frameData;
+	}
+
+	void ApplyArtVisibility()
+	{
+		_illustration.Visible = !_frameData && _illustration.Texture != null;
+		_fallback.Visible = !_frameData && _illustration.Texture == null;
+		_pips.Visible = _showPips && !_frameData;
 	}
 }
