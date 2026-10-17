@@ -86,6 +86,39 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Meta-unlocks (YOK-86) are deferred behind YOK-89. **If YOK-89 has not merged by 2026-10-17, the meta-unlock layer is cut** and YOK-86 canceled.
   - Carry-over (YOK-97) and story stay regardless (G2).
   - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
+- 2026-10-18 designer ("approve all"): every provisional default in PRs #147–#164 is accepted as built. Each one can be retuned later.
+  - **Tanuki pressure (Y5):** elders and the Tanuki are pressured; the apprentice is not. +10 aggression per win (capped at 3 wins), read as a higher aggression bias. The stored win count is uncapped, and the count lives in the save as `tanuki_wins`.
+  - **Elder twists (Y2/Y3):**
+    - Twists are fight rules in the sim, not in the profile AI.
+    - "Twice in a row": normals, throws, jumps and dashes don't break the row; EX counts as the same special.
+    - Oni armour takes 1 hit per special, from frame 1 to the last active frame. A reflected projectile counts toward the elder's MaxActive.
+    - The intro card shows on every elder entry. Esc closes the card.
+  - **Twist text (YOK-138):**
+    - The proposed Oni voice (proud, blunt) and Kappa voice (formal, polite).
+    - "One-line" in Y3 means one sentence. HUD labels are stored as story cards.
+  - **Carry-over (M3), all six provisional choices:**
+    1. "Best" uses the copy-rule ranking over Ryo's own specials.
+    2. A Lv 1 best is raised to Lv 2.
+    3. It comes back with no modifier or evolution.
+    4. It replaces the starter in its slot.
+    5. It counts as levelled earliest.
+    6. It persists until a run ends.
+  - **Dojo trials (R7):**
+    - Trials still marked `proposed` are offered.
+    - Borrowed-ink specials can be trained.
+    - No trial for a special at its top level.
+    - The first trial in slot order is offered.
+    - The dummy is the node's opponent.
+  - **Tutorial (Y6):** no cancel rule is lent. Lesson damage carries over, and the apprentice isn't protected from a KO. "First run" ends on a win or a loss. Carried-in meter needs a new gain.
+  - **Harness:** a timeout or double KO counts as a loss. The bot's numbers and the shop order are as proposed.
+  - **Oni:**
+    - Slower clip-timed normals (MP 8/5/7, MK 15/6/7, HP 16/4/25).
+    - Push width 150.
+    - The aftershock counts from the first active frame, is anchored where it struck, and pushes in the owner's facing. It still lands after the owner is hit.
+  - **UI:**
+    - Reward cards show the diamond icons in place of the old plates, and the frame alone marks the pick.
+    - Captures from the merge train are signed off.
+  - **Approved work:** YOK-34's fourth gate round, YOK-103's fourth critic round and the YOK-80 icon job (30 credits) are approved.
 - 2026-10-17 designer calls:
   - **YOK-133:** the camera frames the tallest fighter in each fight. In tall-body fights:
     - the view may widen past E1's 1,540 to about 1,900;
