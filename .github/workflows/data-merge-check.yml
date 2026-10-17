@@ -1,9 +1,14 @@
 name: data-merge-check
 # YOK-34: a pull request that touches data/ runs the data merge check (docs/pipeline.md):
-# schema -> rules -> whole-run harness -> headless test suite, stopping at the first failure.
-# The verdict is advisory. Nothing here merges: the designer reviews and merges every PR.
-#   MERGEABLE (0)  job passes          FAIL (1) / SETUP (2)  job fails, the report names the step
-#   REVIEW (3)     job passes with a warning: the PR also changes code and goes to code review
+# schema -> rules -> whole-run harness (200 runs) -> headless test suite, after a fresh build,
+# stopping at the first failure. The verdict is advisory. Nothing here merges: the designer reviews
+# and merges every PR.
+#   MERGEABLE (0)         job passes with a notice
+#   REVIEW (3)            job passes with a warning: the PR also changes code and goes to code review
+#   NOTHING TO MERGE (5)  job passes with a notice: no file changed
+#   FAIL (1) / SETUP (2) / INCOMPLETE (4)  job fails, the report says why
+# The checkout stays clean until the check has read its scope: the base checker, Godot, the report and
+# the suite log all live in $RUNNER_TEMP, outside the workspace (a dirty tree outside data/ is SETUP).
 on:
   pull_request:
     paths: ["data/**"]
@@ -14,7 +19,6 @@ permissions:
 
 env:
   GODOT_VERSION: 4.7.2
-  GODOT_DIR: ${{ github.workspace }}/.godot-bin
 
 jobs:
   check:
@@ -25,34 +29,36 @@ jobs:
         with:
           fetch-depth: 0   # the check diffs the PR against its base to tell data-only from code
 
-      # The checker and its validators come from the BASE branch, never from the PR: a PR could otherwise
-      # edit tools/ to call itself mergeable. The PR's tools/ is replaced by the base's before the check
-      # runs on the PR's data/. (Any change to tools/ or game/ is itself a code change: REVIEW at best.)
-      - name: Check out the base branch's checker
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          ref: ${{ github.base_ref || 'main' }}
-          path: .base
-          sparse-checkout: tools
-
-      - name: Use the base branch's tools/
+      - name: Paths outside the checkout
         run: |
-          if [ -f .base/tools/data_merge_check.py ]; then
-            rm -rf tools && cp -R .base/tools tools
+          echo "GODOT_DIR=$RUNNER_TEMP/godot-bin" >> "$GITHUB_ENV"
+          echo "OUT_DIR=$RUNNER_TEMP/data-merge" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/data-merge"
+
+      # The checker and its validators come from the BASE branch, never from the PR: a PR could otherwise
+      # edit tools/ to call itself mergeable. They are extracted outside the checkout and run on the PR's
+      # data/ with --tools. (Any change to tools/ or game/ is itself a code change: REVIEW at best.)
+      - name: Extract the base branch's checker
+        run: |
+          base="origin/${GITHUB_BASE_REF:-main}"
+          mkdir -p "$RUNNER_TEMP/base"
+          git archive "$base" tools | tar -x -C "$RUNNER_TEMP/base"
+          if [ -f "$RUNNER_TEMP/base/tools/data_merge_check.py" ]; then
+            echo "TOOLS=$RUNNER_TEMP/base/tools" >> "$GITHUB_ENV"
             echo "CHECKER=base" >> "$GITHUB_ENV"
           else
-            # Bootstrap: the base has no checker yet (the PR that adds it). Run the PR's, but never as a merge verdict.
+            # Bootstrap: the base has no checker yet (the PR that adds it). Run the PR's, never as a merge verdict.
             echo "::warning::The base branch has no tools/data_merge_check.py; running the PR's own checker, verdict capped at REVIEW"
+            echo "TOOLS=$GITHUB_WORKSPACE/tools" >> "$GITHUB_ENV"
             echo "CHECKER=pr" >> "$GITHUB_ENV"
           fi
-          rm -rf .base
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.13"
 
       - name: Install the schema validator
-        run: pip install -r tools/requirements.txt
+        run: pip install -r "$TOOLS/requirements.txt"
 
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
@@ -76,18 +82,21 @@ jobs:
       - name: Locate Godot
         run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
 
+      # Defaults only: 200 runs and a fresh build + import (designer 2026-10-17: anything less is INCOMPLETE).
       - name: Data merge check
         run: |
           base="origin/${GITHUB_BASE_REF:-main}"
           set +e
-          python tools/data_merge_check.py --base "$base" --report data-merge-report.txt --suite-log data-merge-suite.log
+          python "$TOOLS/data_merge_check.py" --root "$GITHUB_WORKSPACE" --tools "$TOOLS" --base "$base" \
+            --report "$OUT_DIR/data-merge-report.txt" --suite-log "$OUT_DIR/data-merge-suite.log"
           code=$?
           set -e
           if [ "$CHECKER" = pr ] && [ "$code" = 0 ]; then code=3; fi
           case $code in
             0) echo "::notice::Data merge check: MERGEABLE (verdict only; the designer reviews and merges)";;
             3) echo "::warning::Data merge check passed, but the PR also changes code: it goes to code review";;
-            *) echo "::error::Data merge check failed (exit $code); see the report"; exit 1;;
+            5) echo "::notice::Data merge check: nothing to merge (no file changed)";;
+            *) echo "::error::Data merge check did not pass (exit $code); see the report"; exit 1;;
           esac
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -95,6 +104,6 @@ jobs:
         with:
           name: data-merge-report
           path: |
-            data-merge-report.txt
-            data-merge-suite.log
+            ${{ env.OUT_DIR }}/data-merge-report.txt
+            ${{ env.OUT_DIR }}/data-merge-suite.log
           if-no-files-found: ignore

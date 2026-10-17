@@ -13,17 +13,18 @@ python3 tools/data_merge_check.py --base origin/main
 
 Godot is found from `--godot`, then `$GODOT`, then `godot` on `PATH`. The check runs `dotnet build`
 and a headless Godot import in `game/` before the Godot steps; `--no-build` skips both when the
-game is already built and imported.
+game is already built and imported, but then the verdict is INCOMPLETE (designer 2026-10-17).
 
 | Option | Use |
 |---|---|
 | `--base REF` | Diff `REF...HEAD` to tell a data-only change from one that touches code. Without it the tree is checked as it is. |
-| `--runs N`, `--seed N` | Harness batch (default 200 runs from seed 1, the Sparring Partner's batch). |
+| `--runs N`, `--seed N` | Harness batch (default 200 runs from seed 1, the Sparring Partner's batch). Fewer than 200 runs makes the verdict INCOMPLETE, for quick local runs only. |
 | `--only schema,rules` | Run some steps while iterating. Skipped steps make the verdict INCOMPLETE, never MERGEABLE. |
 | `--report FILE` | Also write the text report to a file. |
 | `--suite-log FILE` | Where the test suite's full output goes (default: a uniquely named temp file). |
 | `--json` | The report as one JSON object (verdict, scope, each step's status, details and notes). |
-| `--root DIR` | Check another checkout (its `tools/`, `data/` and `game/`). |
+| `--root DIR` | Check another checkout (its `data/` and `game/`, and its `tools/` unless `--tools` is given). |
+| `--tools DIR` | Take `validate_data.py` and `check_rules.py` from another folder (CI: the base branch's), still checking `--root`'s data. |
 
 ## The steps, in order
 
@@ -53,40 +54,43 @@ rule, a loop through rules held at once.
 
 | Exit | Verdict | Meaning |
 |---|---|---|
-| 0 | MERGEABLE | Every step passed and the change touches only content in `data/`. Ready for the designer's review. |
+| 0 | MERGEABLE | Every step passed on the full 200-run batch after a fresh build, and the change touches only content in `data/`. Ready for the designer's review. |
 | 1 | FAIL | A step failed. The report's first line names it (`DATA MERGE CHECK: FAIL at step 2 (rules: ...)`), with the failing files and rule IDs below. |
-| 2 | SETUP | The check could not run (no Godot, no jsonschema, build or import failed, bad `--base`). Says nothing about the change. |
+| 2 | SETUP | The check could not run (no Godot, no jsonschema, build or import failed, bad `--base`), or, with `--base`, the tree has uncommitted changes outside `data/` content. Says nothing about the change. |
 | 3 | REVIEW | Every step passed, but the change also touches code: anything but a `.json` file under `data/`, or anything in `data/schema/` (the schemas are the C# loader's contract). A rename counts both paths, so moving a test from `game/` into `data/` is a code change. A symlink or submodule (git mode 120000/160000) is code whatever its name, and so is a path with a `..` segment or a backslash in a root file name. Code goes through Code Critic, Test Breaker and designer review as before. |
-| 4 | INCOMPLETE | `--only` skipped steps; no merge verdict. |
+| 4 | INCOMPLETE | Every step that ran passed, but `--only` skipped steps, `--runs` was under 200 or `--no-build` was given. No merge verdict. |
+| 5 | NOTHING TO MERGE | `--base` shows no changed file. No verdict, nothing to review. |
 
 ## CI hook
 
 `.github/workflows/data-merge-check.yml` runs the check on every pull request that touches `data/**`
-(and by hand). It diffs against the PR's base branch, uploads the report and the suite log as the
-`data-merge-report` artifact and writes the report to the job summary. FAIL and SETUP fail the job;
-REVIEW passes with a warning; MERGEABLE passes with a notice. The workflow has read-only permissions and
-never merges.
+(and by hand), always with the defaults: 200 runs and a fresh build and import. It diffs against the
+PR's base branch, uploads the report and the suite log as the `data-merge-report` artifact and writes
+the report to the job summary. MERGEABLE and NOTHING TO MERGE pass with a notice, REVIEW passes with a
+warning, FAIL, SETUP and INCOMPLETE fail the job. The workflow has read-only permissions and never merges.
 
-The checker never comes from the PR itself. A second checkout of the base branch supplies `tools/`
-(the checker, `validate_data.py`, `check_rules.py`), which replaces the PR's `tools/` before the check
-runs on the PR's `data/`, so a PR cannot edit the checker to call itself mergeable. A PR that changes
-`tools/` or `game/` is a code change anyway and gets REVIEW at best. While the base has no checker yet
-(the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW. Every action is
-pinned to a commit SHA, with its version tag in a comment.
+The checker never comes from the PR itself. The base branch's `tools/` (the checker, `validate_data.py`,
+`check_rules.py`) is extracted with `git archive` into `$RUNNER_TEMP`, outside the checkout, and run on
+the PR's checkout with `--root` and `--tools` (the validator is pointed at the PR's `data/` through
+`YOK_CONTENT_ROOT`). A PR therefore cannot edit the checker to call itself mergeable, and a PR that
+changes `tools/` or `game/` is a code change anyway: REVIEW at best. Godot, the report and the suite log
+also live in `$RUNNER_TEMP`, so the checkout is clean when the check reads its scope. While the base has
+no checker yet (the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW.
+Every action is pinned to a commit SHA, with its version tag in a comment.
 
-## Open questions for the designer
+## Designer decisions (2026-10-17)
 
-The current behaviour, until the designer decides otherwise (probes in
-`tools/test_data_merge_check_breaker.py` that expect something else stay failing on purpose):
-
-- **Empty diff.** A `--base` diff with no changed files at all gives MERGEABLE when every step passes
-  (`test_empty_diff_is_not_a_merge_verdict` expects no merge verdict).
-- **Dirty working tree.** The scope comes from committed history (`REF...HEAD`); uncommitted edits, in
-  `game/` or anywhere, are not classified, though the steps run on the files as they are on disk. In CI
-  the tree is always clean (`test_uncommitted_game_change_does_not_pass_as_data_only`).
-- **Small batches.** `--runs 1 --no-build` can give MERGEABLE: the run count and the build are not part
-  of the verdict (`test_one_run_batch_is_not_a_mergeable_verdict`). CI always uses the default 200 runs
-  and builds.
+- **Empty diff is nothing to merge.** With `--base`, a diff with no changed file gives
+  `NOTHING TO MERGE` (exit 5) before any step runs: never MERGEABLE.
+- **Uncommitted changes outside `data/` are refused.** With `--base`, the scope comes from commits
+  (`REF...HEAD`), so any staged, unstaged or untracked (not ignored) file that is not content in `data/`
+  (a `.json` file outside `data/schema/`) gives SETUP (exit 2), listing the files. Uncommitted content
+  files are allowed, for local runs on a draft. CI is a clean checkout and the check runs before the
+  build, so the build's own outputs never trip it. Locally, untracked Godot import outputs (`.uid`,
+  `.import`) count: commit or remove them first.
+- **MERGEABLE needs the full batch and a fresh build.** `--runs` under 200 or `--no-build` give
+  INCOMPLETE (exit 4) even when every step passes. Both flags stay for quick local runs. CI runs the
+  defaults (200 runs, build and import).
 
 ## Samples
 

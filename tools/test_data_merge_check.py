@@ -115,6 +115,18 @@ class SampleChangesTest(unittest.TestCase):
         rep = self.assertFailsAt(MERGE_FIX / "harness-bot-range", "harness", "preferred_min is above preferred_max")
         self.assertEqual((status(rep)["schema"], status(rep)["rules"]), ("pass", "pass"))
 
+    def test_tools_from_elsewhere_check_the_root_data(self):
+        # CI: the base branch's tools/ (here: this repo's) check the PR checkout's data/, which has no tools/
+        with Checkout(MERGE_FIX / "schema-wrong-type") as c:
+            shutil.rmtree(c.root / "tools")
+            out = io.StringIO()
+            code = dmc.main(["--root", str(c.root), "--tools", str(ROOT / "tools"), "--only", "schema,rules", "--json"],
+                            out=out)
+        rep = json.loads(out.getvalue())
+        self.assertEqual(code, dmc.FAIL, rep)
+        self.assertEqual(status(rep)["schema"], "fail", rep)
+        self.assertTrue(any("ryo-light-punch.json" in d for d in rep["steps"][0]["details"]), rep["steps"][0])
+
     def test_report_names_the_failing_step(self):
         with Checkout(MERGE_FIX / "rules-trial-foreign-move") as c:
             out = io.StringIO()
@@ -175,14 +187,15 @@ class ScopeAndVerdictTest(unittest.TestCase):
                 self.assertEqual(code, dmc.REVIEW, text)
                 self.assertIn(f"code (goes to review): {src}", text)
 
-    def _verdict(self, changed):
+    def _verdict(self, changed, *args, dirty=()):
         """Every step passes (stubbed); only the change scope decides."""
-        saved = (dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
+        saved = (dmc.uncommitted_outside_data, dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
                  dmc.find_godot, dmc.prepare_godot)
 
         def ok(*a):
             a[1].status = "pass"
         try:
+            dmc.uncommitted_outside_data = lambda root: list(dirty)
             dmc.changed_entries = lambda root, base: [(p, "100644", "100644") for p in changed]
             dmc.step_schema = dmc.step_rules = ok
             dmc.step_harness = lambda root, st, *a: setattr(st, "status", "pass")
@@ -190,10 +203,38 @@ class ScopeAndVerdictTest(unittest.TestCase):
             dmc.find_godot = lambda arg: "godot"
             dmc.prepare_godot = lambda *a, **k: True
             out = io.StringIO()
-            return dmc.main(["--base", "origin/main"], out=out), out.getvalue()
+            return dmc.main(["--base", "origin/main", *args], out=out), out.getvalue()
         finally:
-            (dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
+            (dmc.uncommitted_outside_data, dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
              dmc.find_godot, dmc.prepare_godot) = saved
+
+    def test_designer_2026_10_17_empty_diff_is_nothing_to_merge(self):
+        code, text = self._verdict([])
+        self.assertEqual(code, dmc.NOTHING, text)
+        self.assertNotIn("MERGEABLE", text)
+
+    def test_designer_2026_10_17_dirty_tree_outside_data_is_setup(self):
+        code, text = self._verdict(["data/moves/x.json"], dirty=["game/tests/T.cs"])
+        self.assertEqual(code, dmc.SETUP, text)
+        self.assertIn("uncommitted: game/tests/T.cs", text)
+
+    def test_designer_2026_10_17_full_batch_and_build_for_mergeable(self):
+        for args in (["--runs", "199"], ["--no-build"], ["--runs", "1", "--no-build"]):
+            with self.subTest(args=args):
+                code, text = self._verdict(["data/moves/x.json"], *args)
+                self.assertEqual(code, dmc.INCOMPLETE, text)
+        code, text = self._verdict(["data/moves/x.json"], "--runs", "200")
+        self.assertEqual(code, dmc.MERGEABLE, text)
+
+    def test_uncommitted_content_is_allowed_and_other_files_are_listed(self):
+        tmp, r = self._repo_with_rename("game/tests/GuardTests.cs", "game/tests/Moved.cs")
+        with tmp:
+            (r / "data" / "moves" / "a.json").write_text('{"kind": "y"}\n')
+            (r / "data" / "moves" / "new.json").write_text("{}\n")
+            self.assertEqual(dmc.uncommitted_outside_data(r), [])
+            (r / "game" / "tests" / "Moved.cs").write_text("dirty\n")
+            (r / "data" / "notes.txt").write_text("x\n")
+            self.assertEqual(dmc.uncommitted_outside_data(r), ["data/notes.txt", "game/tests/Moved.cs"])
 
     def test_data_only_change_is_mergeable(self):
         code, text = self._verdict(["data/moves/spirit-wave.json"])

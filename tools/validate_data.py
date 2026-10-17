@@ -20,6 +20,7 @@ Requires the `jsonschema` package (see tools/requirements.txt).
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -32,6 +33,9 @@ except ImportError:  # pragma: no cover
     sys.exit(2)
 
 ROOT = Path(__file__).resolve().parent.parent
+if os.environ.get("YOK_CONTENT_ROOT"):
+    # YOK-34: the data merge check runs the base branch's validator on a PR's checkout, named here.
+    ROOT = Path(os.environ["YOK_CONTENT_ROOT"]).resolve()
 DATA = ROOT / "data"
 SCHEMA_DIR = DATA / "schema"
 RULES_MD = ROOT / "docs" / "design" / "rules.md"

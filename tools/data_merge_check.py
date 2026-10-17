@@ -17,19 +17,28 @@ Runs, in order, stopping at the first step that fails:
   4 suite    the full headless Godot test suite (data PRs need it green, as code does)
 
 Verdicts (exit code):
-  0 MERGEABLE   every step passed and the change touches only content in data/
+  0 MERGEABLE   every step passed on the full 200-run batch after a fresh build, and the change touches
+                only content in data/
   1 FAIL        a step failed; the report names it and why
-  2 SETUP       the check could not run (no Godot, no jsonschema, build failed, bad --base)
+  2 SETUP       the check could not run (no Godot, no jsonschema, build failed, bad --base), or, with
+                --base, the tree has uncommitted changes outside data/ content
   3 REVIEW      every step passed but the change also touches code (anything but a .json file in data/,
                 or data/schema/; a rename counts both paths; a symlink or submodule is code): it goes to code review
-  4 INCOMPLETE  every step that ran passed, but --only skipped some: not a merge verdict
+  4 INCOMPLETE  every step that ran passed, but --only skipped some, --runs was under 200 or --no-build
+                was given: not a merge verdict
+  5 NOTHING TO MERGE  --base shows no changed file: no verdict
+Designer decisions 2026-10-17: empty diff, dirty tree and full batch + build (docs/pipeline.md).
 
 MERGEABLE is a verdict only. Nothing here merges: the designer still reviews and merges every
 data PR until they say otherwise (CLAUDE.md, Pipeline).
 
 --base REF   compare HEAD with REF (git diff REF...HEAD in ROOT) to decide data-only vs code.
              Without it the scope is not checked and the best verdict is MERGEABLE for the tree.
---root DIR   the checkout to check (default: this repo). Its tools/ and data/ are used.
+--root DIR   the checkout to check (default: this repo). Its data/ and game/ are used, and its tools/
+             unless --tools names another.
+--tools DIR  where validate_data.py and check_rules.py come from (CI: the base branch's tools/, extracted
+             outside the checkout so the tree stays clean). The validator is pointed at ROOT through
+             YOK_CONTENT_ROOT.
 --only       comma list of steps to run (schema,rules,harness,suite), for local iteration.
 --no-build   skip `dotnet build` and the Godot import before the Godot steps.
 """
@@ -47,8 +56,10 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 STEPS = ("schema", "rules", "harness", "suite")
-MERGEABLE, FAIL, SETUP, REVIEW, INCOMPLETE = 0, 1, 2, 3, 4
-VERDICT = {MERGEABLE: "MERGEABLE", FAIL: "FAIL", SETUP: "SETUP", REVIEW: "REVIEW", INCOMPLETE: "INCOMPLETE"}
+MERGEABLE, FAIL, SETUP, REVIEW, INCOMPLETE, NOTHING = 0, 1, 2, 3, 4, 5
+VERDICT = {MERGEABLE: "MERGEABLE", FAIL: "FAIL", SETUP: "SETUP", REVIEW: "REVIEW", INCOMPLETE: "INCOMPLETE",
+           NOTHING: "NOTHING TO MERGE"}
+FULL_RUNS = 200   # designer 2026-10-17: MERGEABLE needs the full 200-run batch and a fresh build
 MAX_LINES = 25          # lines of a failing step's output kept in the report
 HARNESS_OUTCOMES = {"won", "lost"}
 
@@ -72,10 +83,10 @@ def tail(text: str, n: int = MAX_LINES) -> list[str]:
     return lines[-n:]
 
 
-def run_split(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[int, str, str]:
+def run_split(cmd: list[str], cwd: Path | None = None, timeout: int = 1800, env: dict | None = None) -> tuple[int, str, str]:
     """(exit code, stdout, stderr)."""
     try:
-        p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
     except FileNotFoundError as e:
         return 127, "", f"{e}"
     except subprocess.TimeoutExpired:
@@ -83,9 +94,9 @@ def run_split(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> t
     return p.returncode, p.stdout or "", p.stderr or ""
 
 
-def run(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[int, str]:
+def run(cmd: list[str], cwd: Path | None = None, timeout: int = 1800, env: dict | None = None) -> tuple[int, str]:
     """(exit code, stdout + stderr), for output that is shown, never parsed."""
-    code, out, err = run_split(cmd, cwd, timeout)
+    code, out, err = run_split(cmd, cwd, timeout, env)
     return code, out + err
 
 
@@ -135,6 +146,25 @@ def changed_entries(root: Path, base: str) -> list[tuple[str, str, str]]:
     return entries
 
 
+def uncommitted_outside_data(root: Path) -> list[str]:
+    """Paths with uncommitted changes (staged, unstaged or untracked, not ignored) that are not content in
+    data/. Uncommitted content files are allowed for local runs; anything else is refused (SETUP)."""
+    code, out, err = run_split(["git", "-C", str(root), "status", "--porcelain=v1", "-z", "--untracked-files=all"])
+    if code != 0:
+        raise RuntimeError(f"git status failed: {(err or out).strip()[:300]}")
+    fields, paths, i = out.split("\0"), [], 0
+    while i < len(fields):
+        f = fields[i]
+        if len(f) > 3:
+            paths.append(f[3:])
+            if f[0] in "RC":           # a rename or copy carries its old path in the next field
+                i += 1
+                if i < len(fields) and fields[i]:
+                    paths.append(fields[i])
+        i += 1
+    return sorted(p for p in set(paths) if not is_content(p))
+
+
 def changed_files(root: Path, base: str) -> list[str]:
     return [p for p, _, _ in changed_entries(root, base)]
 
@@ -146,8 +176,10 @@ def scope_of(entries: list[tuple[str, str, str]]) -> tuple[list[str], list[str]]
 
 # --- steps -------------------------------------------------------------------------------------
 
-def step_schema(root: Path, st: Step, py: str) -> None:
-    code, out = run([py, str(root / "tools" / "validate_data.py")], cwd=root)
+def step_schema(root: Path, st: Step, py: str, tools: Path | None = None) -> None:
+    # YOK_CONTENT_ROOT: the validator checks ROOT's data/ even when it comes from another tools/ (CI: the base's)
+    code, out = run([py, str((tools or root / "tools") / "validate_data.py")], cwd=root,
+                    env={**os.environ, "YOK_CONTENT_ROOT": str(root)})
     last = tail(out, 1)
     st.summary = last[0] if last else f"exit {code}"
     if code == 0:
@@ -160,8 +192,9 @@ def step_schema(root: Path, st: Step, py: str) -> None:
         st.details = tail(out)
 
 
-def step_rules(root: Path, st: Step, py: str) -> None:
-    code, out, err = run_split([py, "-I", str(root / "tools" / "check_rules.py"), "--json", str(root / "data")], cwd=root)
+def step_rules(root: Path, st: Step, py: str, tools: Path | None = None) -> None:
+    code, out, err = run_split([py, "-I", str((tools or root / "tools") / "check_rules.py"), "--json", str(root / "data")],
+                               cwd=root)
     try:
         rep = json.loads(out)   # stdout only: --json prints one object there; stderr is shown, never parsed
     except ValueError:
@@ -270,7 +303,12 @@ def render(verdict: int, steps: list[Step], scope: dict) -> str:
     if failed:
         head += f" at step {steps.index(failed) + 1} ({failed.name}: {failed.title})"
     lines = [head, ""]
-    if scope.get("checked"):
+    if scope.get("dirty"):
+        lines.append(f"Uncommitted changes outside data/ ({len(scope['dirty'])}): commit, stash or remove them first; "
+                     "the scope is read from commits, so they would not be classified")
+        for p in scope["dirty"][:MAX_LINES]:
+            lines.append(f"    uncommitted: {p}")
+    elif scope.get("checked"):
         lines.append(f"Change: {len(scope['content'])} content file(s) in data/, {len(scope['code'])} other file(s)")
         for p in scope["code"][:MAX_LINES]:
             lines.append(f"    code (goes to review): {p}")
@@ -291,7 +329,8 @@ def render(verdict: int, steps: list[Step], scope: dict) -> str:
         FAIL: f"Not mergeable: fix step {steps.index(failed) + 1 if failed else '?'} ({failed.name if failed else '?'}) and run again.",
         SETUP: "The check could not run; this says nothing about the change. Fix the setup and run again.",
         REVIEW: "Checks passed, but the change touches code: it goes to code review (Code Critic, Test Breaker, designer).",
-        INCOMPLETE: "Some steps were skipped (--only): no merge verdict.",
+        INCOMPLETE: "No merge verdict: " + "; ".join(scope.get("incomplete") or ["steps were skipped"]) + ".",
+        NOTHING: f"Nothing to merge: no file changed since {scope.get('base')}. No verdict.",
     }[verdict])
     return "\n".join(lines) + "\n"
 
@@ -307,6 +346,8 @@ def main(argv=None, out=sys.stdout) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--base")
     ap.add_argument("--root", type=Path, default=REPO)
+    ap.add_argument("--tools", type=Path, help="where validate_data.py and check_rules.py come from (default ROOT/tools; "
+                                               "CI passes the base branch's, kept outside the checkout)")
     ap.add_argument("--runs", type=int, default=200)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--no-build", action="store_true")
@@ -318,6 +359,7 @@ def main(argv=None, out=sys.stdout) -> int:
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     root = a.root.resolve()
+    tools = a.tools.resolve() if a.tools else None
     only = [s.strip() for s in a.only.split(",") if s.strip()]
     unknown = [s for s in only if s not in STEPS]
     if unknown or a.runs < 1:
@@ -329,15 +371,24 @@ def main(argv=None, out=sys.stdout) -> int:
              Step("rules", "written rules, tools/check_rules.py"),
              Step("harness", f"whole-run harness, {a.runs} runs"),
              Step("suite", "headless Godot test suite")]
-    scope = {"checked": False, "content": [], "code": []}
+    scope = {"checked": False, "content": [], "code": [], "base": a.base}
     verdict = None
     if a.base:
         try:
-            content, code = scope_of(changed_entries(root, a.base))
-            scope.update(checked=True, content=content, code=code)
+            dirty = uncommitted_outside_data(root)
+            entries = changed_entries(root, a.base)
         except RuntimeError as e:
             steps[0].status, steps[0].summary = "setup", str(e)
             verdict = SETUP
+        else:
+            if dirty:                      # designer 2026-10-17: refuse, never classify a dirty tree
+                scope["dirty"] = dirty
+                verdict = SETUP
+            elif not entries:              # designer 2026-10-17: an empty diff is nothing to merge
+                verdict = NOTHING
+            else:
+                content, code = scope_of(entries)
+                scope.update(checked=True, content=content, code=code)
 
     godot = find_godot(a.godot)
     prepared = False
@@ -355,9 +406,9 @@ def main(argv=None, out=sys.stdout) -> int:
                 prepared = prepare_godot(root / "game", godot, st, build=not a.no_build)
         if st.status == "not run":
             if st.name == "schema":
-                step_schema(root, st, a.python)
+                step_schema(root, st, a.python, tools)
             elif st.name == "rules":
-                step_rules(root, st, a.python)
+                step_rules(root, st, a.python, tools)
             elif st.name == "harness":
                 step_harness(root, st, godot, a.runs, a.seed)
             else:
@@ -369,7 +420,15 @@ def main(argv=None, out=sys.stdout) -> int:
         elif st.status == "setup":
             verdict = SETUP
     if verdict is None:
+        reasons = []
         if any(s.status == "skipped" for s in steps):
+            reasons.append("steps were skipped (--only)")
+        if a.runs < FULL_RUNS:
+            reasons.append(f"the harness played {a.runs} runs, not the full {FULL_RUNS}")
+        if a.no_build:
+            reasons.append("--no-build: the game was not freshly built")
+        scope["incomplete"] = reasons
+        if reasons:
             verdict = INCOMPLETE
         elif scope["checked"] and scope["code"]:
             verdict = REVIEW
