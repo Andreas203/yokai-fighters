@@ -1,0 +1,30 @@
+{
+  "kind": "cancel_rule",
+  "id": "spirit-chain",
+  "name": "Spirit Chain",
+  "source": "kitsune",
+  "offered_by": "nine-tailed-kitsune",
+  "rarity": "rare",
+  "locked": false,
+  "rules": [
+    "X1",
+    "X2",
+    "X3",
+    "X4",
+    "A9"
+  ],
+  "path": {
+    "from": "specials",
+    "into": "specials",
+    "on": [
+      "hit",
+      "block"
+    ]
+  },
+  "once_per_combo": true,
+  "card": {
+    "plain": "Cancel any special into a dash.",
+    "frames": "Special → dash inside the move's cancel window, once per combo"
+  },
+  "notes": "YOK-35 passing fixture: the cycle is bounded by once per combo (X3); the harness confirms."
+}

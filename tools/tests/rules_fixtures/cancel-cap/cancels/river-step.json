@@ -1,0 +1,30 @@
+{
+  "kind": "cancel_rule",
+  "id": "river-step",
+  "name": "River Step",
+  "source": "kappa",
+  "offered_by": "elder-kappa",
+  "rarity": "rare",
+  "locked": false,
+  "rules": [
+    "X1",
+    "X2",
+    "X3",
+    "X4",
+    "A9"
+  ],
+  "path": {
+    "from": "normals",
+    "into": "dash",
+    "on": [
+      "hit",
+      "block"
+    ]
+  },
+  "once_per_combo": true,
+  "card": {
+    "plain": "Cancel any special into a dash.",
+    "frames": "Special → dash inside the move's cancel window, once per combo"
+  },
+  "notes": "YOK-35 broken fixture."
+}

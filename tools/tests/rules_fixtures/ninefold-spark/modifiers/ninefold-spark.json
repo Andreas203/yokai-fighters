@@ -1,0 +1,33 @@
+{
+  "kind": "modifier",
+  "id": "ninefold-spark",
+  "name": "Ninefold Spark",
+  "status": "proposed",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A2",
+    "A8",
+    "A9",
+    "A10",
+    "A12",
+    "C5",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "ex.meter_cost",
+      "op": "mul_pct",
+      "value": 50
+    }
+  ],
+  "card": {
+    "plain": "This special's EX version costs half a bar.",
+    "frames": "EX meter cost 100 -> 50"
+  },
+  "notes": "YOK-35 passing fixture: meter-cost modifiers target ex.meter_cost (C5, E16)."
+}
