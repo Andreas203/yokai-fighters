@@ -192,5 +192,33 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(check_rules.move_classes({"kind": "normal", "source": "kitsune", "input": {"button": "HP"}}), set())
 
 
+class TuningStepTest(unittest.TestCase):
+    """A4 one tuning step; E21/P1 a step that changes damage alone, also a nested `x.damage` target."""
+
+    def _lv2(self, tuning):
+        import tempfile
+        d = json.loads((DATA / "moves" / "spirit-wave.json").read_text())
+        d["levels"]["2"]["tuning"] = tuning
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "spirit-wave.json").write_text(json.dumps(d))
+            code, rep = violations(DATA, tmp)
+        return code, {(v["rule"], v["check"]) for v in rep["violations"]}
+
+    def test_nested_damage_target_is_damage(self):
+        code, hits = self._lv2({"target": "projectile.damage", "op": "add", "value": 10})
+        self.assertEqual(code, 1)
+        self.assertIn(("E21", "levels"), hits)
+
+    def test_two_targets_are_not_one_step(self):
+        code, hits = self._lv2({"target": "recovery", "op": "add", "value": -4,
+                                "also": {"target": "startup", "op": "add", "value": -1}})
+        self.assertEqual(code, 1)
+        self.assertIn(("A4", "levels"), hits)
+
+    def test_one_non_damage_target_passes(self):
+        code, hits = self._lv2({"target": "recovery", "op": "add", "value": -4})
+        self.assertEqual(code, 0, hits)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -407,7 +407,8 @@ def _targets(node):
 
 
 def _is_damage(t) -> bool:
-    return isinstance(t, str) and t.strip().lower() == "damage"
+    t = t.strip().lower() if isinstance(t, str) else ""
+    return t == "damage" or t.endswith(".damage")   # `damage`, or a nested one like `projectile.damage`
 
 
 def check_levels(docs, rep: Report):
@@ -426,8 +427,8 @@ def check_levels(docs, rep: Report):
             lv2 = D(levels.get("2"))
             t = lv2.get("tuning")
             targets = list(_targets(t))
-            if not isinstance(t, dict) or not targets or not all(S(x) for x in targets):
-                rep.fail("levels", "A4", p, "Lv 2 must be one tuning step (an effect with a `target` in `tuning`)")
+            if not isinstance(t, dict) or len(targets) != 1 or not all(S(x) for x in targets):
+                rep.fail("levels", "A4", p, f"Lv 2 must be one tuning step (exactly one effect `target` in `tuning`, got {len(targets)})")
             if targets and all(_is_damage(x) for x in targets):
                 rep.fail("levels", "E21", p, "Lv 2 step changes damage alone; damage-only steps are out (P1, E21)")
             if "evolution" in lv2:
