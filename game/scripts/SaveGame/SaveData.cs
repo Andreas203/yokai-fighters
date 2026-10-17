@@ -254,7 +254,7 @@ public sealed record SaveData
 	public IReadOnlyList<string> Unlocks { get; init; } = Array.Empty<string>();
 	public StoryProgress Story { get; init; } = StoryProgress.None;
 	/// <summary>
-	/// YOK-99, Y5: runs won against the Tanuki, kept across runs (version 6; 0 when the file has none). Never
+	/// YOK-99, Y5: runs won against the Tanuki, kept across runs (version 7; 0 when the file has none). Never
 	/// negative; the count is not capped (the S3 win cards and later wins read it), only its effect is
 	/// (<c>Ai.TanukiPressure.MaxWins</c>).
 	/// </summary>

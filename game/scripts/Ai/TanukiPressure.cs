@@ -6,7 +6,7 @@ namespace YokaiFighters.Ai;
 /// YOK-99, Y5: each Tanuki win (max 3) makes yokai react 1 frame faster and pushes them toward aggressive.
 /// Pure and deterministic: the count of Tanuki wins (kept across runs in the save file, read by the host and handed
 /// to the fight) turns into the fight's reaction frames and an aggression bonus on the profile's
-/// <see cref="BehaviourProfile.AggressionBias"/>. Applied to every AI opponent of a run, the Tanuki included.
+/// <see cref="BehaviourProfile.AggressionBias"/>. Applied to every AI opponent of a run except the row-1 apprentice (Y4/Y6, see <c>FightScene.PressureFor</c>), elders and the Tanuki included.
 /// The count itself is never capped here; only its effect is (<see cref="MaxWins"/>).
 /// </summary>
 public readonly record struct TanukiPressure(int Wins)

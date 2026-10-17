@@ -12,7 +12,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-99, Y5: each Tanuki win (max 3) makes yokai react 1 frame faster and pushes them toward aggressive.
 /// The pressure's numbers, the AI that applies it, the replay that records it and the run end that counts a win.
-/// The save that keeps the count across runs (version 6, <c>tanuki_wins</c>) and the boot flow that hands it to the
+/// The save that keeps the count across runs (version 7, <c>tanuki_wins</c>) and the boot flow that hands it to the
 /// next run are in <c>SaveTests</c> (the only test files allowed to name the save store).
 /// </summary>
 public static class TanukiPressureTests
@@ -89,6 +89,30 @@ public static class TanukiPressureTests
 		Assert.True(with.AggressionBonus == 20 && with.ReactionFrames == 20, "bonus and pressured frames recorded");
 		string none = System.Text.Json.JsonSerializer.Serialize(ReplayRecorder.AiOf(new ProfileAi(Patient, 1, kit, 9), 9));
 		Assert.True(!none.Contains("AggressionBonus"), "no pressure: the field is left out, so old recordings read the same: " + none);
+	}
+
+	// ---- which fights ----
+
+	[Test]
+	public static void Apprentice_IsNeverPressed_OtherNodesAre()
+	{
+		var graph = FileMapSource.Default(MapDir).Load();
+		var table = NodeSceneTable.Default(MapDir);
+		NodeContext Ctx(string id) => table.Resolve(graph.Node(id)).Context;
+		var kit = AiLoadout.From(NewMatch().P2);
+
+		var apprentice = Ctx("r1-apprentice");
+		Assert.True(apprentice.Tier == FightScene.ApprenticeTier && apprentice.ReactionFrames == 30, "row 1 is the Y4 apprentice at 30f");
+		var p1 = FightScene.PressureFor(apprentice, 3);
+		var ai = new ProfileAi(Patient, 1, kit, 1, p1.ReactionFrames(apprentice.ReactionFrames), AiFightTier.Standard, p1.AggressionBonus);
+		Assert.True(ai.ReactionFrames == 30 && ai.AggressionBonus == 0, "Y4/Y6: three wins leave the guided apprentice fight at 30f, no bonus");
+
+		var yokai = Ctx("r2-kitsune");
+		var p2 = FightScene.PressureFor(yokai, 3);
+		Assert.True(p2.ReactionFrames(yokai.ReactionFrames) == yokai.ReactionFrames - 3 && p2.AggressionBonus == 3 * TanukiPressure.AggressionPerWin, "a row-2 yokai is pressed");
+		var boss = Ctx("boss-tanuki");
+		Assert.Equal(boss.ReactionFrames - 3, FightScene.PressureFor(boss, 3).ReactionFrames(boss.ReactionFrames), "the Tanuki is pressed (reading flagged to the designer)");
+		Assert.Equal(3, FightScene.PressureFor(null, 3).Steps, "no node (the scene on its own): pressed as asked");
 	}
 
 	// ---- the run end ----

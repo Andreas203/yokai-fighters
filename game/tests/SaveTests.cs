@@ -144,12 +144,12 @@ public static class SaveTests
 		Assert.Equal(current, SaveStore.Serialize(older.Data), "an older file's fields are all kept and rewritten as the current version");
 		Assert.Equal(SaveLoadStatus.OlderVersion, SaveStore.Parse(current.Replace(Current, "\"version\": 0")).Status, "version 0");
 
-		string newer = current.Replace(Current, "\"version\": 7, \"from_the_future\": { \"x\": [1] }");
+		string newer = current.Replace(Current, "\"version\": " + (SaveStore.CurrentVersion + 1) + ", \"from_the_future\": { \"x\": [1] }");
 		File.WriteAllText(path, newer);
 		var store = new SaveStore(path);
 		SaveLoad load = store.Load();
 		Assert.Equal(SaveLoadStatus.NewerVersion, load.Status, "newer");
-		Assert.True(load.Problems[0].Contains("version 7"), "says which version");
+		Assert.True(load.Problems[0].Contains("version " + (SaveStore.CurrentVersion + 1)), "says which version");
 		Assert.Equal(current, SaveStore.Serialize(load.Data), "the fields this build knows are kept");
 		Assert.True(store.Save(load.Data), "saved over it");
 		Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the newer build's file survives as a backup");
@@ -1009,7 +1009,7 @@ public static class SaveTests
 		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
 	});
 
-	// ---- YOK-99, Y5: Tanuki wins across runs (version 6) ----
+	// ---- YOK-99, Y5: Tanuki wins across runs (version 7) ----
 
 	[Test]
 	public static void TanukiWins_RoundTrip_AndOtherSectionsAlone()
@@ -1024,7 +1024,7 @@ public static class SaveTests
 		Assert.Equal(int.MaxValue, (d with { TanukiWins = int.MaxValue }).WithTanukiWin().TanukiWins, "never wraps");
 		Assert.Equal(1, (d with { TanukiWins = -5 }).WithTanukiWin().TanukiWins, "a bad negative count restarts at 1");
 		Assert.True(SaveStore.Serialize(d with { TanukiWins = -5 }).Contains("\"tanuki_wins\": 0"), "never writes a negative count");
-		Assert.True(SaveStore.CurrentVersion >= 6, "YOK-99 raised the version (5 is YOK-90's)");
+		Assert.True(SaveStore.CurrentVersion >= 7, "YOK-99 raised the version (5 = YOK-90, 6 = YOK-97 by merge order)");
 		Assert.True(d.WithRun(Sample.Run).TanukiWins == 2 && d.WithRun(null).TanukiWins == 2, "a new or ended run keeps the count");
 	}
 
@@ -1034,6 +1034,17 @@ public static class SaveTests
 		var v4 = SaveStore.Parse("""{ "version": 4, "run": null, "unlocks": [], "story": { "seen": [] } }""");
 		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.TanukiWins == 0 && !SaveStore.LostSomething(v4),
 			$"a version 4 file: no wins, nothing lost ({string.Join("; ", v4.Problems)})");
+
+		// Versions 5 (YOK-90) and 6 (YOK-97) come before this one: older, every field this build knows kept.
+		foreach (int older in new[] { 5, 6 })
+		{
+			var l = SaveStore.Parse("{ \"version\": " + older + ", \"run\": null, \"unlocks\": [\"foxfire\"], \"story\": { \"seen\": [\"intro\"] }, \"carry_over\": { \"special\": \"foxfire\" } }");
+			Assert.True(l.Status == SaveLoadStatus.OlderVersion && l.Data.Unlocks.Single() == "foxfire" && l.Data.Story.Has(StoryProgress.Intro) && l.Data.TanukiWins == 0,
+				$"version {older}: older, known fields kept ({string.Join("; ", l.Problems)})");
+		}
+		// A newer file (fields this build cannot know): never silently written over, it is backed up first.
+		var newer = SaveStore.Parse("{ \"version\": " + (SaveStore.CurrentVersion + 1) + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }, \"tanuki_wins\": 2, \"later\": 1 }");
+		Assert.True(newer.Status == SaveLoadStatus.NewerVersion && SaveStore.LostSomething(newer) && newer.Data.TanukiWins == 2, "newer: kept what it can read, backed up before the next write");
 
 		string Now(string wins) => "{ " + Current + ", \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }" + wins + " }";
 		Assert.True(SaveStore.Parse(Now("")) is { Status: SaveLoadStatus.Loaded, Data.TanukiWins: 0 }, "missing: 0, like any later-added field");
@@ -1079,13 +1090,17 @@ public static class SaveTests
 			var file = new SaveStore(path).Load();
 			Assert.True(file.Status == SaveLoadStatus.Loaded && file.Data.TanukiWins == 1 && file.Data.Run is null, "one win saved, the run cleared");
 
-			// The next run's fights are pressed (Y5).
+			// The next run: the apprentice stays as Y4 wrote it (Y6 tutorial), the row-2 yokai is pressed (Y5).
 			NewRun(flow);
 			Assert.True(new SaveStore(path).Load().Data.TanukiWins == 1, "a new run keeps the count");
 			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 1");
+			var row1 = flow.Fight!;
+			Assert.True(row1.TanukiWins == 1 && row1.P2Ai!.ReactionFrames == baseFrames && row1.P2Ai.AggressionBonus == 0, "the apprentice is never pressed");
+			WinEnteredNode(flow, 600);
+			Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered row 2");
 			var pressed = flow.Fight!;
 			Assert.True(pressed.TanukiWins == 1, "the count reached the fight");
-			Assert.Equal(baseFrames - 1, pressed.P2Ai!.ReactionFrames, "Y5: one frame faster");
+			Assert.Equal(pressed.Node!.ReactionFrames - 1, pressed.P2Ai!.ReactionFrames, "Y5: one frame faster");
 			Assert.Equal(TanukiPressure.AggressionPerWin, pressed.P2Ai.AggressionBonus, "Y5: pushed toward aggressive");
 		}, seed: 9);
 

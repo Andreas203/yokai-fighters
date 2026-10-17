@@ -21,10 +21,23 @@ public partial class FightScene
 	public ProfileAi? P2Ai { get; private set; }
 	/// <summary>
 	/// YOK-99, Y5: Tanuki wins before this run (the host sets it from the save before the scene enters the tree;
-	/// 0 on its own). Every AI opponent reacts one frame faster per win and leans aggressive (<see cref="TanukiPressure"/>).
+	/// 0 on its own). Every AI opponent but the apprentice reacts one frame faster per win and leans aggressive
+	/// (<see cref="TanukiPressure"/>, <see cref="PressureFor"/>).
 	/// </summary>
 	public int TanukiWins { get; set; }
-	public TanukiPressure Pressure => new(TanukiWins);
+	/// <summary>The pressure this fight's AI gets (<see cref="PressureFor"/>).</summary>
+	public TanukiPressure Pressure => PressureFor(Node, TanukiWins);
+
+	/// <summary>Y4 tier name of the row-1 apprentice (data/map/node-scenes.json).</summary>
+	public const string ApprenticeTier = "apprentice";
+
+	/// <summary>
+	/// YOK-99, Y5 with Y4/Y6: the Tanuki pressure for a node. The apprentice (Y4 tier "apprentice", row 1) is
+	/// exempt: Y4 fixes it at 30f and Y6 makes it the guided tutorial fight. Every other node, elders and the
+	/// Tanuki included, gets <paramref name="tanukiWins"/> in full (that reading is flagged to the designer).
+	/// </summary>
+	public static TanukiPressure PressureFor(NodeContext? node, int tanukiWins) =>
+		node?.Tier == ApprenticeTier ? TanukiPressure.None : new TanukiPressure(tanukiWins);
 	public BehaviourProfile[] Profiles { get; private set; } = Array.Empty<BehaviourProfile>();
 	private int _profileIndex;
 	private bool _swapHeld, _toggleHeld;

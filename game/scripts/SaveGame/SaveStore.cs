@@ -37,7 +37,7 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 6,
+/// { "version": 7,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
 ///                   "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
@@ -66,9 +66,10 @@ public sealed class SaveStore
 	/// <summary>2 (YOK-87 after YOK-82/85): <c>run.coins</c>, <c>run.copy_locked</c>, <c>run.locked_copy</c>. Version 1 files load: no coins, the lock worked out or refused (<see cref="RunSave.Restore"/>).</summary>
 	/// <remarks>3 (YOK-95): <c>run.slots[].borrowed</c> and <c>run.slots[].modifier_borrowed</c> (R6 borrowed ink; missing = false), so version 2 and 1 files load with nothing borrowed.</remarks>
 	/// <remarks>4 (YOK-128): <c>run.node_paid</c> (R8: the entered node's win is already paid and healed; missing = false), so older files load unpaid, as before.</remarks>
-	/// <remarks>6 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.
-	/// Version 5 is taken by YOK-90 (PR #149); whichever merges second rebases onto the other's version.</remarks>
-	public const int CurrentVersion = 6;
+	/// <remarks>7 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.
+	/// Planned merge order: 5 = elder flags (YOK-90, PR #149), 6 = <c>carry_over</c> (YOK-97), 7 = this; a branch that merges
+	/// before the others keeps its number, and the later ones rebase onto it, reading every earlier field.</remarks>
+	public const int CurrentVersion = 7;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";

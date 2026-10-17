@@ -349,6 +349,8 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
+			// A dev jump's run, or a run in progress when dev mode was switched (both `_unsavedSession`), is never
+			// written: neither its end nor a Tanuki win it scores reaches either save slot (intentional, YOK-99).
 			if (session != Session || session == _unsavedSession) return;
 			// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
 			SaveData after = end.BeatTanuki ? Saved.WithRun(null).WithTanukiWin() : Saved.WithRun(null);
