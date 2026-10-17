@@ -83,7 +83,12 @@ public partial class FightScene
 	}
 
 	/// <summary>P2's input for the next tick: the AI from the screen as it is now (it delays itself), else devices.</summary>
-	private FighterInput P2Input() => P2Ai is { } ai ? ai.Next(AiView.Capture(Match)) : InputDevices.Read(1);
+	private FighterInput P2Input()
+	{
+		if (P2Ai is not { } ai) return InputDevices.Read(1);
+		AiView view = AiView.Capture(Match);
+		return CoachedP2(view, ai.Next(view)); // YOK-92: the tutorial coach overrides while a lesson needs the apprentice
+	}
 
 	/// <summary>ExternalDrive: one tick with P1's input and P2 from the AI (or devices when it is off).</summary>
 	public void StepWithAi(FighterInput p1) => Step(p1, P2Input());

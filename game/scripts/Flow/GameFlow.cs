@@ -359,6 +359,7 @@ public partial class GameFlow : Node
 		};
 		session.NodeCompleted += n =>
 		{
+			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was won
 			GD.Print($"GameFlow: completed '{n.NodeId}', health {session.Run.Health}");
 			if (session == Session) _firstMeeting = false;
 			if (!session.IsOver) SaveRun(session);
@@ -368,7 +369,18 @@ public partial class GameFlow : Node
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
 			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
+			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was lost
 		};
+	}
+
+	/// <summary>
+	/// YOK-92, Y6: the guided apprentice fight is played once. Its story flag is set when its lessons finish or its
+	/// duel ends (won or lost); a quit mid-fight leaves it unset, so the next run is guided again.
+	/// </summary>
+	public void MarkTutorialSeen()
+	{
+		if (Saved.Story.Has(StoryProgress.ApprenticeTutorial)) return;
+		Write(Saved.WithStory(StoryProgress.ApprenticeTutorial));
 	}
 
 	private void SaveRun(RunSession session)
@@ -517,6 +529,8 @@ public partial class GameFlow : Node
 			fight.Session = Session; // null = the bypass
 			fight.FirstMeeting = FirstMeeting; // Y3 (YOK-139): the callout shows on a first meeting only
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
+			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
+			fight.TutorialFinished += _ => MarkTutorialSeen();
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
 			ConfigureFight?.Invoke(fight);
