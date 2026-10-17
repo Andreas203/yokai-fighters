@@ -49,6 +49,7 @@ KIND_SCHEMA = {
     "node_scenes": "node-scenes.schema.json",
     "trial": "trial.schema.json",
     "fighter": "fighter.schema.json",
+    "harness_bot": "harness-bot.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -61,6 +62,7 @@ DIR_KIND = {
     "map": ("run_map", "node_scenes"),
     "trials": ("trial",),
     "fighters": ("fighter",),
+    "harness": ("harness_bot",),
 }
 # Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
 TRIAL_KATA_ONLY = ("motion", "precision", "kata")

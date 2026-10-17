@@ -21,10 +21,16 @@ public sealed record DevJumpTarget(string Id, string Group, string Title, DevJum
 	public bool Built => NotBuilt is null;
 }
 
-/// <summary>A fight opponent on the Jump page; greyed (<see cref="NotBuilt"/>) when it has no fighter of its own.</summary>
-public sealed record DevOpponent(string Yokai, string Name, string? NotBuilt)
+/// <summary>
+/// A fight opponent on the Jump page; greyed (<see cref="NotBuilt"/>) when it has neither a fighter nor a body of its own.
+/// <see cref="Note"/> qualifies a pickable one that shows its own body on a stand-in's moves (YOK-135).
+/// </summary>
+public sealed record DevOpponent(string Yokai, string Name, string? NotBuilt, string? Note = null)
 {
 	public bool Built => NotBuilt is null;
+
+	/// <summary>The menu line: the name, with the note or the greyed reason in brackets.</summary>
+	public string Label => Name + (NotBuilt is { } why ? $" ({why})" : Note is { } note ? $" ({note})" : "");
 }
 
 /// <summary>Y1/Y3, rules.md Y table: each yokai's elder and its one twist.</summary>
@@ -111,7 +117,11 @@ public static class DevJump
 
 	public static DevElder? ElderOf(string yokai) => Array.Find(Elders, e => e.Yokai == yokai);
 
-	/// <summary>The opponents, built when the node-scene table gives them a fighter of their own (not a stand-in).</summary>
+	/// <summary>
+	/// The opponents. One is built when the node-scene table gives it a fighter of its own, or when it stands in on
+	/// another fighter's kit but has a body of its own (<see cref="FighterAnimSet.HasBody"/>: the Oni and Kappa fight as
+	/// themselves on the Kitsune's moves). A stand-in with no body of its own stays greyed.
+	/// </summary>
 	public static IReadOnlyList<DevOpponent> Opponents(NodeSceneTable? table = null)
 	{
 		table ??= Table();
@@ -119,7 +129,10 @@ public static class DevJump
 		foreach (string id in OpponentIds)
 		{
 			var ctx = table.Resolve(FightNode(id, false)).Context;
-			list.Add(new DevOpponent(id, StoryLibrary.DisplayName(id), ctx.StandIn ? $"{NotBuiltYet}: no fighter of its own (would fight as the {ctx.Fighter} stand-in)" : null));
+			string name = StoryLibrary.DisplayName(id);
+			if (!ctx.StandIn) list.Add(new DevOpponent(id, name, null));
+			else if (FighterAnimSet.HasBody(id)) list.Add(new DevOpponent(id, name, null, $"own body, {StoryLibrary.DisplayName(ctx.Fighter)}'s moves"));
+			else list.Add(new DevOpponent(id, name, $"{NotBuiltYet}: no fighter of its own (would fight as the {ctx.Fighter} stand-in)"));
 		}
 		list.Add(new DevOpponent("human-guises", "Human guises", $"{NotBuiltYet}: no guise has data"));
 		return list;

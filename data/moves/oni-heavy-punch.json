@@ -1,0 +1,83 @@
+{
+  "kind": "normal",
+  "id": "oni-heavy-punch",
+  "name": "Oni club slam",
+  "status": "proposed",
+  "source": "oni",
+  "clip": "oni-heavy-punch",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2",
+    "A8"
+  ],
+  "input": {
+    "button": "HP"
+  },
+  "frame_data": {
+    "startup": 16,
+    "active": 4,
+    "recovery": 25,
+    "damage": 80,
+    "hitstun": 24,
+    "blockstun": 18,
+    "strength": "heavy",
+    "hitboxes": [
+      {
+        "frames": [
+          17,
+          20
+        ],
+        "rect": {
+          "x": 110,
+          "y": 70,
+          "w": 190,
+          "h": 180
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          45
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 110,
+          "h": 415
+        }
+      },
+      {
+        "frames": [
+          8,
+          16
+        ],
+        "rect": {
+          "x": -30,
+          "y": 330,
+          "w": 100,
+          "h": 110
+        }
+      },
+      {
+        "frames": [
+          17,
+          26
+        ],
+        "rect": {
+          "x": 60,
+          "y": 180,
+          "w": 110,
+          "h": 80
+        }
+      }
+    ]
+  },
+  "notes": "Clip oni-heavy-punch (45 frames via retime curve, hit 17-20): 16/4/25. Delta against the rules.md first-pass 10/4/20: +6 startup, same active, +5 recovery; clip timing kept (F2), flagged. Hitbox is the club head at the slam: x 110-300 (peak reach 150 cm forward = 300 units), y 70-250 (the club's lowest point in the clip is 0.42 m = 84 units; head radius 0.17 m). The raised arms are a hurtbox on frames 8-16 (club peak 2.36 m, above the body box's 415). WARN carried from the clip: left foot shuffles 1.04 cm per frame. Estimated boxes, not yet re-placed from the posed rig."
+}
