@@ -1,0 +1,77 @@
+name: data-merge-check
+# YOK-34: a pull request that touches data/ runs the data merge check (docs/pipeline.md):
+# schema -> rules -> whole-run harness -> headless test suite, stopping at the first failure.
+# The verdict is advisory. Nothing here merges: the designer reviews and merges every PR.
+#   MERGEABLE (0)  job passes          FAIL (1) / SETUP (2)  job fails, the report names the step
+#   REVIEW (3)     job passes with a warning: the PR also changes code and goes to code review
+on:
+  pull_request:
+    paths: ["data/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.7.2
+  GODOT_DIR: ${{ github.workspace }}/.godot-bin
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the check diffs the PR against its base to tell data-only from code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the schema validator
+        run: pip install -r tools/requirements.txt
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GODOT_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+          mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+
+      - name: Locate Godot
+        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Data merge check
+        run: |
+          base="origin/${GITHUB_BASE_REF:-main}"
+          set +e
+          python tools/data_merge_check.py --base "$base" --report data-merge-report.txt --suite-log data-merge-suite.log
+          code=$?
+          set -e
+          case $code in
+            0) echo "::notice::Data merge check: MERGEABLE (verdict only; the designer reviews and merges)";;
+            3) echo "::warning::Data merge check passed, but the PR also changes code: it goes to code review";;
+            *) echo "::error::Data merge check failed (exit $code); see the report"; exit 1;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: data-merge-report
+          path: |
+            data-merge-report.txt
+            data-merge-suite.log
+          if-no-files-found: ignore
