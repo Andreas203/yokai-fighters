@@ -131,15 +131,19 @@ public partial class FightHud : CanvasLayer
 	// A longer twist line shrinks (down to 26 px, 17 px at 720p) instead of clipping: it must stay whole and readable (V1).
 	private void FitStripText()
 	{
+		float room = _twistText.Size.X;
+		if (room <= 0 || (_fitText == _twistText.Text && _fitRoom == room)) return;
+		_fitText = _twistText.Text; _fitRoom = room;
 		var font = _twistText.GetThemeFont("font");
 		int size = _twistFontSize ??= _twistText.GetThemeFontSize("font_size");
-		float room = _twistText.Size.X;
 		while (size > 26 && font.GetStringSize(_twistText.Text, fontSize: size).X > room) size--;
 		_twistText.AddThemeFontSizeOverride("font_size", size);
 		_twistText.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis; // still too long at the floor: a visible ellipsis, never a silent cut
 	}
 
 	private int? _twistFontSize;
+	private string? _fitText;
+	private float _fitRoom;
 
 	// YOK-139 (Y3): the strip's line is the fighting elder's twist (Match.P2.Twist = FightScene.Twist) worded by story data
 	// through TwistCopy; with no twist on P2 (a stub fight, no twist data) the generic placeholder stays.
@@ -209,7 +213,7 @@ public partial class FightHud : CanvasLayer
 	{
 		if (_callout == null || _calloutStart < 0) return;
 		int age = tick - _calloutStart;
-		if (age < 0 || age >= TwistCalloutTicks) { _callout.Visible = false; if (age >= TwistCalloutTicks) _calloutStart = -1; return; }
+		if (age < 0 || age >= TwistCalloutTicks) { _callout.Visible = false; _calloutStart = -1; return; } // a negative age = a new match started: expired, never replayed
 		_callout.Visible = true;
 		_callout.Modulate = new Color(1, 1, 1, Mathf.Clamp((TwistCalloutTicks - age) / (float)TwistCalloutFadeTicks, 0f, 1f));
 	}

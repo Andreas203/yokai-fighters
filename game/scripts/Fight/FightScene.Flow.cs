@@ -344,6 +344,7 @@ public partial class FightScene
 	/// <summary>A new Match (rematch, restart): rewire the HUD and shake, rebuild the AI, start a new recording.</summary>
 	private void ReplaceMatch(Match m)
 	{
+		_hud.ClearTwistCallout(); // a new match's ticks restart at 0: the old callout must not come back
 		Match = m;
 		_lastP1 = InputBits.None;
 		_hud.View = new MatchHudView(m, 0);

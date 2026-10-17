@@ -109,6 +109,10 @@ public static class TwistUiTests
 			hud.Refresh(m);
 			Assert.True(hud.TwistCalloutVisible && hud.TwistCalloutText == "NEW", "callout shows");
 			Assert.Equal("twist-armour", hud.TwistCalloutIcon, "callout icon");
+			for (int i = 0; i < FightHud.TwistCalloutTicks; i++) m.Step(default, default);
+			hud.Refresh(m);
+			Assert.True(!hud.TwistCalloutVisible, "expired after 180 ticks");
+			hud.ShowTwistCallout("AGAIN", "twist-armour");
 			hud.ClearTwistCallout();
 			hud.Refresh(m);
 			Assert.True(!hud.TwistCalloutVisible, "cleared");
