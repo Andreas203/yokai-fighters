@@ -159,6 +159,8 @@ public static class Replayer
 			if (s.CopiedSlot != 0 && (s.CopiedSlot < 1 || s.CopiedSlot >= f.Specials.Length || f.Specials[s.CopiedSlot] is null))
 				throw new ReplaySetupException($"P{p + 1} copied slot {s.CopiedSlot} holds no special in the recording");
 			f.CopiedSlot = (SpecialSlot)s.CopiedSlot;
+			if (s.PushWidth < 0) throw new ReplaySetupException($"P{p + 1} push width {s.PushWidth} is negative");
+			f.PushWidth = s.PushWidth; // YOK-136: part of the fight as recorded
 			foreach (var c in s.CancelRules) f.HoldCancelRule(new CancelRule(c.Id, c.From, c.Into, c.OnHit, c.OnBlock, c.OnWhiff));
 			f.Input.Scheme = Enum.Parse<ControlScheme>(s.Scheme);
 			f.Twist = s.Twist is null ? null : TwistOf(s, cat, $"P{p + 1}"); // YOK-90

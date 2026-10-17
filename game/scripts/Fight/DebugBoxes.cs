@@ -22,8 +22,8 @@ public static class DebugBoxes
 		Fighter f = match.Fighters[fighter];
 		SimConfig c = match.Config;
 
-		// Push box: the sim's push is 1-D (BodyWidth between centres), drawn idle-hurtbox tall for readability.
-		int half = c.BodyWidth / 2;
+		// Push box: the sim's push is 1-D (YOK-136: this fighter's own width, else BodyWidth), drawn idle-hurtbox tall for readability.
+		int half = match.PushWidth(f) / 2;
 		list.Add(new DebugBox(DebugBoxKind.Push, f.X - half, f.Y + c.IdleHurtbox.Y * SimConfig.Scale,
 			f.X + half, f.Y + (c.IdleHurtbox.Y + c.IdleHurtbox.H) * SimConfig.Scale));
 
@@ -34,6 +34,10 @@ public static class DebugBoxes
 				var (px0, py0, px1, py1) = p.WorldBox();
 				list.Add(new DebugBox(DebugBoxKind.Projectile, px0, py0, px1, py1));
 			}
+
+		// YOK-136: this fighter's live aftershocks, exactly the boxes Match.ResolveAftershocks tests.
+		foreach (var (ax0, ay0, ax1, ay1) in match.AftershockBoxes(fighter))
+			list.Add(new DebugBox(DebugBoxKind.Hit, ax0, ay0, ax1, ay1));
 
 		MoveData? m = f.CurrentMove;
 		bool hittable = !f.KnockedOut && !f.State.IsDown();

@@ -42,7 +42,7 @@ public sealed class ReplayRecorder
 
 	static FighterSetup Capture(Fighter f)
 	{
-		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot };
+		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot, PushWidth = f.PushWidth };
 		foreach (var mv in f.Moves) s.Moves.Add(new KitEntry { Id = mv.Id, Fp = Fingerprint.Of(mv) });
 		for (int i = 1; i < f.Specials.Length; i++)
 			if (f.Specials[i] is { } sp)

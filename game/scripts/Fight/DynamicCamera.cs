@@ -147,8 +147,8 @@ public sealed class DynamicCamera
 	public void Snap(in Subject s)
 	{
 		Width = TargetWidth(s);
-		HeightMeters = TargetHeight(s, Width);
-		Constrain(s);
+		HeightMeters = _easedHeight = TargetHeight(s, Width);
+		Constrain(s, snap: true);
 		Ready = true;
 	}
 
@@ -157,12 +157,16 @@ public sealed class DynamicCamera
 	{
 		if (!Ready) { Snap(s); return; }
 		Width += (TargetWidth(s) - Width) * Config.ZoomEase;
-		HeightMeters += (TargetHeight(s, Width) - HeightMeters) * Config.HeightEase;
+		// YOK-133: with the feet floor on (a tall body), the ease runs on its own height so the HUD lift of one tick does not
+		// carry into the next (it would hold the camera high after a jump and push the feet out). Off: the YOK-129 ease, unchanged.
+		float from = Config.FeetClearPx > 0f ? _easedHeight : HeightMeters;
+		HeightMeters = _easedHeight = from + (TargetHeight(s, Width) - from) * Config.HeightEase;
 		Constrain(s);
 	}
 
-	private void Constrain(in Subject s)
+	private void Constrain(in Subject s, bool snap = false)
 	{
+		float eased = HeightMeters; // YOK-133: the eased height before the floors; the feet floor re-derives the HUD lift at its wider width
 		// The pitch follows the width; re-set it after every width floor so the rendered pitch is the one MinHeight
 		// assumed for that width (MinHeight falls as the width grows, so a later floor keeps the height valid).
 		SetPitch(Width);
@@ -171,6 +175,7 @@ public sealed class DynamicCamera
 		HeightMeters = MathF.Max(HeightMeters, MinHeight(Width, s));
 		Width = MathF.Max(Width, RequiredWidth(HeightMeters, s)); // a higher camera only lowers this; kept for safety
 		SetPitch(Width);
+		FitFeet(s, eased, snap);
 
 		float lim = MathF.Max(0f, StageHalf - Width / 2f);
 		float cx = Math.Clamp((s.A.X + s.B.X) / 2f, -lim, lim);
@@ -180,11 +185,45 @@ public sealed class DynamicCamera
 		CenterX = lo <= hi ? Math.Clamp(cx, lo, hi) : (lo + hi) / 2f;
 	}
 
-	/// <summary>Camera position (m) and pitch (radians, negative = looking down) for the rig.</summary>
+	/// <summary>Screen y (px, 1080 canvas) of a point at height h (m) seen from a camera at width w and height cy (pitch of w); x-independent.</summary>
+	private float ScreenYPxAt(float w, float cy, float h)
+	{
+		float p = (Config.PitchDegrees + (Config.WidePitchDegrees - Config.PitchDegrees) * Zoom(w)) * MathF.PI / 180f;
+		float c = MathF.Cos(p), sn = MathF.Sin(p), ry = h - cy, rz = -DistanceFor(w);
+		return (1f - (ry * c - rz * sn) / ((-ry * sn - rz * c) * _tanV)) * 540f;
+	}
+
+	/// <summary>
+	/// YOK-133: the last hard floor. A tall body (the Oni's club, <see cref="CameraConfig.TallBodyTopMeters"/>) makes
+	/// <see cref="MinHeight"/> lift the camera until the lower fighter's feet would leave the bottom of the frame; then the
+	/// camera dollies out (width up, which lets the height come down) just far enough that the feet sit at
+	/// <see cref="CameraConfig.FeetClearPx"/>. A fixed-count bisection, so deterministic per tick. It holds the feet against both
+	/// the HUD lift and the eased jump follow (which carries earlier ticks' lift). Off (<see cref="CameraConfig.FeetClearPx"/> 0) in the
+	/// default config, so Ryo vs the Kitsune keeps the YOK-129 framing exactly (TallestFighterCameraTests).
+	/// </summary>
+	/// <summary>True when the last <see cref="Step"/>/<see cref="Snap"/> widened the view for the feet (tests: never for Ryo vs the Kitsune).</summary>
+	public bool FeetFloorEngaged { get; private set; }
+	private float _easedHeight;
+
+	private void FitFeet(Subject s, float eased, bool snap)
+	{
+		float feet = MathF.Min(MathF.Max(0f, s.A.Y), MathF.Max(0f, s.B.Y)) / UnitsPerMeter;
+		if (Config.FeetClearPx <= 0f) { FeetFloorEngaged = false; return; } // off: the default (Ryo vs the Kitsune) framing
+		bool Fits(float w) => ScreenYPxAt(w, MathF.Max(eased, MinHeight(w, s)), feet) <= Config.FeetClearPx;
+		FeetFloorEngaged = !Fits(Width);
+		if (!FeetFloorEngaged) return;
+		float lo = Width, hi = Width * 2f;
+		for (int i = 0; i < 8 && !Fits(hi); i++) hi *= 2f;
+		for (int i = 0; i < 24; i++) { float mid = (lo + hi) / 2f; if (Fits(mid)) hi = mid; else lo = mid; }
+		Width = snap ? hi : MathF.Min(hi, Width + Config.FeetFloorStepUnits); // a sudden lift (a launch) catches up over a few ticks: no snapping
+		SetPitch(Width);
+		HeightMeters = MathF.Max(eased, MinHeight(Width, s));
+	}
+
 	/// <summary>Puts the camera at a given framing (stage-coverage tests and captures); the next <see cref="Step"/> eases on from it.</summary>
 	public void Place(float width, float heightMeters, float centerX)
 	{
-		Width = width; HeightMeters = heightMeters; CenterX = centerX; Ready = true;
+		Width = width; HeightMeters = _easedHeight = heightMeters; CenterX = centerX; Ready = true;
 		SetPitch(width);
 	}
 

@@ -99,8 +99,7 @@ public sealed partial class Match
 		f.Crouching = false;
 
 		int dir = o.X != f.X ? Math.Sign(o.X - f.X) : f.Facing;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		o.X = Math.Clamp(o.X + dir * Config.BurstPushback * SimConfig.Scale, lo, hi);
+		o.X = Math.Clamp(o.X + dir * Config.BurstPushback * SimConfig.Scale, CornerLo(o), CornerHi(o));
 		BurstFired?.Invoke(this, i);
 		return true;
 	}
