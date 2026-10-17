@@ -43,6 +43,21 @@ public sealed record Behaviour(Observation When, AiAction Do, int Weight);
 public enum AiFightTier { Standard, Elder, Tanuki }
 
 /// <summary>
+/// YOK-57, E22: the fight the AI is in, from the entered node. The boss node (the copy-lock node,
+/// <see cref="YokaiFighters.Sim.RunSession.IsCopyLockNode"/>) or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder;
+/// anything else, or no node, = Standard (no EX, no burst whatever the profile says). Pure, so the fight scene and the
+/// whole-run harness (YOK-26) gate meter the same way.
+/// </summary>
+public static class AiFightTiers
+{
+	public static AiFightTier Of(YokaiFighters.Sim.NodeContext? node) =>
+		node is null ? AiFightTier.Standard
+		: YokaiFighters.Sim.RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
+		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
+		: AiFightTier.Standard;
+}
+
+/// <summary>
 /// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
 /// <see cref="KeepMeter"/>, it asks for the EX version with <see cref="ChancePct"/>. Absent = never (E22 standard tier).
 /// </summary>
