@@ -15,8 +15,8 @@ public partial class RewardCard : Control
 	/// <summary>Body size when the frame-data box is hidden / shown (the card grows to fit it).</summary>
 	[Export] public float BodyHeight { get; set; } = 640f;
 	[Export] public float BodyHeightWithFrames { get; set; } = 700f;
-	/// <summary>A selected card sits this far above the others.</summary>
-	[Export] public float RaiseWhenSelected { get; set; } = 14f;
+	/// <summary>A selected card sits this far above the others (0: every name shares one baseline; the frame marks the pick).</summary>
+	[Export] public float RaiseWhenSelected { get; set; } = 0f;
 
 	public event Action<RewardCard>? Hovered, Clicked;
 
