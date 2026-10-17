@@ -7,7 +7,7 @@ public enum CardKind { NewMove, Upgrade, Modifier }
 /// <summary>One reward card as the UI shows it. All text comes from card data (A12): plain language first, frame data behind a toggle.</summary>
 public sealed record CardView(
 	CardKind Kind, string Id, string Name, string Source, string Plain, string Frames,
-	string Tag, string? TargetPrompt = null);
+	string Tag, string? TargetPrompt = null, int ToLevel = 0);
 
 /// <summary>A special slot the modifier card can attach to (A2: one modifier per special).</summary>
 public sealed record TargetView(string Id, string Slot, string Name, int Level, string? CurrentModifier, bool Eligible, string? WhyNot = null);
@@ -36,7 +36,7 @@ public sealed class StubRewardSource : IRewardSource, IStorySource
 	public RewardOffer Offer { get; } = new("Kitsune", new[]
 	{
 		new CardView(CardKind.NewMove, "foxfire", "Foxfire", "Kitsune - special", "A slow, drifting flame. It leaves fading copies behind it.", "Startup 15 / Active 4 / Recovery 30\nDamage 70 / Slow projectile", "NEW - Lv 1"),
-		new CardView(CardKind.Upgrade, "spirit-wave", "Spirit Wave", "Your special", "Your wave hits harder and recovers faster.", "Lv 1 -> Lv 2\nRecovery -4 frames (30 -> 26)", "UPGRADE - Lv 1 to 2"),
+		new CardView(CardKind.Upgrade, "spirit-wave", "Spirit Wave", "Your special", "Your wave hits harder and recovers faster.", "Lv 2 -> Lv 3\nRecovery -4 frames (30 -> 26)", "UPGRADE - Lv 2 to 3", null, 3),
 		new CardView(CardKind.Modifier, "will-o-wisp", "Will-o'-wisp", "Kitsune - modifier", "Your projectiles fly 30% faster.", "Projectile speed x1.3", "MODIFIER",
 			"Pick the special to carry it"),
 	}, new[]

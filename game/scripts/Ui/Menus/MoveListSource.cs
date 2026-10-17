@@ -15,7 +15,7 @@ public sealed record MoveRow(string Id, string Name, string Input, string Plain,
 
 /// <summary>One special slot A-D. Empty = nothing owned there yet. Both schemes' inputs are kept; the panel shows the active one.</summary>
 public sealed record SlotRow(string Slot, bool Empty, string Name, int Level, int MaxLevel, string KataInput, string KihonInput, string Plain, string Frames,
-	string ModifierName = "", string ModifierPlain = "");
+	string ModifierName = "", string ModifierPlain = "", string MoveId = "");
 
 public sealed record MoveListView(IReadOnlyList<MoveRow> Base, IReadOnlyList<SlotRow> Slots);
 
@@ -102,7 +102,7 @@ public static class MoveListSource
 			string ex = owned.Data.HasEx ? $"\nEX costs {owned.Data.ExCost / cfg.MeterBar} bar" : "";
 			var mod = owned.Modifier;
 			string frames = FrameLine(m) + (mod is { CardFrames.Length: > 0 } ? $"\n{mod.Name}: {mod.CardFrames}" : "") + ex;
-			slots.Add(new(letter, false, owned.Data.Name, owned.Level, owned.Data.MaxLevel, kata, kihon, owned.Data.CardPlain, frames, mod?.Name ?? "", mod?.CardPlain ?? ""));
+			slots.Add(new(letter, false, owned.Data.Name, owned.Level, owned.Data.MaxLevel, kata, kihon, owned.Data.CardPlain, frames, mod?.Name ?? "", mod?.CardPlain ?? "", owned.Data.Id));
 		}
 		return new MoveListView(rows, slots);
 	}

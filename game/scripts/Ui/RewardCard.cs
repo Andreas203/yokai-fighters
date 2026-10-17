@@ -25,6 +25,7 @@ public partial class RewardCard : Control
 	private TextureRect _illustration = null!;
 	private NinePatchRect _selection = null!;
 	private Label _name = null!, _source = null!, _tag = null!, _plain = null!, _prompt = null!, _frames = null!;
+	private LevelPips _pips = null!;
 	private Control _tagPanel = null!, _frameBox = null!;
 
 	public override void _Ready()
@@ -37,6 +38,7 @@ public partial class RewardCard : Control
 		_name = UiFind.Get<Label>(this, "Name");
 		_source = UiFind.Get<Label>(this, "Source");
 		_tag = UiFind.Get<Label>(this, "Tag");
+		_pips = UiFind.Get<LevelPips>(this, "Pips");
 		_tagPanel = UiFind.Get<Control>(this, "TagPanel");
 		_plain = UiFind.Get<Label>(this, "Plain");
 		_prompt = UiFind.Get<Label>(this, "TargetPrompt");
@@ -54,7 +56,10 @@ public partial class RewardCard : Control
 	{
 		_crest.Glyph = string.IsNullOrEmpty(c.Name) ? "?" : c.Name[..1].ToUpperInvariant();
 		_fallback.Glyph = _crest.Glyph;
-		_illustration.Texture = RewardArt.ForId(c.Id);
+		// Modifier cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
+		_illustration.Texture = c.Kind == CardKind.Modifier ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);
+		_pips.Visible = c.Kind == CardKind.Upgrade && c.ToLevel == 3; // Lv 3 evolution: base icon plus level pips
+		_pips.Level = c.ToLevel; _pips.Max = 3;
 		_crest.Fill = c.Kind switch { CardKind.Modifier => Color.FromHtml("2D3A5E"), CardKind.Upgrade => Color.FromHtml("34483B"), _ => Color.FromHtml("B5332B") };
 		_fallback.Fill = _crest.Fill;
 		_tagPanel.SelfModulate = _crest.Fill;
@@ -75,6 +80,7 @@ public partial class RewardCard : Control
 		_selection.Visible = selected;
 		_illustration.Visible = !frameData && _illustration.Texture != null;
 		_fallback.Visible = !frameData && _illustration.Texture == null;
+		_pips.Visible = _pips.Visible && !frameData;
 		_frameBox.Visible = frameData;
 	}
 }

@@ -13,3 +13,4 @@ Development screenshots that came from Linear tickets. Nothing here is the curre
 | `YOK-53-wakeup/` | 36 | YOK-53 | Wake-up after knockdown, before and after the get-up pop fix, with two contact sheets | evidence only | `docs/codebase-map.md` |
 
 Deleting a folder with an entry in the last column leaves a dead link there; fix the link in the same change.
+| `YOK-81-before/` | 5 | YOK-81 | Reward cards, modifier-target and move list before ability icons | `current/reward_*.png`, `current/menus/move_list*.png` | nothing |
