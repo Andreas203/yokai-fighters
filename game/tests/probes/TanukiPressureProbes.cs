@@ -318,4 +318,23 @@ public static class TanukiPressureProbes
 			Assert.Equal(2, Load(File.ReadAllText(path)).wins, "a loss does not count");
 		});
 	});
+
+	// Y5 max 3 wins: header bonus 30 replays, 31 and -1 are refused with a setup error (not a crash, not a silent replay).
+	[Test]
+	public static void Replay_BonusBounds_HeaderAndEvent()
+	{
+		var rec = Record(600, 200, m => Pressured(m, 3, Patient), m => Pressured(m, 3, Patient));
+		foreach (int bad in new[] { 31, -1, int.MaxValue, int.MinValue })
+		{
+			var h = ReplayRecording.FromBytes(rec.ToBytes());
+			h.Header.Ai!.AggressionBonus = bad;
+			var r = Replayer.Run(h, Catalog);
+			Assert.True(!r.Ok && r.Error!.StartsWith("setup"), $"header bonus {bad} refused: {r.Error}");
+			var e = ReplayRecording.FromBytes(rec.ToBytes());
+			e.Header.Events.Single(x => x.Kind == "ai").Ai!.AggressionBonus = bad;
+			var r2 = Replayer.Run(e, Catalog);
+			Assert.True(!r2.Ok && r2.Error!.StartsWith("setup (step"), $"event bonus {bad} refused: {r2.Error}");
+		}
+		Assert.True(Replayer.Run(ReplayRecording.FromBytes(rec.ToBytes()), Catalog).Ok, "30 in header and event still replays");
+	}
 }
