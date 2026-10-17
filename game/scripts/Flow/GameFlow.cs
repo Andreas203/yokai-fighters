@@ -331,7 +331,14 @@ public partial class GameFlow : Node
 	{
 		_freshRun = false;
 		_firstMeeting = false;
-		try { Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next()); }
+		try
+		{
+			// YOK-97, M3: the last ended run's best special starts this one at Lv 2 (kept in the save until a run ends).
+			var pool = FightScene.LoadAbilityPool();
+			var run = CarryOver.NewRun(pool, Saved.CarryOver, null, out string? dropped);
+			if (dropped is not null) GD.PushWarning($"GameFlow: {dropped}");
+			Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next(), pool, run);
+		}
 		catch (Exception e) when (e is FormatException or System.IO.IOException)
 		{
 			GD.PushError($"GameFlow: no run: {e.Message}");
@@ -368,7 +375,13 @@ public partial class GameFlow : Node
 		session.RunEnded += end =>
 		{
 			GD.Print($"GameFlow: run {(end.Won ? "won" : "lost")} on '{end.NodeId}' (row {end.RowReached})");
-			if (session == Session && session != _unsavedSession && Saves is not null) Write(Saved.WithRun(null));
+			if (session == Session && session != _unsavedSession)
+			{
+				// M3: the carry-over is decided here, at run end, and replaces the last one (null below row 6).
+				string? carried = CarryOver.FromRunEnd(session.Run, end);
+				if (carried is not null) GD.Print($"GameFlow: '{carried}' carries to the next run at Lv {CarryOver.Level}");
+				Write(Saved.WithRun(null).WithCarryOver(carried));
+			}
 			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was lost
 		};
 	}

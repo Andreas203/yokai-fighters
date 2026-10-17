@@ -511,6 +511,51 @@ public static class SaveTests
 		}, seed: 9);
 	});
 
+	/// <summary>YOK-97, M3: version 6 saves the carry-over at top level; older files carry nothing.</summary>
+	[Test]
+	public static void Store_CarryOver_SavedAtTopLevel_OlderFilesCarryNothing_BadValuesAreReported()
+	{
+		Assert.Equal(6, SaveStore.CurrentVersion, "M3 raised the format to 6 (5 is YOK-106's elder flags)");
+		var data = SaveData.Empty.WithStory("intro").WithCarryOver("foxfire");
+		string text = SaveStore.Serialize(data);
+		Assert.True(text.Contains("\"carry_over\": \"foxfire\""), "written: " + text);
+		var back = SaveStore.Parse(text);
+		Assert.True(back.Status == SaveLoadStatus.Loaded && back.Data.CarryOver == "foxfire" && back.Data.Story.Has("intro"), "read back");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+		Assert.True(SaveStore.Parse(SaveStore.Serialize(SaveData.Empty)).Data.CarryOver is null, "null round trip");
+		Assert.True(SaveData.Empty.WithCarryOver("x").WithCarryOver(null).CarryOver is null, "cleared");
+
+		var v4 = SaveStore.Parse("{ \"version\": 4, \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] } }");
+		Assert.True(v4.Status == SaveLoadStatus.OlderVersion && v4.Data.CarryOver is null, "version 4: nothing carried");
+		var bad = SaveStore.Parse("{ \"version\": 6, \"run\": null, \"unlocks\": [], \"story\": { \"seen\": [] }, \"carry_over\": 3 }");
+		Assert.True(bad.Status == SaveLoadStatus.Partial && bad.Data.CarryOver is null && bad.Problems.Any(p => p.Contains("carry_over")), "not an id: reported, none");
+	}
+
+	/// <summary>YOK-97, M3: a won run's best special is saved as the carry-over and the next run starts with it at Lv 2.</summary>
+	[Test]
+	public static void Boot_CarryOver_AWonRunCarriesItsBest_IntoTheNextRun(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+			while (!flow.Session!.IsOver)
+			{
+				Assert.True(flow.ChooseNode(flow.Session.Reachable()[0]).Ok, "entered");
+				WinEnteredNode(flow, 600);
+			}
+			string best = CarryOver.Best(flow.Session.Run)!.Data.Id;
+			Assert.True(new SaveStore(path).Load() is { Status: SaveLoadStatus.Loaded, Data: { Run: null } d } && d.CarryOver == best,
+				"the won run is gone and its best special is saved as the carry-over");
+			Assert.True(flow.RestartRun(), "a new run");
+			var next = flow.Session!;
+			var slot = flow.Session.Run.Owned.Single(o => o.Special.Data.Id == best);
+			Assert.True(slot.Special.Level == CarryOver.Level && slot.Special.Modifier is null, "carried at Lv 2");
+			Assert.Equal(best, new SaveStore(path).Load().Data.CarryOver, "kept in the file while the run is in progress");
+			Assert.True(next.Run.Owned.Count(o => o.Special.Level > 1) == 1, "nothing else above Lv 1");
+		}, seed: 9);
+	});
+
 	[Test]
 	public static void Boot_ASavedRunThisBuildCannotHold_IsNotContinued_AndNotDestroyed(Node runner) => WithTempFile(path =>
 	{
@@ -996,7 +1041,7 @@ public static class SaveTests
 	[Test]
 	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFiveReadsOlderFiles_M4()
 	{
-		Assert.Equal(5, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4)");
+		Assert.Equal(6, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4); YOK-97 then to 6");
 		SaveData d = Sample.WithElderMet("elder-oni").WithElderMet("elder-kappa").WithElderMet("elder-oni").WithElderMet(" ");
 		Assert.True(d.Story.EldersMet.SequenceEqual(new[] { "elder-kappa", "elder-oni" }), "a set: once each, ordinal order, blank ignored");
 		Assert.True(d.Story.HasMetElder("elder-oni") && !d.Story.HasMetElder("nine-tailed-kitsune"), "has met");

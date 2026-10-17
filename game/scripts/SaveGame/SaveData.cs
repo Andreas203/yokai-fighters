@@ -288,6 +288,12 @@ public sealed record SaveData
 	public RunSave? Run { get; init; }
 	public IReadOnlyList<string> Unlocks { get; init; } = Array.Empty<string>();
 	public StoryProgress Story { get; init; } = StoryProgress.None;
+	/// <summary>
+	/// YOK-97, M3: the special id the next run carries at Lv 2 (null = none). Set at every run end by
+	/// <see cref="Sim.CarryOver.FromRunEnd"/> (replacing the last one); kept while a run is in progress, so a run
+	/// abandoned for a new one does not lose it. Saved apart from the run, like unlocks and story.
+	/// </summary>
+	public string? CarryOver { get; init; }
 
 	public SaveData WithRun(RunSave? run) => this with { Run = run };
 	/// <summary>M1: unlocks keep their award order; one already held is not added twice. Story is untouched (M4).</summary>
@@ -297,4 +303,6 @@ public sealed record SaveData
 	public SaveData WithStory(string flag) => this with { Story = Story.With(flag) };
 	/// <summary>Y3, M4: marks an elder met (story progress). Unlocks and the run are untouched.</summary>
 	public SaveData WithElderMet(string elderId) => this with { Story = Story.WithElderMet(elderId) };
+	/// <summary>M3: replaces the carry-over (null clears it). The run, unlocks and story are untouched.</summary>
+	public SaveData WithCarryOver(string? specialId) => this with { CarryOver = string.IsNullOrWhiteSpace(specialId) ? null : specialId };
 }
