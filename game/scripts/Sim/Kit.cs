@@ -17,6 +17,9 @@ public sealed record KitSources(
 	string FixtureSpecialsDir,
 	string FixtureRewardsDir)
 {
+	/// <summary>YOK-136: <c>data/fighters/</c> (kind <c>fighter</c>: push width); empty = every fighter on the defaults.</summary>
+	public string FightersDir { get; init; } = "";
+
 	/// <summary>The repo layout: the folder holding <c>data/</c> and <c>game/</c>.</summary>
 	public static KitSources Repo(string repoRoot) =>
 		At(Path.Combine(repoRoot, "data"), Path.Combine(repoRoot, "game", "tests", "fixtures"));
@@ -25,10 +28,11 @@ public sealed record KitSources(
 	public static KitSources At(string dataDir, string fixturesDir) =>
 		new(Path.Combine(dataDir, "moves"),
 			Path.Combine(fixturesDir, "ryo-normals"), Path.Combine(fixturesDir, "ryo-air-normals"), Path.Combine(fixturesDir, "throws"),
-			Path.Combine(fixturesDir, "specials"), Path.Combine(fixturesDir, "rewards"));
+			Path.Combine(fixturesDir, "specials"), Path.Combine(fixturesDir, "rewards"))
+		{ FightersDir = Path.Combine(dataDir, "fighters") };
 
 	/// <summary>Same fixtures, no real content: tests that must not depend on what is in <c>data/</c>.</summary>
-	public KitSources FixturesOnly() => this with { MovesDir = "" };
+	public KitSources FixturesOnly() => this with { MovesDir = "", FightersDir = "" };
 }
 
 /// <summary>
@@ -51,6 +55,8 @@ public sealed class Kit
 	public SpecialData[] Specials { get; }
 	/// <summary>Which kinds fell back to TEST FIXTURES (for the log).</summary>
 	public IReadOnlyList<string> Notes { get; }
+	/// <summary>YOK-136: the fighter's body numbers from <c>data/fighters/</c> (defaults when it has no file).</summary>
+	public FighterData Body { get; private init; } = FighterData.Default;
 
 	private Kit(string fighter, MoveData[] moves, SpecialData[] specials, List<string> notes)
 	{
@@ -84,7 +90,8 @@ public sealed class Kit
 				? $"{fighter}: no {label} in data, TEST FIXTURE {label}"
 				: $"{fighter}: no {label} in data, Ryo's TEST FIXTURE {label} stand in");
 		}
-		return new Kit(fighter, moves.ToArray(), LoadSpecials(fighter, src, notes), notes);
+		return new Kit(fighter, moves.ToArray(), LoadSpecials(fighter, src, notes), notes)
+			{ Body = FighterData.Load(src.FightersDir, fighter) };
 	}
 
 	/// <summary>
@@ -102,7 +109,11 @@ public sealed class Kit
 	}
 
 	/// <summary>A1: each special into its own slot at Lv 1 (first file wins a slot).</summary>
-	public void Equip(Fighter f) => EquipSpecials(f, Specials);
+	public void Equip(Fighter f)
+	{
+		EquipSpecials(f, Specials);
+		Body.Apply(f);
+	}
 
 	public static void EquipSpecials(Fighter f, IEnumerable<SpecialData> specials)
 	{

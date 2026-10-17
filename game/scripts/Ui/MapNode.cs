@@ -56,6 +56,8 @@ public partial class MapNode : Button
 	public string YokaiText => UiFind.Get<Label>(this, "NameLabel").Text;
 	public string StateText => UiFind.Get<Label>(this, "StateLabel").Text;
 	public bool ElderShown => UiFind.Get<Control>(this, "ElderMark").Visible;
+	/// <summary>YOK-139: the twist icon id drawn on the elder mark; "" = the plain "E" mark (no twist data).</summary>
+	public string TwistIconId { get; private set; } = "";
 
 	public event Action<MapNode>? Chosen, Hovered;
 
@@ -66,7 +68,7 @@ public partial class MapNode : Button
 		MouseEntered += () => Hovered?.Invoke(this);
 	}
 
-	public void Bind(MapNodeView v, MapNodeLook look, Vector2 size, bool cursor)
+	public void Bind(MapNodeView v, MapNodeLook look, Vector2 size, bool cursor, MapNodeLook? twistLook = null)
 	{
 		NodeId = v.Id; State = v.State; CursorOn = cursor;
 		Name = "Node_" + v.Id;
@@ -85,6 +87,13 @@ public partial class MapNode : Button
 			l.AddThemeFontSizeOverride("font_size", l == name ? font + 2 : font - 2);
 		var elder = UiFind.Get<Control>(this, "ElderMark");
 		elder.Visible = v.Elder;
+		TwistIconId = v.Elder && twistLook != null ? v.TwistIcon ?? "" : "";
+		// YOK-139 (Y3): an elder with twist data wears its twist's seal (red stamp, placeholder shape) in place of the plain "E".
+		var seal = elder.GetNodeOrNull<TwistSeal>("TwistSeal");
+		if (seal == null) { seal = new TwistSeal { Name = "TwistSeal", CustomMinimumSize = new Vector2(30, 30), SizeFlagsVertical = SizeFlags.ShrinkCenter }; elder.AddChild(seal); }
+		seal.Visible = TwistIconId != "";
+		if (seal.Visible) { seal.Icon = TwistIconId; seal.Fallback = twistLook!.Value.Icon; }
+		UiFind.Get<Label>(this, "ElderGlyph").Visible = !seal.Visible;
 
 		bool reachable = v.State == MapNodeState.Reachable;
 		Disabled = !reachable;
@@ -103,7 +112,7 @@ public partial class MapNode : Button
 		type.AddThemeColorOverride("font_color", lit ? look.Color : dimText);
 		name.AddThemeColorOverride("font_color", lit ? MapNodePalette.Ink : dimText);
 		stateLabel.AddThemeColorOverride("font_color", v.State == MapNodeState.Current ? MapNodePalette.ElderRed : lit ? new Color(MapNodePalette.Ink, 0.8f) : dimText);
-		elder.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 12, CornerRadiusTopRight = 12, CornerRadiusBottomLeft = 12, CornerRadiusBottomRight = 12 });
+		elder.AddThemeStyleboxOverride("panel", seal.Visible ? new StyleBoxEmpty() : new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 12, CornerRadiusTopRight = 12, CornerRadiusBottomLeft = 12, CornerRadiusBottomRight = 12 });
 		UiFind.Get<Label>(this, "ElderGlyph").AddThemeColorOverride("font_color", MapNodePalette.Paper);
 		ZIndex = cursor ? 2 : 0;
 		QueueRedraw();

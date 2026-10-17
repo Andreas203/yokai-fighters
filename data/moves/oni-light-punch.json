@@ -1,0 +1,70 @@
+{
+  "kind": "normal",
+  "id": "oni-light-punch",
+  "name": "Oni light punch",
+  "status": "proposed",
+  "source": "oni",
+  "clip": "ryo-light-punch",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2",
+    "A8"
+  ],
+  "input": {
+    "button": "LP"
+  },
+  "frame_data": {
+    "startup": 4,
+    "active": 2,
+    "recovery": 7,
+    "damage": 30,
+    "hitstun": 11,
+    "blockstun": 8,
+    "hitboxes": [
+      {
+        "frames": [
+          5,
+          6
+        ],
+        "rect": {
+          "x": 90,
+          "y": 290,
+          "w": 100,
+          "h": 55
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          13
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 110,
+          "h": 415
+        }
+      },
+      {
+        "frames": [
+          4,
+          10
+        ],
+        "rect": {
+          "x": 80,
+          "y": 275,
+          "w": 105,
+          "h": 70
+        }
+      }
+    ]
+  },
+  "notes": "Shared clip ryo-light-punch (13 frames, hit 5-6): 4/2/7 = C8, no deviation. The clip is Ryo's jab played on the Oni rig (club-clean per assets/specs/clips/oni-club-clips.md). Boxes are Ryo's YOK-33 boxes scaled by the height ratio 2.2/1.75 = 1.257 (rounded to 5 units); the body hurtbox is the Oni standing box (110 x 415). NOT re-placed from the Oni's posed rig: proposed, needs a YOK-33 style pass. Damage is the C8 number; hitstun and blockstun are Ryo-scale placeholders."
+}
