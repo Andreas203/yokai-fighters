@@ -730,5 +730,70 @@ class WorkflowProbes(unittest.TestCase):
                 self.assertNotIn("${{", b)
 
 
+class Round4Probes(Stubbed, unittest.TestCase):
+    def dirty_verdict(self, setup):
+        tmp, r = repo(("data/moves/a.json", "data/moves/real.json", "game/tests/T.cs"))
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            setup(r)
+            return self.verdict(r)
+
+    def test_uncommitted_symlink_to_regular_data_file_is_setup(self):
+        # a symlink is never content, even when it points at a real data file
+        code, text = self.dirty_verdict(lambda r: os.symlink("real.json", r / "data/moves/link.json"))
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_uncommitted_dangling_symlink_is_setup(self):
+        code, text = self.dirty_verdict(lambda r: os.symlink("/nonexistent", r / "data/moves/dangling.json"))
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_uncommitted_directory_named_json_is_setup(self):
+        code, text = self.dirty_verdict(lambda r: write(r, "data/moves/dir.json/inner.cs", "x"))
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_tracked_file_replaced_by_symlink_is_setup(self):
+        def s(r):
+            (r / "data/moves/real.json").unlink()
+            os.symlink("../../game/tests/T.cs", r / "data/moves/real.json")
+        code, text = self.dirty_verdict(s)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_dirty_content_edit_and_delete_stay_allowed(self):
+        def s(r):
+            write(r, "data/moves/real.json", '{"x": 1}')
+            (r / "data/moves/a.json").unlink()
+        code, text = self.dirty_verdict(s)
+        self.assertNotEqual(code, dmc.SETUP, text)
+
+
+class SummaryForgeryProbes(unittest.TestCase):
+    def setUp(self):
+        self.text = WORKFLOW.read_text()
+
+    def check_step(self):
+        i = self.text.index("data_merge_check.py\" --root")
+        return self.text[max(0, i - 600):i + 600]
+
+    def test_game_running_step_loses_every_runner_file_command(self):
+        # the PR's game code runs in this step: GITHUB_ENV / GITHUB_PATH / GITHUB_OUTPUT / GITHUB_STATE let it
+        # poison later steps exactly as GITHUB_STEP_SUMMARY lets it forge the summary
+        block = self.check_step()
+        for var in ("GITHUB_STEP_SUMMARY", "GITHUB_ENV", "GITHUB_PATH", "GITHUB_OUTPUT", "GITHUB_STATE"):
+            self.assertIn(f"-u {var}", block, f"{var} still reachable by the PR's game code")
+
+    def test_summary_step_does_not_trust_env_written_by_the_game_step(self):
+        # OUT_DIR comes from $GITHUB_ENV, which the game step could rewrite (see above); the summary step
+        # must not read a path from env the game step can change
+        i = self.text.index("Job summary from the report")
+        block = self.text[i:i + 700]
+        self.assertNotIn("$OUT_DIR", block.replace("RUNNER_TEMP", ""), "summary reads OUT_DIR from GITHUB_ENV")
+
+    def test_summary_step_always_runs_and_reads_only_the_report(self):
+        i = self.text.index("Job summary from the report")
+        block = self.text[i:i + 700]
+        self.assertIn("always()", block)
+
+
 if __name__ == "__main__":
     unittest.main()
