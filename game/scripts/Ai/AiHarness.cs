@@ -65,10 +65,10 @@ public static class AiHarness
 	private static int Min(this List<int> v) { int m = int.MaxValue; foreach (int x in v) m = Math.Min(m, x); return m; }
 
 	public static Result Run(Func<Match> newMatch, BehaviourProfile profile, P1Script script, uint seed, int ticks,
-		int? reactionFrames = null, bool trace = false, AiFightTier tier = AiFightTier.Standard)
+		int? reactionFrames = null, bool trace = false, AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
 	{
 		var match = newMatch();
-		ProfileAi NewAi(int round) => new(profile, 1, AiLoadout.From(match.P2), seed + (uint)round * 7919u, reactionFrames, tier);
+		ProfileAi NewAi(int round) => new(profile, 1, AiLoadout.From(match.P2), seed + (uint)round * 7919u, reactionFrames, tier, aggressionBonus); // YOK-99
 		var ai = NewAi(0);
 		var r = new Result { Profile = profile.Id, ReactionFrames = ai.ReactionFrames, Seed = seed, Script = script };
 		ai.Log = r.Decisions;

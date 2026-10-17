@@ -13,6 +13,7 @@ You **never edit** files. You judge them against `docs/design/rules.md` and retu
 1. Read `docs/design/rules.md` fully every time.
 2. Read each file you were given (or `git diff --name-only` for changed files under `data/`).
 3. If `data/schema/` exists, validate against it (e.g. with a script in `tools/` if one exists). A schema failure is a FAIL.
+   Then run `python -I tools/check_rules.py` (static rules: slots, modifiers, cancel cap and loops, levels, EX meter, both schemes, trial moves); any violation it prints is a FAIL, and its "harness must confirm" lines go in your verdict as harness items.
 4. Check every applicable rule. Common checks:
    - **A8 source fidelity**: the ability's source yokai matches the tables; a Kappa never offers a projectile.
    - **A7/A9 offers**: commons vs rares, rares only from elders, cancel rules only from elders (X1).

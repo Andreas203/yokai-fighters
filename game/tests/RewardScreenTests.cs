@@ -23,13 +23,13 @@ public static class RewardScreenTests
 	{
 		var (s, _) = Make(host);
 		var card = s.GetNode<RewardCard>("Cards/Card1");
-		Assert.True(UiFind.Get<TextureRect>(card, "Illustration").Texture == RewardArt.ForId("foxfire"), "id supplies art");
+		Assert.True(UiFind.Get<TextureRect>(card, "Illustration").Texture == AbilityArt.ForId("foxfire"), "id supplies art");
 		card.Bind(new CardView(CardKind.Modifier, "fox-patience", "Fox's Patience", "Kitsune - modifier", "From source", "Live frames", "MODIFIER"));
 		card.SetState(true, false);
-		Assert.True(UiFind.Get<SealStamp>(card, "Fallback").Visible, "unmapped id gets letter, not previous art");
+		Assert.True(UiFind.Get<TextureRect>(card, "Illustration").Texture == AbilityArt.Fallback, "modifier card gets the generic diamond, not previous art");
 		Assert.Equal("F", UiFind.Get<SealStamp>(card, "Fallback").Glyph, "live initial");
 		s.ToggleFrameData();
-		Assert.True(UiFind.Get<Control>(card, "FrameBox").Visible && !UiFind.Get<Control>(card, "Fallback").Visible, "frames replace illustration");
+		Assert.True(UiFind.Get<Control>(card, "FrameBox").Visible && !UiFind.Get<Control>(card, "Illustration").Visible, "frames replace illustration");
 		Assert.Equal("Live frames", UiFind.Get<Label>(card, "FrameText").Text, "source frame text");
 		InputGlyphs.Set(InputDevice.Keyboard);
 		Assert.Equal("TAB", UiFind.Get<KeyChipFooter>(s, "FrameHint").ChipTexts()[0], "keyboard toggle chip");

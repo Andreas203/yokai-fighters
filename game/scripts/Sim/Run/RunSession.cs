@@ -9,6 +9,10 @@ public enum RunOutcome { Won, Lost }
 public sealed record RunEnd(RunOutcome Outcome, int RowReached, string NodeId)
 {
 	public bool Won => Outcome == RunOutcome.Won;
+	/// <summary>YOK-99: the run ended on the Tanuki's node (<see cref="RunSession.IsCopyLockNode"/>).</summary>
+	public bool AtTanuki { get; init; }
+	/// <summary>YOK-99, Y5: a Tanuki win, the one thing that raises the Tanuki pressure on later runs.</summary>
+	public bool BeatTanuki => Won && AtTanuki;
 }
 
 /// <summary>
@@ -35,6 +39,11 @@ public sealed class RunSession
 	public INodeSceneResolver Scenes { get; }
 	/// <summary>Seeds the reward drafts (node n of the walk uses Seed + n): same seed and picks, same run.</summary>
 	public uint Seed { get; }
+	/// <summary>
+	/// YOK-98, R7: the hand-authored trials the dojo may offer (<see cref="TrialLoader.LoadDirectory"/> of data/trials/).
+	/// Empty = no trial is offered anywhere. Set by whoever starts or restores the session; read by each dojo stop.
+	/// </summary>
+	public IReadOnlyList<TrialData> Trials { get; set; } = Array.Empty<TrialData>();
 
 	/// <summary>The node Ryo is on and the scene that runs it; null on the map (between nodes).</summary>
 	public NodeScene? Entered { get; private set; }
@@ -122,7 +131,7 @@ public sealed class RunSession
 		LockedCopy = lockedCopy;
 		foreach (var n in Map.Graph.Nodes) scenes.Resolve(n); // a node the resolver cannot place fails here, not mid-run
 		if (Map.InNode) Entered = scenes.Resolve(Map.CurrentNode!); // a restored walk
-		if (Entered?.Context.Type == NodeTypeRegistry.Dojo) _dojo = new Dojo(Run, Entered.Context.NodeId, IsOpenDojo); // its saved choice: Dojo.Restore
+		if (Entered?.Context.Type == NodeTypeRegistry.Dojo) _dojo = new Dojo(Run, Entered.Context.NodeId, IsOpenDojo, () => Trials); // its saved choice: Dojo.Restore
 		Merchant = MerchantAt(Node);
 		if (merchantChoice != MerchantChoice.None && Merchant?.Restore(merchantChoice) is not { Ok: true })
 			throw new ArgumentException($"merchant choice '{merchantChoice}' does not fit this walk (R6)", nameof(merchantChoice));
@@ -188,7 +197,7 @@ public sealed class RunSession
 		var step = Map.Select(nodeId);
 		if (!step.Ok) return step;
 		Entered = Scenes.Resolve(Map.Graph.Node(nodeId));
-		_dojo = Entered.Context.Type == NodeTypeRegistry.Dojo ? new Dojo(Run, nodeId, IsOpenDojo) : null; // R7
+		_dojo = Entered.Context.Type == NodeTypeRegistry.Dojo ? new Dojo(Run, nodeId, IsOpenDojo, () => Trials) : null; // R7
 		Merchant = MerchantAt(Node);
 		(CoinsWon, _paid) = (0, false);
 		LockCopyOnEntering(Entered.Context); // T1, before the event so listeners see the lock
@@ -223,6 +232,7 @@ public sealed class RunSession
 		if (IsOver) return MapResult.Fail("the run is over");
 		if (Node is not { } node) return MapResult.Fail("no node is entered");
 		if (Draft is { Picked: false }) return MapResult.Fail($"node '{node.NodeId}': the reward is not picked yet (A7)");
+		if (_dojo is { TrialRunning: true }) return MapResult.Fail($"node '{node.NodeId}': the training trial is not finished (R7)");
 		var step = Map.Complete(node.NodeId);
 		if (!step.Ok) return step;
 		Entered = null;
@@ -230,7 +240,7 @@ public sealed class RunSession
 		_dojo = null;
 		Merchant = null;
 		(CoinsWon, _paid) = (0, false);
-		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId);
+		if (Map.IsFinished) Ended = new RunEnd(RunOutcome.Won, node.Row, node.NodeId) { AtTanuki = IsCopyLockNode(node) };
 		NodeCompleted?.Invoke(node);
 		if (Ended is { } end) RunEnded?.Invoke(end);
 		return step;
@@ -265,7 +275,7 @@ public sealed class RunSession
 	{
 		if (IsOver) return MapResult.Fail("the run is over");
 		if (Node is not { } node) return MapResult.Fail("no node is entered");
-		Ended = new RunEnd(RunOutcome.Lost, node.Row, node.NodeId);
+		Ended = new RunEnd(RunOutcome.Lost, node.Row, node.NodeId) { AtTanuki = IsCopyLockNode(node) };
 		RunEnded?.Invoke(Ended);
 		return MapResult.Done;
 	}
@@ -289,7 +299,13 @@ public sealed class RunSession
 		// R6: a spent merchant choice is run state; a run with none keeps the hash it had before YOK-83
 		if (Merchant is { Choice: not MerchantChoice.None } m) h = Fnv.Mix(Fnv.MixString(h, "merchant"), (int)m.Choice);
 		// R7: a dojo choice already made is run state; a run with none keeps the hash it had before YOK-84.
-		if (_dojo is { Choice: not DojoChoice.None } dojo) h = Fnv.Mix(Fnv.Mix(h, Sim.Dojo.HashTag), (int)dojo.Choice);
+		if (_dojo is { Choice: not DojoChoice.None } dojo)
+		{
+			h = Fnv.Mix(Fnv.Mix(h, Sim.Dojo.HashTag), (int)dojo.Choice);
+			// YOK-98: the chosen trial and its attempt count (a rest hashes as it did before trials existed).
+			if (dojo.Choice == DojoChoice.Trial)
+				h = Fnv.Mix(Fnv.Mix(Fnv.Mix(Fnv.MixString(h, dojo.TrialId ?? ""), (int)dojo.TrialSlot), dojo.Attempts), (int)dojo.TrialResult);
+		}
 		return h;
 	}
 }

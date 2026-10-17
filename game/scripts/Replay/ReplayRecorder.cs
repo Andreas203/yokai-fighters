@@ -1,6 +1,7 @@
 using System;
 using YokaiFighters.Ai;
 using YokaiFighters.Sim;
+using YokaiFighters.Tutorial;
 
 namespace YokaiFighters.Replay;
 
@@ -38,11 +39,12 @@ public sealed class ReplayRecorder
 		ProfileId = ai.Profile.Id, Temperament = ai.Profile.Temperament, ProfileFp = Fingerprint.Of(ai.Profile),
 		ReactionFrames = ai.ReactionFrames, Seed = seed,
 		FightTier = ai.Tier == AiFightTier.Standard ? null : ai.Tier.ToString().ToLowerInvariant(),
+		AggressionBonus = ai.AggressionBonus,
 	};
 
 	static FighterSetup Capture(Fighter f)
 	{
-		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot };
+		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot, PushWidth = f.PushWidth };
 		foreach (var mv in f.Moves) s.Moves.Add(new KitEntry { Id = mv.Id, Fp = Fingerprint.Of(mv) });
 		for (int i = 1; i < f.Specials.Length; i++)
 			if (f.Specials[i] is { } sp)
@@ -53,6 +55,7 @@ public sealed class ReplayRecorder
 				});
 		foreach (var c in f.CancelRules)
 			s.CancelRules.Add(new CancelEntry { Id = c.Id, From = c.From, Into = c.Into, OnHit = c.OnHit, OnBlock = c.OnBlock, OnWhiff = c.OnWhiff });
+		if (f.Twist is { } t) { s.Twist = t.Id; s.TwistFp = Fingerprint.Of(t); } // YOK-90
 		return s;
 	}
 
@@ -75,6 +78,21 @@ public sealed class ReplayRecorder
 		if (Recording.Steps == 0) { Recording.Header.Ai = AiOf(ai, seed); return; }
 		Recording.Header.Events.Add(new ReplayEvent { Tick = Recording.Steps, Kind = "ai", Player = 1, Ai = AiOf(ai, seed) });
 	}
+
+	/// <summary>YOK-92: the fight is guided (call right after <see cref="Begin"/>; null tutorial or coach = not guided).</summary>
+	public void OnTutorial(ApprenticeTutorial? t, TutorialCoach? coach)
+	{
+		if (Recording.Steps != 0) throw new InvalidOperationException("the tutorial is part of the tick-0 setup");
+		Recording.Header.Tutorial = t is null || coach is null ? null : new TutorialSetup
+		{
+			Player = t.Player, BlocksToPass = t.Options.BlocksToPass, MinPromptTicks = t.Options.MinPromptTicks,
+			AttackEvery = t.Options.AttackEvery, ThrowRetryTicks = t.Options.ThrowRetryTicks, ReactionFrames = coach.ReactionFrames,
+		};
+	}
+
+	/// <summary>YOK-92: the player skipped the lesson on screen before the next step.</summary>
+	public void OnTutorialSkip() =>
+		Recording.Header.Events.Add(new ReplayEvent { Tick = Recording.Steps, Kind = "tutorial-skip" });
 
 	/// <summary>Stamps the result as it stands now (winner, health, ticks, final hash) and returns the recording.</summary>
 	public ReplayRecording Finish(Match m)

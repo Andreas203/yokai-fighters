@@ -58,6 +58,7 @@ public partial class FightHud : CanvasLayer
 		_twistStrip = UiFind.Get<Control>(this, "TwistStrip");
 		_twistKicker = UiFind.Get<Label>(this, "Kicker");
 		_twistText = UiFind.Get<Label>(this, "TwistText");
+		BuildTwistCallout();
 		_banner.Text = "";
 		_ready = true;
 	}
@@ -124,8 +125,100 @@ public partial class FightHud : CanvasLayer
 		else
 		{
 			_twistKicker.Text = "ELDER TWIST";
-			_twistText.Text = TwistPlaceholder;
+			_twistText.Text = ElderLine();
 		}
+		FitStripText();
+		ShowCalloutNow(tick);
+	}
+
+	// A longer twist line shrinks (down to 26 px, 17 px at 720p) instead of clipping: it must stay whole and readable (V1).
+	private void FitStripText()
+	{
+		float room = _twistText.Size.X;
+		if (room <= 0 || (_fitText == _twistText.Text && _fitRoom == room)) return;
+		_fitText = _twistText.Text; _fitRoom = room;
+		var font = _twistText.GetThemeFont("font");
+		int size = _twistFontSize ??= _twistText.GetThemeFontSize("font_size");
+		while (size > 26 && font.GetStringSize(_twistText.Text, fontSize: size).X > room) size--;
+		_twistText.AddThemeFontSizeOverride("font_size", size);
+		_twistText.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis; // still too long at the floor: a visible ellipsis, never a silent cut
+	}
+
+	private int? _twistFontSize;
+	private string? _fitText;
+	private float _fitRoom;
+
+	// YOK-139 (Y3): the strip's line is the fighting elder's twist (Match.P2.Twist = FightScene.Twist) worded by story data
+	// through TwistCopy; with no twist on P2 (a stub fight, no twist data) the generic placeholder stays.
+	private string? _lineTwistId, _lineText;
+	private string ElderLine()
+	{
+		if (_match?.P2.Twist is not { } twist) return TwistPlaceholder;
+		if (_lineTwistId != twist.Id || _lineText == null)
+		{
+			_lineTwistId = twist.Id;
+			_lineText = TwistCopy.Label(twist, TwistCopy.Story, Story.StoryLibrary.DisplayName(FightScene.Opponent)).Text;
+		}
+		return _lineText;
+	}
+
+	/// <summary>YOK-139: the first-meeting callout shows for 3 s of unpaused fight time, fading over the last half second.</summary>
+	public const int TwistCalloutTicks = 180, TwistCalloutFadeTicks = 30;
+	private Control? _callout;
+	private Label? _calloutText;
+	private TwistSeal? _calloutSeal;
+	private int _calloutStart = -1;
+	public bool TwistCalloutVisible => _callout?.Visible == true;
+	public string TwistCalloutText => _calloutText?.Text ?? "";
+	public string TwistCalloutIcon => _calloutSeal?.Icon ?? "";
+
+	private void BuildTwistCallout()
+	{
+		// A paper banner between the top panels and the gameplay plane (y 232 to 322 of 1080); nothing here enters the plane.
+		_callout = new PanelContainer { Name = "TwistCallout", Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(480, 232), Size = new Vector2(960, 92) };
+		var box = new StyleBoxFlat { BgColor = TwistSeal.Paper, BorderColor = new Color(0.72f, 0.2f, 0.16f), ContentMarginLeft = 18, ContentMarginRight = 22, ContentMarginTop = 8, ContentMarginBottom = 8 };
+		box.SetBorderWidthAll(4); box.SetCornerRadiusAll(6);
+		((PanelContainer)_callout).AddThemeStyleboxOverride("panel", box);
+		var row = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+		row.AddThemeConstantOverride("separation", 16);
+		_calloutSeal = new TwistSeal { CustomMinimumSize = new Vector2(60, 60), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+		var col = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		col.AddThemeConstantOverride("separation", 0);
+		var kicker = new Label { Text = "ELDER TWIST · NEW", MouseFilter = Control.MouseFilterEnum.Ignore };
+		kicker.AddThemeFontSizeOverride("font_size", 26);
+		kicker.AddThemeColorOverride("font_color", new Color(0.72f, 0.2f, 0.16f));
+		_calloutText = new Label { MouseFilter = Control.MouseFilterEnum.Ignore, AutowrapMode = TextServer.AutowrapMode.WordSmart };
+		_calloutText.AddThemeFontSizeOverride("font_size", 30);
+		_calloutText.AddThemeColorOverride("font_color", new Color(0.114f, 0.106f, 0.129f));
+		col.AddChild(kicker); col.AddChild(_calloutText);
+		row.AddChild(_calloutSeal); row.AddChild(col);
+		_callout.AddChild(row);
+		AddChild(_callout); // beside the Strip, not in it: it sits below the top strip, above the gameplay plane
+	}
+
+	/// <summary>Y3, first meeting only: show the callout banner now (the host decides it is a first meeting; this only draws it).</summary>
+	public void ShowTwistCallout(string text, string? iconId = null)
+	{
+		if (_callout == null) return;
+		_calloutText!.Text = text;
+		_calloutSeal!.Icon = iconId ?? ""; _calloutSeal.Fallback = "E";
+		_calloutStart = _match?.Tick ?? 0;
+		_callout.Visible = true; _callout.Modulate = Colors.White;
+	}
+
+	public void ClearTwistCallout()
+	{
+		_calloutStart = -1;
+		if (_callout != null) _callout.Visible = false;
+	}
+
+	private void ShowCalloutNow(int tick)
+	{
+		if (_callout == null || _calloutStart < 0) return;
+		int age = tick - _calloutStart;
+		if (age < 0 || age >= TwistCalloutTicks) { _callout.Visible = false; _calloutStart = -1; return; } // a negative age = a new match started: expired, never replayed
+		_callout.Visible = true;
+		_callout.Modulate = new Color(1, 1, 1, Mathf.Clamp((TwistCalloutTicks - age) / (float)TwistCalloutFadeTicks, 0f, 1f));
 	}
 
 	/// <summary>The lose screen's story card, already filled with the run's names (S4). Null title keeps the current one.</summary>
