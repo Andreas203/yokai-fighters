@@ -297,4 +297,50 @@ public static class TutorialProbes
 		Assert.True(t.Index == 0 && t.Outcome(TutorialLesson.Block) == LessonOutcome.Pending, "nothing changed");
 		Assert.Equal(before, m.StateHash(), "sim untouched");
 	}
+
+	static ApprenticeTutorial AtCancelLesson(Match m, int carried)
+	{
+		var rule = new CancelRule("probe-lent3", CancelFrom.HeavyNormals, CancelInto.Specials, true, true, false);
+		var t = new ApprenticeTutorial(m, Fast with { LentCancel = rule });
+		SkipTo(t, TutorialLesson.Burst);
+		m.P1.CancelUsed = carried;
+		t.SkipLesson();
+		return t;
+	}
+
+	// Y6 / X3: a carried mark cleared mid-lesson, then a real new cancel on the same bit, passes.
+	[Test]
+	public static void CancelLesson_CarriedMarkClearedThenReused_Passes()
+	{
+		var m = NewMatch();
+		var t = AtCancelLesson(m, 1);
+		for (int i = 0; i < 20; i++) t.Observe();
+		Assert.True(t.Current == TutorialLesson.Cancel, "carried mark alone does not pass");
+		m.P1.CancelUsed = 0; t.Observe();
+		m.P1.CancelUsed = 1;
+		for (int i = 0; i < 20; i++) t.Observe();
+		Assert.Equal(LessonOutcome.Done, t.Outcome(TutorialLesson.Cancel), "X3: a new cancel after the combo reset counts");
+	}
+
+	// A different bit set while another is carried in is a cancel made in the lesson.
+	[Test]
+	public static void CancelLesson_NewBitBesideACarriedOne_Passes()
+	{
+		var m = NewMatch();
+		var t = AtCancelLesson(m, 1);
+		m.P1.CancelUsed = 3;
+		for (int i = 0; i < 20; i++) t.Observe();
+		Assert.Equal(LessonOutcome.Done, t.Outcome(TutorialLesson.Cancel), "a new bit counts");
+	}
+
+	// A cancel on the first Observe after the lesson opens counts.
+	[Test]
+	public static void CancelLesson_CancelOnTheFirstTickAfterOpening_Passes()
+	{
+		var m = NewMatch();
+		var t = AtCancelLesson(m, 0);
+		m.P1.CancelUsed = 1;
+		for (int i = 0; i < 20; i++) t.Observe();
+		Assert.Equal(LessonOutcome.Done, t.Outcome(TutorialLesson.Cancel), "counts");
+	}
 }
