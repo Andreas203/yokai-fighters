@@ -1207,6 +1207,21 @@ public static class SaveTests
 		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
 	});
 
+	// ---- YOK-98, R7 / M5: a dojo trial never reaches the file ----
+
+	[Test]
+	public static void DojoTrial_NothingOfAMidTrialReachesTheFile()
+	{
+		var s = DojoTrialTests.AtDojo(500);
+		string entry = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
+		var offer = s.Dojo!.Trials[0];
+		Assert.True(s.Dojo.ChooseTrial(offer.Trial.Id).Ok && s.Dojo.RecordAttempt(false).Ok, "one miss, mid-trial");
+		string mid = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
+		Assert.Equal(entry, mid, "a mid-trial capture is the entry save byte for byte: M5, Continue restarts the node");
+		Assert.True(!mid.Contains("\"dojo\"") && !mid.Contains("trial"), "no dojo or trial field (the node id r7-dojo is the walk)");
+		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-98 adds no saved state, so no version bump (7 = YOK-99, the last bump)");
+	}
+
 	// ---- YOK-99, Y5: Tanuki wins across runs (version 7) ----
 
 	[Test]

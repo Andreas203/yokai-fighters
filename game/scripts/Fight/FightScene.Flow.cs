@@ -65,7 +65,18 @@ public partial class FightScene
 		var graph = new FileMapSource(System.IO.Path.Combine(dir, mapFile)).Load();
 		run ??= RunState.NewRun(pool);
 		if (run.Map is null || run.Map.IsFinished) run.StartMap(graph);
-		return new RunSession(run, pool, NodeSceneTable.Default(dir), seed);
+		return new RunSession(run, pool, NodeSceneTable.Default(dir), seed) { Trials = LoadTrials() };
+	}
+
+	/// <summary>YOK-98, R7: the dojo's trials from data/trials/ (none when the folder is absent; a broken file is logged and offers none).</summary>
+	public static TrialData[] LoadTrials()
+	{
+		try { return TrialLoader.LoadDirectory(ContentPaths.Data("trials")); }
+		catch (Exception e) when (e is FormatException or System.IO.IOException or System.Text.Json.JsonException)
+		{
+			GD.PushWarning($"FightScene: no dojo trials: {e.Message}");
+			return Array.Empty<TrialData>();
+		}
 	}
 
 	/// <summary>Seed for the reward draft (duel n uses RunSeed + n), so one run offers the same cards on replay.
@@ -126,7 +137,7 @@ public partial class FightScene
 			Session = NewSession(DemoMapFile, RunSeed, Pool, Run);
 		}
 		BeginNode();
-		Match = NewDuel();
+		Match = InTrial ? NewTrialMatch() : NewDuel(); // YOK-98: a dojo trial plays on this same loop
 	}
 
 	/// <summary>Takes the session's entered node (on its own: enters the next one first): opponent, fight number, the log of stand-ins.</summary>
@@ -262,6 +273,7 @@ public partial class FightScene
 	/// <summary>After each sim step: route once when a duel ends.</summary>
 	private void CheckDuelOver()
 	{
+		if (InTrial) { CheckTrial(); return; } // YOK-98: attempts, not a duel result
 		if (Stage != DemoStage.Fighting || Match.Phase != MatchPhase.Over) return;
 		if (Recorder is { } rec) { DuelRecordings.Add(rec.Finish(Match)); Recorder = null; }
 		var session = Session!;
