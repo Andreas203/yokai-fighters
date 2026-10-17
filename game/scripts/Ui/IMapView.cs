@@ -26,7 +26,11 @@ public sealed record MapNodeDetail(string? Reward, string? Twist = null);
 /// never a switch in code); <see cref="Yokai"/> is the display name of whoever waits there (R2), null for a stop with no yokai;
 /// <see cref="Elder"/> is Y3's marker.
 /// </summary>
-public sealed record MapNodeView(string Id, int Row, string Type, string? Yokai, bool Elder, MapNodeState State);
+public sealed record MapNodeView(string Id, int Row, string Type, string? Yokai, bool Elder, MapNodeState State)
+{
+	/// <summary>YOK-139 (Y3): the icon id of this elder node's twist (data/twists/*.json <c>icon</c>); null = no twist data for it.</summary>
+	public string? TwistIcon { get; init; }
+}
 
 /// <summary>A route between two node ids; goes from the lower row to the higher.</summary>
 public sealed record MapRouteView(string From, string To);
@@ -78,11 +82,14 @@ public sealed class StubMapView : IMapView
 	public string? Current { get; private set; }
 
 	public IReadOnlyList<MapRouteView> Routes => _routes;
-	public IReadOnlyList<MapNodeView> Nodes => _defs.Select(d => new MapNodeView(d.Id, d.Row, d.Type, d.Yokai, d.Elder, _state[d.Id])).ToList();
+	public IReadOnlyList<MapNodeView> Nodes => _defs.Select(d => new MapNodeView(d.Id, d.Row, d.Type, d.Yokai, d.Elder, _state[d.Id]) { TwistIcon = TwistIcons.GetValueOrDefault(d.Id) }).ToList();
 
-	public StubMapView Add(string id, int row, string type, string? yokai = null, bool elder = false)
+	public Dictionary<string, string> TwistIcons { get; } = new();
+
+	public StubMapView Add(string id, int row, string type, string? yokai = null, bool elder = false, string? twistIcon = null)
 	{
 		_defs.Add((id, row, type, yokai, elder));
+		if (twistIcon != null) TwistIcons[id] = twistIcon;
 		_state[id] = MapNodeState.Locked;
 		return this;
 	}

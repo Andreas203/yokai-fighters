@@ -51,7 +51,9 @@ KIND_SCHEMA = {
     "story_card": "story-card.schema.json",
     "run_map": "run-map.schema.json",
     "node_scenes": "node-scenes.schema.json",
+    "elder_twist": "elder-twist.schema.json",
     "trial": "trial.schema.json",
+    "fighter": "fighter.schema.json",
     "harness_bot": "harness-bot.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
@@ -63,7 +65,9 @@ DIR_KIND = {
     "clips": ("clip",),
     "story": ("story_card",),
     "map": ("run_map", "node_scenes"),
+    "twists": ("elder_twist",),
     "trials": ("trial",),
+    "fighters": ("fighter",),
     "harness": ("harness_bot",),
 }
 # Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
@@ -367,6 +371,11 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
         for name in sorted(listed - used):
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
+    elif kind == "elder_twist":  # YOK-90 (Y3): the intro card and callout are story cards
+        for key in ("intro_card", "callout_card"):
+            card = doc.get(key)
+            if isinstance(card, str) and not (DATA / "story" / f"{card}.json").is_file():
+                errs.append((key, f"story card '{card}' not found (expected data/story/{card}.json) (Y3)"))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
@@ -504,6 +513,14 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             errs.extend(semantic(doc, f, rule_ids, clips, move_kinds))
         if errs:
             failures[f] = errs
+
+    # YOK-90 (Y2): one twist per elder across the files checked together.
+    twist_of: dict[str, Path] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "elder_twist" and isinstance(doc.get("elder"), str):
+            first = twist_of.setdefault(doc["elder"], f)
+            if first != f:
+                failures.setdefault(f, []).append(("elder", f"'{doc['elder']}' already has a twist in {rel(first)} (Y2: one per elder)"))
 
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:

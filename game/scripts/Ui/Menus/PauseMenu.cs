@@ -112,11 +112,11 @@ public partial class PauseMenu : Control
 		foreach (var slot in summary.Slots)
 		{
 			bool empty = slot.Level <= 0;
-			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 116),
+			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 124),
 				MouseFilter = MouseFilterEnum.Ignore };
 			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_card_style.tres").Duplicate();
 			paper.ContentMarginLeft = paper.ContentMarginRight = 20;
-			paper.ContentMarginTop = paper.ContentMarginBottom = 12;
+			paper.ContentMarginTop = paper.ContentMarginBottom = 16;
 			card.AddThemeStyleboxOverride("panel", paper);
 			var content = new Control { CustomMinimumSize = new(640, 92), MouseFilter = MouseFilterEnum.Ignore };
 			card.AddChild(content);
@@ -132,12 +132,12 @@ public partial class PauseMenu : Control
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Visible = !empty,
 				MouseFilter = MouseFilterEnum.Ignore });
 			var name = new Label { Name = "MoveName", Text = empty ? $"{slot.Slot}   Empty" : $"{slot.Move} · Lv {slot.Level}",
-				Position = new(112, string.IsNullOrEmpty(slot.Modifier) ? 24 : 6), Size = new(516, 40),
+				Position = new(112, string.IsNullOrEmpty(slot.Modifier) ? 26 : 4), Size = new(516, 40),
 				AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
 			name.AddThemeFontSizeOverride("font_size", 28);
 			content.AddChild(name);
 			var modifier = new Label { Name = "Modifier", Text = slot.Modifier, Visible = !empty && !string.IsNullOrEmpty(slot.Modifier),
-				Position = new(112, 50), Size = new(516, 36), MouseFilter = MouseFilterEnum.Ignore };
+				Position = new(112, 46), Size = new(516, 40), MouseFilter = MouseFilterEnum.Ignore };
 			modifier.AddThemeFontSizeOverride("font_size", 26);
 			content.AddChild(modifier);
 			slots.AddChild(card);

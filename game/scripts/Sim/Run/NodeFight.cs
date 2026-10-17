@@ -11,9 +11,10 @@ namespace YokaiFighters.Sim;
 public static class NodeFight
 {
 	public static Match NewMatch(KitSources sources, RunState? run, RunSession? session, string opponent, ControlScheme scheme,
-		Action<string>? log = null)
+		Action<string>? log = null, Func<SimConfig, SimConfig>? shape = null)
 	{
 		var cfg = run?.MatchConfig();
+		if (shape is not null) cfg = shape(cfg ?? SimConfig.Default); // YOK-98: a dojo trial's start distance
 		var ryo = Load(Kit.Ryo, sources, log);
 		Match m;
 		if (session?.Node?.Kit == TanukiKit.KitId)

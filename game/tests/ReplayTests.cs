@@ -130,6 +130,24 @@ public static class ReplayTests
 	}
 
 	[Test]
+	public static void PushWidth_IsRecorded_AndReplaysIdentically()
+	{
+		// YOK-136: a fighter's own push box (data/fighters/) is part of the fight as recorded.
+		var m = FightScene.NewMatch();
+		m.P2.PushWidth = 150 * SimConfig.Scale;
+		var rec = Play(m, Bully, (_, _) => FighterInput.None, 6000);
+		Assert.Equal(150 * SimConfig.Scale, rec.Header.Fighters[1].PushWidth, "P2's push width is in the recording");
+		Assert.Equal(0, rec.Header.Fighters[0].PushWidth, "Ryo keeps the default (not written)");
+		AssertReplays(rec, "wide push box");
+		var stripped = ReplayRecording.FromBytes(rec.ToBytes());
+		stripped.Header.Fighters[1].PushWidth = 0;
+		Assert.True(!Replayer.Run(stripped, Catalog).Ok, "the same inputs with the default push box do not replay as recorded");
+
+		var plain = Play(FightScene.NewMatch(), Bully, (_, _) => FighterInput.None, 600);
+		Assert.True(!System.Text.Json.JsonSerializer.Serialize(plain.Header).Contains("PushWidth"), "default push boxes: the field is not written (older headers)");
+	}
+
+	[Test]
 	public static void TanukiCopiedSpecial_RecordingWithoutTheFieldStillReplays()
 	{
 		// A fight with no copy writes its header as recordings did before YOK-94: no CopiedSlot at all.

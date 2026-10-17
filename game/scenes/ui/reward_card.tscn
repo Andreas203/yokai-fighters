@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/Ui/SealStamp.cs" id="seal"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/selection-frame.png" id="selection"]
 [ext_resource type="Script" path="res://scripts/Ui/RewardCard.cs" id="script"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/LevelPips.cs" id="pips"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/red-brush.png" id="brush"]
 [ext_resource type="Material" path="res://ui/kit/ink_stroke_material.tres" id="ink"]
 
@@ -101,6 +102,15 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Pips" type="Control" parent="Body"]
+visible = false
+offset_left = 246
+offset_top = 372
+offset_right = 406
+offset_bottom = 398
+mouse_filter = 2
+script = ExtResource("pips")
+
 [node name="Fallback" type="Control" parent="Body"]
 offset_left = 170
 offset_top = 250
@@ -110,9 +120,9 @@ mouse_filter = 2
 script = ExtResource("seal")
 
 [node name="Plain" type="Label" parent="Body"]
-offset_left = 32
+offset_left = 40
 offset_top = 414
-offset_right = 418
+offset_right = 410
 offset_bottom = 566
 mouse_filter = 2
 theme_override_font_sizes/font_size = 28
@@ -120,9 +130,9 @@ autowrap_mode = 3
 
 
 [node name="TargetPrompt" type="Label" parent="Body"]
-offset_left = 32
+offset_left = 40
 offset_top = 570
-offset_right = 418
+offset_right = 410
 offset_bottom = 610
 mouse_filter = 2
 theme_override_font_sizes/font_size = 26

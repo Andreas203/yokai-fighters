@@ -82,11 +82,35 @@ public partial class RestStopScreen : Control, INodeScene
 	/// </summary>
 	public bool OpenSecond()
 	{
+		if (Model is { Kind: RestStopKind.Dojo } dm && _session != null) return OpenTrial(dm);
 		if (Model is not { Kind: RestStopKind.Merchant } m || _session == null) return false;
 		if (!m.OpenShop().Ok) { Refresh(); return false; }
 		Refresh(); // the used state first, so nothing under the shop changes while it is open
 		ShopRequested?.Invoke();
 		return true;
+	}
+
+	/// <summary>
+	/// YOK-98, R7: the dojo's second card: takes the offered trial as the stop's one choice (closing the rest) and
+	/// asks the flow to play it (<see cref="TrialRequested"/>). Refused, changing nothing, when the rest was taken,
+	/// no trial is offered or the trial is already over.
+	/// </summary>
+	private bool OpenTrial(RestStopScreenModel m)
+	{
+		if (!m.TrialRunning && !m.ChooseTrial().Ok) { Refresh(); return false; }
+		Refresh();
+		TrialRequested?.Invoke();
+		return true;
+	}
+
+	/// <summary>YOK-98: raised once the trial is chosen: the flow plays it on the fight scene and brings this stop back after.</summary>
+	public event Action? TrialRequested;
+
+	/// <summary>The flow calls this when the trial fight ended and the stop shows again: the result, focus on Continue.</summary>
+	public void TrialClosed()
+	{
+		Refresh();
+		if (ContinueButton.Visible) ContinueButton.GrabFocus();
 	}
 
 	/// <summary>Raised after the shop was chosen: the flow shows the shop over this stop (and hides it).</summary>
@@ -225,18 +249,27 @@ public partial class RestStopScreen : Control, INodeScene
 		L(card + "Top/Titles/Sub").Text = dojo ? "A drill for one special" : "Spend coins instead";
 		Tag(SecondCard.GetNode<Control>("Box/Top/Tag"), dojo ? "TRIAL" : "SHOP");
 		L(card + "Desc").Text = dojo
-			? "Land the drill to level one special."
+			? (m.ChosenTrial is { } t
+				? $"{t.Prompt}\nHeals {Dojo.TrialHealPercent}% either way; land it within {t.Attempts} tries to level {t.Special}."
+				: "Land the drill to level one special.")
 			: $"Buy an ability or release a binding.\nYou have {m.Coins} coins.";
 		L(card + "Coming").Text = m.Second switch
 		{
-			RestStopOption.ComingSoon => "Coming soon",
+			RestStopOption.NoTrial => "No trial for your specials.",
 			RestStopOption.Closed => "Closed: the other option was taken.",
-			RestStopOption.Taken => dojo ? "Chosen" : "Chosen · Enter to browse again",
+			RestStopOption.Taken => dojo ? DojoTaken() : "Chosen · Enter to browse again",
 			_ => "",
 		};
 		// The shop stays open for the stop (R6: buying more is allowed): once chosen the card goes back in, as "Chosen".
 		SecondCard.CardDisabled = !(m.Second == RestStopOption.Ready || (m.Second == RestStopOption.Taken && !dojo));
 	}
+
+	private string DojoTaken() => _session?.Dojo switch
+	{
+		{ TrialResult: DojoTrialResult.Landed } d => $"Landed · +{d.Healed} health · Lv {d.LevelBefore} → {d.LevelAfter}",
+		{ TrialResult: DojoTrialResult.Failed } d => $"Missed · +{d.Healed} health",
+		_ => "Chosen",
+	};
 
 	private void BindForecast(RestStopScreenModel m)
 	{

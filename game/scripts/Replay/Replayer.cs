@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using YokaiFighters.Ai;
 using YokaiFighters.Sim;
+using YokaiFighters.Tutorial;
 
 namespace YokaiFighters.Replay;
 
@@ -17,6 +18,7 @@ public sealed class ReplayCatalog
 	public List<SpecialData> Specials { get; } = new();
 	public List<ModifierData> Modifiers { get; } = new();
 	public List<BehaviourProfile> Profiles { get; } = new();
+	public List<ElderTwist> Twists { get; } = new(); // YOK-90
 
 	/// <summary>Scans <c>data/</c> and <c>game/tests/fixtures/</c> under the repo root, every *.json, by its kind.</summary>
 	public static ReplayCatalog FromRepo(string repoRoot)
@@ -41,6 +43,7 @@ public sealed class ReplayCatalog
 					case "special": Specials.Add(SpecialLoader.LoadFile(path)); break;
 					case "modifier": Modifiers.Add(ModifierLoader.LoadFile(path)); break;
 					case "profile": Profiles.Add(BehaviourProfile.LoadFile(path)); break;
+					case ElderTwistLoader.Kind: Twists.Add(ElderTwistLoader.LoadFile(path)); break;
 					default: Moves.Add(MoveLoader.LoadFile(path)); break; // non-move kinds fail to parse and are skipped
 				}
 			}
@@ -84,6 +87,16 @@ public static class Replayer
 		try { ai = MakeAi(rec.Header.Ai, catalog, m); }
 		catch (ReplaySetupException e) { report.Error = "setup: " + e.Message; return report; }
 
+		// YOK-92: a guided fight rebuilds its lessons and the coach, as FightScene.SetUpTutorial does.
+		ApprenticeTutorial? tut = null;
+		TutorialCoach? coach = null;
+		if (rec.Header.Tutorial is { } ts)
+		{
+			var opts = new TutorialOptions { BlocksToPass = ts.BlocksToPass, MinPromptTicks = ts.MinPromptTicks, AttackEvery = ts.AttackEvery, ThrowRetryTicks = ts.ThrowRetryTicks };
+			tut = new ApprenticeTutorial(m, opts, ts.Player);
+			coach = new TutorialCoach(m.Fighters[1 - ts.Player], 1 - ts.Player, m.Config, opts, ts.ReactionFrames);
+		}
+
 		var events = rec.Header.Events.OrderBy(e => e.Tick).ToList();
 		int ev = 0;
 		for (int i = 0; i < rec.Steps; i++)
@@ -97,12 +110,15 @@ public static class Replayer
 					try { ai = MakeAi(e.Ai, catalog, m); }
 					catch (ReplaySetupException ex) { report.Error = $"setup (step {i}): " + ex.Message; return report; }
 				}
+				else if (e.Kind == "tutorial-skip") tut?.SkipLesson();
 			}
 			var p1 = rec.P1[i];
 			var p2 = rec.P2[i];
 			if (ai is not null)
 			{
-				var mine = ai.Next(AiView.Capture(m));
+				var view = AiView.Capture(m);
+				var mine = ai.Next(view);
+				if (coach is not null && tut is not null) mine = coach.Next(view, tut.Current) ?? mine; // as FightScene.CoachedP2
 				report.AiStepsChecked++;
 				if (mine != p2 && report.FirstAiMismatchStep < 0)
 				{
@@ -112,6 +128,7 @@ public static class Replayer
 				p2 = mine;
 			}
 			m.Step(p1, p2);
+			if (tut is not null) { tut.Observe(); if (m.Phase == MatchPhase.Over) tut.Detach(); } // as FightScene.ObserveTutorial
 			report.StepsRun = i + 1;
 			ulong h = m.StateHash();
 			if (h != rec.Hashes[i])
@@ -157,11 +174,22 @@ public static class Replayer
 			if (s.CopiedSlot != 0 && (s.CopiedSlot < 1 || s.CopiedSlot >= f.Specials.Length || f.Specials[s.CopiedSlot] is null))
 				throw new ReplaySetupException($"P{p + 1} copied slot {s.CopiedSlot} holds no special in the recording");
 			f.CopiedSlot = (SpecialSlot)s.CopiedSlot;
+			if (s.PushWidth < 0) throw new ReplaySetupException($"P{p + 1} push width {s.PushWidth} is negative");
+			f.PushWidth = s.PushWidth; // YOK-136: part of the fight as recorded
 			foreach (var c in s.CancelRules) f.HoldCancelRule(new CancelRule(c.Id, c.From, c.Into, c.OnHit, c.OnBlock, c.OnWhiff));
 			f.Input.Scheme = Enum.Parse<ControlScheme>(s.Scheme);
+			f.Twist = s.Twist is null ? null : TwistOf(s, cat, $"P{p + 1}"); // YOK-90
 		}
 		m.Reset(); // health from config, as at fight start (Reset keeps specials and cancel rules)
 		return m;
+	}
+
+	static ElderTwist TwistOf(FighterSetup s, ReplayCatalog cat, string who)
+	{
+		var same = cat.Twists.Where(t => t.Id == s.Twist).ToList();
+		if (same.Count == 0) throw new ReplaySetupException($"{who} elder twist '{s.Twist}' no longer exists in data/twists/");
+		return same.FirstOrDefault(t => Fingerprint.Of(t) == s.TwistFp)
+			?? throw new ReplaySetupException($"{who} elder twist '{s.Twist}' changed since the recording");
 	}
 
 	static MoveData[] Kit(FighterSetup s, ReplayCatalog cat, string who) => s.Moves.Select((k, slot) =>
@@ -207,7 +235,10 @@ public static class Replayer
 			null or "standard" => AiFightTier.Standard, "elder" => AiFightTier.Elder, "tanuki" => AiFightTier.Tanuki,
 			_ => throw new ReplaySetupException($"unknown AI fight tier '{a.FightTier}'"),
 		};
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier);
+		// YOK-99, Y5: only Tanuki pressure makes a bonus, so anything outside 0..MaxWins × AggressionPerWin is not a recording this build made.
+		if (a.AggressionBonus < 0 || a.AggressionBonus > TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin)
+			throw new ReplaySetupException($"AI aggression bonus {a.AggressionBonus} is outside 0-{TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin}");
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus);
 	}
 }
 

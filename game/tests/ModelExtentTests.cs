@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Godot;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
@@ -62,6 +63,136 @@ public static class ModelExtentTests
 		}
 		const float unitsPerMetre = 200f; // E1
 		return ((int)Math.Ceiling(front * unitsPerMetre) + FleshPad, (int)Math.Ceiling(back * unitsPerMetre) + FleshPad, fc, bc);
+	}
+
+	/// <summary>Clips a body plays in a fight: its pose and move clips, plus every take cut on its own rig (the Oni's
+	/// <c>oni/</c> folder, YOK-102). Ryo and the Kitsune keep the YOK-39 rule (every catalogued clip but the Oni's takes).</summary>
+	public static bool PlaysClip(FighterAnimSet set, string clip)
+	{
+		bool onOni = OnOniRig(FightScene.Catalog[clip]?.ResPath);
+		if (set.Fighter != "oni") return !onOni;
+		return onOni || set.Clips.Values.Contains(clip) || set.ClipOverrides.Values.Contains(clip) || OniKitClips.Contains(clip);
+	}
+
+	/// <summary>Every clip the Oni body plays for his stand-in kit's moves (the node's fighter, YOK-131), through
+	/// <see cref="FighterAnimSet.MoveClip"/>, the way <see cref="FighterPresenter"/> picks them.</summary>
+	static System.Collections.Generic.HashSet<string> OniKitClips => _oniKitClips ??= FightScene
+		.LoadMoves(YokaiFighters.Dev.DevJump.FighterOf(new YokaiFighters.Dev.DevFightSetup("oni")))
+		.Select(m => FightScene.MoveClips.TryGetValue(m.Id, out var c) ? FighterAnimSet.Oni.MoveClip(c) : null)
+		.Where(c => c != null).Select(c => c!).ToHashSet();
+	static System.Collections.Generic.HashSet<string>? _oniKitClips;
+
+	/// <summary>Highest Y (m, feet = 0) of the meshes under a node that pass <paramref name="keep"/>: the 8 corners of each mesh AABB, posed by its global transform.</summary>
+	static float MeshTop(Node root, Func<MeshInstance3D, bool> keep)
+	{
+		float top = float.NegativeInfinity;
+		foreach (var n in root.FindChildren("*", "MeshInstance3D", true, false))
+		{
+			var mesh = (MeshInstance3D)n;
+			if (!keep(mesh)) continue;
+			var box = mesh.GetAabb();
+			// A skinned mesh's vertices are in bind space (the GLB armature's centimetres): place them through the skin's
+			// first bind at the rest pose (exact for the rest pose the allowance is measured in).
+			var xf = mesh.GlobalTransform;
+			if (mesh.Skin is { } skin && skin.GetBindCount() > 0 && mesh.GetNodeOrNull<Skeleton3D>(mesh.Skeleton) is { } sk)
+			{
+				int bone = skin.GetBindBone(0) >= 0 ? skin.GetBindBone(0) : sk.FindBone(skin.GetBindName(0));
+				if (bone >= 0) xf = sk.GlobalTransform * sk.GetBoneGlobalRest(bone) * skin.GetBindPose(0);
+			}
+			for (int c = 0; c < 8; c++) top = Math.Max(top, (xf * box.GetEndpoint(c)).Y);
+		}
+		return top;
+	}
+
+	/// <summary>Highest club point per clip from the last <see cref="MeasureTop"/> (m), for the printout.</summary>
+	static readonly System.Collections.Generic.Dictionary<string, float> ClubTopByClip = new();
+
+	static bool UnderClub(Node n)
+	{
+		for (var p = n.GetParent(); p != null; p = p.GetParent()) if (p.Name == "Club") return true;
+		return false;
+	}
+
+	/// <summary>
+	/// YOK-133: the highest point of a model over every clip it plays, in metres above its feet: the top bone plus the body
+	/// mesh's reach past it (horns, hair: the skinned mesh's rest top minus the rest top bone, at least the 15 cm the HUD
+	/// test always allowed), or the club tip (the club's mesh corners every frame; it rides the hand bone rigidly).
+	/// </summary>
+	public static (float Top, string Clip, float Bone, float Allowance, float Club, string ClubClip) MeasureTop(FighterModel model)
+	{
+		model.Position = Vector3.Zero;
+		model.Mirror.Scale = Vector3.One;
+		var skel = model.Skeleton;
+		model.Player.Stop();
+		skel.ResetBonePoses();
+		float restBone = 0;
+		for (int b = 0; b < skel.GetBoneCount(); b++) restBone = Math.Max(restBone, (skel.GlobalTransform * skel.GetBoneGlobalRest(b)).Origin.Y);
+		float restMesh = MeshTop(skel, m => !UnderClub(m));
+		float allowance = Math.Max(0.15f, restMesh - restBone);
+		GD.Print($"YOK-133 rest {model.AnimSet.Fighter}: mesh top {restMesh:0.000} m, top bone {restBone:0.000} m");
+		// The club rides the hand bone rigidly. BoneAttachment3D only follows the skeleton on its deferred update, so the
+		// club is posed here from the bone itself: hand bone pose x (attachment -> club mesh), fixed for the clip.
+		var attach = model.FindChildren("Club", "BoneAttachment3D", true, false).Cast<BoneAttachment3D>().FirstOrDefault();
+		int hand = attach is null ? -1 : skel.FindBone(attach.BoneName);
+		var clubMeshes = attach is null ? Array.Empty<(MeshInstance3D, Transform3D)>()
+			: attach.FindChildren("*", "MeshInstance3D", true, false).Cast<MeshInstance3D>()
+				.Select(m => (m, attach.GlobalTransform.AffineInverse() * m.GlobalTransform)).ToArray();
+		var lib = model.Player.GetAnimationLibrary(FighterModel.LibraryName);
+		float bone = 0, club = 0; string bc = "", cc = "";
+		foreach (var name in lib.GetAnimationList())
+		{
+			if (!PlaysClip(model.AnimSet, name)) continue;
+			var anim = lib.GetAnimation(name);
+			model.Player.Play(FighterModel.LibraryName + "/" + name);
+			int frames = Math.Max(1, (int)Math.Ceiling(anim.Length * 60));
+			for (int k = 0; k <= frames; k++)
+			{
+				model.Player.Seek(Math.Min(anim.Length, k / 60.0), true);
+				var xf = skel.GlobalTransform;
+				for (int b = 0; b < skel.GetBoneCount(); b++)
+				{
+					float y = (xf * skel.GetBoneGlobalPose(b)).Origin.Y;
+					if (y > bone) { bone = y; bc = name; }
+				}
+				if (hand < 0) continue;
+				var handXf = xf * skel.GetBoneGlobalPose(hand);
+				foreach (var (mesh, rel) in clubMeshes)
+				{
+					var box = mesh.GetAabb();
+					for (int c = 0; c < 8; c++)
+					{
+						float y = (handXf * rel * box.GetEndpoint(c)).Y;
+						if (y > club) { club = y; cc = name; }
+						if (!ClubTopByClip.TryGetValue(name, out float was) || y > was) ClubTopByClip[name] = y;
+					}
+				}
+			}
+		}
+		float body = bone + allowance;
+		return club > body ? (club, cc + " (club)", bone, allowance, club, cc) : (body, bc, bone, allowance, club, cc);
+	}
+
+	/// <summary>YOK-133: every body's highest point (bones, body mesh, club tip) stays under the top the camera frames it for.</summary>
+	[Test]
+	public static void ModelTop_FitsTheCameraFraming(Node runner)
+	{
+		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
+		{
+			var model = FighterModel.Create(set, FightScene.Catalog);
+			Assert.True(model != null, $"{set.Fighter}: model loads");
+			if (model is null) continue;
+			runner.AddChild(model);
+			var (top, clip, bone, allow, club, cc) = MeasureTop(model);
+			float framed = CameraConfig.Default.TopFor(set.Fighter);
+			GD.Print($"YOK-133 top {set.Fighter}: {top:0.000} m ({clip}); bone {bone:0.000} + body {allow:0.000}, club {club:0.000} ({cc}); framed for {framed:0.000}");
+			Assert.True(top <= framed, $"{set.Fighter}: highest point {top:0.000} m ({clip}) > framed top {framed:0.000}");
+			if (set.Fighter == "oni")
+				foreach (var (c, y) in ClubTopByClip.OrderByDescending(kv => kv.Value).Take(5))
+					GD.Print($"YOK-133 oni club top {c}: {y:0.000} m");
+			ClubTopByClip.Clear();
+			if (set.Fighter == "oni") Assert.True(club > bone, $"oni: the club tip ({club:0.000} m) is measured and rises past the bones ({bone:0.000})");
+			model.QueueFree();
+		}
 	}
 
 	[Test]
