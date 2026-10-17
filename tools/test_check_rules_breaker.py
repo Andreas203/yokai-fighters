@@ -305,5 +305,29 @@ class InputProbes(unittest.TestCase):
         self.assertTrue([v for v in rep["violations"] if v["check"] == "read"], rep["violations"])
 
 
+class RecursiveKataKeyProbes(unittest.TestCase):
+    """Round 4: the recursive Kata-only key search (K2) must not open holes or false positives."""
+    def trial(self, step):
+        t = real("trials/spirit-wave-trial.json"); t["goal"]["steps"] = [step]
+        return {"trials/spirit-wave-trial.json": t}
+
+    def test_motion_word_in_text_values_is_allowed(self):
+        # K2 forbids Kata inputs, not the word: strings and a `notes` text are not keys
+        code, rep = run(self.trial({"event": "hit", "move": "spirit-wave", "hint": "motion 236 is Kata only"}))
+        self.assertFalse(hit(rep, "K2", "trials"), rep["violations"])
+
+    def test_motion_inside_list_of_dicts_is_found(self):
+        code, rep = run(self.trial({"event": "hit", "any_of": [{"move": "spirit-wave"}, {"motion": "236"}]}))
+        self.assertTrue(hit(rep, "K2", "trials"), rep["violations"])
+
+    def test_very_deep_nesting_reports_instead_of_passing(self):
+        deep = cur = {}
+        for _ in range(400):
+            cur["x"] = {}; cur = cur["x"]
+        cur["motion"] = "236"
+        code, rep = run(self.trial({"event": "hit", "move": "spirit-wave", "a": deep}))
+        self.assertTrue(hit(rep, "K2", "trials") or code == 1, (code, rep["violations"]))
+
+
 if __name__ == "__main__":
     unittest.main()
