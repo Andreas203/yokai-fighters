@@ -1,0 +1,24 @@
+{
+  "version": 3,
+  "run": {
+    "slots": [
+      {
+        "slot": "A",
+        "special": "spirit-wave",
+        "level": 1,
+        "modifier": null
+      },
+      {
+        "slot": "B",
+        "special": "rising-talisman",
+        "level": 1,
+        "modifier": null
+      }
+    ],
+    "cancels": [
+      "fox-step",
+      "oni-chain",
+      "undertow"
+    ]
+  }
+}
