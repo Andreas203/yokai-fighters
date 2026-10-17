@@ -91,7 +91,7 @@ public partial class CopyTalisman : Control
 		_caption.AddThemeColorOverride("font_color", State == CopyTalismanState.None ? FightHud.Ink : FightHud.Seal); // red on the grey plate would be unreadable
 		_name.Text = t is null ? "-" : t.Data.Name.ToUpperInvariant();
 		_level.Text = t is null ? "" : $"Lv {t.Level}";
-		var art = t is null ? null : RewardArt.ForId(t.Data.Id);
+		var art = t is null ? null : AbilityArt.ForId(t.Data.Id);
 		_icon.Texture = art;
 		_icon.Visible = art != null;
 		_letter.Visible = art == null && t != null;
