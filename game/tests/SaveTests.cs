@@ -1007,4 +1007,142 @@ public static class SaveTests
 		Assert.True(!plain.Contains("off_route"), "a walk on the routes writes the file as before");
 		Assert.True(SaveStore.Parse(plain.Replace("\"coins\"", "\"off_route\": 3, \"coins\"")).Data.Run == null, "off_route of the wrong kind drops the run");
 	});
+
+	// ---- YOK-73: the title's Continue through the real boot and its buttons ----
+	// No save: greyed with the accurate reason. A saved run: lit, and Continue loads the node it was saved in, from its
+	// entry state (M5: health, coins, slots). Older, newer and corrupt files by the save file's own conventions, with
+	// story progress kept apart from the run (M4). Practice stays greyed with its own reason whatever the save holds.
+
+	static void PracticeStaysGreyed(GameFlow flow, string what) =>
+		Assert.True(flow.Title.PracticeButton.Disabled && flow.Title.DisabledReason(TitleEntry.Practice) == ScreenRouter.NoPracticeReason, $"{what}: Practice stays greyed with its reason");
+
+	/// <summary>Plays row 1 through the boot (won, first card drafted), then enters row 2: the file now holds the run inside that node.</summary>
+	static (string node, int health, int coins, string slots) SaveInsideRow2(GameFlow flow)
+	{
+		Press(flow.Title.StartButton);
+		Press(flow.ControlSelect.Start);
+		var s = flow.Session!;
+		Assert.True(flow.ChooseNode(s.Reachable()[0]).Ok, "row 1 entered");
+		WinEnteredNode(flow, 610);
+		Assert.True(flow.Router.Current == Screen.Map, "row 1 done, back on the map");
+		string next = s.Reachable()[0];
+		Assert.True(flow.ChooseNode(next).Ok && flow.Router.Current == Screen.Fight, "row 2 entered");
+		return (next, s.Run.Health, s.Run.Coins, Slots(s));
+	}
+
+	[Test]
+	public static void Title_NoSave_ContinueIsGreyed_WithAnAccurateReason(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+			Assert.True(flow.Title.ContinueButton.Disabled && !flow.Router.Entry(TitleEntry.Continue).Enabled, "no save: Continue is greyed");
+			Assert.Equal(ScreenRouter.NoSaveReason, reason, "with the no-save reason");
+			Assert.True(!reason.Contains("not built", StringComparison.OrdinalIgnoreCase), "saving exists: the reason does not say it is not built: " + reason);
+			PracticeStaysGreyed(flow, "no save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null && !File.Exists(path), "pressing it does nothing and writes nothing");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_SavedInsideANode_ContinueIsLit_AndRestartsThatNodeFromItsEntryState_M5(Node runner) => WithTempFile(path =>
+	{
+		(string node, int health, int coins, string slots) entry = default;
+		WithBoot(runner, path, flow =>
+		{
+			entry = SaveInsideRow2(flow);
+			Assert.True(entry.coins > 0, $"row 1 paid coins, so M5's coins are tested (coins {entry.coins})");
+			for (int t = 0; t < 6; t++) flow.Fight!.Step(FighterInput.None, new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+			Assert.True(flow.Fight!.Match.P1.Health < entry.health, "Ryo took damage inside the node");
+			Assert.True(flow.ReturnToTitle(), "quit inside the node");
+		}, seed: 73);
+
+		// A new process on the same file.
+		WithBoot(runner, path, flow =>
+		{
+			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a save: Continue is lit");
+			PracticeStaysGreyed(flow, "with a save");
+			Press(flow.Title.ContinueButton);
+			var s = flow.Session!;
+			Assert.True(flow.Router.Current == Screen.Fight && s.Node?.NodeId == entry.node, $"Continue loads the node it was saved in ({entry.node})");
+			Assert.True(flow.Fight!.Match.Tick == 0 && flow.Fight.Match.P1.Health == entry.health, "the fight restarts with the health Ryo entered with");
+			Assert.True(s.Run.Health == entry.health && s.Run.Coins == entry.coins && Slots(s) == entry.slots, $"and the coins and slots he entered with (M5): coins {s.Run.Coins}, slots {Slots(s)}");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_OlderVersionSave_IsContinued_OnTheRightNode(Node runner) => WithTempFile(path =>
+	{
+		string node = "";
+		int health = 0;
+		WithBoot(runner, path, flow =>
+		{
+			(node, health, _, _) = SaveInsideRow2(flow);
+			flow.ReturnToTitle();
+		}, seed: 73);
+		// Rewritten as a version-1 file: no coins, no copy lock (version 1 had neither).
+		string text = File.ReadAllText(path).Replace(Current, "\"version\": 1");
+		text = System.Text.RegularExpressions.Regex.Replace(text, "\\s*\"(coins|copy_locked|locked_copy|node_paid)\": [^,\\n]*,", "");
+		Assert.True(!text.Contains("\"coins\"") && text.Contains("\"version\": 1"), "a version-1 file: " + text);
+		File.WriteAllText(path, text);
+
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "read as an older file");
+			Assert.True(!flow.Title.ContinueButton.Disabled, "an older save is still offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
+			PracticeStaysGreyed(flow, "older save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "Continue loads the saved node");
+			Assert.True(flow.Fight!.Match.P1.Health == health && flow.Session.Run.Coins == 0, "with the entry health, and no coins (version 1 had none)");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_NewerVersionSave_KeepsStory_AndIsBackedUpBeforeAnyWrite_M4(Node runner) => WithTempFile(path =>
+	{
+		string node = "";
+		WithBoot(runner, path, flow =>
+		{
+			(node, _, _, _) = SaveInsideRow2(flow);
+			flow.Write(flow.Saved.WithStory(StoryProgress.Intro));
+			flow.ReturnToTitle();
+		}, seed: 73);
+		string newer = File.ReadAllText(path).Replace(Current, "\"version\": " + (SaveStore.CurrentVersion + 1));
+		File.WriteAllText(path, newer);
+
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.NewerVersion, flow.SaveLoaded!.Status, "read as a newer file");
+			Assert.True(flow.Saved.Story.Has(StoryProgress.Intro), "story progress is read on its own (M4)");
+			Assert.Equal(newer, File.ReadAllText(path), "booting leaves the newer file as it is");
+			PracticeStaysGreyed(flow, "newer save");
+			if (flow.Title.ContinueButton.Disabled)
+			{
+				string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+				Assert.True(reason.Length > 0 && reason != ScreenRouter.NoSaveReason, "greyed, but not as 'no saved run': " + reason);
+				return;
+			}
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "the known fields continue on the saved node");
+			if (File.ReadAllText(path) != newer)
+				Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the newer file is backed up before it is written over");
+		}, seed: 73);
+	});
+
+	[Test]
+	public static void Title_CorruptSave_ContinueIsGreyed_SaysSo_AndTheFileIsKept(Node runner) => WithTempFile(path =>
+	{
+		const string corrupt = "{ \"version\": 4, \"run\": { broken";
+		File.WriteAllText(path, corrupt);
+		WithBoot(runner, path, flow =>
+		{
+			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
+			Assert.True(flow.Title.ContinueButton.Disabled && reason != ScreenRouter.NoSaveReason && reason.Contains("could not be read"), "corrupt: greyed with its own reason: " + reason);
+			PracticeStaysGreyed(flow, "corrupt save");
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null, "nothing starts");
+			Assert.Equal(corrupt, File.ReadAllText(path), "the file is left as it was");
+		}, seed: 73);
+	});
 }
