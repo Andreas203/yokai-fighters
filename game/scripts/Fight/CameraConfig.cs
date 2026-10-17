@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace YokaiFighters.Fight;
 
 /// <summary>
@@ -55,6 +58,30 @@ public sealed record CameraConfig
 	public float ModelTopMeters { get; init; } = 1.9f;
 
 	/// <summary>
+	/// YOK-133 (designer: frame for the tallest fighter in the fight): bodies whose highest point passes
+	/// <see cref="ModelTopMeters"/>, in metres above the feet over every clip they play, body mesh and props included
+	/// (ModelExtentTests.ModelTop_FitsTheCameraFraming measures and checks them). The Oni: his overhead club slam.
+	/// </summary>
+	public IReadOnlyDictionary<string, float> TallBodyTopMeters { get; init; } = new Dictionary<string, float>
+	{
+		["oni"] = 3.15f, // measured 3.124 m: the club tip at the top of his heavy kick swing (ryo-heavy-kick); the HP slam is under it
+	};
+
+	/// <summary>The top the camera frames one body for: <see cref="ModelTopMeters"/>, or more for a tall body.</summary>
+	public float TopFor(string? body) =>
+		body != null && TallBodyTopMeters.TryGetValue(body, out float t) ? MathF.Max(t, ModelTopMeters) : ModelTopMeters;
+
+	/// <summary>
+	/// YOK-133: this config framed for the tallest of a fight's two bodies. Returns this same instance when neither is
+	/// taller than <see cref="ModelTopMeters"/> (Ryo vs the Kitsune keeps the default camera exactly).
+	/// </summary>
+	public CameraConfig ForBodies(string? a, string? b)
+	{
+		float top = MathF.Max(TopFor(a), TopFor(b));
+		return top == ModelTopMeters ? this : this with { ModelTopMeters = top, FeetClearPx = TallFeetClearPx };
+	}
+
+	/// <summary>
 	/// What "a fighter fills x% of the screen height" measures: Ryo's idle fighting stance, feet to hair top, 1.55 m
 	/// (measured on the YOK-129 captures; standing straight he is ~1.75 m). Framing tests only; the camera never reads it.
 	/// </summary>
@@ -62,6 +89,19 @@ public sealed record CameraConfig
 
 	/// <summary>The top HUD strip (138 px) plus a margin, on the 1080-px canvas: no fighter's head goes above this line.</summary>
 	public float HudClearPx { get; init; } = 146f;
+
+	/// <summary>
+	/// YOK-133: the lowest the lower fighter's feet may sit when the HUD floor lifts the camera (px from the top of the
+	/// 1080 canvas; see <see cref="DynamicCamera"/>'s feet floor). 0 = off, the default: Ryo vs the Kitsune keeps the
+	/// YOK-129 framing exactly. <see cref="ForBodies"/> turns it on (<see cref="TallFeetClearPx"/>) for a tall body.
+	/// </summary>
+	public float FeetClearPx { get; init; }
+
+	/// <summary>YOK-133: the feet line a tall body's fight uses (~96% down the frame).</summary>
+	public float TallFeetClearPx { get; init; } = 1040f;
+
+	/// <summary>YOK-133: the most the feet floor widens the view in one tick beyond the eased width (units; half the no-snap allowance of the camera probes). A sudden rise, such as a launch, catches up over a few ticks, the feet dipping under <see cref="TallFeetClearPx"/> meanwhile but staying on screen.</summary>
+	public float FeetFloorStepUnits { get; init; } = 80f;
 
 	/// <summary>
 	/// How far past <see cref="Sim.FightCamera.VisibleHalfWidth"/> the view may show at the stage edge: the pitched
