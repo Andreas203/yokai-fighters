@@ -82,6 +82,21 @@ public partial class GameFlow : Node
 	private string? _runMapFile;
 	/// <summary>The last write was refused: the file is behind <see cref="Saved"/> (e.g. it still holds an ended run). Retried on the title and on exit.</summary>
 	private bool _writePending;
+	/// <summary>YOK-106: the node entered (or continued into) is Ryo's first meeting with its elder.</summary>
+	private bool _firstMeeting;
+
+	/// <summary>Y3 (YOK-106): Ryo has met this elder (the yokai id an elder node names), in this run or an earlier one. Story progress, per save (M4).</summary>
+	public bool HasMetElder(string elderId) => Saved.Story.HasMetElder(elderId);
+	/// <summary>
+	/// Y3 (YOK-106): the node Ryo is in is an elder's, met for the first time on this entry (the intro card and the
+	/// callout show). Set before <see cref="RunSession.NodeEntered"/> reaches handlers added after this flow's; stays
+	/// true when a quit inside that node is continued (M5). False off a node and on any later meeting.
+	/// </summary>
+	public bool FirstMeeting => _firstMeeting && Session is { Map.InNode: true };
+	/// <summary>YOK-90 (Y3): the twist of the elder node Ryo is in (intro card; the callout when <see cref="FirstMeeting"/>), else
+	/// null. A map node's own twist (its icon): <c>FightScene.Twists.ForNode(node)</c>.</summary>
+	public ElderTwist? CurrentTwist => Session is { Map.InNode: true } s ? FightScene.Twists.ForNode(s.Map.CurrentNode) : null;
+
 	/// <summary>Why the save file gave no run at boot (unreadable file, unreadable run); shown on Continue until a save succeeds.</summary>
 	private string? _saveTrouble;
 
@@ -315,6 +330,7 @@ public partial class GameFlow : Node
 	private bool StartRun()
 	{
 		_freshRun = false;
+		_firstMeeting = false;
 		try { Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next()); }
 		catch (Exception e) when (e is FormatException or System.IO.IOException)
 		{
@@ -338,12 +354,14 @@ public partial class GameFlow : Node
 		session.NodeEntered += n =>
 		{
 			GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
+			if (session == Session) Saved = ElderMeetings.Enter(Saved, session.Map.CurrentNode, out _firstMeeting); // written by this save point (M5)
 			SaveRun(session);
 		};
 		session.NodeCompleted += n =>
 		{
 			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was won
 			GD.Print($"GameFlow: completed '{n.NodeId}', health {session.Run.Health}");
+			if (session == Session) _firstMeeting = false;
 			if (!session.IsOver) SaveRun(session);
 			if (session == Session && !session.IsOver) Router.ReturnToMap(); // the last node stays on its end card
 		};
@@ -368,7 +386,7 @@ public partial class GameFlow : Node
 	private void SaveRun(RunSession session)
 	{
 		if (Saves is null || session != Session || session == _unsavedSession) return;
-		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile)));
+		Write(Saved.WithRun(RunSave.Capture(session, _runMapFile ?? MapFile) with { FirstMeeting = _firstMeeting }));
 	}
 
 	/// <summary>Replaces the save (and writes it when a file is attached). False when the disk refused; the value is kept either way.</summary>
@@ -453,6 +471,7 @@ public partial class GameFlow : Node
 		Session = session;
 		_freshRun = false;
 		_runMapFile = Saved.Run?.MapFile ?? MapFile;
+		Saved = ElderMeetings.Resume(Saved, session, out _firstMeeting); // not written here: the next save point writes it
 		GD.Print($"GameFlow: continued run on map '{session.Map.Graph.Id}', seed {session.Seed}, health {session.Run.Health}");
 		Adopt(session);
 		Router.ContinueRun();
@@ -508,6 +527,7 @@ public partial class GameFlow : Node
 		if (scene is FightScene fight)
 		{
 			fight.Session = Session; // null = the bypass
+			fight.FirstMeeting = FirstMeeting; // Y3 (YOK-139): the callout shows on a first meeting only
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
 			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
 			fight.TutorialFinished += _ => MarkTutorialSeen();

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MapNodeStyles" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="MapNodeStyles" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/Ui/MapNodeStyles.cs" id="1"]
 [ext_resource type="Script" path="res://scripts/Ui/MapNodeStyle.cs" id="2"]
@@ -45,7 +45,29 @@ Label = ""
 Color = Color(0.45, 0.42, 0.38, 1)
 Icon = "?"
 
+[sub_resource type="Resource" id="twist_grip"]
+script = ExtResource("2")
+Type = "twist-grip"
+Label = "Unbreakable throws"
+Color = Color(0.72, 0.2, 0.16, 1)
+Icon = "G"
+
+[sub_resource type="Resource" id="twist_armour"]
+script = ExtResource("2")
+Type = "twist-armour"
+Label = "Special armour"
+Color = Color(0.72, 0.2, 0.16, 1)
+Icon = "A"
+
+[sub_resource type="Resource" id="twist_reflect"]
+script = ExtResource("2")
+Type = "twist-reflect"
+Label = "Reflects repeats"
+Color = Color(0.72, 0.2, 0.16, 1)
+Icon = "R"
+
 [resource]
 script = ExtResource("1")
 Styles = Array[Object]([SubResource("duel"), SubResource("elder"), SubResource("boss"), SubResource("merchant"), SubResource("dojo")])
 Fallback = SubResource("fallback")
+TwistIcons = Array[Object]([SubResource("twist_grip"), SubResource("twist_armour"), SubResource("twist_reflect")])

@@ -43,7 +43,7 @@ public sealed class ReplayRecorder
 
 	static FighterSetup Capture(Fighter f)
 	{
-		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot };
+		var s = new FighterSetup { Scheme = f.Input.Scheme.ToString(), CopiedSlot = (int)f.CopiedSlot, PushWidth = f.PushWidth };
 		foreach (var mv in f.Moves) s.Moves.Add(new KitEntry { Id = mv.Id, Fp = Fingerprint.Of(mv) });
 		for (int i = 1; i < f.Specials.Length; i++)
 			if (f.Specials[i] is { } sp)
@@ -54,6 +54,7 @@ public sealed class ReplayRecorder
 				});
 		foreach (var c in f.CancelRules)
 			s.CancelRules.Add(new CancelEntry { Id = c.Id, From = c.From, Into = c.Into, OnHit = c.OnHit, OnBlock = c.OnBlock, OnWhiff = c.OnWhiff });
+		if (f.Twist is { } t) { s.Twist = t.Id; s.TwistFp = Fingerprint.Of(t); } // YOK-90
 		return s;
 	}
 

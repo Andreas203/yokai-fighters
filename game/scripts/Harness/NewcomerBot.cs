@@ -1,0 +1,280 @@
+using System;
+using System.Collections.Generic;
+using YokaiFighters.Ai;
+using YokaiFighters.Sim;
+
+namespace YokaiFighters.Harness;
+
+/// <summary>
+/// YOK-26: what Ryo's own fighter can do, as the player knows it from his move list: ground normals (button +
+/// direction), the throw buttons, and which special slots are filled. Built once at fight start from Ryo's
+/// fighter (his own kit, never the opponent's state or input).
+/// </summary>
+public sealed class BotKit
+{
+	public readonly record struct Press(InputBits Bits, int Frames);
+
+	public IReadOnlyList<Press> Normals { get; }
+	/// <summary>Filled slots A-D with each special's total frames.</summary>
+	public IReadOnlyList<(SpecialSlot Slot, int Frames)> Specials { get; }
+	public Press Throw { get; }
+
+	BotKit(List<Press> normals, List<(SpecialSlot, int)> specials, Press thrw)
+	{
+		Normals = normals;
+		Specials = specials;
+		Throw = thrw;
+	}
+
+	public static BotKit From(Fighter f)
+	{
+		var normals = new List<Press>();
+		Press thrw = default;
+		foreach (var m in f.Moves)
+		{
+			if (m.IsThrow) { if (thrw.Bits == InputBits.None) thrw = new Press(m.ThrowButtons, m.TotalFrames); continue; }
+			if (!m.IsNormal || m.Air) continue;
+			normals.Add(new Press(m.Button | DirectionBits(m.DirectionMask), m.TotalFrames));
+		}
+		var specials = new List<(SpecialSlot, int)>();
+		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+			if (f.Specials[s] is { } eq) specials.Add(((SpecialSlot)s, eq.Move.TotalFrames));
+		return new BotKit(normals, specials, thrw);
+	}
+
+	/// <summary>
+	/// The direction a normal is pressed with, as numpad bits for facing right (the bot flips them by facing):
+	/// none when the move takes any direction or neutral, else its lowest listed numpad direction.
+	/// </summary>
+	static InputBits DirectionBits(int mask)
+	{
+		if (mask == 0 || (mask & (1 << 5)) != 0) return InputBits.None;
+		for (int d = 1; d <= 9; d++) if ((mask & (1 << d)) != 0) return Numpad.ToBits(d, 1);
+		return InputBits.None;
+	}
+}
+
+/// <summary>
+/// YOK-26: the player-side newcomer bot for one fight, on Kihon (K2). Like the yokai AI (P6) it is fed
+/// <see cref="AiView"/> snapshots only and acts on the one <see cref="BotFightConfig.ReactionFrames"/> ticks old,
+/// so it reacts to what is on screen, never to the opponent's buttons. It outputs raw buttons only (no slot
+/// requests): normals = button (+ direction), specials = Special + direction (neutral A, forward B, back C,
+/// down D), throw = the throw buttons. Newcomer habits, all from data: decides every <c>decide_every</c> ticks,
+/// guards (standing) against a seen threat with <c>block_pct</c>, anti-airs a seen jump with <c>anti_air_pct</c>, picks
+/// neutral actions by weight with simple spacing, and on <c>mistake_pct</c> of its decisions presses a random
+/// normal whatever the range. The one thing it reads off the live screen is its own fighter (whether its move is
+/// over), never the opponent. No EX, burst, throw breaks or crouch guard. Deterministic: one seeded <see cref="SimRng"/>.
+/// </summary>
+public sealed class NewcomerBot
+{
+	public const int Self = 0;
+
+	enum PlanKind { None, Walk, Wait, Block, Attack }
+
+	readonly BotFightConfig _cfg;
+	readonly BotKit _kit;
+	readonly SimRng _rng;
+	readonly AiView?[] _seen;
+	readonly BotKit.Press? _antiAir;
+	int _calls, _nextDecision;
+	bool _threatRolled;
+	AiView? _prev;
+	readonly List<(InputBits Bits, int Ticks)> _steps = new();
+	int _step, _stepTick, _sincePress;
+	PlanKind _plan;
+
+	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
+	public BotStats Stats { get; } = new();
+
+	public NewcomerBot(BotFightConfig cfg, BotKit kit, uint seed)
+	{
+		_cfg = cfg;
+		_kit = kit;
+		_rng = new SimRng(seed == 0 ? 1u : seed);
+		_seen = new AiView?[cfg.ReactionFrames];
+		foreach (var n in kit.Normals)
+			if ((n.Bits & InputBits.Attacks) == cfg.AntiAirButton) { _antiAir = n; break; }
+		if (_antiAir is null && kit.Normals.Count > 0) _antiAir = kit.Normals[0];
+	}
+
+	/// <summary>Feed this tick's screen; returns Ryo's raw input for the next sim step.</summary>
+	public FighterInput Next(AiView now)
+	{
+		int n = _seen.Length;
+		_seen[_calls % n] = now;
+		AiView view = _calls >= n - 1 ? _seen[(_calls - n + 1) % n]! : _seen[0]!;
+		_calls++;
+		AiView? prev = _prev;
+		_prev = view;
+		if (view.Phase != MatchPhase.Fighting) { Clear(); return FighterInput.None; }
+
+		// Its own fighter it reads off the live screen: a move that is over, or a press that never came out, ends the attack plan.
+		FighterView me = now.Fighter(Self);
+		if (_plan == PlanKind.Attack && _sincePress >= 2 && me.State == FighterState.Idle) Clear();
+
+		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
+		bool interruptible = _plan is PlanKind.None or PlanKind.Walk or PlanKind.Wait;
+		bool jumpShown = false;
+		if (prev is not null && prev.Tick != view.Tick)
+		{
+			FighterView po = prev.Fighter(1 - Self);
+			bool attackShown = o.Threatening && (!po.Threatening || po.MoveId != o.MoveId || o.MoveFrame < po.MoveFrame);
+			if (attackShown || Shots(view) > Shots(prev)) _threatRolled = false; // a new threat gets its own roll
+			jumpShown = o.Airborne && !po.Airborne;
+		}
+		// A threat = a swing in progress or one of the opponent's projectiles on screen. The bot rolls block_pct once per
+		// threat, on the first tick it sees it while free to react (not mid-move); a guard, once up, is held while it lasts.
+		bool threat = o.Threatening || Shots(view) > 0;
+		if (!threat) _threatRolled = false;
+		if (threat && interruptible && !_threatRolled)
+		{
+			_threatRolled = true;
+			if (Roll(_cfg.BlockPct))
+			{
+				Start(PlanKind.Block, (Back(s, o), _cfg.BlockTicks));
+				Stats.Blocks++;
+			}
+		}
+		else if (jumpShown && interruptible && _antiAir is { } aa && Roll(_cfg.AntiAirPct))
+		{
+			Start(PlanKind.Attack, (aa.Bits, 1), (InputBits.None, Math.Max(1, aa.Frames - 1)));
+			Stats.AntiAirs++;
+		}
+		if (_plan == PlanKind.Block && threat) _stepTick = 0;
+
+		if (_plan == PlanKind.None && _calls >= _nextDecision)
+		{
+			Decide(s, o);
+			_nextDecision = _calls + _cfg.DecideEvery;
+		}
+		return Emit(me.Facing);
+	}
+
+	void Decide(FighterView s, FighterView o)
+	{
+		int dist = Math.Abs(o.X - s.X) / SimConfig.Scale;
+		if (_kit.Normals.Count > 0 && Roll(_cfg.MistakePct))
+		{
+			Normal(_kit.Normals[_rng.Next(_kit.Normals.Count)]); // a button pressed whatever the range
+			Stats.Mistakes++;
+			return;
+		}
+		int walk = _cfg.WalkWeight, normal = _kit.Normals.Count > 0 ? _cfg.NormalWeight : 0, special = _kit.Specials.Count > 0 ? _cfg.SpecialWeight : 0;
+		int thrw = _kit.Throw.Bits != InputBits.None ? _cfg.ThrowWeight : 0, jump = _cfg.JumpWeight, wait = _cfg.WaitWeight;
+		int total = walk + normal + special + thrw + jump + wait;
+		if (total == 0) { Start(PlanKind.Wait, (InputBits.None, _cfg.WaitTicks)); return; }
+		int r = _rng.Next(total);
+		if ((r -= walk) < 0) Walk(s, o, dist);
+		else if ((r -= normal) < 0)
+		{
+			if (dist <= _cfg.PokeRange) Normal(_kit.Normals[_rng.Next(_kit.Normals.Count)]);
+			else Approach(s, o);
+		}
+		else if ((r -= special) < 0)
+		{
+			var (slot, frames) = _kit.Specials[_rng.Next(_kit.Specials.Count)];
+			Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.None, Math.Max(1, frames - 1)));
+			Stats.Specials++;
+		}
+		else if ((r -= thrw) < 0)
+		{
+			if (dist <= _cfg.ThrowRange)
+			{
+				Start(PlanKind.Attack, (_kit.Throw.Bits, 1), (InputBits.None, Math.Max(1, _kit.Throw.Frames - 1)));
+				Stats.Throws++;
+			}
+			else Approach(s, o);
+		}
+		else if ((r -= jump) < 0)
+		{
+			InputBits drift = _rng.Next(2) == 0 ? InputBits.None : InputBits.Right; // forward, as facing right (flipped in Emit)
+			Start(PlanKind.Attack, (InputBits.Up | drift, 2), (InputBits.None, SimConfig.Default.JumpFrames));
+			Stats.Jumps++;
+		}
+		else Start(PlanKind.Wait, (InputBits.None, _cfg.WaitTicks));
+	}
+
+	void Walk(FighterView s, FighterView o, int dist)
+	{
+		if (dist > _cfg.PreferredMax) Approach(s, o);
+		else if (dist < _cfg.PreferredMin) Start(PlanKind.Walk, (Back(s, o), _cfg.WalkTicks));
+		else Start(PlanKind.Walk, (_rng.Next(2) == 0 ? Forward(s, o) : Back(s, o), _cfg.WalkTicks));
+		Stats.Walks++;
+	}
+
+	void Approach(FighterView s, FighterView o) => Start(PlanKind.Walk, (Forward(s, o), _cfg.WalkTicks));
+
+	void Normal(BotKit.Press p)
+	{
+		Start(PlanKind.Attack, (p.Bits, 1), (InputBits.None, Math.Max(1, p.Frames - 1)));
+		Stats.Normals++;
+	}
+
+	/// <summary>K2 / E18: neutral = A, forward = B, back = C, down = D (as numpad, flipped by facing in <see cref="Emit"/>).</summary>
+	static InputBits SlotDirection(SpecialSlot slot) => slot switch
+	{
+		SpecialSlot.B => Numpad.ToBits(6, 1),
+		SpecialSlot.C => Numpad.ToBits(4, 1),
+		SpecialSlot.D => Numpad.ToBits(2, 1),
+		_ => InputBits.None,
+	};
+
+	void Start(PlanKind kind, params (InputBits, int)[] steps)
+	{
+		_plan = kind;
+		_steps.Clear();
+		_steps.AddRange(steps);
+		_step = _stepTick = _sincePress = 0;
+	}
+
+	void Clear()
+	{
+		_plan = PlanKind.None;
+		_steps.Clear();
+	}
+
+	/// <summary>
+	/// The current plan step. Attack plans store directions as if facing right and are flipped by the fighter's
+	/// facing on the live screen; walk and block plans already hold absolute directions. Buttons go down on a step's first tick only.
+	/// </summary>
+	FighterInput Emit(int facing)
+	{
+		if (_plan == PlanKind.None || _step >= _steps.Count) { Clear(); return FighterInput.None; }
+		var (bits, ticks) = _steps[_step];
+		_sincePress++;
+		if (_plan == PlanKind.Attack) bits = Flip(bits, facing);
+		if (_stepTick > 0) bits &= ~(InputBits.Attacks | InputBits.Special);
+		if (++_stepTick >= ticks) { _step++; _stepTick = 0; }
+		if (_step >= _steps.Count) _plan = PlanKind.None;
+		return new FighterInput(bits);
+	}
+
+	static InputBits Flip(InputBits bits, int facing)
+	{
+		if (facing >= 0) return bits;
+		bool l = (bits & InputBits.Left) != 0, r = (bits & InputBits.Right) != 0;
+		bits &= ~(InputBits.Left | InputBits.Right);
+		if (l) bits |= InputBits.Right;
+		if (r) bits |= InputBits.Left;
+		return bits;
+	}
+
+	static int Side(FighterView s, FighterView o) => o.X != s.X ? Math.Sign(o.X - s.X) : s.Facing;
+	static InputBits Forward(FighterView s, FighterView o) => Side(s, o) > 0 ? InputBits.Right : InputBits.Left;
+	static InputBits Back(FighterView s, FighterView o) => Side(s, o) > 0 ? InputBits.Left : InputBits.Right;
+
+	static int Shots(AiView v)
+	{
+		int c = 0;
+		foreach (var p in v.Projectiles) if (p.Owner != Self) c++;
+		return c;
+	}
+
+	bool Roll(int pct) => pct > 0 && _rng.Next(100) < pct;
+}
+
+/// <summary>YOK-26: counts of the bot's choices in one fight.</summary>
+public sealed class BotStats
+{
+	public int Walks, Normals, Specials, Throws, Jumps, Blocks, AntiAirs, Mistakes;
+}

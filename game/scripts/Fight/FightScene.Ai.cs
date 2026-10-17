@@ -63,15 +63,9 @@ public partial class FightScene
 	}
 
 	/// <summary>
-	/// YOK-57, E22: the fight the AI is in. The boss node (the copy-lock node, <see cref="RunSession.IsCopyLockNode"/>)
-	/// or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder; anything else, or no node, = Standard
-	/// (no EX, no burst whatever the profile says).
+	/// YOK-57, E22: the fight the AI is in; see <see cref="AiFightTiers.Of"/> (shared with the YOK-26 harness).
 	/// </summary>
-	public static AiFightTier TierOf(NodeContext? node) =>
-		node is null ? AiFightTier.Standard
-		: RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
-		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
-		: AiFightTier.Standard;
+	public static AiFightTier TierOf(NodeContext? node) => AiFightTiers.Of(node);
 
 	public void SwapTemperament()
 	{

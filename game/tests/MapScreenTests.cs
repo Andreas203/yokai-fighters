@@ -231,7 +231,7 @@ public static class MapScreenTests
 		Assert.Equal("AFTER ROW 8", s.HeaderTexts[8], "the boss column");
 		Assert.True(s.DetailNameText.EndsWith("row 5") && s.DetailNameText.Contains("Elder duel"), "detail names the focused node: " + s.DetailNameText);
 		Assert.True(s.DetailRewardText.Contains("Pays 50 coins") && s.DetailRewardText.Contains("rare"), "reward line from the node table: " + s.DetailRewardText);
-		Assert.True(!s.DetailTwist.Visible, "the twist slot stays hidden until the view gives a twist (YOK-90)");
+		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Twist: "), "YOK-139: the focused elder's twist line (data text, or a marked placeholder) shows: " + s.DetailTwist.Text);
 		Assert.Equal(6, s.LegendStateCount, "a swatch per node state");
 		Assert.True(s.LegendTypesText.Contains("merchant") && s.LegendTypesText.Contains("dojo") && s.LegendTypesText.Contains("elder"), "legend types come from the styles resource");
 		string before = sess.StateHash().ToString();

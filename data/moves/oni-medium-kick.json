@@ -1,0 +1,71 @@
+{
+  "kind": "normal",
+  "id": "oni-medium-kick",
+  "name": "Oni heavy club swing",
+  "status": "proposed",
+  "source": "oni",
+  "clip": "oni-medium-kick",
+  "rules": [
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2",
+    "A8"
+  ],
+  "input": {
+    "button": "MK"
+  },
+  "frame_data": {
+    "startup": 15,
+    "active": 6,
+    "recovery": 7,
+    "damage": 55,
+    "hitstun": 18,
+    "blockstun": 14,
+    "strength": "medium",
+    "hitboxes": [
+      {
+        "frames": [
+          16,
+          21
+        ],
+        "rect": {
+          "x": 70,
+          "y": 170,
+          "w": 230,
+          "h": 100
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          28
+        ],
+        "rect": {
+          "x": -45,
+          "y": 0,
+          "w": 110,
+          "h": 415
+        }
+      },
+      {
+        "frames": [
+          12,
+          24
+        ],
+        "rect": {
+          "x": 60,
+          "y": 250,
+          "w": 110,
+          "h": 70
+        }
+      }
+    ]
+  },
+  "notes": "Clip oni-medium-kick (28 frames via a slower retime curve, hit 16-21), the same swing take as the MP: 15/6/7. Delta against the rules.md first-pass 7/3/14: +8 startup, +3 active, -7 recovery; clip timing kept (F2), flagged. Same pose as the MP, so the same hitbox; it differs by a slower wind-up. Hitstun and blockstun are placeholders at the Kitsune MK scale. Boxes estimated, not yet re-placed from the posed rig."
+}

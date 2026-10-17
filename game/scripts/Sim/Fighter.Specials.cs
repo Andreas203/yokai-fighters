@@ -57,6 +57,19 @@ public sealed partial class Fighter
 
 	public const int MaxCancelRules = 2;
 
+	/// <summary>
+	/// YOK-90: the elder twist this fighter fights with (the elder of an elder node, whoever stands in), or null.
+	/// Fight setup, like the held cancel rules: Reset keeps it.
+	/// </summary>
+	public ElderTwist? Twist;
+	/// <summary>
+	/// YOK-90, reflect: which use in a row the special being played is (1 = first; 0 = not counted). Counted only
+	/// when the opponent holds a reflect twist, so other fights hash as before.
+	/// </summary>
+	public int ActiveRepeat;
+	/// <summary>YOK-90, armour: hits the special being played has taken under the twist's armour.</summary>
+	public int TwistArmourTaken;
+
 	public void Equip(SpecialSlot slot, SpecialData data, int level = 1, ModifierData? modifier = null, SimConfig? defaults = null)
 	{
 		if (slot == SpecialSlot.None) throw new ArgumentException("slot A-D", nameof(slot));
@@ -104,6 +117,8 @@ public sealed partial class Fighter
 		ActivePrecision = false;
 		SpecialButtons = InputBits.None;
 		MoveBlocked = false;
+		ActiveRepeat = 0;
+		TwistArmourTaken = 0;
 	}
 
 	internal ulong HashSpecialState(ulong h)
@@ -111,6 +126,12 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (int)ActiveSpecial | (ActiveEx ? 16 : 0) | (ActivePrecision ? 32 : 0) | (MoveBlocked ? 64 : 0));
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
+		if (Twist is { } tw) // YOK-90: mixed only in twist fights, so every other recording keeps its hashes
+		{
+			h = Fnv.MixString(h, tw.Id);
+			h = Fnv.Mix(h, ActiveRepeat | TwistArmourTaken << 8);
+		}
+		else if (ActiveRepeat != 0) h = Fnv.Mix(h, ActiveRepeat);
 		for (int i = 1; i < Specials.Length; i++)
 		{
 			h = Fnv.Mix(h, Specials[i]?.Level ?? 0);
