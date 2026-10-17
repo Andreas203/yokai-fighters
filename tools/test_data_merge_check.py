@@ -134,6 +134,16 @@ class ScopeAndVerdictTest(unittest.TestCase):
         self.assertEqual(code, ["data/attic/GuardTests.cs", "data/moves/README.md", "data/schema/special.schema.json",
                                 "data/tools/run.py", "docs/pipeline.md", "game/x.cs"])
 
+    def test_scope_of_treats_symlinks_submodules_and_odd_paths_as_code(self):
+        content, code = dmc.scope_of([("data/moves/a.json", "100644", "100644"),
+                                      ("data/moves/new.json", "000000", "100644"),
+                                      ("data/moves/evil.json", "000000", "120000"),
+                                      ("data/moves/sub.json", "160000", "160000"),
+                                      ("data\\evil.json", "000000", "100644"),
+                                      ("data/../game/x.json", "000000", "100644")])
+        self.assertEqual(content, ["data/moves/a.json", "data/moves/new.json"])
+        self.assertEqual(len(code), 4, code)
+
     def _repo_with_rename(self, src, dest):
         """A temp git repo whose branch `pr` moves `src` to `dest` (git mv) off `main`."""
         tmp = tempfile.TemporaryDirectory(prefix="yok34-git-")
@@ -167,13 +177,13 @@ class ScopeAndVerdictTest(unittest.TestCase):
 
     def _verdict(self, changed):
         """Every step passes (stubbed); only the change scope decides."""
-        saved = (dmc.changed_files, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
+        saved = (dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
                  dmc.find_godot, dmc.prepare_godot)
 
         def ok(*a):
             a[1].status = "pass"
         try:
-            dmc.changed_files = lambda root, base: changed
+            dmc.changed_entries = lambda root, base: [(p, "100644", "100644") for p in changed]
             dmc.step_schema = dmc.step_rules = ok
             dmc.step_harness = lambda root, st, *a: setattr(st, "status", "pass")
             dmc.step_suite = lambda root, st, *a: setattr(st, "status", "pass")
@@ -182,7 +192,7 @@ class ScopeAndVerdictTest(unittest.TestCase):
             out = io.StringIO()
             return dmc.main(["--base", "origin/main"], out=out), out.getvalue()
         finally:
-            (dmc.changed_files, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
+            (dmc.changed_entries, dmc.step_schema, dmc.step_rules, dmc.step_harness, dmc.step_suite,
              dmc.find_godot, dmc.prepare_godot) = saved
 
     def test_data_only_change_is_mergeable(self):

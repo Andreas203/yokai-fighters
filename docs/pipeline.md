@@ -33,7 +33,7 @@ The check stops at the first step that fails, so a later step never runs on cont
 |---|---|---|---|
 | 1 | schema | `tools/validate_data.py`: every file against `data/schema/`, ids, rule IDs, clip references, hitboxes in the active window (YOK-12) | any file is invalid |
 | 2 | rules | `tools/check_rules.py`: the written rules over the whole content set, each citing its rules.md ID and GDD section (YOK-35): slots (A1), one modifier per special (A2), cancel-rule caps (X2, A11/X4), once per combo and cancel loops (X3), three levels (A3-A5, E21, P1), meter for EX only (C5, E16), Kata and Kihon on every special (K1, K2, E18), trials with Kihon inputs (R7, K2) | any violation |
-| 3 | harness | The whole-run harness (YOK-26): the newcomer Kihon bot plays the batch headless on this `data/` | the harness errors, or a run is missing or has no won/lost outcome |
+| 3 | harness | The whole-run harness (YOK-26): the newcomer Kihon bot plays the batch headless on this `data/` | the harness errors, writes no file or more than one, the file is not a batch, or a run is missing, not an object or has no won/lost outcome |
 | 4 | suite | The full headless Godot test suite (`tests/test_runner.tscn`) | any test fails or the runner does not finish |
 
 Not gating, but listed in the report for the reviewer:
@@ -56,7 +56,7 @@ rule, a loop through rules held at once.
 | 0 | MERGEABLE | Every step passed and the change touches only content in `data/`. Ready for the designer's review. |
 | 1 | FAIL | A step failed. The report's first line names it (`DATA MERGE CHECK: FAIL at step 2 (rules: ...)`), with the failing files and rule IDs below. |
 | 2 | SETUP | The check could not run (no Godot, no jsonschema, build or import failed, bad `--base`). Says nothing about the change. |
-| 3 | REVIEW | Every step passed, but the change also touches code: anything but a `.json` file under `data/`, or anything in `data/schema/` (the schemas are the C# loader's contract). A rename counts both paths, so moving a test from `game/` into `data/` is a code change. Code goes through Code Critic, Test Breaker and designer review as before. |
+| 3 | REVIEW | Every step passed, but the change also touches code: anything but a `.json` file under `data/`, or anything in `data/schema/` (the schemas are the C# loader's contract). A rename counts both paths, so moving a test from `game/` into `data/` is a code change. A symlink or submodule (git mode 120000/160000) is code whatever its name, and so is a path with a `..` segment or a backslash in a root file name. Code goes through Code Critic, Test Breaker and designer review as before. |
 | 4 | INCOMPLETE | `--only` skipped steps; no merge verdict. |
 
 ## CI hook
@@ -73,6 +73,20 @@ runs on the PR's `data/`, so a PR cannot edit the checker to call itself mergeab
 `tools/` or `game/` is a code change anyway and gets REVIEW at best. While the base has no checker yet
 (the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW. Every action is
 pinned to a commit SHA, with its version tag in a comment.
+
+## Open questions for the designer
+
+The current behaviour, until the designer decides otherwise (probes in
+`tools/test_data_merge_check_breaker.py` that expect something else stay failing on purpose):
+
+- **Empty diff.** A `--base` diff with no changed files at all gives MERGEABLE when every step passes
+  (`test_empty_diff_is_not_a_merge_verdict` expects no merge verdict).
+- **Dirty working tree.** The scope comes from committed history (`REF...HEAD`); uncommitted edits, in
+  `game/` or anywhere, are not classified, though the steps run on the files as they are on disk. In CI
+  the tree is always clean (`test_uncommitted_game_change_does_not_pass_as_data_only`).
+- **Small batches.** `--runs 1 --no-build` can give MERGEABLE: the run count and the build are not part
+  of the verdict (`test_one_run_batch_is_not_a_mergeable_verdict`). CI always uses the default 200 runs
+  and builds.
 
 ## Samples
 

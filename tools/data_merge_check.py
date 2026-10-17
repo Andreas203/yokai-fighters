@@ -21,7 +21,7 @@ Verdicts (exit code):
   1 FAIL        a step failed; the report names it and why
   2 SETUP       the check could not run (no Godot, no jsonschema, build failed, bad --base)
   3 REVIEW      every step passed but the change also touches code (anything but a .json file in data/,
-                or data/schema/; a rename counts both paths): it goes to code review (Code Critic, Test Breaker, designer)
+                or data/schema/; a rename counts both paths; a symlink or submodule is code): it goes to code review
   4 INCOMPLETE  every step that ran passed, but --only skipped some: not a merge verdict
 
 MERGEABLE is a verdict only. Nothing here merges: the designer still reviews and merges every
@@ -93,24 +93,55 @@ def run(cmd: list[str], cwd: Path | None = None, timeout: int = 1800) -> tuple[i
 
 def is_content(path: str) -> bool:
     """Content the data path may carry: a JSON file under data/, outside data/schema/ (the C# loader's
-    contract). Anything else under data/ (scripts, binaries, other text) goes to review like code."""
-    p = path.replace("\\", "/")
-    return p.startswith("data/") and not p.startswith("data/schema/") and p.endswith(".json")
+    contract). Anything else under data/ (scripts, binaries, other text) goes to review like code.
+    Paths are git's (always `/`): a backslash is part of a file name, never a separator, and a path with an
+    empty, `.` or `..` segment is never content."""
+    parts = path.split("/")
+    if any(seg in ("", ".", "..") for seg in parts):
+        return False
+    return len(parts) > 1 and parts[0] == "data" and parts[1] != "schema" and path.endswith(".json")
 
 
-def classify(paths: list[str]) -> tuple[list[str], list[str]]:
-    content = sorted(p for p in paths if is_content(p))
-    code = sorted(p for p in paths if not is_content(p))
+def classify(paths: list[str], not_regular: set[str] = frozenset()) -> tuple[list[str], list[str]]:
+    """(content, code). `not_regular`: paths git records as something other than a plain file (a symlink,
+    a submodule); they are code whatever their name, since a symlink can make the loader read a code file."""
+    content = sorted(p for p in paths if is_content(p) and p not in not_regular)
+    code = sorted(p for p in paths if p not in content)
     return content, code
 
 
-def changed_files(root: Path, base: str) -> list[str]:
-    # --no-renames: a rename is a delete plus an add, so both paths are classified (a test moved out of
-    # game/ into data/ is a code change). -z: paths come raw, never quoted.
-    code, out, err = run_split(["git", "-C", str(root), "diff", "--no-renames", "--name-only", "-z", f"{base}...HEAD"])
+REGULAR_MODES = {"100644", "100755", "000000"}   # plain files, and the missing side of an add or delete
+
+
+def changed_entries(root: Path, base: str) -> list[tuple[str, str, str]]:
+    """(path, old mode, new mode) for every file changed in REF...HEAD.
+    --no-renames: a rename is a delete plus an add, so both paths are classified (a test moved out of
+    game/ into data/ is a code change). --raw: the file modes, so a symlink (120000) or a submodule (160000)
+    is seen. -z: paths come raw, never quoted."""
+    code, out, err = run_split(["git", "-C", str(root), "diff", "--raw", "--no-renames", "--no-abbrev", "-z",
+                                f"{base}...HEAD"])
     if code != 0:
         raise RuntimeError(f"git diff {base}...HEAD failed: {(err or out).strip()[:300]}")
-    return [p for p in out.split("\0") if p]
+    fields = out.split("\0")
+    entries = []
+    i = 0
+    while i + 1 < len(fields):
+        meta, path = fields[i], fields[i + 1]
+        if not meta.startswith(":"):
+            raise RuntimeError(f"unexpected git diff --raw output near {meta[:80]!r}")
+        old_mode, new_mode = meta[1:].split(" ")[:2]
+        entries.append((path, old_mode, new_mode))
+        i += 2
+    return entries
+
+
+def changed_files(root: Path, base: str) -> list[str]:
+    return [p for p, _, _ in changed_entries(root, base)]
+
+
+def scope_of(entries: list[tuple[str, str, str]]) -> tuple[list[str], list[str]]:
+    odd = {p for p, a, b in entries if a not in REGULAR_MODES or b not in REGULAR_MODES}
+    return classify([p for p, _, _ in entries], odd)
 
 
 # --- steps -------------------------------------------------------------------------------------
@@ -136,21 +167,26 @@ def step_rules(root: Path, st: Step, py: str) -> None:
     except ValueError:
         st.status, st.summary, st.details = "setup", f"check_rules gave no JSON on stdout (exit {code})", tail(out + err)
         return
-    vs, confirm = rep.get("violations", []), rep.get("harness_must_confirm", [])
+    vs, confirm = (rep.get("violations"), rep.get("harness_must_confirm", [])) if isinstance(rep, dict) else (None, None)
+    if not isinstance(vs, list) or not isinstance(confirm, list):
+        st.status, st.summary = "setup", f"check_rules gave JSON that is not its report (exit {code})"
+        st.details = tail(out + err)
+        return
 
     def line(v):
+        v = v if isinstance(v, dict) else {"message": repr(v)}
         return f"{v.get('file') or '(data)'}: {v.get('rule') or '-'} [{v.get('check')}] {v.get('message')}"
 
     st.summary = f"{len(vs)} violation(s), {len(confirm)} item(s) the harness must confirm"
     # The whole-run harness plays runs, not dojo trials or cancel chains: these stay runtime items for the
     # game suite and playtests, listed so the reviewer sees them (YOK-35 "harness must confirm").
     st.notes = ["runtime item, not gating and not played by the whole-run harness: " + line(v) for v in confirm]
-    if code == 0:
+    if code == 0 and not vs:
         st.status = "pass"
-    elif code == 1:
-        st.status, st.details = "fail", [line(v) for v in vs][:MAX_LINES]
+    elif code in (0, 1):   # a listed violation fails the step even if the exit code says otherwise
+        st.status, st.details = "fail", [line(v) for v in vs][:MAX_LINES] or [f"check_rules exit {code} with no violation listed"]
     else:
-        st.status, st.details = "setup", [line(v) for v in vs] or tail(out)
+        st.status, st.details = "setup", [line(v) for v in vs] or tail(out + err)
 
 
 def prepare_godot(game: Path, godot: str, st: Step, build: bool) -> bool:
@@ -179,19 +215,30 @@ def step_harness(root: Path, st: Step, godot: str, runs: int, seed: int) -> None
             st.summary = f"the harness did not finish (exit {code}, {len(files)} result file(s))"
             st.details = [ln for ln in tail(out, 400) if "RunHarness" in ln or "Exception" in ln or "rror" in ln][:MAX_LINES] or tail(out)
             return
+        if len(files) > 1:   # one batch writes one file; an extra one must never hide behind the first
+            st.status = "fail"
+            st.summary = f"the harness wrote {len(files)} result files; one batch writes exactly one"
+            st.details = [f.name for f in files][:MAX_LINES]
+            return
         try:
             batch = json.loads(files[0].read_text(encoding="utf-8"))
         except ValueError as e:
             st.status, st.summary = "fail", f"harness results are not JSON: {e}"
             return
+    if not isinstance(batch, dict) or not isinstance(batch.get("runs"), list):
+        st.status, st.summary = "fail", "harness results are not a batch (an object with a list of runs)"
+        return
+    recorded = batch["runs"]
     played = batch.get("runs_played")
-    bad = [r.get("seed") for r in batch.get("runs", []) if r.get("outcome") not in HARNESS_OUTCOMES]
     problems = []
-    if played != runs or len(batch.get("runs", [])) != runs:
-        problems.append(f"{played!r} runs played, {len(batch.get('runs', []))} recorded; asked for {runs}")
+    if any(not isinstance(r, dict) for r in recorded):
+        problems.append(f"run entries that are not objects at {[i for i, r in enumerate(recorded) if not isinstance(r, dict)][:10]}")
+    bad = [r.get("seed") for r in recorded if isinstance(r, dict) and r.get("outcome") not in HARNESS_OUTCOMES]
+    if played != runs or len(recorded) != runs:
+        problems.append(f"{played!r} runs played, {len(recorded)} recorded; asked for {runs}")
     if bad:
         problems.append(f"runs without a won/lost outcome, seeds {bad[:10]}")
-    s = batch.get("summary", {})
+    s = batch.get("summary") if isinstance(batch.get("summary"), dict) else {}
     st.notes = [f"for the Sparring Partner, not gating: reached Tanuki {s.get('reach_tanuki_pct')}% "
                 f"(R5 target {s.get('R5_reach_target_pct')}), beat {s.get('beat_tanuki_pct_of_reached')}% of those "
                 f"(R5 target {s.get('R5_beat_target_pct')}), runs ended by row {s.get('runs_ended_by_row')}, "
@@ -286,7 +333,7 @@ def main(argv=None, out=sys.stdout) -> int:
     verdict = None
     if a.base:
         try:
-            content, code = classify(changed_files(root, a.base))
+            content, code = scope_of(changed_entries(root, a.base))
             scope.update(checked=True, content=content, code=code)
         except RuntimeError as e:
             steps[0].status, steps[0].summary = "setup", str(e)
