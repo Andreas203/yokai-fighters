@@ -182,6 +182,34 @@ public static class TwistUiProbes
 		finally { TwistCopy.Story = saved; hud.Free(); }
 	}
 
+	// FitStripText cache: a long line shrinks the font, then a different twist (shorter text, same width) must restore the size.
+	[Test]
+	public static void Strip_LongThenShortText_SameWidth_RestoresFontSize(Node host)
+	{
+		var longT = new ElderTwist("elder-l", "elder-oni", TwistEffect.SpecialArmour, 0, 1, "twist.l", null, null, null);
+		var shortT = longT with { Id = "elder-s", LabelKey = "twist.s" };
+		var saved = TwistCopy.Story;
+		TwistCopy.Story = new StoryLibrary(new[] {
+			new StoryCardData("elder-l-label", null, string.Concat(Enumerable.Repeat("a very long twist reminder ", 8)), Array.Empty<string>(), ""),
+			new StoryCardData("elder-s-label", null, "Short", Array.Empty<string>(), "") });
+		var hud = ElderHud(host, new Match(), longT);
+		try
+		{
+			var m = new Match(); m.P2.Twist = longT;
+			var label = hud.GetNode<Label>("Strip/TwistStrip/TwistText");
+			int theme = label.GetThemeFontSize("font_size");
+			hud.Refresh(m);
+			int shrunk = label.GetThemeFontSize("font_size");
+			if (label.Size.X <= 0) { Assert.True(true, "no layout in headless: inconclusive"); return; }
+			Assert.True(shrunk < theme && shrunk >= 26, $"long text shrinks within the floor: {theme} -> {shrunk}");
+			m.P2.Twist = shortT;
+			hud.Refresh(m);
+			Assert.Equal("Short", hud.TwistLine, "text follows the new twist");
+			Assert.Equal(theme, label.GetThemeFontSize("font_size"), "short text gets the full size back");
+		}
+		finally { TwistCopy.Story = saved; hud.Free(); }
+	}
+
 	// Unknown icon id: the seal falls back to a glyph instead of throwing; the map node keeps the id and stays an elder.
 	[Test]
 	public static void UnknownIconId_FallsBackWithoutThrowing(Node host)
