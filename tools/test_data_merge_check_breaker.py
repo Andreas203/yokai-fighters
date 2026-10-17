@@ -367,9 +367,36 @@ class HarnessProbes(unittest.TestCase):
         b.update(over)
         return b
 
-    def test_control_good_batch_is_mergeable_with_all_steps(self):
+    def test_control_good_batch_small_no_build_is_incomplete(self):
+        # designer 2026-10-17: fewer than 200 runs or --no-build is INCOMPLETE, never MERGEABLE
         code, text = self.run_harness(self.writes(self.good()))
+        self.assertEqual(code, dmc.INCOMPLETE, text)
+
+    def test_control_200_runs_with_build_is_mergeable(self):
+        saved = dmc.prepare_godot
+        dmc.prepare_godot = lambda *a, **k: True      # the build itself is stubbed; the flag is what is tested
+        try:
+            tmp, r = fake_root()
+            with tmp, tempfile.TemporaryDirectory() as gd:
+                g = fake_godot(gd, self.writes(self.good(200)))
+                code, text = run_main("--root", str(r), "--godot", g)
+        finally:
+            dmc.prepare_godot = saved
         self.assertEqual(code, dmc.MERGEABLE, text)
+
+    def test_199_runs_or_no_build_with_a_full_batch_is_incomplete(self):
+        saved = dmc.prepare_godot
+        dmc.prepare_godot = lambda *a, **k: True
+        try:
+            for extra, n in ((["--runs", "199"], 199), (["--no-build"], 200)):
+                with self.subTest(extra=extra):
+                    tmp, r = fake_root()
+                    with tmp, tempfile.TemporaryDirectory() as gd:
+                        g = fake_godot(gd, self.writes(self.good(n)))
+                        code, text = run_main("--root", str(r), "--godot", g, *(["--runs", "200"] if n == 200 else []), *extra)
+                    self.assertEqual(code, dmc.INCOMPLETE, text)
+        finally:
+            dmc.prepare_godot = saved
 
     def test_run_with_no_result_fails(self):
         b = self.good()
@@ -445,6 +472,262 @@ class HarnessProbes(unittest.TestCase):
             p.chmod(0o755)
             code, text = run_main("--root", str(r), "--no-build", "--godot", str(p), "--runs", "3")
         self.assertEqual(code, dmc.FAIL, text)
+
+
+class Round3Probes(Stubbed, unittest.TestCase):
+    def test_exit_5_is_not_mergeable_and_says_so(self):
+        tmp, r = repo()
+        with tmp:
+            code, text = self.verdict(r)
+        self.assertEqual(code, 5, text)
+        self.assertNotIn(code, (dmc.MERGEABLE, dmc.REVIEW, dmc.INCOMPLETE))
+        self.assertNotIn("Mergeable", text)
+        self.assertNotIn("MERGEABLE", text)
+
+    def test_exit_codes_are_distinct(self):
+        codes = [dmc.MERGEABLE, dmc.FAIL, dmc.SETUP, dmc.REVIEW, dmc.INCOMPLETE, dmc.NOTHING]
+        self.assertEqual(len(set(codes)), 6)
+
+    def test_nothing_to_merge_with_only_subset_is_still_5_or_incomplete_never_0(self):
+        tmp, r = repo()
+        with tmp:
+            code, text = self.verdict(r, "--only", "schema")
+        self.assertNotEqual(code, dmc.MERGEABLE, text)
+
+    def test_ignored_untracked_files_do_not_trigger_setup(self):
+        tmp, r = repo()
+        with tmp:
+            (r / ".git/info/exclude").write_text("game/bin/\n*.log\n")
+            write(r, "data/moves/b.json")
+            commit(r)
+            write(r, "game/bin/x.dll", "bin")
+            write(r, "run.log", "log")
+            code, text = self.verdict(r, "--runs", "200")
+        self.assertEqual(code, dmc.MERGEABLE, text)
+
+    def test_untracked_non_ignored_game_file_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            write(r, "game/new.cs", "x")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_staged_but_uncommitted_game_change_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            write(r, "game/tests/T.cs", "staged")
+            git(r, "add", "game/tests/T.cs")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_unstaged_deletion_of_game_file_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            (r / "game/tests/T.cs").unlink()
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_staged_rename_out_of_game_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            git(r, "mv", "game/tests/T.cs", "data/moves/T.json")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_odd_named_dirty_game_file_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            write(r, "game/we ird\nname.cs", "x")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_uncommitted_symlink_named_json_in_data_is_not_mergeable(self):
+        # the dirty-tree rule lets uncommitted data/*.json through; a symlink there is code (YOK-34 scope)
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            os.symlink("../../game/tests/T.cs", r / "data/moves/evil.json")
+            code, text = self.verdict(r)
+        self.assertNotEqual(code, dmc.MERGEABLE, text)
+
+    def test_dirty_schema_file_is_setup(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "data/moves/b.json")
+            commit(r)
+            write(r, "data/schema/x.json")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+    def test_dirty_check_runs_before_nothing_to_merge(self):
+        tmp, r = repo()
+        with tmp:
+            write(r, "game/new.cs", "x")
+            code, text = self.verdict(r)
+        self.assertEqual(code, dmc.SETUP, text)
+
+
+class ToolsOptionProbes(unittest.TestCase):
+    def test_roots_own_tools_cannot_override_tools_option(self):
+        # a PR's tools/ that always passes must not win over --tools (the base's)
+        tmp, r = fake_root()   # root/tools passes
+        with tmp, tempfile.TemporaryDirectory() as bt:
+            (Path(bt) / "validate_data.py").write_text("import sys;print('bad');sys.exit(1)")
+            (Path(bt) / "check_rules.py").write_text((r / "tools/check_rules.py").read_text())
+            code, text = run_main("--root", str(r), "--tools", bt, "--only", "schema,rules")
+        self.assertEqual(code, dmc.FAIL, text)
+
+    def test_validator_from_tools_gets_the_checked_roots_name(self):
+        tmp, r = fake_root(validate="import os,sys;sys.exit(0 if os.environ.get('YOK_CONTENT_ROOT')==os.path.realpath(os.getcwd()) else 1)")
+        with tmp:
+            code, text = run_main("--root", str(r), "--only", "schema")
+        self.assertEqual(code, dmc.INCOMPLETE, text)   # passes the step, skipped steps remain
+
+    def test_inherited_content_root_env_is_overridden(self):
+        tmp, r = fake_root(validate="import os,sys;sys.exit(0 if os.environ.get('YOK_CONTENT_ROOT')==os.path.realpath(os.getcwd()) else 1)")
+        old = os.environ.get("YOK_CONTENT_ROOT")
+        os.environ["YOK_CONTENT_ROOT"] = "/nonexistent-elsewhere"
+        try:
+            with tmp:
+                code, text = run_main("--root", str(r), "--only", "schema")
+        finally:
+            if old is None:
+                del os.environ["YOK_CONTENT_ROOT"]
+            else:
+                os.environ["YOK_CONTENT_ROOT"] = old
+        self.assertEqual(code, dmc.INCOMPLETE, text)
+
+    def test_missing_tools_dir_is_not_a_pass(self):
+        tmp, r = fake_root()
+        with tmp:
+            code, text = run_main("--root", str(r), "--tools", str(r / "nope"), "--only", "schema,rules")
+        self.assertIn(code, (dmc.FAIL, dmc.SETUP), text)
+
+
+HERE = Path(__file__).resolve().parent
+
+
+class RealValidatorRootProbes(unittest.TestCase):
+    """validate_data.py with YOK_CONTENT_ROOT: the base's script must check the PR's data, not its own."""
+
+    def _run(self, root, env_root):
+        env = {k: v for k, v in os.environ.items() if k != "YOK_CONTENT_ROOT"}
+        if env_root is not None:
+            env["YOK_CONTENT_ROOT"] = str(env_root)
+        return subprocess.run([sys.executable, str(HERE / "validate_data.py")], cwd=str(root), env=env,
+                              capture_output=True, text=True)
+
+    def setUp(self):
+        try:
+            import jsonschema  # noqa: F401
+        except ImportError:
+            self.skipTest("jsonschema not installed")
+        self.tmp = tempfile.TemporaryDirectory(prefix="yok34b-vroot-")
+        self.pr = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_pr_with_broken_json_fails_even_though_script_dir_data_is_fine(self):
+        import shutil
+        shutil.copytree(HERE.parent / "data", self.pr / "data")
+        (self.pr / "docs/design").mkdir(parents=True)
+        shutil.copy(HERE.parent / "docs/design/rules.md", self.pr / "docs/design/rules.md")
+        victim = next((self.pr / "data/moves").glob("*.json"))
+        victim.write_text("{ not json")
+        p = self._run(self.pr, self.pr)
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+
+    def test_root_without_data_is_not_a_clean_pass(self):
+        # YOK_CONTENT_ROOT naming a directory with no data/ must not exit 0 (it would validate nothing)
+        p = self._run(self.pr, self.pr)
+        self.assertNotEqual(p.returncode, 0, p.stdout + p.stderr)
+
+    def test_nonexistent_content_root_is_not_a_pass(self):
+        p = self._run(self.pr, self.pr / "gone")
+        self.assertNotEqual(p.returncode, 0, p.stdout + p.stderr)
+
+
+WORKFLOW = HERE.parent / ".github/workflows/data-merge-check.yml"
+
+
+class WorkflowProbes(unittest.TestCase):
+    def setUp(self):
+        self.text = WORKFLOW.read_text()
+
+    def run_blocks(self):
+        """text of every `run:` step body (inline or block)."""
+        out, lines, i = [], self.text.splitlines(), 0
+        while i < len(lines):
+            ln = lines[i]
+            if ln.strip().startswith("run:"):
+                ind = len(ln) - len(ln.lstrip())
+                body = [ln.split("run:", 1)[1]]
+                i += 1
+                while i < len(lines) and (not lines[i].strip() or len(lines[i]) - len(lines[i].lstrip()) > ind):
+                    body.append(lines[i])
+                    i += 1
+                out.append("\n".join(body))
+                continue
+            i += 1
+        return out
+
+    def test_no_attacker_controlled_expression_inside_a_run_block(self):
+        import re
+        bad = re.compile(r"\$\{\{\s*github\.(head_ref|event\.|actor|ref_name|base_ref)")
+        for b in self.run_blocks():
+            self.assertIsNone(bad.search(b), b)
+
+    def test_pull_request_not_pull_request_target(self):
+        self.assertNotIn("pull_request_target", self.text)
+
+    def test_permissions_read_only(self):
+        self.assertIn("contents: read", self.text)
+        self.assertNotRegex(self.text, r"(?m)^\s*(contents|pull-requests|id-token|actions):\s*write")
+
+    def test_every_action_pinned_to_a_sha(self):
+        import re
+        for m in re.finditer(r"uses:\s*(\S+)", self.text):
+            self.assertRegex(m.group(1), r"@[0-9a-f]{40}$", m.group(1))
+
+    def test_base_tools_are_extracted_outside_the_workspace_and_run_with_tools_flag(self):
+        self.assertIn("git archive", self.text)
+        self.assertIn("--tools", self.text)
+        self.assertNotIn("cp -R .base", self.text)
+        self.assertIn("RUNNER_TEMP/base", self.text)
+
+    def test_archive_extract_cannot_escape_runner_temp_or_write_the_workspace(self):
+        import re
+        for b in self.run_blocks():
+            for m in re.finditer(r"tar\s+[^\n|]*-C\s+(\S+)", b):
+                self.assertTrue(m.group(1).strip('"').startswith("$RUNNER_TEMP/"), m.group(0))
+
+    def test_code_exit_handling_never_maps_incomplete_or_setup_to_success(self):
+        import re
+        m = re.search(r"case \$code in(.*?)esac", self.text, re.S)
+        self.assertIsNotNone(m)
+        arms = m.group(1)
+        for ok in re.findall(r"(?m)^\s*([0-9|]+)\)\s*echo", arms):
+            self.assertTrue(set(ok.split("|")) <= {"0", "3", "5"}, ok)
+
+    def test_pr_checker_cannot_report_mergeable(self):
+        self.assertRegex(self.text, r'CHECKER" = pr \]\s*&&\s*\[ "\$code" = 0 \]')
+
+    def test_base_ref_used_via_env_not_expression_in_git_commands(self):
+        for b in self.run_blocks():
+            if "git archive" in b:
+                self.assertNotIn("${{", b)
 
 
 if __name__ == "__main__":
