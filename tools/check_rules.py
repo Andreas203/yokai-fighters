@@ -78,6 +78,7 @@ KIHON_DIRECTION = {"A": "neutral", "B": "forward", "C": "back", "D": "down"}  # 
 EX_COST = 100           # C5: an EX special costs 1 bar of 100
 MAX_HELD_CANCELS = 2    # X2
 MAX_CANCEL_RULES = 3    # A11 / X4: Fox Step, Oni Chain, Undertow
+TRIAL_ATTEMPTS = 3      # R7: a trial levels its special if landed within 3 attempts
 STARTERS = 2            # A1
 KATA_ONLY_KEYS = ("motion", "precision", "kata")  # same list as validate_data.TRIAL_KATA_ONLY
 HEAVY_BUTTONS = ("HP", "HK")  # Match.Specials: CancelFrom.HeavyNormals = HP or HK normal
@@ -157,7 +158,7 @@ def load(roots: list[Path], rep: "Report") -> dict:
                     rep.fail("read", "", f, f"duplicate id: {key[0]} '{key[1]}' is also defined in {rel(this_root[key])}")
                 this_root[key] = f
                 docs[key] = (f, doc)
-            elif run_slots(doc) is not None:
+            elif "slots" in run_of(doc):   # a run state; a non-list `slots` is still one, and fails A1
                 docs[("run", str(f))] = (f, doc)
     return docs
 
@@ -217,6 +218,9 @@ def check_slots(docs, rep: Report):
     for (g, _), (p, doc) in sorted(docs.items(), key=lambda kv: str(kv[1][0])):
         if g != "run":
             continue
+        raw_slots = run_of(doc).get("slots")
+        if raw_slots is not None and not isinstance(raw_slots, list):
+            rep.fail("slots", "A1", p, f"run slots is a {type(raw_slots).__name__}, not a list of at most four slotted specials")
         slots = run_slots(doc) or []
         if len(slots) > len(SLOTS):
             rep.fail("slots", "A1", p, f"{len(slots)} specials slotted; there are four slots")
@@ -433,8 +437,9 @@ def check_levels(docs, rep: Report):
             if not isinstance(ev, dict):
                 rep.fail("levels", "A4", p, "Lv 3 must be an evolution")
             else:
-                if not ev.get("preset"):
-                    rep.fail("levels", "A5", p, "Lv 3 evolution has no visual preset")
+                preset = ev.get("preset")
+                if not (isinstance(preset, str) and preset.strip()):
+                    rep.fail("levels", "A5", p, f"Lv 3 evolution preset {preset!r}: no visual preset (an evolution names its preset as a string)")
                 if ev.get("locked") is True:
                     rep.fail("levels", "A5", p, "evolutions come with their special and are never locked")
                 targets = list(_targets(ev.get("changes")))
@@ -474,9 +479,9 @@ def check_meter(docs, rep: Report):
                 cost = ex.get("meter_cost")
                 if type(cost) is not int or cost != EX_COST:
                     rep.fail("meter", "C5", p, f"ex.meter_cost {cost!r}; an EX special costs 1 bar = {EX_COST} (C5, E16)")
-                for i, c in enumerate(L(ex.get("changes"))):
-                    if _spends_meter(D(c).get("target")):
-                        rep.fail("meter", "C5", p, f"ex.changes.{i}: the EX changes its own cost; the cost is ex.meter_cost (E16)")
+                for t in _targets(ex.get("changes")):   # a list, a single dict or nested: every target counts
+                    if _spends_meter(t):
+                        rep.fail("meter", "C5", p, f"ex.changes: target '{t}' changes the EX's own cost; the cost is ex.meter_cost (E16)")
         effects = []
         if kind == "modifier":
             effects = [("effects", e) for e in L(d.get("effects"))]
@@ -551,7 +556,10 @@ def check_trials(docs, rep: Report):
         for j, mid in enumerate(L(D(D(t.get("setup")).get("dummy")).get("moves"))):
             if S(mid) not in moves:
                 rep.fail("trials", "R7", p, f"setup.dummy.moves.{j}: {mid!r} does not exist in data/moves/")
-        attempts = t.get("attempts", 3)
+        attempts = t.get("attempts", TRIAL_ATTEMPTS)
+        if type(attempts) is not int or attempts != TRIAL_ATTEMPTS:
+            rep.fail("trials", "R7", p, f"attempts {attempts!r}: the special levels only if landed within {TRIAL_ATTEMPTS} attempts")
+            attempts = TRIAL_ATTEMPTS
         rep.confirm("trials", "R7", p, f"'{t.get('id')}' can be landed with Kihon inputs within {attempts!r} attempts")
 
 
