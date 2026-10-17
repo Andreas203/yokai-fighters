@@ -1084,7 +1084,8 @@ public static class SaveTests
 		// Rewritten as a version-1 file: no coins, no copy lock (version 1 had neither).
 		string text = File.ReadAllText(path).Replace(Current, "\"version\": 1");
 		text = System.Text.RegularExpressions.Regex.Replace(text, "\\s*\"(coins|copy_locked|locked_copy|node_paid)\": [^,\\n]*,", "");
-		Assert.True(!text.Contains("\"coins\"") && text.Contains("\"version\": 1"), "a version-1 file: " + text);
+		text = System.Text.RegularExpressions.Regex.Replace(text, ",?\\s*\"(modifier_)?borrowed\": (true|false)", "");
+		Assert.True(!text.Contains("\"coins\"") && !text.Contains("borrowed") && text.Contains("\"version\": 1"), "a version-1 file: " + text);
 		File.WriteAllText(path, text);
 
 		WithBoot(runner, path, flow =>
@@ -1099,7 +1100,7 @@ public static class SaveTests
 	});
 
 	[Test]
-	public static void Title_NewerVersionSave_KeepsStory_AndIsBackedUpBeforeAnyWrite_M4(Node runner) => WithTempFile(path =>
+	public static void Title_NewerVersionSave_IsContinued_KeepsStory_AndIsBackedUpBeforeItIsRewritten_M4(Node runner) => WithTempFile(path =>
 	{
 		string node = "";
 		WithBoot(runner, path, flow =>
@@ -1117,16 +1118,15 @@ public static class SaveTests
 			Assert.True(flow.Saved.Story.Has(StoryProgress.Intro), "story progress is read on its own (M4)");
 			Assert.Equal(newer, File.ReadAllText(path), "booting leaves the newer file as it is");
 			PracticeStaysGreyed(flow, "newer save");
-			if (flow.Title.ContinueButton.Disabled)
-			{
-				string reason = flow.Title.DisabledReason(TitleEntry.Continue);
-				Assert.True(reason.Length > 0 && reason != ScreenRouter.NoSaveReason, "greyed, but not as 'no saved run': " + reason);
-				return;
-			}
+			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a newer file with a valid run is offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "the known fields continue on the saved node");
-			if (File.ReadAllText(path) != newer)
-				Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the newer file is backed up before it is written over");
+			WinEnteredNode(flow, 500); // a node boundary: the file is written
+			Assert.True(File.Exists(path + SaveStore.BackupSuffix), "the newer file was backed up");
+			Assert.Equal(newer, File.ReadAllText(path + SaveStore.BackupSuffix), "the backup is the newer file, byte for byte");
+			SaveLoad rewritten = new SaveStore(path).Load();
+			Assert.True(rewritten.Status == SaveLoadStatus.Loaded && File.ReadAllText(path).Contains(Current), "the main file now has the current version");
+			Assert.True(rewritten.Data.Story.Has(StoryProgress.Intro), "and still holds the story progress (M4)");
 		}, seed: 73);
 	});
 
@@ -1138,7 +1138,7 @@ public static class SaveTests
 		WithBoot(runner, path, flow =>
 		{
 			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
-			Assert.True(flow.Title.ContinueButton.Disabled && reason != ScreenRouter.NoSaveReason && reason.Contains("could not be read"), "corrupt: greyed with its own reason: " + reason);
+			Assert.True(flow.Title.ContinueButton.Disabled && reason.StartsWith("The save file could not be read"), "corrupt: greyed with its own reason: " + reason);
 			PracticeStaysGreyed(flow, "corrupt save");
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null, "nothing starts");
