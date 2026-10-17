@@ -1,0 +1,145 @@
+{
+  "kind": "special",
+  "id": "oni-quake",
+  "name": "Oni Quake",
+  "status": "proposed",
+  "source": "oni",
+  "starter": false,
+  "rarity": "rare",
+  "locked": true,
+  "clip": "oni-quake",
+  "rules": [
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "A11",
+    "A12",
+    "C3",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "V5",
+    "V8"
+  ],
+  "input": {
+    "kata": {
+      "slot": "D",
+      "motion": "22"
+    },
+    "kihon": {
+      "slot": "D",
+      "direction": "down"
+    }
+  },
+  "card": {
+    "plain": "Slam the club into the ground; the shock hits low.",
+    "frames": "27 / 4 / 25 frames, 90 damage, hits low"
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 27,
+        "active": 4,
+        "recovery": 25,
+        "damage": 90,
+        "hitstun": 26,
+        "blockstun": 20,
+        "strength": "heavy",
+        "hitboxes": [
+          {
+            "frames": [
+              28,
+              31
+            ],
+            "rect": {
+              "x": 110,
+              "y": 0,
+              "w": 200,
+              "h": 110
+            }
+          }
+        ],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              56
+            ],
+            "rect": {
+              "x": -45,
+              "y": 0,
+              "w": 110,
+              "h": 415
+            }
+          },
+          {
+            "frames": [
+              10,
+              27
+            ],
+            "rect": {
+              "x": -30,
+              "y": 330,
+              "w": 100,
+              "h": 110
+            }
+          },
+          {
+            "frames": [
+              28,
+              40
+            ],
+            "rect": {
+              "x": 50,
+              "y": 130,
+              "w": 110,
+              "h": 80
+            }
+          }
+        ],
+        "properties": {
+          "low": true
+        }
+      },
+      "preset": "oni-quake-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -4
+      },
+      "card": {
+        "plain": "Lv 1 \u2192 Lv 2: Oni Quake recovers 4 frames faster, so a blocked slam costs less.",
+        "frames": "27 / 4 / 21 frames (recovery -4), 90 damage, hits low"
+      }
+    },
+    "3": {
+      "evolution": {
+        "id": "aftershock",
+        "name": "Aftershock",
+        "status": "proposed",
+        "preset": "aftershock",
+        "changes": [
+          {
+            "target": "properties.aftershock_delay",
+            "op": "set",
+            "value": 30
+          }
+        ],
+        "card": {
+          "plain": "A second quake shakes the ground 30 frames after the first.",
+          "frames": "Second quake 30 frames later"
+        }
+      }
+    }
+  },
+  "notes": "Clip oni-quake (56 frames via retime curve, hit 28-31): 27/4/25. Delta against the rules.md table 22/5/26: +5 startup, -1 active, -1 recovery; clip timing kept (F2), flagged for the designer (the held overhead tell is 4 frames of the 27). Hits low (C3, properties.low): a ground-level box x 110-310, y 0-110 in front of the club, since the slam's shock is the hit, not the club head. Input slot D (down / 22) is proposed: rules.md names no slot for Oni's specials. Locked: marked with the diamond (A11). Lv 2 recovery -4 is proposed (one tuning step, A4), chosen for the Oni's rushdown identity; the designer decides. Lv 3 properties.aftershock_delay is a new engine key (not in the frame-data schema); the second quake repeats the Lv-current hitbox and is data-only (A5); needs gameplay-programmer support. No EX written: its numbers are an open question. Damage 90 is the table; hitstun and blockstun are placeholders."
+}
