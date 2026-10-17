@@ -218,9 +218,15 @@ public static class ElderTwistTests
 		int arrive = WaveArrival(), start = arrive - frame + 1;
 		var log = new Log();
 		var m = Setup(log, twist);
-		int hitFrame = -1;
-		m.Hit += (mm, e) => { if (e.Attacker == 0) hitFrame = mm.P2.MoveFrame; };
-		for (int t = 1; t <= arrive; t++) m.Step(t == 1 ? Wave() : Idle, t == start ? Talisman() : Idle);
+		// The move frame the hit met: the frame before the step + 1 (moves advance before hits resolve). Read from the
+		// fighter at the Hit event it would be 0 for an interrupted special, since the hit has already set hitstun.
+		int hitFrame = -1, before = 0;
+		m.Hit += (mm, e) => { if (e.Attacker == 0) hitFrame = before + 1; };
+		for (int t = 1; t <= arrive; t++)
+		{
+			before = m.P2.State == FighterState.Attack ? m.P2.MoveFrame : -1;
+			m.Step(t == 1 ? Wave() : Idle, t == start ? Talisman() : Idle);
+		}
 		return (m.P2.State, m.P2.Health, hitFrame, log.Twists.Count(x => x.e.Effect == TwistEffect.SpecialArmour));
 	}
 
@@ -237,7 +243,7 @@ public static class ElderTwistTests
 		Assert.True(cState != FighterState.Attack && cHealth == 928 && cArm == 0, $"control: no twist, the hit interrupts ({cState})");
 
 		var (rState, _, rFrame, rArm) = WaveIntoTalisman(Armour, 20);
-		Assert.True(rFrame == 20 && rState != FighterState.Attack && rArm == 0, $"recovery (frame 20 > last active 13) is not armoured ({rState})");
+		Assert.True(rFrame == 20 && rState != FighterState.Attack && rArm == 0, $"recovery (frame 20 > last active 13) is not armoured ({rState}, frame {rFrame}, armoured {rArm})");
 	}
 
 	[Test]
@@ -304,13 +310,13 @@ public static class ElderTwistTests
 	// ---- Determinism and replay ---------------------------------------------------------------------
 
 	static FighterInput Spam(int t) => t % 70 == 0 ? Wave(t % 280 == 0) : t % 70 == 35 ? Talisman()
-		: t % 23 == 9 ? new FighterInput(THROW) : t % 3 == 0 ? new FighterInput(InputBits.Right) : Idle; // THROW: a break press after her grab
+		: t % 23 == 9 ? new FighterInput(THROW) : t % 50 == 2 ? new FighterInput(LP) : t % 3 == 0 ? new FighterInput(InputBits.Right) : Idle; // THROW: a break press after her grab
 	static FighterInput Foe(int t) => t % 50 == 0 ? Wave() : t % 23 == 0 ? new FighterInput(THROW) : t % 7 == 0 ? new FighterInput(InputBits.Left) : Idle;
 
 	static ReplayRecording Record(ElderTwist twist, int steps, Log log)
 	{
 		var m = Setup(log, twist);
-		m.P1.Meter = 100;
+		m.Reset(); // a recording starts from a reset match: its header carries no hand-set positions or meter (Reset keeps the twist)
 		var rec = ReplayRecorder.Begin(m, null, 0);
 		for (int t = 0; t < steps; t++)
 		{

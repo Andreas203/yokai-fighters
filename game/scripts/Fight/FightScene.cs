@@ -82,10 +82,6 @@ public partial class FightScene : Node3D
 	public static string Opponent { get; set; } = "kitsune";
 
 	/// <summary>
-	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
-	/// <c>KitSources.FixturesOnly()</c> (and restore it) so they never depend on what is in data/.
-	/// </summary>
-	/// <summary>
 	/// YOK-90: every elder's twist, from data/twists/ (loaded on first use; a test may set its own). An elder node's
 	/// fight puts its twist on P2, whoever stands in (<see cref="ElderTwists.Apply"/>).
 	/// </summary>
@@ -96,6 +92,10 @@ public partial class FightScene : Node3D
 	}
 	static ElderTwists? _twists;
 
+	/// <summary>
+	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
+	/// <c>KitSources.FixturesOnly()</c> (and restore it) so they never depend on what is in data/.
+	/// </summary>
 	public static KitSources Sources { get; set; } = KitSources.At(ContentPaths.DataDir, ContentPaths.FixturesDir);
 
 	public static KitSources FixtureSources => KitSources.At(ContentPaths.DataDir, ContentPaths.FixturesDir).FixturesOnly();
