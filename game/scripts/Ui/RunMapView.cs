@@ -44,7 +44,7 @@ public class RunMapView : IMapView
 				: _map.IsVisited(n.Id) ? MapNodeState.Visited
 				: reachable.Contains(n.Id) ? MapNodeState.Reachable
 				: n.Row <= leftRow ? MapNodeState.PassedOver
-				: MapNodeState.Locked)).ToList();
+				: MapNodeState.Locked) { TwistIcon = n.Elder ? Fight.FightScene.Twists.ForNode(n)?.Icon : null }).ToList();
 		}
 	}
 
@@ -54,7 +54,11 @@ public class RunMapView : IMapView
 	public virtual CopyTarget? CopyTarget => _run is null ? null : CopyRule.Target(_run);
 	public virtual bool CopyLocked => false;
 
-	public MapNodeDetail? Detail(string nodeId) => _map.Graph.Has(nodeId) ? new MapNodeDetail(RewardLine(_map.Graph.Node(nodeId))) : null;
+	public MapNodeDetail? Detail(string nodeId) => _map.Graph.Has(nodeId) ? new MapNodeDetail(RewardLine(_map.Graph.Node(nodeId)), TwistLine(_map.Graph.Node(nodeId))) : null;
+
+	/// <summary>Y3: the elder's twist line for the detail panel (from story data, placeholder-marked until written); null off an elder node.</summary>
+	static string? TwistLine(MapNodeData n) =>
+		n.Elder && Fight.FightScene.Twists.ForNode(n) is { } t ? "Twist: " + TwistCopy.Label(t, TwistCopy.Story, YokaiName(n)).Text : null;
 
 	public bool Select(string nodeId) => _map.Select(nodeId).Ok;
 

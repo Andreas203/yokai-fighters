@@ -193,7 +193,7 @@ public partial class MapScreen : Control
 			if (!_nodes.TryGetValue(v.Id, out var n)) continue;
 			var r = _layout.Rects[v.Id];
 			n.Position = r.Position;
-			n.Bind(v, Styles!.Look(v.Type), r.Size, v.Id == CursorId && !Locked);
+			n.Bind(v, Styles!.Look(v.Type), r.Size, v.Id == CursorId && !Locked, Styles.TwistLook(v.TwistIcon));
 		}
 		BindPanels();
 		var state = nodes.ToDictionary(n => n.Id, n => n.State);
