@@ -86,6 +86,27 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Meta-unlocks (YOK-86) are deferred behind YOK-89. **If YOK-89 has not merged by 2026-10-17, the meta-unlock layer is cut** and YOK-86 canceled.
   - Carry-over (YOK-97) and story stay regardless (G2).
   - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
+- 2026-10-17 designer calls:
+  - **YOK-133:** the camera frames the tallest fighter in each fight. In tall-body fights:
+    - the view may widen past E1's 1,540 to about 1,900;
+    - the feet line sits at 1,040 px;
+    - the camera may rise 0.25 m per tick.
+    E1 and V7 are amended on that branch.
+  - **YOK-72:** "Back to title" goes next to Restart on the defeat and demo-complete screens.
+  - **YOK-73:** Continue is enabled when a saved run exists; Practice stays greyed.
+  - **YOK-135:** the Oni and Kappa become pickable in the dev menu.
+  - **YOK-81:** the ticket's recommended defaults: the diamond in the reward card's art area, no HUD slots, and evolutions show the base icon.
+- 2026-10-17 data merge check (YOK-34, designer):
+  - An empty diff is not mergeable.
+  - Uncommitted changes outside data/ give SETUP.
+  - MERGEABLE needs the full 200-run batch and a fresh build; anything less is INCOMPLETE.
+- 2026-10-17 save format order, set by the orchestrator in planned merge order:
+  - v5: elder flags (#149, YOK-90/106)
+  - v6: `carry_over` (YOK-97)
+  - v7: `tanuki_wins` (YOK-99)
+  - YOK-98 dropped its `run.dojo` field: no save change.
+  - A PR that merges out of order renumbers on rebase.
+- 2026-10-17 meta-unlock deadline (designer): **extended, no cut.** YOK-89 now has until 2026-10-21 (the balance gate) to merge; if it hasn't, the meta-unlock layer is cut and YOK-86 canceled.
 
 ## Waiting on the designer
 - **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur.
@@ -131,4 +152,4 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Oni and Kappa voices, and the tail count.
   - The order of the 12 unlocks.
   - Which modifiers a cut keeps.
-- **Review queue, in suggested order:** #106 Tanuki → #108 merchant → #107 rest stop → #105 rulings (#109 and #110 merged 10-15).
+- **Review queue, in suggested order (2026-10-17; #105–#108 merged):** #148 harness (YOK-26) → #147 Oni/Kappa bodies (YOK-131; captures first) → #150 Oni normals (YOK-132) → #149 elder twists (YOK-90, carries YOK-106, save v5) → #151 tutorial (YOK-92).
