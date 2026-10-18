@@ -110,7 +110,7 @@ public static class ModifierLoader
 		{
 			if (node is not JsonObject e) throw new FormatException($"{id}: an effect must be an object");
 			Effects.Check(e, id, allowExCost: true);
-			string w = e["when"]?.GetValue<string>() ?? "always";
+			string w = Effects.Text(e, "when", id, "an effect's when") ?? "always";
 			if (!Conditions.TryGetValue(w, out var when)) throw new FormatException($"{id}: condition '{w}' is not one the fight reads");
 			var bare = (JsonObject)e.DeepClone();
 			bare.Remove("when");

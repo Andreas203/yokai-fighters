@@ -23,7 +23,7 @@ public sealed record ArmourWindow(int First, int Last, int Hits = 1)
 		if (o.Any(kv => kv.Key is not ("frames" or "hits"))) return false;
 		if (!Effects.Whole(fr[0], out int first) || !Effects.Whole(fr[1], out int last)) return false;
 		int hits = 1;
-		if (o["hits"] is { } h && !Effects.Whole(h, out hits)) return false;
+		if (o.ContainsKey("hits") && !Effects.Whole(o["hits"], out hits)) return false; // "hits": null is refused, as the schema does
 		if (first < 1 || last < first || hits < 1) return false;
 		window = new ArmourWindow(first, last, hits);
 		return true;

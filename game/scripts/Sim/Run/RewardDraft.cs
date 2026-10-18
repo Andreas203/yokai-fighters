@@ -157,10 +157,12 @@ public sealed class RewardDraft : IRewardDraft
 	/// <summary>Plain wording of one effect, from data only ("recovery -4", "damage +10%").</summary>
 	public static string Describe(JsonNode? effect)
 	{
-		if (effect is null) return "no change";
-		string target = (effect["target"]?.GetValue<string>() ?? "").Replace('_', ' ').Replace('.', ' ');
-		string op = effect["op"]?.GetValue<string>() ?? "";
-		var v = effect["value"];
+		if (effect is not JsonObject e) return effect is null ? "no change" : effect.ToJsonString();
+		// Wording never throws mid-draft: a field of the wrong kind (refused by the loader anyway) is shown raw.
+		static string Str(JsonNode? n) => n is JsonValue sv && sv.TryGetValue(out string? s) ? s : n?.ToJsonString() ?? "";
+		string target = Str(e["target"]).Replace('_', ' ').Replace('.', ' ');
+		string op = Str(e["op"]);
+		var v = e["value"];
 		// YOK-103: numbers read as the loader reads them (Effects.Whole): -4, -4.0 and -4e0 are all -4. A value that is
 		// not a whole number never reaches a card (the loader refuses it), but the wording falls back to the raw JSON
 		// rather than throwing mid-draft.
@@ -168,7 +170,7 @@ public sealed class RewardDraft : IRewardDraft
 		return op switch
 		{
 			"add" when whole => $"{target} {n:+0;-0}",
-			"mul_pct" when whole => $"{target} {n - 100:+0;-0}%",
+			"mul_pct" when whole => $"{target} {(long)n - 100:+0;-0}%", // long: int.MinValue - 100 must not wrap to an increase
 			_ => $"{target} {(op == "set" ? "=" : op)} {v?.ToJsonString()}",
 		};
 	}

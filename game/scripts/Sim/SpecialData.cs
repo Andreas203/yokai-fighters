@@ -232,6 +232,18 @@ public static class SpecialLoader
 /// </summary>
 public static class Effects
 {
+	/// <summary>
+	/// YOK-103: an optional string field: absent = null; present it must be a JSON string (null, a number or an object
+	/// is a FormatException naming <paramref name="what"/>, never an InvalidOperationException).
+	/// </summary>
+	public static string? Text(JsonObject parent, string key, string id, string what)
+	{
+		if (!parent.ContainsKey(key)) return null;
+		return parent[key] is JsonValue v && v.GetValueKind() == JsonValueKind.String
+			? v.GetValue<string>()
+			: throw new FormatException($"{id}: {what} must be a string");
+	}
+
 	static readonly HashSet<string> FrameDataFields = new()
 	{
 		"startup", "active", "recovery", "damage", "hitstun", "blockstun", "pushback", "strength",
