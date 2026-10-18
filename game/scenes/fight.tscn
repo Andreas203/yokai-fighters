@@ -10,8 +10,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/stage/bamboo_grove.tscn" id="9_stage"]
 [ext_resource type="PackedScene" path="res://scenes/camera_rig.tscn" id="10_camera"]
-[ext_resource type="PackedScene" path="res://scenes/fighters/ryo.tscn" id="11_ryo"]
-[ext_resource type="PackedScene" path="res://scenes/fighters/kitsune.tscn" id="12_kitsune"]
 
 [node name="Fight" type="Node3D"]
 script = ExtResource("1_fight")
@@ -22,10 +20,10 @@ script = ExtResource("1_fight")
 
 [node name="Fighters" type="Node3D" parent="."]
 
-[node name="P1" parent="Fighters" instance=ExtResource("11_ryo")]
+[node name="P1Spawn" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="P2" parent="Fighters" instance=ExtResource("12_kitsune")]
+[node name="P2Spawn" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
 [node name="Hud" parent="." instance=ExtResource("2_hud")]
