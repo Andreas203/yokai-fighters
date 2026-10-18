@@ -16,6 +16,13 @@ public sealed class AbilityPool
 	public IReadOnlyList<ModifierData> Modifiers { get; }
 	/// <summary>Which folders fed the pool (fixture fallbacks are listed here for the log).</summary>
 	public IReadOnlyList<string> Notes { get; }
+	/// <summary>
+	/// YOK-153 (M1, A11): the ids the save has unlocked, handed in by the caller (<see cref="WithUnlocks"/>); Sim code
+	/// never reads the save. Empty by default: only abilities whose data says <c>locked: false</c> are available.
+	/// </summary>
+	public IReadOnlySet<string> Unlocked { get; private init; } = EmptyIds;
+
+	static readonly IReadOnlySet<string> EmptyIds = new HashSet<string>(StringComparer.Ordinal);
 
 	public AbilityPool(IEnumerable<SpecialData> specials, IEnumerable<ModifierData> modifiers, IEnumerable<string>? notes = null)
 	{
@@ -33,6 +40,33 @@ public sealed class AbilityPool
 					if (s.HasEx) s.Build(level, true, m, null);
 				}
 	}
+
+	/// <summary>
+	/// The same abilities with <paramref name="unlockedIds"/> (the save's unlocks, M1) as the unlocked set, replacing any
+	/// set before. The data is shared, not rebuilt, and its <c>locked</c> flags are untouched (the unlock order is read
+	/// from them). An id that names no ability, or a blank one, changes nothing.
+	/// </summary>
+	public AbilityPool WithUnlocks(IEnumerable<string>? unlockedIds) => new(this)
+	{
+		Unlocked = new HashSet<string>((unlockedIds ?? Array.Empty<string>()).Where(id => !string.IsNullOrWhiteSpace(id)), StringComparer.Ordinal),
+	};
+
+	AbilityPool(AbilityPool other)
+	{
+		Specials = other.Specials;
+		Modifiers = other.Modifiers;
+		Notes = other.Notes;
+	}
+
+	/// <summary>
+	/// YOK-153, A11/M1: the draft (A7) and the shop (R6) may offer this special: its data is not locked, or the save
+	/// unlocked its id. Its evolution comes with it (A5: never locked on its own). Source, rarity and ownership are
+	/// the caller's filters (A8, A9).
+	/// </summary>
+	public bool IsAvailable(SpecialData s) => !s.Locked || Unlocked.Contains(s.Id);
+
+	/// <summary>As <see cref="IsAvailable(SpecialData)"/>, for a modifier.</summary>
+	public bool IsAvailable(ModifierData m) => !m.Locked || Unlocked.Contains(m.Id);
 
 	public SpecialData? Special(string id) => Specials.FirstOrDefault(s => s.Id == id);
 	public ModifierData? Modifier(string id) => Modifiers.FirstOrDefault(m => m.Id == id);

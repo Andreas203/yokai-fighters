@@ -1498,4 +1498,62 @@ public static class SaveTests
 
 		WithBoot(runner, path, flow => Assert.Equal(1, flow.Saved.TanukiWins, "kept across a reboot"), seed: 9);
 	});
+
+	// YOK-153, M1: unlocks a run earns at its end take effect in the next run's draft and shop (two runs, then Continue).
+	[Test]
+	public static void Boot_UnlocksFromOneRun_ReachTheNextRunsDraftAndShop_M1(Node runner) => WithTempFile(path =>
+	{
+		void NewRun(GameFlow flow)
+		{
+			if (flow.Session is not null) flow.ReturnToTitle();
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+		}
+		void Next(GameFlow flow) { Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered"); WinEnteredNode(flow, 600); }
+
+		bool Drafted(RunSession s, string id, string source)
+		{
+			for (uint seed = 1; seed <= 64; seed++)
+				if (RewardDraft.Build(s.Run, s.Pool, source, seed, elder: true).Offer.Cards.Any(c => c.AbilityId == id)) return true;
+			return false;
+		}
+		bool Shelved(RunSession s, string id) =>
+			MerchantShop.ShelfFor(s.Run, s.Pool, Array.Empty<string>()).Any(x => x.Id == id)
+			|| MerchantShop.ModifierShelfFor(s.Run, s.Pool, Array.Empty<string>()).Any(x => x.Id == id);
+
+		string id = "";
+		WithBoot(runner, path, flow =>
+		{
+			// Run 1, fresh save: the first id in the unlock order is still locked everywhere.
+			NewRun(flow);
+			var s1 = flow.Session!;
+			id = Unlocks.FromData(s1.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels"))).Order[0];
+			var mod = s1.Pool.Modifier(id);
+			Assert.True(mod is not null && mod.Locked && mod.Rarity == "common" && s1.Run.Owned.Any(o => s1.Run.CanAttach(o.Slot, mod)),
+				$"'{id}' is a locked common modifier a starter can take (the test's premise)");
+			string source = mod!.Source;
+			Assert.True(s1.Pool.Unlocked.Count == 0 && !s1.Pool.IsAvailable(mod), "nothing unlocked yet");
+			Assert.True(!Drafted(s1, id, source) && !Shelved(s1, id), "run 1: neither the draft nor the shop offers it");
+
+			// Lost on row 6: one unlock (M1), saved at run end.
+			while (s1.Map.Graph.Node(s1.Reachable()[0]).Row != 6) Next(flow);
+			Assert.True(flow.ChooseNode(s1.Reachable()[0]).Ok, "entered row 6");
+			Assert.True(s1.LoseFight().Ok, "lost on row 6");
+			Assert.True(new SaveStore(path).Load().Data.Unlocks.SequenceEqual(new[] { id }), "row 6: the first id saved");
+
+			// Run 2: the save's unlock reached the new run's pool, the draft and the shop.
+			NewRun(flow);
+			var s2 = flow.Session!;
+			Assert.True(s2 != s1 && s2.Pool.Unlocked.Contains(id), "run 2's pool carries the unlock");
+			Assert.True(Drafted(s2, id, source), $"run 2: the {source} draft offers '{id}'");
+			Assert.True(Shelved(s2, id), $"run 2: the shop sells '{id}' while the {source} is not bound");
+		});
+
+		// A reboot and Continue restore run 2 with the same unlocks.
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session is { } s && s.Pool.Unlocked.Contains(id) && Shelved(s, id), "a continued run reads the unlocks too");
+		});
+	});
 }

@@ -546,3 +546,41 @@ class TrialSchemaTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AbilityIdsAcrossKindsTest(unittest.TestCase):
+    """YOK-153 (A11, M1): an unlock is saved by id, so one id names one ability across specials, evolutions, modifiers and cancels."""
+
+    def _copy(self, tmp, src, new_id, name):
+        import json
+        doc = json.loads(src.read_text(encoding="utf-8"))
+        doc["id"] = new_id
+        f = Path(tmp) / name
+        f.write_text(json.dumps(doc), encoding="utf-8")
+        return f
+
+    def test_the_repo_data_has_one_id_per_ability(self):
+        code, out = run(ROOT / "data")
+        self.assertNotIn("one id per ability", out)
+
+    def test_a_cancel_rule_sharing_a_modifier_id_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            mod = ROOT / "data" / "modifiers" / "brute-recovery.json"
+            cancel = self._copy(tmp, ROOT / "data" / "cancels" / "undertow.json", "brute-recovery", "brute-recovery.json")
+            code, out = run(mod, cancel)
+            self.assertEqual(code, 1, out)
+            self.assertIn("ability id 'brute-recovery' is already the modifier", out)
+            code, out = run(cancel)
+            self.assertEqual(code, 0, "alone, the copied cancel rule is valid:\n" + out)
+
+    def test_a_modifier_sharing_an_evolution_id_is_refused(self):
+        import json
+        import tempfile
+        special = ROOT / "data" / "moves" / "foxfire.json"
+        evo = json.loads(special.read_text(encoding="utf-8"))["levels"]["3"]["evolution"]["id"]
+        with tempfile.TemporaryDirectory() as tmp:
+            mod = self._copy(tmp, ROOT / "data" / "modifiers" / "fox-patience.json", evo, f"{evo}.json")
+            code, out = run(special, mod)
+            self.assertEqual(code, 1, out)
+            self.assertIn(f"ability id '{evo}' is already the evolution", out)

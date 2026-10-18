@@ -334,7 +334,8 @@ public partial class GameFlow : Node
 		try
 		{
 			// YOK-97, M3: the last ended run's best special starts this one at Lv 2 (kept in the save until a run ends).
-			var pool = FightScene.LoadAbilityPool();
+			// YOK-153, M1: what earlier runs unlocked joins this run's draft and shop (the save's ids, handed to the pool).
+			var pool = FightScene.LoadAbilityPool().WithUnlocks(Saved.Unlocks);
 			var run = CarryOver.NewRun(pool, Saved.CarryOver, null, out string? dropped);
 			if (dropped is not null) GD.PushWarning($"GameFlow: {dropped}");
 			Session = FightScene.NewSession(MapFile, FixedRunSeed ?? (uint)Random.Shared.Next(), pool, run);
@@ -401,24 +402,32 @@ public partial class GameFlow : Node
 	/// YOK-86, M1: the fixed unlock order, from the run's pool and data/cancels/ (<see cref="Unlocks.FromData"/>). A
 	/// cancel folder that fails to load is left out with a warning, so a run end is always saved.
 	/// </summary>
-	static Unlocks UnlockOrder(AbilityPool pool)
+	static Unlocks UnlockOrder(AbilityPool pool) =>
+		UnlockOrder(pool, () => CancelRuleLoader.LockedIds(ContentPaths.Data("cancels")), w => GD.PushWarning(w));
+
+	/// <summary>
+	/// As <see cref="UnlockOrder(AbilityPool)"/> with the cancel-rule read and the log handed in (tests). YOK-153: any
+	/// exception from the cancel read (a literal <c>null</c> file, an unreadable folder, ...) leaves the cancel rules
+	/// out; any from the order leaves the order empty. Neither stops the run-end write.
+	/// </summary>
+	internal static Unlocks UnlockOrder(AbilityPool pool, Func<string[]?> lockedCancelIds, Action<string> warn)
 	{
 		string[] cancels;
-		try { cancels = CancelRuleLoader.LockedIds(ContentPaths.Data("cancels")); }
-		catch (Exception e) when (e is FormatException or System.IO.IOException or System.Text.Json.JsonException or InvalidOperationException)
+		try { cancels = lockedCancelIds() ?? Array.Empty<string>(); }
+		catch (Exception e) // the run end must still be written: no locked cancel rules this time rather than no save
 		{
-			GD.PushWarning($"GameFlow: cancel rules left out of the unlock order: {e.Message}");
+			warn($"GameFlow: cancel rules left out of the unlock order: {e.GetType().Name}: {e.Message}");
 			cancels = Array.Empty<string>();
 		}
 		try
 		{
 			var order = Unlocks.FromData(pool, cancels, out var dropped);
-			foreach (string id in dropped) GD.PushWarning($"GameFlow: unlock order: '{id}' is named twice in the data; kept once");
+			foreach (string id in dropped) warn($"GameFlow: unlock order: {Unlocks.WhyDropped(id)}");
 			return order;
 		}
 		catch (Exception e) // the run end must still be written: no unlocks this time rather than no save
 		{
-			GD.PushWarning($"GameFlow: no unlock order, nothing awarded: {e.Message}");
+			warn($"GameFlow: no unlock order, nothing awarded: {e.Message}");
 			return new Unlocks(Array.Empty<string>());
 		}
 	}
@@ -474,7 +483,7 @@ public partial class GameFlow : Node
 				throw new FormatException($"'{named}' is not the name of a map file");
 			var graph = new FileMapSource(System.IO.Path.Combine(dir, run.MapFile ?? MapFile)).Load();
 			var notes = new System.Collections.Generic.List<string>();
-			var session = run.Restore(FightScene.LoadAbilityPool(), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
+			var session = run.Restore(FightScene.LoadAbilityPool().WithUnlocks(Saved.Unlocks), graph, NodeSceneTable.Default(dir), notes, allowOffRoute: DevMode.On); // YOK-124: a walk off the routes comes back only in a dev session
 			foreach (string note in notes) GD.PushWarning($"GameFlow: saved run: {note}");
 			session.Trials = FightScene.LoadTrials(); // YOK-98: the dojo's trials (not saved state: data/trials/)
 			reason = "";
