@@ -1,20 +1,11 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_riydk"]
+[ext_resource type="PackedScene" path="res://scenes/fighters/BaseFighter.tscn" id="1_base"]
 [ext_resource type="PackedScene" path="res://assets/generated/characters/kitsune/kitsune-rigged.glb" id="2_u1m64"]
 [ext_resource type="PackedScene" path="res://assets/generated/characters/kitsune/tail.glb" id="3_eupsx"]
-[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="4_ldgij"]
-[ext_resource type="Material" path="res://materials/toon.tres" id="5_f8dl2"]
-[ext_resource type="Material" path="res://materials/ink_outline.tres" id="6_dhdp7"]
 
-[node name="Kitsune" type="Node3D" unique_id=1830531114]
-script = ExtResource("1_riydk")
+[node name="Kitsune" instance=ExtResource("1_base")]
 Fighter = "kitsune"
-
-[node name="Mirror" type="Node3D" parent="." unique_id=1055103684]
-
-[node name="Yaw" type="Node3D" parent="Mirror" unique_id=31901255]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=1780161145 instance=ExtResource("2_u1m64")]
 
@@ -103,13 +94,3 @@ transform = Transform3D(0.9945219, -0.104528464, 0, -0.027053958, -0.2574012, 0.
 
 [node name="Tail" type="Node3D" parent="Mirror/Yaw/Tails/Tail8/Fan" unique_id=275206006 instance=ExtResource("3_eupsx")]
 transform = Transform3D(-1.2653296e-08, 0, 0.28947368, 0, 0.28947368, 0, -0.28947368, 0, -1.2653296e-08, 0, 0.275, 0)
-
-[node name="Animator" type="AnimationPlayer" parent="." unique_id=1019203756]
-deterministic = true
-root_node = NodePath("../Mirror/Yaw/Model")
-callback_mode_process = 2
-
-[node name="Toon" type="Node" parent="." unique_id=638011263]
-script = ExtResource("4_ldgij")
-Toon = ExtResource("5_f8dl2")
-Outline = ExtResource("6_dhdp7")
