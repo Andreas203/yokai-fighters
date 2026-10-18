@@ -236,7 +236,9 @@ def check_run_map(doc: dict) -> list[tuple[str, str]]:
     return errs
 
 
-STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn$")
+# \Z and fullmatch: '$' would also accept a trailing newline. The schema's $defs/stage can only say '$', so this
+# check and NodeSceneTable.StagePattern (which ends in \z) are the strict ones.
+STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn\Z", re.ASCII)
 
 
 def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
@@ -260,7 +262,7 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     for where, stage in stages:
         if not isinstance(stage, str):
             continue
-        if not STAGE_PATTERN.match(stage):
+        if not STAGE_PATTERN.fullmatch(stage):
             errs.append((where, f"stage '{stage}' is not a scene path under res://scenes/stage/ (no '..', '//' or '\\')"))
         elif not (ROOT / "game" / stage[len("res://"):]).is_file():
             errs.append((where, f"stage scene '{stage}' does not exist under game/"))

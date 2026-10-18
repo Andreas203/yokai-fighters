@@ -81,7 +81,7 @@
   "$defs": {
     "coins": { "description": "R8: coins a won fight on the node pays. Default 0.", "type": "integer", "minimum": 0, "maximum": 9999 },
     "scene": { "description": "A Godot scene path.", "type": "string", "pattern": "^res://.+\\.tscn$" },
-    "stage": { "description": "YOK-144: a stage scene (root script FightStage) under game/scenes/stage/ (path segments of letters, digits, '_' and '-': no '..', '//' or '\\'); the validator checks the file exists.", "type": "string", "pattern": "^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.tscn$" },
+    "stage": { "description": "YOK-144: a stage scene (root script FightStage) under game/scenes/stage/ (path segments of letters, digits, '_' and '-': no '..', '//' or '\\'); the validator checks the file exists. JSON Schema patterns cannot anchor at the very end ('$' also accepts a final newline), so tools/validate_data.py and the game's loader (NodeSceneTable.StagePattern) are the strict checks.", "type": "string", "pattern": "^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.tscn$" },
     "entry": {
       "type": "object",
       "additionalProperties": false,

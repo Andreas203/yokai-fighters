@@ -433,6 +433,7 @@ class ValidateDataTest(unittest.TestCase):
             (lambda d: d["types"]["duel"].update(stage="res://scenes/stage/../fight.tscn"), "not a scene path under res://scenes/stage/"),
             (lambda d: d["types"]["duel"].update(stage="res://scenes/stage//placeholder.tscn"), "not a scene path under res://scenes/stage/"),
             (lambda d: d.update(default_stage="res://scenes/stage/sub\\placeholder.tscn"), "not a scene path under res://scenes/stage/"),
+            (lambda d: d["types"]["duel"].update(stage="res://scenes/stage/placeholder.tscn\n"), "not a scene path under res://scenes/stage/"),
         ]
         for edit, expect in cases:
             code, out = self._node_scenes(edit)

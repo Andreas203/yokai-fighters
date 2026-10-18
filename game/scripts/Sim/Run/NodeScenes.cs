@@ -69,8 +69,13 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	/// <summary>YOK-144: where a stage scene may live.</summary>
 	public const string StagePrefix = "res://scenes/stage/";
 
-	/// <summary>YOK-144: a stage path; the same pattern as the schema's <c>$defs/stage</c> and <c>tools/validate_data.py</c>. Segments are letters, digits, '_' and '-' only, so '..', '//' and '\' cannot escape the stage folder.</summary>
-	public const string StagePattern = @"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn$";
+	/// <summary>
+	/// YOK-144: a stage path, the same as <c>STAGE_PATTERN</c> in <c>tools/validate_data.py</c>. Segments are ASCII letters,
+	/// digits, '_' and '-' only, so '..', '//' and '\' cannot escape the stage folder. It ends in <c>\z</c>, not <c>$</c>
+	/// (which also matches before a final newline). The schema's <c>$defs/stage</c> has to use <c>$</c>; this and the
+	/// validator are the strict checks.
+	/// </summary>
+	public const string StagePattern = @"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn\z";
 
 	readonly Dictionary<string, Entry> _types, _nodes, _opponents;
 	readonly Dictionary<string, int> _tiers;
