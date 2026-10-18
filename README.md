@@ -4,7 +4,10 @@ A single-player **2.5D roguelite fighting game** for PC, built in **Godot 4 (.NE
 
 You play Ryo, an apprentice exorcist who binds yokai instead of destroying them, apologising to each one he seals into a talisman. Every yokai he beats lends him one of three abilities, so the yokai you choose to fight decide the fighter you become. At the end of every run waits the Tanuki, a shapeshifter that copies the move you have invested in most.
 
-> **Assignment 4 (Dynamic Content Pipeline):** the write-up is in this README, at [Assignment 4: Dynamic content pipeline](#assignment-4-dynamic-content-pipeline).
+> **Assignments:** each write-up is a section of this README.
+> - Assignment 3 (Build an Agent Crew): [Assignment 3: Agent crew](#assignment-3-agent-crew)
+> - Assignment 4 (Dynamic Content Pipeline): [Assignment 4: Dynamic content pipeline](#assignment-4-dynamic-content-pipeline)
+> - Assignment 5 (Goal-Oriented Coding Agent): [Assignment 5: Goal-oriented coding agent](#assignment-5-goal-oriented-coding-agent)
 
 ## The game at a glance
 
@@ -35,9 +38,160 @@ You play Ryo, an apprentice exorcist who binds yokai instead of destroying them,
 | [`docs/design/rules.md`](docs/design/rules.md) | The GDD's rules and numbers with citable IDs (`C4`, `T2`, `A8`…) |
 | [`vault/`](vault/Home.md) | The design as linked notes, one topic per note, for people and for the agents |
 | [`tools/content_pipeline/`](tools/content_pipeline/) | Drafts card text from the vault: writer agents read whole notes, and a critic checks each draft against the vault |
+| [`tools/goal_agent/`](tools/goal_agent/) | Goal-oriented coding agent: reads the rules, scans the code, ranks what is missing and writes the top gap through build, test and critic gates |
 | [`docs/crew/vertical-slice-run-log.md`](docs/crew/vertical-slice-run-log.md) | The crew's run that built the Ryo vs Kitsune vertical slice, step by step |
 | [`docs/agent-crew.html`](docs/agent-crew.html) | Interactive map of the agent crew (open in a browser) |
 | [`CLAUDE.md`](CLAUDE.md) | Working instructions for Claude Code and the crew |
+
+## Assignment 3: Agent crew
+
+The crew turns a character design into **game-ready fighting content**. Its outputs:
+- rigged 3D fighters and stage assets generated through the Meshy MCP
+- measured animation clips
+- frame data and hitboxes derived from those clips
+- reward modifiers and card text
+
+Every piece passes a written-rules gate before it reaches the game. In this run it produced the assets and content for the game's first vertical slice, **Ryo vs the Kitsune in the bamboo grove at dusk**. That covers both fighters, nine tails, the stage props and backdrop, 41 measured clips (re-timed onto the GDD's frame targets), frame data and hitboxes for every move of both fighters, and two reward modifiers. All of it runs in a playable demo (see [Demo: the vertical slice](#demo-the-vertical-slice)).
+
+A fighting game is unforgiving here. A move's frame data has to match what the animation shows, frame by frame, or the game feels wrong. So the crew is built around one rule, **clip first (F2)**: no frame data is written until the clip it describes has been generated *and measured*.
+
+| Where to look | Section |
+|---|---|
+| The six agents, with input, output and why each is needed | [The crew (6 agents)](#the-crew-6-agents) |
+| How they connect, and where the designer approves | [Architecture](#architecture) |
+| A real run, with its pull requests, task ids and credits | [Does it run?](#does-it-run) |
+| The playable result | [Demo: the vertical slice](#demo-the-vertical-slice) |
+
+### The crew (6 agents)
+
+All six are Claude Code subagents, and their definitions are the ones the project runs, in [`.claude/agents/`](.claude/agents/): [producer](.claude/agents/producer.md), [asset-smith](.claude/agents/asset-smith.md), clip-matcher, [movesmith](.claude/agents/movesmith.md), [rules-lawyer](.claude/agents/rules-lawyer.md) and [gameplay-programmer](.claude/agents/gameplay-programmer.md). The orchestration procedure is [`.claude/skills/produce/SKILL.md`](.claude/skills/produce/SKILL.md), and the Meshy MCP config (no key) is [`.mcp.example.json`](.mcp.example.json).
+
+Since this assignment, clip-matcher has been split in two (amendment AM5): [rig-specialist](.claude/agents/rig-specialist.md) now owns the rigs and the retarget gate, and [animator](.claude/agents/animator.md) owns the clips. This section describes the crew as it ran for the vertical slice. The current crew is in [The agent crew](#the-agent-crew).
+
+| # | Agent | Role | Input | Output | Why it can't be removed |
+|---|---|---|---|---|---|
+| 1 | **producer** | Lead: turns the goal into tickets and a dispatch order | GDD, `rules.md`, Linear board, repo state | Linear tickets (goal, acceptance criteria, agent, rules) and an ordered dispatch plan with designer approvals listed | Without it nothing is sequenced. Dependencies like "rig before clips, clips before frame data" and the credit approvals are never identified |
+| 2 | **asset-smith** | Generates and accepts visual assets | Character sheets, style rules, approved job list | Generation specs with credit estimates, then rigged GLB fighters, stage props, UI textures and acceptance verdicts | Without it there are no rigged models, so clip-matcher has nothing to animate |
+| 3 | **clip-matcher** | Picks, generates and *measures* each move's animation | Rig task ids, clip-needs list, approved take list | Clip specs, the retarget go/no-go report, and `data/clips/*.json` with real frame counts and hit windows | Without it movesmith has no timing to derive from, and rule F2 forbids frame data without a measured clip |
+| 4 | **movesmith** | Designs moves from the clip timing | `data/clips/*.json`, rules tables | `data/moves/*.json` (startup/active/recovery, 2D hitboxes, damage, EX, levels), `data/modifiers/*.json`, card text | Without it the clips never become playable moves or rewards |
+| 5 | **rules-lawyer** | Gate: read-only judge against the written rules | Content files + `docs/design/rules.md` | `PASS`, or `FAIL` with the exact rule ID and fix | Without it content merges unchecked. Wrong sources, broken numbers or paired throws would reach the game |
+| 6 | **gameplay-programmer** | Builds the Godot (.NET/C#) game that plays the content, and checks it in the engine | `data/` (moves, clips, modifiers, profiles, story) + schemas + rules | The deterministic fight engine, data loaders and schemas, AI, reward draft, demo flow, the models stepped frame by frame from the clips, the hitbox overlay, and 245 automated tests | Without it the content never becomes a game. Its in-engine checks (overlay, model probes) also found bugs the files alone couldn't show, and each went back to the author agent |
+
+A human designer sits at approval gates between the agents (hexagons in the diagram). No Meshy credit is spent without their approval, and a failed gate goes back to the author agent.
+
+### Architecture
+
+Solid arrows are data flow (files the next agent reads). Dotted arrows are tool calls. Hexagons are designer approval gates: no Meshy credit is spent and no content merges without one.
+
+```mermaid
+flowchart TD
+    D([Designer<br/>approves jobs, credits, gates, merges])
+    O[["Orchestrator<br/>main Claude Code session<br/>runs /produce, carries outputs between agents"]]
+
+    P["1 · producer<br/>IN: GDD, rules.md, Linear board, repo<br/>OUT: tickets + ordered dispatch plan"]
+    AS["2 · asset-smith<br/>IN: character sheets, style rules<br/>OUT: generation specs → rigged models, stage, UI textures"]
+    CM["3 · clip-matcher<br/>IN: rigged fighters, clip needs<br/>OUT: measured clips → data/clips/*.json"]
+    MS["4 · movesmith<br/>IN: data/clips/*.json, rules tables<br/>OUT: frame data, hitboxes, modifiers, card text"]
+    RL{"5 · rules-lawyer<br/>IN: content files + rules.md<br/>OUT: PASS / FAIL + rule ID"}
+
+    G1{{"approve job list<br/>+ credit cap"}}
+    G2{{"approve takes<br/>+ credit cap"}}
+    G3{{"gate call: GO / fallback"}}
+    M[("main branch<br/>game data")]
+
+    LIN[(Linear<br/>YOK tickets)]
+    MESHY[(Meshy MCP<br/>image · 3D · rig · animate)]
+    REPO[(Repo files<br/>specs · GLBs · JSON)]
+
+    D -- "request: build the vertical slice" --> O
+    O --> P
+    P -. "create / update tickets" .-> LIN
+    P -- "dispatch plan" --> O
+
+    O --> AS
+    AS -- "spec + credit estimate" --> G1
+    G1 -- approved --> AS
+    AS -. "text/image→image, image→3D, rig" .-> MESHY
+    AS -- "rigged GLBs, turnarounds, acceptance verdicts" --> REPO
+
+    REPO -- "rigged fighters" --> CM
+    O --> CM
+    CM -- "clip spec + credit estimate" --> G2
+    G2 -- approved --> CM
+    CM -. "meshy_animate" .-> MESHY
+    CM -- "retarget gate report" --> G3
+    G3 -- GO --> CM
+    CM -- "data/clips/*.json<br/>(frames, hit window, trim)" --> MS
+
+    O --> MS
+    MS -- "data/moves, data/modifiers<br/>(frame data from clip timing, F2)" --> RL
+    MS -- "timing deviates from GDD<br/>→ re-time (trim/speed, free)" --> CM
+    RL -- "FAIL + rule ID → revise (max 3 rounds)" --> MS
+    RL -- PASS --> M
+    GP["6 · gameplay-programmer<br/>IN: data/*.json + schemas + rules<br/>OUT: deterministic Godot game, loaders, AI, demo flow, tests"]
+    M -- "data/moves, clips, modifiers, profiles, story" --> GP
+    GP -- "playable build" --> DEMO([Playable demo])
+    GP -- "in-engine check: hitbox overlay<br/>on the models → boxes off → fix" --> MS
+    O --> GP
+    O -. "status updates" .-> LIN
+    D -. "reviews / merges" .-> M
+```
+
+**Coordination:** Claude Code subagents can't call each other. The main session is the orchestrator. It runs the `produce` procedure: start the producer, then dispatch each ticket through its workflow (generate → clip → content → gate). It passes each agent's output files and report on to the next agent. Agents run in parallel where tickets don't depend on each other, each in its own git worktree and branch, and every result lands as a pull request.
+
+### Does it run?
+
+Yes, and on real work. [`docs/crew/vertical-slice-run-log.md`](docs/crew/vertical-slice-run-log.md) traces one full run on 5–6 October 2026: producer → asset-smith → clip-matcher → movesmith → rules-lawyer. It lists the pull request, the Meshy task ids and the credits for each step. In that run:
+- 500 Meshy credits were spent, all inside approved caps.
+- 41 clips were measured.
+- Movesmith wrote frame data for both fighters. It flagged that the clips ran long, so clip-matcher re-timed them. Movesmith then re-derived the data, and every normal now matches the GDD table.
+- Once the models were in the game, movesmith re-placed all 34 moves' hitboxes on the bodies.
+- The rules-lawyer passed four content PRs (#37, #38, #39, #48), and each merged into the game's `data/`.
+- gameplay-programmer built the game that loads all of it, across 22 PRs from an empty project to a playable demo, with tests growing from 12 to 245.
+
+The outputs are in the project itself, where the game and the next agent read them:
+
+| Stage | Agent | Where it is |
+|---|---|---|
+| References | asset-smith | The chosen stylised references: [Ryo E](docs/design/characters/ryo/references/ryo-ref-e.png), [Kitsune D](docs/design/characters/kitsune/references/kitsune-ref-d.png) |
+| Models and stage | asset-smith | The approved job list [`assets/specs/yok-29-job-list.md`](assets/specs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](game/assets/generated/characters/); the [stage backdrop](game/assets/generated/stage/bamboo-grove/backdrop.png) |
+| Retarget gate | clip-matcher | The gate report [`assets/specs/clips/retarget_gate.md`](assets/specs/clips/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](assets/specs/clips/stills/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](assets/specs/clips/stills/retarget-gate/ryo-grab-2.png)) |
+| Clips | clip-matcher | [`data/clips/`](data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](data/clips/kitsune-foxfire.json); stills in [`assets/specs/clips/stills/`](assets/specs/clips/stills/) |
+| Reward content | movesmith | Modifier files that passed rules-lawyer: [`will-o-wisp.json`](data/modifiers/will-o-wisp.json), [`fox-patience.json`](data/modifiers/fox-patience.json) |
+| Frame data | movesmith | [`data/moves/`](data/moves/), derived from the re-timed clips: [Ryo's light punch](data/moves/ryo-light-punch.json) (4/2/7 = C8), the [heavy kick](data/moves/ryo-heavy-kick.json), the shared [Foxfire](data/moves/foxfire.json) |
+| Hitbox alignment | movesmith → rules-lawyer | [`docs/screenshots/review/YOK-33-hitbox-alignment/`](docs/screenshots/review/YOK-33-hitbox-alignment/), before and after: Ryo's heavy-kick and air-kick hitboxes moved from floating above the limb onto the foot |
+
+Failure handling also ran:
+- Three library grabs failed measurement, so clip-matcher applied the F5 substitute.
+- Six clips were proposed for retake rather than forced.
+- Movesmith flagged clip timings that disagreed with the GDD instead of hiding them. That loop (movesmith → clip-matcher re-time → movesmith) brought every normal onto target.
+- Movesmith also found an engine bug, which became its own ticket.
+
+### Demo: the vertical slice
+
+The crew's output is playable. The demo is Ryo vs the Kitsune in the bamboo grove at dusk. It uses the rigged models, measured clips, frame data and hitboxes this crew produced, plus the two reward modifiers:
+
+1. **Start screen** with the controls ([screenshot](docs/screenshots/current/start.png)).
+2. **The fight** on Kihon controls against the AI Kitsune. She has one readable habit: she jumps right after getting up ([screenshot](docs/screenshots/current/stage/fight.png)).
+3. **F1 hitbox overlay:** the boxes from movesmith's data drawn on the moving models ([screenshot](docs/screenshots/current/fighters/ryo-heavy-kick-active.png)).
+4. **Win:** the binding line, *"Forgive me, Kitsune. I'll set your spirit free."*, then three reward cards. Foxfire is NEW, a Lv 2 upgrade is UPGRADE, and Will-o'-wisp or Fox's Patience is MODIFIER ([screenshot](docs/screenshots/current/reward_binding.png), [screenshot](docs/screenshots/current/reward_cards.png)).
+5. **Rematch** with the drafted power and the carried health, then the demo-complete card ([screenshot](docs/screenshots/current/demo_complete.png)).
+
+**Play it on Windows, no install needed:**
+1. Download [`YokaiFighters-Demo-Windows.zip`](https://github.com/Andreas203/yokai-fighters/releases/download/demo-v0.1/YokaiFighters-Demo-Windows.zip) from the [`demo-v0.1` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-v0.1) (145 MB).
+2. Right-click the zip and choose **Extract All**. Don't run the game from inside the zip.
+3. Open the `YokaiFighters-Demo` folder and double-click **`PLAY.bat`**. It checks that the folder is complete, then starts the game. The start screen lists the keyboard and gamepad controls.
+
+To run it from source instead, install Godot 4.7 (.NET) and the .NET 10 SDK, then:
+```
+git clone https://github.com/Andreas203/yokai-fighters.git
+cd yokai-fighters/game
+dotnet build
+godot --headless --path . --import   # first run only
+godot --path .                        # or open game/project.godot in the editor and press F5
+```
+
+Agents 1–5 produced what the game *plays*: the models, clips, frame data, hitboxes and reward content. **gameplay-programmer** (agent 6) built the game that plays it, from the deterministic 60-tick fight engine to the demo flow; its work is listed in the [run log](docs/crew/vertical-slice-run-log.md), § 6. The HUD and menu screens came from a separate `ui-designer` agent, which isn't part of this crew.
 
 ## Assignment 4: Dynamic content pipeline
 
@@ -274,6 +428,223 @@ A smaller choice sits in the vault itself: I wrote the tone note as quoted do-an
 | [`tools/content_pipeline/seeded_faults.json`](tools/content_pipeline/seeded_faults.json) | The three hand-broken drafts |
 | [`tools/content_pipeline/runs/`](tools/content_pipeline/runs/) | The recorded runs: `trace.md`, `trace.json`, `llm-calls.json` and each run's output |
 
+## Assignment 5: Goal-oriented coding agent
+
+The agent's goal is one sentence: **every feature the design requires is in the codebase.** It reads the design, scans the code, finds what is missing, decides what to build next, writes it, and scans again until nothing it can write is left. It chose and wrote the rule the whole game is built around, the Tanuki's copy target. That code passed the game's test runner, merged in PR #89 exactly as the agent wrote it, and is what the Tanuki fight, the HUD and the save system now call.
+
+Everything in [`tools/goal_agent/`](tools/goal_agent/) was written for this game.
+
+| What the assignment asks for | Section |
+|---|---|
+| Source code: reads the GDD, scans the codebase, generates code | [How the agent works](#how-the-agent-works), [Run the agent](#run-the-agent) |
+| Priority scoring | [`priority_score()`](#priority_score) |
+| Gap-detection pass, code-writing step, iteration loop | [How the agent works](#how-the-agent-works) |
+| The feature the agent built | [What the agent built](#what-the-agent-built) |
+| Why it selected that feature | [Why the agent chose it](#why-the-agent-chose-it) |
+| Manual changes before accepting the code | [Manual changes before accepting the code](#manual-changes-before-accepting-the-code) |
+
+### The deliverables
+
+| Deliverable | Where |
+|---|---|
+| Source code | [`tools/goal_agent/`](tools/goal_agent/): about 1,450 lines of Python, standard library only, plus 22 unit tests |
+| Working feature | [`game/scripts/Sim/Run/CopyRule.cs`](game/scripts/Sim/Run/CopyRule.cs), the changes to [`RunState.cs`](game/scripts/Sim/Run/RunState.cs), and [`game/tests/CopyRuleTests.cs`](game/tests/CopyRuleTests.cs) |
+| Feature documentation | this section |
+
+### How the agent works
+
+```mermaid
+flowchart TD
+    D[(rules.md + GDD + amendments)] -->|rule text, never-cut list, cut order, schedule| G[Gap detection]
+    S[Scan: C# types, public members, tests, data files] --> G
+    F[(features.json: 36 features, each tied to rule IDs and evidence)] --> G
+    G -->|gaps| P["priority_score()"]
+    P -->|top gap the agent can write| W[Writer model: no tools, sees only rules + nearby files]
+    W --> A{Paths allowed? Builds? All tests green? Re-scan finds it?}
+    A -->|no| W
+    A -->|yes| C1[code-critic: proves a rule is broken, quoting the line]
+    A -->|yes| C2[test-breaker: writes probe tests, which are compiled and run]
+    C1 -->|blocking finding| W
+    C2 -->|failing probe| W
+    C1 -->|nothing blocking| OK[Accepted: stays in the working tree]
+    C2 -->|nothing blocking| OK
+    OK -->|re-scan| G
+```
+
+| Part | File | What it does |
+|---|---|---|
+| Reads the GDD | [`gdd.py`](tools/goal_agent/gdd.py) | Parses every rule in [`docs/design/rules.md`](docs/design/rules.md) (my GDD distilled into citable IDs), the GDD transcription by section, and the amendments. From section G it reads what is never cut (G1), what is cut first (G2, G3) and which week each milestone belongs to (G5). |
+| Scans the codebase | [`scan.py`](tools/goal_agent/scan.py) `scan()` | Walks `game/scripts`, `game/tests` and `data`: every C# type, public member and `[Test]`, every data file. |
+| **Gap-detection pass** | [`scan.py`](tools/goal_agent/scan.py) `detect_gaps()` | Checks each feature's evidence against the scan: present, partial or missing. Comments are stripped first, so `// copy rule not built here` cannot make the copy rule look built. |
+| **Priority scoring** | [`priority.py`](tools/goal_agent/priority.py) `priority_score()` | One number per gap, with the reason for every point. See below. |
+| **Code-writing step** | [`writer.py`](tools/goal_agent/writer.py) | Prompts a model with the rule text and the files next to the feature, parses its answer and writes it. It may only create or edit the files the feature names, can never edit an existing test, and every write is snapshotted so a rejected attempt is undone completely. |
+| Verifying what it wrote | [`verify.py`](tools/goal_agent/verify.py) | `dotnet build`, then the game's headless test runner inside Godot. |
+| Adversarial critics | [`critics.py`](tools/goal_agent/critics.py) | See [The adversaries](#the-adversaries). |
+| **Iteration loop** | [`run.py`](tools/goal_agent/run.py) `cmd_build()` | Scan, detect, rank, write the top gap, then scan again from scratch. Stops when nothing is missing, when nothing that is left can be written by the agent, or when the run's budget is spent, and says which. |
+
+#### What "required" means
+
+[`features.json`](tools/goal_agent/features.json) is the bridge between the design and the code: 36 features, each with the rule IDs it implements and the evidence that proves it exists (a type, a test class, a count of data files). I wrote it by hand, and the agent holds it to the design: it refuses to run if a feature cites a rule that is not in `rules.md`, names a milestone the schedule does not use, points at the full-game stretch section, or if any rule is covered by no feature and not explicitly listed as untracked. Priority is not stored in that file at all.
+
+#### `priority_score()`
+
+Every input is a fact read from the design or from the scan. If I edit rule G1, the ranking changes with no change to the tool.
+
+| Factor | Points | Read from |
+|---|---|---|
+| Never cut | +40 | G1: the copy rule, the merchant, Kihon, the harness, the story cards |
+| Schedule | +10 × urgency (3 = due this week or late, down to 0) | G5, against the build week counted from the first commit |
+| Unblocks | +6 per unbuilt feature waiting on it, up to 5 | the `needs` graph, followed through chains |
+| Cut risk | −4 to −20, the first cut lowest | G2, G3: Kata, the meta-unlock layer, modifiers, dojo trials, presets |
+| Size | −5 × size (1 to 3) | the feature |
+| Started | +5 | the scan finds part of it |
+
+A feature whose prerequisites are missing is not ranked: it is blocked, and being waited on is what raises the score of the feature it needs. Content and UI gaps, and code gaps with no build brief, are reported with their owner (Movesmith, Habit Writer, UI Designer) and left to the crew.
+
+#### The adversaries
+
+A writer that grades its own work will pass it. So after the mechanical gates (allowed paths, build, every existing test, the re-scan), two critics with the opposite incentive get the change:
+
+- **code-critic** is told to assume the code is wrong and prove it against the rule text. A finding only counts if the line it quotes is really in the file and the rule it cites is really in `rules.md`; anything else is thrown away and logged. This stops a critic inventing problems.
+- **test-breaker** does not argue. It writes up to eight probe tests whose expected values come from the rules, and the agent compiles and runs them in the game's test runner. A probe that fails is the finding. A probe that does not compile is discarded.
+
+A blocking finding removes the attempt from the repo and goes back to the writer with the critic's reasoning. The writer may dispute a probe by naming the rule ID; disputed probes are not argued further, they are listed for me to decide. Advisory findings never block: they are the suggested changes in the final report.
+
+Before the model critics run, plain code checks reject what is never acceptable here: Godot types, floats, clocks or unseeded randomness in simulation code, yokai or ability ids hard-coded in shipping code, tests that read `data/` instead of fixtures.
+
+#### Run the agent
+
+From the repo root:
+
+```
+python tools/goal_agent/run.py gaps                         # what is missing, ranked, with reasons. No model calls.
+python tools/goal_agent/run.py gaps --json                  # the same, for the producer agent
+python tools/goal_agent/run.py build --run NAME             # write the top-ranked gap, re-scan, stop
+python tools/goal_agent/run.py build --run NAME --max-features 3
+python tools/goal_agent/run.py critic-test                  # seed faults into accepted code, see who catches them
+python -m unittest discover -s tools/goal_agent -p "test_*.py"
+```
+
+`gaps` needs only Python 3.10+. `build` also needs the `claude` CLI (logged in), `dotnet` and `godot` on PATH, and a branch other than `main`: the agent writes to the working tree and never commits, pushes or merges. Each run writes `runs/<name>/trace.md` with every decision, plus `llm-calls.json` with every prompt and reply.
+
+### What the agent built
+
+**The Tanuki's copy target** (rules T2, T3, T4; GDD 5.3). Recorded run: [`runs/v1-copy-target/trace.md`](tools/goal_agent/runs/v1-copy-target/trace.md).
+
+The Tanuki boss copies one of Ryo's specials. Until then nothing in the game could say which one. The agent wrote:
+
+- `CopyRule.Target(RunState)`: the highest-level special in a slot (T2), ties to the one levelled most recently, then the lower slot (T3).
+- `CopyTarget.Build()`: the copy's move at Ryo's level, never with his modifier and never with the Lv 3 evolution (T4), so an evolved move always beats its copy.
+- In `RunState`: the run did not record when a special gained a level, which T3 needs. The agent added it, put it in the run's state hash only for runs where something has levelled (so existing hashes hold), and added a way to restore it for the later save system.
+- 17 tests, one per clause of the rules.
+
+**It runs.** The game's headless test runner went from 363 passing tests to 380, with none failing:
+
+```
+cd game && dotnet build
+godot --headless --path . res://tests/test_runner.tscn     # ... TESTS 380 passed, 0 failed
+```
+
+When the agent wrote it, it was simulation code with no screen of its own. It is now the copy rule the game plays by: the crew built the rest of the chain on top of `CopyRule.Target`, unchanged. The Tanuki's kit takes its copied special from it ([`TanukiKit.cs`](game/scripts/Sim/TanukiKit.cs), built from [`NodeFight.cs`](game/scripts/Sim/Run/NodeFight.cs)), the HUD talisman that glows for the copy target reads it ([`HudRunView.cs`](game/scripts/Fight/HudRunView.cs)), and the save system checks a restored run against it ([`SaveData.cs`](game/scripts/SaveGame/SaveData.cs)).
+
+### Why the agent chose it
+
+It was not told to. On the first scan it found 15 of 36 features present and ranked the 21 gaps; five were ones it could write at that moment:
+
+| Rank | Feature | Score |
+|---|---|---|
+| 1 | `copy-target` (T2, T3, T4) | 95 |
+| 2 | `merchant-heal` (R6) | 83 |
+| 3 | `dojo-rest` (R7) | 43 |
+| 4 | `coins` (R8) | 37 |
+| 5 | `unlocks` (M1) | 9 |
+
+The score for `copy-target`, as the agent printed it:
+
+| Factor | Points | Why |
+|---|---|---|
+| never cut | +40 | G1 lists "copy rule" |
+| schedule | +30 | G5 puts "copy rule" in week 2; now week 2: due this week or late |
+| unblocks | +30 | 7 unbuilt features wait on it: copy-lock, copy-target-hud, merchant-shop, rest-stop-screen, tanuki-fighter, tanuki-pressure, whole-run-harness |
+| size | −5 | size 1 of 3 |
+| **total** | **95** | |
+
+The merchant's heal is also never cut and also due this week. The copy target won on one thing: seven other gaps cannot start without it, including the Tanuki fight itself and the harness. `unlocks` came last because G2 names the meta-unlock layer as the second thing cut if the build falls behind.
+
+After the write, the agent scanned again: 16 present, `copy-target` gone from the list, and `copy-lock` (T1), blocked a moment earlier, now ranked first at 83. It stopped there because the run's budget was one feature.
+
+**The same scan today.** Run on the repo as it is now (build week 3), `gaps` finds 33 of 36 features present; the crew built the rest of them through tickets. The one gap left that the agent can write is `unlocks` (M1), at 9 points: due, but the second thing G2 cuts. The other two go to their owners: the remaining abilities to Movesmith, hit feedback to the Gameplay Programmer.
+
+### What the critics did to it
+
+The feature took three attempts. The first two built, passed every test and passed all eight probes, and were still rejected:
+
+| Attempt | Mechanical gates | code-critic | test-breaker | Result |
+|---|---|---|---|---|
+| 1 | build ok, 375 tests green | The level-up order decides the copy target but is not in `StateHash()`: two runs with the same hash get different copy targets, and a restored run can silently change its target. | 8 probes, 0 failed | rejected |
+| 2 | build ok, 379 green | The new restore method stores any positive number: restore `int.MaxValue`, level another special, and the order wraps negative, so the wrong special wins the T3 tie. | 8 probes, 0 failed | rejected |
+| 3 | build ok, 380 green | 4 advisory findings, none blocking | 7 probes, 0 failed | **accepted** |
+
+Every finding the critic made across the run quoted a real line and a real rule; none had to be thrown away. Nine model calls in total.
+
+#### Do the critics work, or do they just complain?
+
+A critic that always finds something proves nothing. So [`seeded_faults.json`](tools/goal_agent/seeded_faults.json) holds three faults I wrote by hand, each one line that breaks a rule in the accepted code. `critic-test` puts each one in, runs the gates as in a real attempt, and takes it out again. The critics see the whole files with no hint of where the fault is. Recorded run: [`runs/critic-seeded-faults/trace.md`](tools/goal_agent/runs/critic-seeded-faults/trace.md).
+
+| Seeded fault | Rule | My agent's own tests | code-critic | test-breaker |
+|---|---|---|---|---|
+| Ties go to the least recently levelled special instead of the most recent | T3 | 7 fail | found it: "The tie-break is inverted", `CopyRule.cs:55` | 5 probes fail |
+| The copy of a Lv 3 special keeps Ryo's evolution | T4 | 1 fails | found it: the constant "never clamps", `CopyRule.cs:35` | 1 probe fails |
+| A full tie goes to the higher slot instead of the lower | T3 | 2 fail | found it: "the HIGHER slot wins", `CopyRule.cs:54` | 3 probes fail |
+
+All three were caught three ways, and each critic finding named the seeded line itself rather than something nearby. With no fault seeded, the same critics passed the same code with nothing blocking, so they tell broken code from working code. Six model calls.
+
+### Manual changes before accepting the code
+
+**To the generated game code: none.** `CopyRule.cs`, the `RunState.cs` changes and `CopyRuleTests.cs` merged in PR #89 exactly as the agent's third attempt wrote them, and `CopyRule.cs` and `CopyRuleTests.cs` have not been edited since. The three attempts were corrected by the agent's own critics, not by me. The two `.cs.uid` files beside the new scripts were generated by Godot's import step, not by the agent.
+
+**To the agent's inputs, before the run:** the first version of the feature's brief allowed the writer only `CopyRule.cs` and its test file. T3's "most recently levelled" cannot be answered without the run recording level-ups, so I added `RunState.cs` to the files the feature may edit. That is the one place where I had to understand the feature better than the agent's manifest did.
+
+**What I reviewed and accepted as it is.** The writer flagged two readings where the rules are silent, which only I could decide. I kept both:
+
+- T3 counts a gained level as "levelled". A newly drafted Lv 1 special has not levelled, so a run where everything is Lv 1 resolves to the lower slot (Spirit Wave), not to the newest pick.
+- T4 says the copy never has the evolution. The writer read that as: a copy of a Lv 3 special runs the Lv 2 numbers.
+
+**Suggested changes I have not taken yet.** The critics left four advisory findings that did not block acceptance. They are still open:
+
+1. `CopyRuleTests.cs:325`: one assertion takes its "before" hash too early, so it cannot fail for the reason it names. Take the hash after the Foxfire equip. This one is simply right.
+2. `CopyRuleTests.cs`: T2 says "throws included" and no test uses a throw special. Add one.
+3. `CopyRule.cs:25`: `CopyTarget.Build` always uses the default sim config while Ryo's move uses the match's. Pass the config through if a match ever runs on a non-default config.
+4. `RunState.cs`: the level-up order is hashed for every run with a level-up, even where it cannot change the result. Either narrow it or accept that recorded hashes of such runs change. No recorded replay was affected when it merged (all 380 tests passed, including the replay tests).
+
+### Which existing agents became goal-oriented
+
+My crew had ten agents when I built this. I went through each and asked one question: can it measure for itself whether it is finished, and is it safe for it to keep going until it is? (clip-matcher has since been split into `rig-specialist` and `animator`; the answer for both is the one clip-matcher got.)
+
+| Agent | Goal-oriented now? | Why |
+|---|---|---|
+| `producer` | **Yes** | It planned by reading the ticket board, which only shows work someone already thought of. It now starts every pass with `run.py gaps --json` and tickets the gaps in score order. Its pass is done when every gap is ticketed, blocked with a reason, or waiting on me. |
+| `gameplay-programmer` | **Yes** | It already looped on build and tests. It now has a stated goal and stop condition: the gap its ticket names is reported present by the scan, not "the code is written". |
+| `ui-designer` | No, but it gets the critics | Whether a screen is finished is a visual judgment against the concept art, and that is mine. A loop cannot check it. |
+| `movesmith`, `habit-writer` | No | Their counts are easy to measure (33 abilities, 7 profiles) and the gap report now shows them, but every move waits on a clip I have approved. A loop would stall on me or write frame data with no clip, which rule F2 forbids. |
+| `asset-smith`, `rig-specialist`, `animator`, `sound-scout` | No | Each step spends generation credits or money. An agent that pursues a goal by spending is the one I least want looping unattended. |
+| `rules-lawyer` | No, deliberately | It is a gate. A gate with a goal of its own, such as "get content merged", is biased toward passing. Its job is to have no stake in the outcome. |
+| `sparring-partner` | No | It reads results and recommends. If it could change the numbers to hit its own targets, it would be marking its own homework. |
+
+Two new agents, both adversarial, both for code, which had no gate before (content has had the Rules Lawyer since assignment 3):
+
+- [`code-critic`](.claude/agents/code-critic.md): reads a code branch against the written rules and rejects by file, line and rule ID. Read-only.
+- [`test-breaker`](.claude/agents/test-breaker.md): writes probe tests that try to make a branch give a wrong answer and reports the ones that fail. It can write probes and nothing else.
+
+The goal agent's in-loop critics take their briefs from these two role files ("What to attack"), so the tool and the crew attack the same things and I maintain one description. `/produce` now runs both on every code branch before it reaches my review queue, with three rounds before a ticket is marked blocked, the same shape as the Rules Lawyer gate for content.
+
+### What I would change next
+
+- The manifest is hand-written. The agent checks it against the design in both directions, but a feature I forgot to describe is still a feature it cannot see beyond "rule X is covered by nothing".
+- The writer sees only the files a brief names. That kept it honest and cheap here, and it is why the brief needed `RunState.cs` added by hand.
+- The critic in attempt 2 blocked on an input (`int.MaxValue` from a save file) that no code produced at the time. It was right, and the fix was small, but a critic with no cost for blocking will always find one more edge. The cap of four attempts is the only thing that bounds it today.
+- The recorded run had a budget of one feature, so the loop's re-scan is shown once. A longer run would show it carrying on to `copy-lock`.
+
 ## The agent crew
 
 The game is built with a crew of AI agents running in Claude Code. They are **development tools only**; none of them ship in the game. A human designer reviews their work, runs the asset generators, buys sound, makes cut decisions and approves every code merge.
@@ -291,6 +662,8 @@ The game is built with a crew of AI agents running in Claude Code. They are **de
 | Content | `sparring-partner` | Reads whole-run bot results and recommends minimal tuning |
 | Engineering | `gameplay-programmer` | C# systems, fight AI, test bot and harness via the Godot MCP |
 | Engineering | `ui-designer` | Every screen and the HUD via the Godot MCP |
+| Engineering | `code-critic` | Gate: assumes a code branch is wrong and tries to prove it against the written rules; read-only |
+| Engineering | `test-breaker` | Gate: writes probe tests that try to break a code branch |
 
 Agent definitions live in [`.claude/agents/`](.claude/agents/). Run a production pass with **`/produce`** ([`.claude/skills/produce/SKILL.md`](.claude/skills/produce/SKILL.md)).
 
@@ -320,6 +693,7 @@ flowchart TD
     subgraph ENG["Engineering team"]
         GP["Gameplay Programmer<br/>C# via Godot MCP"]
         UI["UI Designer<br/>screens + HUD via Godot MCP"]
+        CC{"Code Critic + Test Breaker<br/>gates"}
     end
 
     subgraph CONTENT["Content team"]
@@ -352,8 +726,10 @@ flowchart TD
     O -- "code" --> GP
     O -- "code" --> UI
     GP -- "builds bot + harness" --> H
-    GP -- "PR on YOK-n branch" --> R
-    UI -- "PR on YOK-n branch" --> R
+    GP -- "YOK-n branch" --> CC
+    UI -- "YOK-n branch" --> CC
+    CC -. "FAIL + file:line, rule or probe" .-> GP
+    CC -- "PASS: PR" --> R
     R -- "approve + merge" --> M
 
     H -- "bot results" --> SP
@@ -369,7 +745,7 @@ flowchart TD
 | **rig** | Rig Specialist spec → designer approves the job (generator auto-rig or AccuRIG 2) → job runs → Blender checks → G4 gate for a yokai | Rig accepted, or 3 takes then a fallback |
 | **clip** | Animator spec → designer approves the take → take runs (generator, motion capture or bought pack) → Animator cleans, measures and retimes it | A measured clip in `data/clips/`, or an F5 substitute after 3 takes |
 | **sound** | Sound Scout → designer buys → Animator sound cues | The designer has made the purchase decision |
-| **code** | Gameplay Programmer or UI Designer on its own branch, build-and-test loop via the Godot MCP | The designer approves the PR. Agents never merge. |
+| **code** | Gameplay Programmer or UI Designer on its own branch, build-and-test loop via the Godot MCP → Code Critic → Test Breaker | The designer approves the PR. Agents never merge. Three failed gate rounds block the ticket for the designer. |
 | **balance** | Harness results → Sparring Partner → Producer tickets the tuning | Tuning tickets re-enter the content workflow |
 
 ## Tickets, branches and PRs
