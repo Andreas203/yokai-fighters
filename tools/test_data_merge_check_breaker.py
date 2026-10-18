@@ -795,5 +795,31 @@ class SummaryForgeryProbes(unittest.TestCase):
         self.assertIn("always()", block)
 
 
+class Round5Probes(unittest.TestCase):
+    def setUp(self):
+        self.text = WORKFLOW.read_text()
+        i = self.text.index("Job summary from the report")
+        self.after = self.text[i:]
+
+    def test_summary_and_upload_steps_read_no_env_path(self):
+        import re
+        self.assertNotRegex(self.after, r"\$\{?OUT_DIR|env\.OUT_DIR|\$\{\{\s*env\.")
+        for m in re.finditer(r"(?:cat|-f)\s+\"?\$\{?([A-Z_]+)", self.after):
+            self.assertEqual(m.group(1), "RUNNER_TEMP", m.group(0))
+
+    def test_out_dir_not_exported_to_github_env(self):
+        self.assertNotRegex(self.text, r"OUT_DIR=.*GITHUB_ENV")
+
+    def test_check_step_strips_every_runner_file_command(self):
+        i = self.text.index("data_merge_check.py")
+        block = self.text[i - 700:i]
+        for v in ("GITHUB_STEP_SUMMARY", "GITHUB_ENV", "GITHUB_PATH", "GITHUB_OUTPUT", "GITHUB_STATE"):
+            self.assertIn(f"-u {v}", block)
+
+    def test_no_step_after_the_check_exports_to_github_env(self):
+        i = self.text.index("data_merge_check.py")
+        self.assertNotIn("GITHUB_ENV", self.text[i:])
+
+
 if __name__ == "__main__":
     unittest.main()
