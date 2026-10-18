@@ -251,3 +251,21 @@ public static class FightStageContainerProbes
 		finally { fight.QueueFree(); }
 	}
 }
+
+public static class StagePatternProbes
+{
+	[Test]
+	public static void StagePattern_RejectsTrailingNewlineCaseUnicodeEmptySegment()
+	{
+		// claim: a stage is a scene path of [A-Za-z0-9_-] segments under res://scenes/stage/ ending .tscn; nothing else loads.
+		foreach (string bad in new[] { "res://scenes/stage/a.tscn\n", "res://scenes/stage/a.tscn\r\n", "res://scenes/stage/a.tscn ", "res://scenes/stage/a.TSCN",
+			"res://scenes/stage//a.tscn", "res://scenes/stage/./a.tscn", "res://scenes/stage/ａ.tscn", "res://scenes/stage/а.tscn", "res://scenes/stage/a b.tscn", "res://scenes/stage/a\0.tscn" })
+		{
+			string json = "{ \"kind\": \"node_scenes\", \"id\": \"t\", \"schema_version\": 1, \"default_scene\": \"res://scenes/fight.tscn\", \"fallback_fighter\": \"kitsune\", \"default_stage\": "
+				+ System.Text.Json.JsonSerializer.Serialize(bad) + ", \"tiers\": { \"yokai\": { \"reaction_frames\": 22 } }, \"opponents\": { \"kitsune\": { \"fighter\": \"kitsune\" } } }";
+			bool threw = false;
+			try { YokaiFighters.Sim.NodeSceneTable.Parse(json); } catch (System.FormatException) { threw = true; }
+			Assert.True(threw, $"refused: {System.Text.Json.JsonSerializer.Serialize(bad)}");
+		}
+	}
+}
