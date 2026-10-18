@@ -385,10 +385,32 @@ public partial class GameFlow : Node
 				SaveData after = Saved.WithRun(null).WithCarryOver(carried);
 				// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
 				if (end.BeatTanuki) after = after.WithTanukiWin();
+				// YOK-86, M1: unlocks by the depth reached, the next still-locked ids in the fixed order, in the same write.
+				foreach (string id in UnlockOrder(session.Pool).Award(end, after.Unlocks))
+				{
+					GD.Print($"GameFlow: unlocked '{id}'");
+					after = after.WithUnlock(id);
+				}
 				Write(after);
 			}
 			if (Fight?.Tutorial is not null) MarkTutorialSeen(); // YOK-92: the guided duel was lost
 		};
+	}
+
+	/// <summary>
+	/// YOK-86, M1: the fixed unlock order, from the run's pool and data/cancels/ (<see cref="Unlocks.FromData"/>). A
+	/// cancel folder that fails to load is left out with a warning, so a run end is always saved.
+	/// </summary>
+	static Unlocks UnlockOrder(AbilityPool pool)
+	{
+		string[] cancels;
+		try { cancels = CancelRuleLoader.LockedIds(ContentPaths.Data("cancels")); }
+		catch (Exception e) when (e is FormatException or System.IO.IOException or System.Text.Json.JsonException or InvalidOperationException)
+		{
+			GD.PushWarning($"GameFlow: cancel rules left out of the unlock order: {e.Message}");
+			cancels = Array.Empty<string>();
+		}
+		return Unlocks.FromData(pool, cancels);
 	}
 
 	/// <summary>

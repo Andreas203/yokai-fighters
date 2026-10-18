@@ -1027,7 +1027,9 @@ public static class SaveProbes
 			Assert.True(flow.Session!.Node?.NodeId == "boss-tanuki" && flow.Session.CopyLocked && SameCopy(flow.Session.LockedCopy, boss.LockedCopy), "inside the boss, the same copy locked");
 			Assert.True(flow.Session.LoseFight().Ok, "lost");
 			SaveLoad after = new SaveStore(path).Load();
-			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
+			// YOK-86, M1: a loss at the Tanuki now awards 2 unlocks after the saved ones; the saved "u" stays first.
+			var awarded = Unlocks.FromData(flow.Session.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels"))).Award(flow.Session.Ended!, new[] { "u" });
+			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }.Concat(awarded)) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
 			Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup");
 		});
 	});

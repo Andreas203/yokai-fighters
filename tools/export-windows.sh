@@ -16,7 +16,7 @@ mkdir -p "$OUT"
 "$GODOT" --headless --path "$REPO/game" --export-release "Windows Desktop" ../build/windows/YokaiFighters.exe
 
 mkdir -p "$OUT/data" "$OUT/fixtures"
-for d in clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
+for d in cancels clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
 if command -v powershell.exe >/dev/null; then
