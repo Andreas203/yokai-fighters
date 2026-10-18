@@ -488,18 +488,27 @@ flowchart TD
 
 #### `priority_score()`
 
-Every input is a fact read from the design or from the scan. If I edit rule G1, the ranking changes with no change to the tool.
+Ranking a gap takes two steps.
 
-| Factor | Points | Read from |
-|---|---|---|
-| Never cut | +40 | G1: the copy rule, the merchant, Kihon, the harness, the story cards |
-| Schedule | +10 × urgency (3 = due this week or late, down to 0) | G5, against the build week counted from the first commit |
-| Unblocks | +6 per unbuilt feature waiting on it, up to 5 | the `needs` graph, followed through chains |
-| Cut risk | −4 to −20, the first cut lowest | G2, G3: Kata, the meta-unlock layer, modifiers, dojo trials, presets |
-| Size | −5 × size (1 to 3) | the feature |
-| Started | +5 | the scan finds part of it |
+**Step 1: can the agent write it right now?** A gap is skipped if any of these is true:
+- **It is blocked:** something it needs is not built yet. The Tanuki fight, for example, needs the copy target first.
+- **It is not code:** moves and card text go to Movesmith or the Habit Writer.
+- **It has no build brief yet** in `features.json`.
 
-A feature whose prerequisites are missing is not ranked: it is blocked, and being waited on is what raises the score of the feature it needs. Content and UI gaps, and code gaps with no build brief, are reported with their owner (Movesmith, Habit Writer, UI Designer) and left to the crew.
+Skipped gaps still get a score, but they are listed after every gap the agent can write, and the report names who they go to. That is why a gap the agent can write at 9 points sits above a content gap at 20.
+
+**Step 2: score it.** Points are added up from six questions. Every answer is read from the design (section G of `rules.md`) or from the scan, so if I edit rule G1, the ranking changes with no change to the tool.
+
+| Question | Points |
+|---|---|
+| Does G1 say it's never cut? | **+40** |
+| How soon is it due (G5)? | **+30** if due this week or late, +20 next week, +10 the week after, 0 later |
+| How many unbuilt features are waiting on it? | **+6 each**, counting at most 5 (so +30 max). This includes indirect waits: if A waits on B and B waits on this one, both count. |
+| Is it on the cut list if the build falls behind (G2, G3)? | The earlier it gets cut, the bigger the penalty: Kata −20, meta-unlocks −16, modifiers −12, dojo trials −8, presets −4 |
+| How big is it? | **−5** per size point (sizes 1 to 3) |
+| Is it already half-built? | **+5** |
+
+The agent writes the eligible gap with the highest total. In one line: build what can never be cut first, then whatever is due, then whatever unlocks the most other work, and leave anything that might be cut until last. The worked scores for the recorded run are in [Why the agent chose it](#why-the-agent-chose-it).
 
 #### The adversaries
 
@@ -526,6 +535,19 @@ python -m unittest discover -s tools/goal_agent -p "test_*.py"
 ```
 
 `gaps` needs only Python 3.10+. `build` also needs the `claude` CLI (logged in), `dotnet` and `godot` on PATH, and a branch other than `main`: the agent writes to the working tree and never commits, pushes or merges. Each run writes `runs/<name>/trace.md` with every decision, plus `llm-calls.json` with every prompt and reply.
+
+#### How it connects to Linear
+
+The agent never touches Linear. It reads the design, scans the code and writes to the working tree, nothing else. The `producer` agent keeps the board in step with it on every `/produce` pass:
+
+1. It runs `run.py gaps --json`.
+2. Every gap with no ticket gets one, in score order. The gap's owner is the agent assigned, its unmet evidence is the acceptance criteria, and its rule IDs go on the ticket.
+3. A gap's `blocked_by` list becomes Linear blocking relations between the tickets.
+4. A ticket whose feature the scan now reports present is ready to close.
+
+A ticket for a gap the agent can write may be run by the agent instead of a crew programmer: `run.py build --only <feature-id>` on the ticket's `YOK-<number>` branch, with the trace in the PR description. The PR then goes to my review like any other.
+
+The recorded `copy-target` run came before this wiring: it ran on the `YOK-assignment-5-goal-agent` branch with no ticket, so that feature never had a Linear ticket.
 
 ### What the agent built
 
@@ -623,7 +645,7 @@ My crew had ten agents when I built this. I went through each and asked one ques
 
 | Agent | Goal-oriented now? | Why |
 |---|---|---|
-| `producer` | **Yes** | It planned by reading the ticket board, which only shows work someone already thought of. It now starts every pass with `run.py gaps --json` and tickets the gaps in score order. Its pass is done when every gap is ticketed, blocked with a reason, or waiting on me. |
+| `producer` | **Yes** | It planned by reading the ticket board, which only shows work someone already thought of. It now starts every pass with `run.py gaps --json` and tickets the gaps in score order. Its pass is done when every gap is ticketed, blocked with a reason, or waiting on me. How the gaps become tickets: [How it connects to Linear](#how-it-connects-to-linear). |
 | `gameplay-programmer` | **Yes** | It already looped on build and tests. It now has a stated goal and stop condition: the gap its ticket names is reported present by the scan, not "the code is written". |
 | `ui-designer` | No, but it gets the critics | Whether a screen is finished is a visual judgment against the concept art, and that is mine. A loop cannot check it. |
 | `movesmith`, `habit-writer` | No | Their counts are easy to measure (33 abilities, 7 profiles) and the gap report now shows them, but every move waits on a clip I have approved. A loop would stall on me or write frame data with no clip, which rule F2 forbids. |
