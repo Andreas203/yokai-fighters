@@ -17,7 +17,7 @@ How it was read (2026-10-15): the glTF JSON chunk parsed directly, and Blender 4
 | Property | Value |
 |---|---|
 | Up axis | **+Y** (glTF native). Blender shows it as +Z after import |
-| Facing | **+Z** in glTF (the `headfront` joint sits 12.7 cm (Ryo) / 16.5 cm (Kitsune) in front of `Head` on +Z). Character's left = +X. The Godot fighter scenes turn the model with the `Mirror/Yaw` node, not by changing the rig |
+| Facing | **+Z** in glTF (the `headfront` joint sits 12.7 cm (Ryo) / 16.5 cm (Kitsune) in front of `Head` on +Z). Character's left = +X. The Godot fighter scenes turn the model with the `Mirror/Yaw` node of `game/scenes/fighters/BaseFighter.tscn` (+90° about Y: rig +Z → world +X = sim facing right; YOK-145), shared by every fighter, not by changing the rig or a per-fighter rotation |
 | Units | Bones in **centimetres**: the `Armature` node carries scale 0.01, so world units are metres. Bone translations in the files are in cm (Hips at Y about 95) |
 | Origin | At the feet: mesh bbox min Y = 0.000 on both rigs; root at world (0, 0, 0) |
 | Rest pose | **T-pose**: arms horizontal (hand head 3.8 cm (Ryo) / 6.0 cm (Kitsune) below the shoulder head), legs straight, feet slightly apart (ankles ±0.13 m) |

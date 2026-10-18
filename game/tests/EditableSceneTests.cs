@@ -156,6 +156,29 @@ public static class EditableSceneTests
 		}
 	}
 
+	/// <summary>YOK-145: every body scene inherits BaseFighter.tscn and adds only its model and extras; the shared
+	/// nodes (Mirror, Yaw, Animator, Toon) are never overridden, so the guard yaw and the Manual animator stay in one place.</summary>
+	[Test]
+	public static void FighterScenes_InheritBaseFighterWithoutOverridingSharedNodes()
+	{
+		const string basePath = "res://scenes/fighters/BaseFighter.tscn";
+		string[] shared = { "Mirror", "Mirror/Yaw", "Animator", "Toon" };
+		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
+		{
+			var state = GD.Load<PackedScene>(set.ScenePath).GetState();
+			Assert.Equal(basePath, state.GetNodeInstance(0)?.ResourcePath, $"{set.ScenePath}: root inherits the base fighter");
+			bool hasModel = false;
+			for (int i = 0; i < state.GetNodeCount(); i++)
+			{
+				string path = state.GetNodePath(i).ToString().TrimPrefix("./");
+				if (shared.Contains(path))
+					Assert.Equal(0, state.GetNodePropertyCount(i), $"{set.ScenePath}: {path} is the base's, not overridden");
+				if (path == "Mirror/Yaw/Model") hasModel = state.GetNodeInstance(i) != null;
+			}
+			Assert.True(hasModel, $"{set.ScenePath}: adds its rigged model at Mirror/Yaw/Model");
+		}
+	}
+
 	[Test]
 	public static void KitsuneTails_FollowTheHips(Node runner)
 	{

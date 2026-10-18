@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FighterModel.cs" id="1_model"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="2_toon"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="3_toonmat"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="4_outline"]
+
+[node name="Fighter" type="Node3D" unique_id=1145014501]
+script = ExtResource("1_model")
+
+[node name="Mirror" type="Node3D" parent="." unique_id=1145014502]
+
+[node name="Yaw" type="Node3D" parent="Mirror" unique_id=1145014503]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Animator" type="AnimationPlayer" parent="." unique_id=1145014504]
+deterministic = true
+root_node = NodePath("../Mirror/Yaw/Model")
+callback_mode_process = 2
+
+[node name="Toon" type="Node" parent="." unique_id=1145014505]
+script = ExtResource("2_toon")
+Toon = ExtResource("3_toonmat")
+Outline = ExtResource("4_outline")
