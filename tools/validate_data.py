@@ -868,6 +868,29 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first != f:
                 failures.setdefault(f, []).append(("elder", f"'{doc['elder']}' already has a twist in {rel(first)} (Y2: one per elder)"))
 
+    # YOK-153 (A11, M1): an unlock is saved by ability id alone, so one id must name one ability across the kinds
+    # checked together: specials, their evolutions (A5), modifiers and cancel rules. data/samples/ is documentation
+    # and may reuse real ids.
+    ability_of: dict[str, tuple[Path, str]] = {}
+    for f, doc in docs.items():
+        if not isinstance(doc, dict) or SAMPLES_DIR in f.resolve().parents:
+            continue
+        kind = doc.get("kind")
+        named: list[tuple[str, str, object]] = []
+        if kind in ("special", "modifier", "cancel_rule"):
+            named.append(("id", kind, doc.get("id")))
+        if kind == "special":
+            evo = ((doc.get("levels") or {}).get("3") or {}).get("evolution") if isinstance(doc.get("levels"), dict) else None
+            if isinstance(evo, dict):
+                named.append(("levels.3.evolution.id", "evolution", evo.get("id")))
+        for where, what, aid in named:
+            if not isinstance(aid, str) or not aid:
+                continue
+            first = ability_of.setdefault(aid, (f, what))
+            if first != (f, what):
+                failures.setdefault(f, []).append(
+                    (where, f"ability id '{aid}' is already the {first[1]} in {rel(first[0])} (A11: one id per ability, so an unlock names one)"))
+
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:
         for where, msg in failures.get(f, []):

@@ -73,6 +73,13 @@ public sealed class Unlocks
 	}
 
 	/// <summary>
+	/// YOK-153: the log line for one id <see cref="FromData(AbilityPool, IEnumerable{string}?, out IReadOnlyList{string})"/>
+	/// dropped: a blank id says it is blank; any other was named twice.
+	/// </summary>
+	public static string WhyDropped(string? id) =>
+		string.IsNullOrWhiteSpace(id) ? "a blank id in the data was left out" : $"'{id}' is named twice in the data; kept once";
+
+	/// <summary>
 	/// M1: unlocks earned by a run that ended this way. A Tanuki win → 4; ended on the Tanuki's node (lost) → 2;
 	/// reached row 6 or further otherwise → 1; row 5 or earlier → 0. "Reached the Tanuki" is
 	/// <see cref="RunEnd.AtTanuki"/> (the copy-lock node), not a row number, so it holds on any map.

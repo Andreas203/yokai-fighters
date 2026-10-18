@@ -9,7 +9,7 @@ namespace YokaiFighters.Sim;
 /// YOK-47: the reward draft after a duel (A7): up to three cards from the beaten yokai, built from data with
 /// a seeded <see cref="SimRng"/> (same run + pool + seed = same offer). Card order: NEW, UPGRADE, MODIFIER.
 /// <list type="bullet">
-/// <item>NEW: an unlocked special sourced from the yokai (A8; rare only from elders, A9) Ryo doesn't own;
+/// <item>NEW: an unlocked special (data not locked, or unlocked by the save: <see cref="AbilityPool.IsAvailable(SpecialData)"/>) sourced from the yokai (A8; rare only from elders, A9) Ryo doesn't own;
 /// it goes to its own slot at Lv 1 (A3).</item>
 /// <item>UPGRADE (always offered while an owned special can level, A7): one owned special +1 level, the step
 /// from its data (A4). One seeded target by default; <c>upgradeChoice</c> lets the player pick any.</item>
@@ -38,10 +38,12 @@ public sealed class RewardDraft : IRewardDraft
 	public static RewardDraft Build(RunState run, AbilityPool pool, string yokai, uint seed, bool elder = false, bool upgradeChoice = false)
 	{
 		var rng = new SimRng(seed);
-		bool Offered(string source, string rarity, bool locked) => source == yokai && !locked && (rarity == "common" || elder);
+		// A8 source, A9 rarity, A11/M1 locked unless the save unlocked it (YOK-153: pool.Unlocked, a set, so the pool's
+		// file-name order and therefore the seeded draw stay the same for the same seed, save and pool).
+		bool Offered(string source, string rarity, bool available) => source == yokai && available && (rarity == "common" || elder);
 
-		var newPool = pool.Specials.Where(s => !s.Starter && Offered(s.Source, s.Rarity, s.Locked) && !run.Owns(s.Id)).ToList();
-		var modPool = pool.Modifiers.Where(m => Offered(m.Source, m.Rarity, m.Locked) && run.Owned.Any(o => run.CanAttach(o.Slot, m))).ToList();
+		var newPool = pool.Specials.Where(s => !s.Starter && Offered(s.Source, s.Rarity, pool.IsAvailable(s)) && !run.Owns(s.Id)).ToList();
+		var modPool = pool.Modifiers.Where(m => Offered(m.Source, m.Rarity, pool.IsAvailable(m)) && run.Owned.Any(o => run.CanAttach(o.Slot, m))).ToList();
 		var upgradable = run.Owned.Where(o => run.CanLevelUp(o.Slot)).ToList();
 
 		var cards = new List<(CardView, SpecialData?, ModifierData?)>();
