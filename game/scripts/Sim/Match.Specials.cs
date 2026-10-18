@@ -29,6 +29,8 @@ public sealed class Projectile
 	public int FiredBy;
 	/// <summary>YOK-90: which use in a row of its special fired it (0 = not counted); see <see cref="Match"/> twists.</summary>
 	public int Repeat;
+	/// <summary>YOK-103: turned back by an elder's reflect (YOK-90): hits as the elder's, never as a use of the firer's move.</summary>
+	public bool Reflected;
 
 	/// <summary>Hitbox in world centi-units, mirrored by the direction it flies.</summary>
 	public (int x0, int y0, int x1, int y1) WorldBox()
@@ -254,7 +256,7 @@ public sealed partial class Match
 			if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Projectile) == true) continue;
 			if (!HurtOverlaps(def, p.WorldBox())) continue;
 			if (Reflects(1 - p.Owner, p.Repeat)) { ReflectProjectile(p); continue; } // YOK-90: turned around, no hit
-			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p);
+			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p, reflected: p.Reflected);
 			p.HitsLeft--;
 			any = true;
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(p.Owner, p.Move.Id,
@@ -300,7 +302,8 @@ public sealed partial class Match
 			h = Fnv.Mix(h, p.Age);
 			h = Fnv.Mix(h, p.HitsLeft);
 			h = Fnv.Mix(h, p.AbsorbsLeft);
-			h = Fnv.Mix(h, p.FiredBy);
+			if (p.Move.OnHitVariant != null || p.Move.OnBlockVariant != null) h = Fnv.Mix(h, p.FiredBy); // YOK-103: only read then
+			if (p.Reflected) h = Fnv.Mix(h, 1);
 			h = Fnv.Mix(h, p.Move.Damage);
 			if (p.Repeat != 0) h = Fnv.Mix(h, p.Repeat); // YOK-90: only in reflect fights
 		}

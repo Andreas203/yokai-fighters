@@ -397,7 +397,9 @@ public sealed partial class Match
 			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
-			if (m.HealPctMaxHealth > 0) // YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max
+			// YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max. A reflected move (YOK-90) is the
+			// victim's own: its modifier gifts never act for the elder who turned it back.
+			if (m.HealPctMaxHealth > 0 && !reflected)
 				att.Health = (int)Math.Min(att.MaxHealth, (long)att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
 		}
 		def.Guarding = false;
@@ -407,7 +409,7 @@ public sealed partial class Match
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
 		int away = Math.Sign(def.X - att.X);
 		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : reflected && away != 0 ? away : att.Facing), want = push * SimConfig.Scale;
-		if (!blocked && m.PullOnHit > 0)
+		if (!blocked && m.PullOnHit > 0 && !reflected)
 		{
 			// YOK-103 (River Pull): instead of the push, the defender comes PullOnHit steps toward the attacker;
 			// push boxes (ResolvePositions) stop it at the attacker's body. No corner hand-off.

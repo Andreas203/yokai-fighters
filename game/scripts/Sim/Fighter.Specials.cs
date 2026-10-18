@@ -153,14 +153,29 @@ public sealed partial class Fighter
 		TwistArmourTaken = 0;
 	}
 
+	/// <summary>YOK-103: any slot carries a modifier (fight setup; the use counters only matter then).</summary>
+	public bool HoldsModifier
+	{
+		get
+		{
+			for (int i = 1; i < Specials.Length; i++) if (Specials[i]?.Modifier != null) return true;
+			return false;
+		}
+	}
+
 	internal ulong HashSpecialState(ulong h)
 	{
 		h = Fnv.Mix(h, (int)ActiveSpecial | (ActiveEx ? 16 : 0) | (ActivePrecision ? 32 : 0) | (MoveBlocked ? 64 : 0));
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
-		h = Fnv.Mix(h, (int)ActiveConditions | ArmourHitsTaken << 8);
-		h = Fnv.Mix(h, MoveSerial);
-		foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
+		// YOK-103 state, mixed only where it can matter, so a fight without modifiers hashes as before (as YOK-90 does
+		// for twists): start conditions / armour hits once set, use counters only for a fighter holding a modifier.
+		if (ActiveConditions != StartConditions.None || ArmourHitsTaken != 0) h = Fnv.Mix(h, (int)ActiveConditions | ArmourHitsTaken << 8);
+		if (HoldsModifier)
+		{
+			h = Fnv.Mix(h, MoveSerial);
+			foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
+		}
 		if (Twist is { } tw) // YOK-90: mixed only in twist fights, so every other recording keeps its hashes
 		{
 			h = Fnv.MixString(h, tw.Id);
