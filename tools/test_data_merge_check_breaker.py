@@ -811,13 +811,13 @@ class Round5Probes(unittest.TestCase):
         self.assertNotRegex(self.text, r"OUT_DIR=.*GITHUB_ENV")
 
     def test_check_step_strips_every_runner_file_command(self):
-        i = self.text.index("data_merge_check.py")
+        i = self.text.index("python -I \"$TOOLS/data_merge_check.py\"")
         block = self.text[i - 700:i]
         for v in ("GITHUB_STEP_SUMMARY", "GITHUB_ENV", "GITHUB_PATH", "GITHUB_OUTPUT", "GITHUB_STATE"):
             self.assertIn(f"-u {v}", block)
 
     def test_no_step_after_the_check_exports_to_github_env(self):
-        i = self.text.index("data_merge_check.py")
+        i = self.text.index("python -I \"$TOOLS/data_merge_check.py\"")
         self.assertNotIn("GITHUB_ENV", self.text[i:])
 
 
