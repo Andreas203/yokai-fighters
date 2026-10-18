@@ -45,12 +45,31 @@ public sealed class Unlocks
 	/// sorted by file name), then the locked cancel-rule ids in the order given (<see cref="CancelRuleLoader.LockedIds"/>
 	/// sorts by file name). Starters are never locked (A1) and are left out even if a file says so.
 	/// </summary>
-	public static Unlocks FromData(AbilityPool pool, IEnumerable<string>? lockedCancelIds = null)
+	public static Unlocks FromData(AbilityPool pool, IEnumerable<string>? lockedCancelIds = null) =>
+		FromData(pool, lockedCancelIds, out _);
+
+	/// <summary>
+	/// As <see cref="FromData(AbilityPool, IEnumerable{string}?)"/>; an id named twice in the data (a modifier and a
+	/// cancel rule sharing one, or a blank cancel id) is kept once, first occurrence wins, and listed in
+	/// <paramref name="dropped"/> for the caller's log, so a data slip never aborts a run-end save. A designer-written
+	/// order given to the constructor stays strict.
+	/// </summary>
+	public static Unlocks FromData(AbilityPool pool, IEnumerable<string>? lockedCancelIds, out IReadOnlyList<string> dropped)
 	{
 		if (pool is null) throw new ArgumentNullException(nameof(pool));
-		return new Unlocks(pool.Specials.Where(s => s.Locked && !s.Starter).Select(s => s.Id)
+		var all = pool.Specials.Where(s => s.Locked && !s.Starter).Select(s => s.Id)
 			.Concat(pool.Modifiers.Where(m => m.Locked).Select(m => m.Id))
-			.Concat(lockedCancelIds ?? Array.Empty<string>()));
+			.Concat(lockedCancelIds ?? Array.Empty<string>());
+		var seen = new HashSet<string>(StringComparer.Ordinal);
+		var order = new List<string>();
+		var skipped = new List<string>();
+		foreach (string id in all)
+		{
+			if (string.IsNullOrWhiteSpace(id) || !seen.Add(id)) { skipped.Add(id ?? ""); continue; }
+			order.Add(id);
+		}
+		dropped = skipped;
+		return new Unlocks(order);
 	}
 
 	/// <summary>

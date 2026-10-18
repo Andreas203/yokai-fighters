@@ -62,7 +62,8 @@ public static class CancelRuleLoader
 		Directory.Exists(dir)
 			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
 				.Where(f => MoveLoader.KindOf(f) == "cancel_rule")
-				.Select(f => (Rule: LoadFile(f), Root: JsonNode.Parse(File.ReadAllText(f))!.AsObject()))
+				.Select(f => (Text: File.ReadAllText(f), Name: Path.GetFileNameWithoutExtension(f)))
+				.Select(x => (Rule: Parse(x.Text, x.Name), Root: JsonNode.Parse(x.Text)!.AsObject())) // one read; Parse validates
 				.Where(x => x.Root["locked"] is JsonValue v && v.TryGetValue(out bool l) && l)
 				.Select(x => x.Rule.Id).ToArray()
 			: Array.Empty<string>();

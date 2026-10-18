@@ -410,7 +410,17 @@ public partial class GameFlow : Node
 			GD.PushWarning($"GameFlow: cancel rules left out of the unlock order: {e.Message}");
 			cancels = Array.Empty<string>();
 		}
-		return Unlocks.FromData(pool, cancels);
+		try
+		{
+			var order = Unlocks.FromData(pool, cancels, out var dropped);
+			foreach (string id in dropped) GD.PushWarning($"GameFlow: unlock order: '{id}' is named twice in the data; kept once");
+			return order;
+		}
+		catch (Exception e) // the run end must still be written: no unlocks this time rather than no save
+		{
+			GD.PushWarning($"GameFlow: no unlock order, nothing awarded: {e.Message}");
+			return new Unlocks(Array.Empty<string>());
+		}
 	}
 
 	/// <summary>

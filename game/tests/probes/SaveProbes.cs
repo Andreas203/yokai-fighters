@@ -1028,7 +1028,9 @@ public static class SaveProbes
 			Assert.True(flow.Session.LoseFight().Ok, "lost");
 			SaveLoad after = new SaveStore(path).Load();
 			// YOK-86, M1: a loss at the Tanuki now awards 2 unlocks after the saved ones; the saved "u" stays first.
-			var awarded = Unlocks.FromData(flow.Session.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels"))).Award(flow.Session.Ended!, new[] { "u" });
+			var order = Unlocks.FromData(flow.Session.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels")));
+			var awarded = order.Award(flow.Session.Ended!, new[] { "u" });
+			Assert.Equal(Math.Min(2, order.StillLocked(new[] { "u" }).Count), awarded.Count, "M1: a loss at the Tanuki awards 2 (or what is left)");
 			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }.Concat(awarded)) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
 			Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup");
 		});

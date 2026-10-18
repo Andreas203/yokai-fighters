@@ -90,6 +90,18 @@ public static class UnlockTests
 	}
 
 	[Test]
+	public static void OrderFromData_KeepsAnIdNamedTwiceOnce_AndReportsIt()
+	{
+		var pool = AbilityPool.LoadRepo(RepoRoot);
+		string mod = pool.Modifiers.First(m => m.Locked).Id;
+		var u = Unlocks.FromData(pool, new[] { mod, "cancel-x", "cancel-x", " " }, out var dropped);
+		Assert.Equal(1, u.Order.Count(id => id == mod), "the shared id is kept once");
+		Assert.True(u.Order.ToList().IndexOf(mod) < u.Order.ToList().IndexOf("cancel-x"), "first occurrence wins (the modifier's place)");
+		Assert.Equal(1, u.Order.Count(id => id == "cancel-x"), "a cancel id twice: once");
+		Assert.Equal(3, dropped.Count, "the shared id, the repeat and the blank are reported");
+	}
+
+	[Test]
 	public static void OrderFromRepoDataIsEveryLockedAbility()
 	{
 		var pool = AbilityPool.LoadRepo(RepoRoot);
