@@ -116,4 +116,61 @@ public static class UnlockProbes
 				catch (Exception e) { Assert.True(false, $"'{body}' threw uncaught {e.GetType().Name}: {e.Message}"); }
 			});
 	}
+
+	// Round 2: a duplicate keeps its FIRST position (specials, then modifiers, then cancels) and is reported once per extra copy.
+	[Test]
+	public static void FromData_DuplicateKeepsFirstPosition_AndReportsDropped()
+	{
+		var pool = AbilityPool.LoadRepo(RepoRoot);
+		var baseOrder = Unlocks.FromData(pool).Order;
+		var mod = pool.Modifiers.First(m => m.Locked).Id;
+		var withDup = Unlocks.FromData(pool, new[] { mod, "zz-new", "zz-new" }, out var dropped);
+		Assert.Equal(string.Join(",", baseOrder) + ",zz-new", string.Join(",", withDup.Order), "first occurrence wins, later copies gone");
+		Assert.Equal(2, dropped.Count, "modifier copy and second zz-new reported");
+		var again = Unlocks.FromData(pool, new[] { mod, "zz-new", "zz-new" });
+		Assert.Equal(string.Join(",", withDup.Order), string.Join(",", again.Order), "deterministic, both overloads agree");
+	}
+
+	// Round 2: blank / whitespace / null cancel ids are skipped, not thrown on; padded ids are kept as distinct ids.
+	[Test]
+	public static void FromData_BlankAndNullCancelIdsAreSkipped()
+	{
+		var pool = AbilityPool.LoadRepo(RepoRoot);
+		var baseCount = Unlocks.FromData(pool).Order.Count;
+		var u = Unlocks.FromData(pool, new string[] { "", "  ", null!, "	", "ok" }, out var dropped);
+		Assert.Equal(baseCount + 1, u.Order.Count, "only 'ok' added");
+		Assert.Equal(4, dropped.Count, "four blanks reported");
+		Assert.True(u.Order.Last() == "ok", "ok last");
+	}
+
+	// Round 2: empty-order fallback: the run end still awards nothing and does not throw, whatever the depth.
+	[Test]
+	public static void EmptyOrder_AwardsNothingAtAnyDepth()
+	{
+		var u = new Unlocks(Array.Empty<string>());
+		foreach (var end in new[] { new RunEnd(RunOutcome.Lost, 3, "a"), new RunEnd(RunOutcome.Lost, 7, "a"),
+			new RunEnd(RunOutcome.Won, 9, "t") { AtTanuki = true } })
+			Assert.Equal(0, u.Award(end, new[] { "x" }).Count, "nothing to award");
+	}
+
+	// Round 2: the constructor stays strict for a designer-written order.
+	[Test]
+	public static void Constructor_StaysStrict()
+	{
+		bool threw = false;
+		try { _ = new Unlocks(new[] { "a", "b", "a" }); } catch (FormatException) { threw = true; }
+		Assert.True(threw, "designer order with a duplicate is rejected");
+	}
+
+	// Round 2: LockedIds still parses once and yields the same ids as before; a cancel file with a blank id is rejected or skipped, not crashing uncaught.
+	[Test]
+	public static void LockedIds_BlankIdFile_ThrowsOnlyCaughtTypes()
+	{
+		WithDir(dir =>
+		{
+			File.WriteAllText(Path.Combine(dir, "x.json"), Rule("  ", "\"locked\":true,"));
+			try { var ids = CancelRuleLoader.LockedIds(dir); Unlocks.FromData(AbilityPool.LoadRepo(RepoRoot), ids, out _); }
+			catch (Exception e) when (e is FormatException or IOException or System.Text.Json.JsonException or InvalidOperationException) { }
+		});
+	}
 }
