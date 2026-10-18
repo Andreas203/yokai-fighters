@@ -100,7 +100,8 @@ class TrialValidatorProbes(unittest.TestCase):
     def test_every_existing_data_file_still_validates(self):
         out = io.StringIO()
         self.assertEqual(validate_data.validate([], out=out), 0, out.getvalue())
-        self.assertIn("96 file(s), 96 valid, 0 invalid", out.getvalue())
+        # The file count grows with content (96 when written, already more on main): every file valid is the point.
+        self.assertRegex(out.getvalue(), r"(\d+) file\(s\), \1 valid, 0 invalid")
 
     def test_whole_number_spellings_accepted_like_the_loader(self):
         text = FIXTURE_TRIAL.read_text(encoding="utf-8")

@@ -17,7 +17,8 @@ public sealed partial record MoveData
 		if (!fd.TryGetProperty("properties", out var props) || props.ValueKind != JsonValueKind.Object
 			|| !props.TryGetProperty("aftershock_delay", out var v) || v.ValueKind == JsonValueKind.Null)
 			return move;
-		int delay = v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int d) ? d
+		// YOK-103: the one whole-number rule (Effects.WholeInt): 30, 30.0 and 3e1 are all 30 frames.
+		int delay = v.ValueKind == JsonValueKind.Number && Effects.Whole(System.Text.Json.Nodes.JsonNode.Parse(v.GetRawText()), out int d) ? d
 			: throw new FormatException($"{move.Id}: properties.aftershock_delay must be a whole number of frames");
 		if (delay < 1) throw new FormatException($"{move.Id}: properties.aftershock_delay must be >= 1");
 		if (move.Hitboxes.Count == 0 || move.IsThrow)

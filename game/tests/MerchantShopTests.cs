@@ -80,7 +80,9 @@ public static partial class MerchantShopTests
 			CloneMod("test-fox-patience", "test-kappa-rare-mod", "kappa", "rare"),
 			CloneMod("test-fox-patience", "test-kappa-sealed-mod", "kappa", "common", locked: true),
 		};
-		return new AbilityPool(fx.Specials.Concat(extra), fx.Modifiers.Concat(mods));
+		// YOK-103: data/modifiers/ now holds the Oni's and Kappa's commons too; this pool keeps only the Kitsune's
+		// (bound on the test walk) so the shelves below are exactly the clones. Real-data shelves: MerchantShopProbes.
+		return new AbilityPool(fx.Specials.Concat(extra), fx.Modifiers.Where(m => m.Source == "kitsune").Concat(mods));
 	}
 
 	static SpecialData S(AbilityPool pool, string id) => pool.Special(id) ?? throw new InvalidOperationException(id);

@@ -49,7 +49,17 @@ public sealed partial class Match
 	/// </summary>
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
-		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing; // YOK-55: landing recovery
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing // YOK-55: landing recovery
+		&& !ThrowInvulnerable(d);
+
+	/// <summary>
+	/// YOK-103 (Slippery Skin): a move with <c>properties.throw_invuln: "startup"</c> can't be grabbed during its
+	/// startup frames. This is what the modifier's data says; E12/E17 as written say throws ignore
+	/// throw-invulnerability data (<c>properties.invuln</c> against throw is still read and not applied), so the
+	/// two disagree: an open designer question. Removing this one check makes the modifier do nothing.
+	/// </summary>
+	public static bool ThrowInvulnerable(Fighter d) =>
+		d.CurrentMove is { ThrowInvulnStartup: true } m && d.MoveFrame < m.FirstActive;
 
 	/// <summary>
 	/// E12: the throw whose buttons were all pressed within ThrowPressWindow ticks, the last of them

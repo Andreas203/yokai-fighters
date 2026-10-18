@@ -77,11 +77,11 @@
       "properties": {
         "armour": {
           "type": "object",
-          "required": ["frames", "hits"],
+          "required": ["frames"],
           "additionalProperties": false,
           "properties": {
             "frames": { "$ref": "common.schema.json#/$defs/frameRange" },
-            "hits": { "type": "integer", "minimum": 1 }
+            "hits": { "type": "integer", "minimum": 1, "description": "Hits taken per use of the move; omitted = 1 (the loader's default, YOK-103)." }
           }
         },
         "invuln": {
@@ -107,6 +107,7 @@
             "hits": { "type": "integer", "minimum": 1 },
             "lifetime": { "type": "integer", "minimum": 1, "description": "Ticks before it fades; omit for screen edge." },
             "passes_projectiles": { "type": "boolean" },
+            "angle_up": { "type": "boolean", "description": "YOK-103: the projectile climbs as it flies (SimConfig.ProjectileAngleUpRisePct, proposed)." },
             "absorbs_projectiles": { "type": "integer", "minimum": 0 },
             "max_active": { "type": "integer", "minimum": 1, "description": "How many of the owner's projectiles from this move may be on screen at once; omitted = 1 (YOK-21: one per owner)." }
           }
@@ -139,7 +140,12 @@
             "frame": { "type": "integer", "minimum": 1 }
           }
         },
-        "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move." }
+        "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move." },
+        "counterhit_immune": { "type": "boolean", "description": "YOK-103: a hit during this move is never a counterhit (C7)." },
+        "projectile_interrupt_immune": { "type": "boolean", "description": "YOK-103: projectile hits deal damage but don't interrupt the move." },
+        "throw_invuln": { "const": "startup", "description": "YOK-103: can't be thrown during startup. Disagrees with E12 / E17 as written: open designer question." },
+        "pull_on_hit": { "type": "integer", "minimum": 0, "description": "YOK-103: on hit the defender is pulled this many steps toward the attacker instead of pushed (step = SimConfig.PullStepUnits, proposed)." },
+        "heal_pct_max_health": { "type": "integer", "minimum": 0, "description": "YOK-103: on hit the attacker heals this % of its max health." }
       }
     }
   }

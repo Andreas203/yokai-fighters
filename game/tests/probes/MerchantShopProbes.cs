@@ -519,8 +519,9 @@ public static class MerchantShopProbes
 	});
 
 	[Test]
-	public static void KnownOpen_RealDefaultMap_ShopSellsNothing_AfterApprenticeAlone() =>
-		// Content gap, not this ticket: today's data has only the Kitsune's kit and the apprentice node is a stand-in for it.
+	public static void RealDefaultMap_AfterApprenticeAlone_ShopSellsOnlyUnboundCommonModifiers() =>
+		// Was KnownOpen_..._ShopSellsNothing: the content gap closed with YOK-103 (the Oni's and Kappa's modifiers are in
+		// data/modifiers/). Specials: still only the Kitsune's kit, bound by the apprentice stand-in, so none are sold.
 		WithRealData(() =>
 		{
 			var pool = FightScene.LoadAbilityPool(); var g = DefaultMap();
@@ -531,7 +532,10 @@ public static class MerchantShopProbes
 			Assert.True(bound.Contains("kitsune") && bound.Contains("apprentice"), "bound = {kitsune, apprentice}: " + string.Join(",", bound));
 			var sell = MerchantShop.ShelfFor(run, pool, bound).Select(x => x.Id).ToArray();
 			var sellMods = MerchantShop.ModifierShelfFor(run, pool, bound).Select(x => x.Id).ToArray();
-			Assert.True(sell.Length == 0 && sellMods.Length == 0, "KNOWN-OPEN content gap: shelves empty. specials=" + string.Join(",", sell) + " mods=" + string.Join(",", sellMods));
+			Assert.True(sell.Length == 0, "no unbound specials in data yet: " + string.Join(",", sell));
+			var want = pool.Modifiers.Where(m => m.Rarity == "common" && !m.Locked && !bound.Contains(m.Source)).Select(m => m.Id).ToArray();
+			Assert.True(want.Length > 0 && want.All(id => !pool.Modifiers.Any(m => m.Id == id && m.Source == "kitsune")), "the Oni's and Kappa's unlocked commons: " + string.Join(",", want));
+			Assert.Equal(string.Join(",", want), string.Join(",", sellMods), "R6: common, unlocked modifiers of unbound yokai, pool order");
 		});
 
 	static void WithRealData(Action body)

@@ -235,7 +235,7 @@ public sealed partial class Match
 	{
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
-		f.ActiveMove = f.Moves[slot];
+		f.Play(f.Moves[slot]);
 		f.MoveSlot = slot;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -365,14 +365,24 @@ public sealed partial class Match
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
 		bool body = projectile is null && !reflected && remoteDir == 0;
+		// YOK-103: a modifier's on_hit / on_block effects hold from the connect on. A body hit's outcome is always
+		// picked from the move as it started (ActiveBase; a projectile carries it), so a later connect of the same use
+		// that goes the other way (blocked, then hit) still gets its own variant. A reflect (YOK-90) or an aftershock
+		// (YOK-136) is not the attacker's own move connecting, so it hits as it is.
+		if (!reflected && remoteDir == 0) m = (body ? att.ActiveBase ?? m : m).Outcome(blocked);
 		if (body)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
+			if (att.ActiveBase != null) att.ActiveMove = m; // e.g. recovery on block
 		}
+		else if (projectile != null && att.State == FighterState.Attack && att.ActiveBase != null && att.MoveSerial == projectile.FiredBy)
+			att.ActiveMove = m; // the owner is still in the move that fired it: its own frame data changes too (Brute Recovery on a projectile special)
 
-		bool counter = !blocked && defenderWasAttacking;           // C7
-		bool armoured = !blocked && TwistArmourTakes(1 - attIndex); // YOK-90: the elder's special plays on
+		MoveData? defMove = def.CurrentMove;
+		bool counter = !blocked && defenderWasAttacking && defMove?.CounterhitImmune != true; // C7
+		bool absorbed = !blocked && Absorbs(def, defMove, projectile != null);                // YOK-103: armour
+		bool armoured = absorbed || (!blocked && TwistArmourTakes(1 - attIndex));          // YOK-90: the elder's special plays on
 		int push, damage = 0;
 		if (blocked)
 		{
@@ -383,10 +393,14 @@ public sealed partial class Match
 		{
 			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
 			def.PendingDamage += damage;
-			if (armoured) { } // the damage lands, the special is not interrupted
+			if (armoured) { } // the damage lands, the move plays on (YOK-103 armour or YOK-90 twist armour)
 			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
+			// YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max. A reflected move (YOK-90) is the
+			// victim's own: its modifier gifts never act for the elder who turned it back.
+			if (m.HealPctMaxHealth > 0 && !reflected)
+				att.Health = (int)Math.Min(att.MaxHealth, (long)att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
 		}
 		def.Guarding = false;
 		def.Crouching = false;
@@ -395,14 +409,37 @@ public sealed partial class Match
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
 		int away = Math.Sign(def.X - att.X);
 		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : reflected && away != 0 ? away : att.Facing), want = push * SimConfig.Scale;
-		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
-		int got = Math.Abs(target - def.X);
-		def.X = target;
-		if (body) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
+		if (!blocked && m.PullOnHit > 0 && !reflected)
+		{
+			// YOK-103 (River Pull): instead of the push, the defender comes PullOnHit steps toward the attacker;
+			// push boxes (ResolvePositions) stop it at the attacker's body. No corner hand-off.
+			def.X = Math.Clamp(def.X - dir * m.PullOnHit * Config.PullStepUnits * SimConfig.Scale, CornerLo(def), CornerHi(def));
+		}
+		else
+		{
+			int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
+			int got = Math.Abs(target - def.X);
+			def.X = target;
+			if (body) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
+		}
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
 		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
 		return blocked;
+	}
+
+	/// <summary>
+	/// YOK-103: does the defender's move take this hit without being interrupted? <c>projectile_interrupt_immune</c>
+	/// (Iron Will) against any projectile hit; <c>armour</c> (Oni's Hide) inside its frames while it has hits left.
+	/// The damage (and a counterhit's bonus, C7) still lands; hitstun, knockdown and the cancel of the move don't.
+	/// </summary>
+	private static bool Absorbs(Fighter def, MoveData? defMove, bool projectile)
+	{
+		if (defMove is null) return false;
+		if (projectile && defMove.ProjectileInterruptImmune) return true;
+		if (defMove.Armour is not { } a || !a.Covers(def.MoveFrame) || def.ArmourHitsTaken >= a.Hits) return false;
+		def.ArmourHitsTaken++;
+		return true;
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>

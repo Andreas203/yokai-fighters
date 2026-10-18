@@ -34,6 +34,15 @@ def rules_hit(fixture):
     return code, [(v["rule"], v["check"], v["message"]) for v in rep["violations"]], rep
 
 
+def passing_hit(fixture):
+    """rules_hit for a passing fixture laid over the real data. A fixture that adds a cancel rule of its own can
+    push data/cancels/ (three rules since YOK-103, the A11 cap) to four: that cap hit belongs to the data plus the
+    fixture, not to what the fixture tests, and the cancel-cap fixture covers the cap itself."""
+    _, hits, rep = rules_hit(fixture)
+    hits = [h for h in hits if not (h[1] == "cancel-cap" and h[0] == "A11")]
+    return (1 if hits else 0), hits, rep
+
+
 class CurrentDataTest(unittest.TestCase):
     def test_data_on_main_passes(self):
         code, out = run()
@@ -140,7 +149,7 @@ class BrokenSamplesTest(unittest.TestCase):
         for name in broken:
             self.assertEqual(rules_hit(name)[0], 1, name)
         for name in PASSING:
-            self.assertEqual(rules_hit(name)[0], 0, name)
+            self.assertEqual(passing_hit(name)[0], 0, name)
 
 
 PASSING = {"cancel-cycle-bounded", "river-grab-x4", "ninefold-spark"}
@@ -148,7 +157,7 @@ PASSING = {"cancel-cycle-bounded", "river-grab-x4", "ninefold-spark"}
 
 class PassingSamplesTest(unittest.TestCase):
     def test_cycle_bounded_by_once_per_combo_is_left_for_the_harness(self):
-        code, hits, rep = rules_hit("cancel-cycle-bounded")
+        code, hits, rep = passing_hit("cancel-cycle-bounded")
         self.assertEqual(code, 0, hits)
         self.assertTrue(any(h["rule"] == "X3" and "cancel cycle via ['spirit-chain']" in h["message"]
                             for h in rep["harness_must_confirm"]), rep["harness_must_confirm"])

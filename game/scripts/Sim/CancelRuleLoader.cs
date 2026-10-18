@@ -1,5 +1,7 @@
+using System.Text.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Nodes;
 
 namespace YokaiFighters.Sim;
@@ -12,8 +14,8 @@ public static class CancelRuleLoader
 		var root = JsonNode.Parse(json)!.AsObject();
 		string id = root["id"]?.GetValue<string>() ?? fallbackId ?? "unnamed";
 		if (root["kind"]?.GetValue<string>() != "cancel_rule") throw new FormatException($"{id}: not a kind \"cancel_rule\" file");
-		var path = root["path"] ?? throw new FormatException($"{id}: path is required");
-		CancelFrom from = path["from"]?.GetValue<string>() switch
+		var path = root["path"] as JsonObject ?? throw new FormatException($"{id}: path is required and must be an object");
+		CancelFrom from = Effects.Text(path, "from", id, "path.from") switch
 		{
 			"specials" => CancelFrom.Specials,
 			"heavy_normals" => CancelFrom.HeavyNormals,
@@ -21,7 +23,7 @@ public static class CancelRuleLoader
 			"successful_throws" => CancelFrom.SuccessfulThrows,
 			var o => throw new FormatException($"{id}: path.from '{o}' is unknown"),
 		};
-		CancelInto into = path["into"]?.GetValue<string>() switch
+		CancelInto into = Effects.Text(path, "into", id, "path.into") switch
 		{
 			"dash" => CancelInto.Dash,
 			"specials" => CancelInto.Specials,
@@ -29,15 +31,28 @@ public static class CancelRuleLoader
 			var o => throw new FormatException($"{id}: path.into '{o}' is unknown"),
 		};
 		bool hit = false, block = false, whiff = false;
-		foreach (var on in path["on"]?.AsArray() ?? new JsonArray())
-			switch (on?.GetValue<string>())
+		if (path.ContainsKey("on") && path["on"] is not JsonArray) throw new FormatException($"{id}: path.on must be a list");
+		foreach (var on in path["on"] as JsonArray ?? new JsonArray())
+			switch (on is JsonValue ov && ov.GetValueKind() == JsonValueKind.String ? ov.GetValue<string>() : throw new FormatException($"{id}: path.on entries must be strings"))
 			{
 				case "hit": hit = true; break;
 				case "block": block = true; break;
 				case "whiff": whiff = true; break;
+				case var o: throw new FormatException($"{id}: path.on '{o}' is unknown"); // YOK-103: as the schema
 			}
+		if (!hit && !block && !whiff) throw new FormatException($"{id}: path.on must list hit, block or whiff");
+		// X3 is not optional: the fight always limits each target to once per combo (Fighter.CancelUsed).
+		if (root["once_per_combo"] is not JsonValue once || !once.TryGetValue(out bool opc) || !opc)
+			throw new FormatException($"{id}: once_per_combo must be true (X3)");
 		return new CancelRule(id, from, into, hit, block, whiff);
 	}
+
+	/// <summary>Every kind "cancel_rule" *.json in the folder, sorted by file name; other kinds are skipped.</summary>
+	public static CancelRule[] LoadDirectory(string dir) =>
+		Directory.Exists(dir)
+			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
+				.Where(f => MoveLoader.KindOf(f) == "cancel_rule").Select(LoadFile).ToArray()
+			: Array.Empty<CancelRule>();
 
 	public static CancelRule LoadFile(string path) =>
 		Parse(File.ReadAllText(path), Path.GetFileNameWithoutExtension(path));

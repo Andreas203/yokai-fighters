@@ -16,14 +16,20 @@ public sealed class EquippedSpecial
 	public MoveData? ExMove { get; }
 	/// <summary>YOK-47: the attached modifier (A2: at most one), already applied to Move and ExMove.</summary>
 	public ModifierData? Modifier { get; }
+	/// <summary>YOK-103: the EX cost with the modifier (Ninefold Spark halves it), else the data's <c>ex.meter_cost</c>.</summary>
+	public int ExCost { get; }
+	/// <summary>The fight defaults the modifier was built against (kept so a level-up rebuilds the same way).</summary>
+	public SimConfig? Defaults { get; }
 
 	public EquippedSpecial(SpecialData data, int level, ModifierData? modifier = null, SimConfig? defaults = null)
 	{
 		Data = data;
 		Level = level;
 		Modifier = modifier;
+		Defaults = defaults;
 		Move = data.Build(level, false, modifier, defaults);
 		ExMove = data.HasEx ? data.Build(level, true, modifier, defaults) : null;
+		ExCost = modifier?.ExCostFor(data.ExCost) ?? data.ExCost;
 	}
 }
 
@@ -40,6 +46,20 @@ public sealed partial class Fighter
 
 	/// <summary>The move being played: a normal/throw from <see cref="Moves"/> or a special variant.</summary>
 	public MoveData? ActiveMove;
+	/// <summary>
+	/// YOK-103: the move as it started (before any on_hit / on_block variant took <see cref="ActiveMove"/>'s place), so
+	/// every connect of the same use picks its outcome from the same root: blocked first, hit later still gets on_hit.
+	/// </summary>
+	public MoveData? ActiveBase;
+	/// <summary>YOK-103: counts moves started this round; a projectile remembers the use that fired it (<see cref="Projectile.FiredBy"/>).</summary>
+	public int MoveSerial;
+
+	/// <summary>Starts playing <paramref name="move"/>: the one place <see cref="ActiveMove"/> and <see cref="ActiveBase"/> are set.</summary>
+	internal void Play(MoveData move, bool newUse = true)
+	{
+		ActiveMove = ActiveBase = move;
+		if (newUse) MoveSerial++;
+	}
 	/// <summary>Slot of the special being played; None for normals and throws.</summary>
 	public SpecialSlot ActiveSpecial;
 	public bool ActiveEx;
@@ -54,6 +74,13 @@ public sealed partial class Fighter
 	public readonly List<CancelRule> CancelRules = new();
 	/// <summary>X3: targets already cancelled into this combo (bits 1-4 slots A-D, bit 5 dash); cleared when Idle.</summary>
 	public int CancelUsed;
+
+	/// <summary>YOK-103: start conditions held when the current special started (which build plays, kept for the EX upgrade).</summary>
+	public StartConditions ActiveConditions;
+	/// <summary>YOK-103: hits the current move's armour has taken (properties.armour hits).</summary>
+	public int ArmourHitsTaken;
+	/// <summary>YOK-103: specials started this round per slot (first_use_each_round); cleared by Reset (a new round).</summary>
+	public readonly int[] SpecialUses = new int[5];
 
 	public const int MaxCancelRules = 2;
 
@@ -90,7 +117,7 @@ public sealed partial class Fighter
 	{
 		var s = Specials[(int)slot] ?? throw new InvalidOperationException($"slot {slot} is empty");
 		int level = Math.Min(3, s.Level + 1);
-		Specials[(int)slot] = new EquippedSpecial(s.Data, level, s.Modifier);
+		Specials[(int)slot] = new EquippedSpecial(s.Data, level, s.Modifier, s.Defaults);
 		return level;
 	}
 
@@ -106,19 +133,34 @@ public sealed partial class Fighter
 	{
 		ResetSpecialMoveState();
 		CancelUsed = 0;
+		MoveSerial = 0;
+		Array.Clear(SpecialUses);
 	}
 
 	/// <summary>Clears what belongs to the move being played (on every state change).</summary>
 	internal void ResetSpecialMoveState()
 	{
 		ActiveMove = null;
+		ActiveBase = null;
 		ActiveSpecial = SpecialSlot.None;
 		ActiveEx = false;
 		ActivePrecision = false;
 		SpecialButtons = InputBits.None;
 		MoveBlocked = false;
+		ActiveConditions = StartConditions.None;
+		ArmourHitsTaken = 0;
 		ActiveRepeat = 0;
 		TwistArmourTaken = 0;
+	}
+
+	/// <summary>YOK-103: any slot carries a modifier (fight setup; the use counters only matter then).</summary>
+	public bool HoldsModifier
+	{
+		get
+		{
+			for (int i = 1; i < Specials.Length; i++) if (Specials[i]?.Modifier != null) return true;
+			return false;
+		}
 	}
 
 	internal ulong HashSpecialState(ulong h)
@@ -126,6 +168,14 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, (int)ActiveSpecial | (ActiveEx ? 16 : 0) | (ActivePrecision ? 32 : 0) | (MoveBlocked ? 64 : 0));
 		h = Fnv.Mix(h, (int)SpecialButtons);
 		h = Fnv.Mix(h, CancelUsed);
+		// YOK-103 state, mixed only where it can matter, so a fight without modifiers hashes as before (as YOK-90 does
+		// for twists): start conditions / armour hits once set, use counters only for a fighter holding a modifier.
+		if (ActiveConditions != StartConditions.None || ArmourHitsTaken != 0) h = Fnv.Mix(h, (int)ActiveConditions | ArmourHitsTaken << 8);
+		if (HoldsModifier)
+		{
+			h = Fnv.Mix(h, MoveSerial);
+			foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
+		}
 		if (Twist is { } tw) // YOK-90: mixed only in twist fights, so every other recording keeps its hashes
 		{
 			h = Fnv.MixString(h, tw.Id);

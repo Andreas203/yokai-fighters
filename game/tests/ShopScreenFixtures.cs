@@ -49,7 +49,9 @@ public static class ShopScreenFixtures
 			CloneMod("test-fox-patience", "test-kappa-patience", "kappa", "Kappa's Patience", "Blocking charges your meter 25% faster."),
 			CloneMod("test-will-o-wisp", "test-kappa-wisp", "kappa", "Pond Lantern", "Your projectiles fly 30% faster."),
 		} : System.Array.Empty<ModifierData>();
-		return new AbilityPool(fx.Specials.Concat(sp), fx.Modifiers.Concat(md));
+		// YOK-103: data/modifiers/ also holds the Oni's and Kappa's commons now; keep only the Kitsune's (bound on the
+		// walk) so the stock is exactly the clones above and an unstocked pool still has empty shelves.
+		return new AbilityPool(fx.Specials.Concat(sp), fx.Modifiers.Where(m => m.Source == "kitsune").Concat(md));
 	}
 
 	/// <summary>A run at the row-4 merchant (entered) holding <paramref name="slots"/> and <paramref name="coins"/>.</summary>

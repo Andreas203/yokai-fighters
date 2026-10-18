@@ -1,0 +1,63 @@
+{
+  "about": "YOK-103: one list of modifier effects, read by BOTH gates: tools/test_validate_data.py (the validator must accept or reject each) and ModifierEffectTests.ValidatorAndLoaderAgreeOnTheSharedCases (the C# loader must do the same when it parses the modifier and builds it on every special it applies to). Each case is wrapped in an otherwise valid modifier file. Numbers written 2.0 and 1e1 are deliberate: a whole number in any JSON notation counts on both sides. Not game content.",
+  "cases": [
+    { "name": "plain-damage", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 10 }] },
+    { "name": "whole-number-as-2-point-0", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 2.0 }] },
+    { "name": "whole-number-as-1e1", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 1e1 }] },
+    { "name": "set-whole-number-as-2-point-0", "accept": true, "requires": [], "effects": [{ "target": "hitstun", "op": "set", "value": 22.0 }] },
+    { "name": "fraction", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 1.5 }] },
+    { "name": "flag-on-an-integer-target", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": true }] },
+    { "name": "unknown-target", "accept": false, "requires": [], "effects": [{ "target": "damage_bonus", "op": "add", "value": 1 }] },
+    { "name": "unknown-op", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "double", "value": 1 }] },
+    { "name": "holding-charge", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 120, "when": "holding_charge" }] },
+    { "name": "on-whiff", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 1, "when": "on_whiff" }] },
+
+    { "name": "armour-without-hits", "accept": true, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [1, 5] } }] },
+    { "name": "armour-frames-as-1-point-0", "accept": true, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [1.0, 5.0], "hits": 2.0 } }] },
+    { "name": "armour-frames-backwards", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [5, 1] } }] },
+    { "name": "armour-past-the-end-of-the-move", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [1, 500] } }] },
+    { "name": "armour-without-frames", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "hits": 1 } }] },
+    { "name": "throw-invuln-other-phase", "accept": false, "requires": [], "effects": [{ "target": "properties.throw_invuln", "op": "set", "value": "active" }] },
+    { "name": "flag-with-add", "accept": false, "requires": [], "effects": [{ "target": "properties.counterhit_immune", "op": "add", "value": 1 }] },
+
+    { "name": "projectile-speed-on-projectile-specials", "accept": true, "requires": ["projectile"], "effects": [{ "target": "projectile.speed", "op": "add", "value": 1 }] },
+    { "name": "projectile-speed-on-any-special", "accept": false, "requires": [], "effects": [{ "target": "projectile.speed", "op": "add", "value": 1 }] },
+    { "name": "projectile-angle-up-on-any-special", "accept": false, "requires": [], "effects": [{ "target": "projectile.angle_up", "op": "set", "value": true }] },
+    { "name": "projectile-hits-to-zero", "accept": false, "requires": ["projectile"], "effects": [{ "target": "properties.projectile.hits", "op": "set", "value": 0 }] },
+    { "name": "projectile-speed-negative", "accept": false, "requires": ["projectile"], "effects": [{ "target": "projectile.speed", "op": "add", "value": -1000 }] },
+
+    { "name": "pull-negative", "accept": false, "requires": [], "effects": [{ "target": "properties.pull_on_hit", "op": "set", "value": -1 }] },
+    { "name": "heal-negative-by-add", "accept": false, "requires": [], "effects": [{ "target": "heal_pct_max_health", "op": "add", "value": -1, "when": "on_hit" }] },
+    { "name": "startup-below-one", "accept": false, "requires": [], "effects": [{ "target": "startup", "op": "add", "value": -100 }] },
+    { "name": "startup-below-one-in-a-start-variant", "accept": false, "requires": [], "effects": [{ "target": "startup", "op": "add", "value": -100, "when": "first_use_each_round" }] },
+    { "name": "recovery-on-block", "accept": true, "requires": [], "effects": [{ "target": "recovery", "op": "add", "value": -4, "when": "on_block" }] },
+    { "name": "recovery-below-zero-on-block", "accept": false, "requires": [], "effects": [{ "target": "recovery", "op": "add", "value": -100, "when": "on_block" }] },
+    { "name": "damage-below-zero", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": -1000 }] },
+
+    { "name": "pushback-scaled", "accept": true, "requires": [], "effects": [{ "target": "pushback", "op": "mul_pct", "value": 150 }] },
+    { "name": "pushback-set-as-a-pair", "accept": false, "requires": [], "effects": [{ "target": "pushback", "op": "set", "value": 10 }] },
+    { "name": "pushback-negative", "accept": false, "requires": [], "effects": [{ "target": "pushback.on_hit", "op": "add", "value": -100 }] },
+    { "name": "meter-on-block-scaled-from-the-default", "accept": true, "requires": [], "effects": [{ "target": "meter_gain.on_block", "op": "mul_pct", "value": 125 }] },
+
+    { "name": "ex-cost", "accept": true, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "set", "value": 50 }] },
+    { "name": "ex-cost-conditional", "accept": false, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "set", "value": 50, "when": "on_hit" }] },
+    { "name": "damage-below-thirty-percent", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 115, "when": "ryo_health_below_30pct" }] },
+
+    { "name": "value-outside-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 3000000000 }] },
+    { "name": "add-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 2147483600 }] },
+    { "name": "mul-pct-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "damage", "op": "mul_pct", "value": 2147483647 }] },
+    { "name": "ex-cost-add", "accept": true, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "add", "value": 10 }] },
+    { "name": "ex-cost-add-overflows-int32", "accept": false, "requires": [], "effects": [{ "target": "ex.meter_cost", "op": "add", "value": 2147483600 }] }
+  ],
+  "special_cases_about": "A special's own file: the named TEST FIXTURE special (game/tests/fixtures/specials/) with levels.1.frame_data changed by 'set' (field -> value) and 'remove' (fields deleted). The validator side ignores only the missing clip (fixtures have no clip file); the loader side runs SpecialLoader.Parse, which builds every level plain and EX.",
+  "special_cases": [
+    { "name": "special-unchanged", "accept": true, "base": "test-rising-talisman", "set": {}, "remove": [] },
+    { "name": "special-recovery-written-28-point-0", "accept": true, "base": "test-rising-talisman", "set": { "recovery": 28.0 }, "remove": [] },
+    { "name": "special-damage-written-9e1", "accept": true, "base": "test-rising-talisman", "set": { "damage": 9e1 }, "remove": [] },
+    { "name": "special-recovery-fraction", "accept": false, "base": "test-rising-talisman", "set": { "recovery": 28.5 }, "remove": [] },
+    { "name": "special-startup-outside-int32", "accept": false, "base": "test-rising-talisman", "set": { "startup": 3000000000 }, "remove": [] },
+    { "name": "special-hitboxes-without-blockstun", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": ["blockstun"] },
+    { "name": "special-damaging-projectile-without-hitstun", "accept": false, "base": "test-spirit-wave", "set": {}, "remove": ["hitstun"] },
+    { "name": "special-harmless-projectile-without-stun", "accept": true, "base": "test-spirit-wave", "set": { "damage": 0 }, "remove": ["hitstun", "blockstun"] }
+  ]
+}

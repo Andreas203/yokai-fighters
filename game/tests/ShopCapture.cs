@@ -35,7 +35,7 @@ public partial class ShopCapture : Node
 			var last = ShopScreenFixtures.At(pool, 120, (SpecialSlot.A, "test-spirit-wave", 1));
 			last.Merchant!.Choose(MerchantChoice.Shop);
 			await Shot(dir, "shop_last_special" + suffix, last, _ => { });
-			var empty = ShopScreenFixtures.At(FightScene.LoadAbilityPool(), 75, two);
+			var empty = ShopScreenFixtures.At(ShopScreenFixtures.StockedPool(modifiers: false, specials: false), 75, two); // YOK-103: the real pool stocks Kappa modifiers now
 			empty.Merchant!.Choose(MerchantChoice.Shop);
 			await Shot(dir, "shop_empty" + suffix, empty, _ => { });
 		}

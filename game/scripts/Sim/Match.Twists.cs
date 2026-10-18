@@ -64,6 +64,12 @@ public sealed partial class Match
 		p.Owner = 1 - p.Owner;
 		p.Dir = -p.Dir;
 		p.Repeat = 0;
+		// YOK-103: the wave is the elder's now, not a use of Ryo's move. Ryo's modifier outcomes (on_hit / on_block
+		// variants, e.g. a heal) never act for her, and no use of hers matches it (MoveSerial counts from 1).
+		p.FiredBy = 0;
+		p.Reflected = true;
+		if (p.Move.OnHitVariant != null || p.Move.OnBlockVariant != null)
+			p.Move = p.Move with { OnHitVariant = null, OnBlockVariant = null };
 		TwistTriggered?.Invoke(this, new TwistEvent(p.Owner, TwistEffect.ReflectRepeatedSpecial, p.Move.Id));
 		ProjectileChanged?.Invoke(this, new ProjectileEvent(p.Owner, p.Move.Id, ProjectileEventKind.Reflected, p.X));
 	}

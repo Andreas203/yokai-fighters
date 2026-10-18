@@ -1,0 +1,33 @@
+{
+  "kind": "cancel_rule",
+  "id": "oni-chain",
+  "name": "Oni Chain",
+  "status": "proposed",
+  "source": "oni",
+  "offered_by": "elder-oni",
+  "rarity": "rare",
+  "locked": false,
+  "rules": [
+    "X1",
+    "X2",
+    "X3",
+    "X4",
+    "A9",
+    "A8",
+    "A12"
+  ],
+  "path": {
+    "from": "heavy_normals",
+    "into": "specials",
+    "on": [
+      "hit",
+      "block"
+    ]
+  },
+  "once_per_combo": true,
+  "card": {
+    "plain": "Cancel a heavy normal into a special.",
+    "frames": "Heavy punch/kick → any special on hit or block, once per combo"
+  },
+  "notes": "GDD example: heavy punch -> Iron-Club Charge, 190 damage (C8 80 + 110). Hit/block triggers are a reading; whiff excluded. Open question."
+}

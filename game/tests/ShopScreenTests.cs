@@ -253,7 +253,7 @@ public static class ShopScreenTests
 	[Test]
 	public static void Scene_ShelfEmpty_ReadsAsAWholeState_WhenBothShelvesAreEmpty(Node runner) => OnFixtures(() =>
 	{
-		var s = ShopScreenFixtures.At(FightScene.LoadAbilityPool(), 75, ShopScreenFixtures.Starters);
+		var s = ShopScreenFixtures.At(ShopScreenFixtures.StockedPool(modifiers: false, specials: false), 75, ShopScreenFixtures.Starters); // YOK-103: the real pool now stocks Kappa modifiers
 		s.Merchant!.Choose(MerchantChoice.Shop);
 		var screen = Open(runner, s);
 		try

@@ -106,7 +106,10 @@ public static class RewardDraftTests
 		Bad("{\"kind\":\"special\",\"id\":\"x\",\"effects\":[{\"target\":\"damage\",\"op\":\"add\",\"value\":1}]}", "wrong kind");
 		Bad("{\"kind\":\"modifier\",\"id\":\"x\",\"effects\":[]}", "no effects");
 		// An effect the sim can't run fails when the pool builds it, not mid-run.
-		var bad = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.nonsense\",\"op\":\"add\",\"value\":1}]}");
+		// YOK-103: a target outside the loader's vocabulary fails at parse.
+		Bad("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.nonsense\",\"op\":\"add\",\"value\":1}]}", "unknown target");
+		// A known target the special doesn't have (Rising Talisman fires no projectile) fails at the pool.
+		var bad = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"x\",\"source\":\"kitsune\",\"applies_to\":{\"requires\":[]},\"effects\":[{\"target\":\"projectile.speed\",\"op\":\"add\",\"value\":1}]}");
 		try { new AbilityPool(Pool().Specials, new[] { bad }); }
 		catch (FormatException) { return; }
 		throw new AssertFailed("pool accepted an effect on a missing field");
@@ -329,6 +332,25 @@ public static class RewardDraftTests
 		Assert.Equal(66, Effects.MulPct(60, 110), "60 x 1.1");
 		Assert.Equal(99, Effects.MulPct(90, 110), "90 x 1.1");
 		Assert.Equal(-4, Effects.MulPct(-3, 125), "symmetric for negatives");
+	}
+
+	[Test]
+	public static void DescribeReadsWholeNumbersInAnyNotation()
+	{
+		// YOK-103 critic round 3: a level-2 tuning value written -4.0 passes the validator and the loader, so the
+		// upgrade card's wording must read it the same way (Effects.Whole) instead of throwing mid-draft.
+		static System.Text.Json.Nodes.JsonNode? E(string json) => System.Text.Json.Nodes.JsonNode.Parse(json);
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4 }""")), "int");
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4.0 }""")), "-4.0");
+		Assert.Equal("recovery -4", RewardDraft.Describe(E("""{ "target": "recovery", "op": "add", "value": -4e0 }""")), "-4e0");
+		Assert.Equal("damage +10%", RewardDraft.Describe(E("""{ "target": "damage", "op": "mul_pct", "value": 110.0 }""")), "mul_pct 110.0");
+		Assert.Equal("projectile speed +1", RewardDraft.Describe(E("""{ "target": "projectile.speed", "op": "add", "value": 1e0 }""")), "1e0");
+		Assert.Equal("damage add 1.5", RewardDraft.Describe(E("""{ "target": "damage", "op": "add", "value": 1.5 }""")), "no throw on a fraction");
+		// End to end: the fixture special's own Lv 2 step written -4.0 loads, and the upgrade card's wording reads it.
+		var node = E(System.IO.File.ReadAllText(System.IO.Path.Combine(ContentPaths.FixturesDir, "specials", "test-spirit-wave.json")))!;
+		node["levels"]!["2"]!["tuning"]!["value"] = System.Text.Json.Nodes.JsonValue.Create(-4.0);
+		var wave = SpecialLoader.Parse(node.ToJsonString(), "test-spirit-wave");
+		Assert.Equal("recovery -4", RewardDraft.Describe(wave.Level2Step), "Lv 2 tuning -4.0 on the upgrade card");
 	}
 
 	[Test]

@@ -49,8 +49,8 @@ public sealed partial record MoveData
 		int? onHit = null, onBlock = null;
 		if (fd.TryGetProperty("meter_gain", out var mg) && mg.ValueKind == JsonValueKind.Object)
 		{
-			if (mg.TryGetProperty("on_hit", out var h)) onHit = h.GetInt32();
-			if (mg.TryGetProperty("on_block", out var b)) onBlock = b.GetInt32();
+			if (mg.TryGetProperty("on_hit", out var h)) onHit = h.WholeInt();
+			if (mg.TryGetProperty("on_block", out var b)) onBlock = b.WholeInt();
 		}
 		return move with { Strength = strength, MeterOnHit = onHit, MeterOnBlock = onBlock };
 	}

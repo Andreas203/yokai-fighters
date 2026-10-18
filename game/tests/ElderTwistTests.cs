@@ -151,6 +151,62 @@ public static class ElderTwistTests
 		Assert.Equal(1000, c.P1.Health, "control: Ryo untouched");
 	}
 
+	static ModifierData Mod(string id) => ModifierLoader.LoadFile(Path.Combine(ContentPaths.Data("modifiers"), id + ".json"));
+
+	[Test]
+	public static void Twist_Reflect_ReflectedWaveCarriesNoneOfRyosModifierOutcomes()
+	{
+		// YOK-103 critic round 4: a reflected wave is the elder's; Ryo's Cucumber Gift (on_hit heal) never heals her.
+		var log = new Log();
+		var m = Setup(log, Reflect);
+		m.P1.AttachModifier(SpecialSlot.A, Mod("cucumber-gift"), m.Config);
+		m.P1.Health = 500;
+		m.P2.Health = 500;
+		P1(m, Wave(), 140);
+		Assert.Equal(440, m.P2.Health, "the first wave hits her (60)");
+		Assert.Equal(520, m.P1.Health, "and Ryo's Cucumber Gift heals him 2% of 1,000");
+		P1(m, Wave(), 200);
+		Assert.Equal(1, log.Reflected, "the second wave is reflected");
+		Assert.Equal(460, m.P1.Health, "it hits Ryo (60)");
+		Assert.Equal(440, m.P2.Health, "and the elder is not healed by Ryo's modifier");
+	}
+
+	[Test]
+	public static void Twist_Reflect_BlockedReflectedWaveNeverSwapsTheEldersMove()
+	{
+		// YOK-103 critic round 4: Brute Recovery (on_block, recovery -4) on Ryo's wave. Reflected, the wave drops its
+		// variants and its FiredBy, so when Ryo blocks it the elder's own move (whatever use she is in) is untouched.
+		bool sawSerialMatch = false;
+		for (int offset = 60; offset <= 114; offset += 2) // she starts jabbing late enough to be in her 2nd use at the connect
+		{
+			var log = new Log();
+			var m = Setup(log, Reflect);
+			m.P1.AttachModifier(SpecialSlot.A, Mod("brute-recovery"), m.Config);
+			P1(m, Wave(), 140);
+			int ryoUse = m.P1.MoveSerial + 1;
+			m.Step(Wave(), Idle);
+			var block = new FighterInput(InputBits.Left);
+			for (int t = 1; t <= 200; t++)
+			{
+				var p2 = t >= offset && (t - offset) % 2 == 0 ? new FighterInput(LP) : Idle; // fresh presses: jab again as soon as she can
+				var before = m.P2.ActiveMove;
+				int hits = log.Hits.Count;
+				m.Step(block, p2);
+				foreach (var p in m.Projectiles.Where(p => p.Owner == 1))
+					Assert.True(p.FiredBy == 0 && p.Move.OnHitVariant == null && p.Move.OnBlockVariant == null, "reflected: no FiredBy, no outcome variants");
+				Assert.True(m.P2.ActiveMove?.Id != "test-spirit-wave", $"offset {offset}, tick {t}: the elder never plays Ryo's wave");
+				if (log.Hits.Count > hits && log.Hits.Last().e.Attacker == 1 && log.Hits.Last().e.Blocked
+					&& m.P2.State == FighterState.Attack && m.P2.MoveSerial == ryoUse)
+				{
+					sawSerialMatch = true;
+					Assert.True(ReferenceEquals(before, m.P2.ActiveMove), $"offset {offset}: her move is unchanged by the connect");
+				}
+			}
+			Assert.Equal(1, log.Reflected, $"offset {offset}: reflected once");
+		}
+		Assert.True(sawSerialMatch, "some offset has the elder mid-move in the use whose number matched the old FiredBy");
+	}
+
 	[Test]
 	public static void Twist_Reflect_RowIsBrokenOnlyByADifferentSpecial()
 	{
