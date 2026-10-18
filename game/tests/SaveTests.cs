@@ -1409,6 +1409,47 @@ public static class SaveTests
 	}
 
 	[Test]
+	public static void Boot_Unlocks_AwardedByDepthAtRunEnd_InTheFixedOrder_M1(Node runner) => WithTempFile(path =>
+	{
+		void NewRun(GameFlow flow)
+		{
+			if (flow.Session is not null) flow.ReturnToTitle();
+			Press(flow.Title.StartButton);
+			Press(flow.ControlSelect.Start);
+		}
+		void Next(GameFlow flow) { Assert.True(flow.ChooseNode(flow.Session!.Reachable()[0]).Ok, "entered"); WinEnteredNode(flow, 600); }
+		void LoseOn(GameFlow flow, Func<string, bool> stop)
+		{
+			NewRun(flow);
+			while (!stop(flow.Session!.Reachable()[0])) Next(flow);
+			Assert.True(flow.ChooseNode(flow.Session.Reachable()[0]).Ok, "entered the losing node");
+			Assert.True(flow.Session.LoseFight().Ok, "lost");
+		}
+		int RowOf(GameFlow flow, string id) => flow.Session!.Map.Graph.Node(id).Row;
+
+		WithBoot(runner, path, flow =>
+		{
+			NewRun(flow);
+			var order = Unlocks.FromData(flow.Session!.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels"))).Order;
+			Assert.True(order.Count > 0, "the data has locked abilities");
+			string[] Expect(int n) => order.Take(n).ToArray();
+			string[] Saved() => new SaveStore(path).Load().Data.Unlocks.ToArray();
+
+			LoseOn(flow, id => RowOf(flow, id) == 5);
+			Assert.Equal(0, Saved().Length, "row 5: nothing (M1)");
+			LoseOn(flow, id => RowOf(flow, id) == 6);
+			Assert.Equal(string.Join(",", Expect(1)), string.Join(",", Saved()), "row 6: one, the first in order");
+			LoseOn(flow, id => id == "boss-tanuki");
+			Assert.Equal(string.Join(",", Expect(3)), string.Join(",", Saved()), "reached the Tanuki: two more");
+			NewRun(flow);
+			while (!flow.Session!.IsOver) Next(flow);
+			Assert.True(flow.Session.Ended!.BeatTanuki, "beat the Tanuki");
+			Assert.Equal(string.Join(",", Expect(7)), string.Join(",", Saved()), "a Tanuki win: four more (or what is left)");
+			Assert.Equal(string.Join(",", Saved()), string.Join(",", flow.Saved.Unlocks), "memory and file agree");
+		});
+	});
+
+	[Test]
 	public static void Boot_ATanukiWin_IsCounted_Saved_AndPressesTheNextRun(Node runner) => WithTempFile(path =>
 	{
 		void NewRun(GameFlow flow)

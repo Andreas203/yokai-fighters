@@ -54,6 +54,20 @@ public static class CancelRuleLoader
 				.Where(f => MoveLoader.KindOf(f) == "cancel_rule").Select(LoadFile).ToArray()
 			: Array.Empty<CancelRule>();
 
+	/// <summary>
+	/// YOK-86 (A11, M1): ids of the cancel rules that start locked (<c>locked: true</c>), sorted by file name like
+	/// <see cref="LoadDirectory"/>; each file is parsed in full, so a broken rule fails here as it would there.
+	/// </summary>
+	public static string[] LockedIds(string dir) =>
+		Directory.Exists(dir)
+			? Directory.GetFiles(dir, "*.json").OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
+				.Where(f => MoveLoader.KindOf(f) == "cancel_rule")
+				.Select(f => (Text: File.ReadAllText(f), Name: Path.GetFileNameWithoutExtension(f)))
+				.Select(x => (Rule: Parse(x.Text, x.Name), Root: JsonNode.Parse(x.Text)!.AsObject())) // one read; Parse validates
+				.Where(x => x.Root["locked"] is JsonValue v && v.TryGetValue(out bool l) && l)
+				.Select(x => x.Rule.Id).ToArray()
+			: Array.Empty<string>();
+
 	public static CancelRule LoadFile(string path) =>
 		Parse(File.ReadAllText(path), Path.GetFileNameWithoutExtension(path));
 }
