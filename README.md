@@ -488,18 +488,27 @@ flowchart TD
 
 #### `priority_score()`
 
-Every input is a fact read from the design or from the scan. If I edit rule G1, the ranking changes with no change to the tool.
+Ranking a gap takes two steps.
 
-| Factor | Points | Read from |
-|---|---|---|
-| Never cut | +40 | G1: the copy rule, the merchant, Kihon, the harness, the story cards |
-| Schedule | +10 × urgency (3 = due this week or late, down to 0) | G5, against the build week counted from the first commit |
-| Unblocks | +6 per unbuilt feature waiting on it, up to 5 | the `needs` graph, followed through chains |
-| Cut risk | −4 to −20, the first cut lowest | G2, G3: Kata, the meta-unlock layer, modifiers, dojo trials, presets |
-| Size | −5 × size (1 to 3) | the feature |
-| Started | +5 | the scan finds part of it |
+**Step 1: can the agent write it right now?** A gap is skipped if any of these is true:
+- **It is blocked:** something it needs is not built yet. The Tanuki fight, for example, needs the copy target first.
+- **It is not code:** moves and card text go to Movesmith or the Habit Writer.
+- **It has no build brief yet** in `features.json`.
 
-A feature whose prerequisites are missing is not ranked: it is blocked, and being waited on is what raises the score of the feature it needs. Content and UI gaps, and code gaps with no build brief, are reported with their owner (Movesmith, Habit Writer, UI Designer) and left to the crew.
+Skipped gaps still get a score, but they are listed after every gap the agent can write, and the report names who they go to. That is why a gap the agent can write at 9 points sits above a content gap at 20.
+
+**Step 2: score it.** Points are added up from six questions. Every answer is read from the design (section G of `rules.md`) or from the scan, so if I edit rule G1, the ranking changes with no change to the tool.
+
+| Question | Points |
+|---|---|
+| Does G1 say it's never cut? | **+40** |
+| How soon is it due (G5)? | **+30** if due this week or late, +20 next week, +10 the week after, 0 later |
+| How many unbuilt features are waiting on it? | **+6 each**, counting at most 5 (so +30 max). This includes indirect waits: if A waits on B and B waits on this one, both count. |
+| Is it on the cut list if the build falls behind (G2, G3)? | The earlier it gets cut, the bigger the penalty: Kata −20, meta-unlocks −16, modifiers −12, dojo trials −8, presets −4 |
+| How big is it? | **−5** per size point (sizes 1 to 3) |
+| Is it already half-built? | **+5** |
+
+The agent writes the eligible gap with the highest total. In one line: build what can never be cut first, then whatever is due, then whatever unlocks the most other work, and leave anything that might be cut until last. The worked scores for the recorded run are in [Why the agent chose it](#why-the-agent-chose-it).
 
 #### The adversaries
 
