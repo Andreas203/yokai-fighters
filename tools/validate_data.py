@@ -248,6 +248,14 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             tier = entry.get("tier") if isinstance(entry, dict) else None
             if isinstance(tier, str) and tier not in tiers:
                 errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
+    # YOK-144: every stage named is a scene that exists (res:// = game/).
+    stages = [("default_stage", doc.get("default_stage"))]
+    for section in ("types", "nodes"):
+        entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
+        stages += [(f"{section}.{name}.stage", e.get("stage")) for name, e in entries.items() if isinstance(e, dict)]
+    for where, stage in stages:
+        if isinstance(stage, str) and stage.startswith("res://") and not (ROOT / "game" / stage[len("res://"):]).is_file():
+            errs.append((where, f"stage scene '{stage}' does not exist under game/"))
     for other in sorted(path.parent.glob("*.json")):
         try:
             m = json.loads(other.read_text(encoding="utf-8"))

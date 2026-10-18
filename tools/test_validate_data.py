@@ -426,6 +426,10 @@ class ValidateDataTest(unittest.TestCase):
             (lambda d: d["types"]["duel"].pop("tier"), "'tier' is a required property"),
             (lambda d: d["types"]["duel"].update(scene="scenes/fight.tscn"), "does not match"),
             (lambda d: d.pop("fallback_fighter"), "'fallback_fighter' is a required property"),
+            (lambda d: d["types"]["duel"].update(stage="res://scenes/fight.tscn"), "does not match"),
+            (lambda d: d.update(default_stage="res://scenes/stage/no_such_stage.tscn"), "does not exist under game/"),
+            (lambda d: d["types"]["elder"].update(stage="res://scenes/stage/missing.tscn"), "types.elder.stage"),
+            (lambda d: d["opponents"]["kitsune"].update(stage="res://scenes/stage/placeholder.tscn"), "Additional properties"),
         ]
         for edit, expect in cases:
             code, out = self._node_scenes(edit)

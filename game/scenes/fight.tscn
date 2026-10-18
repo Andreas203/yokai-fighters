@@ -8,13 +8,12 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_menu.tscn" id="7_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_overlay"]
-[ext_resource type="PackedScene" path="res://scenes/stage/bamboo_grove.tscn" id="9_stage"]
 [ext_resource type="PackedScene" path="res://scenes/camera_rig.tscn" id="10_camera"]
 
 [node name="Fight" type="Node3D"]
 script = ExtResource("1_fight")
 
-[node name="Stage" parent="." instance=ExtResource("9_stage")]
+[node name="StageContainer" type="Node3D" parent="."]
 
 [node name="CameraRig" parent="." instance=ExtResource("10_camera")]
 
