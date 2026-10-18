@@ -5,6 +5,7 @@
   "status": "proposed",
   "rules": ["R2", "R3", "A7", "Y4", "R8"],
   "default_scene": "res://scenes/fight.tscn",
+  "default_stage": "res://scenes/stage/bamboo_grove.tscn",
   "fallback_fighter": "kitsune",
   "tiers": {
     "apprentice": { "reaction_frames": 30 },

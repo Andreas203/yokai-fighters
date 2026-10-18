@@ -7,7 +7,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-39: the stage and camera rig are editor scenes instanced in fight.tscn (YOK-143: the fighters are spawned at runtime at its markers), the
+/// YOK-39: the camera rig is an editor scene instanced in fight.tscn (YOK-143/144: the fighters and the stage are instanced at runtime), the
 /// scene files carry the settings determinism depends on, and the code still drives them from the sim.
 /// </summary>
 public static class EditableSceneTests
@@ -41,10 +41,11 @@ public static class EditableSceneTests
 	}
 
 	[Test]
-	public static void FightScene_InstancesStageAndCameraRig_FightersIsAnEmptyContainerWithSpawnMarkers()
+	public static void FightScene_InstancesCameraRig_StageAndFightersAreEmptyContainers()
 	{
 		var state = GD.Load<PackedScene>("res://scenes/fight.tscn").GetState();
-		Assert.Equal(FightScene.GroveScene, Instance(state, "Stage"), "Stage is an instanced child of fight.tscn");
+		Assert.Equal("", Instance(state, FightScene.StageContainerName), "YOK-144: StageContainer is a plain container (the stage comes from node data)");
+		Assert.Equal("(missing)", Instance(state, FightScene.StageName), "YOK-144: no hard-instanced stage");
 		Assert.Equal("res://scenes/camera_rig.tscn", Instance(state, "CameraRig"), "CameraRig is an instanced child");
 		// YOK-143: no hard-instanced bodies; the scene is a template with a container and two markers.
 		Assert.Equal("", Instance(state, FightScene.FightersName), "Fighters is a plain container");

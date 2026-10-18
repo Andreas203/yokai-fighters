@@ -13,6 +13,7 @@
     "status": { "$ref": "common.schema.json#/$defs/status" },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "default_scene": { "description": "Scene for a node whose type and id name none.", "$ref": "#/$defs/scene" },
+    "default_stage": { "description": "YOK-144, presentation only: the stage scene for a fight node whose id and type name none. Left out = the fight scene's default, the bamboo grove.", "$ref": "#/$defs/stage" },
     "fallback_fighter": { "description": "Kit that fights for a yokai with no 'fighter' under 'opponents' (logged when used).", "$ref": "common.schema.json#/$defs/id" },
     "tiers": {
       "description": "Y4 rows: reaction delay in frames per tier.",
@@ -80,11 +81,13 @@
   "$defs": {
     "coins": { "description": "R8: coins a won fight on the node pays. Default 0.", "type": "integer", "minimum": 0, "maximum": 9999 },
     "scene": { "description": "A Godot scene path.", "type": "string", "pattern": "^res://.+\\.tscn$" },
+    "stage": { "description": "YOK-144: a stage scene (root script FightStage) under game/scenes/stage/ (path segments of letters, digits, '_' and '-': no '..', '//' or '\\'); the validator checks the file exists. JSON Schema patterns cannot anchor at the very end ('$' also accepts a final newline), so tools/validate_data.py and the game's loader (NodeSceneTable.StagePattern) are the strict checks.", "type": "string", "pattern": "^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.tscn$" },
     "entry": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "scene": { "$ref": "#/$defs/scene" },
+        "stage": { "description": "YOK-144, presentation only: the stage the fight shows; nodes win over types, then default_stage.", "$ref": "#/$defs/stage" },
         "opponent": { "description": "Stand-in yokai for a node that names none (merchant, dojo until their behaviour is built).", "$ref": "common.schema.json#/$defs/id" },
         "tier": { "description": "Y4 row; a key of 'tiers'.", "$ref": "common.schema.json#/$defs/id" },
         "profile": { "description": "Behaviour profile id for the opponent; without it the fighter's first profile plays.", "$ref": "common.schema.json#/$defs/id" },

@@ -236,6 +236,11 @@ def check_run_map(doc: dict) -> list[tuple[str, str]]:
     return errs
 
 
+# \Z and fullmatch: '$' would also accept a trailing newline. The schema's $defs/stage can only say '$', so this
+# check and NodeSceneTable.StagePattern (which ends in \z) are the strict ones.
+STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn\Z", re.ASCII)
+
+
 def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     """YOK-77: every tier named is defined, and every node type used by a run map in the same folder has an
     entry (the game's resolver refuses a node whose type has no Y4 tier)."""
@@ -248,6 +253,19 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             tier = entry.get("tier") if isinstance(entry, dict) else None
             if isinstance(tier, str) and tier not in tiers:
                 errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
+    # YOK-144: every stage named is a scene under scenes/stage/ that exists (res:// = game/). STAGE_PATTERN is the
+    # schema's $defs/stage pattern and NodeSceneTable.StagePattern; it also stops '..' from escaping the folder here.
+    stages = [("default_stage", doc.get("default_stage"))]
+    for section in ("types", "nodes"):
+        entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
+        stages += [(f"{section}.{name}.stage", e.get("stage")) for name, e in entries.items() if isinstance(e, dict)]
+    for where, stage in stages:
+        if not isinstance(stage, str):
+            continue
+        if not STAGE_PATTERN.fullmatch(stage):
+            errs.append((where, f"stage '{stage}' is not a scene path under res://scenes/stage/ (no '..', '//' or '\\')"))
+        elif not (ROOT / "game" / stage[len("res://"):]).is_file():
+            errs.append((where, f"stage scene '{stage}' does not exist under game/"))
     for other in sorted(path.parent.glob("*.json")):
         try:
             m = json.loads(other.read_text(encoding="utf-8"))
