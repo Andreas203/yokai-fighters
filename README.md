@@ -536,6 +536,19 @@ python -m unittest discover -s tools/goal_agent -p "test_*.py"
 
 `gaps` needs only Python 3.10+. `build` also needs the `claude` CLI (logged in), `dotnet` and `godot` on PATH, and a branch other than `main`: the agent writes to the working tree and never commits, pushes or merges. Each run writes `runs/<name>/trace.md` with every decision, plus `llm-calls.json` with every prompt and reply.
 
+#### How it connects to Linear
+
+The agent never touches Linear. It reads the design, scans the code and writes to the working tree, nothing else. The `producer` agent keeps the board in step with it on every `/produce` pass:
+
+1. It runs `run.py gaps --json`.
+2. Every gap with no ticket gets one, in score order. The gap's owner is the agent assigned, its unmet evidence is the acceptance criteria, and its rule IDs go on the ticket.
+3. A gap's `blocked_by` list becomes Linear blocking relations between the tickets.
+4. A ticket whose feature the scan now reports present is ready to close.
+
+A ticket for a gap the agent can write may be run by the agent instead of a crew programmer: `run.py build --only <feature-id>` on the ticket's `YOK-<number>` branch, with the trace in the PR description. The PR then goes to my review like any other.
+
+The recorded `copy-target` run came before this wiring: it ran on the `YOK-assignment-5-goal-agent` branch with no ticket, so that feature never had a Linear ticket.
+
 ### What the agent built
 
 **The Tanuki's copy target** (rules T2, T3, T4; GDD 5.3). Recorded run: [`runs/v1-copy-target/trace.md`](tools/goal_agent/runs/v1-copy-target/trace.md).
