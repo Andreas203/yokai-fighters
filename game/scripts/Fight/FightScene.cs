@@ -185,6 +185,7 @@ public partial class FightScene : Node3D
 
 	public override void _Ready()
 	{
+		if (GetNodeOrNull(FightEditorPreview.NodeName) is { } preview) { RemoveChild(preview); preview.Free(); } // YOK-144: the editor-only preview never exists at runtime
 		SetUpRun(); // YOK-48: a fresh run, the first fight built from it
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
