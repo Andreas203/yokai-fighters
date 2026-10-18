@@ -7,7 +7,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-39: the stage, camera rig and fighters are editor scenes instanced in fight.tscn (not built in code), the
+/// YOK-39: the stage and camera rig are editor scenes instanced in fight.tscn (YOK-143: the fighters are spawned at runtime at its markers), the
 /// scene files carry the settings determinism depends on, and the code still drives them from the sim.
 /// </summary>
 public static class EditableSceneTests
@@ -20,23 +20,70 @@ public static class EditableSceneTests
 		return scene;
 	}
 
+	static string Instance(SceneState state, string path)
+	{
+		for (int i = 0; i < state.GetNodeCount(); i++)
+		{
+			string p = state.GetNodePath(i).ToString();
+			if (p == "./" + path || p == path) return state.GetNodeInstance(i)?.ResourcePath ?? "";
+		}
+		return "(missing)";
+	}
+
+	static int IndexOf(SceneState state, string path)
+	{
+		for (int i = 0; i < state.GetNodeCount(); i++)
+		{
+			string p = state.GetNodePath(i).ToString();
+			if (p == "./" + path || p == path) return i;
+		}
+		return -1;
+	}
+
 	[Test]
-	public static void FightScene_InstancesStageCameraRigAndBothFighterSlots()
+	public static void FightScene_InstancesStageAndCameraRig_FightersIsAnEmptyContainerWithSpawnMarkers()
 	{
 		var state = GD.Load<PackedScene>("res://scenes/fight.tscn").GetState();
-		string Instance(string path)
+		Assert.Equal(FightScene.GroveScene, Instance(state, "Stage"), "Stage is an instanced child of fight.tscn");
+		Assert.Equal("res://scenes/camera_rig.tscn", Instance(state, "CameraRig"), "CameraRig is an instanced child");
+		// YOK-143: no hard-instanced bodies; the scene is a template with a container and two markers.
+		Assert.Equal("", Instance(state, FightScene.FightersName), "Fighters is a plain container");
+		for (int i = 0; i < state.GetNodeCount(); i++)
 		{
-			for (int i = 0; i < state.GetNodeCount(); i++)
-			{
-				string p = state.GetNodePath(i).ToString();
-				if (p == "./" + path || p == path) return state.GetNodeInstance(i)?.ResourcePath ?? "";
-			}
-			return "(missing)";
+			string p = state.GetNodePath(i).ToString();
+			Assert.True(!p.StartsWith("./Fighters/") && !p.StartsWith("Fighters/"), $"fight.tscn holds no body under Fighters ({p})");
 		}
-		Assert.Equal(FightScene.GroveScene, Instance("Stage"), "Stage is an instanced child of fight.tscn");
-		Assert.Equal("res://scenes/camera_rig.tscn", Instance("CameraRig"), "CameraRig is an instanced child");
-		Assert.Equal(FighterAnimSet.Ryo.ScenePath, Instance("Fighters/P1"), "P1 slot shows Ryo in the editor");
-		Assert.Equal(FighterAnimSet.Kitsune.ScenePath, Instance("Fighters/P2"), "P2 slot shows the Kitsune in the editor");
+		foreach (var (name, i) in new[] { (FightScene.P1SpawnName, 0), (FightScene.P2SpawnName, 1) })
+		{
+			int n = IndexOf(state, name);
+			Assert.True(n >= 0, $"{name} exists");
+			Assert.Equal("Marker3D", state.GetNodeType(n).ToString(), $"{name} is a Marker3D");
+			Transform3D t = Transform3D.Identity;
+			for (int k = 0; k < state.GetNodePropertyCount(n); k++)
+				if (state.GetNodePropertyName(n, k) == "transform") t = state.GetNodePropertyValue(n, k).AsTransform3D();
+			Assert.True(t.Origin.IsEqualApprox(FightScene.DefaultSpawn[i]) && t.Basis.IsEqualApprox(Basis.Identity), $"{name} at {t.Origin}, unrotated (same placement as before YOK-143)");
+		}
+	}
+
+	[Test]
+	public static void FightScene_InstancesBothBodiesAtTheirMarkers(Node runner)
+	{
+		// YOK-143: at load (before any render moves them to the sim's positions) each body sits on its marker.
+		var scene = Load(runner);
+		try
+		{
+			var fighters = scene.GetNode<Node3D>(FightScene.FightersName);
+			Assert.Equal(2, fighters.GetChildCount(), "two bodies under Fighters");
+			foreach (var (slot, i, path) in new[] { ("P1", 0, FighterAnimSet.Ryo.ScenePath), ("P2", 1, FighterAnimSet.Kitsune.ScenePath) })
+			{
+				var body = fighters.GetNodeOrNull<FighterModel>(slot);
+				Assert.True(body != null && ReferenceEquals(body, scene.ModelOf(i)), $"Fighters/{slot} is the model of player {i}");
+				Assert.Equal(path, body!.SceneFilePath, $"{slot} body scene");
+				Assert.Equal(i, body.GetIndex(), $"{slot} is child {i} of Fighters");
+				Assert.True(body.Transform.IsEqualApprox(scene.SpawnOf(i)), $"{slot} at {body.Transform.Origin}, marker {scene.SpawnOf(i).Origin}");
+			}
+		}
+		finally { scene.QueueFree(); }
 	}
 
 	[Test]
