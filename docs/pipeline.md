@@ -66,8 +66,13 @@ rule, a loop through rules held at once.
 `.github/workflows/data-merge-check.yml` runs the check on every pull request that touches `data/**`
 (and by hand), always with the defaults: 200 runs and a fresh build and import. It diffs against the
 PR's base branch, uploads the report and the suite log as the `data-merge-report` artifact and writes
-the report to the job summary in a step of its own, from the report file (the check step runs the PR's
-game code, so it gets no `GITHUB_STEP_SUMMARY`). The base checker runs as `python -I`. MERGEABLE and NOTHING TO MERGE pass with a notice, REVIEW passes with a
+the report to the job summary in a step of its own, from the report file. The check step runs the PR's
+game code (harness, suite), so the base checker runs as `python -I` with every runner file command
+removed (`GITHUB_STEP_SUMMARY`, `GITHUB_ENV`, `GITHUB_PATH`, `GITHUB_OUTPUT`, `GITHUB_STATE`): that code
+cannot write the summary or change the env, path, outputs or state of later steps. The summary and
+artifact steps read the literal path `$RUNNER_TEMP/data-merge`, never a path from env.
+Residual risk, accepted by the designer (2026-10-18) because every code PR is reviewed: game code can
+still find the runner's command files by path (`$RUNNER_TEMP/../_runner_file_commands`). MERGEABLE and NOTHING TO MERGE pass with a notice, REVIEW passes with a
 warning, FAIL, SETUP and INCOMPLETE fail the job. The workflow has read-only permissions and never merges.
 
 The checker never comes from the PR itself. The base branch's `tools/` (the checker, `validate_data.py`,

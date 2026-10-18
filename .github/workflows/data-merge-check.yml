@@ -32,7 +32,6 @@ jobs:
       - name: Paths outside the checkout
         run: |
           echo "GODOT_DIR=$RUNNER_TEMP/godot-bin" >> "$GITHUB_ENV"
-          echo "OUT_DIR=$RUNNER_TEMP/data-merge" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/data-merge"
 
       # The checker and its validators come from the BASE branch, never from the PR: a PR could otherwise
@@ -87,10 +86,13 @@ jobs:
         run: |
           base="origin/${GITHUB_BASE_REF:-main}"
           set +e
-          # -I: the checker imports nothing from the checkout. No GITHUB_STEP_SUMMARY here: the PR's game code
-          # runs inside this step (harness, suite), so the summary is written in its own step below.
-          env -u GITHUB_STEP_SUMMARY python -I "$TOOLS/data_merge_check.py" --root "$GITHUB_WORKSPACE" --tools "$TOOLS" \
-            --base "$base" --report "$OUT_DIR/data-merge-report.txt" --suite-log "$OUT_DIR/data-merge-suite.log"
+          # -I: the checker imports nothing from the checkout. The PR's game code runs inside this step
+          # (harness, suite), so it gets no runner file command: it cannot write the summary, env, path,
+          # outputs or state of later steps. The summary is written in its own step below.
+          out="$RUNNER_TEMP/data-merge"
+          env -u GITHUB_STEP_SUMMARY -u GITHUB_ENV -u GITHUB_PATH -u GITHUB_OUTPUT -u GITHUB_STATE \
+            python -I "$TOOLS/data_merge_check.py" --root "$GITHUB_WORKSPACE" --tools "$TOOLS" \
+            --base "$base" --report "$out/data-merge-report.txt" --suite-log "$out/data-merge-suite.log"
           code=$?
           set -e
           if [ "$CHECKER" = pr ] && [ "$code" = 0 ]; then code=3; fi
@@ -104,8 +106,10 @@ jobs:
       - name: Job summary from the report
         if: always()
         run: |
-          if [ -f "$OUT_DIR/data-merge-report.txt" ]; then
-            { echo '```'; cat "$OUT_DIR/data-merge-report.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          # A literal path, never one read from env: the check step ran the PR's game code.
+          report="$RUNNER_TEMP/data-merge/data-merge-report.txt"
+          if [ -f "$report" ]; then
+            { echo '```'; cat "$report"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Data merge check wrote no report." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -115,6 +119,6 @@ jobs:
         with:
           name: data-merge-report
           path: |
-            ${{ env.OUT_DIR }}/data-merge-report.txt
-            ${{ env.OUT_DIR }}/data-merge-suite.log
+            ${{ runner.temp }}/data-merge/data-merge-report.txt
+            ${{ runner.temp }}/data-merge/data-merge-suite.log
           if-no-files-found: ignore
