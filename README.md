@@ -645,7 +645,7 @@ My crew had ten agents when I built this. I went through each and asked one ques
 
 | Agent | Goal-oriented now? | Why |
 |---|---|---|
-| `producer` | **Yes** | It planned by reading the ticket board, which only shows work someone already thought of. It now starts every pass with `run.py gaps --json` and tickets the gaps in score order. Its pass is done when every gap is ticketed, blocked with a reason, or waiting on me. |
+| `producer` | **Yes** | It planned by reading the ticket board, which only shows work someone already thought of. It now starts every pass with `run.py gaps --json` and tickets the gaps in score order. Its pass is done when every gap is ticketed, blocked with a reason, or waiting on me. How the gaps become tickets: [How it connects to Linear](#how-it-connects-to-linear). |
 | `gameplay-programmer` | **Yes** | It already looped on build and tests. It now has a stated goal and stop condition: the gap its ticket names is reported present by the scan, not "the code is written". |
 | `ui-designer` | No, but it gets the critics | Whether a screen is finished is a visual judgment against the concept art, and that is mine. A loop cannot check it. |
 | `movesmith`, `habit-writer` | No | Their counts are easy to measure (33 abilities, 7 profiles) and the gap report now shows them, but every move waits on a clip I have approved. A loop would stall on me or write frame data with no clip, which rule F2 forbids. |
