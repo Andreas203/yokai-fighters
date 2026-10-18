@@ -86,6 +86,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Meta-unlocks (YOK-86) are deferred behind YOK-89. **If YOK-89 has not merged by 2026-10-17, the meta-unlock layer is cut** and YOK-86 canceled.
   - Carry-over (YOK-97) and story stay regardless (G2).
   - The real risks are off the G2 list: the abilities (YOK-103), the Astra art (YOK-102) and harness reach (0 of 200). They go to the balance gate, mid W3.
+- 2026-10-18 meta-unlock gate (designer): **met, no cut.** YOK-103 (#171) landed YOK-89's modifiers and cancels before 10-21, all but Sumo Stance. YOK-86 (unlocks) stays and can be dispatched. Sumo Stance has its own ticket.
 - 2026-10-18 designer ("approve all"): every provisional default in PRs #147–#164 is accepted as built. Each one can be retuned later.
   - **Tanuki pressure (Y5):** elders and the Tanuki are pressured; the apprentice is not. +10 aggression per win (capped at 3 wins), read as a higher aggression bias. The stored win count is uncapped, and the count lives in the save as `tanuki_wins`.
   - **Elder twists (Y2/Y3):**
