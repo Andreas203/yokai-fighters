@@ -40,6 +40,9 @@ public static class StageContainerTests
 			(Table.Replace("res://scenes/stage/placeholder.tscn", "res://scenes/fight.tscn"), "a type stage outside scenes/stage/"),
 			(Table.Replace("res://scenes/stage/den.tscn", "scenes/stage/den.tscn"), "a node stage without res://"),
 			(Table.Replace("res://scenes/stage/den.tscn", "res://scenes/stage/.tscn"), "an empty stage name"),
+			(Table.Replace("res://scenes/stage/den.tscn", "res://scenes/stage/../fight.tscn"), "a '..' escaping the stage folder"),
+			(Table.Replace("res://scenes/stage/den.tscn", "res://scenes/stage//den.tscn"), "a '//' in the stage path"),
+			(Table.Replace("res://scenes/stage/den.tscn", "res://scenes/stage/sub\\\\den.tscn"), "a backslash in the stage path"),
 			(Table.Replace("\"fallback_fighter\"", "\"default_stage\": \"res://scenes/stage/x.png\", \"fallback_fighter\""), "a default_stage that is not a scene"),
 			(Table.Replace("{ \"fighter\": \"kitsune\" }", "{ \"fighter\": \"kitsune\", \"stage\": \"res://scenes/stage/placeholder.tscn\" }"), "a stage on an opponent"),
 		})
