@@ -1,0 +1,915 @@
+{
+ "note": "YOK-146 stopgap retarget: Meshy clip (meshy rig ryo-rigged.glb) vs retargeted clip (ryo-tripo-rigged.glb). measure_clip.py --as-stripped with the data/clips trim; skin_clip_check.py --rotations-only 1 over the trim. Tear limit 0.2% of edges: Meshy 62 (31,130 edges), Tripo 169 (84,653 edges).",
+ "clips": [
+  {
+   "clip": "ryo-block-high",
+   "id": "ryo-block-high",
+   "trim": [
+    20,
+    30
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.465,
+   "slide_tripo": 0.76,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [],
+   "tears_meshy": 6,
+   "tears_tripo": 15,
+   "stretch_meshy": 3.327,
+   "stretch_tripo": 7.012,
+   "worst_frame_tripo": 30,
+   "bones_tripo": {
+    "LeftForeArm": 4,
+    "LeftArm": 3,
+    "LeftShoulder": 3,
+    "RightForeArm": 3,
+    "RightArm": 3,
+    "RightUpLeg": 2
+   },
+   "tear_frames_tripo": 11,
+   "frames": [
+    20,
+    30
+   ]
+  },
+  {
+   "clip": "ryo-block-low",
+   "id": "ryo-block-low",
+   "trim": [
+    0,
+    34
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.467,
+   "slide_tripo": 0.605,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [],
+   "tears_meshy": 52,
+   "tears_tripo": 169,
+   "stretch_meshy": 4.658,
+   "stretch_tripo": 11.213,
+   "worst_frame_tripo": 34,
+   "bones_tripo": {
+    "Hips": 262,
+    "LeftUpLeg": 23,
+    "RightUpLeg": 10,
+    "RightShoulder": 6,
+    "Spine": 4,
+    "LeftShoulder": 3
+   },
+   "tear_frames_tripo": 33,
+   "frames": [
+    2,
+    34
+   ]
+  },
+  {
+   "clip": "ryo-crouch",
+   "id": "ryo-crouch",
+   "trim": [
+    100,
+    100
+   ],
+   "measure_meshy": "n/a",
+   "measure_tripo": "n/a",
+   "slide_meshy": null,
+   "slide_tripo": null,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [],
+   "tears_meshy": 31,
+   "tears_tripo": 83,
+   "stretch_meshy": 4.421,
+   "stretch_tripo": 8.093,
+   "worst_frame_tripo": 100,
+   "bones_tripo": {
+    "Hips": 90,
+    "RightUpLeg": 33,
+    "LeftUpLeg": 9,
+    "Spine": 4,
+    "LeftShoulder": 3,
+    "LeftFoot": 2
+   },
+   "tear_frames_tripo": 1,
+   "frames": [
+    100,
+    100
+   ]
+  },
+  {
+   "clip": "ryo-dash-back",
+   "id": "ryo-dash-back",
+   "trim": [
+    0,
+    55
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 3.062,
+   "slide_tripo": 3.635,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 3.63 cm/frame > 2.00",
+    "INFO 12 angular-velocity reversals on ['LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 16,
+   "tears_tripo": 43,
+   "stretch_meshy": 3.277,
+   "stretch_tripo": 6.287,
+   "worst_frame_tripo": 32,
+   "bones_tripo": {
+    "Hips": 35,
+    "LeftUpLeg": 12,
+    "LeftForeArm": 8,
+    "RightUpLeg": 6,
+    "LeftArm": 6,
+    "RightForeArm": 4
+   },
+   "tear_frames_tripo": 53,
+   "frames": [
+    2,
+    54
+   ]
+  },
+  {
+   "clip": "ryo-foxfire",
+   "id": "ryo-foxfire-cast",
+   "trim": [
+    32,
+    104
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "WARN",
+   "slide_meshy": 0.95,
+   "slide_tripo": 1.12,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.12 cm/frame > 1.00",
+    "INFO 1 angular-velocity reversals on ['RightLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 14,
+   "tears_tripo": 16,
+   "stretch_meshy": 3.289,
+   "stretch_tripo": 6.984,
+   "worst_frame_tripo": 40,
+   "bones_tripo": {
+    "RightArm": 10,
+    "RightUpLeg": 6,
+    "RightForeArm": 4,
+    "LeftShoulder": 2,
+    "Neck": 1
+   },
+   "tear_frames_tripo": 73,
+   "frames": [
+    32,
+    104
+   ]
+  },
+  {
+   "clip": "ryo-get-up",
+   "id": "ryo-get-up",
+   "trim": [
+    22,
+    102
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 3.197,
+   "slide_tripo": 3.123,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 3.12 cm/frame > 2.00",
+    "joint acceleration 20.3 deg/frame^2 (LeftFoot, frame 13) > 20",
+    "INFO 27 angular-velocity reversals on ['LeftFoot', 'LeftForeArm', 'LeftLeg', 'LeftToeBase', 'RightArm', 'RightFoot', 'RightForeArm', 'RightHand', 'RightLeg', 'RightToeBase', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 84,
+   "tears_tripo": 224,
+   "stretch_meshy": 4.589,
+   "stretch_tripo": 12.424,
+   "worst_frame_tripo": 30,
+   "bones_tripo": {
+    "Hips": 311,
+    "RightUpLeg": 26,
+    "LeftUpLeg": 19,
+    "Spine": 12,
+    "RightFoot": 7,
+    "RightLeg": 5
+   },
+   "tear_frames_tripo": 81,
+   "frames": [
+    22,
+    102
+   ]
+  },
+  {
+   "clip": "ryo-hit-high",
+   "id": "ryo-hit-high",
+   "trim": [
+    28,
+    70
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 1.88,
+   "slide_tripo": 2.031,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.03 cm/frame > 2.00",
+    "INFO 8 angular-velocity reversals on ['Head', 'LeftFoot', 'LeftShoulder', 'LeftToeBase', 'RightArm', 'RightForeArm', 'RightShoulder'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 18,
+   "tears_tripo": 26,
+   "stretch_meshy": 4.077,
+   "stretch_tripo": 6.25,
+   "worst_frame_tripo": 66,
+   "bones_tripo": {
+    "RightUpLeg": 11,
+    "LeftArm": 8,
+    "LeftForeArm": 5,
+    "RightForeArm": 4,
+    "Hips": 4,
+    "LeftShoulder": 3
+   },
+   "tear_frames_tripo": 43,
+   "frames": [
+    28,
+    70
+   ]
+  },
+  {
+   "clip": "ryo-hit-low",
+   "id": "ryo-hit-low",
+   "trim": [
+    8,
+    50
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 2.307,
+   "slide_tripo": 3.545,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 3.54 cm/frame > 2.00",
+    "INFO 9 angular-velocity reversals on ['LeftHand', 'LeftLeg', 'LeftShoulder', 'LeftUpLeg', 'RightFoot', 'RightForeArm', 'RightHand', 'RightShoulder', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 36,
+   "tears_tripo": 163,
+   "stretch_meshy": 3.267,
+   "stretch_tripo": 7.011,
+   "worst_frame_tripo": 50,
+   "bones_tripo": {
+    "Hips": 256,
+    "LeftUpLeg": 37,
+    "RightUpLeg": 12,
+    "RightForeArm": 4,
+    "Spine": 3,
+    "RightArm": 2
+   },
+   "tear_frames_tripo": 43,
+   "frames": [
+    8,
+    50
+   ]
+  },
+  {
+   "clip": "ryo-hk",
+   "id": "ryo-heavy-kick",
+   "trim": [
+    46,
+    93
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.443,
+   "slide_tripo": 1.868,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.87 cm/frame > 1.00",
+    "joint acceleration 21.3 deg/frame^2 (RightLeg, frame 17) > 20",
+    "INFO 5 angular-velocity reversals on ['RightArm', 'RightLeg', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 57,
+   "tears_tripo": 132,
+   "stretch_meshy": 5.916,
+   "stretch_tripo": 9.384,
+   "worst_frame_tripo": 65,
+   "bones_tripo": {
+    "RightUpLeg": 80,
+    "Hips": 64,
+    "LeftUpLeg": 29,
+    "RightArm": 14,
+    "Head": 11,
+    "LeftShoulder": 4
+   },
+   "tear_frames_tripo": 48,
+   "frames": [
+    46,
+    93
+   ]
+  },
+  {
+   "clip": "ryo-idle-guard",
+   "id": "ryo-idle-guard",
+   "trim": [
+    0,
+    222
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.26,
+   "slide_tripo": 0.333,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [],
+   "tears_meshy": 34,
+   "tears_tripo": 111,
+   "stretch_meshy": 3.655,
+   "stretch_tripo": 6.188,
+   "worst_frame_tripo": 53,
+   "bones_tripo": {
+    "Hips": 130,
+    "RightUpLeg": 28,
+    "RightArm": 10,
+    "LeftArm": 9,
+    "LeftUpLeg": 9,
+    "Head": 4
+   },
+   "tear_frames_tripo": 221,
+   "frames": [
+    2,
+    222
+   ]
+  },
+  {
+   "clip": "ryo-jump-back",
+   "id": "ryo-jump-back",
+   "trim": [
+    10,
+    50
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "PASS",
+   "slide_meshy": 2.395,
+   "slide_tripo": 0.0,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "INFO 19 angular-velocity reversals on ['LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightForeArm', 'RightHand', 'RightLeg', 'RightToeBase', 'RightUpLeg', 'Spine'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 63,
+   "tears_tripo": 90,
+   "stretch_meshy": 4.21,
+   "stretch_tripo": 12.338,
+   "worst_frame_tripo": 31,
+   "bones_tripo": {
+    "RightUpLeg": 111,
+    "LeftUpLeg": 24,
+    "Spine": 5,
+    "RightForeArm": 2,
+    "RightHand": 2,
+    "Hips": 2
+   },
+   "tear_frames_tripo": 41,
+   "frames": [
+    10,
+    50
+   ]
+  },
+  {
+   "clip": "ryo-jump-kick",
+   "id": "ryo-jump-kick",
+   "trim": [
+    22,
+    46
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 2.182,
+   "slide_tripo": 2.755,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.75 cm/frame > 2.00",
+    "INFO 11 angular-velocity reversals on ['LeftFoot', 'LeftForeArm', 'LeftLeg', 'LeftUpLeg', 'RightArm', 'RightForeArm', 'RightHand', 'RightLeg', 'RightToeBase', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 45,
+   "tears_tripo": 155,
+   "stretch_meshy": 5.188,
+   "stretch_tripo": 9.736,
+   "worst_frame_tripo": 42,
+   "bones_tripo": {
+    "Hips": 251,
+    "RightUpLeg": 18,
+    "LeftUpLeg": 12,
+    "RightForeArm": 4,
+    "Spine": 3,
+    "RightArm": 3
+   },
+   "tear_frames_tripo": 25,
+   "frames": [
+    22,
+    46
+   ]
+  },
+  {
+   "clip": "ryo-jump-punch",
+   "id": null,
+   "trim": null,
+   "measure_meshy": "FAIL",
+   "measure_tripo": "PASS",
+   "slide_meshy": 4.99,
+   "slide_tripo": 0.0,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "INFO 79 angular-velocity reversals on ['LeftArm', 'LeftFoot', 'LeftForeArm', 'LeftHand', 'LeftLeg', 'LeftShoulder', 'LeftToeBase', 'LeftUpLeg', 'RightArm', 'RightFoot', 'RightForeArm', 'RightHand', 'RightLeg', 'RightShoulder', 'RightToeBase', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 60,
+   "tears_tripo": 177,
+   "stretch_meshy": 4.609,
+   "stretch_tripo": 11.734,
+   "worst_frame_tripo": 18,
+   "bones_tripo": {
+    "Hips": 288,
+    "LeftUpLeg": 20,
+    "RightUpLeg": 17,
+    "LeftArm": 8,
+    "RightLeg": 4,
+    "RightArm": 1
+   },
+   "tear_frames_tripo": 161,
+   "frames": [
+    2,
+    162
+   ]
+  },
+  {
+   "clip": "ryo-jump",
+   "id": "ryo-jump",
+   "trim": [
+    32,
+    76
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.502,
+   "slide_tripo": 0.633,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "INFO 5 angular-velocity reversals on ['LeftLeg', 'LeftUpLeg', 'RightFoot', 'RightToeBase', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 55,
+   "tears_tripo": 170,
+   "stretch_meshy": 4.649,
+   "stretch_tripo": 7.505,
+   "worst_frame_tripo": 76,
+   "bones_tripo": {
+    "Hips": 278,
+    "LeftUpLeg": 32,
+    "LeftArm": 6,
+    "LeftLeg": 6,
+    "LeftShoulder": 3,
+    "Spine": 2
+   },
+   "tear_frames_tripo": 45,
+   "frames": [
+    32,
+    76
+   ]
+  },
+  {
+   "clip": "ryo-knockdown",
+   "id": "ryo-knockdown",
+   "trim": [
+    50,
+    130
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 1.354,
+   "slide_tripo": 2.054,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.05 cm/frame > 2.00",
+    "joint acceleration 34.5 deg/frame^2 (RightLeg, frame 2) > 20",
+    "INFO 34 angular-velocity reversals on ['Head', 'Hips', 'LeftArm', 'LeftFoot', 'LeftLeg', 'LeftShoulder', 'LeftUpLeg', 'RightArm', 'RightForeArm', 'RightLeg', 'RightShoulder', 'RightUpLeg', 'Spine'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 36,
+   "tears_tripo": 210,
+   "stretch_meshy": 4.714,
+   "stretch_tripo": 9.782,
+   "worst_frame_tripo": 89,
+   "bones_tripo": {
+    "Hips": 345,
+    "LeftUpLeg": 18,
+    "RightUpLeg": 17,
+    "RightShoulder": 7,
+    "Neck": 4,
+    "Spine": 4
+   },
+   "tear_frames_tripo": 81,
+   "frames": [
+    50,
+    130
+   ]
+  },
+  {
+   "clip": "ryo-lk",
+   "id": "ryo-light-kick",
+   "trim": [
+    44,
+    74
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 1.82,
+   "slide_tripo": 2.441,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.44 cm/frame > 2.00",
+    "INFO 6 angular-velocity reversals on ['RightFoot', 'RightForeArm', 'RightLeg', 'RightToeBase', 'RightUpLeg'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 28,
+   "tears_tripo": 53,
+   "stretch_meshy": 2.991,
+   "stretch_tripo": 11.461,
+   "worst_frame_tripo": 58,
+   "bones_tripo": {
+    "RightUpLeg": 46,
+    "Hips": 21,
+    "RightForeArm": 5,
+    "LeftArm": 4,
+    "LeftForeArm": 4,
+    "LeftShoulder": 3
+   },
+   "tear_frames_tripo": 31,
+   "frames": [
+    44,
+    74
+   ]
+  },
+  {
+   "clip": "ryo-lp",
+   "id": "ryo-light-punch",
+   "trim": [
+    30,
+    48
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.398,
+   "slide_tripo": 0.516,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [],
+   "tears_meshy": 14,
+   "tears_tripo": 32,
+   "stretch_meshy": 4.694,
+   "stretch_tripo": 8.722,
+   "worst_frame_tripo": 30,
+   "bones_tripo": {
+    "Hips": 16,
+    "RightUpLeg": 14,
+    "LeftUpLeg": 6,
+    "LeftShoulder": 3,
+    "RightForeArm": 2,
+    "RightArm": 2
+   },
+   "tear_frames_tripo": 19,
+   "frames": [
+    30,
+    48
+   ]
+  },
+  {
+   "clip": "ryo-mk",
+   "id": "ryo-medium-kick",
+   "trim": [
+    33,
+    61
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.179,
+   "slide_tripo": 1.595,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.59 cm/frame > 1.00",
+    "INFO 4 angular-velocity reversals on ['RightFoot', 'RightLeg', 'RightToeBase'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 42,
+   "tears_tripo": 87,
+   "stretch_meshy": 4.732,
+   "stretch_tripo": 11.665,
+   "worst_frame_tripo": 44,
+   "bones_tripo": {
+    "RightUpLeg": 90,
+    "Head": 16,
+    "RightArm": 10,
+    "LeftUpLeg": 8,
+    "Hips": 4,
+    "Neck": 3
+   },
+   "tear_frames_tripo": 29,
+   "frames": [
+    33,
+    61
+   ]
+  },
+  {
+   "clip": "ryo-mp",
+   "id": "ryo-medium-punch",
+   "trim": [
+    105,
+    130
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.483,
+   "slide_tripo": 0.622,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "INFO 2 angular-velocity reversals on ['Hips', 'RightShoulder'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 20,
+   "tears_tripo": 58,
+   "stretch_meshy": 3.875,
+   "stretch_tripo": 6.445,
+   "worst_frame_tripo": 107,
+   "bones_tripo": {
+    "Hips": 72,
+    "LeftUpLeg": 17,
+    "RightUpLeg": 7,
+    "RightForeArm": 4,
+    "LeftForeArm": 4,
+    "RightArm": 2
+   },
+   "tear_frames_tripo": 26,
+   "frames": [
+    105,
+    130
+   ]
+  },
+  {
+   "clip": "ryo-rising-talisman",
+   "id": "ryo-rising-talisman-strike",
+   "trim": [
+    17,
+    57
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.2,
+   "slide_tripo": 1.418,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.42 cm/frame > 1.00",
+    "INFO 3 angular-velocity reversals on ['LeftArm', 'LeftFoot', 'LeftForeArm'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 14,
+   "tears_tripo": 26,
+   "stretch_meshy": 3.457,
+   "stretch_tripo": 6.278,
+   "worst_frame_tripo": 39,
+   "bones_tripo": {
+    "LeftArm": 11,
+    "LeftForeArm": 8,
+    "Hips": 6,
+    "RightUpLeg": 6,
+    "RightArm": 4,
+    "RightForeArm": 4
+   },
+   "tear_frames_tripo": 41,
+   "frames": [
+    17,
+    57
+   ]
+  },
+  {
+   "clip": "ryo-spirit-wave",
+   "id": "ryo-spirit-wave-cast",
+   "trim": [
+    18,
+    61
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 1.592,
+   "slide_tripo": 2.001,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.00 cm/frame > 2.00",
+    "INFO 3 angular-velocity reversals on ['LeftArm', 'RightFoot'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 27,
+   "tears_tripo": 110,
+   "stretch_meshy": 4.373,
+   "stretch_tripo": 6.76,
+   "worst_frame_tripo": 61,
+   "bones_tripo": {
+    "Hips": 181,
+    "LeftUpLeg": 10,
+    "RightUpLeg": 8,
+    "Spine": 1,
+    "Neck": 1,
+    "LeftLeg": 1
+   },
+   "tear_frames_tripo": 44,
+   "frames": [
+    18,
+    61
+   ]
+  },
+  {
+   "clip": "ryo-walk-guard-back",
+   "id": "ryo-walk-guard-back",
+   "trim": [
+    0,
+    104
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.038,
+   "slide_tripo": 1.361,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.36 cm/frame > 1.00"
+   ],
+   "tears_meshy": 14,
+   "tears_tripo": 13,
+   "stretch_meshy": 2.585,
+   "stretch_tripo": 4.784,
+   "worst_frame_tripo": 11,
+   "bones_tripo": {
+    "LeftShoulder": 4,
+    "LeftArm": 3,
+    "RightUpLeg": 2,
+    "RightForeArm": 2,
+    "RightArm": 2,
+    "LeftFoot": 2
+   },
+   "tear_frames_tripo": 103,
+   "frames": [
+    2,
+    104
+   ]
+  },
+  {
+   "clip": "ryo-walk-guard-fwd",
+   "id": "ryo-walk-guard-fwd",
+   "trim": [
+    0,
+    104
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.804,
+   "slide_tripo": 1.789,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.79 cm/frame > 1.00"
+   ],
+   "tears_meshy": 18,
+   "tears_tripo": 21,
+   "stretch_meshy": 2.885,
+   "stretch_tripo": 5.565,
+   "worst_frame_tripo": 55,
+   "bones_tripo": {
+    "Hips": 15,
+    "LeftUpLeg": 7,
+    "RightForeArm": 4,
+    "LeftArm": 3,
+    "LeftShoulder": 3,
+    "RightArm": 2
+   },
+   "tear_frames_tripo": 103,
+   "frames": [
+    2,
+    104
+   ]
+  },
+  {
+   "clip": "ryo-heavy",
+   "id": "ryo-heavy-punch",
+   "trim": [
+    28,
+    61
+   ],
+   "measure_meshy": "PASS",
+   "measure_tripo": "PASS",
+   "slide_meshy": 0.945,
+   "slide_tripo": 0.969,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "INFO 8 angular-velocity reversals on ['Hips', 'LeftArm', 'LeftForeArm', 'LeftHand', 'LeftUpLeg', 'RightForeArm', 'RightHand'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 18,
+   "tears_tripo": 30,
+   "stretch_meshy": 4.679,
+   "stretch_tripo": 7.685,
+   "worst_frame_tripo": 28,
+   "bones_tripo": {
+    "Hips": 19,
+    "LeftUpLeg": 10,
+    "LeftForeArm": 5,
+    "RightForeArm": 4,
+    "RightUpLeg": 4,
+    "LeftArm": 3
+   },
+   "tear_frames_tripo": 34,
+   "frames": [
+    28,
+    61
+   ]
+  },
+  {
+   "clip": "ryo-grab-2",
+   "id": "ryo-generic-throw",
+   "trim": [
+    30,
+    59
+   ],
+   "measure_meshy": "WARN",
+   "measure_tripo": "WARN",
+   "slide_meshy": 1.11,
+   "slide_tripo": 1.31,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 1.31 cm/frame > 1.00",
+    "INFO 2 angular-velocity reversals on ['LeftHand', 'RightHand'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 16,
+   "tears_tripo": 20,
+   "stretch_meshy": 3.263,
+   "stretch_tripo": 7.23,
+   "worst_frame_tripo": 49,
+   "bones_tripo": {
+    "RightUpLeg": 12,
+    "Hips": 4,
+    "LeftArm": 3,
+    "LeftShoulder": 3,
+    "RightLeg": 2,
+    "RightArm": 2
+   },
+   "tear_frames_tripo": 30,
+   "frames": [
+    30,
+    59
+   ]
+  },
+  {
+   "clip": "ryo-walk",
+   "id": "ryo-walk-fwd",
+   "trim": [
+    0,
+    64
+   ],
+   "measure_meshy": "FAIL",
+   "measure_tripo": "FAIL",
+   "slide_meshy": 2.284,
+   "slide_tripo": 2.792,
+   "jit_meshy": null,
+   "jit_tripo": null,
+   "reasons_tripo": [
+    "foot slide 2.79 cm/frame > 2.00",
+    "INFO 10 angular-velocity reversals on ['LeftFoot', 'LeftLeg', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase'] (accepted Ryo clips run 0-12 with real direction changes; read them with the stills, not alone)"
+   ],
+   "tears_meshy": 12,
+   "tears_tripo": 21,
+   "stretch_meshy": 3.846,
+   "stretch_tripo": 5.501,
+   "worst_frame_tripo": 13,
+   "bones_tripo": {
+    "Hips": 31,
+    "LeftArm": 4,
+    "LeftUpLeg": 3
+   },
+   "tear_frames_tripo": 63,
+   "frames": [
+    2,
+    64
+   ]
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "tool": "tools/blender/skin_clip_check.py",
+ "rigs": {
+  "tripo": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb"
+ },
+ "clips": {
+  "ryo-knockdown": {
+   "action": "retargeted_Armature",
+   "frames": [
+    50,
+    130
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 210,
+     "worst_frame": 89,
+     "worst_frame_bones": {
+      "Hips": 345,
+      "LeftUpLeg": 18,
+      "RightUpLeg": 17,
+      "RightShoulder": 7,
+      "Neck": 4,
+      "Spine": 4
+     },
+     "max_stretch": 9.782,
+     "frames_with_failing_edges": 81,
+     "mean_edges_over_1_8x": 223.7
+    }
+   },
+   "stills": [
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-knockdown_f089_tripo_front.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-knockdown_f089_tripo_side.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-knockdown_f089_tripo_pelvis.png"
+   ]
+  },
+  "ryo-get-up": {
+   "action": "retargeted_Armature.002",
+   "frames": [
+    22,
+    102
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 224,
+     "worst_frame": 30,
+     "worst_frame_bones": {
+      "Hips": 311,
+      "RightUpLeg": 26,
+      "LeftUpLeg": 19,
+      "Spine": 12,
+      "RightFoot": 7,
+      "RightLeg": 5
+     },
+     "max_stretch": 12.424,
+     "frames_with_failing_edges": 81,
+     "mean_edges_over_1_8x": 297.2
+    }
+   },
+   "stills": [
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-get-up_f030_tripo_front.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-get-up_f030_tripo_side.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-get-up_f030_tripo_pelvis.png"
+   ]
+  },
+  "ryo-jump": {
+   "action": "retargeted_Armature.004",
+   "frames": [
+    32,
+    76
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 170,
+     "worst_frame": 76,
+     "worst_frame_bones": {
+      "Hips": 278,
+      "LeftUpLeg": 32,
+      "LeftArm": 6,
+      "LeftLeg": 6,
+      "LeftShoulder": 3,
+      "Spine": 2
+     },
+     "max_stretch": 7.505,
+     "frames_with_failing_edges": 45,
+     "mean_edges_over_1_8x": 156.8
+    }
+   },
+   "stills": [
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-jump_f076_tripo_front.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-jump_f076_tripo_side.png",
+    "assets\\specs\\rigs\\stills\\ryo-tripo\\clips\\ryo-jump_f076_tripo_pelvis.png"
+   ]
+  }
+ }
+}

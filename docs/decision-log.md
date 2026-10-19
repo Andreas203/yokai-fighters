@@ -48,6 +48,14 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Same skeleton, so the clips, frame data and Tanuki carry over.
   - No regeneration: `assets/specs/ryo-regen.md` is kept on file as not needed.
   - Charm, pouch and sash are only partly freed from the thighs; a full rigid bind tears the crouch (`assets/specs/rigs/ryo-weight-repair.md`).
+- 2026-10-19 YOK-146 (designer, on the ticket): **Option A: Tripo's skeleton becomes the shared skeleton.** `assets/specs/rigs/skeleton.md` is rewritten from the Tripo Ryo; the Meshy spec is kept there as "Previous shared skeleton (Meshy)" and in `skeleton-meshy.json` for Kitsune, Oni and Kappa until YOK-147/148/149.
+  - **Ryo's heavy punch and heavy kick come from video mocap**; the animator specs them separately.
+  - The designer wants a test branch where the new Ryo is playable soon.
+- 2026-10-19 YOK-146 (rig-specialist, recorded for review):
+  - **Prefix stripped:** bones are `Hips`, not `mixamorig:Hips`. Godot 4.7.2 imports `:` as `_` (`mixamorig_Hips`), and the game looks up `Hips` and `RightHand` by bare name. The Blender scripts strip `mixamorig:` and `mixamorig_` on input.
+  - **Fingers removed, weights merged into the hand** (E15 mitts): 25 joints.
+  - **The Tripo GLB is rebuilt by script** (`tools/blender/canon_tripo_rig.py`): its joints carry no transforms and its inverse binds are in a Z-up frame, so it tears raw. Then the `ryo-tripo` pelvis repair. Metre bones, 1.75 m. Expect the same on every Tripo file.
+  - **Rig ACCEPT for the test branch (provisional):** deep-crouch volume FAIL from the painted charm and pouch; everything else PASS or WARN. Stopgap clips in `game/assets/generated/clips/ryo-tripo/` (Meshy clips retargeted by script). G4 for the Tripo set stays open until the real clips. 0 credits, no jobs (`assets/specs/rigs/ryo-tripo.md`).
 
 ## Tooling and process
 - 2026-10-11 YOK-59/62: UI moved to the Codex ui-designer (Astra). Its 18 generated plates replaced Meshy plates, because Claude's kit (#74) was not close enough to the concepts.
@@ -143,6 +151,11 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-17 meta-unlock deadline (designer): **extended, no cut.** YOK-89 now has until 2026-10-21 (the balance gate) to merge; if it hasn't, the meta-unlock layer is cut and YOK-86 canceled.
 
 ## Waiting on the designer
+- **YOK-146 (Tripo Ryo):**
+  - 54k triangles against the 20k budget (decimate by script, or accept).
+  - The deep-crouch flag from the charm and pouch (accept, or a take with them as separate meshes).
+  - Whether to commit the raw `Ryo.glb`.
+  - The gameplay branch must load Ryo's clips from `clips/ryo-tripo/` while the Meshy fighters keep `clips/ryo/`.
 - **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur.
 - **YOK-36 open rules:**
   - Lv 2 steps for the other specials.
