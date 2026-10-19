@@ -28,6 +28,9 @@ import sys
 import numpy as np
 from mathutils import Vector
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import clip_common as cc  # noqa: E402  (YOK-146: bone-name normaliser)
+
 STRETCH_FAIL, SQUASH_FAIL, STRETCH_WARN = 3.0, 0.25, 1.8
 
 
@@ -202,7 +205,8 @@ def main():
                     for o in (rigs[u]["mesh"] for u in tags):
                         o.hide_render = o is not rigs[t]["mesh"]
                     co = coords(rigs[t]["mesh"])
-                    hips = rigs[t]["arm"].matrix_world @ rigs[t]["arm"].pose.bones["Hips"].head
+                    ra_t = rigs[t]["arm"]
+                    hips = ra_t.matrix_world @ ra_t.pose.bones[cc.resolve_bone(ra_t, "Hips")].head
                     lo, hi = co.min(0), co.max(0)
                     for view, rot, off in (("front", (math.radians(90), 0, 0), Vector((0, -10, 0))),
                                            ("side", (math.radians(90), 0, math.radians(90)), Vector((10, 0, 0))),

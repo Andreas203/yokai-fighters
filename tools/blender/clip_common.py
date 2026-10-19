@@ -6,6 +6,8 @@ Conventions (all measured on the accepted Ryo/Kitsune clips):
   (`trim_start`, `trim_end`) are these raw ticks.
 - After import: Blender world is Z up, the character faces -Y (glTF +Z), its left is +X. The armature object
   carries scale 0.01, so world units are metres and armature-space units are centimetres.
+  (Meshy rigs. The Tripo shared skeleton, YOK-146, has an unscaled Armature with metre bones; scripts read world
+  positions, so both work.)
 - Game frames are 1-based: game frame n shows raw tick trim_start + (n - 1) * speed_scale.
 """
 import hashlib
@@ -18,6 +20,38 @@ import bpy
 import numpy as np
 
 FPS = 60
+
+# YOK-146 (Option A): the shared skeleton is Tripo's Mixamo-preset skeleton with the `mixamorig:` prefix stripped
+# (assets/specs/rigs/skeleton.md). Raw Tripo/Mixamo files carry `mixamorig:Hips`, and Godot imports that as
+# `mixamorig_Hips`; both read as `Hips` here.
+NAME_PREFIXES = ("mixamorig:", "mixamorig_")
+# Same chain position on the previous Meshy skeleton -> the shared (Tripo) skeleton. Meshy's spine counts down.
+MESHY_TO_TRIPO = {"Spine02": "Spine", "Spine01": "Spine1", "Spine": "Spine2", "neck": "Neck",
+                  "head_end": "HeadTop_End"}
+
+
+def normalise_bone_name(name):
+    """Bare shared-skeleton name: `mixamorig:Hips` / `mixamorig_Hips` -> `Hips`; other names unchanged."""
+    for p in NAME_PREFIXES:
+        if name and name.startswith(p):
+            return name[len(p):]
+    return name
+
+
+def bone_lookup(arm):
+    """{normalised name: actual pose-bone name} for an armature, so scripts can ask for `Hips` on any rig."""
+    return {normalise_bone_name(b.name): b.name for b in arm.data.bones}
+
+
+def resolve_bone(arm, name):
+    """Actual bone name on `arm` for a shared name (normalised), or None. A Meshy name also resolves on a Tripo
+    rig by chain position (`Spine02` -> `Spine`) only when the rig has no bone of that name; `Spine` is ambiguous
+    (Meshy chest, Tripo lowest spine) and always means the rig's own `Spine`."""
+    look = bone_lookup(arm)
+    if name in look:
+        return look[name]
+    alt = MESHY_TO_TRIPO.get(name)
+    return look.get(alt) if alt else None
 
 
 def script_args(tool):
@@ -110,9 +144,10 @@ def action_last_tick(act):
 
 
 def bone_world_heads(arm, names):
-    """World-space head positions (m) of the named pose bones at the current frame."""
+    """World-space head positions (m) of the named pose bones at the current frame. Names are shared names
+    (normalised, see resolve_bone), so `Hips` finds `mixamorig:Hips`."""
     mw = arm.matrix_world
-    return np.array([np.array(mw @ arm.pose.bones[n].head) for n in names])
+    return np.array([np.array(mw @ arm.pose.bones[resolve_bone(arm, n) or n].head) for n in names])
 
 
 def write_json(path, data):

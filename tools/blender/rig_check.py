@@ -116,7 +116,29 @@ DEFAULTS = {
     "arm_leg_bleed_min_weight": 0.10,  # a vert weighted to both an arm and a leg bone = WARN
 }
 
-PROTECTED_BONES = {"Hips", "Spine02", "Spine01", "Spine", "neck", "Head"}
+# Torso and head chain on both skeletons: Meshy (previous) and Tripo/Mixamo (shared since YOK-146, Option A).
+PROTECTED_BONES = {"Hips", "Spine02", "Spine01", "Spine", "neck", "Head", "Spine1", "Spine2", "Neck"}
+# YOK-146: the stress poses below are written in the Meshy names. On the Tripo skeleton they are renamed by
+# chain position (Meshy's spine counts down, Tripo's counts up), so both skeletons get the same poses.
+MESHY_TO_TRIPO = {"Spine02": "Spine", "Spine01": "Spine1", "Spine": "Spine2", "neck": "Neck",
+                  "head_end": "HeadTop_End"}
+NAME_PREFIXES = ("mixamorig:", "mixamorig_")  # Tripo's Mixamo preset; Godot imports ':' as '_'
+
+
+def normalise_bone_name(name):
+    """Bare shared-skeleton name: drops a Mixamo namespace prefix (see clip_common.normalise_bone_name)."""
+    for p in NAME_PREFIXES:
+        if name and name.startswith(p):
+            return name[len(p):]
+    return name
+
+
+def poses_for(skel):
+    """STRESS_POSES with bone names in the skeleton's own naming (Meshy or Tripo)."""
+    names = {b["name"] for b in skel["bones"]}
+    if "Spine02" in names or "Spine2" not in names:
+        return STRESS_POSES
+    return {k: [(MESHY_TO_TRIPO.get(b, b), ax, d) for b, ax, d in v] for k, v in STRESS_POSES.items()}
 ARM_BONES = {s + n for s in ("Left", "Right") for n in ("Shoulder", "Arm", "ForeArm", "Hand")}
 LEG_BONES = {s + n for s in ("Left", "Right") for n in ("UpLeg", "Leg", "Foot", "ToeBase")}
 
@@ -632,7 +654,7 @@ def owners(meshes, arm):
     return np.array(res, dtype=object)
 
 
-def check_poses(arm, meshes, rest_co, H, T, out_dir, render, cloth=None):
+def check_poses(arm, meshes, rest_co, H, T, out_dir, render, cloth=None, poses=None):
     E = edges_of(meshes)
     if cloth is None:
         is_cloth = np.zeros(len(rest_co), bool)
@@ -645,7 +667,7 @@ def check_poses(arm, meshes, rest_co, H, T, out_dir, render, cloth=None):
     own = owners(meshes, arm)
     rest_seg = bone_segments(arm)
     res = {}
-    for name, pose in STRESS_POSES.items():
+    for name, pose in (poses or STRESS_POSES).items():
         skipped = apply_pose(arm, meshes, pose, H)
         co = all_coords(meshes, True)
         seg = bone_segments(arm)
@@ -782,6 +804,9 @@ def main():
         skel["height_m"] = float(a["height"])
     bmap = load_bone_map(a["bone_map"], skel)
     arm, meshes = load_scene(a["rig"])
+    for b in arm.data.bones:  # YOK-146: `mixamorig:Hips` checks as `Hips` without a bone map
+        if b.name not in bmap and normalise_bone_name(b.name) != b.name:
+            bmap[b.name] = normalise_bone_name(b.name)
     reset_pose(arm)
     if a["dump"]:
         dump_skeleton(arm, meshes, a["dump"], bmap)
@@ -812,7 +837,7 @@ def main():
                            "verts_total": int(sum(counts.values())), "verts_in_mesh": len(rest_co)}
         if a["render"]:
             report["cloth"]["mask_stills"] = render_cloth_mask(meshes, cloth, out_dir)
-    report["poses"] = check_poses(arm, meshes, rest_co, H, T, out_dir, a["render"], cloth)
+    report["poses"] = check_poses(arm, meshes, rest_co, H, T, out_dir, a["render"], cloth, poses_for(skel))
 
     keys = ["skeleton", "rest_pose", "scale", "up_axis", "origin", "weights"]
     states = [report[k]["status"] for k in keys] + [p["status"] for p in report["poses"].values()]
