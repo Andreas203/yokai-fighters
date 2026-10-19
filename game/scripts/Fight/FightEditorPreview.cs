@@ -15,7 +15,9 @@ public partial class FightEditorPreview : Node
 	public const string NodeName = "EditorPreview", StageName = "EditorPreviewStage", P1Name = "EditorPreviewP1", P2Name = "EditorPreviewP2";
 
 	/// <summary>The preview's scenes; tests check they match <see cref="FightScene.GroveScene"/> and <see cref="FighterAnimSet"/>.</summary>
-	public const string StageScene = "res://scenes/stage/bamboo_grove.tscn", P1Scene = "res://scenes/fighters/ryo.tscn", P2Scene = "res://scenes/fighters/kitsune.tscn";
+	public const string StageScene = "res://scenes/stage/bamboo_grove.tscn", P2Scene = "res://scenes/fighters/kitsune.tscn";
+	/// <summary>YOK-146: Ryo's body follows <see cref="FighterAnimSet.TripoRyo"/> (Tripo or Meshy).</summary>
+	public static string P1Scene => FighterAnimSet.Ryo.ScenePath;
 
 	/// <summary>How many times a preview was built in this process (tests: stays 0 outside the editor).</summary>
 	public static int BuildCount { get; private set; }

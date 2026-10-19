@@ -9,7 +9,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-33 measurement tool (not a test): poses each rigged fighter on every frame of every clip it plays and writes the
 /// bone positions in gameplay units (200/m, feet-relative, x toward the opponent) as TSV, so hitboxes and hurtboxes can be
-/// placed from the model. Run: godot --headless --path game res://tests/bone_probe.tscn -- out=&lt;file&gt;
+/// placed from the model. Run: godot --headless --path game res://tests/bone_probe.tscn -- out=&lt;file&gt; [meshy]
 /// </summary>
 public partial class BoneProbe : Node
 {
@@ -17,6 +17,7 @@ public partial class BoneProbe : Node
 	{
 		string path = "bone_probe.tsv";
 		foreach (string a in OS.GetCmdlineUserArgs()) if (a.StartsWith("out=")) path = a[4..];
+		if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "meshy") >= 0) FighterAnimSet.TripoRyo = false; // YOK-146: the old Ryo, for comparison
 		var sb = new StringBuilder("fighter\tclip\tframe\tbone\tx\ty\tz\n");
 		foreach (var set in new[] { FighterAnimSet.Ryo, FighterAnimSet.Kitsune })
 		{

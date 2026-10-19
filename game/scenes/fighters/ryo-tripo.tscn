@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/fighters/BaseFighter.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://b3d6xpsq20bxj" path="res://assets/generated/characters/ryo/ryo-tripo-rigged.glb" id="2_tripo"]
+
+[node name="Ryo" instance=ExtResource("1_base")]
+Fighter = "ryo"
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=954421728 instance=ExtResource("2_tripo")]
