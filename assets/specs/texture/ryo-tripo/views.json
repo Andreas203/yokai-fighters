@@ -1,0 +1,222 @@
+{
+ "tool": "texture_views.py",
+ "input": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb",
+ "input_sha256": "034b20cfbf19f9bbec0c1fb24aee6b5d196311fd272a2aaf22fad703bd7030b2",
+ "resolution": [
+  2048,
+  2048
+ ],
+ "ortho_scale": 1.8899998712539674,
+ "pad": 1.08,
+ "distance": 10.0,
+ "units": "metres, Blender world (Z up, character faces -Y, left = +X)",
+ "target": [
+  0.01017877459526062,
+  0.026794210076332092,
+  0.8749998211860657
+ ],
+ "bounds_min": [
+  -0.7374395728111267,
+  -0.24207481741905212,
+  -1.6163915006472962e-07
+ ],
+ "bounds_max": [
+  0.757797122001648,
+  0.2956632375717163,
+  1.749999761581421
+ ],
+ "mesh_objects": [
+  "ryo"
+ ],
+ "pixel_size_m": 0.0009228514996357263,
+ "views": {
+  "front": {
+   "note": "front, character faces the camera, his left is image-right",
+   "location": [
+    0.01017877459526062,
+    -9.97320556640625,
+    0.8749998211860657
+   ],
+   "direction_from_target": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "rotation_euler_xyz": [
+    1.5707964897155762,
+    -0.0,
+    0.0
+   ],
+   "matrix_world": [
+    [
+     1.0,
+     0.0,
+     0.0,
+     0.01017877459526062
+    ],
+    [
+     0.0,
+     -1.6292068494294654e-07,
+     -1.0,
+     -9.97320556640625
+    ],
+    [
+     0.0,
+     1.0,
+     -1.6292068494294654e-07,
+     0.8749998211860657
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "albedo": "ryo-albedo-front.png",
+   "mask": "ryo-mask-front.png",
+   "projection": "orthographic; pixel (px, py) from top-left maps to camera-space x = (px+0.5)/res*ortho_scale - ortho_scale/2, y = ortho_scale/2 - (py+0.5)/res*ortho_scale, looking down camera -Z"
+  },
+  "left": {
+   "note": "the character's left side, he faces image-left",
+   "location": [
+    10.010178565979004,
+    0.026794210076332092,
+    0.8749998211860657
+   ],
+   "direction_from_target": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "rotation_euler_xyz": [
+    1.5707963705062866,
+    -0.0,
+    1.5707963705062866
+   ],
+   "matrix_world": [
+    [
+     -4.371138828673793e-08,
+     4.371138828673793e-08,
+     1.0,
+     10.010178565979004
+    ],
+    [
+     1.0,
+     1.910685676922942e-15,
+     4.371138828673793e-08,
+     0.026794210076332092
+    ],
+    [
+     0.0,
+     1.0,
+     -4.371138828673793e-08,
+     0.8749998211860657
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "albedo": "ryo-albedo-left.png",
+   "mask": "ryo-mask-left.png",
+   "projection": "orthographic; pixel (px, py) from top-left maps to camera-space x = (px+0.5)/res*ortho_scale - ortho_scale/2, y = ortho_scale/2 - (py+0.5)/res*ortho_scale, looking down camera -Z"
+  },
+  "right": {
+   "note": "the character's right side, he faces image-right",
+   "location": [
+    -9.989821434020996,
+    0.026794210076332092,
+    0.8749998211860657
+   ],
+   "direction_from_target": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "rotation_euler_xyz": [
+    1.5707963705062866,
+    -0.0,
+    -1.5707963705062866
+   ],
+   "matrix_world": [
+    [
+     -4.371138828673793e-08,
+     -4.371138828673793e-08,
+     -1.0,
+     -9.989821434020996
+    ],
+    [
+     -1.0,
+     1.910685676922942e-15,
+     4.371138828673793e-08,
+     0.026794210076332092
+    ],
+    [
+     0.0,
+     1.0,
+     -4.371138828673793e-08,
+     0.8749998211860657
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "albedo": "ryo-albedo-right.png",
+   "mask": "ryo-mask-right.png",
+   "projection": "orthographic; pixel (px, py) from top-left maps to camera-space x = (px+0.5)/res*ortho_scale - ortho_scale/2, y = ortho_scale/2 - (py+0.5)/res*ortho_scale, looking down camera -Z"
+  },
+  "back": {
+   "note": "back, his left is image-left",
+   "location": [
+    0.01017877459526062,
+    10.02679443359375,
+    0.8749998211860657
+   ],
+   "direction_from_target": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "rotation_euler_xyz": [
+    -1.570796251296997,
+    3.141592502593994,
+    -0.0
+   ],
+   "matrix_world": [
+    [
+     -1.0,
+     -1.5099580252808664e-07,
+     1.1399865765455465e-14,
+     0.01017877459526062
+    ],
+    [
+     0.0,
+     7.549790126404332e-08,
+     1.0,
+     10.02679443359375
+    ],
+    [
+     -1.5099580252808664e-07,
+     1.0,
+     -7.549790126404332e-08,
+     0.8749998211860657
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "albedo": "ryo-albedo-back.png",
+   "mask": "ryo-mask-back.png",
+   "projection": "orthographic; pixel (px, py) from top-left maps to camera-space x = (px+0.5)/res*ortho_scale - ortho_scale/2, y = ortho_scale/2 - (py+0.5)/res*ortho_scale, looking down camera -Z"
+  }
+ }
+}

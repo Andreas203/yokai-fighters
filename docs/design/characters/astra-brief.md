@@ -76,3 +76,47 @@ Palette: straw `#B08A48`; fur brown `#6E5A48` PROPOSED; belly and paper `#F1E8D4
 ## After the sheets land
 
 Asset Smith checks them against the specs (palette, flat lighting, same scale across views, no held items) before any Meshy mesh job is proposed for approval. Sheets with baked shading or a painted look are sent back to the designer.
+
+---
+
+## Ryo texture paint-over (YOK-146)
+
+Why: the Tripo Ryo's base colour has cloth folds and shading painted in, which stretch when the mesh bends and clash with the game's toon shader. Blender rendered four orthographic views of the rigged T-pose mesh (`tools/blender/texture_views.py`). Astra repaints each as flat cel colour, inside the exact same silhouette. Blender then projects the paintings back onto the existing UVs (phase B). Diagnosis and render details: `assets/specs/texture/ryo-tripo/README.md`. The designer runs Astra; no credits are spent by Asset Smith.
+
+### Inputs per view (attach all three, in this order)
+
+| View | 1. Albedo render | 2. Mask | 3. Concept |
+|---|---|---|---|
+| front | `assets/specs/texture/ryo-tripo/ryo-albedo-front.png` | `ryo-mask-front.png` | `docs/design/characters/ryo/ryo-astra-view-front.png` |
+| left | `ryo-albedo-left.png` | `ryo-mask-left.png` | `ryo-astra-view-left.png` |
+| right | `ryo-albedo-right.png` | `ryo-mask-right.png` | `ryo-astra-view-right.png` |
+| back | `ryo-albedo-back.png` | `ryo-mask-back.png` | `ryo-astra-view-back.png` |
+
+Outputs, 2048 x 2048 PNG, same name pattern: `assets/specs/texture/ryo-tripo/ryo-paint-{front,left,right,back}.png`.
+
+### Rules for these outputs (on top of "Rules for every output")
+
+- The canvas, pose, scale and framing are the albedo render's. The silhouette must match the mask pixel for pixel: nothing added outside it, nothing cropped, no outline stroke that grows or shrinks the shape. The mask's black region is where paint goes; everything else stays pure white `#FFFFFF`.
+- Do not redraw or re-pose the figure from the concept. Take design, colours and details from the concept view; take position and shape from the render.
+- Preferably flat base colour only, one colour per material area (coat indigo, lining persimmon, rope and wraps rice paper, skin, hair ink, boots ink). At most 2 to 3 tone steps where the concept has them. The game's toon shader adds the shading.
+- No drawn shadows, fold lines, wrinkles, highlights, gradients, rim light, ambient occlusion or outline. Keep small marks that are design, not shading: buttons, the seal on the wrist wrap, rope twist as flat colour blocks, bandage lines as flat colour, the paper charm and its tassel, face details.
+- Palette from `assets/specs/style.md`: indigo `#2D3A5E`, ink `#1D1B21`, persimmon `#D8632C`, rice paper `#F1E8D4`, shrine red `#B5332B`, brass `#B08A48`.
+- Check before accepting: toggle the mask over the paint; any coloured pixel outside the mask, or a mask pixel left white, is a retake. Left and right views must agree with front and back on every colour.
+
+### Ryo paint, front (copy-paste)
+
+[style block] Repaint the first attached image (a flat, unlit render of a 3D character, front view, T-pose) as flat cel colour art, using the third attached image as the design and palette reference for the same character. The second attached image is the exact silhouette mask: black is where the character is. Keep the pose, scale, framing and canvas size of the first image, and keep the silhouette pixel-exact to the mask, with nothing added outside it and nothing cropped. Fill every area with one flat base colour from the reference (indigo coat and trousers, persimmon lining, rice-paper rope and wraps, skin, ink hair and boots, brass buttons), at most 2 to 3 tone steps, preferably flat colour only. No drawn shadows, no fold lines, no highlights, no gradients, no outline. Keep face, buttons, wrist seal, rope and charm details from the reference as flat shapes. Pure white background #FFFFFF. Output 2048 x 2048. [negative block]
+
+### Ryo paint, left (copy-paste)
+
+[style block] Repaint the first attached image (a flat, unlit render of a 3D character, side view of his left side, T-pose, facing image-left) as flat cel colour art, using the third attached image as the design and palette reference for the same character. The second attached image is the exact silhouette mask: black is where the character is. Keep the pose, scale, framing and canvas size of the first image, and keep the silhouette pixel-exact to the mask, with nothing added outside it and nothing cropped. Fill every area with one flat base colour from the reference (indigo coat and trousers, persimmon lining, rice-paper rope and wraps, skin, ink hair and boots, brass buttons), at most 2 to 3 tone steps, preferably flat colour only. No drawn shadows, no fold lines, no highlights, no gradients, no outline. Keep the colours identical to the front view. Pure white background #FFFFFF. Output 2048 x 2048. [negative block]
+
+### Ryo paint, right (copy-paste)
+
+[style block] Repaint the first attached image (a flat, unlit render of a 3D character, side view of his right side, T-pose, facing image-right) as flat cel colour art, using the third attached image as the design and palette reference for the same character. The second attached image is the exact silhouette mask: black is where the character is. Keep the pose, scale, framing and canvas size of the first image, and keep the silhouette pixel-exact to the mask, with nothing added outside it and nothing cropped. Fill every area with one flat base colour from the reference (indigo coat and trousers, persimmon lining, rice-paper rope and wraps, skin, ink hair and boots, brass buttons), at most 2 to 3 tone steps, preferably flat colour only. No drawn shadows, no fold lines, no highlights, no gradients, no outline. Keep the colours identical to the front view. Pure white background #FFFFFF. Output 2048 x 2048. [negative block]
+
+### Ryo paint, back (copy-paste)
+
+[style block] Repaint the first attached image (a flat, unlit render of a 3D character, back view, T-pose) as flat cel colour art, using the third attached image as the design and palette reference for the same character. The second attached image is the exact silhouette mask: black is where the character is. Keep the pose, scale, framing and canvas size of the first image, and keep the silhouette pixel-exact to the mask, with nothing added outside it and nothing cropped. Fill every area with one flat base colour from the reference (indigo coat and trousers, persimmon lining, rice-paper rope and wraps, skin, ink hair and boots, brass buttons), at most 2 to 3 tone steps, preferably flat colour only. No drawn shadows, no fold lines, no highlights, no gradients, no outline. Keep the colours identical to the front view. Pure white background #FFFFFF. Output 2048 x 2048. [negative block]
+
+Style block and negative block are the shared ones at the top of this file; paste their text in place of the bracketed names.
