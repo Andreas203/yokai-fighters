@@ -112,6 +112,27 @@ One plate per run (Q10), 6 runs. S3 stays a single sheet because body and tail m
 
 After the plates land, Asset Smith runs the checks in "After the plates land" and resizes into `game/assets/generated/ui/`. The UI Designer then swaps them into `shop.tscn` in place of the greybox cabinet, tags, bubble, slip, portrait box and the shared backdrop.
 
+### S5 take 3, the accepted take (designer, 2026-10-20)
+
+The designer asked for the merchant to fit Ryo's style more. Take 1 used the S5 prompt above and came out soft anime. Take 2 added Ryo's portrait as the style image and was flatter, but still soft. Take 3 (accepted) attaches only `game/assets/generated/ui/ryo-portrait.png` (style) and take 2 (character); the costume sheet was dropped because it pulled the look soft. All three raw takes are kept in `docs/design/screens/astra/` (`merchant-portrait-take1/2/3.png`); `merchant-portrait.png` is take 3. This prompt supersedes S5 for any future merchant art, such as a story-card face:
+
+> Redraw the merchant in Image 2 in EXACTLY the drawing style of Image 1, as if the same artist drew both for the same game. Image 1 is the STYLE reference: the game's hero portrait. Study and copy its technique:
+> - very bold, heavy black ink-brush outlines that taper and vary in thickness, with sharp spiky stroke ends;
+> - shadows drawn as solid black ink shapes and rough dry-brush hatching strokes laid over a flat base colour, NOT as a darker or blended tone;
+> - hair as one solid black mass with sharp, spiky, tapered brush tips and almost no internal detail;
+> - the face in flat skin colour, drawn with a few confident black ink lines, a simple bold eye, a short nose line and no blush, gradient or soft shading;
+> - flat colour fills with only a few colours, high contrast, and a graphic manga-woodblock feel;
+> - a rough dry-brush torn cutout along the bottom edge, with ragged black brush streaks.
+> Image 2 is the CHARACTER reference: keep this exact merchant (his round friendly human face and warm half-smile, short round build, three-quarter pose facing right, and the hand holding the bundle's rope) and his costume: a wide conical straw hat tilted back, a dark brown kimono with a rice-paper inner collar, a wide shrine-red obi sash tied at the front, and a large rice-paper cloth bundle on his back on a thick rope. Only the drawing style changes.
+> Simplify as Image 1 does:
+> - the hat is one flat straw-coloured #B08A48 cone with 3 or 4 bold black brush lines and a black dry-brush shadow under the brim, with no basket weave;
+> - the kimono is flat brown #6E5A48 with folds and shadow shown by black brush strokes and hatching;
+> - the obi is flat shrine red #B5332B with black ink shadow strokes;
+> - the collar and bundle are flat rice paper #F1E8D4 with black ink line folds;
+> - the rope is a few bold ink-outlined twists with no fibre detail.
+> Colours limited to ink #1D1B21, straw #B08A48, brown #6E5A48, rice paper #F1E8D4, shrine red #B5332B and one flat warm skin tone. He is fully human: human ears and hands, no fur, no tail, no whiskers, no eye patches, no animal features. Standalone half-length portrait, head to waist, genuine transparent alpha background, aspect 9:16 portrait. No text, no numbers, no kanji, no other characters.
+> Avoid: soft anime shading, gradients, airbrush, blush, thin uniform linework, fine basket weave, rope fibres, fabric texture, photorealism, gloss, glow, cast shadow on the background, watermark, signature, extra fingers, any animal or tanuki trait, any resemblance to an existing franchise, artist or character.
+
 ## Dojo
 
 Layout facts (built screen, PR #201): the portrait box is about 410 x 360 at 1080p, left of the Rest and Training-trial scrolls, with the master's line box under it. Sheet covers about x 90 to 1830, so the backdrop again shows only as an edge band.
