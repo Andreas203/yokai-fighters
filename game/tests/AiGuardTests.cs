@@ -369,6 +369,54 @@ public static class AiGuardTests
 		Assert.True(Jumps(blockOnly, 100) == Jumps(blockOnly, null), "and no extra draw: identical to no tier rate");
 	}
 
+	/// <summary>
+	/// Test-breaker probe Rate100_JumpSeenDuringOwnRecovery_Measured, made an assertion: at rate 100, a jump the AI sees
+	/// while in its own move is answered on its first actionable tick (the press is held, not dropped by the sim), unless
+	/// the jumper shows landed on the AI's view by then. The hold itself draws nothing (the roll is when the jump is seen).
+	/// </summary>
+	[Test]
+	public static void Rate100_JumpSeenDuringOwnMove_StartsOnFirstActionableTick()
+	{
+		const string Heavy = "normal:test-ryo-heavy-punch", Medium = "normal:test-ryo-medium-punch";
+		const int reaction = 15;
+		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "{{Heavy}}", "weight": 15 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }"""));
+		var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+		Place(m, 200);
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: 0) { Log = new() };
+		var starts = new List<int>();
+		var freeAfter = new Dictionary<int, bool>(); // P2 idle (can act on the next step) after step t
+		var p1Air = new Dictionary<int, bool>();
+		string? last = null;
+		for (int t = 1; t <= 3000 && m.Phase != MatchPhase.Over; t++)
+		{
+			var o = ai.Next(AiView.Capture(m));
+			m.P1.Health = m.P1.MaxHealth;
+			m.Step(t % 61 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, o);
+			string? id = m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null;
+			if (id != null && id != last && id.Contains("medium")) starts.Add(t);
+			last = id;
+			bool attackEnds = m.P2.State == FighterState.Attack && m.P2.MoveFrame >= m.P2.CurrentMove!.TotalFrames;
+			freeAfter[t] = m.P2.State == FighterState.Idle || attackEnds;
+			p1Air[t] = m.P1.Airborne;
+		}
+		var answers = ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react").ToList();
+		Assert.True(answers.Count >= 30, $"the AI decided to punish many jumps ({answers.Count})");
+		int started = 0, landed = 0;
+		var bad = new List<string>();
+		foreach (var a in answers)
+		{
+			int free = a.Tick;
+			while (free > 1 && freeAfter.ContainsKey(free - 1) && !freeAfter[free - 1] && free < a.Tick + 120) free++;
+			int s = starts.FirstOrDefault(x => x >= a.Tick && x <= free + 1);
+			if (s != 0) { started++; if (s > free + 1) bad.Add($"{a.Tick}: started {s}, free {free}"); }
+			else if (!p1Air.GetValueOrDefault(free - reaction - 1, true)) landed++;
+			else bad.Add($"{a.Tick}: never started (free {free})");
+		}
+		GD.Print($"YOK-165 rate 100: {started} of {answers.Count} started on the first actionable tick, {landed} dropped (jumper landed)");
+		Assert.True(bad.Count == 0, $"every punish starts on the first actionable tick or the jumper had landed: {string.Join("; ", bad.Take(6))}");
+		Assert.True(started * 10 >= answers.Count * 8, $"most start ({started} of {answers.Count})");
+	}
+
 	/// <summary>The AI's decisions on the jumps (tick, kind, action, roll, pct), for pinning draw order.</summary>
 	static List<string> JumpLog(BehaviourProfile p, int? pct, uint seed = 11, int ticks = 1800)
 	{

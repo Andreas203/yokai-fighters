@@ -63,6 +63,8 @@ public sealed class ProfileAi
 	private int _blockedInRow;
 	private string? _oppLastSpecial;
 	private int _comboHits, _burstPressTick = -1;
+	/// <summary>YOK-165: the tick the AI last pressed a move of its own and that move's length (its own plan, not the screen).</summary>
+	private int _ownPressTick = -1, _ownPressFrames;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
@@ -151,7 +153,10 @@ public sealed class ProfileAi
 		}
 
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
+		// YOK-165: an anti-air held for the first actionable tick is dropped (no draw) if the jumper shows landed by then.
+		if (_plan is { AtPress: true } && !o.Airborne) _plan = null;
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
+		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
 		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
 	}
 
@@ -181,9 +186,36 @@ public sealed class ProfileAi
 				w -= b.Weight;
 			}
 		}
-		var p = Build(pick.Do, view, tick, false, 0);
+		// Test-breaker YOK-165: a press while the AI is still in its own move is dropped by the sim, so (like the wake-up habit)
+		// the answer waits for its first actionable tick, predicted from its own state on screen. No draw is added: Build's
+		// EX and guard rolls happen now, as before; the plan is dropped at the press if the jumper shows landed (Next).
+		int wait = Math.Max(0, FirstActionableTick(view) - tick);
+		var p = Build(pick.Do, view, tick, false, wait);
+		if (p is not null && wait > 0) p.PressStep = 1; // Build puts the wait in step 0, the press in step 1
 		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
 		return p;
+	}
+
+	/// <summary>
+	/// YOK-165: the first tick the AI can act, predicted from its own fighter on the (delayed) screen, the way the wake-up
+	/// habit predicts its wake tick: its own move's remaining frames (total from its kit), or the stun left (+ the get-up
+	/// after a knockdown). Hitstop holds every count. States with no visible count (dash, jump, thrown) predict nothing
+	/// (0 = act now, as before).
+	/// </summary>
+	private int FirstActionableTick(AiView view)
+	{
+		FighterView s = view.Fighter(Self);
+		int left = s.State switch
+		{
+			FighterState.Attack when s.MoveId is not null && _kit.TryGetTotalFrames(s.MoveId, out int total) => Math.Max(0, total - s.MoveFrame),
+			FighterState.Hitstun or FighterState.Blockstun or FighterState.Burst or FighterState.Landing or FighterState.WakeUp => s.StunLeft,
+			FighterState.Knockdown => s.StunLeft + view.WakeUpFrames,
+			_ => -1,
+		};
+		int seen = left < 0 ? 0 : view.Tick + view.HitstopLeft + left + 1;
+		// Its own press made after the screen it sees has not shown yet (the view is reaction frames old): the AI knows its
+		// own commitment, so it waits for that move too. Once the view reaches the press, the screen decides alone.
+		return _ownPressTick > view.Tick ? Math.Max(seen, _ownPressTick + _ownPressFrames) : seen;
 	}
 
 	/// <summary>YOK-165: an attacking answer to a jump that this kit can perform (side-effect free: no draw, no EX roll).</summary>
@@ -265,12 +297,16 @@ public sealed class ProfileAi
 			}
 			steps = tail;
 		}
-		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps };
+		// YOK-165: a move's press step and length, so the AI knows when its own press makes it busy until (FirstActionableTick).
+		int moveFrames = !a.IsMove ? 0 : a.Kind == ActionKind.Throw ? _kit.ThrowFrames : 1 + steps[1].Item2;
+		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames };
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
 		Array.Copy(steps, 0, all, 1, steps.Length);
-		return new Plan(habit, all);
+		bool[]? guardAll = null;
+		if (guardSteps is not null) { guardAll = new bool[all.Length]; Array.Copy(guardSteps, 0, guardAll, 1, guardSteps.Length); }
+		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames };
 	}
 
 	/// <summary>
@@ -385,6 +421,13 @@ public sealed class ProfileAi
 		/// so a cross-up the AI sees mid-plan does not leave it holding down-forward.</summary>
 		public bool[]? Guard { get; init; }
 		public bool Done => _i >= _steps.Length;
+		/// <summary>YOK-165: the step that presses a held anti-air (-1 = none); <see cref="AtPress"/> = it emits on this tick.</summary>
+		public int PressStep { get; set; } = -1;
+		public bool AtPress => PressStep >= 0 && _i == PressStep && _t == 0;
+		/// <summary>YOK-165: the step that presses a move of the AI's own (-1 = none) and the move's length in ticks.</summary>
+		public int MoveStep { get; init; } = -1;
+		public int MoveFrames { get; init; }
+		public bool AtMovePress => MoveStep >= 0 && _i == MoveStep && _t == 0;
 		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;

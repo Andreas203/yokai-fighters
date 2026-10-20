@@ -13,7 +13,13 @@ public sealed class AiLoadout
 	private readonly Dictionary<string, (FighterInput Input, int Frames)> _moves = new();
 	/// <summary>YOK-57: specials with an EX version: the EX slot request and its meter cost (ex.meter_cost).</summary>
 	private readonly Dictionary<string, (FighterInput Input, int Cost)> _ex = new();
+	/// <summary>YOK-165: every move id in the kit (normals, air normals, throw, specials and their EX) → total frames, so the
+	/// AI can tell from its own move on screen when it acts again.</summary>
+	private readonly Dictionary<string, int> _frames = new();
 	public InputBits ThrowButtons { get; private set; }
+
+	/// <summary>YOK-165: total frames of one of this fighter's own moves by id; false for an id not in the kit.</summary>
+	public bool TryGetTotalFrames(string moveId, out int frames) => _frames.TryGetValue(moveId, out frames);
 	public int ThrowFrames { get; private set; }
 
 	public static AiLoadout From(Fighter f)
@@ -22,9 +28,16 @@ public sealed class AiLoadout
 		for (int i = 0; i < f.Moves.Length; i++)
 		{
 			var m = f.Moves[i];
+			l._frames.TryAdd(m.Id, m.TotalFrames);
 			if (m.IsThrow) { if (l.ThrowButtons == InputBits.None) { l.ThrowButtons = m.ThrowButtons; l.ThrowFrames = m.TotalFrames; } }
 			else if (m.IsNormal && !m.Air) l._moves.TryAdd("normal:" + m.Id, (FighterInput.Attack(i), m.TotalFrames));
 		}
+		for (int s = 1; s < f.Specials.Length; s++)
+			if (f.Specials[s] is { } sp)
+			{
+				l._frames.TryAdd(sp.Move.Id, sp.Move.TotalFrames);
+				if (sp.ExMove is { } exm) l._frames.TryAdd(exm.Id, exm.TotalFrames);
+			}
 		for (int s = 1; s < f.Specials.Length; s++)
 			if (f.Specials[s] is { } eq && l._moves.TryAdd("special:" + eq.Data.Id, (FighterInput.Special((SpecialSlot)s), eq.Move.TotalFrames)))
 				l.AddEx("special:" + eq.Data.Id, (SpecialSlot)s, eq);
