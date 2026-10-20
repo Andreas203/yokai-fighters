@@ -20,10 +20,11 @@ public partial class RestStopCapture : Node
 		await Shot(dir, "rest_stop_merchant" + suffix, "merchant", false);
 		await Shot(dir, "rest_stop_dojo" + suffix, "dojo", false);
 		await Shot(dir, "rest_stop_used" + suffix, "merchant", true);
+		await Shot(dir, "rest_stop_dojo_trial" + suffix, "dojo", false, withTrial: true);
 		GetTree().Quit();
 	}
 
-	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take)
+	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take, bool withTrial = false)
 	{
 		string md = ContentPaths.Data("map");
 		var s = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
@@ -41,6 +42,12 @@ public partial class RestStopCapture : Node
 				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
 				s.CompleteNode();
 			}
+		}
+		if (withTrial)
+		{
+			// worst case for the card: the longest authored prompt (the Foxfire one, 75 chars) on the trial for Ryo's Spirit Wave
+			s.Trials = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(TrialLoader.LoadDirectory(ContentPaths.Data("trials")),
+				w => new TrialData { Id = w.Id, Special = w.Special, Prompt = "Send a slow Foxfire at the dummy, then follow the flame in and land a hit.", Attempts = w.Attempts, Distance = w.Distance, AttemptFrames = w.AttemptFrames, Dummy = w.Dummy, Steps = w.Steps }));
 		}
 		s.Run.SetHealth(640);
 		var screen = GD.Load<PackedScene>("res://scenes/ui/rest_stop.tscn").Instantiate<RestStopScreen>();

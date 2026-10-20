@@ -90,14 +90,14 @@ mouse_filter = 2
 offset_left = 590.0
 offset_top = 280.0
 offset_right = 1240.0
-offset_bottom = 554.0
+offset_bottom = 540.0
 
 [node name="SecondHanger" type="Control" parent="."]
 mouse_filter = 2
 offset_left = 590.0
-offset_top = 576.0
+offset_top = 562.0
 offset_right = 1240.0
-offset_bottom = 850.0
+offset_bottom = 890.0
 
 [node name="ForecastHanger" type="Control" parent="."]
 mouse_filter = 2
@@ -213,7 +213,7 @@ mouse_filter = 2
 offset_left = 150.0
 offset_top = 665.0
 offset_right = 560.0
-offset_bottom = 895.0
+offset_bottom = 840.0
 theme_type_variation = &"PaperCard"
 
 [node name="Box" type="VBoxContainer" parent="LineBox"]
@@ -241,7 +241,7 @@ clip_text = true
 offset_left = 600.0
 offset_top = 323.0
 offset_right = 1230.0
-offset_bottom = 511.0
+offset_bottom = 497.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -269,7 +269,7 @@ mouse_filter = 2
 theme_override_constants/separation = 16
 
 [node name="Icon" type="Panel" parent="FreeCard/Box/Top"]
-custom_minimum_size = Vector2(70, 70)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -281,7 +281,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("theme")
 theme_type_variation = &"PaperLabel"
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "+"
@@ -295,7 +295,7 @@ theme_override_constants/separation = 0
 [node name="Title" type="Label" parent="FreeCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 32
 text = "Free heal"
 
 [node name="Sub" type="Label" parent="FreeCard/Box/Top/Titles"]
@@ -366,9 +366,9 @@ theme_type_variation = &"HealthBar"
 
 [node name="SecondCard" type="PanelContainer" parent="."]
 offset_left = 600.0
-offset_top = 619.0
+offset_top = 605.0
 offset_right = 1230.0
-offset_bottom = 807.0
+offset_bottom = 847.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -396,7 +396,7 @@ mouse_filter = 2
 theme_override_constants/separation = 16
 
 [node name="Icon" type="Panel" parent="SecondCard/Box/Top"]
-custom_minimum_size = Vector2(70, 70)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -407,7 +407,7 @@ mouse_filter = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_type_variation = &"PaperLabel"
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "¥"
@@ -421,7 +421,7 @@ theme_override_constants/separation = 0
 [node name="Title" type="Label" parent="SecondCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 32
 text = "Browse the shop"
 
 [node name="Sub" type="Label" parent="SecondCard/Box/Top/Titles"]
@@ -464,19 +464,19 @@ text = ""
 
 [node name="PickLine" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 600.0
-offset_top = 856.0
-offset_right = 1240.0
-offset_bottom = 888.0
+offset_left = 720.0
+offset_top = 164.0
+offset_right = 1310.0
+offset_bottom = 226.0
 theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
 
 [node name="ContinueButton" parent="." instance=ExtResource("red_button")]
 visible = false
-offset_left = 616.0
-offset_top = 856.0
-offset_right = 1000.0
-offset_bottom = 892.0
+offset_left = 190.0
+offset_top = 852.0
+offset_right = 520.0
+offset_bottom = 890.0
 custom_minimum_size = Vector2(0, 0)
 theme_override_font_sizes/font_size = 24
 text = "Continue to the map"

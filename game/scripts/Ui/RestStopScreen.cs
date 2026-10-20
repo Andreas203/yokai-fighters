@@ -59,6 +59,12 @@ public partial class RestStopScreen : Control, INodeScene
 		FreeCard.Activated += () => TakeFree();
 		SecondCard.Activated += () => OpenSecond(); // the shop (YOK-104); the trial (YOK-98) wires in here too
 		ContinueButton.Pressed += () => Leave();
+		// The scene's slim brush_pad margins carry no border, so keyboard focus needs its own mark: an ink outline drawn
+		// around the brush stroke (this screen only; the shared kit button is untouched).
+		var focusMark = new StyleBoxFlat { DrawCenter = false, BorderColor = new Color("1D1B21"), ExpandMarginLeft = 18, ExpandMarginRight = 18, ExpandMarginTop = 6, ExpandMarginBottom = 6 };
+		focusMark.SetBorderWidthAll(3);
+		focusMark.SetCornerRadiusAll(4);
+		ContinueButton.AddThemeStyleboxOverride("focus", focusMark);
 		foreach (var card in new Control[] { FreeCard, SecondCard, GetNode<Control>("LineBox") }) PadPaper(card);
 		GetNode<KeyChipFooter>("Footer").Alignment = BoxContainer.AlignmentMode.Begin;
 		Refresh();
