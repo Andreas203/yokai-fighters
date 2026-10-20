@@ -96,3 +96,76 @@ Verdict: **PASS (provisional; no in-engine toon render yet)**. The take-1 grey-s
 - Rig (glTF parsed): 15,153 tris, 1 mesh, 1 material, 2K base colour, no PBR, 24 joints, rigged height 1.65 m (unrigged mesh bbox 1.70 m), origin at feet, Y-up, T-pose span +-0.72 m. Sizes 3.9-4.6 MB each.
 - G4 risk (high, record for clip-matcher/YOK-31): (1) hakama is wide and long with legs inside one shared volume; Meshy skinning will likely weight both legs onto the same cloth, so walk may show the skirt stretching or leg poking through, and heavy/throw wide stances will tear or pinch the front pleats; (2) hair is long to hip level behind the back, baked rigid to head/spine, will clip into the hakama back and into the tail mounts in kick/crouch; (3) wide haori sleeves clip in heavy/throw as before. Mitigation if the gate fails: shorten hakama or tie hair up (new spec, 44 credits), or folklore human guise fallback.
 - Licence: plan tier unknown, flagged.
+
+## Take 3: Tripo redo (YOK-147, SPEC ONLY, awaiting designer approval)
+
+Ticket: YOK-147 "Tripo redo: Kitsune". Status: **DRAFT. No job has been run and no credits spent.** The designer runs Tripo by hand (no Tripo MCP is installed) and drops the files in `game/assets/generated/characters/kitsune/` (raw files in a `tripo-raw/` subfolder with a `.gdignore`; a raw Tripo rig is never imported as is, see Rig notes). It supersedes the Meshy take 2 body only when accepted AND G4 passes; until then the Meshy files stay (same rule as Ryo, `rigs/ryo-tripo.md`).
+
+Rules: V1, F5, F6, G4, T0, E15; AM1, AM5. Decisions kept: nine tails as one mesh instanced, not rigged by the generator; full mask stays on.
+
+**Open gate, stated plainly:** YOK-146's G4 (retarget gate) for the Tripo set is **still OPEN**. Ryo's Tripo rig is ACCEPT for the test branch only (provisional); the clips are Meshy clips retargeted by script, and the real Tripo/mocap clips do not exist yet (`rigs/ryo-tripo.md`, "G4 status"). Open flags from that ticket that touch this job: 54k triangles against a 20k budget, painted-on props across the hip crease failing deep-crouch volume, and a groin pleat tearing in floor clips. This spec is written to avoid them (triangle cap, no painted-on props), but spending before G4 closes is a bet that the Tripo skeleton survives. Designer's call: wait, or approve and accept the risk.
+
+### The export preset and skeleton from YOK-146
+`assets/specs/rigs/tripo-export.md`, named in the ticket, does **not exist** on main. The settings below come from what YOK-146 recorded in `assets/specs/rigs/ryo-tripo.md` and `skeleton.md`: Tripo auto-rig with the **Mixamo preset** (65 joints, `mixamorig:` prefix, 40 finger joints), exported as GLB. The Tripo version, task id and credits of the Ryo run were not recorded; the designer should write them in the Takes table this time. If a `tripo-export.md` was intended, rig-specialist should write it from these lines.
+
+Target skeleton: the shared 25 bones in `skeleton.md` (no fingers, no prefix, metres). `tools/blender/canon_tripo_rig.py` builds it from the raw export, so the export only has to carry the standard Mixamo names.
+
+### Inputs
+| Use | File | Note |
+|---|---|---|
+| Body, front (and side, back) | a **tail-less** version of `docs/design/characters/kitsune/kitsune-astra-turnaround.png` | The Astra sheet is settled (T-pose, mask on, hair, bell, geta), but its nine tails hide the legs and back and Tripo would fuse them into the body (the G4 failure mode). Needs an Astra rerun, brief below |
+| Tail | crop of one tail from the same Astra sheet (lowest left tail, front view) | One tail, isolated on white |
+| Fallback body ref | `docs/design/characters/kitsune/kitsune-meshy-front-notails.png` | Older, A-pose, flat. Only if Astra is not rerun |
+
+Astra brief addition (`astra-brief.md`, designer runs): "The same turnaround of the same character, same pose, outfit, hair, mask and art style, with all nine tails removed so the legs and the back of the hakama are visible. T-pose, feet shoulder width apart, arms straight out, plain white background, no effects."
+
+### Tripo settings (designer runs)
+Tripo version, plan and per-job credits are **not verifiable from the repo**. The figures are working estimates from Tripo's published tiers as I know them; the designer confirms each against the figure the Tripo UI shows before running (AM5 open question YOK-115).
+
+| # | Step | Tripo setting | Est. credits |
+|---|---|---|---|
+| T0 | Prepare images | Tail-less turnaround (Astra, designer) and tail crop. Not a Tripo job | 0 |
+| T1 | Body: image (or multiview) to model | Latest standard model; multiview with front, side, back if offered, else the front only; T-pose; texture ON, **PBR OFF**; face limit about **20,000 triangles** (Ryo came back at 54k); triangles, not quad; no stylize preset; not A-pose | ~30-40 |
+| T2 | Body: auto-rig | Tripo auto-rig, humanoid, **Mixamo preset** (as Ryo), fingers on (stripped later by script), export GLB with rig | ~25 |
+| T3 | Tail: image to model | Single tail crop; standard model; texture ON, PBR OFF; face limit about 4,000; no rig | ~25-30 |
+
+Per-take total (UNVERIFIED estimate): **about 80-95 Tripo credits**. Take cap 3, for the whole chain or any subset. Cheapest option: keep the accepted Meshy `tail.glb` and run T1+T2 only (about 55-65). Designer to choose.
+
+Texture note: Ryo's Tripo base colour had folds and shading painted in and needed an Astra four-view paint-over (`assets/specs/texture/ryo-tripo/README.md`). White fur and haori show this first; budget the same designer-run pass if T1 shows it. No Tripo credits.
+
+### Prompt (only if Tripo takes a text hint with the image)
+Style block first (`assets/specs/style.md`), then:
+> Same fox-spirit fighter as the image, no tails: full white fox mask with red markings, eye slits only, fox ears, long white hair tipped orange hanging down the back, cropped white haori with wide sleeves and red trim over an indigo high-neck top, orange sash with indigo cord and a small bell, shrine-red pleated hakama, black split-toe socks, wooden geta. T-pose, feet shoulder width apart, flat cel colours. Palette: fur white #FBF6EC, foxfire #F2A23A, shrine red #B5332B, indigo #2D3A5E. Avoid: [negative prompt].
+
+Tail:
+> A single fluffy fox tail on its own, white fur with a foxfire-orange tip, gentle S-curve, flat cel colours. Avoid: [negative prompt], body, hands, fire.
+
+### Rig notes for rig-specialist
+Target: shared 25-bone skeleton, 1.65 m (the Meshy Kitsune height), origin at feet, Y-up, +Z facing, metres: `canon_tripo_rig.py`, then a Kitsune weight repair (`repair_weights.py`, as for Oni and Kappa). Expect the two known Tripo faults (joints without transforms; inverse binds in a Z-up frame).
+
+| Part | Mesh or body | Plan |
+|---|---|---|
+| Nine tails | **Separate mesh** (T3 or the Meshy tail), instanced 9x | `BoneAttachment3D` on `Hips`, or `X_Tail_<n>` bones added by script under `Hips` (`skeleton.md`, "Attachment points"). Tick-driven sway, no physics. Re-pivot to the tail root and scale to about 0.5 m (the Meshy tail pivots at its centre, bbox about +-0.95 m) |
+| Hakama | Part of the body (wide pleated skirt-trouser) | Highest G4 risk: one volume hides both legs. Ask T1 for a visible gap between the legs at the hem. Pelvis and knee repair steps are ready if it tears |
+| Hair | Part of the body, behind the shoulders | Clips the hakama back and tail mounts in kick and crouch. Optional `X_Hair_0..2` chain bones by script |
+| Haori sleeves | Part of the body | Clip in heavy and throw; risk accepted in take 2 |
+| Mask, ears | Part of the head | Rigid |
+| Bell, cord, tassels | Part of the body | Small, baked. Check they are not painted flat across the hip crease (the YOK-146 deep-crouch fault) |
+
+### Acceptance criteria (checked on import)
+- **Look (V1):** mask covers the face fully (hard fail if a face appears); orange-tipped white hair; fox ears; palette within tolerance; flat tones, no baked shading; reads as a fox at 720p with and without the tails.
+- **Consistency:** 1.65 m; proportions and outline weight match the accepted Tripo Ryo.
+- **Mesh:** at or under 20,000 triangles (flag above 25,000); one material; clean T-pose, arms within 10 degrees of horizontal; legs not fused; origin at the feet; tail is one clean piece with an orange tip.
+- **Rig:** Mixamo names present; after `canon_tripo_rig.py` it matches `skeleton.md` and passes `rig_check.py`; stress poses no worse than Ryo's Tripo rig (55 edges; volume FAIL only for painted props).
+- **G4 readiness:** hakama, hair, sleeve and tail clearance recorded for walk, heavy, throw. This take cannot close the open Tripo G4.
+- **Licence:** Tripo plan and commercial terms of the output UNKNOWN (YOK-115); flag.
+
+### Fallback after 3 failed takes
+Shorten the hakama or tie the hair up (new brief), or the folklore human guise (new spec). Not run without approval.
+
+### Takes (Tripo, designer fills in)
+| Job | Tripo task id | Version and settings used | Credits (est/actual) |
+|---|---|---|---|
+| T1 body | | | ~30-40 / |
+| T2 rig | | | ~25 / |
+| T3 tail | | | ~25-30 / |
