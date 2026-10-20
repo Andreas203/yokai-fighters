@@ -26,7 +26,7 @@ class S:
         lh=lh or size*1.3
         for n,a in enumerate(arr): s.t(x,y+n*lh,a,size,fill,**k)
     def svg(s,w=1920,h=1080,bg=IND):
-        return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><rect width="{w}" height="{h}" fill="{bg}"/>'+"".join(s.o)+'</svg>'
+        return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><defs><linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.38"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient></defs><rect width="{w}" height="{h}" fill="{bg}"/>'+"".join(s.o)+'</svg>'
 
 def strip(s,x,w,label="ROUGH PROTOTYPE · AWAITING ASTRA PASS · YOK-159"):
     s.r(x,18,w,32,RED,None,0)
@@ -72,60 +72,76 @@ def portrait(s,x,y,w,h,small=False):
     s.c(cx,y+h*0.36,w*0.2,"#D3C7A8","#B7AB8B",2)
     s.p(f"M{x+w*0.12},{y+h} Q{x+w*0.14},{y+h*0.62} {cx},{y+h*0.58} Q{x+w*0.86},{y+h*0.62} {x+w*0.88},{y+h} Z","#D3C7A8","#B7AB8B",2)
     if not small:
-        s.r(x+8,y+h-34,w-16,24,PAPER,None,0,2)
-        s.t(cx,y+h-17,"portrait (human guise)",13,MUTE,a="middle",i=True)
+        s.r(x+6,y+8,w-12,40,PAPER,None,0,2)
+        s.t(cx,y+24,"portrait (human guise)",13,MUTE,a="middle",i=True); s.t(cx,y+41,"never the Tanuki (S3)",12,MUTE,a="middle",i=True)
 
 # ---------- shelf pieces ----------
-def tag(s,x,y,name,price,state="normal",price_txt=None,k=1.0):
-    """Hanging price tag; (x,y) = left edge, top of body. k scales the whole tag."""
+# The cabinet is drawn in local coordinates (0,0 = top-left, 700 wide) and wrapped in a transform, so the
+# same drawing serves the main sheet (scale 1) and the small state panels.
+CW=700; SIDE=34; TIER=180
+def cab_height(tiers): return 20+tiers*TIER+22
+
+def tag(s,cx,y,name,price,state="normal",price_txt=None,focus=False):
+    """Price tag hung from a brass hook on the shelf lip; (cx,y) = centre x, top of tag body."""
     g=state!="normal"
-    s.add(f'<g transform="translate({x},{y-10*k}) scale({k})">')
-    s.c(90,5,3.5,INK,INK,1)
-    s.p("M4,10 L134,10 L134,54 L4,54 L-6,32 Z",PAPER2 if not g else "#D9D4C6",INK,2)
-    s.c(8,32,3.5,"#E3D8BD",INK,1.5)
-    s.t(74,29,name,14,INK if not g else GREYD,"bold","middle")
+    s.l(cx,y-6,cx,y,"#3a2a1c",2); s.c(cx,y-6,3.5,BRASS,INK,1)
+    if focus: s.r(cx-84,y-3,168,50,"none",FOX,4,6)
+    s.p(f"M{cx-80},{y} L{cx+80},{y} L{cx+80},{y+44} L{cx-80},{y+44} Z",PAPER2 if not g else "#D9D4C6",INK,2)
+    s.c(cx-70,y+8,2.5,"#E3D8BD",INK,1)
+    s.t(cx,y+19,name,16,INK if not g else GREYD,"bold","middle")
     if state=="bought":
-        s.t(74,48,"SOLD · borrowed ink",11,GREYD,a="middle",i=True)
+        s.t(cx,y+38,"SOLD · borrowed ink",12,GREYD,a="middle",i=True)
     else:
-        coin(s,44,43,7)
-        s.t(56,48,price_txt or str(price),15,(RED if not g else GREYD),"bold")
+        coin(s,cx-22,y+34,6)
+        s.t(cx-12,y+39,price_txt or str(price),15,(RED if not g else GREYD),"bold")
+
+def item(s,cx,bt,letter,kind,name,price=50,state="normal",focus=False,price_txt=None):
+    """Standing ofuda in a wooden cradle ON the shelf surface (bt = back edge of the board top)."""
+    g=state in("dim","bought")
+    sy=bt+8   # depth: item stands mid-way on the board surface
+    s.add(f'<ellipse cx="{cx}" cy="{sy+2}" rx="44" ry="6" fill="#000" opacity="0.32"/>')
+    if state=="bought":
+        s.r(cx-36,sy-46,72,42,"#D9D4C6",GREYD,2.5,21); s.r(cx-42,sy-48,10,46,GREYD,INK,1.5,5); s.r(cx+32,sy-48,10,46,GREYD,INK,1.5,5)
+        s.l(cx-8,sy-46,cx-8,sy-4,RED,3); seal(s,cx+14,sy-25,10)
+    else:
+        paper=PAPER2 if not g else "#D9D4C6"
+        band=(RED if kind=="special" else IND) if not g else GREYD
+        icon=({"special":PERS,"modifier":IND}[kind]) if not g else GREYD
+        lift=6 if focus else 0
+        pw,ph=64,90; top=sy-4-lift-ph
+        if focus:
+            s.add(f'<ellipse cx="{cx}" cy="{sy+2}" rx="54" ry="8" fill="{FOX}" opacity="0.6"/>')
+            s.r(cx-pw/2-6,top-6,pw+12,ph+10,"none",FOX,5,6); s.r(cx-pw/2-10,top-10,pw+20,ph+18,"none",FOX,2,8,"4 4")
+        s.r(cx-pw/2,top,pw,ph,paper,INK,2.5,2)
+        s.r(cx-pw/2,top,pw,16,band,INK,2.5,0); s.t(cx,top+12,kind.upper(),10,PAPER,"bold","middle")
+        s.r(cx-17,top+22,34,34,icon,None,0,5); s.t(cx,top+22+25,letter,22,PAPER,"bold","middle")
+        s.r(cx-6,top+68,12,12,RED if not g else GREYD,None,0,2)
+        s.r(cx-28,sy-12,56,14,WOOD,INK,2,2); s.l(cx-26,sy-10,cx+26,sy-10,WOODL,1.5)
+    tag(s,cx,bt+30,name,price,"bought" if state=="bought" else ("dim" if state=="dim" else "normal"),price_txt,focus)
+
+def cabinet(s,x,y,sc,tiers,rows,focus=None):
+    """rows = list of tiers, each a list of up to 3 tuples (letter,kind,name[,state[,price_txt]]); focus=(row,col)."""
+    s.add(f'<g transform="translate({x},{y}) scale({sc})">')
+    H=cab_height(tiers)
+    s.r(SIDE,20,CW-2*SIDE,tiers*TIER,"#5E4430",INK,2)
+    for k in range(SIDE+40,CW-SIDE,70): s.l(k,20,k,20+tiers*TIER,"#503A29",1.5)
+    s.r(0,12,SIDE,H-24,WOOD2,INK,3,2); s.r(CW-SIDE,12,SIDE,H-24,WOOD2,INK,3,2)
+    s.r(SIDE-6,20,6,tiers*TIER,"#2C1D12",None,0); s.r(CW-SIDE,20,6,tiers*TIER,"#2C1D12",None,0)
+    s.r(4,16,6,H-32,WOODL,None,0)
+    s.r(CW-10,16,6,H-32,"#33231A",None,0)
+    cxs=[SIDE+105+210*c for c in range(3)]
+    for ti in range(tiers):
+        top=20+ti*TIER; bt=top+106
+        s.add(f'<rect x="{SIDE}" y="{top}" width="{CW-2*SIDE}" height="34" fill="url(#shade)"/>')
+        s.p(f"M{SIDE+14},{bt} L{CW-SIDE-14},{bt} L{CW-SIDE+8},{bt+14} L{SIDE-8},{bt+14} Z",WOODL,INK,2.5)
+        s.r(SIDE-8,bt+14,CW-2*SIDE+16,12,WOOD,INK,2.5,1); s.l(SIDE-6,bt+17,CW-SIDE+6,bt+17,"#A67C52",1.5)
+        row=rows[ti] if ti<len(rows) else []
+        for ci,it in enumerate(row):
+            st=it[3] if len(it)>3 else "normal"; pt=it[4] if len(it)>4 else None
+            item(s,cxs[ci],bt,it[0],it[1],it[2],50,st,focus==(ti,ci),pt)
+    s.r(-8,0,CW+16,20,WOOD,INK,3,3); s.l(-4,4,CW+4,4,"#A67C52",1.5)
+    s.r(-8,20+tiers*TIER,CW+16,22,WOOD,INK,3,3)
     s.add('</g>')
-
-def talisman(s,cx,base,letter,kind,name,state="normal",lift=0,price=50,price_txt=None,k=1.0):
-    """Standing ofuda on a stand; base = shelf board top. Type mark is the band text (red = special, indigo = modifier).
-    Returns (paper top, hole x, hole y)."""
-    g=state!="normal"
-    paper=PAPER2 if not g else "#D9D4C6"
-    band=(RED if kind=="special" else IND) if not g else GREYD
-    icon=({"special":PERS,"modifier":IND}[kind]) if not g else GREYD
-    pw=80*k; ph=100 if k<=1 else 128; hw=pw/2
-    s.r(cx-46*k,base-12,92*k,12,WOODL,INK,2,2); s.r(cx-30*k,base-18,60*k,8,WOOD,INK,2,2)
-    top=base-12-lift-6-ph
-    if lift:
-        s.add(f'<ellipse cx="{cx}" cy="{base-1}" rx="{hw+22}" ry="6" fill="{FOX}" opacity="0.6"/>')
-        s.r(cx-hw-12,top-8,pw+24,ph+20,"none",FOX,5,6); s.r(cx-hw-18,top-14,pw+36,ph+32,"none",FOX,2,8,"4 4")
-    s.r(cx-hw,top,pw,ph,paper,INK,2.5,2)
-    bh=18 if k<=1 else 24
-    s.r(cx-hw,top,pw,bh,band,INK,2.5,0); s.t(cx,top+bh-6,kind.upper(),11 if k<=1 else 14,PAPER,"bold","middle")
-    isz=40 if k<=1 else 50
-    s.r(cx-isz/2,top+bh+6,isz,isz,icon,None,0,6); s.t(cx,top+bh+6+isz*0.72,letter,24 if k<=1 else 32,PAPER,"bold","middle")
-    tg=top+bh+6+isz+4
-    tk=0.9 if k<=1 else 1.5
-    tag(s,cx-65*tk,tg,name,price,state,price_txt,tk)
-    return top,cx+25*tk,tg
-
-def shelf_unit(s,x,y,w,h,rows):
-    s.r(x,y,w,h,WOOD2,INK,3,4)
-    ix=x+24; iw=w-48
-    s.r(ix,y+22,iw,h-34,"#CDBB94",INK,2)
-    for k in range(0,int(iw),48): s.l(ix+k,y+22,ix+k,y+h-12,"#C0AE86",1)
-    s.r(x-10,y-12,w+20,22,WOOD,INK,3,3); s.r(x-6,y+h-12,w+12,18,WOOD,INK,3,3)
-    ch=(h-34)/rows; out=[]
-    for i in range(rows):
-        top=y+22+i*ch; bt=top+ch-14
-        s.r(ix-2,bt,iw+4,14,WOODL,INK,2.5,1); s.l(ix,bt+4,ix+iw,bt+4,"#6b4a34",1)
-        out.append((top,bt))
-    return out,ix,iw
 
 
 def slot_row(s,x,y,w,n,letter,name,lvl,focused=False,target=False,empty=False,h=84):
@@ -155,34 +171,42 @@ def slots_scroll(s,x,y,w,h,focus_slot=None):
     slot_row(s,x+16,ry,w-32,4,"","","",empty=True)
     s.t(x+16,y+h-52,"Releasing frees a slot; the move loses",13,"#4A463C"); s.t(x+16,y+h-34,"its levels (A6). Foxfire: Tanuki target (T2).",13,"#4A463C")
 
-def hang(s,ceiling,res):
-    pt,hx,hy=res
-    s.l(hx,ceiling,hx,hy,"#6b4a34",1.8)
-
-def slip(s,x,y,w,h,title,kind_line,blocks,foot=None):
-    """Paper ledger slip pinned with a red pin. blocks = list of (heading, [lines])."""
-    s.r(x+4,y+5,w,h,"#1D1B2133",None,0,2)
+def slip(s,x,y,w,h,title,kind_line,blocks,foot=None,wide=True):
+    """Paper ledger slip pinned with a red pin. blocks = list of (heading, [lines]).
+    wide: heading in a left column, lines to its right. Not wide: heading above its lines."""
+    s.r(x+4,y+5,w,h,"#1D1B2166",None,0,2)
     s.r(x,y,w,h,PAPER2,INK,2.5,2)
     s.r(x,y,w,26,IND,None,0)
     s.t(x+12,y+19,"LEDGER SLIP · frame data",14,PAPER,"bold")
     s.c(x+w-18,y+13,6,RED,INK,1.5)
-    s.t(x+12,y+56,title,20,INK,"bold"); s.t(x+12,y+78,kind_line,14,"#4A463C")
-    yy=y+104
+    s.t(x+12,y+52,title,20,INK,"bold"); s.t(x+w-12,y+52,kind_line,14,"#4A463C",a="end")
+    yy=y+80
     for hd,lines in blocks:
-        s.t(x+12,yy,hd,12,RED,"bold"); yy+=20
-        for ln in lines:
-            s.t(x+12,yy,ln,15,INK); yy+=21
-        yy+=8
+        if wide:
+            s.t(x+12,yy,hd,12,RED,"bold")
+            for ln in lines:
+                s.t(x+132,yy,ln,15,INK); yy+=21
+            yy+=7
+        else:
+            s.t(x+12,yy,hd,12,RED,"bold"); yy+=20
+            for ln in lines:
+                s.t(x+12,yy,ln,15,INK); yy+=21
+            yy+=8
     if foot:
-        yy=y+h-18-(len(foot)-1)*16
+        yy=y+h-10-(len(foot)-1)*15
         for ln in foot:
-            s.t(x+12,yy,ln,12,MUTE,i=True); yy+=16
+            s.t(x+12,yy,ln,12,MUTE,i=True); yy+=15
 
 def key_footer(s,x,y,frame_on=False):
     nx=chip(s,x,y,"Arrows / D-pad","Move",150)
     nx=chip(s,nx,y,"Enter / A","Buy / Release",100)
     nx=chip(s,nx,y,"Tab / Y","Frame data: ON" if frame_on else "Frame data",78)
     chip(s,nx,y,"Esc / B","Back to rest stop",90)
+
+# example 9-item stock (placeholder names beyond the five Kappa items); specials first, then modifiers
+STOCK9=[[("R","special","River Grab"),("S","special","Shell Spin"),("O","special","Oni Stomp")],
+        [("P","modifier","River Pull"),("Sk","modifier","Slippery Skin"),("C","modifier","Cucumber Gift")],
+        [("T","modifier","Thick Hide"),("E","modifier","Ember Fist"),("L","modifier","Long Reach")]]
 
 # ================= MAIN SHEET =================
 def main():
@@ -196,44 +220,29 @@ def main():
     s.t(1330,236,"COINS",20,INK,"bold"); s.r(1410,212,120,36,PAPER2,BRASS,3,18); s.t(1470,238,"75",24,INK,"bold","middle")
     # merchant column
     s.t(160,296,"MERCHANT",18,INK,"bold")
-    bubble(s,160,336,460,140,["Ah, Slippery Skin: Slick kappa skin makes","you impossible to throw while the","move starts up."],(250,576),22,
+    bubble(s,160,336,460,140,["Ah, Slippery Skin: Slick kappa skin makes","you impossible to throw while the","move starts up."],(270,596),22,
            event="bubble: focus line = lead-in + card.plain, at most 2 sentences, no numbers (A12)")
-    portrait(s,160,570,180,310)
-    s.t(160,896,"never the Tanuki here (S3)",13,MUTE,i=True)
-    slip(s,360,520,260,360,"Slippery Skin","Kappa modifier · common",
-         [("CHANGE",["Throw-invulnerable","during startup"]),
-          ("FRAME NUMBERS",["unchanged"]),
+    portrait(s,160,500,220,386)
+    slip(s,160,684,460,204,"Slippery Skin","Kappa modifier · common",
+         [("CHANGE",["Throw-invulnerable during startup"]),
+          ("NUMBERS",["Frame numbers unchanged"]),
           ("RIDES ON",["the special you pick"])],
-         ["modifier: shows the change, not a table","stays open while focus moves (Tab / Y)"])
+         ["modifier: shows the change, not a table · stays open while focus moves (Tab / Y)"])
+    s.t(392,560,"slip slides over",13,MUTE,i=True); s.t(392,576,"the portrait's body;",13,MUTE,i=True); s.t(392,592,"head stays visible",13,MUTE,i=True)
     # shelf
     s.t(670,290,"ABILITIES · 50 coins · common · from yokai you have not bound (Kappa)",19,INK,"bold")
-    s.t(670,312,"Bought abilities are borrowed ink: grey, this run only.",16,GREYD,i=True)
-    rows,ix,iw=shelf_unit(s,670,330,640,556,3)
-    cxs=[ix+iw*0.25,ix+iw*0.75]
-    items=[[("R","special","River Grab"),("S","special","Shell Spin")],
-           [("P","modifier","River Pull"),("Sk","modifier","Slippery Skin")],
-           [("C","modifier","Cucumber Gift")]]
-    focus=(1,1)
-    for ri,(top,bt) in enumerate(rows):
-        for ci,(l,k,n) in enumerate(items[ri]):
-            cx=cxs[ci]; lift=12 if (ri,ci)==focus else 0
-            res=talisman(s,cx,bt,l,k,n,lift=lift,k=1.5)
-            hang(s,top,res)
-    s.t(1336,360,"SPECIALS first,",14,MUTE,i=True); s.t(1336,378,"then MODIFIERS",14,MUTE,i=True)
+    s.t(670,312,"Specials first, then modifiers. Bought abilities are borrowed ink: grey, this run only.",16,GREYD,i=True)
+    cabinet(s,664,320,1.0,3,STOCK9,focus=(1,1))
     slots_scroll(s,1472,336,290,546)
-    key_footer(s,150,902,True)
+    key_footer(s,150,912,True)
+    s.t(1200,934,"EXAMPLE stock: 9 items, placeholder names;",13,MUTE,i=True)
+    s.t(1200,950,"the real Kappa stock today is only 5 items.",13,MUTE,i=True)
     return s.svg()
 
 # ================= STATES SHEET =================
 def panel(s,x,y,w,h,title,n):
     s.r(x,y,w,h,PAPER,INK,2.5,2); s.r(x,y,w,34,IND,None,0)
     s.t(x+12,y+24,f"{n}  {title}",18,PAPER,"bold")
-
-def mini_shelf(s,x,y,w,h):
-    s.r(x,y,w,h,"#CDBB94",INK,2.5,2)
-    for k in range(0,int(w),40): s.l(x+k,y,x+k,y+h,"#C0AE86",1)
-    s.r(x-4,y+h-12,w+8,14,WOODL,INK,2.5,1)
-    return y+h-12
 
 def mini_speaker(s,x,y,arr,ev,w=290,h=70):
     portrait(s,x,y+4,64,86,small=True)
@@ -248,23 +257,15 @@ def states():
     # 1 bought
     x,y=xs[0],ys[0]; panel(s,x,y,W,H,"Bought",1)
     mini_speaker(s,x+14,y+46,["Sold! Treat it kindly."],"event: bought_special (replaces the focus line)",290,66)
-    bt=mini_shelf(s,x+14,y+160,W-28,230)
-    cx=x+110
-    s.r(cx-46,bt-12,92,12,GREY,GREYD,2,2)
-    s.r(cx-40,bt-60,80,46,"#D9D4C6",GREYD,2.5,23); s.r(cx-46,bt-62,10,50,GREYD,INK,1.5,5); s.r(cx+36,bt-62,10,50,GREYD,INK,1.5,5)
-    s.l(cx-8,bt-60,cx-8,bt-14,RED,3); seal(s,cx+14,bt-36,10)
-    tag(s,cx-50,bt-130,"River Grab",50,"bought")
-    s.l(cx+40,y+170,cx+40,bt-120,"#6b4a34",1.8)
-    hang(s,y+170,talisman(s,x+300,bt,"S","special","Shell Spin"))
-    s.t(x+14,y+H-10,"Rolled in place, tied, grey, not selectable again.",12,MUTE,i=True)
+    cabinet(s,x+14,y+150,0.58,1,[[("R","special","River Grab","bought"),("S","special","Shell Spin"),("P","modifier","River Pull")]])
+    s.t(x+14,y+H-34,"The item rolls up in place: tied, sealed, grey borrowed ink,",12,MUTE,i=True)
+    s.t(x+14,y+H-18,"tag reads SOLD, not selectable again. Others do not shift.",12,MUTE,i=True)
     # 2 cannot afford
     x,y=xs[1],ys[0]; panel(s,x,y,W,H,"Cannot afford",2)
     mini_speaker(s,x+14,y+46,["Ah, not quite enough coins.","Win a few more, friend."],"event: cannot_afford",290,66)
     s.t(x+W-14,y+130,"COINS",14,INK,"bold","end"); s.r(x+W-110,y+136,96,22,PAPER2,RED,3,11); s.t(x+W-62,y+153,"25",16,INK,"bold","middle")
-    bt=mini_shelf(s,x+14,y+176,W-28,214)
-    hang(s,y+186,talisman(s,x+110,bt,"R","special","River Grab"))
-    hang(s,y+186,talisman(s,x+300,bt,"S","special","Shell Spin","dim",price_txt="Need 50"))
-    s.t(x+14,y+H-10,"Dimmed, Enter does nothing, coin chip shakes, nothing changes.",12,MUTE,i=True)
+    cabinet(s,x+14,y+176,0.58,1,[[("R","special","River Grab"),("S","special","Shell Spin"),("P","modifier","River Pull","dim","Need 50")]])
+    s.t(x+14,y+H-18,"Dimmed, Enter does nothing, coin chip shakes, nothing changes.",12,MUTE,i=True)
     # 3 slot full
     x,y=xs[2],ys[0]; panel(s,x,y,W,H,"Slot full (buying a special)",3)
     mini_speaker(s,x+14,y+46,["Hands full! A swapped move","forgets its levels, mind."],"event: slot_full",290,66)
@@ -309,36 +310,35 @@ def states():
     # 7 shelf empty
     x,y=xs[2],ys[1]; panel(s,x,y,W,H,"Shelf empty",7)
     mini_speaker(s,x+14,y+46,["All gone! You've cleaned me out."],"event: shelf_empty",290,66)
-    s.r(x+14,y+160,W-28,226,"#CDBB94",INK,2.5,2)
-    for k in range(2): s.r(x+10,y+160+(k+1)*75,W-20,12,WOODL,INK,2.5,1)
-    s.r(x+10,y+160+225-12,W-20,14,WOODL,INK,2.5,1)
-    s.t(x+W/2,y+215,"bare shelf",18,MUTE,a="middle",i=True)
+    cabinet(s,x+70,y+150,0.42,3,[])
     s.t(x+14,y+H-10,"All yokai bound or everything bought. Footer keeps only Back.",12,MUTE,i=True)
-    # 8 overflow
-    x,y=xs[3],ys[1]; panel(s,x,y,W,H,"Overflow (more than 6, about 10)",8)
-    s.r(x+14,y+46,W-70,330,"#CDBB94",INK,2.5,2)
-    for k in range(3):
-        by=y+46+(k+1)*110-14
-        s.r(x+10,by,W-62,12,WOODL,INK,2.5,1)
-        for j in range(2):
-            cx=x+14+(W-70)*(0.27 if j==0 else 0.75)
-            s.r(cx-26,by-62,52,62,PAPER2,INK,2,2); s.r(cx-14,by-52,28,28,PERS if k<2 else IND,None,0,4)
-    s.add(f'<rect x="{x+15}" y="{y+46+330-60}" width="{W-72}" height="58" fill="{PAPER}" opacity="0.6"/>')
-    s.p(f"M{x+W/2-95},{y+372} l15,-12 l15,12","none",INK,3)
-    s.t(x+W/2-60,y+368,"more below",14,INK,"bold")
-    s.r(x+W-34,y+46,14,330,"#D8CDB0",INK,2,6); s.r(x+W-34,y+46,14,150,WOOD,INK,2,6)
-    s.t(x+W-27,y+394,"1-3 / 5",12,INK,"bold","middle")
-    s.lines(x+14,y+H-30,["Proposal: 3 shelves visible; focus past the edge scrolls one shelf;","rod shows position; PgUp / PgDn or LB / RB jump a page."],12,MUTE,lh=15,i=True)
+    # 8 six-item variant
+    x,y=xs[3],ys[1]; panel(s,x,y,W,H,"Variant: 6 items (2 shelves)",8)
+    cabinet(s,x+14,y+48,0.58,2,[STOCK9[0],STOCK9[1]],focus=(1,1))
+    s.lines(x+14,y+312,["Same cabinet one tier shorter, so items, tags, bubble, slip and","slots panel are all unchanged; the cabinet is just 1 shelf lower.","Designer's note: 6 may suit balance better than 9. The main","sheet draws 9; the choice is open (R6 shop size)."],13,INK,lh=19)
+    s.t(x+14,y+H-10,"Example stock again; picked from unbound yokai, specials first.",12,MUTE,i=True)
     # 9 frame data slip open (special)
     x,y=xs[0],ys[2]; panel(s,x,y,W,H,"Frame data slip open (special)",9)
     mini_speaker(s,x+14,y+46,["Command grab. Hard to block,","slow to start."],"bubble: lead-in would make 3 sentences, so card text alone",290,66)
     slip(s,x+14,y+158,W-28,230,"River Grab","Kappa special · throw · common",
          [("FRAME DATA (placeholder numbers)",["Startup 20 / Active 3 / Recovery 40","On block -12","Damage 120 / Throw"])],
-         ["same format as the reward screen and move list","Tab / Y toggles; stays on while focus moves"])
+         ["same format as the reward screen and move list","Tab / Y toggles; stays on while focus moves"],wide=False)
     s.t(x+14,y+H-10,"The merchant never speaks these numbers (A12).",12,MUTE,i=True)
     # 10 reference
     x,y=xs[1],ys[2]; panel(s,x,y,W,H,"Slip format (matches existing screens)",10)
     s.lines(x+14,y+62,["Special (reward_screen CardView.frames):","  Startup 15 / Active 4 / Recovery 30","  Damage 70 / Slow projectile","","Modifier (card.frames, the change only):","  Throw-invulnerable during startup","  Pulls opponent one step closer on hit","  Heals 2% of max health on hit","","Open: data/moves has no Kappa specials yet, so the","special numbers above are placeholders; a modifier","shows 'Startup +N' only if its data carries one","(none of the three does today)."],15,INK,lh=22)
+    # 11 slip off / on over portrait
+    x,y=xs[2],ys[2]; panel(s,x,y,W,H,"Slip over the portrait (off / on)",11)
+    for k,(lbl,on) in enumerate([("Frame data OFF",False),("Frame data ON (Tab / Y)",True)]):
+        px=x+16+k*212
+        s.t(px,y+62,lbl,14,INK,"bold")
+        bubble(s,px,y+76,196,60,["Ah, Slippery Skin:","slick kappa skin..."],(px+60,y+170),14)
+        portrait(s,px+8,y+160,120,210,small=True)
+        if on:
+            s.r(px+4,y+256,196,114,PAPER2,INK,2.5,2); s.r(px+4,y+256,196,18,IND,None,0)
+            s.t(px+12,y+269,"LEDGER SLIP",11,PAPER,"bold"); s.t(px+12,y+296,"Slippery Skin",14,INK,"bold")
+            s.t(px+12,y+318,"CHANGE  throw-invuln.",11,INK); s.t(px+12,y+334,"NUMBERS unchanged",11,INK)
+    s.lines(x+14,y+H-26,["The slip covers the portrait's body only; the head and bubble","tail stay visible, so the merchant still reads as the speaker."],12,MUTE,lh=15,i=True)
     return s.svg(1920,1480)
 
 if __name__=="__main__":
