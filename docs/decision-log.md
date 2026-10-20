@@ -219,3 +219,4 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **YOK-146:** keep the 54k mesh; retake the deep crouch (route pending); commit `Ryo.glb` (PR #195); the groin-weights branch is rejected.
 - **Review queue:** the `ready-for-review` Linear label now exists (YOK-37).
 - **YOK-71 fonts:** specimen sheet in progress.
+- **Stages first pass (YOK-150/151/152), approved 2026-10-20:** 195 credits on Meshy, Shrine Gate 66 (S1-S8; S9 snowflake sheet not approved, plain quads), Riverbank 69 (S1-S9; no bank lanterns, spec default), Tea House 60 (S1-S10). Tea House seasons change on beats, round start only; wiring is a gameplay follow-up. Palette added to `style.md`: snow #A9B4C8, water teal #3E7F86 (same as Kappa spark teal), brown #6E5A48, spring pink #E8A6B0. Take cap 3 per asset, never above 195 total without asking. **Status: jobs not run**, the Meshy MCP was unavailable to the asset-smith session, 0 credits spent.
