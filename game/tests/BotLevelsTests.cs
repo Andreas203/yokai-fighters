@@ -102,6 +102,16 @@ public static class BotLevelsTests
 		Bad("level named all", d => Lv(d, 2)["level"] = "all");
 		Bad("status missing", d => Lv(d, 1).Remove("status"));
 		Bad("status unknown", d => Lv(d, 1)["status"] = "maybe");
+		Bad("level name with a trailing newline (reserved 'mixed')", d => Lv(d, 2)["level"] = "mixed\n");
+		Bad("level name with a trailing newline", d => Lv(d, 2)["level"] = "expert\n");
+		Bad("bot_id with a trailing newline", d => Lv(d, 2)["bot_id"] = "x\n");
+		Bad("base is a number", d => d["base"] = 5);
+		Bad("kind is a number", d => d["kind"] = 5);
+		Bad("id is an object", d => d["id"] = new JsonObject());
+		Bad("level name is a number", d => Lv(d, 1)["level"] = 2);
+		Bad("bot_id is an array", d => Lv(d, 1)["bot_id"] = new JsonArray());
+		Bad("status is a bool", d => Lv(d, 1)["status"] = true);
+		Bad("levels is an object", d => d["levels"] = new JsonObject());
 		Bad("base file missing", d => d["base"] = "intermediate-kihon-bot");
 		Bad("base is a path", d => d["base"] = "../harness/newcomer-kihon-bot");
 	}

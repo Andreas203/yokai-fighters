@@ -11,7 +11,7 @@
     "units": { "type": "integer", "minimum": 0, "maximum": 4000 },
     "ticks": { "type": "integer", "minimum": 1, "maximum": 600 },
     "weight": { "type": "integer", "minimum": 0, "maximum": 1000 },
-    "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?!\n)$", "$comment": "(?!newline)$ = the end of the string in both the ECMA and the Python 3.13 regex dialects (neither has the same end-of-string anchor); a bare $ lets a trailing newline through in Python, as in .NET where the loader uses its end-of-string anchor." },
     "level": {
       "type": "object",
       "required": ["level", "bot_id", "status"],

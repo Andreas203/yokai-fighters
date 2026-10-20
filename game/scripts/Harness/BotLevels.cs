@@ -29,7 +29,8 @@ public sealed record BotLevels
 	static readonly string[] WeightKeys = { "walk", "normal", "special", "throw", "jump", "wait" };
 	static readonly string[] RunKeys = { "route", "reward_order", "merchant", "heal_below_pct", "dojo" };
 	static readonly string[] LevelKeys = { "level", "bot_id", "status", "fight", "run", "notes" };
-	static readonly Regex Name = new("^[a-z][a-z0-9-]*$");
+	// \z, not $: .NET's $ also matches before a final newline, so "mixed\n" would pass.
+	static readonly Regex Name = new(@"^[a-z][a-z0-9-]*\z");
 
 	public required string Id { get; init; }
 	public required string Base { get; init; }
@@ -61,6 +62,15 @@ public sealed record BotLevels
 
 	/// <param name="baseJson">The base bot file's text by its id.</param>
 	public static BotLevels Parse(string json, Func<string, string> baseJson)
+	{
+		// A value of the wrong JSON kind (e.g. "base": 5) throws InvalidOperationException from the casts below, bad JSON a
+		// JsonException: both are a bad file, so a FormatException like every other check.
+		try { return ParseChecked(json, baseJson); }
+		catch (InvalidOperationException e) { throw new FormatException($"bot levels: a value of the wrong kind: {e.Message}", e); }
+		catch (System.Text.Json.JsonException e) { throw new FormatException($"bot levels: not JSON: {e.Message}", e); }
+	}
+
+	static BotLevels ParseChecked(string json, Func<string, string> baseJson)
 	{
 		var o = JsonNode.Parse(json)?.AsObject() ?? throw new FormatException("empty bot levels file");
 		if ((string?)o["kind"] != Kind) throw new FormatException($"kind is not '{Kind}'");
