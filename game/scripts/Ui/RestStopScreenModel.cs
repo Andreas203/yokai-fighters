@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using YokaiFighters.Sim;
 
@@ -96,7 +97,16 @@ public sealed class RestStopScreenModel
 	/// YOK-109: the trial the card shows and takes: the selector's special's offer (the chosen one once taken).
 	/// Null when no special has a trial that can still level it.
 	/// </summary>
-	public DojoTrialOffer? TrialOffer => _dojo is { } d && d.Trials is { Count: > 0 } offers ? offers[Math.Clamp(_pick, 0, offers.Count - 1)] : null;
+	public DojoTrialOffer? TrialOffer
+	{
+		get
+		{
+			if (_dojo is not { } d || d.Trials is not { Count: > 0 } offers) return null;
+			// Once taken, the chosen special (a landed trial may have dropped it from the offers, so the index would point at a neighbour).
+			if (d.Choice == DojoChoice.Trial) return offers.FirstOrDefault(o => o.Slot == d.TrialSlot);
+			return offers[Math.Clamp(_pick, 0, offers.Count - 1)];
+		}
+	}
 
 	/// <summary>The display name of the special the card trains (the move data's name, never its id), or null with no trial.</summary>
 	public string? TrialSpecialName
