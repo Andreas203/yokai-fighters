@@ -3,6 +3,8 @@
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
 [ext_resource type="Script" path="res://scripts/Ui/ShopScreen.cs" id="script"]
 [ext_resource type="Script" path="res://scripts/Ui/ShopScreenDecor.cs" id="decor_script"]
+[ext_resource type="Script" path="res://scripts/Ui/ShopCabinet.cs" id="cabinet_script"]
+[ext_resource type="Script" path="res://scripts/Ui/ShopBubble.cs" id="bubble_script"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="rule"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
@@ -18,6 +20,32 @@ corner_radius_top_left = 18
 corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="slip_paper"]
+bg_color = Color(0.973, 0.945, 0.878, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.114, 0.106, 0.129, 1)
+
+[sub_resource type="StyleBoxFlat" id="slip_band"]
+bg_color = Color(0.176, 0.227, 0.369, 1)
+content_margin_left = 12.0
+content_margin_top = 2.0
+content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="slip_pin"]
+bg_color = Color(0.74, 0.18, 0.15, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.114, 0.106, 0.129, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="Shop" type="Control"]
 mouse_filter = 0
@@ -36,40 +64,10 @@ script = ExtResource("decor_script")
 
 [node name="SlotsHanger" type="Control" parent="."]
 mouse_filter = 2
-offset_left = 1250.0
-offset_top = 283.0
+offset_left = 1455.0
+offset_top = 300.0
 offset_right = 1780.0
-offset_bottom = 880.0
-
-[node name="Portrait" type="Control" parent="."]
-mouse_filter = 2
-offset_left = 690.0
-offset_top = 128.0
-offset_right = 780.0
-offset_bottom = 218.0
-
-[node name="PortraitLabel" type="Label" parent="Portrait"]
-mouse_filter = 2
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 1
-vertical_alignment = 1
-text = "face"
-autowrap_mode = 3
-
-[node name="MerchantLine" type="Label" parent="."]
-mouse_filter = 2
-offset_left = 796.0
-offset_top = 128.0
-offset_right = 1230.0
-offset_bottom = 222.0
-theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 20
-text = "Merchant's line (habit-writer: not written yet)."
-autowrap_mode = 3
-clip_text = true
+offset_bottom = 893.0
 
 [node name="Heading" type="Label" parent="."]
 mouse_filter = 2
@@ -97,7 +95,7 @@ offset_left = 150.0
 offset_top = 240.0
 offset_right = 690.0
 offset_bottom = 280.0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Merchant's wares · pay in coins"
 
 [node name="HealthLabel" type="Label" parent="."]
@@ -152,171 +150,240 @@ theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Shelves" type="VBoxContainer" parent="."]
+[node name="Portrait" type="Control" parent="."]
 mouse_filter = 2
-offset_left = 150.0
-offset_top = 286.0
-offset_right = 1220.0
-offset_bottom = 846.0
-theme_override_constants/separation = 2
+offset_left = 160.0
+offset_top = 500.0
+offset_right = 380.0
+offset_bottom = 886.0
 
-[node name="SpecialsLabel" type="Label" parent="Shelves"]
-layout_mode = 2
+[node name="PortraitLabel" type="Label" parent="Portrait"]
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
-text = "SPECIALS · 50 coins · common · from yokai you have not bound"
-
-[node name="SpecialsScroll" type="ScrollContainer" parent="Shelves"]
-layout_mode = 2
-mouse_filter = 2
-custom_minimum_size = Vector2(0, 262)
-follow_focus = true
-horizontal_scroll_mode = 3
-vertical_scroll_mode = 0
-
-[node name="SpecialsRow" type="HBoxContainer" parent="Shelves/SpecialsScroll"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 14
-
-[node name="SpecialsEmpty" type="Label" parent="Shelves"]
-layout_mode = 2
-mouse_filter = 2
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 22
-text = "No specials for sale."
-autowrap_mode = 3
-
-[node name="ModifiersLabel" type="Label" parent="Shelves"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 24
-text = "MODIFIERS · 50 coins · common · you pick the special that carries it"
-
-[node name="ModifiersScroll" type="ScrollContainer" parent="Shelves"]
-layout_mode = 2
-mouse_filter = 2
-custom_minimum_size = Vector2(0, 262)
-follow_focus = true
-horizontal_scroll_mode = 3
-vertical_scroll_mode = 0
-
-[node name="ModifiersRow" type="HBoxContainer" parent="Shelves/ModifiersScroll"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 14
-
-[node name="ModifiersEmpty" type="Label" parent="Shelves"]
-layout_mode = 2
-mouse_filter = 2
-theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 22
-text = "No modifiers for sale."
-autowrap_mode = 3
-
-[node name="AllEmpty" type="PanelContainer" parent="."]
-mouse_filter = 2
-offset_left = 150.0
-offset_top = 296.0
-offset_right = 1210.0
-offset_bottom = 830.0
-theme_type_variation = &"PaperCard"
-
-[node name="Box" type="VBoxContainer" parent="AllEmpty"]
-layout_mode = 2
-mouse_filter = 2
-alignment = 1
-theme_override_constants/separation = 12
-
-[node name="Pegs" type="Control" parent="AllEmpty/Box"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="EmptyTitle" type="Label" parent="AllEmpty/Box"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
-text = "Shelf empty"
+text = "portrait (human guise, art to come)"
 
-[node name="EmptyWhy" type="Label" parent="AllEmpty/Box"]
-layout_mode = 2
+[node name="MerchantLabel" type="Label" parent="."]
 mouse_filter = 2
+offset_left = 160.0
+offset_top = 296.0
+offset_right = 460.0
+offset_bottom = 330.0
+theme_override_font_sizes/font_size = 22
+text = "MERCHANT"
+
+[node name="Bubble" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 158.0
+offset_top = 335.0
+offset_right = 622.0
+offset_bottom = 575.0
+script = ExtResource("bubble_script")
+
+[node name="MerchantLine" type="Label" parent="Bubble"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 12.0
+offset_right = 442.0
+offset_bottom = 130.0
 theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
-autowrap_mode = 3
-text = "Nothing left to sell."
-
-[node name="EmptyHint" type="Label" parent="AllEmpty/Box"]
-layout_mode = 2
-mouse_filter = 2
-theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
-autowrap_mode = 3
-text = "You can still release a binding on the right."
-
-[node name="Detail" type="Label" parent="."]
-mouse_filter = 2
-offset_left = 150.0
-offset_top = 848.0
-offset_right = 1220.0
-offset_bottom = 896.0
-theme_override_font_sizes/font_size = 22
+vertical_alignment = 1
 autowrap_mode = 3
 clip_text = true
 
+[node name="ShelfHeading" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 670.0
+offset_top = 266.0
+offset_right = 1450.0
+offset_bottom = 294.0
+theme_override_font_sizes/font_size = 20
+text = "ABILITIES"
+clip_text = true
+
+[node name="ShelfNote" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 670.0
+offset_top = 292.0
+offset_right = 1450.0
+offset_bottom = 320.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 17
+clip_text = true
+
+[node name="Cabinet" type="Control" parent="."]
+mouse_filter = 2
+offset_left = 655.0
+offset_top = 322.0
+offset_right = 1373.0
+offset_bottom = 907.0
+script = ExtResource("cabinet_script")
+
+[node name="AllEmpty" type="Control" parent="Cabinet"]
+mouse_filter = 2
+offset_left = 60.0
+offset_top = 40.0
+offset_right = 658.0
+offset_bottom = 340.0
+
+[node name="EmptyTitle" type="Label" parent="Cabinet/AllEmpty"]
+mouse_filter = 2
+offset_right = 598.0
+offset_bottom = 70.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 46
+horizontal_alignment = 1
+text = "Shelf empty"
+
+[node name="EmptyWhy" type="Label" parent="Cabinet/AllEmpty"]
+mouse_filter = 2
+offset_left = 20.0
+offset_top = 80.0
+offset_right = 578.0
+offset_bottom = 170.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EmptyHint" type="Label" parent="Cabinet/AllEmpty"]
+mouse_filter = 2
+offset_left = 20.0
+offset_top = 180.0
+offset_right = 578.0
+offset_bottom = 250.0
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 21
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Slip" type="PanelContainer" parent="."]
+mouse_filter = 2
+offset_left = 160.0
+offset_top = 683.0
+offset_right = 622.0
+offset_bottom = 888.0
+theme_override_styles/panel = SubResource("slip_paper")
+
+[node name="Column" type="VBoxContainer" parent="Slip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Header" type="PanelContainer" parent="Slip/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("slip_band")
+
+[node name="HeaderLabel" type="Label" parent="Slip/Column/Header"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"PaperLabel"
+theme_override_font_sizes/font_size = 15
+text = "LEDGER SLIP · frame data"
+
+[node name="Pad" type="MarginContainer" parent="Slip/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="Box" type="VBoxContainer" parent="Slip/Column/Pad"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="Slip/Column/Pad/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 26
+clip_text = true
+
+[node name="Sub" type="Label" parent="Slip/Column/Pad/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 16
+
+[node name="Body" type="VBoxContainer" parent="Slip/Column/Pad/Box"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="SlipPin" type="Panel" parent="."]
+visible = false
+mouse_filter = 2
+offset_left = 598.0
+offset_top = 690.0
+offset_right = 610.0
+offset_bottom = 702.0
+theme_override_styles/panel = SubResource("slip_pin")
+
 [node name="SlotsHeading" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 1280.0
-offset_top = 316.0
-offset_right = 1760.0
-offset_bottom = 352.0
-theme_override_colors/font_color = Color(0.74, 0.18, 0.15, 1)
-theme_override_font_sizes/font_size = 25
-text = "YOUR SLOTS · release a binding 40"
+offset_left = 1470.0
+offset_top = 340.0
+offset_right = 1765.0
+offset_bottom = 382.0
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+text = "YOUR SLOTS"
+clip_text = true
+
+[node name="SlotsCaption" type="Label" parent="."]
+mouse_filter = 2
+offset_left = 1470.0
+offset_top = 382.0
+offset_right = 1765.0
+offset_bottom = 408.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 17
+horizontal_alignment = 1
 clip_text = true
 
 [node name="SlotRows" type="VBoxContainer" parent="."]
 mouse_filter = 2
-offset_left = 1280.0
-offset_top = 356.0
-offset_right = 1760.0
-offset_bottom = 768.0
+offset_left = 1478.0
+offset_top = 414.0
+offset_right = 1762.0
+offset_bottom = 758.0
 theme_override_constants/separation = 8
 
 [node name="SlotNotes" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 1280.0
-offset_top = 786.0
-offset_right = 1760.0
-offset_bottom = 846.0
+offset_left = 1470.0
+offset_top = 764.0
+offset_right = 1765.0
+offset_bottom = 858.0
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 clip_text = true
 
-[node name="BackButton" type="Button" parent="."]
-offset_left = 1440.0
-offset_top = 894.0
-offset_right = 1780.0
-offset_bottom = 944.0
-theme_override_font_sizes/font_size = 28
-text = "Back to rest stop"
-
-[node name="Rule" type="ColorRect" parent="."]
+[node name="Detail" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 150.0
-offset_top = 902.0
-offset_right = 1220.0
-offset_bottom = 904.0
-color = Color(0.114, 0.106, 0.129, 0.6)
+offset_left = 1215.0
+offset_top = 905.0
+offset_right = 1770.0
+offset_bottom = 957.0
+theme_type_variation = &"CaptionLabel"
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+autowrap_mode = 3
+clip_text = true
 
 [node name="Footer" parent="." instance=ExtResource("footer")]
 offset_left = 150.0
 offset_top = 912.0
-offset_right = 1220.0
+offset_right = 1120.0
 offset_bottom = 954.0
 alignment = 0
 OnPaper = true

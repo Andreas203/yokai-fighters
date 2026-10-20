@@ -36,6 +36,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Bubbles follow S2 (at most 2 sentences).
   - No copy hinting in the shop lines. The S3 row-4 story card keeps its line; the rules are unchanged.
   - Status: mockup rev 2 on `YOK-159-shop-shelf-mockup` awaits approval; the merchant lines on `YOK-159-merchant-shop-lines` have a Rules Lawyer PASS and need a schema and loader in the build.
+- 2026-10-20 YOK-159 (designer): shop mockup rev 3 approved (commit 06d4d1a on `YOK-159-shop-shelf-mockup`: 3x3 wooden cabinet, hanging tags, ledger slip over the portrait). Build on `YOK-159-shop-shelf-build`: schema `merchant-shop-lines.schema.json` and loader `MerchantShopLines` for the Rules Lawyer-approved lines. Provisional, for the designer: shelf size and item picking stay open (R6, stock logic untouched); a buy is one Enter with no "Buy X for 50?" step; buying a special into an occupied slot is refused with the slot_full line (no replace prompt: it needs a `MerchantShop` replace action, a gameplay ticket); the bubble opens on the greeting and the focus line takes over on the first move.
 - 2026-10-20 YOK-157 (designer):
   - Under a held idle guard the bot lets the first jump it sees in each fight go, and may anti-air later jumps.
   - P5 dominance is damage_pct plus a per-opponent-profile breakdown.

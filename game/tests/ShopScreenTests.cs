@@ -99,7 +99,7 @@ public static class ShopScreenTests
 			Assert.True(screen.BuySpecial("test-river-grab"), "bought");
 			Assert.True(s.Run.Coins == 70 && s.Run[SpecialSlot.D] is { Borrowed: true, Level: 1 } o && o.Data.Id == "test-river-grab", "R6: 50 coins, Lv 1, borrowed ink, its own slot");
 			Assert.Equal("70", screen.GetNode<Label>("CoinChip/CoinValue").Text, "the coin chip follows");
-			Assert.True(screen.Cards["Special_test-river-grab"].CardDisabled && Text(screen.Cards["Special_test-river-grab"], "TagLabel") == "BOUGHT", "the card stays, tagged BOUGHT and not offered again");
+			Assert.True(screen.Cards["Special_test-river-grab"].CardDisabled && screen.Cards["Special_test-river-grab"].PriceText == "SOLD · borrowed ink", "the item stays on its shelf, rolled up and tagged SOLD, not offered again");
 			Assert.True(Text(screen.Rows[SpecialSlot.D], "Sub").Contains("borrowed ink"), "the slots list shows it as borrowed ink");
 			Assert.True(!screen.BuySpecial("test-river-grab") && s.Run.Coins == 70, "a second buy is refused and changes nothing");
 		}
@@ -232,7 +232,8 @@ public static class ShopScreenTests
 			Assert.True(s.Run.SpecialCount == 1 && row.Locked && !row.CanRelease && row.Reason != null && row.Reason.Contains("last special"), "T5 wins over the coin shortfall");
 			Assert.Equal("LOCKED", Text(screen.Rows[SpecialSlot.D], "BadgeLabel"), "the button reads LOCKED, not Need 40");
 			Assert.True(Text(screen.Rows[SpecialSlot.D], "Why").Contains("last special"), "with the reason");
-			Assert.True(((Control)screen.Rows[SpecialSlot.D].GetNode("Body")).Modulate.R < 0.95f, "greyed");
+			Assert.True(screen.Rows[SpecialSlot.D].GetNodeOrNull("SealMark") != null, "T5 is drawn as a tied cord and seal across the row");
+			Assert.True(((Control)screen.Rows[SpecialSlot.D].FindChild("Badge", true, false)!).Visible, "the LOCKED badge is always shown on the last special");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});
@@ -258,23 +259,24 @@ public static class ShopScreenTests
 		var screen = Open(runner, s);
 		try
 		{
-			Assert.True(screen.GetNode<Control>("AllEmpty").Visible && !screen.GetNode<Control>("Shelves").Visible, "the empty-shelf panel replaces the shelves");
-			Assert.Equal("Shelf empty", screen.GetNode<Label>("AllEmpty/Box/EmptyTitle").Text, "it says so");
-			Assert.True(screen.Cards.Count == 0 && screen.Rows.Values.Count(r => r.FocusMode != Control.FocusModeEnum.None) == 2, "no cards; the two locked starters and Back still take focus");
-			Assert.True(Focus(screen) != null, "focus is on something: " + Focus(screen));
+			Assert.True(screen.GetNode<Control>("Cabinet/AllEmpty").Visible && screen.Items.Count == 0 && screen.Tiers == 3, "a bare cabinet says so");
+			Assert.Equal("Shelf empty", screen.GetNode<Label>("Cabinet/AllEmpty/EmptyTitle").Text, "it says so");
+			Assert.True(screen.Cards.Count == 0 && screen.Rows.Values.Count(r => r.FocusMode != Control.FocusModeEnum.None) == 2, "no items; the two locked starters still take focus");
+			Assert.True(Focus(screen) != null && Focus(screen)!.StartsWith("Slot_"), "focus is on a slot: " + Focus(screen));
+			Assert.True(screen.MerchantLine.Length > 0 && screen.Lines.Variants("shelf_empty").Contains(screen.MerchantLine), "the merchant speaks a shelf_empty line from the data: " + screen.MerchantLine);
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});
 
 	[Test]
-	public static void Scene_OneShelfEmpty_ShowsItsNoteAndTheOtherShelf(Node runner) => OnFixtures(() =>
+	public static void Scene_SpecialsOnly_StandOnTheCabinetWithoutTheEmptyState(Node runner) => OnFixtures(() =>
 	{
 		var s = ShopScreenFixtures.At(ShopScreenFixtures.StockedPool(modifiers: false), 75, ShopScreenFixtures.Starters);
 		s.Merchant!.Choose(MerchantChoice.Shop);
 		var screen = Open(runner, s);
 		try
 		{
-			Assert.True(!screen.GetNode<Control>("AllEmpty").Visible && screen.GetNode<Control>("Shelves/SpecialsScroll").Visible && !screen.GetNode<Control>("Shelves/ModifiersScroll").Visible && screen.GetNode<Control>("Shelves/ModifiersEmpty").Visible, "specials shown, modifiers noted as empty");
+			Assert.True(!screen.GetNode<Control>("Cabinet/AllEmpty").Visible && screen.Items.Count == 2 && screen.Tiers == 2, "two specials on a two-shelf cabinet, no empty state");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});
@@ -308,9 +310,15 @@ public static class ShopScreenTests
 			Tap(screen, Key.Right);
 			Assert.Equal("Special_test-slippery-skin", Focus(screen), "Right moves along the shelf");
 			Tap(screen, Key.Right);
-			Assert.Equal("Slot_A", Focus(screen), "Right from the last card enters the slots");
+			Assert.Equal("Modifier_test-kappa-patience", Focus(screen), "specials first, then modifiers: the shelf is a 3-wide grid read row by row");
+			Tap(screen, Key.Right);
+			Assert.True(Focus(screen)!.StartsWith("Slot_"), "Right from the last item enters the slots: " + Focus(screen));
 			Tap(screen, Key.Left);
-			Assert.True(Focus(screen)!.StartsWith("Special_"), "Left returns to the shelf");
+			Assert.Equal("Modifier_test-kappa-patience", Focus(screen), "Left returns to the shelf at the last focused item");
+			Tap(screen, Key.Down);
+			Assert.Equal("Modifier_test-kappa-wisp", Focus(screen), "Down: the second shelf has one item, so the nearest one");
+			Tap(screen, Key.Up);
+			Assert.Equal("Special_test-river-grab", Focus(screen), "Up keeps the column where the shelf has an item there (column 1)");
 			Tap(screen, Key.Enter);
 			Assert.True(s.Run.Owns("test-river-grab") && s.Run.Coins == 70, "Enter buys the focused card (keyboard)");
 			Assert.Equal("Special_test-slippery-skin", Focus(screen), "focus moved on to the next card when the bought one went inert");
@@ -342,8 +350,8 @@ public static class ShopScreenTests
 			Tap(screen, Key.Escape);
 			Assert.True(screen.Picking == null && !closed && Focus(screen) == "Modifier_test-kappa-wisp" && s.StateHash() == h, "Esc cancels the pick, focus back on its card, nothing bought");
 			screen.Refresh("Special_test-river-grab");
-			Tap(screen, Key.Right); Tap(screen, Key.Right);
-			Assert.Equal("Slot_A", Focus(screen), "to the slots");
+			Tap(screen, Key.Right); Tap(screen, Key.Right); Tap(screen, Key.Right);
+			Assert.True(Focus(screen)!.StartsWith("Slot_"), "to the slots");
 			Tap(screen, Key.Escape);
 			Assert.True(closed && s.StateHash() == h, "Esc on the shop closes it, nothing changed");
 		}

@@ -35,6 +35,25 @@ public static class ShopScreenFixtures
 		return ModifierLoader.Parse(node.ToJsonString(), id);
 	}
 
+	/// <summary>
+	/// The fixture starters are named "TEST FIXTURE: Spirit Wave (A-section numbers; ...)", a note to developers that would show
+	/// on the shop's slot rows and in the captures. Same file, same data, the name cut down to what a player would read.
+	/// </summary>
+	static SpecialData Displayable(SpecialData d)
+	{
+		if (!d.Name.StartsWith("TEST FIXTURE", System.StringComparison.Ordinal)) return d;
+		string name = System.Text.RegularExpressions.Regex.Replace(d.Name, @"^TEST FIXTURE:\s*|\s*\(.*$", "");
+		foreach (string dir in new[] { "specials", "rewards" })
+		{
+			string path = Path.Combine(ContentPaths.FixturesDir, dir, d.Id + ".json");
+			if (!File.Exists(path)) continue;
+			var node = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+			node["name"] = name;
+			return SpecialLoader.Parse(node.ToJsonString(), d.Id);
+		}
+		return d;
+	}
+
 	/// <summary>Fixture pool plus Kappa specials (C and D) and Kappa modifiers (any special; needs a projectile).</summary>
 	public static AbilityPool StockedPool(bool modifiers = true, bool specials = true)
 	{
@@ -51,7 +70,19 @@ public static class ShopScreenFixtures
 		} : System.Array.Empty<ModifierData>();
 		// YOK-103: data/modifiers/ also holds the Oni's and Kappa's commons now; keep only the Kitsune's (bound on the
 		// walk) so the stock is exactly the clones above and an unstocked pool still has empty shelves.
-		return new AbilityPool(fx.Specials.Concat(sp), fx.Modifiers.Where(m => m.Source == "kitsune").Concat(md));
+		return new AbilityPool(fx.Specials.Select(Displayable).Concat(sp), fx.Modifiers.Where(m => m.Source == "kitsune").Concat(md));
+	}
+
+	static readonly string[] SpecialNames = { "Reed Whistle", "Pond Drum", "Lotus Slap", "Mud Splash", "Bamboo Spear" };
+	static readonly string[] ModifierNames = { "Cold Water", "Thick Shell", "Long Reach", "Silt Cloak", "Heron Step" };
+
+	/// <summary>The stocked pool plus extra Kappa specials and modifiers (made-up names), for a shelf with more items than the cabinet shows.</summary>
+	public static AbilityPool WidePool(int extraSpecials, int extraModifiers)
+	{
+		var basePool = StockedPool();
+		var sp = Enumerable.Range(0, extraSpecials).Select(i => Clone($"test-wide-sp{i}", "kappa", "common", i % 2 == 0 ? "C" : "D", SpecialNames[i % SpecialNames.Length], $"Wide special number {i} does one plain thing."));
+		var md = Enumerable.Range(0, extraModifiers).Select(i => CloneMod("test-fox-patience", $"test-wide-md{i}", "kappa", ModifierNames[i % ModifierNames.Length], $"Wide modifier number {i} changes one plain thing."));
+		return new AbilityPool(basePool.Specials.Concat(sp), basePool.Modifiers.Concat(md));
 	}
 
 	/// <summary>A run at the row-4 merchant (entered) holding <paramref name="slots"/> and <paramref name="coins"/>.</summary>

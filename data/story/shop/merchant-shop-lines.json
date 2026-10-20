@@ -1,0 +1,113 @@
+{
+  "kind": "merchant_shop_lines",
+  "id": "merchant-shop-lines",
+  "status": "proposed",
+  "speaker": "Merchant",
+  "rules": ["S1", "S2", "R6", "T5", "A6", "A12"],
+  "notes": "YOK-159. Speech-bubble lines for the shop. Designer decisions: every bubble is at most 2 sentences (S2 applies to bubbles), and the shop lines carry no copy hinting; the merchant reads as a pleasant, ordinary shopkeeper. The row-4 line 'That {move} of yours... I'd love one.' lives only on the S3 story card (data/story/merchant-row4.json), not here. No stock or rarity promises (R6: never sells rares). Placeholders: only item_focused uses any ({name}, {card_text}, both new). {card_text} is only the plain-language line of the item card block (A12: frame data sits behind a toggle and is never spoken), inserted verbatim from the card block. Selection rule for item_focused: count sentences of lead-in + card text; if that would exceed 2, show the card text alone. The lead-ins are fragments that join the card text's first sentence, so a 1-sentence card text gives a 1-sentence bubble. Checked 2026-10-20: every card plain line in data/moves and data/modifiers (specials, modifiers and level lines) is 1 sentence, so none bypass the lead-in today. Re-check when a card plain line gains a second sentence. Lives in data/story/shop/ so StoryLibrary (top-level *.json, throws on other kinds) does not load it.",
+  "events": {
+    "greeting_row4": {
+      "trigger": "Row 4 merchant visit, before the heal-or-shop choice",
+      "placeholders": [],
+      "variants": [
+        "Welcome, Ryo! Take a look around.",
+        "Ah, a customer! Have a browse, friend.",
+        "Come in, come in. Mind the step."
+      ]
+    },
+    "greeting_row7": {
+      "trigger": "Row 7 merchant visit",
+      "placeholders": [],
+      "variants": [
+        "Back again! Welcome, welcome.",
+        "Welcome, welcome. I've set out a fresh shelf for you.",
+        "Good to see you again, Ryo."
+      ]
+    },
+    "item_focused": {
+      "trigger": "A shelf item is hovered or focused: the bubble speaks a lead-in joined to the item card text (designer decision, YOK-159)",
+      "placeholders": ["name", "card_text"],
+      "lead_ins": [
+        "Ah, {name}: {card_text}",
+        "{name}, for you: {card_text}",
+        "Look at {name}: {card_text}",
+        "{name}, a good pick: {card_text}",
+        "Ooh, {name}: {card_text}",
+        "Care for {name}? {card_text}"
+      ],
+      "notes": "Modifier tags are dropped (the MODIFIER mark and the target step already say the player picks the special). Selection rule: if lead-in + card text would exceed 2 sentences, show the card text alone. Lead-ins never alter or paraphrase the card text. 'Care for {name}? {card_text}' is a question plus the card sentence, so 2 sentences in total, still within the limit."
+    },
+    "bought_special": {
+      "trigger": "Ryo buys a special (R6)",
+      "placeholders": [],
+      "variants": [
+        "Sold! Treat it kindly.",
+        "Sold! It will serve you well.",
+        "A fine choice. Thank you!"
+      ]
+    },
+    "bought_modifier": {
+      "trigger": "Ryo buys a modifier and attaches it to a special (R6, A2)",
+      "placeholders": [],
+      "variants": [
+        "A little polish on your move. Lovely.",
+        "Clever! Sold.",
+        "Sold! That should make a difference."
+      ]
+    },
+    "cannot_afford": {
+      "trigger": "Ryo tries to buy with too few coins",
+      "placeholders": [],
+      "variants": [
+        "Ah, not quite enough coins. Win a few more, friend.",
+        "So close! Come back when your purse is heavier.",
+        "Fair is fair, I'm afraid."
+      ]
+    },
+    "slot_full": {
+      "trigger": "Ryo tries to buy a special with every slot full; a replaced move loses its levels (A6)",
+      "placeholders": [],
+      "variants": [
+        "Hands full! A swapped move forgets its levels, mind.",
+        "No room. Something must go, levels and all.",
+        "You can't hold more. Choose carefully."
+      ]
+    },
+    "release_binding": {
+      "trigger": "Ryo pays 40 to release a binding (R6)",
+      "placeholders": [],
+      "variants": [
+        "Letting one go? Kind of you, forty please.",
+        "Off it drifts. Forty, thank you.",
+        "Free, then. Forty coins, and a kind deed."
+      ]
+    },
+    "release_last_special": {
+      "trigger": "Ryo tries to release his last special (T5): the merchant refuses",
+      "placeholders": [],
+      "variants": [
+        "Not that one! It's all you have left.",
+        "Oh no, no. You'd be empty-handed.",
+        "That one stays with you. Trust a shopkeeper."
+      ]
+    },
+    "shelf_empty": {
+      "trigger": "No items left on the shelf",
+      "placeholders": [],
+      "variants": [
+        "All gone! You've cleaned me out.",
+        "Nothing left but dust and good manners.",
+        "Empty shelves. Come back when the road has given you more."
+      ]
+    },
+    "leaving": {
+      "trigger": "Ryo leaves the shop",
+      "placeholders": [],
+      "variants": [
+        "Off you go. Safe road, Ryo!",
+        "Safe travels, friend.",
+        "Goodbye, goodbye! Mind how you go."
+      ]
+    }
+  }
+}

@@ -322,7 +322,7 @@ class ValidateDataTest(unittest.TestCase):
     def test_story_cards_validate(self):
         code, out = run(ROOT / "data" / "story", SAMPLES / "sample-story-card.json")
         self.assertEqual(code, 0, out)
-        n = len(list((ROOT / "data" / "story").glob("*.json"))) + 1  # every story card + the sample
+        n = len(list((ROOT / "data" / "story").rglob("*.json"))) + 1  # every story card (and the shop's lines in story/shop/, YOK-159) + the sample
         self.assertIn(f"{n} file(s), {n} valid, 0 invalid", out)
 
     def test_malformed_story_card_fails_with_clear_messages(self):

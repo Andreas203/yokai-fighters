@@ -99,7 +99,7 @@ public static class ShopScreenProbes
 		try
 		{
 			Assert.True(screen.BuySpecial("test-river-grab") && screen.BuySpecial("test-slippery-skin"), "both specials bought");
-			Assert.True(!screen.GetNode<Control>("AllEmpty").Visible, "bought cards stay on the shelf, not the empty state");
+			Assert.True(!screen.GetNode<Control>("Cabinet/AllEmpty").Visible, "bought cards stay on the shelf, not the empty state");
 			Assert.True(screen.Cards.Values.Where(c => c.Name.ToString().StartsWith("Special_")).All(c => c.CardDisabled), "both read bought");
 			FocusIsSane(screen, "after the last special");
 			ulong h = s.StateHash();
@@ -141,28 +141,13 @@ public static class ShopScreenProbes
 			Assert.True(!closed && screen.Picking == null && s.StateHash() == h && s.Run.Coins == 120, "Esc cancels the pick only: no coins, no state change");
 			Assert.True(screen.Cards["Modifier_test-kappa-wisp"].FocusMode != Control.FocusModeEnum.None, "cards focusable again");
 			FocusIsSane(screen, "after cancelled pick");
-			Assert.True(!screen.Cards["Modifier_test-kappa-wisp"].Selected, "the card is not left selected");
-			Assert.True(((Control)screen.Cards["Special_test-river-grab"].GetNode("Body")).Modulate.R > 0.7f, "other cards are no longer dimmed");
+			Assert.True(!screen.Cards["Modifier_test-kappa-wisp"].Marked, "the card is not left selected");
+			Assert.True(screen.Cards["Special_test-river-grab"].Modulate.R > 0.7f, "other cards are no longer dimmed");
 		}
 		finally { Close(runner, screen); }
 	});
 
-	// A pick is open, Back button pressed by mouse/pad press: must not leave the shop mid-pick.
-	[Test]
-	public static void Modifier_BackButtonPressedDuringPick_CancelsPickOnly(Node runner) => OnFixtures(() =>
-	{
-		var s = Shopping(120);
-		var screen = Open(runner, s);
-		bool closed = false; screen.Closed += () => closed = true;
-		try
-		{
-			ulong h = s.StateHash();
-			screen.BeginPick("test-kappa-wisp");
-			screen.BackButton.EmitSignal(BaseButton.SignalName.Pressed);
-			Assert.True(!closed && screen.Picking == null && s.StateHash() == h, "Back during pick: one level only, nothing spent");
-		}
-		finally { Close(runner, screen); }
-	});
+	// YOK-159: the "Back to rest stop" button is gone (Esc / B is the one back action), so the old button probe went with it.
 
 	// T5: release leaves one special: the remaining one is locked whatever the coins.
 	[Test]
