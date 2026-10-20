@@ -366,9 +366,9 @@ theme_type_variation = &"HealthBar"
 
 [node name="SecondCard" type="PanelContainer" parent="."]
 offset_left = 600.0
-offset_top = 605.0
+offset_top = 600.0
 offset_right = 1230.0
-offset_bottom = 845.0
+offset_bottom = 872.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -455,6 +455,24 @@ mouse_filter = 2
 theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
 
+[node name="Picker" type="HBoxContainer" parent="SecondCard/Box"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Special" type="Label" parent="SecondCard/Box/Picker"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 22
+text = "Special: < Foxfire Lv 2 >"
+
+[node name="Pips" type="Label" parent="SecondCard/Box/Picker"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 22
+text = "Tries ○ ○ ○"
+
 [node name="Coming" type="Label" parent="SecondCard/Box"]
 layout_mode = 2
 mouse_filter = 2
@@ -464,11 +482,11 @@ text = ""
 
 [node name="PickLine" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 720.0
-offset_top = 164.0
-offset_right = 1310.0
-offset_bottom = 226.0
-theme_override_font_sizes/font_size = 22
+offset_left = 150.0
+offset_top = 850.0
+offset_right = 560.0
+offset_bottom = 898.0
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 
 [node name="ContinueButton" parent="." instance=ExtResource("red_button")]
@@ -676,7 +694,7 @@ mouse_filter = 2
 offset_left = 22.0
 offset_top = 402.0
 offset_right = 474.0
-offset_bottom = 470.0
+offset_bottom = 456.0
 theme_type_variation = &"CaptionLabel"
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
@@ -685,9 +703,9 @@ text = "Average health you lose per fight to this move, from your own fights so 
 [node name="Placeholder" type="Label" parent="Forecast"]
 mouse_filter = 2
 offset_left = 22.0
-offset_top = 474.0
+offset_top = 458.0
 offset_right = 474.0
-offset_bottom = 500.0
+offset_bottom = 482.0
 theme_type_variation = &"PersimmonLabel"
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
@@ -696,10 +714,21 @@ text = "PLACEHOLDER: no cost formula yet"
 [node name="LockNote" type="Label" parent="Forecast"]
 mouse_filter = 2
 offset_left = 22.0
-offset_top = 504.0
+offset_top = 538.0
 offset_right = 474.0
-offset_bottom = 566.0
+offset_bottom = 572.0
 theme_type_variation = &"CaptionLabel"
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = "Locks when you enter the Tanuki's node."
+
+[node name="TrainNote" type="Label" parent="Forecast"]
+mouse_filter = 2
+offset_left = 22.0
+offset_top = 484.0
+offset_right = 474.0
+offset_bottom = 536.0
+theme_type_variation = &"PersimmonLabel"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+text = ""
