@@ -71,8 +71,13 @@
     },
     {
       "when": "opponent_jumping",
+      "do": "normal:oni-medium-punch",
+      "weight": 40
+    },
+    {
+      "when": "opponent_jumping",
       "do": "block",
-      "weight": 30
+      "weight": 20
     }
   ],
   "rules": [
@@ -83,5 +88,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. opponent_jumping stays block. Iron-Club Charge not wired (no special in data/moves)."
+  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. Anti-air (YOK-165) kept: opponent_jumping answers oni-medium-punch 40 plus block 20; the medium punch is the single attacking answer to a jump. Iron-Club Charge not wired (no special in data/moves)."
 }
