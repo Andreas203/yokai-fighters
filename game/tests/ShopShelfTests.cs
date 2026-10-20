@@ -293,7 +293,7 @@ public static class ShopShelfTests
 				foreach (var it in screen.Items.Where(i => i.Visible))
 					Assert.True(new Rect2(Vector2.Zero, cab.Size).Encloses(new Rect2(it.Position, it.Size)), $"{it.Name} sits inside the cabinet {cab.Size}");
 				Assert.True(screen.Items.Select(i => i.Entry.Kind).SequenceEqual(screen.Items.Select(i => i.Entry.Kind).OrderBy(k => k)), "specials first, then modifiers");
-				Assert.True(screen.Tiers is >= 2 and <= 3, "two or three shelves");
+				Assert.True(screen.Tiers == 3, "the fixed plate always shows three shelves");
 				Assert.True(AllText(screen).Contains("Shelf empty") == (expect == 0), "the empty text only when empty");
 				Assert.True(Focus(screen) != null, "focus is somewhere");
 			}
@@ -348,6 +348,12 @@ public static class ShopShelfTests
 				Assert.True(cardTop >= ShopCabinet.Cavity[row].Top * k, $"item {i}: lifted talisman top {cardTop} under the cavity top {ShopCabinet.Cavity[row].Top * k}");
 				Assert.True(it.Position.X >= (ShopCabinet.ColumnX[col] - ShopCabinet.ColumnW / 2) * k - 1 && it.Position.X + ShopItem.W <= (ShopCabinet.ColumnX[col] + ShopCabinet.ColumnW / 2) * k + 1, $"item {i}: the tag fits its 202-wide column");
 				if (row < 2) Assert.True(it.Position.Y + ShopItem.TagY + ShopItem.TagH <= ShopCabinet.Cavity[row + 1].Top * k + 12, $"item {i}: the tag does not climb into the next row's talisman");
+				if (row < 2)
+				{
+					var below = screen.Items[i + 3];
+					var tagBottom = it.Position + new Vector2(ShopItem.W / 2, ShopItem.TagY + ShopItem.TagH - 2);
+					Assert.True(it._HasPoint(tagBottom - it.Position) && !below._HasPoint(tagBottom - below.Position), $"item {i}: the foot of its tag is its own, not the shelf below's (hover and click)");
+				}
 				Assert.True(it.Position.Y + ShopItem.H <= GetCabinetBase(), $"item {i}: inside the plate's base");
 			}
 			var cab = screen.GetNode<Control>("Cabinet");

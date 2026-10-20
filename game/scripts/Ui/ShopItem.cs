@@ -49,7 +49,10 @@ public partial class ShopItem : Control
 		MouseFilter = MouseFilterEnum.Stop;
 		foreach (var l in new[] { NameLabel, PriceLabel, GlyphLabel }) { l.MouseFilter = MouseFilterEnum.Ignore; if (l.GetParent() == null) AddChild(l); }
 		NameLabel.Text = e.Name; NameLabel.HorizontalAlignment = HorizontalAlignment.Center; NameLabel.ClipText = true;
-		NameLabel.AddThemeFontSizeOverride("font_size", e.Name.Length > 14 ? 14 : e.Name.Length > 11 ? 15 : 17);
+		var nameFont = NameLabel.GetThemeFont("font");
+		int nameSize = 17;
+		while (nameSize > 10 && nameFont.GetStringSize(e.Name, HorizontalAlignment.Left, -1, nameSize).X > FaceW) nameSize--;
+		NameLabel.AddThemeFontSizeOverride("font_size", nameSize);
 		NameLabel.Position = new Vector2(FaceX, TagY + 7); NameLabel.Size = new Vector2(FaceW, 20);
 		PriceLabel.Text = bought ? "SOLD · borrowed ink" : coins ? $"Need {e.Price}" : e.Price.ToString();
 		PriceLabel.AddThemeFontSizeOverride("font_size", bought ? 11 : 16); PriceLabel.ClipText = true;
@@ -58,7 +61,6 @@ public partial class ShopItem : Control
 		TypeText = e.Kind == ShopKind.Special ? "SPECIAL" : "MODIFIER";
 		GlyphLabel.Text = e.Name.Length > 0 ? e.Name[..1].ToUpperInvariant() : "?";
 		GlyphLabel.ThemeTypeVariation = "PaperLabel"; GlyphLabel.HorizontalAlignment = HorizontalAlignment.Center; GlyphLabel.VerticalAlignment = VerticalAlignment.Center;
-		GlyphLabel.AddThemeFontSizeOverride("font_size", 24);
 		GlyphLabel.AddThemeFontSizeOverride("font_size", 20);
 		GlyphLabel.Size = new Vector2(30, 30); GlyphLabel.ClipText = true;
 		GlyphLabel.Visible = !bought;
@@ -74,6 +76,10 @@ public partial class ShopItem : Control
 		GlyphLabel.Position = new Vector2(Cx - 15, CardTop + 18 - up);
 		QueueRedraw();
 	}
+
+	/// <summary>Hover and click land only on the talisman (or scroll) and the tag, not on the item's whole rect: the tag of one shelf overlaps the next shelf's rect.</summary>
+	public override bool _HasPoint(Vector2 p) =>
+		new Rect2(Cx - 36, CardTop - Lift, 72, StandY - CardTop + Lift).HasPoint(p) || new Rect2(0, TagY, W, TagH).HasPoint(p);
 
 	public override void _Ready()
 	{
