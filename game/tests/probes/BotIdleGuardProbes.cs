@@ -104,18 +104,60 @@ public static class BotIdleGuardProbes
 		Assert.True(bot.Stats.Walks > 0, "sanity: walks happened");
 	}
 
-	// Determinism: same seed same batch hash twice; 100 differs from 0.
+	// Determinism: same seed, same fight (match_hash) twice; pct 100 plays a different fight than 0.
+	// (session_hash is the run state, which can coincide when both lose row 1; the fight is what differs.)
 	[Test]
-	public static void Batch_SameSeedSameHash_DifferentPctDifferentHash()
+	public static void Batch_SameSeedSameMatchHash_DifferentPctDifferentFight()
 	{
 		string H(int pct)
 		{
 			var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = pct } };
 			using var d = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(RunHarness.PlayBatch(Content, bot, 2, 1)));
-			return d.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString()!;
+			foreach (var n in d.RootElement.GetProperty("runs")[0].GetProperty("nodes").EnumerateArray())
+				if (n.TryGetProperty("fight", out var f)) return f.GetProperty("match_hash").GetString()!;
+			return "";
 		}
-		Assert.Equal(H(50), H(50), "same seed, same hash");
-		Assert.True(H(100) != H(0), "a different idle_guard_pct plays a different run");
+		Assert.True(H(50) != "", "a fight was played");
+		Assert.Equal(H(50), H(50), "same seed, same fight");
+		Assert.True(H(100) != H(0), "a different idle_guard_pct plays a different fight");
+	}
+
+	// Anti-air takes over a guarded wait: the punch must not carry a stale forced back direction.
+	[Test]
+	public static void AntiAirTakesOverGuard_NoStaleHoldAway()
+	{
+		var (m, kit) = Fresh();
+		var b = AiView.Capture(m);
+		var cfg = Quick(wait: 1, walk: 0, pct: 100, waitTicks: 30) with { AntiAirPct = 100 };
+		var bot = new NewcomerBot(cfg, kit, 3);
+		var ground = Staged(b, 0, 100 * SimConfig.Scale, 1);
+		var jump = ground with { P2 = ground.P2 with { Airborne = true } };
+		for (int i = 0; i < 5; i++) bot.Next(ground with { Tick = i });
+		var o = bot.Next(jump with { Tick = 5 });
+		Assert.True((o.Bits & InputBits.Attacks) != 0, "anti-air pressed");
+		Assert.True((o.Bits & (InputBits.Left | InputBits.Right)) == InputBits.None, $"no stale guard direction on the punch ({o.Bits})");
+		Assert.Equal(1, bot.Stats.AntiAirs, "one anti-air");
+	}
+
+	// After a guarded plan ends, an unguarded wait must be neutral: pct 100 for the first plan only is not
+	// expressible, so use pct 50 and check every non-guard tick-run carries no direction when IdleGuards did not grow.
+	[Test]
+	public static void UnguardedWaitAfterGuardedOne_IsNeutral()
+	{
+		var (m, kit) = Fresh();
+		var b = Staged(AiView.Capture(m), 0, 100 * SimConfig.Scale, 1);
+		var bot = new NewcomerBot(Quick(wait: 1, walk: 0, pct: 50, waitTicks: 5), kit, 11);
+		int neutralPlans = 0;
+		for (int plan = 0; plan < 200; plan++)
+		{
+			int before = bot.Stats.IdleGuards;
+			var first = bot.Next(b with { Tick = plan * 5 });
+			bool guarded = bot.Stats.IdleGuards > before;
+			for (int k = 1; k < 5; k++) Assert.Equal(first.Bits, bot.Next(b with { Tick = plan * 5 + k }).Bits, $"plan {plan} tick {k}: constant within a plan");
+			if (!guarded) { neutralPlans++; Assert.Equal(InputBits.None, first.Bits, $"plan {plan}: unguarded wait is neutral"); }
+			else Assert.True(IsAway(first.Bits, 0, 100 * SimConfig.Scale), $"plan {plan}: guard is away");
+		}
+		Assert.True(neutralPlans > 0 && neutralPlans < 200, "sanity: both kinds occurred");
 	}
 
 	// P6: the guard roll and its direction come from the delayed view; a change of the opponent's side that
