@@ -180,11 +180,44 @@ public static class BotIdleGuardTests
 	}
 
 	/// <summary>
-	/// 0 plays the bot without idle guards: the first runs of the seed-1 batch at idle_guard_pct 0 play to pinned session
-	/// hashes, so a 0 roll draws nothing from the RNG. Re-pinned for YOK-166 (designer 2026-10-20, new R5 baseline): the
-	/// reactive Block now follows a cross-up, which changes 25 of the 200 runs at 0 (run 3 among them); runs 1 and 2 are
-	/// unchanged by it. (The old pins were already stale on main after the YOK-156/157 fight changes.)
+	/// A regression pin, not a proof: the first runs of the seed-1 batch at idle_guard_pct 0 play to pinned session hashes,
+	/// so any later change to how the bot plays at 0 shows. The pins were taken from this code (YOK-166, designer 2026-10-20,
+	/// new R5 baseline: the reactive Block follows a cross-up, which changes 25 of the 200 runs at 0, run 3 among them; the
+	/// old pins were already stale on main after YOK-156/157). That a 0 roll draws nothing from the RNG is proved directly by
+	/// <see cref="IdleGuard_0_DrawsNothingFromTheRng"/>.
 	/// </summary>
+	/// <summary>
+	/// YOK-155, checked directly (code-critic, YOK-166): an idle_guard_pct of 0 (written or absent) draws nothing from the
+	/// bot's RNG. With waits only, no mistakes and no threat, one decision draws exactly the weight pick at 0, and one more
+	/// (the guard roll) at 100. Compared with a SimRng of the same seed advanced by hand.
+	/// </summary>
+	[Test]
+	public static void IdleGuard_0_DrawsNothingFromTheRng()
+	{
+		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+		var view = AiView.Capture(m);
+		Assert.True(view.Phase == MatchPhase.Fighting && !view.P2.Threatening && !view.P2.Airborne, "a quiet screen: no threat, no jump");
+		string json = System.IO.File.ReadAllText(System.IO.Path.Combine(ContentPaths.DataDir, "harness", BotConfig.DefaultId + ".json"));
+		var absent = BotConfig.Parse(json.Replace("\"idle_guard_pct\": 50,", "")).Fight;
+		const uint Seed = 11;
+		uint After(int draws) { var r = new SimRng(Seed); for (int i = 0; i < draws; i++) r.NextUInt(); return r.State; }
+		foreach (var (name, fight, draws) in new[]
+		{
+			("written 0", Only(wait: 1, idleGuard: 0) with { DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 1),
+			("absent", absent with { WalkWeight = 0, NormalWeight = 0, SpecialWeight = 0, ThrowWeight = 0, JumpWeight = 0, WaitWeight = 1, MistakePct = 0, DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 1),
+			("100", Only(wait: 1, idleGuard: 100) with { DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 2),
+		})
+		{
+			var bot = new NewcomerBot(fight, BotKit.From(m.P1), Seed);
+			Assert.Equal(After(0), bot.RngState, $"{name}: nothing drawn before the first decision");
+			bot.Next(view);
+			Assert.Equal(After(draws), bot.RngState, $"{name}: one wait decision draws {draws}");
+		}
+		Assert.Equal(0, absent.IdleGuardPct, "absent reads as 0");
+	}
+
 	[Test]
 	public static void IdleGuard_0_PlaysTheOldBatch()
 	{

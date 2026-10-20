@@ -101,6 +101,8 @@ public sealed class NewcomerBot
 	public BotStats Stats { get; } = new();
 	/// <summary>YOK-157: the id of the normal the bot anti-airs with (null when Ryo has no ground normal).</summary>
 	public string? AntiAirMove => _antiAir?.Id;
+	/// <summary>Tests: the bot RNG state, to check what a roll drew (YOK-155: a 0 roll draws nothing).</summary>
+	internal uint RngState => _rng.State;
 
 	public NewcomerBot(BotFightConfig cfg, BotKit kit, uint seed)
 	{
