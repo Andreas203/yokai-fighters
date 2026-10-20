@@ -88,6 +88,8 @@ public sealed class NewcomerBot
 	readonly BotKit.Press? _antiAir;
 	int _calls, _nextDecision;
 	bool _threatRolled, _jumpRolled;
+	/// <summary>YOK-157 (designer): this fight's first jump seen under a held idle guard has passed unanswered.</summary>
+	bool _guardJumpSeen;
 	AiView? _prev;
 	readonly List<(InputBits Bits, int Ticks)> _steps = new();
 	int _step, _stepTick, _sincePress;
@@ -142,6 +144,14 @@ public sealed class NewcomerBot
 		// is free while it sees the opponent airborne, not only on the tick the jump first shows, when the bot is often
 		// mid-move. Free = no plan to finish and the press will come out (FreeToPress).
 		if (!o.Airborne) _jumpRolled = false;
+		// YOK-157, designer decision: holding an idle guard (YOK-155), the bot keeps guarding through the FIRST jump it
+		// sees in this fight (no anti-air roll for that jump); having seen the pattern, it rolls for every later jump as usual.
+		if (o.Airborne && !_jumpRolled && !_guardJumpSeen && _holdAway && (_plan is PlanKind.Wait or PlanKind.Walk))
+		{
+			_guardJumpSeen = true;
+			_jumpRolled = true;
+			Stats.GuardedJumpsLetGo++;
+		}
 		if (threat && interruptible && !_threatRolled)
 		{
 			_threatRolled = true;
@@ -336,4 +346,6 @@ public sealed class BotStats
 	public int Walks, Normals, Specials, Throws, Jumps, Blocks, AntiAirs, Mistakes;
 	/// <summary>YOK-155: wait and in-range walk plans held as a standing guard.</summary>
 	public int IdleGuards;
+	/// <summary>YOK-157: jumps let go under a held idle guard (at most one per fight).</summary>
+	public int GuardedJumpsLetGo;
 }

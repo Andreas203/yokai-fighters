@@ -133,7 +133,10 @@ public static class BotIdleGuardProbes
 		var ground = Staged(b, 0, 100 * SimConfig.Scale, 1);
 		var jump = ground with { P2 = ground.P2 with { Airborne = true } };
 		for (int i = 0; i < 5; i++) bot.Next(ground with { Tick = i });
-		var o = bot.Next(jump with { Tick = 5 });
+		// YOK-157 designer decision: the fight's first jump under an idle guard is let go; the anti-air comes on the next one.
+		bot.Next(jump with { Tick = 5 });
+		for (int i = 6; i < 9; i++) bot.Next(ground with { Tick = i });
+		var o = bot.Next(jump with { Tick = 9 });
 		Assert.True((o.Bits & InputBits.Attacks) != 0, "anti-air pressed");
 		Assert.True((o.Bits & (InputBits.Left | InputBits.Right)) == InputBits.None, $"no stale guard direction on the punch ({o.Bits})");
 		Assert.Equal(1, bot.Stats.AntiAirs, "one anti-air");

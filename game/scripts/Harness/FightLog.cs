@@ -182,34 +182,22 @@ public static class FightLogReport
 
 	/// <summary>
 	/// Summary <c>moves</c>: per side and move id, the batch totals, the fights it connected in and its share of that side's
-	/// damage (P5). Summary <c>habits</c>: per opponent profile, rolls / fired / covered / punished and punished as a percent
+	/// damage (P5), and <c>moves_by_profile</c> the same per opponent profile. Summary <c>habits</c>: per opponent profile, rolls / fired / covered / punished and punished as a percent
 	/// of the uncovered habits (P6, Y2). Both empty when the log was off.
 	/// </summary>
 	public static void WriteSummary(Utf8JsonWriter w, IEnumerable<FightRecord> fights)
 	{
 		var logged = fights.Where(f => f.Log is not null).ToList();
 		w.WriteStartObject("moves");
-		for (int side = 0; side < 2; side++)
+		WriteMoves(w, logged);
+		w.WriteEndObject();
+		// Designer (YOK-157): the same shares per opponent profile, so one opponent's dominant move is not read as all of them.
+		w.WriteStartObject("moves_by_profile");
+		foreach (var g in logged.GroupBy(f => f.Profile).OrderBy(g => g.Key, StringComparer.Ordinal))
 		{
-			var total = new SortedDictionary<string, MoveTally>(StringComparer.Ordinal);
-			var used = new Dictionary<string, int>(StringComparer.Ordinal);
-			foreach (var f in logged)
-				foreach (var (id, t) in f.Log!.Moves[side])
-				{
-					if (!total.TryGetValue(id, out var sum)) total[id] = sum = new MoveTally();
-					sum.Add(t);
-					used[id] = used.GetValueOrDefault(id) + 1;
-				}
-			long all = total.Values.Sum(t => (long)t.Damage);
-			w.WriteStartObject(Sides[side]);
-			foreach (var (id, t) in total)
-			{
-				Tally(w, id, t, open: false);
-				w.WriteNumber("fights", used[id]);
-				if (all == 0) w.WriteNull("damage_pct");
-				else w.WriteNumber("damage_pct", Math.Round(100.0 * t.Damage / all, 1, MidpointRounding.AwayFromZero));
-				w.WriteEndObject();
-			}
+			w.WriteStartObject(g.Key);
+			w.WriteNumber("fights", g.Count());
+			WriteMoves(w, g.ToList());
 			w.WriteEndObject();
 		}
 		w.WriteEndObject();
@@ -233,6 +221,34 @@ public static class FightLogReport
 			w.WriteEndObject();
 		}
 		w.WriteEndObject();
+	}
+
+	/// <summary>One object per side: per move id the totals over <paramref name="fights"/>, the fights it connected in and its share of the side's damage.</summary>
+	static void WriteMoves(Utf8JsonWriter w, List<FightRecord> fights)
+	{
+		for (int side = 0; side < 2; side++)
+		{
+			var total = new SortedDictionary<string, MoveTally>(StringComparer.Ordinal);
+			var used = new Dictionary<string, int>(StringComparer.Ordinal);
+			foreach (var f in fights)
+				foreach (var (id, t) in f.Log!.Moves[side])
+				{
+					if (!total.TryGetValue(id, out var sum)) total[id] = sum = new MoveTally();
+					sum.Add(t);
+					used[id] = used.GetValueOrDefault(id) + 1;
+				}
+			long all = total.Values.Sum(t => (long)t.Damage);
+			w.WriteStartObject(Sides[side]);
+			foreach (var (id, t) in total)
+			{
+				Tally(w, id, t, open: false);
+				w.WriteNumber("fights", used[id]);
+				if (all == 0) w.WriteNull("damage_pct");
+				else w.WriteNumber("damage_pct", Math.Round(100.0 * t.Damage / all, 1, MidpointRounding.AwayFromZero));
+				w.WriteEndObject();
+			}
+			w.WriteEndObject();
+		}
 	}
 
 	static void Tally(Utf8JsonWriter w, string id, MoveTally t, bool open = true)

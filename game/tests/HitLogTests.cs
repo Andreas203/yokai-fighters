@@ -143,6 +143,20 @@ public static class HitLogTests
 			Assert.True(moves.GetProperty(side).EnumerateObject().Any(), $"{side} has moves");
 			Assert.True(Math.Abs(pct - 100) < 1, $"{side}: damage shares add to 100% ({pct})");
 		}
+		var byProfile = s.GetProperty("moves_by_profile");
+		Assert.True(byProfile.EnumerateObject().Any(), "moves_by_profile has a row per opponent profile");
+		int profileFights = 0;
+		foreach (var pr in byProfile.EnumerateObject())
+		{
+			profileFights += pr.Value.GetProperty("fights").GetInt32();
+			foreach (string side in FightLogReport.Sides)
+			{
+				var mv = pr.Value.GetProperty(side).EnumerateObject().ToList();
+				double sum = mv.Where(x => x.Value.GetProperty("damage_pct").ValueKind == JsonValueKind.Number).Sum(x => x.Value.GetProperty("damage_pct").GetDouble());
+				Assert.True(mv.Count == 0 || sum == 0 || Math.Abs(sum - 100) < 1, $"{pr.Name}.{side}: damage shares add to 100% ({sum})");
+			}
+		}
+		Assert.Equal(Fights(Logged).Count(), profileFights, "every logged fight is in one profile row");
 		var habits = s.GetProperty("habits");
 		Assert.True(habits.EnumerateObject().Any(), "a habit row per profile fought");
 		foreach (var h in habits.EnumerateObject())
@@ -227,5 +241,55 @@ public static class HitLogTests
 		}
 		Assert.True(antiAirTicks.Count >= jumpStarts.Count - 1, $"walk-in {walkIn}: every jump the bot could see was anti-aired ({antiAirTicks.Count} of {jumpStarts.Count})");
 		Assert.True(late > 0, $"some anti-airs came after the jump's first shown tick, when the bot got free ({late})");
+	}
+
+	static AiView Staged(AiView b, int p1x, int p2x, bool p2Air, int tick) =>
+		b with { Tick = tick, P1 = b.P1 with { X = p1x, Facing = 1 }, P2 = b.P2 with { X = p2x, Facing = -1, Airborne = p2Air } };
+
+	/// <summary>
+	/// Designer decision (YOK-157): holding an idle guard (YOK-155), the bot guards through the first jump it sees in the
+	/// fight, with no anti-air roll, and anti-airs later jumps as usual. Per fight: a new bot lets its first one go again.
+	/// Without a guard up, the first jump is anti-aired.
+	/// </summary>
+	[Test]
+	public static void Bot_UnderAnIdleGuard_LetsTheFightsFirstJumpGo_ThenAntiAirs()
+	{
+		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+		var kit = BotKit.From(m.P1);
+		var b = AiView.Capture(m);
+		int far = 100 * SimConfig.Scale;
+		BotFightConfig Cfg(int guardPct) => Bot.Fight with
+		{
+			ReactionFrames = 1, DecideEvery = 1, WaitTicks = 200, WaitWeight = 1, WalkWeight = 0, NormalWeight = 0, SpecialWeight = 0,
+			ThrowWeight = 0, JumpWeight = 0, MistakePct = 0, BlockPct = 0, AntiAirPct = 100, IdleGuardPct = guardPct,
+		};
+		bool Attacks(FighterInput i) => (i.Bits & InputBits.Attacks) != 0;
+
+		for (int fight = 0; fight < 2; fight++)
+		{
+			var bot = new NewcomerBot(Cfg(100), kit, 3);
+			int t = 0;
+			for (; t < 5; t++) Assert.True(!Attacks(bot.Next(Staged(b, 0, far, false, t))), "guarded wait");
+			Assert.True(bot.Stats.IdleGuards > 0, "an idle guard is up");
+			for (int k = 0; k < 10; k++, t++)
+			{
+				var o = bot.Next(Staged(b, 0, far, true, t));
+				Assert.True(!Attacks(o), $"fight {fight}: the first jump under guard is not anti-aired (tick {t})");
+				Assert.True((o.Bits & InputBits.Left) != 0, $"fight {fight}: still holding away (tick {t}, {o.Bits})");
+			}
+			Assert.Equal(1, bot.Stats.GuardedJumpsLetGo, $"fight {fight}: one jump let go");
+			Assert.Equal(0, bot.Stats.AntiAirs, $"fight {fight}: no anti-air roll spent on it");
+			for (int k = 0; k < 5; k++, t++) bot.Next(Staged(b, 0, far, false, t));
+			Assert.True(Attacks(bot.Next(Staged(b, 0, far, true, t++))), $"fight {fight}: the second jump is anti-aired");
+			Assert.Equal(1, bot.Stats.AntiAirs, $"fight {fight}: one anti-air");
+			Assert.Equal(1, bot.Stats.GuardedJumpsLetGo, $"fight {fight}: only the first jump is let go");
+		}
+
+		var open = new NewcomerBot(Cfg(0), kit, 3);
+		for (int t = 0; t < 5; t++) open.Next(Staged(b, 0, far, false, t));
+		Assert.True(Attacks(open.Next(Staged(b, 0, far, true, 5))), "no guard up: the first jump is anti-aired");
+		Assert.Equal(0, open.Stats.GuardedJumpsLetGo, "nothing let go without a guard");
 	}
 }
