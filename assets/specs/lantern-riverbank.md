@@ -1,13 +1,13 @@
 # Lantern riverbank (V9, Kappa's stage) - stage generation spec
 
-Ticket: YOK-151. Status: **DRAFT, awaiting designer approval. No job has been run and no credits spent.** Method: `assets/specs/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (a Tripo run for the meshes is possible if the designer prefers; it would need re-costing).
+Ticket: YOK-151. Status: **APPROVED first pass, S1-S9, 69 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S9, 69 credits. Bank lanterns stay an open question; spec default kept (lanterns on the water only). Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (a Tripo run for the meshes is possible if the designer prefers; it would need re-costing).
 
 Gameplay is a flat plane (F4): the fighters stand on the bank, the river and its lanterns are the band behind them. E1: stage 3,840 units (19.2 m) wide, camera shows 1,060 to about 1,900 units.
 
 Stage mood: a calm river at deep indigo night, paper lanterns drifting on the water and a few on the bank, reeds in the foreground edge. Warm persimmon points against cool indigo, with Kappa's teal in the water.
 
 ## Palette
-Style palette: indigo `#2D3A5E` (night sky, water shade), ink `#1D1B21`, persimmon `#D8632C` (lantern glow), rice paper `#F1E8D4` (lantern paper), pine `#34483B` (reeds, far bank), brass `#B08A48` (lantern rims). **Proposed, not in `style.md` (designer to confirm):** water teal `#3E7F86`, which should match Kappa's teal hit spark (V5; that hex is also not yet in the style table). Keep the lantern glow a flat orange fill, never a bloom.
+Style palette: indigo `#2D3A5E` (night sky, water shade), ink `#1D1B21`, persimmon `#D8632C` (lantern glow), rice paper `#F1E8D4` (lantern paper), pine `#34483B` (reeds, far bank), brass `#B08A48` (lantern rims). **Confirmed 2026-10-20 and added to `style.md` (one colour with Kappa's spark teal):** water teal `#3E7F86`, which should match Kappa's teal hit spark (V5; that hex is also not yet in the style table). Keep the lantern glow a flat orange fill, never a bloom.
 
 ## Lessons from the grove, applied
 - Crop the grey letterbox on Meshy 16:9 outputs (grove: about x 110-1266, y 75-693 of 1376x768). Prompts ask for full-bleed.
@@ -73,4 +73,5 @@ Backdrop on a quad well behind the fight plane (crop the letterbox). Water strip
 3. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet.
+None yet. Ledger: approved 69, spent 0, balance not checked.
+

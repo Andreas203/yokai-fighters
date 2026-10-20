@@ -1,6 +1,6 @@
 # Snowbound shrine gate (V9, Oni's stage) - stage generation spec
 
-Ticket: YOK-150. Status: **DRAFT, awaiting designer approval. No job has been run and no credits spent.** Method: `assets/specs/bamboo-grove-dusk.md` (layers back to front: backdrop image, midground props, edge props, ground strip), style block `assets/specs/style.md`. Generator: Meshy MCP (`meshy_text_to_image`, `meshy_image_to_3d`), as the grove, because Meshy props passed there. A Tripo run is possible for the meshes if the designer prefers; the settings would then need re-costing.
+Ticket: YOK-150. Status: **APPROVED first pass, S1-S8 only, 66 credits. S9 (snowflake sprite sheet) NOT approved: the snowfall uses plain quads.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): core S1-S8, 66 credits. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/bamboo-grove-dusk.md` (layers back to front: backdrop image, midground props, edge props, ground strip), style block `assets/specs/style.md`. Generator: Meshy MCP (`meshy_text_to_image`, `meshy_image_to_3d`), as the grove, because Meshy props passed there. A Tripo run is possible for the meshes if the designer prefers; the settings would then need re-costing.
 
 Gameplay is a flat plane (F4): only the band behind the fighters needs detail. E1: the stage is 3,840 units (19.2 m) wide; the camera shows 1,060 to 1,540 units (up to about 1,900 in tall-body fights), so a 16:9 backdrop quad plus instanced props covers it, as in the grove.
 
@@ -8,7 +8,7 @@ Stage mood: a high mountain shrine gate in snowfall at blue dusk. Cold and quiet
 
 ## Palette
 
-Style palette (`style.md`): indigo `#2D3A5E` (sky and shadow side), rice paper `#F1E8D4` (snow lit side), shrine red `#B5332B` (gate), pine `#34483B` (snowy pines), ink `#1D1B21`, persimmon `#D8632C` (lantern glow only, tiny). **Proposed, not in `style.md` (designer to confirm):** snow shade blue-grey `#A9B4C8` for the shadow side of snow, so snow reads as 2-3 tone steps and not white on white. Do not use pure white.
+Style palette (`style.md`): indigo `#2D3A5E` (sky and shadow side), rice paper `#F1E8D4` (snow lit side), shrine red `#B5332B` (gate), pine `#34483B` (snowy pines), ink `#1D1B21`, persimmon `#D8632C` (lantern glow only, tiny). **Confirmed 2026-10-20 and added to `style.md`:** snow shade blue-grey `#A9B4C8` for the shadow side of snow, so snow reads as 2-3 tone steps and not white on white. Do not use pure white.
 
 ## Lessons from the grove, applied
 - Meshy 16:9 images come back with a grey letterbox border (grove: about x 110-1266, y 75-693 of 1376x768). Plan to crop; the prompt asks for "full-bleed to the edges, no border or frame" but the crop step stays in the assembly.
@@ -77,4 +77,5 @@ Backdrop on a quad well behind the fight plane (crop the letterbox). Gate mesh (
 3. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet.
+None yet. Ledger: approved 66, spent 0, balance not checked.
+

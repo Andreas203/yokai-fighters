@@ -1,13 +1,13 @@
 # Tanuki's tea house (V9, final boss stage) - stage generation spec
 
-Ticket: YOK-152. Status: **DRAFT, awaiting designer approval. No job has been run and no credits spent.** Method: `assets/specs/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (Tripo for the meshes possible; would need re-costing).
+Ticket: YOK-152. Status: **APPROVED first pass, S1-S10, 60 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S10, 60 credits. Seasons change on beats, round start only (option B); the wiring is a gameplay follow-up, not asset-smith's; art cost is unchanged. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (Tripo for the meshes possible; would need re-costing).
 
 Gameplay is a flat plane (F4). E1: stage 3,840 units (19.2 m) wide; camera shows 1,060 to about 1,900 units. The Tanuki fights as Ryo with Ryo's model (T0), so the stage must hold two Ryo-shaped silhouettes (indigo coats): keep the back wall warm and light so indigo reads against it.
 
 Stage mood: a warm lamplit tea house interior, wooden beams, tatami floor, a row of tall paper screens along the back wall whose scenery changes between the four seasons. Cheerful and slightly too welcoming (the first-loss card: "the paper screens fold shut").
 
 ## Palette
-Style palette: rice paper `#F1E8D4` (screens, walls), persimmon `#D8632C` (lamp glow, autumn), brass/straw `#B08A48` (tatami, beams), shrine red `#B5332B` (accents), pine `#34483B` (summer leaves), indigo `#2D3A5E` (shadow tones, night-blue winter sky), ink `#1D1B21`. Tanuki brown `#6E5A48` is PROPOSED in `assets/specs/tanuki.md`, not confirmed; used here only for beams and furniture. **Season accents (proposed, not in `style.md`):** spring blossom pink `#E8A6B0`, winter snow shade `#A9B4C8` (same as YOK-150). Designer to confirm.
+Style palette: rice paper `#F1E8D4` (screens, walls), persimmon `#D8632C` (lamp glow, autumn), brass/straw `#B08A48` (tatami, beams), shrine red `#B5332B` (accents), pine `#34483B` (summer leaves), indigo `#2D3A5E` (shadow tones, night-blue winter sky), ink `#1D1B21`. Tanuki brown `#6E5A48` is confirmed (2026-10-20, in `style.md`); used here only for beams and furniture. **Season accents (confirmed 2026-10-20, in `style.md`):** spring blossom pink `#E8A6B0`, winter snow shade `#A9B4C8` (same as YOK-150). Designer to confirm.
 
 ## Design: how the seasons work (generation side)
 The back wall is one backdrop image with the screen openings left as flat blank rice-paper panels. Four season images are generated for those panels (spring, summer, autumn, winter) with identical layout, so Godot can cross-fade between them on the same quad. The screens carry the only motion in the stage; nothing in the textures is animated or baked as a flicker. Timing and trigger are logic (see the open question), not art, and the art cost is the same either way.
@@ -87,7 +87,7 @@ Backdrop on a quad behind the fight plane (crop the letterbox). The four season 
 - Look consistent with Ryo, Kitsune and the grove once the outline pass is applied.
 - Licence: plan tier unknown, flagged (AM5, YOK-115).
 
-## OPEN QUESTION for the designer (not decided here)
+## DECIDED 2026-10-20 (was an open question): option B, seasons change on beats, round start only. Gameplay follow-up wires it; kept below for the record.
 **Do the screens flicker through the seasons all fight long, or only on beats?**
 
 | Option | What it means | Consequence I can see |
@@ -102,4 +102,5 @@ Other open points:
 2. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet.
+None yet. Ledger: approved 60, spent 0, balance not checked.
+
