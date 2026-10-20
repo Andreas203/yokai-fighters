@@ -122,19 +122,33 @@ public sealed class ProfileAi
 		}
 
 		// Event reactions: each weight is a percent rate per occurrence (anti-air rate, block habit...).
+		// YOK-165, Y4: with a tier jump-punish rate, the jump's attacking answers are one roll at that rate (JumpPunish),
+		// taken where the first opponent_jumping behaviour sits in the list; its other answers roll by weight after a miss.
 		if (_plan is not { Habit: true })
+		{
+			int? jumpRate = rose[(int)Observation.OpponentJumping] ? view.JumpPunishPct(Self) : null;
+			bool jumpRolled = false;
 			foreach (var b in Profile.Behaviours)
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
+				if (jumpRate is { } rate && b.When == Observation.OpponentJumping)
+				{
+					if (!jumpRolled)
+					{
+						jumpRolled = true;
+						if (JumpPunish(rate, view, tick) is { } punish) { _plan = punish; break; }
+					}
+					if (b.Do.IsMove) continue; // the attacks had their one roll
+				}
 				int roll = _rng.Next(100);
-				int pct = RateOf(b, view);
-				if (roll >= pct) continue;
+				if (roll >= b.Weight) continue;
 				var p = Build(b.Do, view, tick, false, 0);
-				Record(tick, view, p is null ? "unavailable" : "react", b.When, b.Do.ToString(), roll, pct);
+				Record(tick, view, p is null ? "unavailable" : "react", b.When, b.Do.ToString(), roll, b.Weight);
 				if (p is null) continue;
 				_plan = p;
 				break;
 			}
+		}
 
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
@@ -142,12 +156,35 @@ public sealed class ProfileAi
 	}
 
 	/// <summary>
-	/// An event behaviour's percent rate. YOK-165, Y4: a move answering <c>opponent_jumping</c> (the anti-air) uses the
-	/// fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) when the tier names one;
-	/// a guard answer (block) and every other event keep the profile's weight.
+	/// YOK-165, Y4: the fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) is the
+	/// absolute chance the AI answers a jump it sees with an attack (designer 2026-10-20: elders and the Tanuki 100,
+	/// apprentice and yokai 50). One draw at that rate; on a hit, a weighted pick among the profile's attacking answers
+	/// to <c>opponent_jumping</c> (a second draw only when there are several). Null, so the other answers (block...)
+	/// roll by weight, on a miss, when the profile has no attacking answer (no draw at all), or when the pick is unavailable.
 	/// </summary>
-	private int RateOf(Behaviour b, AiView view) =>
-		b.When == Observation.OpponentJumping && b.Do.IsMove && view.JumpPunishPct(Self) is { } jump ? jump : b.Weight;
+	private Plan? JumpPunish(int rate, AiView view, int tick)
+	{
+		int total = 0, count = 0;
+		Behaviour? pick = null;
+		foreach (var b in Profile.Behaviours)
+			if (b.When == Observation.OpponentJumping && b.Do.IsMove) { total += b.Weight; count++; pick ??= b; }
+		if (pick is null) return null;
+		int roll = _rng.Next(100);
+		if (roll >= rate) return null;
+		if (count > 1)
+		{
+			int w = _rng.Next(total);
+			foreach (var b in Profile.Behaviours)
+			{
+				if (b.When != Observation.OpponentJumping || !b.Do.IsMove) continue;
+				if (w < b.Weight) { pick = b; break; }
+				w -= b.Weight;
+			}
+		}
+		var p = Build(pick.Do, view, tick, false, 0);
+		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
+		return p;
+	}
 
 	/// <summary>YOK-165: roll the pre-emptive guard (no draw at all when <see cref="GuardPct"/> is 0).</summary>
 	private bool RollGuard(int tick, AiView view, string trigger)

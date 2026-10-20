@@ -283,38 +283,68 @@ public static class AiGuardTests
 		Assert.Equal((int?)100, seen.GetValueOrDefault("tanuki"), "tanuki");
 	}
 
-	/// <summary>P1 jumps every 90 ticks against an AI whose profile anti-airs at 100 and blocks jumps at 100. The tier
-	/// rate replaces the anti-air's weight only: 0 never anti-airs, 100 answers every jump, 50 some; the block keeps its own.</summary>
-	[Test]
-	public static void JumpPunishPct_SetsTheAntiAirRate_NotTheBlock()
+	/// <summary>P1 jumps every 90 ticks; counts the AI's attacking and blocking answers to those jumps.</summary>
+	static (int Jumps, int Attacks, int Blocks, int Medium) Jumps(BehaviourProfile p, int? pct, uint seed = 11)
 	{
-		var anti = BehaviourProfile.Parse(Json("mid", """{ "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 100 }"""));
-		var block = BehaviourProfile.Parse(Json("mid", """{ "when": "opponent_jumping", "do": "block", "weight": 100 }"""));
-		(int jumps, int answers) Run(BehaviourProfile p, int? pct)
+		var m = NewMatch(c => c with { P2JumpPunishPct = pct, P1MaxHealth = 1_000_000 });
+		Place(m, 400);
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), seed, 15, guardPct: 0) { Log = new() };
+		int jumps = 0; bool air = false;
+		for (int t = 1; t <= 9000 && m.Phase != MatchPhase.Over; t++)
 		{
-			var m = NewMatch(c => c with { P2JumpPunishPct = pct });
-			Place(m, 400);
-			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 11, 15, guardPct: 0) { Log = new() };
-			int jumps = 0; bool air = false;
-			for (int t = 1; t <= 3600 && m.Phase != MatchPhase.Over; t++)
-			{
-				m.Step(t % 90 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
-				if (m.P1.Airborne && !air) jumps++;
-				air = m.P1.Airborne;
-			}
-			return (jumps, ai.Log!.Count(d => d.Trigger == "opponent_jumping" && d.Kind is "react" or "unavailable"));
+			m.Step(t % 90 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
+			if (m.P1.Airborne && !air) jumps++;
+			air = m.P1.Airborne;
 		}
-		var (j0, a0) = Run(anti, 0);
-		var (j100, a100) = Run(anti, 100);
-		var (j50, a50) = Run(anti, 50);
-		var (jn, an) = Run(anti, null);
-		Assert.True(j0 >= 30, $"P1 jumped ({j0})");
-		Assert.Equal(0, a0, "rate 0: never anti-airs");
-		Assert.True(a100 >= j100 - 2, $"rate 100: answers every jump seen ({a100} of {j100})");
-		Assert.True(a50 > j50 / 5 && a50 < j50 * 4 / 5, $"rate 50: some ({a50} of {j50})");
-		Assert.True(an >= jn - 2, $"no tier rate: the profile's weight 100 ({an} of {jn})");
-		var (jb, ab) = Run(block, 0);
-		Assert.True(ab >= jb - 2, $"a block answer keeps its weight 100 at tier rate 0 ({ab} of {jb})");
+		var answers = ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react").ToList();
+		return (jumps, answers.Count(d => d.Action.StartsWith("normal:")), answers.Count(d => d.Action == "block"), answers.Count(d => d.Action == "normal:test-ryo-medium-punch"));
+	}
+
+	/// <summary>A patient-style profile: the block listed first (60), two attacking answers (30 and 10).</summary>
+	static BehaviourProfile Mixed => BehaviourProfile.Parse(Json("mid",
+		"""{ "when": "opponent_jumping", "do": "block", "weight": 60 }, """ +
+		"""{ "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 30 }, """ +
+		"""{ "when": "opponent_jumping", "do": "normal:test-ryo-medium-punch", "weight": 10 }"""));
+
+	/// <summary>The tier rate is the absolute chance a jump is answered with an attack (designer 2026-10-20): an elder
+	/// (100) with a block-weighted profile punishes every jump; the block only rolls after a miss.</summary>
+	[Test]
+	public static void JumpPunish_Elder100_PunishesEveryJump_DespiteTheBlock()
+	{
+		var (jumps, attacks, blocks, medium) = Jumps(Mixed, 100);
+		Assert.True(jumps >= 80, $"P1 jumped ({jumps})");
+		Assert.True(attacks >= jumps - 2, $"elder 100: every jump seen is answered with an attack ({attacks} of {jumps})");
+		Assert.Equal(0, blocks, "elder 100: the block never comes first");
+		Assert.True(medium > 0 && medium * 100 < attacks * 45, $"one roll, then a weighted pick 30:10 ({medium} medium punches of {attacks})");
+	}
+
+	[Test]
+	public static void JumpPunish_Apprentice50_AboutHalf_MissesGoToTheBlock()
+	{
+		int jumps = 0, attacks = 0, blocks = 0;
+		foreach (uint seed in new uint[] { 11, 12, 13 })
+		{
+			var r = Jumps(Mixed, 50, seed);
+			jumps += r.Jumps; attacks += r.Attacks; blocks += r.Blocks;
+		}
+		Assert.True(jumps >= 240, $"P1 jumped ({jumps})");
+		Assert.True(attacks * 100 >= jumps * 40 && attacks * 100 <= jumps * 60, $"apprentice 50: about half the jumps punished ({attacks} of {jumps})");
+		Assert.True(blocks > 0 && attacks + blocks <= jumps + 6, $"a miss falls to the block at its own weight ({blocks} blocks)");
+	}
+
+	/// <summary>No tier rate: the profile's weights decide, in list order, as before YOK-165 (block 60 first, so most
+	/// jumps are blocked and few punished). Rate 0 never punishes; a profile with no attacking answer draws nothing extra.</summary>
+	[Test]
+	public static void JumpPunish_NullKeepsTheProfileWeights_ZeroNeverPunishes()
+	{
+		var (jn, an, bn, _) = Jumps(Mixed, null);
+		Assert.True(bn > an && an * 100 < jn * 35, $"null: the old weights (block 60 first): {an} attacks, {bn} blocks of {jn}");
+		var (j0, a0, b0, _) = Jumps(Mixed, 0);
+		Assert.True(a0 == 0 && b0 > 0, $"rate 0: never punishes, still blocks ({b0} of {j0})");
+		var blockOnly = BehaviourProfile.Parse(Json("mid", """{ "when": "opponent_jumping", "do": "block", "weight": 100 }"""));
+		var (jb, ab, bb, _) = Jumps(blockOnly, 100);
+		Assert.True(ab == 0 && bb >= jb - 2, $"no attacking answer: nothing to punish with, the block keeps its weight ({bb} of {jb})");
+		Assert.True(Jumps(blockOnly, 100) == Jumps(blockOnly, null), "and no extra draw: identical to no tier rate");
 	}
 
 	// --- Replays ------------------------------------------------------------------------------------

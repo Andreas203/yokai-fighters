@@ -27,7 +27,7 @@
         "properties": {
           "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 },
           "damage_dealt_pct": { "description": "YOK-156, Y4: percent of its move damage the tier's opponent deals to Ryo, rounded down per hit (the apprentice deals half: 50). Left out = 100.", "type": "integer", "minimum": 1, "maximum": 100 },
-          "jump_punish_pct": { "description": "YOK-165, Y4: percent of Ryo's jumps the tier's opponent answers with its anti-air (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100). It replaces the rate of every attacking 'opponent_jumping' behaviour in the profile; a guard answer (block) keeps its own weight. Left out = the profile's own weights.", "type": "integer", "minimum": 0, "maximum": 100 }
+          "jump_punish_pct": { "description": "YOK-165, Y4: percent of Ryo's jumps the tier's opponent answers with its anti-air (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100). The absolute chance a jump the AI sees is answered with an attack: one roll at this rate, then a weighted pick among the profile's attacking 'opponent_jumping' answers; on a miss its other answers (block...) roll by their own weights. Left out = the profile's own weights.", "type": "integer", "minimum": 0, "maximum": 100 }
         }
       }
     },
