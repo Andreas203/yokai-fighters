@@ -30,7 +30,7 @@
       "placeholders": [],
       "variants": [
         "Back again! You've been busy. Your hands look well-practised.",
-        "Welcome, welcome. I've kept the best shelf for you.",
+        "Welcome, welcome. I've set out a fresh shelf for you.",
         "You fight so beautifully now. Do show me again, sometime."
       ]
     },
@@ -56,7 +56,7 @@
         "A few more coins, though.",
         "Not yet yours, friend."
       ],
-      "notes": "{card_text} is the item card block from data/moves or data/modifiers, inserted verbatim (A12); lead-ins and tags never alter or paraphrase it. Order: lead-in (with card_text), then modifier tag, then unaffordable tag when they apply. Lead-ins at most 6 words excluding {card_text}; tags at most 6 words."
+      "notes": "{card_text} is only the plain-language line of the item card block (A12: frame data sits behind a toggle and is never spoken), taken from the card block from data/moves or data/modifiers, inserted verbatim (A12); lead-ins and tags never alter or paraphrase it. Order: lead-in (with card_text), then modifier tag, then unaffordable tag when they apply. Lead-ins at most 6 words excluding {card_text}; tags at most 6 words."
     },
     "bought_special": {
       "trigger": "Ryo buys a special (R6)",
@@ -116,9 +116,9 @@
       "trigger": "No items left on the shelf",
       "placeholders": [],
       "variants": [
-        "All gone! You've cleaned me out. Almost.",
+        "All gone! You've cleaned me out.",
         "Nothing left but dust and good manners.",
-        "Empty shelves. Next time, perhaps something rarer."
+        "Empty shelves. Come back when the road has given you more."
       ]
     },
     "leaving": {
