@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Godot;
+using YokaiFighters.Audio;
 using YokaiFighters.Sim;
+using YokaiFighters.Ui;
 
 namespace YokaiFighters.Fight;
 
@@ -61,6 +63,24 @@ public partial class FightScene : Node3D
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
+	private static readonly string[] HitClipPaths =
+	{
+		"res://sound/hits/hit_01.wav",
+		"res://sound/hits/hit_02.wav",
+		"res://sound/hits/hit_03.wav",
+		"res://sound/hits/hit_04.wav",
+		"res://sound/hits/hit_05.wav",
+		"res://sound/hits/hit_06.wav",
+		"res://sound/hits/hit_07.wav",
+		"res://sound/hits/hit_08.wav",
+		"res://sound/hits/hit_09.wav",
+	};
+	private readonly AudioStreamPlayer[] _hitPlayers = new AudioStreamPlayer[3];
+	private AudioStreamWav[] _hitClips = System.Array.Empty<AudioStreamWav>();
+	private Match? _hitMatch;
+	private int _nextHitPlayer;
+	private int _nextHitClip;
+	private const float HitVolumeDb = 6f;
 	/// <summary>V3 (YOK-20): started by Match.Impact, stepped once per sim tick.</summary>
 	public ScreenShake Shake { get; } = new(SimConfig.Default.ShakeFrames);
 
@@ -186,6 +206,7 @@ public partial class FightScene : Node3D
 	public override void _Ready()
 	{
 		if (GetNodeOrNull(FightEditorPreview.NodeName) is { } preview) { RemoveChild(preview); preview.Free(); } // YOK-144: the editor-only preview never exists at runtime
+		MusicPlayer.Instance?.PlayBattleMusic();
 		SetUpRun(); // YOK-48: a fresh run, the first fight built from it
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
@@ -200,6 +221,8 @@ public partial class FightScene : Node3D
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
+		SetUpHitSounds();
+		AttachHitSounds(Match);
 		SetUpAi(); // YOK-27
 		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
@@ -209,6 +232,58 @@ public partial class FightScene : Node3D
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
 		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
 		Render();
+	}
+
+	public override void _ExitTree()
+	{
+		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		MusicPlayer.Instance?.PlayMenuMusic();
+	}
+
+	private void SetUpHitSounds()
+	{
+		var clips = new List<AudioStreamWav>(HitClipPaths.Length);
+		foreach (string path in HitClipPaths)
+		{
+			AudioStreamWav? clip = ResourceLoader.Load<AudioStreamWav>(path);
+			if (clip == null)
+			{
+				GD.PushWarning($"FightScene: could not load hit sound {path}");
+				continue;
+			}
+			clips.Add(clip);
+		}
+		_hitClips = clips.ToArray();
+
+		for (int i = 0; i < _hitPlayers.Length; i++)
+		{
+			var player = new AudioStreamPlayer
+			{
+				Name = $"HitSound{i + 1}",
+				Bus = MenuSettings.SfxBus,
+				ProcessMode = ProcessModeEnum.Pausable,
+				VolumeDb = HitVolumeDb,
+			};
+			_hitPlayers[i] = player;
+			AddChild(player);
+		}
+	}
+
+	private void AttachHitSounds(Match match)
+	{
+		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		_hitMatch = match;
+		_hitMatch.Hit += OnHit;
+	}
+
+	private void OnHit(Match _, HitEvent hit)
+	{
+		if (hit.Blocked || _hitClips.Length == 0) return;
+
+		var player = _hitPlayers[_nextHitPlayer++ % _hitPlayers.Length];
+		player.Stop();
+		player.Stream = _hitClips[_nextHitClip++ % _hitClips.Length];
+		player.Play();
 	}
 
 	public override void _Process(double delta)
