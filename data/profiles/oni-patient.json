@@ -68,5 +68,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Anti-air (YOK-165): answers opponent_jumping with oni-medium-punch (8f startup, club swing y170-270), the single attacking answer so jump_punish_pct sets the rate. Oni patient (Y2): walks in, punishes whiffs. The whiff punish is a dash_forward stand-in for the Iron-Club Charge. PROVISIONAL: data/moves/ has no Oni normals or Iron-Club Charge yet (clips blocked on concept art), so this uses only generic actions (walk, dash, jump, block, throw) and cannot strike at close range. When oni-* normals and special:iron-club-charge land, add close-range pokes and swap the whiff punish to the charge. No ids invented."
+  "notes": "Anti-air (YOK-165): answers opponent_jumping with oni-medium-punch (8f startup, club swing y170-270), the single attacking answer so jump_punish_pct sets the rate. Oni patient (Y2): walks in, punishes whiffs; the whiff punish is a dash_forward stand-in for the Iron-Club Charge. Oni normals now exist in data/moves but this profile still uses only generic actions plus the anti-air; close-range pokes and the Iron-Club Charge are not wired in yet."
 }
