@@ -97,7 +97,7 @@ mouse_filter = 2
 offset_left = 590.0
 offset_top = 562.0
 offset_right = 1240.0
-offset_bottom = 890.0
+offset_bottom = 894.0
 
 [node name="ForecastHanger" type="Control" parent="."]
 mouse_filter = 2
@@ -302,7 +302,7 @@ text = "Free heal"
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "Merchant's gift · costs nothing"
 
 [node name="Tag" type="Panel" parent="FreeCard/Box/Top"]
@@ -368,7 +368,7 @@ theme_type_variation = &"HealthBar"
 offset_left = 600.0
 offset_top = 605.0
 offset_right = 1230.0
-offset_bottom = 847.0
+offset_bottom = 845.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -428,7 +428,7 @@ text = "Browse the shop"
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "Spend coins instead"
 
 [node name="Tag" type="Panel" parent="SecondCard/Box/Top"]

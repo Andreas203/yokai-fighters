@@ -21,10 +21,11 @@ public partial class RestStopCapture : Node
 		await Shot(dir, "rest_stop_dojo" + suffix, "dojo", false);
 		await Shot(dir, "rest_stop_used" + suffix, "merchant", true);
 		await Shot(dir, "rest_stop_dojo_trial" + suffix, "dojo", false, withTrial: true);
+		await Shot(dir, "rest_stop_dojo_trial_focus" + suffix, "dojo", false, withTrial: true, focusSecond: true);
 		GetTree().Quit();
 	}
 
-	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take, bool withTrial = false)
+	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take, bool withTrial = false, bool focusSecond = false)
 	{
 		string md = ContentPaths.Data("map");
 		var s = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
@@ -53,6 +54,7 @@ public partial class RestStopCapture : Node
 		var screen = GD.Load<PackedScene>("res://scenes/ui/rest_stop.tscn").Instantiate<RestStopScreen>();
 		screen.BindRun(s, ControlScheme.Kihon);
 		AddChild(screen);
+		if (focusSecond) { await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); screen.SecondCard.GrabFocus(); }
 		if (take) screen.TakeFree();
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
