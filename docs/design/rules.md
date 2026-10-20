@@ -76,11 +76,11 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E14** Meter (C5 reading): attacker +6 on hit, +3 when blocked; defender +3 per hit taken, nothing for blocking. Hitstop (V2) also applies on block. Meter resets to 0 each fight; only health carries over (C1).
 - **E15** Generated rig limits: strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists). The generic throw clip is the Meshy "Step_Forward_and_Push" (preset 259) take, head-trimmed from tick 30, with its forward step in move data: an F5 substitute after three library grabs failed.
 - **E16** EX specials (C5): the special's motion + any two punches or any two kicks, the second button up to 2 ticks late (the special turns into EX in place); costs the special's meter from data (1 bar). LP+LK stays the throw (E12) and wins. Without enough meter the plain version comes out and nothing is spent.
-- **E17** Levels and projectiles: Lv 3 keeps the Lv 2 step and adds its evolution. One projectile per fighter on screen unless the move's data allows more; a second input gives the button's normal instead. Equal projectiles cancel out; a projectile with more hits beats a weaker one and keeps its remaining hits. Throws ignore throw-invulnerability data (E12).
+- **E17** Levels and projectiles: Lv 3 keeps the Lv 2 step and adds its evolution. One projectile per fighter on screen unless the move's data allows more; a second input gives the button's normal instead. Equal projectiles cancel out; a projectile with more hits beats a weaker one and keeps its remaining hits. Throws ignore throw-invulnerability data (E12). Slippery Skin is not throw-invulnerability: it breaks a throw (AM12).
 - **E18** Kihon (K2): Special + direction picks slots A–D (neutral A, forward B, back C, down D; down-diagonals D, up-diagonals as their horizontal, up A); Special beats jump. K1 motions also work in Kihon, at 100% damage. Kihon EX: Special + direction + one extra punch or kick within 2 ticks. An attack pressed before Special gives its normal. Both players default to Kihon in the demo; F4 toggles P1's scheme in debug builds.
 - **E19** Air normals (E11): any punch gives Ryo's air punch, any kick his air kick; one per jump; touchdown ends the move into 3 landing frames (per-move override), during which the fighter can't block and can be thrown. Facing is fixed for the whole jump.
 - **E20** Reward draft (A2–A4, A7, A12): percentage effects round to the nearest whole number, so Fox's Patience's +25% meter on block turns the 3 of C5 into 4. The UPGRADE card names one owned special (chosen by the run's seed); the player picks only a MODIFIER's target. A special that already carries a modifier can't take another. If the pool can't fill three cards, extra NEW or MODIFIER cards fill in, otherwise fewer cards show. Card text lives in each special's or modifier's `card` block; there is no separate `data/cards/` folder.
-- **E21** Lv 2 steps (A4, designer decision YOK-41): Spirit Wave recovers 4 frames faster; Rising Talisman recovers 6 frames faster. Both are relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1).
+- **E21** Lv 2 steps (A4, designer decision YOK-41): Spirit Wave recovers 4 frames faster; Rising Talisman recovers 6 frames faster. Both are relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1). Every other special gets one step: movesmith proposes one step per remaining special and the designer approves it (proposal in progress on branch YOK-36-lv2-steps; decided 2026-10-20).
 - **E22** Behaviour-profile AI (Y2, Y4, P6): the AI sees a read-only snapshot of the screen, its own fighter included, delayed by its reaction frames (apprentice 30, yokai 22, elders 18, Tanuki 15). Habits are data: trigger → action → chance, and `tell_cover_pct` hides the tell some of the time (a per-tier difficulty knob, default 0). First-pass spacing: close under 250 units, mid under 600; neutral spacing weight 40; walk plans 15 ticks, block plans 20. The standard-tier AI doesn't use EX or burst yet.
 - **E23** Demo flow (YOK-39): each new run draws a new reward-draft seed (duel n uses seed + n, so a replay of the run offers the same cards). Restart keeps the temperament chosen in the debug menu (F9). Replaying a finished duel with R is debug-only, so players can't skip the reward. The "demo complete" text is a story card.
 - **E24** Wake-up (C4, E4): after the 40-frame knockdown the fighter has a 28-frame wake-up: invulnerable, can't be thrown, can't act. The model rolls onto its front over the first 10 frames, then plays the get-up. Total down time is 68 frames. A held jump leaves on the first actionable frame (the Kitsune's habit, Y2).
@@ -123,7 +123,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 | Fox Mirage ◆ | Kitsune, rare | 18/—/10 | 0 | Teleport behind opponent | Mirage Feint: decoy absorbs one hit |
 | Iron-Club Charge | Oni, common | 16/6/24 | 110 | Forward charge, 1-hit armour | Crushing Charge: wall bounce |
 | Oni Quake ◆ | Oni, rare | 22/5/26 | 90 | Ground pound, hits low | Aftershock: second quake 30f later |
-| River Grab | Kappa, common | 6/2/30 | 130 | Command grab (generic throw) | Whirlpool Grab: +50% range |
+| River Grab | Kappa, common | 6/2/30 | 130 | Command grab (generic throw); counts as a throw (C4, R7) for trials and cancels | Whirlpool Grab: +50% range |
 | Shell Spin ◆ | Kappa, rare | 10/18/20 | 80 | Spins through projectiles | Torrent Spin: travels forward, multi-hit |
 
 ### Modifiers
@@ -140,10 +140,10 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 | Rage Ember ◆ | Oni | +15% damage while Ryo < 30% health |
 | Club Momentum ◆ | Oni | Pushes opponent 50% further toward the corner |
 | Brute Recovery ◆ | Oni | −4 recovery frames on block |
-| Slippery Skin | Kappa | Throw-invulnerable during startup |
+| Slippery Skin | Kappa | Automatically breaks a throw attempted during this move's startup: a clash, no damage, like throw vs throw [AM12] |
 | River Pull | Kappa | Pulls opponent one step closer on hit |
 | Cucumber Gift ◆ | Kappa | Heals 2% max health on hit |
-| Sumo Stance ◆ | Kappa | Hold to charge for +20% damage |
+| Sumo Stance ◆ | Kappa | Hold the button before the special: the longer the hold, the faster its dash, up to a maximum speed [AM11] |
 
 ## Y — Yokai
 
@@ -161,13 +161,15 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
   | Opponent | Reaction | Damage dealt per duel (newcomer / average) |
   |---|---|---|
-  | Apprentice (row 1) | 30f | 110 / 80 (half damage) |
+  | Apprentice (row 1) | 30f | 110 / 80 (half damage per hit) |
   | Yokai (rows 2, 3, 6) | 22f | 220 / 160 |
   | Elder (rows 5, 8) | 18f | 280 / 200 |
   | Tanuki (boss) | 15f | 350 / 250 |
 
+  The damage-per-duel figures are harness targets only, not rules the game enforces. Half damage (apprentice, and the Y6 guided first fight) floors per hit. Enemy jump punishing scales by tier, from per-tier data: apprentice and yokai punish a jump 50% of the time; elders and the Tanuki 100%. The opponent AI may guard pre-emptively. The test bot's reactive Block follows cross-ups, with a new R5 baseline. The bot has several skill levels across runs, and `idle_guard` depends on the level. A habit's punish window is the next 3 hits; a KO tallies the full hit's damage. (Decided 2026-10-20: YOK-165, 166, 169, 170.)
+
 - **Y5** Each Tanuki win (max 3) makes yokai react 1 frame faster and pushes them toward aggressive.
-- **Y6** The apprentice fight is guided: prompts teach blocking, throw, throw break, meter, burst and one cancel.
+- **Y6** The apprentice fight is guided (and at half damage, Y4): prompts teach blocking, throw, throw break, meter, burst and one cancel.
 
 ## T — The Tanuki copy rule (never cut)
 
@@ -177,7 +179,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20). In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
 
 ## R — The run
 
@@ -186,8 +188,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).
-- **R6** Merchant: free heal 25% **or** shop. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
-- **R7** Dojo: rest (heal 30%) **or** training trial. Trial heals 15% either way, levels the special if landed within 3 attempts. Trials are hand-authored and Kihon-completable.
+- **R6** Merchant: free heal 25% of max health **or** shop. The shop shows items on a physical shelf, 3 per shelf; a bought item rolls up in place; the merchant has no idle line. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
+- **R7** Dojo: rest (heal 30% of max health) **or** training trial. Trial heals 15% either way, levels the special if landed within 3 attempts. Trials are hand-authored and Kihon-completable.
 - **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead. No cap on coins held, for now [AM4].
 - **R9** Target run length 25–40 minutes for a first-time player.
 
@@ -228,16 +230,11 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## Open questions (designer decides; do not invent answers)
 
-- Exact Lv 2 tuning step for each special other than Spirit Wave and Rising Talisman (E21).
 - Generation credit spend and sound/music spend.
 - Generator plan tier (commercial licence for generated output).
 - Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.
-- Merchant heal 25% and dojo rest 30%: a share of max health (as built: flat 250 and 300) or of something else (R6, R7).
 - Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
-- The shop's shelf: how many items, and how they are picked (R6). Whether binding an elder counts as binding its yokai for the shop.
-- The formula behind the forecast's "expected cost" (T6), and what the first rest stop shows before any fight data exists.
-- Slippery Skin ("throw-invulnerable during startup", GDD modifier table) against E12/E17 as written, which would make it do nothing.
-- What "holding charge" means for Sumo Stance without a new animation (A10, E7).
+- The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked. Whether binding an elder counts as binding its yokai for the shop.
+- What the Tanuki does when it copies a charged special such as Sumo Stance (AM11, T4).
 - In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
-- Whether a command grab (River Grab) counts as a throw or a hit, for trials and cancels (C4, R7).

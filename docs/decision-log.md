@@ -164,25 +164,12 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-17 meta-unlock deadline (designer): **extended, no cut.** YOK-89 now has until 2026-10-21 (the balance gate) to merge; if it hasn't, the meta-unlock layer is cut and YOK-86 canceled.
 
 ## Waiting on the designer
-- **YOK-146 (Tripo Ryo):**
-  - 54k triangles against the 20k budget (decimate by script, or accept).
-  - The deep-crouch flag from the charm and pouch (accept, or a take with them as separate meshes).
-  - Whether to commit the raw `Ryo.glb`.
-  - The gameplay branch must load Ryo's clips from `clips/ryo-tripo/` while the Meshy fighters keep `clips/ryo/`.
+- **YOK-146 (Tripo Ryo):** decided 2026-10-20, see Backlog refinement 2026-10-20. Waiting only on the deep-crouch retake route.
 - **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur.
 - **YOK-36 open rules:**
-  - Lv 2 steps for the other specials.
   - Credit and sound spend, plan tier and licence.
   - Practice-mode trials.
-  - From PR #105:
-    - Heal and rest percentages against the flat 250/300 as built.
-    - Leaving a rest stop without choosing, and healing at full health.
-    - The shop shelf's size and how its items are picked.
-    - The forecast's expected-cost formula.
-    - Slippery Skin against E12/E17.
-    - Sumo Stance's "holding charge".
-    - Which level the Tanuki fight shows for the copied move.
-    - Whether River Grab counts as a throw or a hit.
+  - From PR #105: all answered 2026-10-20 except the shop's item count (balance decides), whether Ryo may leave a rest stop without choosing, healing at full health, and the level the Tanuki fight shows for the copied move.
 - **YOK-102:** run Astra from `docs/design/characters/astra-brief.md`; palette hexes, Oni/Kappa heights, guise fallbacks (G1, G2) and the Meshy licence. 0 Meshy credits approved; mesh lines (96 first pass) wait for the sheets.
 - **YOK-103 and YOK-89:**
   - Whether to allow a 4th critic round (the `-4.0` fix at `RewardDraft.cs:166-167`).
@@ -199,7 +186,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Ryo's HUD portrait.
   - Worktree and screenshot cleanup.
   - A hand play-through with a pad.
-- **YOK-71:** fonts. Options are a licensed brush font plus a serif, a free serif, or system fonts.
+- **YOK-71:** fonts. Specimen sheet in progress (2026-10-20); the designer picks from it.
 - **YOK-85, 87, 88:**
   - Coins keyed by node type or by row.
   - Start Game overwriting a save without asking.
@@ -213,3 +200,21 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - The order of the 12 unlocks.
   - Which modifiers a cut keeps.
 - **Review queue, in suggested order (2026-10-17; #105–#108 merged):** #148 harness (YOK-26) → #147 Oni/Kappa bodies (YOK-131; captures first) → #150 Oni normals (YOK-132) → #149 elder twists (YOK-90, carries YOK-106, save v5) → #151 tutorial (YOK-92).
+
+## Designer decisions 2026-10-20
+- **Lv 2 steps (A4/E21):** movesmith proposes one step per remaining special; the designer approves (proposal in progress on branch YOK-36-lv2-steps).
+- **Forecast (T6):** "expected cost" is the copied move's damage per hit at Ryo's level, from data. Always available, so no "not enough fights" state. Ticket YOK-173 replaces the placeholder "~190 health".
+- **AM12 Slippery Skin:** automatically breaks a throw attempted during the carrying move's startup (a clash, no damage, like throw vs throw). E17 is unchanged. Ticket YOK-172.
+- **Heals (R6, R7):** shares of max health, merchant 25% and dojo rest 30%. Open question removed.
+- **River Grab** is a throw (C4, R7), for trials and cancels.
+- **AM11 Sumo Stance (YOK-142):** a longer hold gives a faster dash, up to a maximum speed; replaces "+20% damage". Engine ticket YOK-171 blocks YOK-142. Tanuki copy behaviour for a charged special is an open question.
+- **Shop shelf (R6, YOK-159):** physical shelf, 3 items per shelf. Per visit 9 items (3 shelves) proposed, 6 as a balance alternative; balance decides (open question). Bought items roll up in place. The merchant has no idle line. Shop lines carry no copy hinting.
+- **Y4:** half damage floors per hit. The 110/80 per-duel figures are harness targets only. The Y6 guided first fight is at half damage.
+- **Enemy jump punishing (YOK-165):** apprentice and yokai punish jumps 50% of the time; elders and the Tanuki 100%. Per-tier data.
+- **AI guard:** opponent pre-emptive guard yes (YOK-165). Bot reactive Block follows cross-ups, yes (YOK-166), with a new R5 baseline.
+- **Test bot (YOK-170):** several skill levels across runs; `idle_guard` depends on the level.
+- **Habit punish window (YOK-169):** the next 3 hits. KO damage is tallied as the full hit.
+- **G3 balance gate:** WAIT for harness batch 3 (YOK-167) before deciding any cut.
+- **YOK-146:** keep the 54k mesh; retake the deep crouch (route pending); commit `Ryo.glb` (PR #195); the groin-weights branch is rejected.
+- **Review queue:** the `ready-for-review` Linear label now exists (YOK-37).
+- **YOK-71 fonts:** specimen sheet in progress.
