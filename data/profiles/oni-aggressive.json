@@ -46,8 +46,8 @@
     },
     {
       "when": "opponent_jumping",
-      "do": "block",
-      "weight": 20
+      "do": "normal:oni-medium-punch",
+      "weight": 40
     }
   ],
   "rules": [
@@ -58,5 +58,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Oni aggressive (Y2): dashes in constantly. Habit 70% so it is nameable in 2-3 fights. PROVISIONAL: data/moves/ has no Oni normals or Iron-Club Charge yet (clips blocked on concept art), so this uses only generic actions (walk, dash, jump, block, throw) and cannot strike at close range. When oni-* normals and special:iron-club-charge land, add close-range pokes and swap the whiff punish to the charge. No ids invented."
+  "notes": "Anti-air (YOK-165): answers opponent_jumping with oni-medium-punch (8f startup, club swing y170-270), the single attacking answer so jump_punish_pct sets the rate. Oni aggressive (Y2): dashes in constantly. Habit 70% so it is nameable in 2-3 fights. PROVISIONAL: data/moves/ has no Oni normals or Iron-Club Charge yet (clips blocked on concept art), so this uses only generic actions (walk, dash, jump, block, throw) and cannot strike at close range. When oni-* normals and special:iron-club-charge land, add close-range pokes and swap the whiff punish to the charge. No ids invented."
 }
