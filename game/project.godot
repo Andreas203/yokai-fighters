@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 [autoload]
 
 DevShell="*res://scenes/dev/dev_shell.tscn"
+MusicPlayer="*res://scripts/Audio/MusicPlayer.cs"
 
 [display]
 
