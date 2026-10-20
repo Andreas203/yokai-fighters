@@ -221,3 +221,33 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 |---|---|---|
 | rules.md E1 (scale) | "… 1,540 units (7.7 m) at the widest zoom, which is the sim's screen" | Same, except that in a tall-body fight the presentation view may widen to about 1,900 units; the sim's screen stays 1,540. |
 | rules.md V7 | "chest height (1.2 m) … feet ~90% down the frame" | Same, except that in a tall-body fight the camera frames the tallest body's highest point under the HUD, may sit above 1.2 m while that floor binds, rises up to 0.25 m per tick, and keeps the feet no lower than 1,040 px. |
+
+---
+
+## AM11 — Sumo Stance: holding gives a faster dash, not more damage (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20 for YOK-142. It answers the open question "what does holding charge mean for Sumo Stance without a new animation".
+
+**Decision.** The Kappa modifier Sumo Stance (A10, E7): the player holds the special's button before the special starts. The longer the hold, the faster the special's dash, up to a maximum speed. Nothing is added to damage. The hold uses no new animation. The sim steps the dash in integer units per tick, and the held ticks are part of the state hash. What the Tanuki does when it copies a charged special stays open. Engine work: YOK-171.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD modifier table (§ modifiers), Sumo Stance | "Hold the button to charge for +20% damage." | "Hold the button before the special: the longer the hold, the faster its dash, up to a maximum speed." |
+| rules.md modifier table | "Hold to charge for +20% damage" | The new line above. |
+
+---
+
+## AM12 — Slippery Skin breaks throws during startup (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20. It answers the open question on Slippery Skin against E12/E17, where "throw-invulnerable" would have done nothing.
+
+**Decision.** Slippery Skin automatically BREAKS a throw attempted against the carrier during the carrying move's startup. The result is a clash with no damage, the same as throw vs throw (C4). E17's "throws ignore throw-invulnerability data" stays as written, because Slippery Skin is a break and not invulnerability. Engine, schema and data work: YOK-172.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD modifier table (§ modifiers), Slippery Skin | "Throw-invulnerable during startup." | "Automatically breaks a throw attempted during this move's startup: a clash, no damage, like throw vs throw." |
+| rules.md modifier table | "Throw-invulnerable during startup" | The new line above. |

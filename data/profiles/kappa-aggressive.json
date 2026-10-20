@@ -46,8 +46,8 @@
     },
     {
       "when": "opponent_jumping",
-      "do": "block",
-      "weight": 20
+      "do": "throw",
+      "weight": 40
     }
   ],
   "rules": [
@@ -58,5 +58,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Kappa aggressive (Y2): walks straight into throw range. Kappa uses only generic actions (its throw is the generic throw, C4); data/moves/ has no kappa-* normals or clips yet, so it has no strikes of its own. When they land, add pokes. No ids invented."
+  "notes": "Anti-air (YOK-165): answers opponent_jumping with the generic throw (C4), the single attacking answer so jump_punish_pct sets the rate; it catches the jumper in landing frames (E19). Swap to a Kappa rising normal when one lands. Kappa aggressive (Y2): walks straight into throw range. Its throw is the generic throw (C4); data/moves has no kappa-* normals or clips yet, so it has no strikes of its own. Add pokes when they land."
 }

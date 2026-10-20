@@ -162,8 +162,23 @@ public partial class RestStopScreen : Control, INodeScene
 	{
 		if (!IsVisibleInTree()) return; // hidden while the shop is open: the shop answers its own keys
 		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
+		else if (SelectorStep(e) is int step && step != 0 && Model is { CanSelect: true } sel)
+		{
+			if (sel.SelectTrial(step)) Refresh();
+			GetViewport().SetInputAsHandled();
+		}
 		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
 	}
+
+	/// <summary>YOK-109: the dojo's special selector: Left / Right, A / D, the bumpers or the D-pad. 0 = not a selector key.</summary>
+	public static int SelectorStep(InputEvent e) => e switch
+	{
+		InputEventKey { Pressed: true, Echo: false, Keycode: Key.Left or Key.A } => -1,
+		InputEventKey { Pressed: true, Echo: false, Keycode: Key.Right or Key.D } => 1,
+		InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.LeftShoulder or JoyButton.DpadLeft } => -1,
+		InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.RightShoulder or JoyButton.DpadRight } => 1,
+		_ => 0,
+	};
 
 	private Label L(string path) => GetNode<Label>(path);
 
@@ -199,7 +214,9 @@ public partial class RestStopScreen : Control, INodeScene
 		pick.Visible = !done;
 		ContinueButton.Visible = done;
 		var footer = GetNode<KeyChipFooter>("Footer");
+		// Esc / B goes to the title today (GameFlow: Router.ReturnToTitle), so the label says so; the mockup's "Map" needs a leave-the-node API (reported on YOK-109).
 		if (done) footer.SetHints(new("confirm", "Continue"), new("frames", "Forecast detail"), new("back", "Title"));
+		else if (m.CanSelect) footer.SetHints(new("move", "Choose"), new("choose", "Special"), new("confirm", "Take"), new("frames", "Detail"), new("back", "Title"));
 		else footer.SetHints(new("move", "Choose"), new("confirm", "Take"), new("frames", "Forecast detail"), new("back", "Title"));
 	}
 
@@ -268,16 +285,27 @@ public partial class RestStopScreen : Control, INodeScene
 		Tag(SecondCard.GetNode<Control>("Box/Top/Tag"), dojo ? "TRIAL" : "SHOP");
 		L(card + "Desc").Text = dojo
 			? (m.ChosenTrial is { } t
-				? $"{t.Prompt}\nHeals {Dojo.TrialHealPercent}% either way; land it within {t.Attempts} tries to level {t.Special}."
-				: "Land the drill to level one special.")
+				? $"{t.Prompt}\nHeals {Dojo.TrialHealPercent}% either way; land it within {t.Attempts} tries to level {m.TrialSpecialName}."
+				: "No special of yours has a trial that can level it: each is missing a drill or is at its top level.")
 			: m.Second == RestStopOption.Ready ? $"Buy an ability or release a binding.\nYou have {m.Coins} coins." : "Buy an ability or release a binding."; // the coin chip shows the coins once the card is closed
+		if (dojo) L(card + "Desc").AddThemeFontSizeOverride("font_size", 20); // the dojo card carries the picker row too: one size down keeps it inside its scroll
+		var picker = SecondCard.GetNode<Control>("Box/Picker");
+		picker.Visible = dojo && m.Second != RestStopOption.NoTrial;
+		if (picker.Visible)
+		{
+			string lv = $"{m.TrialSpecialName} Lv {m.TrialSpecialLevel}";
+			L(card + "Picker/Special").Text = m.CanSelect ? $"Special: < {lv} >" : $"Special: {lv}";
+			int used = m.AttemptsUsed;
+			L(card + "Picker/Pips").Text = "Tries " + string.Join(" ", Enumerable.Range(0, RestStopScreenModel.MaxAttempts).Select(i => i < used ? "●" : "○"));
+		}
 		L(card + "Coming").Text = m.Second switch
 		{
-			RestStopOption.NoTrial => "No trial for your specials.",
+			RestStopOption.NoTrial => "Trial unavailable: no drill for your specials.",
 			RestStopOption.Closed => "Closed: the other option was taken.",
 			RestStopOption.Taken => dojo ? DojoTaken() : "Chosen · Enter to browse again",
 			_ => "",
 		};
+		L(card + "Coming").Visible = L(card + "Coming").Text.Length > 0; // no empty line eating the card's height
 		// The shop stays open for the stop (R6: buying more is allowed): once chosen the card goes back in, as "Chosen".
 		SecondCard.CardDisabled = !(m.Second == RestStopOption.Ready || (m.Second == RestStopOption.Taken && !dojo));
 	}
@@ -293,6 +321,8 @@ public partial class RestStopScreen : Control, INodeScene
 	{
 		var f = m.Forecast;
 		var f0 = "Forecast/";
+		// Dojo only (T2, A4): training the selected special raises the level the copy runs at.
+		L(f0 + "TrainNote").Text = m.CopyRaisedTo() is { } raised ? $"Training {m.TrialSpecialName} to Lv {raised} raises this copy." : "";
 		GetNode<TextureRect>(f0 + "IconGlow/IconBox/Icon").Texture = f == null ? null : AbilityArt.ForId(f.SpecialId);
 		var nameLabel = L(f0 + "SpecialName");
 		nameLabel.Text = f?.Name ?? "Nothing yet";

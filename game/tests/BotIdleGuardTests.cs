@@ -105,6 +105,43 @@ public static class BotIdleGuardTests
 		Assert.True(checkedTicks > 200, $"enough settled ticks checked ({checkedTicks})");
 	}
 
+	/// <summary>
+	/// YOK-166 (designer 2026-10-20, C3, P6): the reactive Block plan follows a cross-up the same way. Staged screens: the
+	/// opponent swings from Ryo's right, the bot blocks (holds left); mid-swing it shows on his left. The block is the same
+	/// plan (one roll) and, once the delayed view (P6: <c>reaction_frames</c> later, not sooner) shows the new side, holds
+	/// right. The old code fixed the direction when the block started and walked into the opponent here.
+	/// </summary>
+	[Test]
+	public static void Block_100_CrossUp_GuardFollowsTheDelayedSide()
+	{
+		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+		const int Delay = 4;
+		var cfg = Only(wait: 1, idleGuard: 0) with { ReactionFrames = Delay, DecideEvery = 1, AntiAirPct = 0, BlockPct = 100, BlockTicks = 30 };
+		var bot = new NewcomerBot(cfg, BotKit.From(m.P1), 7);
+		var b = AiView.Capture(m);
+		int far = 100 * SimConfig.Scale;
+		AiView Swing(int tick, int p1x, int p2x) => b with
+		{
+			Tick = tick,
+			P1 = b.P1 with { X = p1x, Facing = Math.Sign(p2x - p1x) },
+			P2 = b.P2 with { X = p2x, Facing = Math.Sign(p1x - p2x), State = FighterState.Attack, MoveId = "swing", MoveFrame = 1, MoveLastActive = 200 },
+		};
+		int t = 0;
+		var outs = new List<InputBits>();
+		for (int i = 0; i < 10; i++) outs.Add(bot.Next(Swing(t++, 0, far)).Bits);
+		Assert.Equal(1, bot.Stats.Blocks, "one block rolled for the swing");
+		Assert.Equal(InputBits.Left, outs[^1], "the block holds away from the opponent on the right");
+		outs.Clear();
+		for (int i = 0; i < 12; i++) outs.Add(bot.Next(Swing(t++, far, 0)).Bits);
+		for (int i = 0; i < Delay - 1; i++)
+			Assert.Equal(InputBits.Left, outs[i], $"cross-up tick {i}: the bot has not seen it yet (P6), still holds left");
+		for (int i = Delay - 1; i < outs.Count; i++)
+			Assert.Equal(InputBits.Right, outs[i], $"cross-up tick {i}: seen, the block holds away from the opponent on the left");
+		Assert.Equal(1, bot.Stats.Blocks, "the same block plan, no new roll");
+	}
+
 	[Test]
 	public static void IdleGuard_100_InRangeWalksBackOff_0_WalksBothWays()
 	{
@@ -143,19 +180,54 @@ public static class BotIdleGuardTests
 	}
 
 	/// <summary>
-	/// 0 is the YOK-26 bot exactly: the first runs of the committed main batch (seed 1, idle guard absent, YOK-154
-	/// re-ran it byte-identical) play to the same session hashes, so a 0 roll draws nothing from the RNG.
+	/// A regression pin, not a proof: the first runs of the seed-1 batch at idle_guard_pct 0 play to pinned session hashes,
+	/// so any later change to how the bot plays at 0 shows. The pins were taken from this code (YOK-166, designer 2026-10-20,
+	/// new R5 baseline: the reactive Block follows a cross-up, which changes 25 of the 200 runs at 0, run 3 among them; the
+	/// old pins were already stale on main after YOK-156/157). That a 0 roll draws nothing from the RNG is proved directly by
+	/// <see cref="IdleGuard_0_DrawsNothingFromTheRng"/>.
 	/// </summary>
+	/// <summary>
+	/// YOK-155, checked directly (code-critic, YOK-166): an idle_guard_pct of 0 (written or absent) draws nothing from the
+	/// bot's RNG. With waits only, no mistakes and no threat, one decision draws exactly the weight pick at 0, and one more
+	/// (the guard roll) at 100. Compared with a SimRng of the same seed advanced by hand.
+	/// </summary>
+	[Test]
+	public static void IdleGuard_0_DrawsNothingFromTheRng()
+	{
+		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+		var view = AiView.Capture(m);
+		Assert.True(view.Phase == MatchPhase.Fighting && !view.P2.Threatening && !view.P2.Airborne, "a quiet screen: no threat, no jump");
+		string json = System.IO.File.ReadAllText(System.IO.Path.Combine(ContentPaths.DataDir, "harness", BotConfig.DefaultId + ".json"));
+		var absent = BotConfig.Parse(json.Replace("\"idle_guard_pct\": 50,", "")).Fight;
+		const uint Seed = 11;
+		uint After(int draws) { var r = new SimRng(Seed); for (int i = 0; i < draws; i++) r.NextUInt(); return r.State; }
+		foreach (var (name, fight, draws) in new[]
+		{
+			("written 0", Only(wait: 1, idleGuard: 0) with { DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 1),
+			("absent", absent with { WalkWeight = 0, NormalWeight = 0, SpecialWeight = 0, ThrowWeight = 0, JumpWeight = 0, WaitWeight = 1, MistakePct = 0, DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 1),
+			("100", Only(wait: 1, idleGuard: 100) with { DecideEvery = 1, BlockPct = 0, AntiAirPct = 0 }, 2),
+		})
+		{
+			var bot = new NewcomerBot(fight, BotKit.From(m.P1), Seed);
+			Assert.Equal(After(0), bot.RngState, $"{name}: nothing drawn before the first decision");
+			bot.Next(view);
+			Assert.Equal(After(draws), bot.RngState, $"{name}: one wait decision draws {draws}");
+		}
+		Assert.Equal(0, absent.IdleGuardPct, "absent reads as 0");
+	}
+
 	[Test]
 	public static void IdleGuard_0_PlaysTheOldBatch()
 	{
 		var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = 0 } };
 		var batch = RunHarness.PlayBatch(Content, bot, 1, 3);
-		var want = new[] { "c7b99e223b9a0450", "28a9873a8981ac73", "09aec0317e926252" };
+		var want = new[] { "1144460045766550", "e75276f37981d48f", "8091329b164ab95a" };
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
-		for (int i = 0; i < want.Length; i++)
-			Assert.Equal(want[i], runs[i].GetProperty("session_hash").GetString(), $"run seed {i + 1}");
+		var got = Enumerable.Range(0, want.Length).Select(i => runs[i].GetProperty("session_hash").GetString()).ToArray();
+		Assert.Equal(string.Join(" ", want), string.Join(" ", got), "runs seed 1-3");
 		foreach (var run in runs.EnumerateArray())
 			foreach (var node in run.GetProperty("nodes").EnumerateArray())
 				if (node.TryGetProperty("fight", out var f))
