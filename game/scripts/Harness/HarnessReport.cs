@@ -64,7 +64,7 @@ public static class HarnessReport
 
 	public const string Caveats =
 		"Not representative yet: every yokai except the Kitsune and the Tanuki fights as a Kitsune stand-in (node-scenes.json fallback_fighter), " +
-		"Oni and Kappa have no strikes of their own, the apprentice's half damage (Y4) is not applied, the bot never takes the dojo trial (YOK-98) and shops " +
+		"so the Oni's own normals (in data/moves) and the Kappa are not played yet; the apprentice's half damage (Y4, YOK-156) is applied; the bot never takes the dojo trial (YOK-98) and shops " +
 		"only when its config says so (the default newcomer heals at the merchant and rests at the dojo, R4's line), and fight time excludes menus (run length adds menu_seconds_per_node per node).";
 
 	/// <summary>The summary block alone (also printed by the command-line entry).</summary>

@@ -184,6 +184,8 @@ public sealed class SimRng
 {
 	private uint _s;
 	public SimRng(uint seed) => _s = seed == 0 ? 0x9E3779B9u : seed;
+	/// <summary>The generator state (tests: whether a call drew from it).</summary>
+	internal uint State => _s;
 	public uint NextUInt()
 	{
 		_s ^= _s << 13;

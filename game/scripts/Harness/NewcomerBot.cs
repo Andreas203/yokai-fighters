@@ -94,13 +94,15 @@ public sealed class NewcomerBot
 	readonly List<(InputBits Bits, int Ticks)> _steps = new();
 	int _step, _stepTick, _sincePress;
 	PlanKind _plan;
-	/// <summary>YOK-155: the plan is a standing guard; <see cref="Emit"/> resolves back from the delayed view every tick.</summary>
+	/// <summary>YOK-155/166: the plan is a standing guard (idle guard or reactive block); <see cref="Emit"/> resolves back from the delayed view every tick.</summary>
 	bool _holdAway;
 
 	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
 	public BotStats Stats { get; } = new();
 	/// <summary>YOK-157: the id of the normal the bot anti-airs with (null when Ryo has no ground normal).</summary>
 	public string? AntiAirMove => _antiAir?.Id;
+	/// <summary>Tests: the bot RNG state, to check what a roll drew (YOK-155: a 0 roll draws nothing).</summary>
+	internal uint RngState => _rng.State;
 
 	public NewcomerBot(BotFightConfig cfg, BotKit kit, uint seed)
 	{
@@ -157,7 +159,10 @@ public sealed class NewcomerBot
 			_threatRolled = true;
 			if (Roll(_cfg.BlockPct))
 			{
-				Start(PlanKind.Block, (Back(s, o), _cfg.BlockTicks)); // still fixed at the start (YOK-26): tracking it changes 25 of 200 runs at idle_guard_pct 0
+				// YOK-166 (designer 2026-10-20, new R5 baseline): the guard holds away from the opponent as the delayed view shows
+				// it each tick (P6), like the YOK-155 idle guard, so a cross-up mid-block does not turn it into a walk forward.
+				Start(PlanKind.Block, (Back(s, o), _cfg.BlockTicks));
+				_holdAway = true;
 				Stats.Blocks++;
 			}
 		}
@@ -294,12 +299,13 @@ public sealed class NewcomerBot
 	void Clear()
 	{
 		_plan = PlanKind.None;
+		_holdAway = false;
 		_steps.Clear();
 	}
 
 	/// <summary>
 	/// The current plan step. Attack plans store directions as if facing right and are flipped by the fighter's
-	/// facing on the live screen; walk and block plans already hold absolute directions. A YOK-155 guard plan (guarded wait or walk)
+	/// facing on the live screen; walk plans already hold absolute directions. A guard plan (YOK-155 guarded wait or walk, YOK-166 block)
 	/// holds away from the opponent as the delayed view <paramref name="s"/>/<paramref name="o"/> shows it this tick,
 	/// so a cross-up mid-plan does not turn the guard into a walk forward. Buttons go down on a step's first tick only.
 	/// </summary>
