@@ -14,6 +14,11 @@ namespace YokaiFighters.Harness;
 public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGraph Map, INodeSceneResolver Scenes,
 	Func<string, BehaviourProfile[]> Profiles)
 {
+	/// <summary>YOK-157: tally each fight's hits, throws and habit rolls into <see cref="FightRecord.Log"/> (listening only; on by default).</summary>
+	public bool HitLog { get; init; } = true;
+	/// <summary>YOK-157: also keep every hit as a raw line (<c>hit_log</c> in the results; large, off by default). Needs <see cref="HitLog"/>.</summary>
+	public bool RawHitLog { get; init; }
+
 	/// <summary>The game's content: <c>data/</c> (moves, modifiers, map, node scenes, profiles) with the TEST FIXTURE fallbacks.</summary>
 	public static HarnessContent Load(string dataDir, string fixturesDir, string mapFile = "default-map.json")
 	{
@@ -118,12 +123,17 @@ public static class RunHarness
 		var ai = new ProfileAi(profiles[pi], 1, AiLoadout.From(m.P2), Mix(runSeed, 0xA1000000u + step), node.ReactionFrames,
 			AiFightTiers.Of(node)); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
 		var ryo = new NewcomerBot(bot.Fight, BotKit.From(m.P1), Mix(runSeed, 0xB0700000u + step));
+		FightLog? log = null;
+		if (content.HitLog) { log = new FightLog(content.RawHitLog); log.Attach(m, ai); }
 		int ryoStart = m.P1.Health, foeStart = m.P2.Health;
 		int t = 0;
 		while (m.Phase != MatchPhase.Over && t < bot.Fight.MaxFightTicks)
 		{
 			var view = AiView.Capture(m);
-			m.Step(ryo.Next(view), ai.Next(view));
+			var ryoIn = ryo.Next(view);
+			var aiIn = ai.Next(view);
+			log?.AfterAi(ai, m.Tick);
+			m.Step(ryoIn, aiIn);
 			t++;
 		}
 		bool timedOut = m.Phase != MatchPhase.Over;
@@ -140,6 +150,7 @@ public static class RunHarness
 			Bot = ryo.Stats,
 			OpponentCopiedSlot = m.P2.CopiedSlot,
 			MatchHash = m.StateHash(),
+			Log = log,
 		};
 	}
 
@@ -180,6 +191,8 @@ public sealed class FightRecord
 	/// <summary>T0: the slot of the Tanuki's copied special (its <see cref="TanukiKit"/>); None for every other opponent.</summary>
 	public SpecialSlot OpponentCopiedSlot { get; init; }
 	public ulong MatchHash { get; init; }
+	/// <summary>YOK-157: hits, throws and habit rolls of this fight; null when <see cref="HarnessContent.HitLog"/> is off.</summary>
+	public FightLog? Log { get; init; }
 }
 
 public sealed class NodeRecord
