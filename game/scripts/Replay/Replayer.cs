@@ -161,6 +161,7 @@ public static class Replayer
 		{
 			P1MaxHealth = h.P1MaxHealth, P2MaxHealth = h.P2MaxHealth, P1StartHealth = h.P1StartHealth, P2StartHealth = h.P2StartHealth,
 			P1DamagePct = h.P1DamagePct, P2DamagePct = h.P2DamagePct, // YOK-156
+			P1JumpPunishPct = h.P1JumpPunishPct, P2JumpPunishPct = h.P2JumpPunishPct, // YOK-165
 		};
 		if (Fingerprint.Of(cfg) != h.ConfigFp)
 			throw new ReplaySetupException("SimConfig differs from the recording (fight constants changed since it was made)");
@@ -239,7 +240,8 @@ public static class Replayer
 		// YOK-99, Y5: only Tanuki pressure makes a bonus, so anything outside 0..MaxWins × AggressionPerWin is not a recording this build made.
 		if (a.AggressionBonus < 0 || a.AggressionBonus > TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin)
 			throw new ReplaySetupException($"AI aggression bonus {a.AggressionBonus} is outside 0-{TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin}");
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus);
+		if (a.GuardPct < 0 || a.GuardPct > 100) throw new ReplaySetupException($"AI guard {a.GuardPct} is outside 0-100");
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus, a.GuardPct); // YOK-165: absent = 0, no guard
 	}
 }
 

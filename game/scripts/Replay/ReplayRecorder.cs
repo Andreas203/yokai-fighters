@@ -30,6 +30,8 @@ public sealed class ReplayRecorder
 		h.P2StartHealth = m.Config.P2StartHealth;
 		h.P1DamagePct = m.Config.P1DamagePct; // YOK-156
 		h.P2DamagePct = m.Config.P2DamagePct;
+		h.P1JumpPunishPct = m.Config.P1JumpPunishPct; // YOK-165
+		h.P2JumpPunishPct = m.Config.P2JumpPunishPct;
 		h.Fighters = new[] { Capture(m.P1), Capture(m.P2) };
 		h.Ai = AiOf(ai, aiSeed);
 		h.RunHash = run?.StateHash().ToString("x16");
@@ -42,6 +44,7 @@ public sealed class ReplayRecorder
 		ReactionFrames = ai.ReactionFrames, Seed = seed,
 		FightTier = ai.Tier == AiFightTier.Standard ? null : ai.Tier.ToString().ToLowerInvariant(),
 		AggressionBonus = ai.AggressionBonus,
+		GuardPct = ai.GuardPct, // YOK-165
 	};
 
 	static FighterSetup Capture(Fighter f)

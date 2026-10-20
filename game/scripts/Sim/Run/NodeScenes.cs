@@ -38,6 +38,10 @@ public sealed record NodeContext(
 	public string? PlaysAs { get; init; }
 	/// <summary>YOK-174: <see cref="PlaysAs"/> with its default.</summary>
 	public string MovesAndProfilesOf => PlaysAs ?? Fighter;
+	/// <summary>YOK-165, Y4: percent of Ryo's jumps this node's opponent answers with its anti-air, from the tier's
+	/// <c>jump_punish_pct</c> (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100); null when the tier
+	/// names none = the profile's own anti-air weights decide, as before YOK-165.</summary>
+	public int? JumpPunishPct { get; init; }
 }
 
 /// <summary>The scene a node runs in (a <c>res://</c> path) and what it is handed.</summary>
@@ -90,6 +94,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	readonly Dictionary<string, Entry> _types, _nodes, _opponents;
 	readonly Dictionary<string, int> _tiers;
 	readonly Dictionary<string, int> _damagePct = new(); // YOK-156, Y4: tier → damage_dealt_pct
+	readonly Dictionary<string, int> _jumpPunishPct = new(); // YOK-165, Y4: tier → jump_punish_pct
 	readonly Dictionary<(int Row, string Type), int> _rowCoins = new(); // R8: what a row pays instead of its type's amount
 
 	public string DefaultScene { get; }
@@ -130,6 +135,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 
 		var tiers = new Dictionary<string, int>();
 		var damagePct = new Dictionary<string, int>(); // YOK-156: tiers that name a damage_dealt_pct
+		var jumpPunishPct = new Dictionary<string, int>(); // YOK-165: tiers that name a jump_punish_pct
 		foreach (var (name, node) in Section(o, "tiers"))
 		{
 			if (node is not JsonObject t || t["reaction_frames"] is not JsonValue f || !f.TryGetValue(out int frames) || frames < 1)
@@ -141,12 +147,19 @@ public sealed class NodeSceneTable : INodeSceneResolver
 					throw new FormatException($"node scenes: tier '{name}' damage_dealt_pct must be a whole number from 1 to 100 (Y4)");
 				damagePct[name] = pct;
 			}
+			if (t.TryGetPropertyValue("jump_punish_pct", out var j)) // YOK-165: present, even as null, must be a valid pct
+			{
+				if (j is not JsonValue jv || !jv.TryGetValue(out int pct) || pct < 0 || pct > 100)
+					throw new FormatException($"node scenes: tier '{name}' jump_punish_pct must be a whole number from 0 to 100 (Y4)");
+				jumpPunishPct[name] = pct;
+			}
 		}
 		var table = new NodeSceneTable(scene, fallback, tiers, Entries(o, "types"), Entries(o, "nodes"), Entries(o, "opponents"))
 		{
 			DefaultStage = StagePath(Text(o, "default_stage", "the table"), "default_stage"),
 		};
 		foreach (var (name, pct) in damagePct) table._damagePct[name] = pct;
+		foreach (var (name, pct) in jumpPunishPct) table._jumpPunishPct[name] = pct;
 		foreach (var (where, e) in table._types.Select(p => ($"type '{p.Key}'", p.Value))
 			.Concat(table._nodes.Select(p => ($"node '{p.Key}'", p.Value)))
 			.Concat(table._opponents.Select(p => ($"opponent '{p.Key}'", p.Value))))
@@ -196,6 +209,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			Kit = foe?.Kit,
 			PlaysAs = foe?.PlaysAs ?? (foe?.Fighter is null && yokai is not null ? yokai : fighter), // YOK-174
 			DamageDealtPct = _damagePct.TryGetValue(tier, out int pct) ? pct : SimConfig.FullDamagePct,
+			JumpPunishPct = _jumpPunishPct.TryGetValue(tier, out int jump) ? jump : null,
 			Stage = byNode?.Stage ?? byType?.Stage ?? DefaultStage,
 			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
 		};

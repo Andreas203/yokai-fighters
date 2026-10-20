@@ -41,12 +41,21 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 	/// <summary>YOK-57: burst length (SimConfig.BurstFrames), a fixed visible animation length.</summary>
 	public int BurstFrames { get; init; }
 
+	/// <summary>YOK-165, Y4: each side's anti-air rate for this fight (SimConfig.P1/P2JumpPunishPct, the node tier's
+	/// <c>jump_punish_pct</c>); a fixed fight constant like the two above, not anything a player pressed. Null = the profile's weights.</summary>
+	public int? P1JumpPunishPct { get; init; }
+	public int? P2JumpPunishPct { get; init; }
+	public int? JumpPunishPct(int i) => i == 0 ? P1JumpPunishPct : P2JumpPunishPct;
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
 		var shots = new ProjectileView[m.Projectiles.Count];
 		for (int i = 0; i < shots.Length; i++) shots[i] = new(m.Projectiles[i].Owner, m.Projectiles[i].X, m.Projectiles[i].Dir);
-		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) { WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames };
+		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) {
+			WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames,
+			P1JumpPunishPct = m.Config.P1JumpPunishPct, P2JumpPunishPct = m.Config.P2JumpPunishPct,
+		};
 	}
 
 	private static FighterView Of(Fighter f)

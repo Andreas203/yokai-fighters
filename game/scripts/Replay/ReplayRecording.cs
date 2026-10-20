@@ -77,6 +77,10 @@ public sealed class AiSetup
 	/// <summary>YOK-99, Y5: aggression bonus from Tanuki wins; left out of the file when 0, so older recordings read as none.</summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public int AggressionBonus { get; set; }
+	/// <summary>YOK-165: the pre-emptive guard rate the AI played with (<see cref="ProfileAi.GuardPct"/>); left out of the
+	/// file when 0, so a recording made before the guard existed reads as no guard and still replays.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public int GuardPct { get; set; }
 }
 
 /// <summary>
@@ -129,6 +133,11 @@ public sealed class ReplayHeader
 	public int? P1DamagePct { get; set; }
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
 	public int? P2DamagePct { get; set; }
+	/// <summary>YOK-165, Y4: each side's AI anti-air rate; null = the profile's weights, not written, as in recordings made before it.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public int? P1JumpPunishPct { get; set; }
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public int? P2JumpPunishPct { get; set; }
 	public FighterSetup[] Fighters { get; set; } = Array.Empty<FighterSetup>();
 	public AiSetup? Ai { get; set; }
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]

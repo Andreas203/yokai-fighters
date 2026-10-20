@@ -24,6 +24,14 @@ public sealed class ProfileAi
 	/// <summary>Neutral weight of "move to the preferred range" next to the profile's standing behaviours (proposed).</summary>
 	public const int SpacingWeight = 40;
 	public const int WalkTicks = 15, SpacingTicks = 10, BlockTicks = 20;
+	/// <summary>
+	/// YOK-165: pre-emptive guard rate when the profile names no <c>guard_pct</c> (<b>proposed</b>, awaiting the designer).
+	/// Every strike normal hits within 15 frames, faster than any reaction tier (Y4), so a guard that waits to see the
+	/// swing is always late (YOK-154 F1). The guard is rolled on the AI's own decisions, never on anything Ryo pressed (P6).
+	/// </summary>
+	public const int DefaultGuardPct = 50;
+	/// <summary>YOK-165: how long the guard is held after the AI's own move ends (proposed, = <see cref="SpacingTicks"/>).</summary>
+	public const int GuardTicks = 10;
 
 	public BehaviourProfile Profile { get; }
 	public int Self { get; }
@@ -37,6 +45,13 @@ public sealed class ProfileAi
 	public int AggressionBonus { get; }
 	/// <summary>The bias the neutral weights use: the profile's own plus <see cref="AggressionBonus"/>, within 0-100.</summary>
 	public int Aggression => (int)Math.Clamp((long)Profile.AggressionBias + AggressionBonus, 0, 100); // long: no overflow before the clamp
+	/// <summary>
+	/// YOK-165: 0-100, the chance the AI holds crouch guard (down-back: blocks lows and mids, E6) instead of standing
+	/// open (a) when it settles in its preferred range to wait and (b) through its own move's recovery and
+	/// <see cref="GuardTicks"/> after it. Ctor argument, else the profile's <c>guard_pct</c>, else <see cref="DefaultGuardPct"/>.
+	/// 0 = no roll at all, so the draw order is the one from before YOK-165 (old replays record no guard and read as 0).
+	/// </summary>
+	public int GuardPct { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -51,8 +66,9 @@ public sealed class ProfileAi
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
-		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null)
 	{
+		GuardPct = Math.Clamp(guardPct ?? profile.GuardPct ?? DefaultGuardPct, 0, 100);
 		Tier = tier;
 		AggressionBonus = aggressionBonus;
 		Profile = profile;
@@ -111,9 +127,10 @@ public sealed class ProfileAi
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
 				int roll = _rng.Next(100);
-				if (roll >= b.Weight) continue;
+				int pct = RateOf(b, view);
+				if (roll >= pct) continue;
 				var p = Build(b.Do, view, tick, false, 0);
-				Record(tick, view, p is null ? "unavailable" : "react", b.When, b.Do.ToString(), roll, b.Weight);
+				Record(tick, view, p is null ? "unavailable" : "react", b.When, b.Do.ToString(), roll, pct);
 				if (p is null) continue;
 				_plan = p;
 				break;
@@ -122,6 +139,24 @@ public sealed class ProfileAi
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
 		return _plan.Emit();
+	}
+
+	/// <summary>
+	/// An event behaviour's percent rate. YOK-165, Y4: a move answering <c>opponent_jumping</c> (the anti-air) uses the
+	/// fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) when the tier names one;
+	/// a guard answer (block) and every other event keep the profile's weight.
+	/// </summary>
+	private int RateOf(Behaviour b, AiView view) =>
+		b.When == Observation.OpponentJumping && b.Do.IsMove && view.JumpPunishPct(Self) is { } jump ? jump : b.Weight;
+
+	/// <summary>YOK-165: roll the pre-emptive guard (no draw at all when <see cref="GuardPct"/> is 0).</summary>
+	private bool RollGuard(int tick, AiView view, string trigger)
+	{
+		if (GuardPct <= 0) return false;
+		int roll = _rng.Next(100);
+		bool guard = roll < GuardPct;
+		if (guard) Record(tick, view, "guard", trigger, "crouch_block", roll, GuardPct);
+		return guard;
 	}
 
 	private Plan Neutral(AiView view, FighterView s, FighterView o, int tick)
@@ -151,6 +186,8 @@ public sealed class ProfileAi
 		var (fwd, back) = Dirs(s, o);
 		InputBits bits = diff > 0 ? back : diff < 0 ? fwd : InputBits.None; // preferred band is farther: back off
 		Record(tick, view, "neutral", Observation.Neutral, diff > 0 ? "space_back" : diff < 0 ? "space_forward" : "hold", roll, SpacingWeight);
+		// YOK-165: settled in its band, it waits in crouch guard rather than standing open (walking back already guards, C3).
+		if (diff == 0 && RollGuard(tick, view, "self_waiting")) bits = back | InputBits.Down;
 		return new Plan(false, (new FighterInput(bits), SpacingTicks));
 	}
 
@@ -171,6 +208,17 @@ public sealed class ProfileAi
 			_ => _kit.TryGet(a, out var input, out int frames) ? new[] { (MaybeEx(a, input, view, tick), 1), (none, Math.Max(1, frames - 1)) } : null,
 		};
 		if (steps is null) return null;
+		// YOK-165: after a move of its own (whiffed or not) it may hold crouch guard through the recovery, so it is guarding
+		// on its first free frame, and a beat after. Not after the habit: that stays as punishable as the profile says (Y2).
+		if (!habit && a.IsMove && RollGuard(tick, view, "self_attacked"))
+		{
+			var guard = new FighterInput(back | InputBits.Down);
+			var tail = new (FighterInput, int)[steps.Length + 1];
+			Array.Copy(steps, tail, steps.Length);
+			for (int i = 1; i < steps.Length; i++) tail[i] = (guard, steps[i].Item2); // the wait steps; the press stays as built
+			tail[^1] = (guard, GuardTicks);
+			steps = tail;
+		}
 		if (preHold <= 0) return new Plan(habit, steps);
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
