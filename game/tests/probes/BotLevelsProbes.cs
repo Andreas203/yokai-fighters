@@ -250,4 +250,30 @@ public static class BotLevelsProbes
 		var d = HarnessReport.ToJson(RunHarness.PlayBatch(Content, Levels["skilled"], 6, 2));
 		Assert.True(a != d, "a different seed gives a different file");
 	}
+
+	// Round 2: BotConfig.Parse wraps duplicate keys at any depth; a bot_id of '<id>-mixed' is refused.
+	[Test]
+	public static void BotConfig_DuplicateKeysAtAnyDepth_AreFormatException()
+	{
+		string b = BaseText;
+		foreach (var (from, to) in new[] { ("\"weights\": {", "\"weights\": {\"walk\": 1, "), ("\"route\": {", "\"route\": {\"rule\": \"random\", "), ("\"fight\": {", "\"fight\": {\"mistake_pct\": 1, "), ("\"run\": {", "\"run\": {\"dojo\": \"skip\", ") })
+		{
+			Assert.True(b.Contains(from), $"fixture shape: {from}");
+			try { BotConfig.Parse(b.Replace(from, to)); }
+			catch (FormatException) { continue; }
+			catch (Exception e) { throw new Exception($"{from}: expected FormatException, got {e.GetType().Name}"); }
+			throw new Exception($"{from}: duplicate accepted");
+		}
+		foreach (string bad in new[] { "{", "", "[]", "{\"kind\":\"harness_bot\",\"id\":5}" })
+		{
+			try { BotConfig.Parse(bad); throw new Exception($"'{bad}' accepted"); }
+			catch (FormatException) { }
+		}
+	}
+
+	[Test]
+	public static void BotIdMixedName_IsRejected()
+	{
+		Rejects(File1(Lv("a", "", "t-levels-mixed")), "bot_id '<id>-mixed'");
+	}
 }
