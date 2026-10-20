@@ -276,7 +276,7 @@ public static class ShopScreenTests
 		var screen = Open(runner, s);
 		try
 		{
-			Assert.True(!screen.GetNode<Control>("Cabinet/AllEmpty").Visible && screen.Items.Count == 2 && screen.Tiers == 2, "two specials on a two-shelf cabinet, no empty state");
+			Assert.True(!screen.GetNode<Control>("Cabinet/AllEmpty").Visible && screen.Items.Count == 2 && screen.Tiers == 3, "two specials on the fixed three-shelf cabinet, no empty state");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 	});

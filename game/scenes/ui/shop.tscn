@@ -6,6 +6,9 @@
 [ext_resource type="Script" path="res://scripts/Ui/ShopCabinet.cs" id="cabinet_script"]
 [ext_resource type="Script" path="res://scripts/Ui/ShopBubble.cs" id="bubble_script"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="rule"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/shop-backdrop.png" id="shop_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/merchant-portrait.png" id="portrait_art"]
+[ext_resource type="Script" path="res://scripts/Ui/ShopPlate.cs" id="plate_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 
@@ -21,32 +24,6 @@ corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 
-[sub_resource type="StyleBoxFlat" id="slip_paper"]
-bg_color = Color(0.973, 0.945, 0.878, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.114, 0.106, 0.129, 1)
-
-[sub_resource type="StyleBoxFlat" id="slip_band"]
-bg_color = Color(0.176, 0.227, 0.369, 1)
-content_margin_left = 12.0
-content_margin_top = 2.0
-content_margin_bottom = 2.0
-
-[sub_resource type="StyleBoxFlat" id="slip_pin"]
-bg_color = Color(0.74, 0.18, 0.15, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.114, 0.106, 0.129, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
 [node name="Shop" type="Control"]
 mouse_filter = 0
 anchor_right = 1.0
@@ -55,6 +32,7 @@ theme = ExtResource("theme")
 script = ExtResource("script")
 
 [node name="Backdrop" parent="." instance=ExtResource("backdrop")]
+Art = ExtResource("shop_backdrop")
 
 [node name="Decor" type="Control" parent="."]
 mouse_filter = 2
@@ -157,16 +135,13 @@ offset_top = 500.0
 offset_right = 380.0
 offset_bottom = 886.0
 
-[node name="PortraitLabel" type="Label" parent="Portrait"]
+[node name="Art" type="TextureRect" parent="Portrait"]
 mouse_filter = 2
-anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -34.0
-theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 16
-horizontal_alignment = 1
-text = "portrait (human guise, art to come)"
+texture = ExtResource("portrait_art")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="MerchantLabel" type="Label" parent="."]
 mouse_filter = 2
@@ -220,23 +195,24 @@ clip_text = true
 [node name="Cabinet" type="Control" parent="."]
 mouse_filter = 2
 offset_left = 655.0
-offset_top = 322.0
-offset_right = 1373.0
-offset_bottom = 907.0
+offset_top = 290.0
+offset_right = 1375.0
+offset_bottom = 924.0
 script = ExtResource("cabinet_script")
 
 [node name="AllEmpty" type="Control" parent="Cabinet"]
 mouse_filter = 2
-offset_left = 60.0
-offset_top = 40.0
-offset_right = 658.0
-offset_bottom = 340.0
+offset_left = 100.0
+offset_top = 110.0
+offset_right = 620.0
+offset_bottom = 400.0
 
 [node name="EmptyTitle" type="Label" parent="Cabinet/AllEmpty"]
 mouse_filter = 2
-offset_right = 598.0
+offset_right = 520.0
 offset_bottom = 70.0
 theme_type_variation = &"PaperLabel"
+theme_override_colors/font_color = Color(0.114, 0.106, 0.129, 1)
 theme_override_font_sizes/font_size = 46
 horizontal_alignment = 1
 text = "Shelf empty"
@@ -245,9 +221,10 @@ text = "Shelf empty"
 mouse_filter = 2
 offset_left = 20.0
 offset_top = 80.0
-offset_right = 578.0
+offset_right = 500.0
 offset_bottom = 170.0
 theme_type_variation = &"PaperLabel"
+theme_override_colors/font_color = Color(0.114, 0.106, 0.129, 1)
 theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -256,76 +233,64 @@ autowrap_mode = 3
 mouse_filter = 2
 offset_left = 20.0
 offset_top = 180.0
-offset_right = 578.0
+offset_right = 500.0
 offset_bottom = 250.0
 theme_type_variation = &"PaperLabel"
+theme_override_colors/font_color = Color(0.114, 0.106, 0.129, 1)
 theme_override_font_sizes/font_size = 21
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Slip" type="PanelContainer" parent="."]
+[node name="Slip" type="Control" parent="."]
 mouse_filter = 2
 offset_left = 160.0
-offset_top = 683.0
+offset_top = 648.0
 offset_right = 622.0
-offset_bottom = 888.0
-theme_override_styles/panel = SubResource("slip_paper")
+offset_bottom = 892.0
+script = ExtResource("plate_script")
 
 [node name="Column" type="VBoxContainer" parent="Slip"]
-layout_mode = 2
 mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 34.0
+offset_top = 40.0
+offset_right = -46.0
+offset_bottom = -30.0
 theme_override_constants/separation = 2
 
-[node name="Header" type="PanelContainer" parent="Slip/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("slip_band")
-
-[node name="HeaderLabel" type="Label" parent="Slip/Column/Header"]
-layout_mode = 2
+[node name="Header" type="Label" parent="Slip/Column"]
 mouse_filter = 2
 theme_type_variation = &"PaperLabel"
+theme_override_colors/font_color = Color(0.74, 0.18, 0.15, 1)
 theme_override_font_sizes/font_size = 15
 text = "LEDGER SLIP · frame data"
 
 [node name="Pad" type="MarginContainer" parent="Slip/Column"]
-layout_mode = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 12
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 6
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
 
 [node name="Box" type="VBoxContainer" parent="Slip/Column/Pad"]
-layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="Title" type="Label" parent="Slip/Column/Pad/Box"]
-layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 26
 clip_text = true
 
 [node name="Sub" type="Label" parent="Slip/Column/Pad/Box"]
-layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
 theme_override_font_sizes/font_size = 16
 
 [node name="Body" type="VBoxContainer" parent="Slip/Column/Pad/Box"]
-layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
-
-[node name="SlipPin" type="Panel" parent="."]
-visible = false
-mouse_filter = 2
-offset_left = 598.0
-offset_top = 690.0
-offset_right = 610.0
-offset_bottom = 702.0
-theme_override_styles/panel = SubResource("slip_pin")
 
 [node name="SlotsHeading" type="Label" parent="."]
 mouse_filter = 2
