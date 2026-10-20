@@ -80,6 +80,7 @@ public partial class FightScene : Node3D
 	private Match? _hitMatch;
 	private int _nextHitPlayer;
 	private int _nextHitClip;
+	private const float HitVolumeDb = 6f;
 	/// <summary>V3 (YOK-20): started by Match.Impact, stepped once per sim tick.</summary>
 	public ScreenShake Shake { get; } = new(SimConfig.Default.ShakeFrames);
 
@@ -261,6 +262,7 @@ public partial class FightScene : Node3D
 				Name = $"HitSound{i + 1}",
 				Bus = MenuSettings.SfxBus,
 				ProcessMode = ProcessModeEnum.Pausable,
+				VolumeDb = HitVolumeDb,
 			};
 			_hitPlayers[i] = player;
 			AddChild(player);
