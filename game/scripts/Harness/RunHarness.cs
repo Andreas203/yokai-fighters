@@ -147,7 +147,7 @@ public static class RunHarness
 		var m = NodeFight.NewMatch(content.Sources, session.Run, session, node.Fighter, bot.Scheme);
 		var profiles = content.Profiles(node.MovesAndProfilesOf); // YOK-174: the yokai's own profiles, even on a stand-in kit
 		if (profiles.Length == 0) throw new InvalidOperationException($"no behaviour profile for '{node.MovesAndProfilesOf}'");
-		int pi = node.Profile is { } want ? Math.Max(0, Array.FindIndex(profiles, p => p.Id == want)) : 0;
+		int pi = Math.Max(0, NodeTemperament.Pick(profiles, node, session.Seed)); // YOK-174, Y1/Y2: named profile, else the seeded 50/50 temperament roll
 		uint step = (uint)session.Step;
 		var loadout = AiLoadout.From(m.P2);
 		if (loadout.Missing(profiles[pi]) is { Count: > 0 } missing) // YOK-174: never skip a named move silently

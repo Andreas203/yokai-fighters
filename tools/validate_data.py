@@ -262,15 +262,37 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             tier = entry.get("tier") if isinstance(entry, dict) else None
             if isinstance(tier, str) and tier not in tiers:
                 errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
-    # YOK-174: a fight opponent with no fighter plays as a yokai (plays_as, else its own id) that must have profiles.
-    profiled = {pp.get("yokai") for pp in (_load_json(f) for f in sorted((ROOT / "data" / "profiles").glob("*.json"))) if isinstance(pp, dict)}
+    # YOK-174: every opponent the table lists, and every yokai a run map in the same folder names, plays as a yokai
+    # (an opponent with a fighter as that fighter; else plays_as, else its own id) that must have a behaviour profile.
+    # Profiles are read next to this file's data folder (<data>/map/node-scenes.json -> <data>/profiles/).
+    profiled = {pp.get("yokai") for pp in (_load_json(f) for f in sorted((path.parent.parent / "profiles").glob("*.json"))) if isinstance(pp, dict)}
     opponents = doc.get("opponents") if isinstance(doc.get("opponents"), dict) else {}
-    for name, entry in opponents.items():
-        if not isinstance(entry, dict) or "fighter" in entry:
+
+    def plays_as(name: str):
+        entry = opponents.get(name)
+        if not isinstance(entry, dict):
+            return name
+        if isinstance(entry.get("fighter"), str):
+            return entry["fighter"]
+        return entry.get("plays_as", name)
+
+    named = [(f"opponents.{n}", n) for n in opponents]
+    for other in sorted(path.parent.glob("*.json")):
+        m = _load_json(other)
+        if isinstance(m, dict) and m.get("kind") == "run_map":
+            named += [(f"{other.name} node '{n.get('id')}'", n["yokai"]) for n in m.get("nodes") or []
+                      if isinstance(n, dict) and isinstance(n.get("yokai"), str)]
+    for name in (t.get("opponent") for t in types.values() if isinstance(t, dict)):
+        if isinstance(name, str):
+            named.append(("types opponent", name))
+    seen = set()
+    for where, name in named:
+        plays = plays_as(name)
+        if not isinstance(plays, str) or (where, plays) in seen:
             continue
-        plays = entry.get("plays_as", name)
-        if isinstance(plays, str) and profiled and plays not in profiled:
-            errs.append((f"opponents.{name}.plays_as", f"'{plays}' has no behaviour profile in data/profiles/ (Y1)"))
+        seen.add((where, plays))
+        if profiled and plays not in profiled:  # a folder with no profiles at all (a partial copy) is not checked
+            errs.append((where, f"'{name}' plays as '{plays}', which has no behaviour profile in {path.parent.parent.name}/profiles/ (Y1)"))
     # YOK-144: every stage named is a scene under scenes/stage/ that exists (res:// = game/). STAGE_PATTERN is the
     # schema's $defs/stage pattern and NodeSceneTable.StagePattern; it also stops '..' from escaping the folder here.
     stages = [("default_stage", doc.get("default_stage"))]

@@ -609,6 +609,11 @@ public partial class GameFlow : Node
 		NodeScene = scene;
 		AddChild(scene);
 		MoveChild(scene, 0); // under the menu layer
+		if (scene is FightScene { AiSetupError: { } why }) // YOK-174: a profile/kit mismatch refuses the fight, never a silent skip
+		{
+			GD.PushError($"GameFlow: fight on node '{Session?.Node?.NodeId}' refused: {why}");
+			Callable.From(() => Router.ReturnToTitle()).CallDeferred();
+		}
 	}
 
 	/// <summary>YOK-104: the merchant's shop over the rest stop: the router says it is open, the stop hides, Back brings it back used.</summary>

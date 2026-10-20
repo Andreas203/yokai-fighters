@@ -57,7 +57,8 @@ public static class BotLevelsTests
 	[Test]
 	public static void Newcomer_PlaysTodaysBatch_Pinned()
 	{
-		var want = new[] { "a4a30e288fb83033", "315e593db7b56116", "9be8a5bed90de1fa" };
+		// YOK-174: run 2 re-pinned (28a9873a8981ac73, was 315e593db7b56116): its row-2 node now rolls its temperament (designer, Y1/Y2).
+		var want = new[] { "a4a30e288fb83033", "28a9873a8981ac73", "9be8a5bed90de1fa" };
 		var level = Hashes(RunHarness.PlayBatch(Content, Levels["newcomer"], 1, 3));
 		var file = Hashes(RunHarness.PlayBatch(Content, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));
 		Assert.Equal(string.Join(" ", want), string.Join(" ", file), "the base file's batch (pinned)");

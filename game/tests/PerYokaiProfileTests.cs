@@ -113,6 +113,57 @@ public static class PerYokaiProfileTests
 	}
 
 	[Test]
+	public static void Temperament_SeededRollPerNode_Deterministic_BothAppear_AboutHalf()
+	{
+		foreach (string node in new[] { "r2-oni", "r2-kappa", "r6-kitsune" })
+		{
+			int aggressive = 0;
+			for (uint seed = 1; seed <= 400; seed++)
+			{
+				string t = NodeTemperament.Roll(seed, node);
+				Assert.Equal(t, NodeTemperament.Roll(seed, node), $"{node} seed {seed}: same seed, same temperament");
+				Assert.True(t is NodeTemperament.Aggressive or NodeTemperament.Patient, t);
+				if (t == NodeTemperament.Aggressive) aggressive++;
+			}
+			Assert.True(aggressive is > 150 and < 250, $"{node}: about 50/50 over 400 seeds (aggressive {aggressive})");
+		}
+		int differ = 0;
+		for (uint seed = 1; seed <= 100; seed++) if (NodeTemperament.Roll(seed, "r2-oni") != NodeTemperament.Roll(seed, "r3-oni")) differ++;
+		Assert.True(differ > 20, $"nodes of one run roll independently ({differ}/100 differ)");
+	}
+
+	[Test]
+	public static void Temperament_ANamedProfileIsKept_NoRoll()
+	{
+		var profiles = HarnessContent.Load(ContentPaths.DataDir, ContentPaths.FixturesDir).Profiles("oni");
+		var node = Resolve("oni");
+		for (uint seed = 1; seed <= 20; seed++)
+		{
+			Assert.Equal(NodeTemperament.Roll(seed, node.NodeId), profiles[NodeTemperament.Pick(profiles, node, seed)].Temperament, $"seed {seed}: unnamed node rolls");
+			Assert.Equal("oni-patient", profiles[NodeTemperament.Pick(profiles, node with { Profile = "oni-patient" }, seed)].Id, $"seed {seed}: named patient kept");
+			Assert.Equal("oni-aggressive", profiles[NodeTemperament.Pick(profiles, node with { Profile = "oni-aggressive" }, seed)].Id, $"seed {seed}: named aggressive kept");
+		}
+		Assert.Equal(-1, NodeTemperament.Pick(profiles, node with { Profile = "no-such-profile" }, 1), "a missing named profile is -1 (the caller reports it)");
+	}
+
+	[Test]
+	public static void Harness_EachFightPlaysItsNodesRolledTemperament_BothTemperamentsAppear()
+	{
+		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
+		var batch = RunHarness.PlayBatch(Content, bot, 1, 40);
+		var seen = new HashSet<string>();
+		foreach (var r in batch.Runs)
+			foreach (var n in r.Nodes.Where(n => n.Fight is not null && n.Type != "boss"))
+			{
+				string want = NodeTemperament.Roll(r.Seed, n.Id);
+				Assert.True(n.Fight!.Profile.EndsWith("-" + want), $"seed {r.Seed} {n.Id}: profile {n.Fight.Profile} plays the rolled {want}");
+				seen.Add(n.Fight.Profile);
+			}
+		foreach (string p in new[] { "kitsune-aggressive", "kitsune-patient", "oni-aggressive", "oni-patient", "kappa-aggressive", "kappa-patient" })
+			Assert.True(seen.Contains(p), $"{p} is fought in 40 runs: " + string.Join(",", seen));
+	}
+
+	[Test]
 	public static void Harness_OniAndKappaNodesFightWithTheirOwnProfiles_AndTheReportListsTheMix()
 	{
 		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
@@ -129,7 +180,7 @@ public static class PerYokaiProfileTests
 		var doc = System.Text.Json.JsonDocument.Parse(json);
 		var mix = doc.RootElement.GetProperty("summary").GetProperty("fight_mix");
 		Assert.Equal(fights.Count, mix.EnumerateArray().Sum(e => e.GetProperty("fights").GetInt32()), "fight_mix counts every fight once");
-		Assert.True(mix.EnumerateArray().Any(e => e.GetProperty("profile").GetString() == "oni-aggressive" && e.GetProperty("fighter").GetString() == "kitsune"), "the Oni on the Kitsune body is listed");
+		Assert.True(mix.EnumerateArray().Any(e => e.GetProperty("profile").GetString()!.StartsWith("oni-") && e.GetProperty("fighter").GetString() == "kitsune"), "the Oni on the Kitsune body is listed");
 		Assert.Equal(json, HarnessReport.ToJson(RunHarness.PlayBatch(Content, bot, 1, 20)), "deterministic: same seed, same bytes");
 	}
 }
