@@ -1,0 +1,36 @@
+{
+  "kind": "modifier",
+  "id": "sumo-stance",
+  "name": "Sumo Stance",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": true,
+  "rules": ["A2", "A4", "A8", "A9", "A10", "A12", "E7", "E10", "E20", "F2", "K3", "P1"],
+  "applies_to": {
+    "requires": [],
+    "excludes": ["projectile"]
+  },
+  "charge": {
+    "button": "special",
+    "window_ticks": { "min": 0, "max": 30, "status": "proposed" },
+    "step_ticks": 10,
+    "grace_ticks": 0,
+    "release": "dash_then_move",
+    "hold_pose_clip": "ryo-crouch",
+    "dash": {
+      "duration": "startup",
+      "units_per_tick_by_step": [14, 18, 22, 26],
+      "cap_units_per_tick": 26,
+      "status": "proposed"
+    }
+  },
+  "effects": [
+    { "target": "properties.forward_travel", "op": "set", "value": "charge_dash", "when": "charge_released" }
+  ],
+  "card": {
+    "plain": "Hold the button to brace, then let go to dash into the move, faster the longer you held.",
+    "frames": "Hold up to 30 ticks; dash during startup at 14 / 18 / 22 / 26 units per tick (0-9 / 10-19 / 20-29 / 30 ticks held), capped at 26. No damage change."
+  },
+  "notes": "DESIGNER DECISION 2026-10-20: 'holding charge' = holding longer gives a faster dash, up to a maximum speed; replaces the GDD table's '+20% damage' (needs an amendment in docs/design/gdd-amendments.md, producer). All numbers are PROPOSED. Reference speeds: walk 12.8 u/tick (C2), forward dash 300 u / 18 frames = 16.7 u/tick (E10), so uncharged 14 is a little under a dash and the cap 26 is about 1.5x a dash. The dash covers the special's own startup frames only (startup 10 = 140-260 units; startup 16 = 224-416), so hitboxes, active and recovery stay the clip's truth (F2) and only position changes. No new animation (A10): the dash plays the special's own matched clip unretimed (root travel stripped, the dash is data, as for Oni's rush and E15); during the hold Ryo plays the existing ryo-crouch clip (Kappa and the Tanuki use Ryo's clips). Retiming is not used, so F2's 0.5x-2x and 4-frame hold limits are not touched. Trade-off: the special starts up to 30 ticks late, so the player buys reach and surprise with time; it is not a damage buff (P1). Kihon parity (K3): the hold is the same Special button in both schemes; Kata's +10% precision bonus is unaffected. Any non-projectile special can take it (a dash with a cast makes no sense); frame-data 'requires' cannot express exclusion. ENGINE/SCHEMA NEEDS (gameplay-programmer; schema NOT edited here): (1) common.schema.json modifierCondition: new 'charge_released', read on the release tick with the held tick count; (2) effectTarget: allow 'properties.forward_travel' (the field exists in frame-data.schema.json but nothing in game/scripts reads it yet, and it is a total distance, not a per-tick speed); (3) modifier.schema.json: a 'charge' object as above (button, window_ticks, step_ticks, units_per_tick_by_step as integers, cap) and 'applies_to.excludes'; (4) engine: a holding state after the special's command in which the move has not started (E7's 40-tick charge is a motion charge, a different mechanism; the 30-tick window here is separate and proposed), held ticks read on release, an integer per-tick position step during startup, hold ticks in the state hash (deterministic); (5) a bot/harness hook so the Tanuki and bots can choose a hold length. Until then this file does not validate against modifier.schema.json (unknown 'charge', 'excludes' and 'when' value)."
+}
