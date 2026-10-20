@@ -25,20 +25,25 @@ public static class BotIdleGuardTests
 	};
 
 	/// <summary>Per tick: Ryo's input, then whether he guarded and attacked on that tick. The opponent stands still,
-	/// or with <paramref name="hopper"/> jumps forward over Ryo whenever it is grounded and idle (cross-ups).</summary>
-	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7, List<int>? sides = null, bool hopper = false)
+	/// or with <paramref name="hopper"/> jumps forward over Ryo whenever it is grounded and idle (cross-ups); with
+	/// <paramref name="jumpIn"/> it also presses heavy kick <paramref name="jumpIn"/> ticks into each jump (a jump-in threat).</summary>
+	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7, List<int>? sides = null, bool hopper = false, int jumpIn = 0)
 	{
 		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
 		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
 		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
 		var bot = new NewcomerBot(cfg, BotKit.From(m.P1), seed);
 		var log = new List<(FighterInput, bool, bool)>();
+		int air = 0;
 		for (int t = 0; t < ticks && m.Phase != MatchPhase.Over; t++)
 		{
 			var input = bot.Next(AiView.Capture(m));
 			var p2 = FighterInput.None;
+			air = m.P2.Airborne ? air + 1 : 0;
 			if (hopper && !m.P2.Airborne && m.P2.State == FighterState.Idle)
 				p2 = new FighterInput(InputBits.Up | (m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right));
+			else if (jumpIn > 0 && air == jumpIn)
+				p2 = new FighterInput(InputBits.HeavyKick);
 			m.Step(input, p2);
 			if (m.Phase == MatchPhase.Fighting) sides?.Add(Math.Sign(m.P2.X - m.P1.X));
 			if (m.Phase == MatchPhase.Fighting) log.Add((input, m.P1.Guarding, m.P1.State == FighterState.Attack));
@@ -105,6 +110,37 @@ public static class BotIdleGuardTests
 		Assert.True(checkedTicks > 200, $"enough settled ticks checked ({checkedTicks})");
 	}
 
+	/// <summary>
+	/// YOK-166 (designer 2026-10-20): the reactive Block plan follows a cross-up the same way. The opponent jumps over Ryo
+	/// and kicks 22 ticks into the jump, after the apex, so the kick is still out as it crosses; Ryo only ever blocks (no idle guard, waits press nothing, no anti-air), so every direction he
+	/// holds is a block, and once the delayed view (P6) has settled on a side, it is away from the opponent on that side.
+	/// </summary>
+	[Test]
+	public static void Block_100_CrossUp_GuardFollowsTheDelayedSide()
+	{
+		var sides = new List<int>();
+		var cfg = Only(wait: 1, idleGuard: 0) with { AntiAirPct = 0, BlockPct = 100 };
+		var (ticks, bot) = Play(cfg, 1800, 7, sides, hopper: true, jumpIn: 22);
+		int lag = cfg.ReactionFrames + 1, checkedTicks = 0, crossedBlocks = 0;
+		for (int i = lag + 1; i < ticks.Count; i++)
+		{
+			if (ticks[i].In.Bits == InputBits.None) continue;
+			Assert.True((ticks[i].In.Bits & ~(InputBits.Left | InputBits.Right)) == InputBits.None, $"tick {i}: only a block is held ({ticks[i].In.Bits})");
+			int seen = sides[i - lag];
+			bool stable = true;
+			for (int k = i - lag; k <= i; k++) stable &= sides[k] == seen && seen != 0;
+			if (!stable) continue;
+			checkedTicks++;
+			// a block held through a side switch: the tick before this settled window the bot saw the other side
+			if (i - lag - 1 >= 0 && sides[i - lag - 1] != seen && ticks[i - 1].In.Bits != InputBits.None) crossedBlocks++;
+			InputBits away = seen > 0 ? InputBits.Left : InputBits.Right;
+			Assert.Equal(away, ticks[i].In.Bits, $"tick {i}: block held away from the opponent on the side the bot saw");
+		}
+		Assert.True(bot.Stats.Blocks > 0 && bot.Stats.IdleGuards == 0, $"reactive blocks only ({bot.Stats.Blocks})");
+		Assert.True(checkedTicks > 50, $"enough settled block ticks checked ({checkedTicks})");
+		Assert.True(crossedBlocks > 0, $"a block was held through a cross-up ({crossedBlocks})");
+	}
+
 	[Test]
 	public static void IdleGuard_100_InRangeWalksBackOff_0_WalksBothWays()
 	{
@@ -143,19 +179,21 @@ public static class BotIdleGuardTests
 	}
 
 	/// <summary>
-	/// 0 is the YOK-26 bot exactly: the first runs of the committed main batch (seed 1, idle guard absent, YOK-154
-	/// re-ran it byte-identical) play to the same session hashes, so a 0 roll draws nothing from the RNG.
+	/// 0 plays the bot without idle guards: the first runs of the seed-1 batch at idle_guard_pct 0 play to pinned session
+	/// hashes, so a 0 roll draws nothing from the RNG. Re-pinned for YOK-166 (designer 2026-10-20, new R5 baseline): the
+	/// reactive Block now follows a cross-up, which changes 25 of the 200 runs at 0 (run 3 among them); runs 1 and 2 are
+	/// unchanged by it. (The old pins were already stale on main after the YOK-156/157 fight changes.)
 	/// </summary>
 	[Test]
 	public static void IdleGuard_0_PlaysTheOldBatch()
 	{
 		var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = 0 } };
 		var batch = RunHarness.PlayBatch(Content, bot, 1, 3);
-		var want = new[] { "c7b99e223b9a0450", "28a9873a8981ac73", "09aec0317e926252" };
+		var want = new[] { "1144460045766550", "e75276f37981d48f", "8091329b164ab95a" };
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
-		for (int i = 0; i < want.Length; i++)
-			Assert.Equal(want[i], runs[i].GetProperty("session_hash").GetString(), $"run seed {i + 1}");
+		var got = Enumerable.Range(0, want.Length).Select(i => runs[i].GetProperty("session_hash").GetString()).ToArray();
+		Assert.Equal(string.Join(" ", want), string.Join(" ", got), "runs seed 1-3");
 		foreach (var run in runs.EnumerateArray())
 			foreach (var node in run.GetProperty("nodes").EnumerateArray())
 				if (node.TryGetProperty("fight", out var f))
