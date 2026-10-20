@@ -12,15 +12,18 @@ namespace YokaiFighters.Harness;
 /// </summary>
 public sealed class BotKit
 {
-	public readonly record struct Press(InputBits Bits, int Frames);
+	public readonly record struct Press(InputBits Bits, int Frames, string? Id = null);
 
 	public IReadOnlyList<Press> Normals { get; }
 	/// <summary>Filled slots A-D with each special's total frames.</summary>
 	public IReadOnlyList<(SpecialSlot Slot, int Frames)> Specials { get; }
 	public Press Throw { get; }
+	/// <summary>YOK-157: total frames of each of Ryo's own moves, by id (his move list, never the opponent's).</summary>
+	public IReadOnlyDictionary<string, int> MoveFrames { get; }
 
-	BotKit(List<Press> normals, List<(SpecialSlot, int)> specials, Press thrw)
+	BotKit(List<Press> normals, List<(SpecialSlot, int)> specials, Press thrw, IReadOnlyDictionary<string, int> moveFrames)
 	{
+		MoveFrames = moveFrames;
 		Normals = normals;
 		Specials = specials;
 		Throw = thrw;
@@ -30,16 +33,20 @@ public sealed class BotKit
 	{
 		var normals = new List<Press>();
 		Press thrw = default;
+		var frames = new Dictionary<string, int>(StringComparer.Ordinal);
 		foreach (var m in f.Moves)
 		{
+			frames[m.Id] = m.TotalFrames;
 			if (m.IsThrow) { if (thrw.Bits == InputBits.None) thrw = new Press(m.ThrowButtons, m.TotalFrames); continue; }
 			if (!m.IsNormal || m.Air) continue;
-			normals.Add(new Press(m.Button | DirectionBits(m.DirectionMask), m.TotalFrames));
+			normals.Add(new Press(m.Button | DirectionBits(m.DirectionMask), m.TotalFrames, m.Id));
 		}
 		var specials = new List<(SpecialSlot, int)>();
 		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
 			if (f.Specials[s] is { } eq) specials.Add(((SpecialSlot)s, eq.Move.TotalFrames));
-		return new BotKit(normals, specials, thrw);
+		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+			if (f.Specials[s] is { } eq) frames[eq.Move.Id] = eq.Move.TotalFrames;
+		return new BotKit(normals, specials, thrw, frames);
 	}
 
 	/// <summary>
@@ -69,6 +76,8 @@ public sealed class BotKit
 public sealed class NewcomerBot
 {
 	public const int Self = 0;
+	/// <summary>E7: ticks a recognised command waits to be used; a press sent later than this before Ryo can act is lost.</summary>
+	static readonly int CommandBuffer = InputConfig.Default.CommandBuffer;
 
 	enum PlanKind { None, Walk, Wait, Block, Attack }
 
@@ -88,6 +97,8 @@ public sealed class NewcomerBot
 
 	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
 	public BotStats Stats { get; } = new();
+	/// <summary>YOK-157: the id of the normal the bot anti-airs with (null when Ryo has no ground normal).</summary>
+	public string? AntiAirMove => _antiAir?.Id;
 
 	public NewcomerBot(BotFightConfig cfg, BotKit kit, uint seed)
 	{
@@ -127,10 +138,9 @@ public sealed class NewcomerBot
 		// threat, on the first tick it sees it while free to react (not mid-move); a guard, once up, is held while it lasts.
 		bool threat = o.Threatening || Shots(view) > 0;
 		if (!threat) _threatRolled = false;
-		// YOK-157 (F4): a jump gets one anti_air_pct roll, on the first tick (of the delayed screen) the bot is free while it
-		// sees the opponent airborne, not only on the tick the jump first shows, when the bot is often mid-move. Free = no
-		// plan it must finish, and its own fighter (live screen) idle or in a move's recovery (the press is buffered), not in
-		// stun, knockdown or a throw, where the press would be lost.
+		// YOK-157 (R5; Y4 delay kept): a jump gets one anti_air_pct roll, on the first tick (of the delayed screen) the bot
+		// is free while it sees the opponent airborne, not only on the tick the jump first shows, when the bot is often
+		// mid-move. Free = no plan to finish and the press will come out (FreeToPress).
 		if (!o.Airborne) _jumpRolled = false;
 		if (threat && interruptible && !_threatRolled)
 		{
@@ -141,7 +151,7 @@ public sealed class NewcomerBot
 				Stats.Blocks++;
 			}
 		}
-		else if (o.Airborne && interruptible && (me.State is FighterState.Idle or FighterState.Attack) && !_jumpRolled && _antiAir is { } aa)
+		else if (o.Airborne && interruptible && FreeToPress(me, now.HitstopLeft) && !_jumpRolled && _antiAir is { } aa)
 		{
 			_jumpRolled = true;
 			if (Roll(_cfg.AntiAirPct))
@@ -159,6 +169,15 @@ public sealed class NewcomerBot
 		}
 		return Emit(me.Facing, s, o);
 	}
+
+	/// <summary>
+	/// YOK-157: Ryo (live screen, his own fighter) can act now, or his move ends, hitstop included, within the E7 command
+	/// buffer so a press sent now is used. Not in stun, knockdown, a throw or the air, where it would be lost.
+	/// </summary>
+	bool FreeToPress(FighterView me, int hitstopLeft) =>
+		me.State == FighterState.Idle
+		|| me.State == FighterState.Attack && me.MoveId is { } id && _kit.MoveFrames.TryGetValue(id, out int total)
+			&& total - me.MoveFrame + hitstopLeft < CommandBuffer;
 
 	void Decide(FighterView s, FighterView o)
 	{

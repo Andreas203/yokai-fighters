@@ -9,7 +9,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-157 (P5, P6, Y2; balance gate F4, F5): the harness's per-hit and habit log, and the bot's anti-air check.
+/// YOK-157 (P5, P6, Y2, R5; YOK-154 report findings 4 and 5): the harness's per-hit and habit log, and the bot's anti-air check.
 /// The log only listens: the same seed plays the same runs with it on or off.
 /// </summary>
 public static class HitLogTests
@@ -169,12 +169,19 @@ public static class HitLogTests
 	}
 
 	/// <summary>
-	/// F4: the opponent jumps over and over while the bot (anti_air_pct 100) presses normals non-stop, so a jump often
+	/// YOK-157 (R5; E7 buffer, Y4 delay): the opponent jumps over and over while the bot (anti_air_pct 100) presses normals non-stop, so a jump often
 	/// shows while the bot is mid-move. Each jump still gets its anti-air, on the first free tick, never before the bot's
-	/// reaction frames, and at most one per jump.
+	/// reaction frames, at most one per jump, and the anti-air move really starts within the E7 command buffer of the roll
+	/// (a roll spent on a press the sim then drops would over-count bot_anti_airs and waste the jump).
 	/// </summary>
 	[Test]
 	public static void Bot_AntiAirs_OnTheFirstFreeTick_WhileTheOpponentIsAirborne()
+	{
+		AntiAirRun(walkIn: false); // jumps from range: the bot's normals whiff
+		AntiAirRun(walkIn: true);  // the opponent walks in between jumps: the bot's normals connect, so hitstop outlasts its plans
+	}
+
+	static void AntiAirRun(bool walkIn)
 	{
 		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
 		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
@@ -189,6 +196,9 @@ public static class HitLogTests
 		int n = cfg.ReactionFrames;
 		var jumpStarts = new List<int>();
 		var antiAirTicks = new List<int>();
+		var aaStarts = new List<int>();
+		string aaMove = ryo.AntiAirMove!;
+		Assert.True(aaMove is not null, "Ryo has an anti-air normal");
 		bool wasAirborne = false;
 		for (int t = 0; t < 1800 && m.Phase != MatchPhase.Over; t++)
 		{
@@ -199,9 +209,11 @@ public static class HitLogTests
 			int before = ryo.Stats.AntiAirs;
 			var input = ryo.Next(view);
 			if (ryo.Stats.AntiAirs > before) antiAirTicks.Add(view.Tick);
-			m.Step(input, new FighterInput(t % 70 < 2 ? InputBits.Up : InputBits.None)); // a fresh jump every 70 ticks
+			var toward = m.P2.X > m.P1.X ? InputBits.Left : InputBits.Right;
+			m.Step(input, new FighterInput(t % 70 < 2 ? InputBits.Up : walkIn ? toward : InputBits.None)); // a fresh jump every 70 ticks
+			if (m.P1.CurrentMove?.Id == aaMove && m.P1.MoveFrame == 1) aaStarts.Add(m.Tick);
 		}
-		Assert.True(jumpStarts.Count >= 5, $"the opponent jumped ({jumpStarts.Count}; phase {m.Phase}, ticks {m.Tick})");
+		Assert.True(jumpStarts.Count >= (walkIn ? 3 : 5), $"walk-in {walkIn}: the opponent jumped ({jumpStarts.Count}; phase {m.Phase}, ticks {m.Tick})");
 		int late = 0;
 		var answered = new HashSet<int>();
 		foreach (int aa in antiAirTicks)
@@ -210,8 +222,10 @@ public static class HitLogTests
 			Assert.True(answered.Add(j), $"one anti-air roll per jump: the jump at {j} was answered twice");
 			Assert.True(aa - j >= n - 1, $"Y4: the anti-air at {aa} comes no sooner than {n} reaction frames after the jump at {j}");
 			if (aa - j > n - 1) late++;
+			int buffer = InputConfig.Default.CommandBuffer;
+			Assert.True(aaStarts.Any(st => st > aa && st <= aa + buffer), $"walk-in {walkIn}, E7: the anti-air rolled at {aa} starts {aaMove} within {buffer} ticks");
 		}
-		Assert.True(antiAirTicks.Count >= jumpStarts.Count - 1, $"every jump the bot could see was anti-aired ({antiAirTicks.Count} of {jumpStarts.Count})");
+		Assert.True(antiAirTicks.Count >= jumpStarts.Count - 1, $"walk-in {walkIn}: every jump the bot could see was anti-aired ({antiAirTicks.Count} of {jumpStarts.Count})");
 		Assert.True(late > 0, $"some anti-airs came after the jump's first shown tick, when the bot got free ({late})");
 	}
 }
