@@ -243,6 +243,13 @@ def check_run_map(doc: dict) -> list[tuple[str, str]]:
 STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn\Z", re.ASCII)
 
 
+def _load_json(f: Path):
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     """YOK-77: every tier named is defined, and every node type used by a run map in the same folder has an
     entry (the game's resolver refuses a node whose type has no Y4 tier)."""
@@ -255,6 +262,15 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             tier = entry.get("tier") if isinstance(entry, dict) else None
             if isinstance(tier, str) and tier not in tiers:
                 errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
+    # YOK-174: a fight opponent with no fighter plays as a yokai (plays_as, else its own id) that must have profiles.
+    profiled = {pp.get("yokai") for pp in (_load_json(f) for f in sorted((ROOT / "data" / "profiles").glob("*.json"))) if isinstance(pp, dict)}
+    opponents = doc.get("opponents") if isinstance(doc.get("opponents"), dict) else {}
+    for name, entry in opponents.items():
+        if not isinstance(entry, dict) or "fighter" in entry:
+            continue
+        plays = entry.get("plays_as", name)
+        if isinstance(plays, str) and profiled and plays not in profiled:
+            errs.append((f"opponents.{name}.plays_as", f"'{plays}' has no behaviour profile in data/profiles/ (Y1)"))
     # YOK-144: every stage named is a scene under scenes/stage/ that exists (res:// = game/). STAGE_PATTERN is the
     # schema's $defs/stage pattern and NodeSceneTable.StagePattern; it also stops '..' from escaping the folder here.
     stages = [("default_stage", doc.get("default_stage"))]

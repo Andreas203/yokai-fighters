@@ -71,7 +71,9 @@
         "type": "object",
         "additionalProperties": false,
         "dependentRequired": { "kit": ["fighter"] },
+        "not": { "required": ["fighter", "plays_as"] },
         "properties": {
+          "plays_as": { "description": "YOK-174: for a yokai with no 'fighter' (it fights on the fallback fighter's kit): the yokai whose own move files in data/moves/ (per kind, the fallback's where it has none; specials only its own) and behaviour profiles in data/profiles/ it fights with. Left out = the opponent's own id. Elders name their yokai (elder-oni = oni); the apprentice names the fallback fighter.", "$ref": "common.schema.json#/$defs/id" },
           "fighter": { "description": "Fighter (kit) id in data/moves/. Leave out while the yokai has no kit: the fallback fights.", "$ref": "common.schema.json#/$defs/id" },
           "kit": { "description": "How the opponent's kit is built. Left out = the fighter's own files in data/moves/. copy_of_ryo = Ryo's normals, throw and starters plus the special copied at the T1 lock (T0), on Ryo's model and clips; 'fighter' is then only the name profiles and the HUD use.", "enum": ["copy_of_ryo"] },
           "tier": { "$ref": "common.schema.json#/$defs/id" },

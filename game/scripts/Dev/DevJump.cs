@@ -141,6 +141,9 @@ public static class DevJump
 	/// <summary>The fighter id the node-scene table gives the setup's node (the elder's stand-in is its yokai's fighter).</summary>
 	public static string FighterOf(DevFightSetup setup) => Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context.Fighter;
 
+	/// <summary>YOK-174: the yokai whose behaviour profiles (and own move files) the setup's opponent fights with.</summary>
+	public static string PlaysAsOf(DevFightSetup setup) => Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context.MovesAndProfilesOf;
+
 	/// <summary>Temperaments of the fighter's profiles (data/profiles/; Y1), aggressive first.</summary>
 	public static IReadOnlyList<string> Temperaments(string fighter) =>
 		FightScene.LoadProfiles(fighter).Select(p => p.Temperament).Distinct().ToArray();
@@ -160,8 +163,7 @@ public static class DevJump
 		if (!OpponentIds.Contains(setup.Opponent)) throw new ArgumentException($"unknown opponent '{setup.Opponent}'");
 		if (setup.Elder && (setup.Opponent == TanukiId || ElderOf(setup.Opponent) is null)) throw new ArgumentException($"{setup.Opponent} has no elder");
 		var node = FightNode(setup.Opponent, setup.Elder);
-		string fighter = Table().Resolve(node).Context.Fighter;
-		var table = Table(ProfileFor(fighter, setup.Temperament));
+		var table = Table(ProfileFor(Table().Resolve(node).Context.MovesAndProfilesOf, setup.Temperament)); // YOK-174
 		var run = (source ?? DevRunStates.Source).Build(pool);
 		if (setup.Opponent == TanukiId && setup.CopySpecial is { } copy) ShapeCopy(run, pool, copy, setup.CopyLevel);
 		run.StartMap(new MapGraph(MapId, new[] { node }, Array.Empty<MapRoute>(), NodeTypeRegistry.Default(), "Dev jump"));

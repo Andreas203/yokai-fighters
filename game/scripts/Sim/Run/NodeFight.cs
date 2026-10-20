@@ -29,7 +29,9 @@ public static class NodeFight
 		}
 		else
 		{
-			var foe = Load(opponent, sources, log);
+			// YOK-174: a yokai with no fighter of its own fights with its own move files on the fallback's kit.
+			string playsAs = session?.Node is { } at && at.Fighter == opponent ? at.MovesAndProfilesOf : opponent;
+			var foe = Load(playsAs, opponent, sources, log);
 			m = new Match(cfg, ryo.Moves, foe.Moves);
 			foe.Equip(m.P2);
 		}
@@ -39,9 +41,11 @@ public static class NodeFight
 		return m;
 	}
 
-	static Kit Load(string fighter, KitSources sources, Action<string>? log)
+	static Kit Load(string fighter, KitSources sources, Action<string>? log) => Load(fighter, fighter, sources, log);
+
+	static Kit Load(string playsAs, string fighter, KitSources sources, Action<string>? log)
 	{
-		var kit = Kit.Load(fighter, sources);
+		var kit = Kit.LoadAs(playsAs, fighter, sources);
 		foreach (var n in kit.Notes) log?.Invoke(n);
 		return kit;
 	}

@@ -31,6 +31,13 @@ public sealed record NodeContext(
 	public string? Stage { get; init; }
 	/// <summary>YOK-156, Y4: percent of its move damage this node's opponent deals, from the tier's <c>damage_dealt_pct</c> (the apprentice: 50); 100 when the tier names none.</summary>
 	public int DamageDealtPct { get; init; } = SimConfig.FullDamagePct;
+	/// <summary>YOK-174: the yokai whose own move files and behaviour profiles the opponent fights with
+	/// (<see cref="YokaiFighters.Sim.Kit.LoadAs"/> on <see cref="Fighter"/>'s kit); the table's <c>opponents[yokai].plays_as</c>,
+	/// else the opponent's own id when it has no fighter (the Oni, the Kappa), else <see cref="Fighter"/>. Null (older
+	/// callers) = <see cref="Fighter"/>.</summary>
+	public string? PlaysAs { get; init; }
+	/// <summary>YOK-174: <see cref="PlaysAs"/> with its default.</summary>
+	public string MovesAndProfilesOf => PlaysAs ?? Fighter;
 }
 
 /// <summary>The scene a node runs in (a <c>res://</c> path) and what it is handed.</summary>
@@ -54,6 +61,7 @@ public interface INodeSceneResolver
 /// <item>opponent: the node's yokai → <c>nodes[id].opponent</c> → <c>types[type].opponent</c> (the stand-in for a
 /// node with no yokai); its kit is <c>opponents[yokai].fighter</c>, else <c>fallback_fighter</c> with a note;</item>
 /// <item>tier (Y4): <c>nodes[id]</c> → <c>opponents[yokai]</c> → <c>types[type]</c>; frames from <c>tiers</c>;</item>
+/// <item>plays as (YOK-174, whose move files and profiles): <c>opponents[yokai].plays_as</c> → the yokai when it has no fighter → the fighter;</item>
 /// <item>profile: <c>nodes[id]</c> → <c>opponents[yokai]</c>; binds: <c>nodes[id]</c> → <c>types[type]</c> → false;</item>
 /// <item>coins (R8): <c>nodes[id]</c> → <c>rows[row].types[type]</c> → <c>types[type]</c> → 0;</item>
 /// <item>stage (YOK-144, presentation only): <c>nodes[id]</c> → <c>types[type]</c> → <c>default_stage</c> → null (the fight scene's own default).</item>
@@ -66,7 +74,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	public const string Kind = "node_scenes";
 	public const int SchemaVersion = 1;
 
-	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds, int? Coins = null, string? Kit = null, string? Stage = null);
+	sealed record Entry(string? Scene, string? Opponent, string? Fighter, string? Tier, string? Profile, bool? Binds, int? Coins = null, string? Kit = null, string? Stage = null, string? PlaysAs = null);
 
 	/// <summary>YOK-144: where a stage scene may live.</summary>
 	public const string StagePrefix = "res://scenes/stage/";
@@ -186,6 +194,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			node.Payload, notes)
 		{
 			Kit = foe?.Kit,
+			PlaysAs = foe?.PlaysAs ?? (foe?.Fighter is null && yokai is not null ? yokai : fighter), // YOK-174
 			DamageDealtPct = _damagePct.TryGetValue(tier, out int pct) ? pct : SimConfig.FullDamagePct,
 			Stage = byNode?.Stage ?? byType?.Stage ?? DefaultStage,
 			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
@@ -208,7 +217,9 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			}
 			map[name] = new Entry(Text(e, "scene", where), Text(e, "opponent", where), Text(e, "fighter", where),
 				Text(e, "tier", where), Text(e, "profile", where), binds, Coins(e, where), Text(e, "kit", where),
-				StagePath(Text(e, "stage", where), where + ".stage"));
+				StagePath(Text(e, "stage", where), where + ".stage"), Text(e, "plays_as", where));
+			if (map[name].PlaysAs is not null && (section != "opponents" || map[name].Fighter is not null)) // YOK-174
+				throw new FormatException($"node scenes: {where}.plays_as is only for an opponent with no 'fighter' of its own");
 			if (map[name].Stage is not null && section == "opponents")
 				throw new FormatException($"node scenes: {where}.stage: a stage belongs to a node or a node type, not an opponent");
 			if (map[name].Kit is not null && (section != "opponents" || map[name].Fighter is null))

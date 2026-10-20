@@ -95,6 +95,35 @@ public sealed class Kit
 	}
 
 	/// <summary>
+	/// YOK-174: a yokai with no fighter of its own fighting on <paramref name="body"/>'s kit, but with every move
+	/// file it does have. Per kind (ground normals, throw, air normals, other), the yokai's own <c>data/moves/</c>
+	/// files when it has any, else <paramref name="body"/>'s kit of that kind (its data or its stand-in fixtures).
+	/// Specials: only the yokai's own (data, else its own fixtures), never the body's: an Oni does not throw Foxfire.
+	/// Body numbers (<c>data/fighters/</c>): the yokai's file when it has one, else the body's.
+	/// <paramref name="yokai"/> == <paramref name="body"/> is exactly <see cref="Load"/>.
+	/// </summary>
+	public static Kit LoadAs(string yokai, string body, KitSources src)
+	{
+		if (yokai == body) return Load(body, src);
+		var bodyKit = Load(body, src);
+		var notes = new List<string>();
+		var real = MoveLoader.LoadDirectory(src.MovesDir, includeSpecials: false).Where(m => m.Source == yokai).ToArray();
+		var moves = new List<MoveData>();
+		foreach (var (kind, label) in new[] { (MoveKind.Other, "other moves"), (MoveKind.Ground, "normals"), (MoveKind.Throw, "throw"), (MoveKind.Air, "air normals") })
+		{
+			var mine = real.Where(m => KindOf(m) == kind).ToArray();
+			if (mine.Length > 0) { moves.AddRange(mine); continue; }
+			var standIn = bodyKit.Moves.Where(m => KindOf(m) == kind).ToArray();
+			moves.AddRange(standIn);
+			if (standIn.Length > 0) notes.Add($"{yokai}: no {label} in data, {body}'s {label} stand in");
+		}
+		var specials = LoadSpecials(yokai, src, notes);
+		bool ownBody = !string.IsNullOrEmpty(src.FightersDir) && File.Exists(Path.Combine(src.FightersDir, yokai + ".json"));
+		return new Kit(yokai, moves.ToArray(), specials, notes)
+			{ Body = FighterData.Load(src.FightersDir, ownBody ? yokai : body) };
+	}
+
+	/// <summary>
 	/// The fighter's own specials (Ryo: starters only, A1), or the fighter's TEST FIXTURE specials while
 	/// <see cref="KitSources.MovesDir"/> has none. Also feeds <see cref="AbilityPool"/>'s starters.
 	/// </summary>

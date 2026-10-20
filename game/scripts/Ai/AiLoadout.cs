@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Ai;
@@ -51,6 +52,28 @@ public sealed class AiLoadout
 		if (a.Kind != ActionKind.Special || !_ex.TryGetValue(a.ToString(), out var v)) return false;
 		(input, cost) = v;
 		return true;
+	}
+
+	/// <summary>
+	/// YOK-174: the actions <paramref name="p"/> names (habit and behaviours) that this fighter cannot do: a
+	/// <c>normal:</c> or <c>special:</c> id it does not have, or <c>throw</c> with no throw. <c>special:copied</c> is
+	/// left out (it exists only after the Tanuki's copy lock, T0). Empty = every action resolves.
+	/// </summary>
+	public IReadOnlyList<string> Missing(BehaviourProfile p)
+	{
+		var missing = new List<string>();
+		foreach (var a in p.Behaviours.Select(b => b.Do).Prepend(p.Habit.Do))
+		{
+			bool ok = a.Kind switch
+			{
+				ActionKind.Normal => _moves.ContainsKey(a.ToString()),
+				ActionKind.Special => a.MoveId == BehaviourProfile.CopiedSpecial || _moves.ContainsKey(a.ToString()),
+				ActionKind.Throw => ThrowButtons != InputBits.None,
+				_ => true,
+			};
+			if (!ok && !missing.Contains(a.ToString())) missing.Add(a.ToString());
+		}
+		return missing;
 	}
 
 	public bool TryGet(AiAction a, out FighterInput input, out int frames)

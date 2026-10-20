@@ -245,7 +245,7 @@ public static class DevJumpTests
 			foreach (bool elder in DevJump.ElderOf(foe.Yokai) is null ? new[] { false } : new[] { false, true })
 			{
 				var probe = new DevFightSetup(foe.Yokai, Elder: elder);
-				foreach (string temp in DevJump.Temperaments(DevJump.FighterOf(probe)))
+				foreach (string temp in DevJump.Temperaments(DevJump.PlaysAsOf(probe)))
 					foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
 					{
 						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Grove };

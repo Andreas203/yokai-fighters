@@ -64,7 +64,7 @@ public partial class FightScene
 	/// <summary>YOK-77: the node's fighter's profiles, starting on the node's profile when it names one.</summary>
 	private void LoadNodeProfiles()
 	{
-		Profiles = LoadProfiles(Opponent);
+		Profiles = LoadProfiles(Node is { } n && n.Fighter == Opponent ? n.MovesAndProfilesOf : Opponent); // YOK-174: the yokai's own profiles
 		if (Node?.Profile is not { } id) return;
 		int i = Array.FindIndex(Profiles, p => p.Id == id);
 		if (i >= 0) _profileIndex = i;
@@ -79,7 +79,16 @@ public partial class FightScene
 			var profile = Profiles[_profileIndex % Profiles.Length];
 			var pressure = Pressure;
 			int reaction = pressure.ReactionFrames(Node?.ReactionFrames ?? profile.ReactionFrames); // Y4: the node's row, Y5: minus Tanuki wins
-			P2Ai = new ProfileAi(profile, 1, AiLoadout.From(Match.P2), AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
+			var loadout = AiLoadout.From(Match.P2);
+			// YOK-174: on the real content a named move the kit lacks is an error, not a silent skip. TEST FIXTURE kits
+			// (Sources.FixturesOnly, MovesDir empty) never match the real profiles' move ids, so they are not checked.
+			if (!string.IsNullOrEmpty(Sources.MovesDir) && loadout.Missing(profile) is { Count: > 0 } missing)
+			{
+				string why = $"FightScene: profile '{profile.Id}' names {string.Join(", ", missing)}, which P2's kit does not have";
+				GD.PushError(why);
+				throw new InvalidOperationException(why);
+			}
+			P2Ai = new ProfileAi(profile, 1, loadout, AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
 		}
 		else P2Ai = null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
