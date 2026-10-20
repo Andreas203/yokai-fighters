@@ -68,7 +68,7 @@
       "trigger": "Ryo tries to buy a special with every slot full; a replaced move loses its levels (A6)",
       "placeholders": [],
       "variants": [
-        "Hands full! Swap one out? It forgets its levels, mind.",
+        "Hands full! A swapped move forgets its levels, mind.",
         "No room. Something must go, levels and all.",
         "You can't hold more. Choose carefully."
       ]
@@ -77,7 +77,7 @@
       "trigger": "Ryo pays 40 to release a binding (R6)",
       "placeholders": [],
       "variants": [
-        "Letting one go? Kind of you. Forty, if you please.",
+        "Letting one go? Kind of you, forty please.",
         "Off it drifts. Forty, thank you.",
         "Free, then. Forty coins, and a kind deed."
       ]
