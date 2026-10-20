@@ -250,7 +250,8 @@ public static class ReplayTests
 		int ex = 0, bursts = 0;
 		m.SpecialStarted += (_, e) => { if (e.Fighter == 1 && e.Ex) ex++; };
 		m.BurstFired += (_, i) => { if (i == 1) bursts++; };
-		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 57, tier: AiFightTier.Elder);
+		// guardPct 0 (YOK-165): this seeded scenario builds meter by trading, which a pre-emptive guard changes; the guard's own replay test is AiGuardTests.
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 57, tier: AiFightTier.Elder, guardPct: 0);
 		var rec = Play(m, Chaos(57), null, 5400, ai, 57, stopAtOver: false);
 		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");
 		var back = ReplayRecording.FromBytes(rec.ToBytes());
