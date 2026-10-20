@@ -152,22 +152,22 @@ public sealed class ProfileAi
 
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
-		return _plan.Emit();
+		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
 	}
 
 	/// <summary>
 	/// YOK-165, Y4: the fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) is the
 	/// absolute chance the AI answers a jump it sees with an attack (designer 2026-10-20: elders and the Tanuki 100,
 	/// apprentice and yokai 50). One draw at that rate; on a hit, a weighted pick among the profile's attacking answers
-	/// to <c>opponent_jumping</c> (a second draw only when there are several). Null, so the other answers (block...)
-	/// roll by weight, on a miss, when the profile has no attacking answer (no draw at all), or when the pick is unavailable.
+	/// to <c>opponent_jumping</c> that this kit can perform (a second draw only when there are several). Null, so the
+	/// other answers (block...) roll by weight, on a miss, or when no attacking answer is performable (no draw at all).
 	/// </summary>
 	private Plan? JumpPunish(int rate, AiView view, int tick)
 	{
 		int total = 0, count = 0;
 		Behaviour? pick = null;
 		foreach (var b in Profile.Behaviours)
-			if (b.When == Observation.OpponentJumping && b.Do.IsMove) { total += b.Weight; count++; pick ??= b; }
+			if (CanPunishWith(b)) { total += b.Weight; count++; pick ??= b; }
 		if (pick is null) return null;
 		int roll = _rng.Next(100);
 		if (roll >= rate) return null;
@@ -176,7 +176,7 @@ public sealed class ProfileAi
 			int w = _rng.Next(total);
 			foreach (var b in Profile.Behaviours)
 			{
-				if (b.When != Observation.OpponentJumping || !b.Do.IsMove) continue;
+				if (!CanPunishWith(b)) continue;
 				if (w < b.Weight) { pick = b; break; }
 				w -= b.Weight;
 			}
@@ -185,6 +185,9 @@ public sealed class ProfileAi
 		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
 		return p;
 	}
+
+	/// <summary>YOK-165: an attacking answer to a jump that this kit can perform (side-effect free: no draw, no EX roll).</summary>
+	private bool CanPunishWith(Behaviour b) => b.When == Observation.OpponentJumping && b.Do.IsMove && _kit.CanDo(b.Do);
 
 	/// <summary>YOK-165: roll the pre-emptive guard (no draw at all when <see cref="GuardPct"/> is 0).</summary>
 	private bool RollGuard(int tick, AiView view, string trigger)
@@ -224,7 +227,8 @@ public sealed class ProfileAi
 		InputBits bits = diff > 0 ? back : diff < 0 ? fwd : InputBits.None; // preferred band is farther: back off
 		Record(tick, view, "neutral", Observation.Neutral, diff > 0 ? "space_back" : diff < 0 ? "space_forward" : "hold", roll, SpacingWeight);
 		// YOK-165: settled in its band, it waits in crouch guard rather than standing open (walking back already guards, C3).
-		if (diff == 0 && RollGuard(tick, view, "self_waiting")) bits = back | InputBits.Down;
+		if (diff == 0 && RollGuard(tick, view, "self_waiting"))
+			return new Plan(false, (new FighterInput(back | InputBits.Down), SpacingTicks)) { Guard = new[] { true } };
 		return new Plan(false, (new FighterInput(bits), SpacingTicks));
 	}
 
@@ -247,16 +251,21 @@ public sealed class ProfileAi
 		if (steps is null) return null;
 		// YOK-165: after a move of its own (whiffed or not) it may hold crouch guard through the recovery, so it is guarding
 		// on its first free frame, and a beat after. Not after the habit: that stays as punishable as the profile says (Y2).
+		bool[]? guardSteps = null;
 		if (!habit && a.IsMove && RollGuard(tick, view, "self_attacked"))
 		{
 			var guard = new FighterInput(back | InputBits.Down);
 			var tail = new (FighterInput, int)[steps.Length + 1];
 			Array.Copy(steps, tail, steps.Length);
-			for (int i = 1; i < steps.Length; i++) tail[i] = (guard, steps[i].Item2); // the wait steps; the press stays as built
-			tail[^1] = (guard, GuardTicks);
+			guardSteps = new bool[tail.Length];
+			for (int i = 1; i < tail.Length; i++) // the wait steps and the tail; the press stays as built
+			{
+				tail[i] = (guard, i < steps.Length ? steps[i].Item2 : GuardTicks);
+				guardSteps[i] = true;
+			}
 			steps = tail;
 		}
-		if (preHold <= 0) return new Plan(habit, steps);
+		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps };
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
@@ -372,11 +381,15 @@ public sealed class ProfileAi
 		private readonly (FighterInput In, int Ticks)[] _steps;
 		private int _i, _t;
 		public Plan(bool habit, params (FighterInput, int)[] steps) { Habit = habit; _steps = steps; }
+		/// <summary>YOK-165: the steps that are the pre-emptive guard. Their "back" is re-read every tick in <see cref="Emit"/>,
+		/// so a cross-up the AI sees mid-plan does not leave it holding down-forward.</summary>
+		public bool[]? Guard { get; init; }
 		public bool Done => _i >= _steps.Length;
-		public FighterInput Emit()
+		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;
 			var (input, ticks) = _steps[_i];
+			if (back != InputBits.None && Guard is { } g && g[_i]) input = new FighterInput(back | InputBits.Down);
 			var result = _t == 0 ? input : new FighterInput(input.Bits);
 			if (++_t >= ticks) { _i++; _t = 0; }
 			return result;

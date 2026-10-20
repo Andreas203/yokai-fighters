@@ -53,14 +53,14 @@ public static class AiGuardTests
 	}
 
 	/// <summary>
-	/// The harness content with the opponent as it was before YOK-156 and YOK-165: no pre-emptive guard (every profile's
-	/// guard_pct 0, so no draw), no tier jump-punish rate (the profiles' own weights) and full damage (no apprentice
-	/// half). For tests that pin whole-run hashes of older batches (BotIdleGuardTests' pins predate YOK-156, which is why
-	/// that test failed on main before this).
+	/// The harness content with the opponent as it was before YOK-156 and YOK-165: no tier jump-punish rate (the
+	/// profiles' own weights) and full damage (no apprentice half). Profiles stay as loaded (GuardPct untouched, so their
+	/// fingerprints too): the guard is off by default and the legacy test below checks no shipped profile opts in. For
+	/// tests that pin whole-run hashes of older batches (BotIdleGuardTests' pins predate YOK-156, which is why that test
+	/// failed on main before this).
 	/// </summary>
 	public static HarnessContent LegacyOpponent(HarnessContent c) => c with
 	{
-		Profiles = f => c.Profiles(f).Select(p => p with { GuardPct = 0 }).ToArray(),
 		Scenes = new LegacyScenes(c.Scenes),
 	};
 
@@ -77,6 +77,8 @@ public static class AiGuardTests
 	public static void LegacyOpponent_PlaysTheOldHashes()
 	{
 		// The first run of the main batch committed before YOK-156 (BotIdleGuardTests pins it too), bot idle guard 0.
+		foreach (var p in BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")))
+			Assert.True(p.GuardPct is null or 0, $"{p.Id}: no shipped profile opts in to the guard (else LegacyOpponent is not legacy)");
 		var content = LegacyOpponent(HarnessContent.Load(ContentPaths.DataDir, ContentPaths.FixturesDir));
 		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
 		var batch = RunHarness.PlayBatch(content, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
@@ -153,6 +155,26 @@ public static class AiGuardTests
 			Assert.True(hits.Count == 1, $"guard {pct}: Ryo's medium kick connects once ({hits.Count})");
 			Assert.Equal(pct == 100, hits[0].Blocked, $"guard {pct}: blocked = {pct == 100}");
 		}
+	}
+
+	/// <summary>Code-critic advisory 4: a guard step re-reads "back" every tick from the AI's own view, so once a
+	/// cross-up shows (reaction frames later) it keeps guarding the new side instead of holding down-forward.</summary>
+	[Test]
+	public static void Guard_FollowsACrossUp_OnceItShows()
+	{
+		var prof = BehaviourProfile.Parse(Json("close", BlockOnAttack));
+		var m = NewMatch();
+		Place(m, 150);
+		const int reaction = 15, cross = 61;
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 3, reaction, guardPct: 100);
+		int open = 0, side = Math.Sign(m.P1.X - m.P2.X);
+		for (int t = 1; t <= cross + reaction + 40; t++)
+		{
+			m.Step(t == cross ? new FighterInput(InputBits.DebugCrossUp) : FighterInput.None, ai.Next(AiView.Capture(m)));
+			if (t == cross) Assert.True(Math.Sign(m.P1.X - m.P2.X) == -side, "P1 crossed to the other side");
+			if (t > cross + reaction + 2 && !(m.P2.Guarding && m.P2.Crouching)) open++;
+		}
+		Assert.Equal(0, open, "guarding the new side from the tick the cross-up shows (+2 for the view and the step)");
 	}
 
 	/// <summary>After its own move it holds crouch guard through the recovery: guarding on its first free frame.</summary>
@@ -346,6 +368,69 @@ public static class AiGuardTests
 		Assert.True(ab == 0 && bb >= jb - 2, $"no attacking answer: nothing to punish with, the block keeps its weight ({bb} of {jb})");
 		Assert.True(Jumps(blockOnly, 100) == Jumps(blockOnly, null), "and no extra draw: identical to no tier rate");
 	}
+
+	/// <summary>The AI's decisions on the jumps (tick, kind, action, roll, pct), for pinning draw order.</summary>
+	static List<string> JumpLog(BehaviourProfile p, int? pct, uint seed = 11, int ticks = 1800)
+	{
+		var m = NewMatch(c => c with { P2JumpPunishPct = pct, P1MaxHealth = 1_000_000 });
+		Place(m, 400);
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), seed, 15, guardPct: 0) { Log = new() };
+		for (int t = 1; t <= ticks && m.Phase != MatchPhase.Over; t++)
+			m.Step(t % 90 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
+		return ai.Log!.Where(d => d.Trigger == "opponent_jumping").Select(d => $"{d.Tick}:{d.Kind}:{d.Action}:{d.Roll}/{d.Pct}").ToList();
+	}
+
+	static BehaviourProfile JumpProfile(string behaviours) => BehaviourProfile.Parse(Json("mid", behaviours));
+	const string Block60 = """{ "when": "opponent_jumping", "do": "block", "weight": 60 }""";
+
+	/// <summary>Code-critic advisory: a block-only profile with a tier rate makes no extra draw: its whole decision log
+	/// (every roll) is the one it makes with no rate.</summary>
+	[Test]
+	public static void JumpPunish_BlockOnly_WithARate_NoExtraDraws()
+	{
+		var p = JumpProfile(Block60);
+		var none = JumpLog(p, null);
+		Assert.True(none.Count >= 10, $"the block rolled ({none.Count})");
+		Assert.True(none.SequenceEqual(JumpLog(p, 100)), "rate 100: the same decisions, rolls and ticks");
+		Assert.True(none.SequenceEqual(JumpLog(p, 50)), "rate 50: the same");
+	}
+
+	/// <summary>An attacking answer the kit cannot perform (a special not in the loadout) is left out of the pick
+	/// without a draw: alone, the profile plays exactly as a block-only one; next to a performable attack, rate 100
+	/// still answers every jump with that attack and never logs "unavailable".</summary>
+	[Test]
+	public static void JumpPunish_UnperformableAnswers_AreLeftOut_WithoutADraw()
+	{
+		const string missing = """{ "when": "opponent_jumping", "do": "special:no-such-special", "weight": 90 }""";
+		var blockOnly = JumpLog(JumpProfile(Block60), null);
+		Assert.True(blockOnly.SequenceEqual(JumpLog(JumpProfile(Block60 + ", " + missing), 100)),
+			"only an unperformable attack: no draw, the block decides as in a block-only profile");
+		var (jumps, attacks, blocks, _) = Jumps(JumpProfile(Block60 + ", " + missing +
+			""", { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 10 }"""), 100);
+		Assert.True(attacks >= jumps - 2 && blocks == 0, $"rate 100: every jump answered by the performable attack ({attacks} of {jumps}, {blocks} blocks)");
+		var log = JumpLog(JumpProfile(Block60 + ", " + missing + """, { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 10 }"""), 100);
+		Assert.True(log.Count > 0 && log.All(l => l.Contains(":react:normal:test-ryo-heavy-punch:")), $"never 'unavailable': {string.Join(" ", log.Take(4))}");
+	}
+
+	/// <summary>Several attacking answers: one draw at the rate, then one weighted draw; the log is pinned so a change in
+	/// draw order shows up here.</summary>
+	[Test]
+	public static void JumpPunish_SeveralAttacks_PinnedDecisionLog()
+	{
+		var p = JumpProfile(Block60 +
+			""", { "when": "opponent_jumping", "do": "normal:test-ryo-heavy-punch", "weight": 30 }""" +
+			""", { "when": "opponent_jumping", "do": "normal:test-ryo-medium-punch", "weight": 10 }""");
+		var log = JumpLog(p, 50, 11, 900);
+		string got = string.Join(" ", log);
+		Assert.Equal(PinnedSeveralAttacks, got, "the decision log (tick:kind:action:roll/pct) is unchanged");
+		Assert.True(log.All(l => l.EndsWith("/50") || l.Contains(":block:")), "attacks are logged at the tier rate, blocks at their weight");
+	}
+
+	// Seed 11, rate 50, 900 ticks: rolls under 50 are attacks (heavy 30 : medium 10 by the second draw); misses roll the block at 60.
+	const string PinnedSeveralAttacks =
+		"105:react:block:47/60 195:react:normal:test-ryo-heavy-punch:32/50 285:react:normal:test-ryo-medium-punch:22/50 " +
+		"375:react:block:47/60 465:react:normal:test-ryo-medium-punch:37/50 555:react:block:29/60 " +
+		"645:react:normal:test-ryo-medium-punch:2/50 735:react:block:24/60 825:react:block:9/60";
 
 	// --- Replays ------------------------------------------------------------------------------------
 

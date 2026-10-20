@@ -76,6 +76,10 @@ public sealed class AiLoadout
 		return missing;
 	}
 
+	/// <summary>YOK-165: this kit can perform the move action (a throw needs throw buttons; a normal or special must be in
+	/// the loadout). No side effects: the AI checks it before a weighted pick, without drawing.</summary>
+	public bool CanDo(AiAction a) => a.Kind == ActionKind.Throw ? ThrowButtons != InputBits.None : TryGet(a, out _, out _);
+
 	public bool TryGet(AiAction a, out FighterInput input, out int frames)
 	{
 		input = default; frames = 0;
