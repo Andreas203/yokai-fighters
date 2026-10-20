@@ -66,7 +66,8 @@ public sealed class MerchantShopLines
 	{
 		using var doc = JsonDocument.Parse(json);
 		var r = doc.RootElement;
-		if (!r.TryGetProperty("kind", out var k) || k.GetString() != "merchant_shop_lines") throw new FormatException("merchant shop lines: kind must be 'merchant_shop_lines'");
+		if (r.ValueKind != JsonValueKind.Object) throw new FormatException("merchant shop lines: the file must be an object");
+		if (!r.TryGetProperty("kind", out var k) || k.ValueKind != JsonValueKind.String || k.GetString() != "merchant_shop_lines") throw new FormatException("merchant shop lines: kind must be 'merchant_shop_lines'");
 		if (!r.TryGetProperty("events", out var ev) || ev.ValueKind != JsonValueKind.Object) throw new FormatException("merchant shop lines: missing 'events'");
 		var variants = new Dictionary<string, string[]>(StringComparer.Ordinal);
 		string[] leadIns = Array.Empty<string>();
@@ -94,6 +95,7 @@ public sealed class MerchantShopLines
 
 	static string[] Strings(JsonElement obj, string prop, string eventKey)
 	{
+		if (obj.ValueKind != JsonValueKind.Object) throw new FormatException($"merchant shop lines: '{eventKey}' must be an object");
 		if (!obj.TryGetProperty(prop, out var a) || a.ValueKind != JsonValueKind.Array) throw new FormatException($"merchant shop lines: '{eventKey}' has no '{prop}'");
 		var list = a.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.String && x.GetString() is { Length: > 0 } s ? s : throw new FormatException($"merchant shop lines: '{eventKey}' has a blank line")).ToArray();
 		if (list.Length == 0) throw new FormatException($"merchant shop lines: '{eventKey}' has no lines");

@@ -401,7 +401,11 @@ public partial class ShopScreen : Control
 		item.Bind(e, index);
 		MenuInput.Neighbours(item, null, null, null, null);
 		item.FocusEntered += () => OnItemFocus(item);
-		item.MouseEntered += () => { if (Picking == null && !item.CardDisabled && !item.HasFocus()) item.GrabFocus(); }; // one focus for mouse and keys
+		item.MouseEntered += () => // one focus for mouse and keys; hovering the item that already has focus still lets the merchant speak it
+		{
+			if (Picking != null || item.CardDisabled) return;
+			if (!item.HasFocus()) item.GrabFocus(); else { _notice = ""; SpeakItem(item.Entry); UpdateDetail(); }
+		};
 		item.Activated += () => { _emitter = item; try { OnItemActivated(e); } finally { _emitter = null; } };
 		item.Navigate += d => Navigate(item, d);
 		return item;
