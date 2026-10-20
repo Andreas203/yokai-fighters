@@ -22,6 +22,8 @@ public readonly record struct FighterView(
 	public int MaxHealth { get; init; }
 	/// <summary>YOK-57: the burst seal is spent (the HUD shows it, C6).</summary>
 	public bool BurstUsed { get; init; }
+	/// <summary>YOK-165: the visible special is its EX version (E16: the EX start shows, and its meter leaves the bar).</summary>
+	public bool MoveIsEx { get; init; }
 }
 
 public readonly record struct ProjectileView(int Owner, int X, int Dir);
@@ -63,6 +65,6 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 		MoveData? mv = f.CurrentMove;
 		return new FighterView(f.X, f.Y, f.Facing, f.State, f.StunLeft, f.Airborne, f.KnockedOut, f.Health, f.Meter,
 			mv?.Id, mv is not null && f.ActiveSpecial != SpecialSlot.None, mv is null ? 0 : f.MoveFrame,
-			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected) { MaxHealth = f.MaxHealth, BurstUsed = f.BurstUsed };
+			mv?.FirstActive ?? 0, mv?.LastActive ?? 0, f.MoveConnected) { MaxHealth = f.MaxHealth, BurstUsed = f.BurstUsed, MoveIsEx = mv is not null && f.ActiveEx };
 	}
 }

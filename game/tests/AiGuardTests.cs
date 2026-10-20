@@ -417,6 +417,109 @@ public static class AiGuardTests
 		Assert.True(started * 10 >= answers.Count * 8, $"most start ({started} of {answers.Count})");
 	}
 
+	/// <summary>
+	/// Plays <paramref name="p1"/> against <paramref name="ai"/> and checks every jump punish (react on opponent_jumping
+	/// with <paramref name="answer"/>) starts on the AI's first actionable step (within +1), or the jumper showed landed
+	/// on the AI's view by then. Returns the punish count and any misses.
+	/// </summary>
+	static (int Answers, int Started, List<string> Bad) PunishTiming(Match m, ProfileAi ai, string answer, int reaction, int ticks,
+		Func<int, Match, FighterInput> p1, Action<Match>? each = null)
+	{
+		var starts = new List<int>();
+		var freeAfter = new Dictionary<int, bool>();
+		var p1Air = new Dictionary<int, bool>();
+		string? last = null; int lastFrame = 0;
+		for (int t = 1; t <= ticks && m.Phase != MatchPhase.Over; t++)
+		{
+			each?.Invoke(m);
+			var o = ai.Next(AiView.Capture(m));
+			m.Step(p1(t, m), o);
+			string? id = m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null;
+			int frame = id is null ? 0 : m.P2.MoveFrame;
+			if (id != null && answer.EndsWith(id) && frame == 1 && (id != last || lastFrame != 1)) starts.Add(t); // back-to-back starts of the same move count too
+			lastFrame = frame;
+			last = id;
+			bool attackEnds = m.P2.State == FighterState.Attack && m.P2.MoveFrame >= m.P2.CurrentMove!.TotalFrames;
+			bool stunEnds = m.P2.State is FighterState.Burst or FighterState.Hitstun or FighterState.Blockstun && m.P2.StunLeft == 0 && !m.P2.Airborne;
+			freeAfter[t] = m.P2.State == FighterState.Idle || attackEnds || stunEnds;
+			p1Air[t] = m.P1.Airborne;
+		}
+		var answers = ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react").ToList();
+		int started = 0;
+		var bad = new List<string>();
+		foreach (var a in answers)
+		{
+			int free = a.Tick;
+			while (freeAfter.TryGetValue(free - 1, out bool f) && !f && free < a.Tick + 120) free++;
+			if (free >= freeAfter.Count - 1) continue; // the run ended before it could act
+			int s = starts.FirstOrDefault(x => x >= a.Tick && x <= free + 1);
+			if (s != 0) started++;
+			else if (p1Air.GetValueOrDefault(free - reaction - 1, true)) bad.Add($"{a.Tick}: never started (free {free})");
+		}
+		return (answers.Count, started, bad);
+	}
+
+	/// <summary>Code-critic round 2: an EX special keeps the AI busy for the EX move's own length (stored apart from the
+	/// plain one, which shares its id; the screen shows which, <see cref="FighterView.MoveIsEx"/>). An elder at rate 100
+	/// that throws its EX special constantly still answers every jump on its first actionable tick.</summary>
+	[Test]
+	public static void Rate100_JumpDuringOwnExSpecial_StillStarts()
+	{
+		// The fixture EX specials keep their plain length, so the TEST FIXTURE Spirit Wave gets an EX 20 frames longer here.
+		string json = File.ReadAllText(Path.Combine(ProjectSettings.GlobalizePath(FightScene.FixtureSpecialsDir), "test-spirit-wave.json"));
+		const string anchor = "{ \"target\": \"projectile.speed\", \"op\": \"add\", \"value\": 4 }";
+		Assert.True(json.Contains(anchor), "the fixture's EX changes are where the test expects");
+		var data = SpecialLoader.Parse(json.Replace(anchor, anchor + ", { \"target\": \"recovery\", \"op\": \"add\", \"value\": 20 }"));
+		var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+		m.P2.Equip(SpecialSlot.B, data);
+		var ex = m.P2.Specials[(int)SpecialSlot.B]!;
+		Assert.Equal(ex.Move.TotalFrames + 20, ex.ExMove!.TotalFrames, "the EX is 20 frames longer");
+		var kit = AiLoadout.From(m.P2);
+		bool havePlain = kit.TryGetTotalFrames(ex.Move.Id, false, out int plain), haveEx = kit.TryGetTotalFrames(ex.ExMove.Id, true, out int exLen);
+		Assert.True(havePlain && haveEx && exLen == plain + 20, $"the loadout keeps both lengths under the shared id ({plain} / {exLen})");
+		string sp = "special:" + data.Id, Medium = "normal:test-ryo-medium-punch";
+		var p = BehaviourProfile.Parse(Json("mid", $$"""{ "when": "neutral", "do": "{{sp}}", "weight": 100 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }""",
+			", \"ex_use\": { \"chance_pct\": 100 }"));
+		Place(m, 400);
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 7, 15, AiFightTier.Elder, guardPct: 0) { Log = new() };
+		var (answers, started, bad) = PunishTiming(m, ai, Medium, 15, 3000, (t, _) => t % 53 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None,
+			mm => { mm.P2.Meter = 300; mm.P1.Health = mm.P1.MaxHealth; });
+		Assert.True(ai.Log!.Count(d => d.Kind == "ex") >= 10, "the AI kept throwing the EX special");
+		Assert.True(answers >= 20, $"many jumps punished ({answers})");
+		GD.Print($"YOK-165 EX: {started} of {answers} started on the first actionable tick");
+		Assert.True(bad.Count == 0, $"every punish starts on the first actionable tick: {string.Join("; ", bad.Take(6))}");
+	}
+
+	/// <summary>Code-critic round 2: the AI's own burst press, made after the screen it sees, keeps it busy for the burst's
+	/// length when it times an anti-air (the screen still shows it in hitstun).</summary>
+	[Test]
+	public static void Rate100_JumpSeenBeforeOwnBurstShows_StartsAfterTheBurst()
+	{
+		const int reaction = 16;
+		string Medium = "normal:test-ryo-medium-punch";
+		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }""",
+			", \"burst_use\": { \"chance_pct\": 100, \"min_combo_hits\": 1 }"));
+		int bursts = 0, checkedRuns = 0, jumpsDuringBurstWindow = 0;
+		var bad = new List<string>();
+		foreach (int hitAt in new[] { 40, 41, 42, 43, 44, 45 })
+		{
+			var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+			Place(m, m.Config.BodyWidth / SimConfig.Scale);
+			m.BurstFired += (_, i) => { if (i == 1) bursts++; };
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 3, reaction, AiFightTier.Elder, guardPct: 0) { Log = new() };
+			var r = PunishTiming(m, ai, Medium, reaction, 160, (t, mm) =>
+				t == hitAt ? new FighterInput(InputBits.LightPunch) : t > hitAt + 6 && !mm.P1.Airborne && t < hitAt + 30 ? new FighterInput(InputBits.Up) : FighterInput.None);
+			var burst = ai.Log!.FirstOrDefault(d => d.Kind == "burst");
+			if (burst.Kind is null || r.Answers == 0) continue;
+			checkedRuns++;
+			if (ai.Log!.Any(d => d.Trigger == "opponent_jumping" && d.Kind == "react" && d.ViewTick < burst.Tick)) jumpsDuringBurstWindow++;
+			bad.AddRange(r.Bad.Select(b => $"hit {hitAt}: {b}"));
+		}
+		Assert.True(bursts > 0 && checkedRuns > 0, $"the AI burst and punished a jump ({bursts} bursts, {checkedRuns} runs)");
+		Assert.True(jumpsDuringBurstWindow > 0, "a jump was decided on from a screen older than the AI's own burst press");
+		Assert.True(bad.Count == 0, $"the anti-air starts after the burst, on the first actionable tick: {string.Join("; ", bad.Take(6))}");
+	}
+
 	/// <summary>The AI's decisions on the jumps (tick, kind, action, roll, pct), for pinning draw order.</summary>
 	static List<string> JumpLog(BehaviourProfile p, int? pct, uint seed = 11, int ticks = 1800)
 	{
