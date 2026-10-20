@@ -329,6 +329,37 @@ public static class ShopShelfTests
 		finally { Close(runner, screen); }
 	});
 
+	[Test]
+	public static void Cabinet_AstraPlate_NineCellsStandOnTheMeasuredBoards_EachRowFromItsOwnNumbers(Node runner) => OnFixtures(() =>
+	{
+		var screen = Open(runner, Shopping(ShopScreenFixtures.WidePool(5, 4), 1000));
+		try
+		{
+			const float k = ShopCabinet.Scale;
+			Assert.True(screen.Items.Count >= 9, "nine cells are filled");
+			for (int i = 0; i < 9; i++)
+			{
+				var it = screen.Items[i];
+				int row = i / 3, col = i % 3;
+				float stand = it.Position.Y + ShopItem.StandY, cx = it.Position.X + ShopItem.W / 2;
+				Assert.True(Mathf.Abs(stand - ShopCabinet.StandY[row] * k) < 0.5f && Mathf.Abs(cx - ShopCabinet.ColumnX[col] * k) < 0.5f, $"item {i} stands on board {row} column {col}: ({cx},{stand})");
+				// the lifted talisman stays inside its own cavity (row 3 is the short one), the tag inside its board front and the column
+				float cardTop = stand - 78 - ShopItem.Lift;
+				Assert.True(cardTop >= ShopCabinet.Cavity[row].Top * k, $"item {i}: lifted talisman top {cardTop} under the cavity top {ShopCabinet.Cavity[row].Top * k}");
+				Assert.True(it.Position.X >= (ShopCabinet.ColumnX[col] - ShopCabinet.ColumnW / 2) * k - 1 && it.Position.X + ShopItem.W <= (ShopCabinet.ColumnX[col] + ShopCabinet.ColumnW / 2) * k + 1, $"item {i}: the tag fits its 202-wide column");
+				if (row < 2) Assert.True(it.Position.Y + ShopItem.TagY + ShopItem.TagH <= ShopCabinet.Cavity[row + 1].Top * k + 12, $"item {i}: the tag does not climb into the next row's talisman");
+				Assert.True(it.Position.Y + ShopItem.H <= GetCabinetBase(), $"item {i}: inside the plate's base");
+			}
+			var cab = screen.GetNode<Control>("Cabinet");
+			Assert.True(cab.Size.IsEqualApprox(new Vector2(ShopCabinet.ArtW, ShopCabinet.ArtH) * k), "the cabinet is the plate at its scale: " + cab.Size);
+			Assert.True(!screen.HasNode("Portrait/PortraitLabel") && screen.GetNode<TextureRect>("Portrait/Art").Texture != null, "the portrait is art, with no placeholder caption");
+			Assert.True(((TextureRect)screen.GetNode("Backdrop/Art")).Texture.ResourcePath.EndsWith("shop-backdrop.png"), "the shop's own backdrop");
+		}
+		finally { Close(runner, screen); }
+	});
+
+	static float GetCabinetBase() => 665 * ShopCabinet.Scale;
+
 	// ---- display names and chips ----
 
 	[Test]

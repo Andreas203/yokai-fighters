@@ -220,7 +220,7 @@ public partial class ShopScreen : Control
 
 	// ---- the shelf grid: focus moves by the grid, shelves scroll to follow it ----
 
-	int Tier(int count) => count == 0 ? ShopCabinet.MaxTiers : Math.Clamp((count + ShopCabinet.Columns - 1) / ShopCabinet.Columns, 2, ShopCabinet.MaxTiers);
+	int Tier(int count) => ShopCabinet.MaxTiers; // the plate is fixed art with three shelves
 
 	/// <summary>Puts every item on its shelf for the current scroll; items past the visible shelves hide.</summary>
 	void Layout()
@@ -452,7 +452,6 @@ public partial class ShopScreen : Control
 		var slip = GetNode<Control>("Slip");
 		var it = FocusedItem();
 		slip.Visible = FrameDataShown && it != null && Picking == null;
-		GetNode<Control>("SlipPin").Visible = slip.Visible;
 		if (!slip.Visible || it == null) return;
 		var e = it.Entry;
 		L("Slip/Column/Pad/Box/Title").Text = e.Name;
