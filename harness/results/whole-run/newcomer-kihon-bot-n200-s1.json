@@ -562,8 +562,8 @@
         "rolls": 361,
         "fired": 266,
         "covered": 0,
-        "punished": 134,
-        "punished_pct_of_uncovered": 50.4,
+        "punished": 216,
+        "punished_pct_of_uncovered": 81.2,
         "bot_anti_airs": 27
       }
     }
@@ -1316,7 +1316,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -4534,7 +4534,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -7849,7 +7849,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -8009,7 +8009,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },
@@ -8269,7 +8269,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -8593,7 +8593,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -9466,7 +9466,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           }
@@ -9618,7 +9618,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -10678,7 +10678,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -10830,7 +10830,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },
@@ -11357,7 +11357,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -12633,7 +12633,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -13091,7 +13091,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -13531,7 +13531,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -14307,7 +14307,7 @@
                 "rolls": 3,
                 "fired": 3,
                 "covered": 0,
-                "punished": 1
+                "punished": 3
               }
             }
           },
@@ -14883,7 +14883,7 @@
                 "rolls": 4,
                 "fired": 3,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },
@@ -15031,7 +15031,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           }
@@ -15339,7 +15339,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -16067,7 +16067,7 @@
                 "rolls": 3,
                 "fired": 3,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -17297,7 +17297,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -18288,7 +18288,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -19629,7 +19629,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           }
@@ -20231,7 +20231,7 @@
                 "rolls": 4,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -21880,7 +21880,7 @@
                 "rolls": 2,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -22188,7 +22188,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -22764,7 +22764,7 @@
                 "rolls": 4,
                 "fired": 3,
                 "covered": 0,
-                "punished": 1
+                "punished": 3
               }
             }
           },
@@ -23664,7 +23664,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -24192,7 +24192,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -25067,7 +25067,7 @@
                 "rolls": 4,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -25483,7 +25483,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           }
@@ -26495,7 +26495,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -27339,7 +27339,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -28218,7 +28218,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -30703,7 +30703,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -30843,7 +30843,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           }
@@ -31255,7 +31255,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -31622,7 +31622,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -32618,7 +32618,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -33294,7 +33294,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -35054,7 +35054,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },
@@ -35178,7 +35178,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           }
@@ -35654,7 +35654,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -35954,7 +35954,7 @@
                 "rolls": 3,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },
@@ -36321,7 +36321,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -37080,7 +37080,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -37940,7 +37940,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -39188,7 +39188,7 @@
                 "rolls": 2,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -39469,7 +39469,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -40237,7 +40237,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -40537,7 +40537,7 @@
                 "rolls": 2,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -40685,7 +40685,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -40837,7 +40837,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -41105,7 +41105,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -42525,7 +42525,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -43597,7 +43597,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -45261,7 +45261,7 @@
                 "rolls": 2,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -45561,7 +45561,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -46989,7 +46989,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -47121,7 +47121,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -47281,7 +47281,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -48315,7 +48315,7 @@
                 "rolls": 3,
                 "fired": 3,
                 "covered": 0,
-                "punished": 2
+                "punished": 3
               }
             }
           },
@@ -48826,7 +48826,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -48958,7 +48958,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           }
@@ -49962,7 +49962,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -50505,7 +50505,7 @@
                 "rolls": 3,
                 "fired": 3,
                 "covered": 0,
-                "punished": 1
+                "punished": 3
               }
             }
           },
@@ -50629,7 +50629,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           }
@@ -52177,7 +52177,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -53004,7 +53004,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -54061,7 +54061,7 @@
                 "rolls": 4,
                 "fired": 3,
                 "covered": 0,
-                "punished": 1
+                "punished": 2
               }
             }
           },
@@ -55173,7 +55173,7 @@
                 "rolls": 1,
                 "fired": 1,
                 "covered": 0,
-                "punished": 0
+                "punished": 1
               }
             }
           },
@@ -55425,7 +55425,7 @@
                 "rolls": 2,
                 "fired": 2,
                 "covered": 0,
-                "punished": 0
+                "punished": 2
               }
             }
           },

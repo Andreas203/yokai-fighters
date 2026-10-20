@@ -41,6 +41,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - P5 dominance is damage_pct plus a per-opponent-profile breakdown.
   - Habit punish window: the designer said "no more than 3", unit unconfirmed (3 seconds or 3 hits). `PunishTailTicks = 30` stays proposed.
 - 2026-10-20 YOK-166 (designer): the bot's reactive Block re-reads its direction from the delayed view every tick, so it follows a cross-up. Accepted as a new R5 baseline: it changes 25 of 200 runs at idle_guard_pct 0 and 30 of 200 at the default 50; `harness/results/whole-run/` re-run on the branch.
+- 2026-10-20 YOK-169 (designer): the habit punish window is the next 3 hits, not 30 ticks. A fired habit is punished by an unblocked Ryo hit while it runs or within the next 3 hits exchanged afterwards (either side's count). KO damage is tallied as the full hit, no cap. `FightLog.PunishWindowHits = 3`.
 - 2026-10-20 YOK-109 scope (designer): the shop items moved out of YOK-109 to YOK-159.
 
 ## Assets and spend (designer)

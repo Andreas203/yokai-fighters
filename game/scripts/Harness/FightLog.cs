@@ -30,12 +30,17 @@ public readonly record struct HitLine(int Tick, int Attacker, string MoveId, str
 /// Moves are tallied per side (0 = Ryo, 1 = the opponent) and move id. A break is tallied on the thrower's move
 /// (<see cref="MoveTally.ThrowsBroken"/>) and counted for the side that broke it (<see cref="ThrowBreaks"/>).
 /// Habit (Y2): every roll of the profile's habit, whether it fired, was covered (tell_cover_pct), and whether Ryo
-/// punished it: an unblocked Ryo hit while the habit's plan runs or within <see cref="PunishTailTicks"/> after it ends.
+/// punished it: an unblocked Ryo hit while the habit's plan runs or within the next <see cref="PunishWindowHits"/> hits
+/// exchanged after it ends (YOK-169).
 /// </summary>
 public sealed class FightLog
 {
-	/// <summary>Proposed (harness only, no rule): ticks after a habit plan's last input in which Ryo's hit still counts as its punish.</summary>
-	public const int PunishTailTicks = 30;
+	/// <summary>
+	/// Designer decision 2026-10-20 (YOK-169, replaces the proposed 30-tick tail): after a habit plan ends, Ryo's unblocked hit
+	/// still counts as its punish if it is one of the next 3 hits exchanged. Every connect counts toward the 3, either side's,
+	/// blocked or not (a landed throw is one hit); once 3 have passed with no Ryo punish, the habit is unpunished.
+	/// </summary>
+	public const int PunishWindowHits = 3;
 
 	public SortedDictionary<string, MoveTally>[] Moves { get; } = { new(System.StringComparer.Ordinal), new(System.StringComparer.Ordinal) };
 	/// <summary>Throws each side broke as the defender, and grab-vs-grab clashes.</summary>
@@ -46,8 +51,8 @@ public sealed class FightLog
 	public int HabitRolls, HabitFired, HabitCovered, HabitPunished;
 	public List<HitLine>? Raw { get; }
 
-	int _aiLogged, _punishUntil = -1;
-	bool _windowOpen;
+	int _aiLogged, _hitsAfter;
+	bool _windowOpen, _habitRunning;
 
 	public FightLog(bool raw) { if (raw) Raw = new(); }
 
@@ -78,11 +83,13 @@ public sealed class FightLog
 		if (e.Counter) t.Counter++;
 		t.Damage += e.Damage;
 		Raw?.Add(new HitLine(tick, e.Attacker, e.MoveId, "hit", e.Blocked, e.Counter, e.Damage));
-		if (_windowOpen && e.Attacker == 0 && !e.Blocked)
+		if (!_windowOpen) return;
+		if (e.Attacker == 0 && !e.Blocked)
 		{
-			HabitPunished++;
+			HabitPunished++; // a KO hit counts like any other (its damage is tallied in full above)
 			_windowOpen = false;
 		}
+		else if (!_habitRunning && ++_hitsAfter >= PunishWindowHits) _windowOpen = false;
 	}
 
 	void OnThrow(int tick, ThrowEvent e)
@@ -118,13 +125,28 @@ public sealed class FightLog
 			if (k == "habit_no") continue;
 			HabitFired++;
 			if (k == "habit_covered") { HabitCovered++; continue; }
-			_windowOpen = true; // a new habit replaces an unpunished one's window
-			_punishUntil = tick + PunishTailTicks;
+			HabitStarted();
 		}
-		if (!_windowOpen) return;
-		if (ai.HabitPlanRunning) _punishUntil = tick + PunishTailTicks;
-		else if (tick > _punishUntil) _windowOpen = false;
+		HabitTick(ai.HabitPlanRunning);
 	}
+
+	/// <summary>An uncovered habit fired: its punish window opens (a new habit replaces an unpunished one's window).</summary>
+	internal void HabitStarted()
+	{
+		_windowOpen = true;
+		_habitRunning = true;
+		_hitsAfter = 0;
+	}
+
+	/// <summary>Once per tick, before the match steps: whether the habit's plan still runs. Hits count toward
+	/// <see cref="PunishWindowHits"/> only once it has ended.</summary>
+	internal void HabitTick(bool planRunning)
+	{
+		if (_windowOpen) _habitRunning = planRunning;
+	}
+
+	/// <summary>Test seam: a connect as the sim raises it.</summary>
+	internal void Hit(int tick, HitEvent e) => OnHit(tick, e);
 }
 
 /// <summary>
