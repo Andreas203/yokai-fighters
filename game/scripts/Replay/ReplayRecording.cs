@@ -124,9 +124,11 @@ public sealed class ReplayHeader
 	public int P2MaxHealth { get; set; }
 	public int? P1StartHealth { get; set; }
 	public int? P2StartHealth { get; set; }
-	/// <summary>YOK-156, Y4: each side's damage percent (the apprentice's half damage); 100 in recordings made before it.</summary>
-	public int P1DamagePct { get; set; } = SimConfig.FullDamagePct;
-	public int P2DamagePct { get; set; } = SimConfig.FullDamagePct;
+	/// <summary>YOK-156, Y4: each side's damage percent (the apprentice's half damage); null = 100, not written, as in recordings made before it.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public int? P1DamagePct { get; set; }
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+	public int? P2DamagePct { get; set; }
 	public FighterSetup[] Fighters { get; set; } = Array.Empty<FighterSetup>();
 	public AiSetup? Ai { get; set; }
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]

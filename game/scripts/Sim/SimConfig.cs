@@ -94,15 +94,16 @@ public sealed partial record SimConfig
 	/// <summary>
 	/// YOK-156, Y4: percent of its hits' damage each fighter deals (strikes, projectiles, aftershocks, reflects and
 	/// throws, after counterhit and precision). The node's tier sets P2's (<c>damage_dealt_pct</c> in node-scenes.json:
-	/// the apprentice deals half). Integer, rounded down per hit: <see cref="ScaleDamage"/>.
+	/// the apprentice deals half). Integer, rounded down per hit: <see cref="ScaleDamage"/>. Null = 100 and left out
+	/// of the replay fingerprint, so a full-damage fight fingerprints as it did before YOK-156 and older replays still run.
 	/// </summary>
-	public int P1DamagePct { get; init; } = FullDamagePct;
-	public int P2DamagePct { get; init; } = FullDamagePct;
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public int? P1DamagePct { get; init; }
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public int? P2DamagePct { get; init; }
 
 	/// <summary>YOK-156: <paramref name="damage"/> as dealt by fighter <paramref name="attIndex"/>: damage x pct / 100, rounded down (so 25 at 50% is 12).</summary>
 	public int ScaleDamage(int attIndex, int damage)
 	{
-		int pct = attIndex == 0 ? P1DamagePct : P2DamagePct;
+		int pct = (attIndex == 0 ? P1DamagePct : P2DamagePct) ?? FullDamagePct;
 		return pct == FullDamagePct ? damage : damage * pct / 100;
 	}
 

@@ -127,7 +127,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			if (node is not JsonObject t || t["reaction_frames"] is not JsonValue f || !f.TryGetValue(out int frames) || frames < 1)
 				throw new FormatException($"node scenes: tier '{name}' needs reaction_frames of 1 or more (Y4)");
 			tiers[name] = frames;
-			if (t["damage_dealt_pct"] is { } d)
+			if (t.TryGetPropertyValue("damage_dealt_pct", out var d)) // present, even as null, must be a valid pct
 			{
 				if (d is not JsonValue dv || !dv.TryGetValue(out int pct) || pct < 1 || pct > SimConfig.FullDamagePct)
 					throw new FormatException($"node scenes: tier '{name}' damage_dealt_pct must be a whole number from 1 to 100 (Y4)");
