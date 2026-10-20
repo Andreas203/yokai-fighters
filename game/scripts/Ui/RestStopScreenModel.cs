@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Ui;
@@ -72,11 +74,69 @@ public sealed class RestStopScreenModel
 			: _dojo!.Choice == DojoChoice.Trial ? RestStopOption.Taken : RestStopOption.Closed)
 		: Kind == RestStopKind.Merchant || TrialOffer is not null ? RestStopOption.Ready : RestStopOption.NoTrial;
 
+	int _pick;
+
+	/// <summary>YOK-109: every trial the dojo offers: one per owned special that has an authored trial and can still level (the dojo skips the rest).</summary>
+	public IReadOnlyList<DojoTrialOffer> Offers => _dojo?.Trials ?? (IReadOnlyList<DojoTrialOffer>)Array.Empty<DojoTrialOffer>();
+
+	/// <summary>YOK-109: index into <see cref="Offers"/> of the special the selector is on (kept in range if the offers shrink).</summary>
+	public int SelectedIndex => Offers.Count == 0 ? 0 : Math.Clamp(_pick, 0, Offers.Count - 1);
+
+	/// <summary>YOK-109: the selector can move: a dojo, no choice made yet, and more than one special to pick from.</summary>
+	public bool CanSelect => Kind == RestStopKind.Dojo && !ChoiceMade && Open && Offers.Count > 1;
+
+	/// <summary>YOK-109: moves the selector by <paramref name="step"/> (wrapping). Refused, changing nothing, when <see cref="CanSelect"/> is false.</summary>
+	public bool SelectTrial(int step)
+	{
+		if (!CanSelect) return false;
+		_pick = ((SelectedIndex + step) % Offers.Count + Offers.Count) % Offers.Count;
+		return true;
+	}
+
 	/// <summary>
-	/// YOK-98: the trial the card offers. PROVISIONAL: the first offer in slot order (A-D); choosing between several
-	/// trials on the screen is not designed yet (<see cref="Dojo.Trials"/> lists them all).
+	/// YOK-109: the trial the card shows and takes: the selector's special's offer (the chosen one once taken).
+	/// Null when no special has a trial that can still level it.
 	/// </summary>
-	public DojoTrialOffer? TrialOffer => _dojo is { } d && d.Trials is { Count: > 0 } offers ? offers[0] : null;
+	public DojoTrialOffer? TrialOffer
+	{
+		get
+		{
+			if (_dojo is not { } d || d.Trials is not { Count: > 0 } offers) return null;
+			// Once taken, the chosen special (a landed trial may have dropped it from the offers, so the index would point at a neighbour).
+			if (d.Choice == DojoChoice.Trial) return offers.FirstOrDefault(o => o.Slot == d.TrialSlot);
+			return offers[Math.Clamp(_pick, 0, offers.Count - 1)];
+		}
+	}
+
+	/// <summary>The display name of the special the card trains (the move data's name, never its id), or null with no trial.</summary>
+	public string? TrialSpecialName
+	{
+		get
+		{
+			if (_dojo is { Choice: DojoChoice.Trial } d && _session.Run[d.TrialSlot]?.Data is { } chosen) return chosen.Name.Length > 0 ? chosen.Name : chosen.Id;
+			return TrialOffer is { } o && _session.Run[o.Slot]?.Data is { } data ? (data.Name.Length > 0 ? data.Name : data.Id) : null;
+		}
+	}
+
+	/// <summary>The level the trained special has now (before a trial), for the card and the forecast line.</summary>
+	public int TrialSpecialLevel => _dojo is { Choice: DojoChoice.Trial } d ? d.LevelBefore : TrialOffer is { } o ? _session.Run[o.Slot]?.Level ?? 0 : 0;
+
+	/// <summary>R7: attempts used on the chosen trial (0 until one is taken), out of <see cref="MaxAttempts"/>.</summary>
+	public int AttemptsUsed => _dojo?.Attempts ?? 0;
+	public static int MaxAttempts => TrialLoader.Attempts;
+
+	/// <summary>
+	/// T2 / A4, dojo only: the selected special is the Tanuki's copy target and a landed trial would raise the level
+	/// the copy runs at (T4: the copy never passes Lv 2, so the Lv 3 evolution does not raise it). Null otherwise;
+	/// otherwise the level the copy would run at after the trial.
+	/// </summary>
+	public int? CopyRaisedTo()
+	{
+		if (Kind != RestStopKind.Dojo || ChoiceMade || TrialOffer is not { } o || Forecast is not { Locked: false } f) return null;
+		if (f.Slot != o.Slot) return null;
+		int next = TrialSpecialLevel + 1;
+		return next <= CopyRule.HighestUnevolvedLevel && next > f.Level ? next : null;
+	}
 
 	/// <summary>YOK-98: the chosen (or offered) trial's data and the special's name for the card.</summary>
 	public TrialData? ChosenTrial => _dojo is { Choice: DojoChoice.Trial } d ? d.Trial(d.TrialId) : TrialOffer?.Trial;
