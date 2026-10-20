@@ -99,11 +99,11 @@
         "value": 2
       },
       "card": {
-        "plain": "Lv 1 -> Lv 2: you can keep two flames on screen at once.",
-        "frames": "Lv 1 -> Lv 2: max flames on screen 1 -> 2"
+        "plain": "Lv 1 → Lv 2: you can keep two flames on screen at once.",
+        "frames": "Lv 1 → Lv 2: max flames on screen 1 → 2 (15 / 4 / 30 frames unchanged)"
       },
       "preset": "foxfire-lv2",
-      "notes": "Proposed (open question). Changes how you fight: stagger two flames to cover a jump. Alternative if the designer prefers a numeric step: recovery -10."
+      "notes": "Proposed (open question). Changes how you fight: stagger two flames to cover a jump. Distinct from the Lv 3 evolution (passes through projectiles, A5). E17 allows more than one projectile when the move data says so. Needs no clip change (F2): frame timing is untouched. Alternative if the designer prefers a numeric step: recovery -10 (30 -> 20, clip tail is blend-out so a retime would need a shorter trim)."
     },
     "3": {
       "evolution": {
