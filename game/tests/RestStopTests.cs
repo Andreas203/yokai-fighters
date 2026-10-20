@@ -284,6 +284,33 @@ public static class RestStopTests
 	});
 
 	[Test]
+	public static void Scene_Portrait_MerchantShowsHisPlateBust_DojoKeepsThePlaceholder(Node runner) => OnFixtures(() =>
+	{
+		foreach (var (kind, merchant) in new[] { ("merchant", true), ("dojo", false) })
+		{
+			var screen = Open(runner, AtStop(kind));
+			try
+			{
+				var art = screen.GetNode<TextureRect>("Portrait/Art");
+				var decor = screen.GetNode<RestStopScreenDecor>("Decor");
+				if (merchant)
+				{
+					var bust = art.Texture as AtlasTexture;
+					Assert.True(art.Visible && bust != null && bust.Atlas == ShopArt.Portrait && bust.Region == RestStopScreen.MerchantBust, "the merchant shows the shop's plate, cropped to the bust");
+					Assert.True(new Rect2(Vector2.Zero, bust!.Atlas.GetSize()).Encloses(bust.Region), "the bust lies inside the plate");
+					Assert.True(!L(screen, "Portrait/PortraitLabel").Visible && decor.PortraitFilled, "no caption and no dashed box behind the art");
+				}
+				else
+				{
+					Assert.True(!art.Visible && art.Texture == null, "the dojo master has no art yet");
+					Assert.True(L(screen, "Portrait/PortraitLabel").Visible && L(screen, "Portrait/PortraitLabel").Text == "dojo master (art to come)" && !decor.PortraitFilled, "the dojo keeps the labelled placeholder");
+				}
+			}
+			finally { runner.RemoveChild(screen); screen.Free(); }
+		}
+	});
+
+	[Test]
 	public static void Scene_Dojo_RestIsLive_TrialIsPresentButDisabled(Node runner) => OnFixtures(() =>
 	{
 		var s = AtStop("dojo", 700);

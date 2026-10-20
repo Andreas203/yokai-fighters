@@ -202,7 +202,7 @@ public partial class RestStopScreen : Control, INodeScene
 		string speaker = dojo ? "Dojo master" : "Merchant";
 		L("LineBox/Box/Speaker").Text = speaker;
 		L("LineBox/Box/Line").Text = (LineSource ?? DefaultLine)(m);
-		L("Portrait/PortraitLabel").Text = dojo ? "dojo master (art to come)" : "merchant portrait (art to come)";
+		BindPortrait(dojo);
 
 		BindFree(m, dojo);
 		BindSecond(m, dojo);
@@ -243,6 +243,21 @@ public partial class RestStopScreen : Control, INodeScene
 		}
 		catch (Exception e) when (e is System.IO.IOException or FormatException) { GD.PushWarning($"RestStopScreen: no merchant line: {e.Message}"); }
 		return "Merchant's line (habit-writer).";
+	}
+
+	/// <summary>Head-and-shoulders crop of the shop's merchant plate (432x768): hat top to mid-chest, the 410:360 shape of the portrait box.</summary>
+	internal static readonly Rect2 MerchantBust = new(0, 92, 432, 379);
+
+	/// <summary>The merchant shows his Astra plate (YOK-159); the dojo master keeps the labelled placeholder until art exists.</summary>
+	private void BindPortrait(bool dojo)
+	{
+		var art = GetNode<TextureRect>("Portrait/Art");
+		art.Texture = dojo ? null : new AtlasTexture { Atlas = ShopArt.Portrait, Region = MerchantBust };
+		art.Visible = !dojo;
+		var label = L("Portrait/PortraitLabel");
+		label.Text = "dojo master (art to come)";
+		label.Visible = dojo;
+		if (GetNodeOrNull<RestStopScreenDecor>("Decor") is { } decor) decor.PortraitFilled = !dojo;
 	}
 
 	private void BindFree(RestStopScreenModel m, bool dojo)

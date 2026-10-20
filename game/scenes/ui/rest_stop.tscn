@@ -113,6 +113,14 @@ offset_top = 290.0
 offset_right = 560.0
 offset_bottom = 650.0
 
+[node name="Art" type="TextureRect" parent="Portrait"]
+visible = false
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+expand_mode = 1
+stretch_mode = 5
+
 [node name="PortraitLabel" type="Label" parent="Portrait"]
 mouse_filter = 2
 anchor_left = 0.0
