@@ -160,6 +160,7 @@ public static class Replayer
 		var cfg = SimConfig.Default with
 		{
 			P1MaxHealth = h.P1MaxHealth, P2MaxHealth = h.P2MaxHealth, P1StartHealth = h.P1StartHealth, P2StartHealth = h.P2StartHealth,
+			P1DamagePct = h.P1DamagePct, P2DamagePct = h.P2DamagePct, // YOK-156
 		};
 		if (Fingerprint.Of(cfg) != h.ConfigFp)
 			throw new ReplaySetupException("SimConfig differs from the recording (fight constants changed since it was made)");

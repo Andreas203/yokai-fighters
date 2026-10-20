@@ -391,7 +391,7 @@ public sealed partial class Match
 		}
 		else
 		{
-			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
+			damage = Config.ScaleDamage(attIndex, counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage); // YOK-156, Y4
 			def.PendingDamage += damage;
 			if (armoured) { } // the damage lands, the move plays on (YOK-103 armour or YOK-90 twist armour)
 			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);

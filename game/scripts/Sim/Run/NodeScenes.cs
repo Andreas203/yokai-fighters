@@ -29,6 +29,8 @@ public sealed record NodeContext(
 	public string? Kit { get; init; }
 	/// <summary>YOK-144: the stage scene (<c>res://scenes/stage/*.tscn</c>) the fight shows, from the table's <c>stage</c>; null = the fight scene's default (the bamboo grove). Presentation only: the sim never reads it.</summary>
 	public string? Stage { get; init; }
+	/// <summary>YOK-156, Y4: percent of its move damage this node's opponent deals, from the tier's <c>damage_dealt_pct</c> (the apprentice: 50); 100 when the tier names none.</summary>
+	public int DamageDealtPct { get; init; } = SimConfig.FullDamagePct;
 }
 
 /// <summary>The scene a node runs in (a <c>res://</c> path) and what it is handed.</summary>
@@ -79,6 +81,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 
 	readonly Dictionary<string, Entry> _types, _nodes, _opponents;
 	readonly Dictionary<string, int> _tiers;
+	readonly Dictionary<string, int> _damagePct = new(); // YOK-156, Y4: tier → damage_dealt_pct
 	readonly Dictionary<(int Row, string Type), int> _rowCoins = new(); // R8: what a row pays instead of its type's amount
 
 	public string DefaultScene { get; }
@@ -118,16 +121,24 @@ public sealed class NodeSceneTable : INodeSceneResolver
 		string fallback = Text(o, "fallback_fighter", "the table") ?? throw new FormatException("node scenes: fallback_fighter is missing");
 
 		var tiers = new Dictionary<string, int>();
+		var damagePct = new Dictionary<string, int>(); // YOK-156: tiers that name a damage_dealt_pct
 		foreach (var (name, node) in Section(o, "tiers"))
 		{
 			if (node is not JsonObject t || t["reaction_frames"] is not JsonValue f || !f.TryGetValue(out int frames) || frames < 1)
 				throw new FormatException($"node scenes: tier '{name}' needs reaction_frames of 1 or more (Y4)");
 			tiers[name] = frames;
+			if (t.TryGetPropertyValue("damage_dealt_pct", out var d)) // present, even as null, must be a valid pct
+			{
+				if (d is not JsonValue dv || !dv.TryGetValue(out int pct) || pct < 1 || pct > SimConfig.FullDamagePct)
+					throw new FormatException($"node scenes: tier '{name}' damage_dealt_pct must be a whole number from 1 to 100 (Y4)");
+				damagePct[name] = pct;
+			}
 		}
 		var table = new NodeSceneTable(scene, fallback, tiers, Entries(o, "types"), Entries(o, "nodes"), Entries(o, "opponents"))
 		{
 			DefaultStage = StagePath(Text(o, "default_stage", "the table"), "default_stage"),
 		};
+		foreach (var (name, pct) in damagePct) table._damagePct[name] = pct;
 		foreach (var (where, e) in table._types.Select(p => ($"type '{p.Key}'", p.Value))
 			.Concat(table._nodes.Select(p => ($"node '{p.Key}'", p.Value)))
 			.Concat(table._opponents.Select(p => ($"opponent '{p.Key}'", p.Value))))
@@ -175,6 +186,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			node.Payload, notes)
 		{
 			Kit = foe?.Kit,
+			DamageDealtPct = _damagePct.TryGetValue(tier, out int pct) ? pct : SimConfig.FullDamagePct,
 			Stage = byNode?.Stage ?? byType?.Stage ?? DefaultStage,
 			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
 		};

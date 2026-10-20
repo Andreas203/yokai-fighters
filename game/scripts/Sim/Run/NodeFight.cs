@@ -6,7 +6,7 @@ namespace YokaiFighters.Sim;
 /// YOK-26: one node's fight as a <see cref="Match"/>, pure C# so the fight scene and the headless whole-run harness
 /// build it with the same code. P1 = Ryo's kit (A1) with the run's slots, levels, modifiers and carried health (C1);
 /// P2 = <paramref name="opponent"/>'s kit, or, when the session's entered node names the Tanuki's kit, Ryo's kit +
-/// the copy locked on entering that node (T0, T1). Both fighters start on <paramref name="scheme"/> (K3: only parsing differs).
+/// the copy locked on entering that node (T0, T1). P2 deals the node tier's damage percent (Y4, YOK-156). Both fighters start on <paramref name="scheme"/> (K3: only parsing differs).
 /// </summary>
 public static class NodeFight
 {
@@ -15,6 +15,9 @@ public static class NodeFight
 	{
 		var cfg = run?.MatchConfig();
 		if (shape is not null) cfg = shape(cfg ?? SimConfig.Default); // YOK-98: a dojo trial's start distance
+		// YOK-156, Y4: the node's tier scales the opponent's damage (the apprentice deals half).
+		if (session?.Node is { DamageDealtPct: not SimConfig.FullDamagePct } node)
+			cfg = (cfg ?? SimConfig.Default) with { P2DamagePct = node.DamageDealtPct };
 		var ryo = Load(Kit.Ryo, sources, log);
 		Match m;
 		if (session?.Node?.Kit == TanukiKit.KitId)

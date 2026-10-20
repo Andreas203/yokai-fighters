@@ -333,12 +333,18 @@ public static class BootFlowTests
 			flow.Router.Back();
 			Press(flow.Title.StartButton);
 			StartGame(flow);
+			Assert.Equal((int?)50, flow.Fight!.Match.Config.P2DamagePct, "the first fight is the apprentice's: half damage (Y4)");
 			viaMenus = Play(flow.Fight!);
 		});
 		var saved = FightScene.Sources;
 		FightScene.Sources = FightScene.FixtureSources;
 		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
 		scene.ExternalDrive = true;
+		// YOK-156: the menu path's first fight is row 1's apprentice, which deals half damage (Y4); the direct
+		// fight is handed the same node so both sims start from the same config.
+		var session = FightScene.NewSession(FileMapSource.DefaultFile, 1);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "direct: row 1 entered");
+		scene.Session = session;
 		try { runner.AddChild(scene); direct = Play(scene); }
 		finally { scene.QueueFree(); FightScene.Sources = saved; }
 		Assert.True(viaMenus.SequenceEqual(direct), "600 ticks hash-identical with and without the menu path");
