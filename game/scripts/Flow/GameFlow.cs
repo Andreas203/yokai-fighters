@@ -617,7 +617,6 @@ public partial class GameFlow : Node
 		if (Session == null || !Router.OpenShop()) return;
 		var shop = GD.Load<PackedScene>("res://scenes/ui/shop.tscn").Instantiate<ShopScreen>();
 		shop.Bind(Session);
-		shop.MerchantLine = stop.MerchantLine;
 		shop.Closed += () =>
 		{
 			Router.CloseShop();
