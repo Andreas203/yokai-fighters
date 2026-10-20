@@ -219,6 +219,7 @@ public static class HarnessReport
 			w.WriteNumber("throws", f.Bot.Throws);
 			w.WriteNumber("jumps", f.Bot.Jumps);
 			w.WriteNumber("blocks", f.Bot.Blocks);
+			w.WriteNumber("idle_guards", f.Bot.IdleGuards);
 			w.WriteNumber("anti_airs", f.Bot.AntiAirs);
 			w.WriteNumber("mistakes", f.Bot.Mistakes);
 			w.WriteEndObject();

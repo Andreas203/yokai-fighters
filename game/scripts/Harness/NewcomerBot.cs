@@ -61,7 +61,8 @@ public sealed class BotKit
 /// requests): normals = button (+ direction), specials = Special + direction (neutral A, forward B, back C,
 /// down D), throw = the throw buttons. Newcomer habits, all from data: decides every <c>decide_every</c> ticks,
 /// guards (standing) against a seen threat with <c>block_pct</c>, anti-airs a seen jump with <c>anti_air_pct</c>, picks
-/// neutral actions by weight with simple spacing, and on <c>mistake_pct</c> of its decisions presses a random
+/// neutral actions by weight with simple spacing, holds a standing guard through <c>idle_guard_pct</c> of its wait and
+/// in-range walk plans (YOK-155), and on <c>mistake_pct</c> of its decisions presses a random
 /// normal whatever the range. The one thing it reads off the live screen is its own fighter (whether its move is
 /// over), never the opponent. No EX, burst, throw breaks or crouch guard. Deterministic: one seeded <see cref="SimRng"/>.
 /// </summary>
@@ -162,7 +163,7 @@ public sealed class NewcomerBot
 		int walk = _cfg.WalkWeight, normal = _kit.Normals.Count > 0 ? _cfg.NormalWeight : 0, special = _kit.Specials.Count > 0 ? _cfg.SpecialWeight : 0;
 		int thrw = _kit.Throw.Bits != InputBits.None ? _cfg.ThrowWeight : 0, jump = _cfg.JumpWeight, wait = _cfg.WaitWeight;
 		int total = walk + normal + special + thrw + jump + wait;
-		if (total == 0) { Start(PlanKind.Wait, (InputBits.None, _cfg.WaitTicks)); return; }
+		if (total == 0) { Wait(s, o); return; }
 		int r = _rng.Next(total);
 		if ((r -= walk) < 0) Walk(s, o, dist);
 		else if ((r -= normal) < 0)
@@ -191,14 +192,32 @@ public sealed class NewcomerBot
 			Start(PlanKind.Attack, (InputBits.Up | drift, 2), (InputBits.None, SimConfig.Default.JumpFrames));
 			Stats.Jumps++;
 		}
-		else Start(PlanKind.Wait, (InputBits.None, _cfg.WaitTicks));
+		else Wait(s, o);
+	}
+
+	/// <summary>
+	/// YOK-155: a wait plan, with a standing guard (hold back, C3) on <c>idle_guard_pct</c> of them, rolled once per plan.
+	/// Strike normals hit sooner than the bot's reaction, so a guard up before the swing is the only one that can block it.
+	/// </summary>
+	void Wait(FighterView s, FighterView o)
+	{
+		bool guard = IdleGuard();
+		Start(PlanKind.Wait, (guard ? Back(s, o) : InputBits.None, _cfg.WaitTicks));
+	}
+
+	/// <summary>YOK-155: one <c>idle_guard_pct</c> roll; 0 draws nothing from the RNG, so a 0 config plays exactly as before.</summary>
+	bool IdleGuard()
+	{
+		if (!Roll(_cfg.IdleGuardPct)) return false;
+		Stats.IdleGuards++;
+		return true;
 	}
 
 	void Walk(FighterView s, FighterView o, int dist)
 	{
 		if (dist > _cfg.PreferredMax) Approach(s, o);
 		else if (dist < _cfg.PreferredMin) Start(PlanKind.Walk, (Back(s, o), _cfg.WalkTicks));
-		else Start(PlanKind.Walk, (_rng.Next(2) == 0 ? Forward(s, o) : Back(s, o), _cfg.WalkTicks));
+		else Start(PlanKind.Walk, (IdleGuard() || _rng.Next(2) != 0 ? Back(s, o) : Forward(s, o), _cfg.WalkTicks)); // YOK-155: in range, a guarded walk backs off
 		Stats.Walks++;
 	}
 
@@ -277,4 +296,6 @@ public sealed class NewcomerBot
 public sealed class BotStats
 {
 	public int Walks, Normals, Specials, Throws, Jumps, Blocks, AntiAirs, Mistakes;
+	/// <summary>YOK-155: wait and in-range walk plans held as a standing guard.</summary>
+	public int IdleGuards;
 }
