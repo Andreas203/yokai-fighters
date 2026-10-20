@@ -409,7 +409,7 @@ public static class AiGuardTests
 			while (free > 1 && freeAfter.ContainsKey(free - 1) && !freeAfter[free - 1] && free < a.Tick + 120) free++;
 			int s = starts.FirstOrDefault(x => x >= a.Tick && x <= free + 1);
 			if (s != 0) { started++; if (s > free + 1) bad.Add($"{a.Tick}: started {s}, free {free}"); }
-			else if (!p1Air.GetValueOrDefault(free - reaction - 1, true)) landed++;
+			else if (!p1Air.GetValueOrDefault(free - reaction, true)) landed++;
 			else bad.Add($"{a.Tick}: never started (free {free})");
 		}
 		GD.Print($"YOK-165 rate 100: {started} of {answers.Count} started on the first actionable tick, {landed} dropped (jumper landed)");
@@ -454,7 +454,7 @@ public static class AiGuardTests
 			if (free >= freeAfter.Count - 1) continue; // the run ended before it could act
 			int s = starts.FirstOrDefault(x => x >= a.Tick && x <= free + 1);
 			if (s != 0) started++;
-			else if (p1Air.GetValueOrDefault(free - reaction - 1, true)) bad.Add($"{a.Tick}: never started (free {free})");
+			else if (p1Air.GetValueOrDefault(free - reaction, true)) bad.Add($"{a.Tick}: never started (free {free})"); // the AI deciding step free sees the screen of step free - reaction
 		}
 		return (answers.Count, started, bad);
 	}
@@ -521,66 +521,80 @@ public static class AiGuardTests
 	}
 
 	/// <summary>
-	/// Code-critic round 3: once a held anti-air has started, the jumper landing on the AI's screen stops the repeats but
-	/// keeps the plan: no neutral decision (no draw) until the move and its guard tail are over, and the AI is in crouch
-	/// guard on its first free tick after it (guard opted in at 100).
+	/// Code-critic rounds 3 and 4: a held anti-air's plan is timed from the answer's start. Once it has started, the
+	/// jumper landing only ends the press; there is no decision while the move plays; and the rest of the plan ends on
+	/// time: with the guard opted in (100), the guard tail ends GuardTicks after the move (the next neutral decision is
+	/// at end + GuardTicks); at guard 0 the next neutral decision comes on the move's end. Checked for a 21-frame and a
+	/// 34-frame answer, so a long answer's window cannot stretch the plan.
 	/// </summary>
 	[Test]
-	public static void HeldAntiAir_JumperLandsMidMove_KeepsThePlanAndGuardTail()
+	public static void HeldAntiAir_PlanTimedFromTheAnswersStart()
 	{
-		const string Heavy = "normal:test-ryo-heavy-punch", Medium = "normal:test-ryo-medium-punch";
 		const int reaction = 15;
-		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "{{Heavy}}", "weight": 15 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }"""));
-		var m = NewMatch(c => c with { P2JumpPunishPct = 50, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
-		Place(m, 200);
-		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: 100) { Log = new() };
-		int mediumTotal = m.P2.Moves.First(x => x.Id == "test-ryo-medium-punch").TotalFrames;
-		var air = new Dictionary<int, bool>();
-		var states = new Dictionary<int, (FighterState St, bool Guard, string? Id, int Frame)>();
-		for (int t = 1; t <= 3000 && m.Phase != MatchPhase.Over; t++)
+		int landedMidMove = 0;
+		foreach (string answerId in new[] { "test-ryo-medium-punch", "test-ryo-heavy-punch" })
+		foreach (int guard in new[] { 100, 0 })
 		{
-			m.P1.Health = m.P1.MaxHealth;
-			m.Step(t % 61 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
-			air[t] = m.P1.Airborne;
-			states[t] = (m.P2.State, m.P2.Guarding && m.P2.Crouching, m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null, m.P2.MoveFrame);
+			string answer = "normal:" + answerId;
+			var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "normal:test-ryo-light-kick", "weight": 15 }, { "when": "opponent_jumping", "do": "{{answer}}", "weight": 100 }"""));
+			var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+			Place(m, 200);
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: guard) { Log = new() };
+			int total = m.P2.Moves.First(x => x.Id == answerId).TotalFrames;
+			var air = new Dictionary<int, bool>();
+			var states = new Dictionary<int, (string? Id, int Frame, bool Guard)>();
+			for (int t = 1; t <= 3000 && m.Phase != MatchPhase.Over; t++)
+			{
+				m.P1.Health = m.P1.MaxHealth;
+				m.Step(t % 67 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
+				air[t] = m.P1.Airborne;
+				states[t] = (m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null, m.P2.MoveFrame, m.P2.Guarding && m.P2.Crouching);
+			}
+			var log = ai.Log!;
+			int cases = 0;
+			var bad = new List<string>();
+			foreach (var d in log.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react"))
+			{
+				int start = Enumerable.Range(d.Tick, 90).FirstOrDefault(t => states.TryGetValue(t, out var s) && s.Id == answerId && s.Frame == 1);
+				if (start == 0 || start == d.Tick) continue; // not held, or never started
+				int end = start + total;                      // its first free tick
+				if (!states.ContainsKey(end + ProfileAi.GuardTicks + 2)) continue;
+				var next = log.FirstOrDefault(x => x.Tick > start && x.Kind != "guard");
+				if (next.Kind is null) continue;
+				if (next.Kind == "react" && next.Tick > start) continue; // another jump took over: not this plan's end
+				cases++;
+				if (Enumerable.Range(start + 1, total - 2).Any(t => !air.GetValueOrDefault(t - reaction, true))) landedMidMove++;
+				int want = end + (guard > 0 ? ProfileAi.GuardTicks : 0);
+				if (next.Tick < want - 1 || next.Tick > want + 1)
+					bad.Add($"{answerId} guard {guard}: start {start}, end {end}: next decision {next.Kind} {next.Action} at {next.Tick}, want {want}");
+				if (guard > 0 && !states[end].Guard) bad.Add($"{answerId}: not guarding on its first free tick {end}");
+			}
+			Assert.True(cases >= 5, $"{answerId} guard {guard}: held answers checked ({cases})");
+			Assert.True(bad.Count == 0, $"the plan ends on time: {string.Join("; ", bad.Take(4))}");
 		}
-		int checkedCases = 0;
-		var bad = new List<string>();
-		foreach (var d in ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react"))
-		{
-			// The held answer's start: the first medium punch frame 1 after the decision.
-			int start = Enumerable.Range(d.Tick, 80).FirstOrDefault(t => states.TryGetValue(t, out var s) && s.Id == "test-ryo-medium-punch" && s.Frame == 1);
-			if (start == 0 || start == d.Tick) continue; // not held (pressed at once) or not started
-			int end = start + mediumTotal; // first free tick
-			if (!states.ContainsKey(end + ProfileAi.GuardTicks)) continue;
-			// The jumper shows landed on the AI's screen while the move plays.
-			bool landsMidMove = Enumerable.Range(start + 1, mediumTotal - 2).Any(t => !air.GetValueOrDefault(t - reaction, true));
-			if (!landsMidMove) continue;
-			checkedCases++;
-			var during = ai.Log!.Where(x => x.Tick > start && x.Tick < end && x.Kind is "neutral" or "unavailable" or "guard" && x.Trigger != "self_attacked").ToList();
-			if (during.Count > 0) bad.Add($"{start}: {during.Count} decision(s) mid-move ({during[0].Kind} {during[0].Action} at {during[0].Tick})");
-			if (!states[end].Guard) bad.Add($"{start}: not in crouch guard on its first free tick {end} ({states[end].St})");
-		}
-		Assert.True(checkedCases >= 1, $"held anti-airs where the jumper lands mid-move ({checkedCases})");
-		Assert.True(bad.Count == 0, $"plan and guard tail kept, no draws mid-move: {string.Join("; ", bad.Take(5))}");
+		Assert.True(landedMidMove >= 1, $"some held answers had the jumper land mid-move ({landedMidMove})");
 	}
 
 	/// <summary>
-	/// Code-critic round 3: an anti-air hit out of its startup is not pressed again from the same roll. The AI is kept
-	/// busy in its own heavy punch so its answers are held; each time its medium punch starts, the test puts it in the
-	/// shortest interruption a hit can cause (light hitstop + the shortest hitstun = <see cref="ProfileAi.MinInterruptTicks"/>)
-	/// while Ryo is still in the air. At reaction 15 the screen showing the AI busy ends the repeats; at 30 the window cap
-	/// does. Either way every decided punish starts at most once.
+	/// Code-critic rounds 3 and 4: an anti-air hit out of its startup is not pressed again from the same roll. The AI is
+	/// kept busy in its own heavy punch so its answers are held; each time its medium punch starts, the test puts it in
+	/// the shortest interruption a hit can cause in that fight (<see cref="ProfileAi.MinInterruptTicks"/>: light hitstop +
+	/// the shortest hitstun, or the hitstun alone with hitstop off) while Ryo is still in the air. At reaction 15 with
+	/// hitstop on the screen showing the hit ends the press; at 30, and at 15 with hitstop off, the window cap does.
 	/// </summary>
 	[Test]
 	public static void HeldAntiAir_HitInStartup_StartsAtMostOncePerRoll()
 	{
 		const string Heavy = "normal:test-ryo-heavy-punch", Medium = "normal:test-ryo-medium-punch";
 		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "{{Heavy}}", "weight": 15 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }"""));
+		foreach (bool hitstop in new[] { true, false })
 		foreach (int reaction in new[] { 15, 30 })
 		{
-			var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+			var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000, HitstopEnabled = hitstop });
 			Place(m, 200);
+			int minInterrupt = ProfileAi.MinInterruptTicks(AiView.Capture(m));
+			Assert.Equal(hitstop ? SimConfig.Default.HitstopLight + ProfileAi.ShortestHitstun : ProfileAi.ShortestHitstun, minInterrupt,
+				$"hitstop {hitstop}: the shortest interruption");
 			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: 0) { Log = new() };
 			var starts = new List<int>();
 			int interrupted = 0;
@@ -596,8 +610,8 @@ public static class AiGuardTests
 					starts.Add(t);
 					if (m.P1.Airborne)
 					{
-						m.P2.State = FighterState.Hitstun; // the shortest a hit can stop it: acts again MinInterruptTicks + 1 later
-						m.P2.StunLeft = ProfileAi.MinInterruptTicks - 1;
+						m.P2.State = FighterState.Hitstun; // the shortest a hit can stop it: acts again minInterrupt + 1 later
+						m.P2.StunLeft = minInterrupt - 1;
 						interrupted++;
 						id = null; frame = 0;
 					}
@@ -605,7 +619,7 @@ public static class AiGuardTests
 				last = id; lastFrame = frame;
 			}
 			var answers = ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react").Select(d => d.Tick).ToList();
-			Assert.True(answers.Count >= 20 && interrupted >= 10, $"reaction {reaction}: punishes decided ({answers.Count}), interrupted ({interrupted})");
+			Assert.True(answers.Count >= 20 && interrupted >= 10, $"hitstop {hitstop} reaction {reaction}: punishes decided ({answers.Count}), interrupted ({interrupted})");
 			var twice = new List<string>();
 			for (int i = 0; i < answers.Count; i++)
 			{
@@ -613,12 +627,12 @@ public static class AiGuardTests
 				int n = starts.Count(s => s >= from && s < to);
 				if (n > 1) twice.Add($"{from}: {n} starts");
 			}
-			Assert.True(twice.Count == 0, $"reaction {reaction}: one roll, at most one anti-air: {string.Join("; ", twice.Take(5))}");
+			Assert.True(twice.Count == 0, $"hitstop {hitstop} reaction {reaction}: one roll, at most one anti-air: {string.Join("; ", twice.Take(5))}");
 		}
 	}
 
-	/// <summary><see cref="ProfileAi.MinInterruptTicks"/> is no longer than any hit can stop a fighter: light hitstop + the
-	/// shortest hitstun in data/moves and the TEST FIXTURE moves.</summary>
+	/// <summary><see cref="ProfileAi.ShortestHitstun"/> is no longer than the shortest hitstun in data/moves and the TEST
+	/// FIXTURE moves, and <see cref="ProfileAi.MinInterruptTicks"/> adds the light hitstop only when hitstop is on.</summary>
 	[Test]
 	public static void MinInterruptTicks_MatchesConfigAndData()
 	{
@@ -628,8 +642,9 @@ public static class AiGuardTests
 				foreach (System.Text.RegularExpressions.Match x in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(f), "\"hitstun\"\\s*:\\s*(\\d+)"))
 					min = Math.Min(min, int.Parse(x.Groups[1].Value));
 		Assert.True(min < int.MaxValue, "found hitstun values");
-		Assert.True(ProfileAi.MinInterruptTicks <= SimConfig.Default.HitstopLight + min,
-			$"MinInterruptTicks {ProfileAi.MinInterruptTicks} <= light hitstop {SimConfig.Default.HitstopLight} + shortest hitstun {min}");
+		Assert.True(ProfileAi.ShortestHitstun <= min, $"ShortestHitstun {ProfileAi.ShortestHitstun} <= the shortest hitstun in data {min}");
+		Assert.Equal(SimConfig.Default.HitstopLight + ProfileAi.ShortestHitstun, ProfileAi.MinInterruptTicks(AiView.Capture(NewMatch())), "hitstop on");
+		Assert.Equal(ProfileAi.ShortestHitstun, ProfileAi.MinInterruptTicks(AiView.Capture(NewMatch(c => c with { HitstopEnabled = false }))), "hitstop off");
 	}
 
 	/// <summary>The AI's decisions on the jumps (tick, kind, action, roll, pct), for pinning draw order.</summary>

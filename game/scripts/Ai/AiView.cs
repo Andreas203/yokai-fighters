@@ -49,6 +49,10 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 	public int? P2JumpPunishPct { get; init; }
 	public int? JumpPunishPct(int i) => i == 0 ? P1JumpPunishPct : P2JumpPunishPct;
 
+	/// <summary>YOK-165: the light hitstop this fight runs with (SimConfig.HitstopLight, 0 when hitstop is off), a fixed
+	/// fight constant like the frame counts above.</summary>
+	public int LightHitstop { get; init; }
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
@@ -57,6 +61,7 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 		return new AiView(m.Tick, m.Phase, m.HitstopLeft, Of(m.P1), Of(m.P2), shots) {
 			WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames,
 			P1JumpPunishPct = m.Config.P1JumpPunishPct, P2JumpPunishPct = m.Config.P2JumpPunishPct,
+			LightHitstop = m.Config.HitstopEnabled ? m.Config.HitstopLight : 0,
 		};
 	}
 
