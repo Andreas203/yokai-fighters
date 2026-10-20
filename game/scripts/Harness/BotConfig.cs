@@ -66,6 +66,8 @@ public sealed record BotConfig
 	public required ControlScheme Scheme { get; init; }
 	public required BotFightConfig Fight { get; init; }
 	public required BotRunConfig Run { get; init; }
+	/// <summary>YOK-170: the skill level this config was built as (<see cref="BotLevels"/>); null for a bot file played on its own.</summary>
+	public string? Level { get; init; }
 
 	public static readonly IReadOnlyDictionary<string, InputBits> Buttons = new Dictionary<string, InputBits>
 	{

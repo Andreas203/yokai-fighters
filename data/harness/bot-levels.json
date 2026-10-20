@@ -1,0 +1,45 @@
+{
+  "kind": "harness_bot_levels",
+  "id": "bot-levels",
+  "status": "proposed",
+  "rules": ["R5", "Y4", "P6"],
+  "base": "newcomer-kihon-bot",
+  "levels": [
+    {
+      "level": "newcomer",
+      "bot_id": "newcomer-kihon-bot",
+      "status": "proposed",
+      "notes": "Today's bot exactly: no overrides, so every value is the base file's (YOK-26/154/155 comparisons hold)."
+    },
+    {
+      "level": "intermediate",
+      "bot_id": "intermediate-kihon-bot",
+      "status": "proposed",
+      "fight": {
+        "reaction_frames": 18,
+        "decide_every": 6,
+        "mistake_pct": 8,
+        "block_pct": 65,
+        "idle_guard_pct": 60,
+        "anti_air_pct": 35
+      },
+      "notes": "Proposed first pass: a player with a few runs behind them. Sees the screen 18 ticks late, decides every 6, about half the newcomer's mistakes, blocks 65% of seen threats, guards 60% of waits and in-range walks, anti-airs 35% of jumps. Everything else is the newcomer's."
+    },
+    {
+      "level": "skilled",
+      "bot_id": "skilled-kihon-bot",
+      "status": "proposed",
+      "fight": {
+        "reaction_frames": 14,
+        "decide_every": 4,
+        "mistake_pct": 3,
+        "block_pct": 80,
+        "idle_guard_pct": 70,
+        "anti_air_pct": 60,
+        "weights": { "jump": 4, "wait": 6 }
+      },
+      "notes": "Proposed first pass: a confident Kihon player. Sees the screen 14 ticks late, decides every 4, rare mistakes, blocks 80% of seen threats, guards 70% of waits and in-range walks, anti-airs 60% of jumps, and jumps and waits less. Everything else is the newcomer's."
+    }
+  ],
+  "notes": "YOK-170 (designer 2026-10-20: the idle-guard default depends on the bot's level; several levels across runs). Each level overrides fields of the base bot file (data/harness/newcomer-kihon-bot.json); max_fight_ticks and menu_seconds_per_node stay the base's so levels compare. Every intermediate and skilled number is proposed for the designer and the Sparring Partner. The YOK-157 rule (the first jump seen under a held idle guard is let go) applies at every level."
+}

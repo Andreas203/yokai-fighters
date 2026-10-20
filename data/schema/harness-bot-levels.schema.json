@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/harness-bot-levels.schema.json",
+  "title": "Whole-run harness bot skill levels",
+  "description": "YOK-170: the test bot's skill levels in data/harness/bot-levels.json. Each level overrides fields of the base harness_bot file; a level with no overrides plays the base exactly. max_fight_ticks and menu_seconds_per_node are not overridable (the batch's measuring rules). The C# loader (BotLevels) also checks every merged level as a harness_bot. Never shipped as gameplay.",
+  "type": "object",
+  "required": ["kind", "id", "rules", "base", "levels"],
+  "additionalProperties": false,
+  "$defs": {
+    "pct": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "units": { "type": "integer", "minimum": 0, "maximum": 4000 },
+    "ticks": { "type": "integer", "minimum": 1, "maximum": 600 },
+    "weight": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "level": {
+      "type": "object",
+      "required": ["level", "bot_id", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "level": { "allOf": [{ "$ref": "#/$defs/name" }, { "not": { "enum": ["all", "mixed"] } }], "description": "The name --level picks; 'all' and 'mixed' are the harness's own." },
+        "bot_id": { "$ref": "#/$defs/name", "description": "The bot id this level plays as (the results file name)." },
+        "status": { "$ref": "common.schema.json#/$defs/status" },
+        "fight": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 },
+            "decide_every": { "$ref": "#/$defs/ticks" },
+            "mistake_pct": { "$ref": "#/$defs/pct" },
+            "block_pct": { "$ref": "#/$defs/pct" },
+            "idle_guard_pct": { "$ref": "#/$defs/pct" },
+            "anti_air_pct": { "$ref": "#/$defs/pct" },
+            "anti_air_button": { "enum": ["light_punch", "medium_punch", "heavy_punch", "light_kick", "medium_kick", "heavy_kick"] },
+            "poke_range": { "$ref": "#/$defs/units" },
+            "throw_range": { "$ref": "#/$defs/units" },
+            "preferred_min": { "$ref": "#/$defs/units" },
+            "preferred_max": { "$ref": "#/$defs/units" },
+            "walk_ticks": { "$ref": "#/$defs/ticks" },
+            "block_ticks": { "$ref": "#/$defs/ticks" },
+            "wait_ticks": { "$ref": "#/$defs/ticks" },
+            "weights": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "walk": { "$ref": "#/$defs/weight" }, "normal": { "$ref": "#/$defs/weight" }, "special": { "$ref": "#/$defs/weight" },
+                "throw": { "$ref": "#/$defs/weight" }, "jump": { "$ref": "#/$defs/weight" }, "wait": { "$ref": "#/$defs/weight" }
+              }
+            }
+          }
+        },
+        "run": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "route": {
+              "type": "object",
+              "required": ["rule"],
+              "additionalProperties": false,
+              "properties": {
+                "rule": { "enum": ["prefer_types_else_random", "random"] },
+                "prefer_types": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "reward_order": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["upgrade", "new", "modifier"] } },
+            "merchant": { "enum": ["heal", "shop", "heal_if_hurt_else_shop", "skip"] },
+            "heal_below_pct": { "$ref": "#/$defs/pct" },
+            "dojo": { "enum": ["rest", "skip"] }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "kind": { "const": "harness_bot_levels" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "base": { "$ref": "common.schema.json#/$defs/id", "description": "The harness_bot file (data/harness/<base>.json) every level starts from." },
+    "levels": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/level" } },
+    "notes": { "type": "string" }
+  }
+}
