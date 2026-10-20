@@ -23,6 +23,9 @@ Owner: asset-smith. Every prompt for a visual asset starts with this block. Chan
 | Water teal | `#3E7F86` | stage water; the same colour as Kappa's teal hit spark (V5) (confirmed 2026-10-20, YOK-151) |
 | Brown | `#6E5A48` | Tanuki fur, tea house beams and furniture (confirmed 2026-10-20, YOK-152) |
 | Spring pink | `#E8A6B0` | spring blossom (confirmed 2026-10-20, YOK-152) |
+| Wood dark | `#4A3425` | shop cabinet frame, dojo pillars (confirmed 2026-10-20, YOK-159) |
+| Wood mid | `#7A5535` | shop shelf boards, dojo floor (confirmed 2026-10-20, YOK-159) |
+| Straw | `#C9B58C` | shop cabinet back panel (confirmed 2026-10-20, YOK-159) |
 
 ## Negative prompt (append as "Avoid: ...")
 
