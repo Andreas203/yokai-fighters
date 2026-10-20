@@ -25,25 +25,20 @@ public static class BotIdleGuardTests
 	};
 
 	/// <summary>Per tick: Ryo's input, then whether he guarded and attacked on that tick. The opponent stands still,
-	/// or with <paramref name="hopper"/> jumps forward over Ryo whenever it is grounded and idle (cross-ups); with
-	/// <paramref name="jumpIn"/> it also presses heavy kick <paramref name="jumpIn"/> ticks into each jump (a jump-in threat).</summary>
-	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7, List<int>? sides = null, bool hopper = false, int jumpIn = 0)
+	/// or with <paramref name="hopper"/> jumps forward over Ryo whenever it is grounded and idle (cross-ups).</summary>
+	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7, List<int>? sides = null, bool hopper = false)
 	{
 		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
 		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
 		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
 		var bot = new NewcomerBot(cfg, BotKit.From(m.P1), seed);
 		var log = new List<(FighterInput, bool, bool)>();
-		int air = 0;
 		for (int t = 0; t < ticks && m.Phase != MatchPhase.Over; t++)
 		{
 			var input = bot.Next(AiView.Capture(m));
 			var p2 = FighterInput.None;
-			air = m.P2.Airborne ? air + 1 : 0;
 			if (hopper && !m.P2.Airborne && m.P2.State == FighterState.Idle)
 				p2 = new FighterInput(InputBits.Up | (m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right));
-			else if (jumpIn > 0 && air == jumpIn)
-				p2 = new FighterInput(InputBits.HeavyKick);
 			m.Step(input, p2);
 			if (m.Phase == MatchPhase.Fighting) sides?.Add(Math.Sign(m.P2.X - m.P1.X));
 			if (m.Phase == MatchPhase.Fighting) log.Add((input, m.P1.Guarding, m.P1.State == FighterState.Attack));
@@ -111,34 +106,40 @@ public static class BotIdleGuardTests
 	}
 
 	/// <summary>
-	/// YOK-166 (designer 2026-10-20): the reactive Block plan follows a cross-up the same way. The opponent jumps over Ryo
-	/// and kicks 22 ticks into the jump, after the apex, so the kick is still out as it crosses; Ryo only ever blocks (no idle guard, waits press nothing, no anti-air), so every direction he
-	/// holds is a block, and once the delayed view (P6) has settled on a side, it is away from the opponent on that side.
+	/// YOK-166 (designer 2026-10-20, C3, P6): the reactive Block plan follows a cross-up the same way. Staged screens: the
+	/// opponent swings from Ryo's right, the bot blocks (holds left); mid-swing it shows on his left. The block is the same
+	/// plan (one roll) and, once the delayed view (P6: <c>reaction_frames</c> later, not sooner) shows the new side, holds
+	/// right. The old code fixed the direction when the block started and walked into the opponent here.
 	/// </summary>
 	[Test]
 	public static void Block_100_CrossUp_GuardFollowsTheDelayedSide()
 	{
-		var sides = new List<int>();
-		var cfg = Only(wait: 1, idleGuard: 0) with { AntiAirPct = 0, BlockPct = 100 };
-		var (ticks, bot) = Play(cfg, 1800, 7, sides, hopper: true, jumpIn: 22);
-		int lag = cfg.ReactionFrames + 1, checkedTicks = 0, crossedBlocks = 0;
-		for (int i = lag + 1; i < ticks.Count; i++)
+		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+		var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+		const int Delay = 4;
+		var cfg = Only(wait: 1, idleGuard: 0) with { ReactionFrames = Delay, DecideEvery = 1, AntiAirPct = 0, BlockPct = 100, BlockTicks = 30 };
+		var bot = new NewcomerBot(cfg, BotKit.From(m.P1), 7);
+		var b = AiView.Capture(m);
+		int far = 100 * SimConfig.Scale;
+		AiView Swing(int tick, int p1x, int p2x) => b with
 		{
-			if (ticks[i].In.Bits == InputBits.None) continue;
-			Assert.True((ticks[i].In.Bits & ~(InputBits.Left | InputBits.Right)) == InputBits.None, $"tick {i}: only a block is held ({ticks[i].In.Bits})");
-			int seen = sides[i - lag];
-			bool stable = true;
-			for (int k = i - lag; k <= i; k++) stable &= sides[k] == seen && seen != 0;
-			if (!stable) continue;
-			checkedTicks++;
-			// a block held through a side switch: the tick before this settled window the bot saw the other side
-			if (i - lag - 1 >= 0 && sides[i - lag - 1] != seen && ticks[i - 1].In.Bits != InputBits.None) crossedBlocks++;
-			InputBits away = seen > 0 ? InputBits.Left : InputBits.Right;
-			Assert.Equal(away, ticks[i].In.Bits, $"tick {i}: block held away from the opponent on the side the bot saw");
-		}
-		Assert.True(bot.Stats.Blocks > 0 && bot.Stats.IdleGuards == 0, $"reactive blocks only ({bot.Stats.Blocks})");
-		Assert.True(checkedTicks > 50, $"enough settled block ticks checked ({checkedTicks})");
-		Assert.True(crossedBlocks > 0, $"a block was held through a cross-up ({crossedBlocks})");
+			Tick = tick,
+			P1 = b.P1 with { X = p1x, Facing = Math.Sign(p2x - p1x) },
+			P2 = b.P2 with { X = p2x, Facing = Math.Sign(p1x - p2x), State = FighterState.Attack, MoveId = "swing", MoveFrame = 1, MoveLastActive = 200 },
+		};
+		int t = 0;
+		var outs = new List<InputBits>();
+		for (int i = 0; i < 10; i++) outs.Add(bot.Next(Swing(t++, 0, far)).Bits);
+		Assert.Equal(1, bot.Stats.Blocks, "one block rolled for the swing");
+		Assert.Equal(InputBits.Left, outs[^1], "the block holds away from the opponent on the right");
+		outs.Clear();
+		for (int i = 0; i < 12; i++) outs.Add(bot.Next(Swing(t++, far, 0)).Bits);
+		for (int i = 0; i < Delay - 1; i++)
+			Assert.Equal(InputBits.Left, outs[i], $"cross-up tick {i}: the bot has not seen it yet (P6), still holds left");
+		for (int i = Delay - 1; i < outs.Count; i++)
+			Assert.Equal(InputBits.Right, outs[i], $"cross-up tick {i}: seen, the block holds away from the opponent on the left");
+		Assert.Equal(1, bot.Stats.Blocks, "the same block plan, no new roll");
 	}
 
 	[Test]
