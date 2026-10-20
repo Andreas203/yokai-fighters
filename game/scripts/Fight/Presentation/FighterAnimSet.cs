@@ -11,8 +11,10 @@ public enum PoseKind
 
 /// <summary>
 /// YOK-53: a fighter's model and which clip shows each <see cref="PoseKind"/> (presentation data, not game rules).
-/// Every clip shares the Meshy 24-joint humanoid skeleton, so a fighter may borrow another's clip (e.g. Kitsune's
-/// back dash uses Ryo's Step_Back) until her own is generated.
+/// The catalogued clips (data/clips) are cut on the Meshy 24-joint humanoid skeleton, so a Meshy body may borrow
+/// another's clip (e.g. Kitsune's back dash uses Ryo's Step_Back) until her own is generated.
+/// YOK-146: a body on another skeleton (the Tripo shared skeleton, Option A) names its own <see cref="ClipRoot"/>: it
+/// plays the clip of the same file name from that folder, and never a Meshy file (the spine bones mean different things).
 /// </summary>
 public sealed class FighterAnimSet
 {
@@ -43,13 +45,58 @@ public sealed class FighterAnimSet
 
 	public string MoveClip(string clip) => ClipOverrides.TryGetValue(clip, out var o) ? o : clip;
 
+	/// <summary>
+	/// YOK-146: res:// folder (ending in '/') holding this body's clips on its own skeleton, under the same file names as
+	/// the catalog's Meshy GLBs; null = the body is on the Meshy skeleton and plays the catalog's files.
+	/// </summary>
+	public string? ClipRoot { get; init; }
+
+	private readonly Dictionary<string, string?> _clipPaths = new();
+
+	/// <summary>
+	/// YOK-146: the GLB this body plays for a catalogued clip: the catalog's file on the Meshy skeleton, else the file of
+	/// the same name under <see cref="ClipRoot"/>, or null when this skeleton has no such clip (the body never plays it).
+	/// </summary>
+	public string? ClipPath(ClipInfo info)
+	{
+		if (ClipRoot is null) return info.ResPath;
+		if (_clipPaths.TryGetValue(info.ResPath, out var p)) return p;
+		string own = ClipRoot + info.ResPath[(info.ResPath.LastIndexOf('/') + 1)..];
+		p = Godot.ResourceLoader.Exists(own) ? own : null;
+		_clipPaths[info.ResPath] = p;
+		return p;
+	}
+
+	/// <summary>YOK-146: true when this body has the clip on its own skeleton (see <see cref="ClipPath"/>).</summary>
+	public bool CanPlay(ClipInfo? info) => info != null && ClipPath(info) != null;
+
 	private static readonly HashSet<string> SharedAir = new() { "ryo-jump", "ryo-jump-back", "kitsune-jump", "ryo-jump-kick", "ryo-jump-punch" };
 
-	public static readonly FighterAnimSet Ryo = new()
+	/// <summary>
+	/// YOK-146 SWITCH: which Ryo body fights. True = the Tripo Ryo on the Option A shared skeleton (metre bones, his
+	/// stopgap clips in <c>clips/ryo-tripo/</c>); false = the old Meshy Ryo (cm bones, <c>clips/ryo/</c>), for comparison.
+	/// The Tanuki fights with Ryo's body (T0), so it follows. Read when a fight builds its models (the dev menu flips it).
+	/// </summary>
+	public static bool TripoRyo { get; set; } = true;
+
+	/// <summary>Ryo's body for the next fight: <see cref="RyoTripo"/> or <see cref="RyoMeshy"/> by <see cref="TripoRyo"/>.</summary>
+	public static FighterAnimSet Ryo => TripoRyo ? RyoTripo : RyoMeshy;
+
+	/// <summary>YOK-146: the Tripo Ryo (assets/specs/rigs/ryo-tripo.md): same clip ids, trims and frame numbers as the Meshy Ryo.</summary>
+	public static readonly FighterAnimSet RyoTripo = RyoBody(
+		"res://assets/generated/characters/ryo/ryo-tripo-rigged.glb", "res://scenes/fighters/ryo-tripo.tscn",
+		"res://assets/generated/clips/ryo-tripo/");
+
+	/// <summary>The Meshy Ryo (YOK-53), kept for comparison until the Tripo set passes G4.</summary>
+	public static readonly FighterAnimSet RyoMeshy = RyoBody(
+		"res://assets/generated/characters/ryo/ryo-rigged.glb", "res://scenes/fighters/ryo.tscn", null);
+
+	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot) => new()
 	{
 		Fighter = "ryo",
-		ModelPath = "res://assets/generated/characters/ryo/ryo-rigged.glb",
-		ScenePath = "res://scenes/fighters/ryo.tscn",
+		ModelPath = model,
+		ScenePath = scene,
+		ClipRoot = clipRoot,
 		JumpFrameOffset = 0,
 		LandingFrame = 40,
 		BurstFrame = 10,

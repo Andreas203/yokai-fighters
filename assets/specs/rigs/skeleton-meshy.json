@@ -1,0 +1,127 @@
+{
+ "skeleton": "meshy-humanoid-24 (previous shared skeleton, YOK-111; Kitsune, Oni, Kappa until YOK-147/148/149)",
+ "up_axis": "Y",
+ "rest_pose": "T",
+ "bones": [
+  {
+   "name": "Hips",
+   "parent": null,
+   "index": 0
+  },
+  {
+   "name": "Spine02",
+   "parent": "Hips",
+   "index": 1
+  },
+  {
+   "name": "Spine01",
+   "parent": "Spine02",
+   "index": 2
+  },
+  {
+   "name": "Spine",
+   "parent": "Spine01",
+   "index": 3
+  },
+  {
+   "name": "neck",
+   "parent": "Spine",
+   "index": 4
+  },
+  {
+   "name": "Head",
+   "parent": "neck",
+   "index": 5
+  },
+  {
+   "name": "head_end",
+   "parent": "Head",
+   "index": 6
+  },
+  {
+   "name": "headfront",
+   "parent": "Head",
+   "index": 7
+  },
+  {
+   "name": "LeftShoulder",
+   "parent": "Spine",
+   "index": 8
+  },
+  {
+   "name": "LeftArm",
+   "parent": "LeftShoulder",
+   "index": 9
+  },
+  {
+   "name": "LeftForeArm",
+   "parent": "LeftArm",
+   "index": 10
+  },
+  {
+   "name": "LeftHand",
+   "parent": "LeftForeArm",
+   "index": 11
+  },
+  {
+   "name": "RightShoulder",
+   "parent": "Spine",
+   "index": 12
+  },
+  {
+   "name": "RightArm",
+   "parent": "RightShoulder",
+   "index": 13
+  },
+  {
+   "name": "RightForeArm",
+   "parent": "RightArm",
+   "index": 14
+  },
+  {
+   "name": "RightHand",
+   "parent": "RightForeArm",
+   "index": 15
+  },
+  {
+   "name": "LeftUpLeg",
+   "parent": "Hips",
+   "index": 16
+  },
+  {
+   "name": "LeftLeg",
+   "parent": "LeftUpLeg",
+   "index": 17
+  },
+  {
+   "name": "LeftFoot",
+   "parent": "LeftLeg",
+   "index": 18
+  },
+  {
+   "name": "LeftToeBase",
+   "parent": "LeftFoot",
+   "index": 19
+  },
+  {
+   "name": "RightUpLeg",
+   "parent": "Hips",
+   "index": 20
+  },
+  {
+   "name": "RightLeg",
+   "parent": "RightUpLeg",
+   "index": 21
+  },
+  {
+   "name": "RightFoot",
+   "parent": "RightLeg",
+   "index": 22
+  },
+  {
+   "name": "RightToeBase",
+   "parent": "RightFoot",
+   "index": 23
+  }
+ ]
+}

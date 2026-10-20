@@ -8,7 +8,8 @@ namespace YokaiFighters.Tests;
 /// YOK-130: shared clips keep their hips height relative to the rig. A clip's <c>Hips</c> Y keys are scaled by
 /// (this rig's rest hips Y) / (the clip rig's rest hips Y), so a taller or shorter rig keeps its toes on the floor.
 /// The test rigs are synthetic (Ryo's rig with every bone rest scaled, optionally with the Oni's 1.1 on the Armature
-/// node) so this branch stands without the Oni and Kappa rigs.
+/// node) so this branch stands without the Oni and Kappa rigs. YOK-146: "Ryo" is whichever body the switch picks (the
+/// Tripo Ryo, metre bones under an unscaled Armature, with his clips); the ratios are unitless, so the checks hold for both.
 /// </summary>
 public static class HipScaleTests
 {
@@ -18,11 +19,14 @@ public static class HipScaleTests
 	[Test]
 	public static void HipScale_IsRigRestOverClipRest_AndOneWhenUnknown()
 	{
-		// The rig specs' measured rests (bone space, cm): Oni 112.8, Kappa 73.5, Ryo 94.9.
+		// The rig specs' measured rests (bone space, cm on the Meshy rigs): Oni 112.8, Kappa 73.5, Meshy Ryo 94.9.
 		Assert.True(Math.Abs(FighterModel.HipScale(112.8f, 94.9f) - 1.19f) < 0.005f, "Oni about 1.19");
 		Assert.True(Math.Abs(FighterModel.HipScale(73.5f, 94.9f) - 0.77f) < 0.005f, "Kappa about 0.77");
 		Assert.Equal(1f, FighterModel.HipScale(94.9f, 94.9f), "Ryo on his own clips");
 		Assert.Equal(1f, FighterModel.HipScale(94.9f, 0f), "no clip skeleton: unchanged");
+		// YOK-146: the Tripo Ryo is in metres (0.998); his own clips are too (ratio 1), a Meshy cm clip would be 0.0105.
+		Assert.Equal(1f, FighterModel.HipScale(0.998f, 0.998f), "Tripo Ryo on his own clips");
+		Assert.True(FighterModel.HipScale(0.998f, 94.9f) < FighterModel.HipScaleWarnMin, "a cm clip on the metre rig is outside the warn band");
 		Assert.Equal(1f, FighterModel.HipScale(0f, 94.9f), "no rig hips: unchanged");
 	}
 
@@ -54,6 +58,7 @@ public static class HipScaleTests
 			foreach (var (id, info) in Cat.Clips)
 			{
 				if (ModelExtentTests.OnOniRig(info.ResPath)) continue; // the Oni's own takes: hips 112.8 by design
+				if (set.ClipPath(info) is null) continue; // YOK-146: not on this body's skeleton (a Meshy clip on the Tripo Ryo)
 				float k = model!.HipScaleFor(info);
 				Assert.Equal(1f, k, $"{set.Fighter} on {id}: hip scale {k:0.0000} is exactly 1 (unchanged)");
 			}

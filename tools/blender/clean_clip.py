@@ -143,6 +143,7 @@ def main():
             sys.exit("%s: --smooth-paths accepts rotation_quaternion and location" % TOOL)
 
     arm, act = cc.load_clip(clip)
+    root = cc.resolve_bone(arm, root) or root  # YOK-146: `Hips` also finds `mixamorig:Hips`
     chans = cc.pose_channels(act)
     last = cc.action_last_tick(act)
     trim = args.get("--trim")

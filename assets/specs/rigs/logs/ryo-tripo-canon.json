@@ -1,0 +1,304 @@
+{
+ "tool": "tools/blender/canon_tripo_rig.py",
+ "blender": "4.1.1",
+ "in": "game/assets/generated/characters/ryo/Ryo.glb",
+ "out": "<scratch>/ryo-tripo-canon.glb",
+ "input_faults": {
+  "joint_nodes_with_trs": 0,
+  "note": "no joint node has TRS: the bind pose is only in the IBMs, which are in a Z-up frame"
+ },
+ "frame_fit": {
+  "R_skel_to_mesh": [
+   [
+    0,
+    1,
+    0
+   ],
+   [
+    0,
+    0,
+    1
+   ],
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "t_m": [
+   -0.00186,
+   0.49689,
+   0.00541
+  ],
+  "s": 1.01281,
+  "mean_clipped_dist_m": 0.04637,
+  "runner_up_rotation_dist_m": 0.06646,
+  "per_bone_median_dist_m": {
+   "mixamorig:LeftUpLeg": 0.07,
+   "mixamorig:LeftLeg": 0.035,
+   "mixamorig:LeftFoot": 0.0386,
+   "mixamorig:LeftToeBase": 0.0235,
+   "mixamorig:RightUpLeg": 0.0764,
+   "mixamorig:RightLeg": 0.0357,
+   "mixamorig:RightFoot": 0.0383,
+   "mixamorig:RightToeBase": 0.025,
+   "mixamorig:Spine1": 0.081,
+   "mixamorig:LeftShoulder": 0.0375,
+   "mixamorig:LeftArm": 0.0421,
+   "mixamorig:LeftForeArm": 0.0272,
+   "mixamorig:LeftHand": 0.0149,
+   "mixamorig:LeftHandIndex1": 0.0072,
+   "mixamorig:LeftHandIndex2": 0.0074,
+   "mixamorig:LeftHandIndex3": 0.0057,
+   "mixamorig:LeftHandMiddle1": 0.0099,
+   "mixamorig:LeftHandMiddle2": 0.0084,
+   "mixamorig:LeftHandMiddle3": 0.0061,
+   "mixamorig:LeftHandPinky1": 0.0104,
+   "mixamorig:LeftHandPinky2": 0.0084,
+   "mixamorig:LeftHandPinky3": 0.007,
+   "mixamorig:LeftHandRing1": 0.0097,
+   "mixamorig:LeftHandRing2": 0.008,
+   "mixamorig:LeftHandRing3": 0.006,
+   "mixamorig:LeftHandThumb1": 0.0136,
+   "mixamorig:LeftHandThumb2": 0.0077,
+   "mixamorig:LeftHandThumb3": 0.0072,
+   "mixamorig:Neck": 0.074,
+   "mixamorig:Head": 0.0467,
+   "mixamorig:RightShoulder": 0.0364,
+   "mixamorig:RightArm": 0.0486,
+   "mixamorig:RightForeArm": 0.0228,
+   "mixamorig:RightHand": 0.0231,
+   "mixamorig:RightHandIndex1": 0.0095,
+   "mixamorig:RightHandIndex2": 0.0086,
+   "mixamorig:RightHandIndex3": 0.0063,
+   "mixamorig:RightHandMiddle1": 0.01,
+   "mixamorig:RightHandMiddle2": 0.0085,
+   "mixamorig:RightHandMiddle3": 0.0065,
+   "mixamorig:RightHandPinky1": 0.0114,
+   "mixamorig:RightHandPinky2": 0.0093,
+   "mixamorig:RightHandPinky3": 0.0073,
+   "mixamorig:RightHandRing1": 0.0103,
+   "mixamorig:RightHandRing2": 0.008,
+   "mixamorig:RightHandRing3": 0.0071,
+   "mixamorig:RightHandThumb1": 0.0145,
+   "mixamorig:RightHandThumb2": 0.0081,
+   "mixamorig:RightHandThumb3": 0.0074
+  }
+ },
+ "source_height_m": 0.99951,
+ "height_m": 1.75,
+ "scale_factor": 1.750855,
+ "shift_before_scale_m": [
+  0.00581,
+  -0.0,
+  -0.0153
+ ],
+ "bones_in": 65,
+ "bones_out": 25,
+ "bones_out_names": [
+  "Hips",
+  "LeftUpLeg",
+  "LeftLeg",
+  "LeftFoot",
+  "LeftToeBase",
+  "LeftToe_End",
+  "RightUpLeg",
+  "RightLeg",
+  "RightFoot",
+  "RightToeBase",
+  "RightToe_End",
+  "Spine",
+  "Spine1",
+  "Spine2",
+  "LeftShoulder",
+  "LeftArm",
+  "LeftForeArm",
+  "LeftHand",
+  "Neck",
+  "Head",
+  "HeadTop_End",
+  "RightShoulder",
+  "RightArm",
+  "RightForeArm",
+  "RightHand"
+ ],
+ "fingers": {
+  "removed": [
+   "LeftHandIndex1",
+   "LeftHandIndex2",
+   "LeftHandIndex3",
+   "LeftHandIndex4",
+   "LeftHandMiddle1",
+   "LeftHandMiddle2",
+   "LeftHandMiddle3",
+   "LeftHandMiddle4",
+   "LeftHandPinky1",
+   "LeftHandPinky2",
+   "LeftHandPinky3",
+   "LeftHandPinky4",
+   "LeftHandRing1",
+   "LeftHandRing2",
+   "LeftHandRing3",
+   "LeftHandRing4",
+   "LeftHandThumb1",
+   "LeftHandThumb2",
+   "LeftHandThumb3",
+   "LeftHandThumb4",
+   "RightHandIndex1",
+   "RightHandIndex2",
+   "RightHandIndex3",
+   "RightHandIndex4",
+   "RightHandMiddle1",
+   "RightHandMiddle2",
+   "RightHandMiddle3",
+   "RightHandMiddle4",
+   "RightHandPinky1",
+   "RightHandPinky2",
+   "RightHandPinky3",
+   "RightHandPinky4",
+   "RightHandRing1",
+   "RightHandRing2",
+   "RightHandRing3",
+   "RightHandRing4",
+   "RightHandThumb1",
+   "RightHandThumb2",
+   "RightHandThumb3",
+   "RightHandThumb4"
+  ],
+  "verts_with_finger_weight": 3115,
+  "rule": "finger weight added to the same-side Hand bone, then renormalised (E15 mitts)"
+ },
+ "weights": {
+  "max_influences": 4,
+  "unweighted": 0,
+  "renormalised_max_change": 0.0
+ },
+ "rest_vs_bind_max_offset_m": 0.0,
+ "joint_heads_gltf_m": {
+  "Hips": [
+   0.0035,
+   0.9981,
+   0.0554
+  ],
+  "LeftUpLeg": [
+   0.0935,
+   0.9981,
+   0.0554
+  ],
+  "LeftLeg": [
+   0.1559,
+   0.5617,
+   0.0554
+  ],
+  "LeftFoot": [
+   0.2251,
+   0.1046,
+   -0.0
+  ],
+  "LeftToeBase": [
+   0.2667,
+   0.0214,
+   0.097
+  ],
+  "LeftToe_End": [
+   0.2946,
+   0.0214,
+   0.1621
+  ],
+  "RightUpLeg": [
+   -0.0866,
+   0.9981,
+   0.0554
+  ],
+  "RightLeg": [
+   -0.1351,
+   0.5617,
+   0.0554
+  ],
+  "RightFoot": [
+   -0.2251,
+   0.1046,
+   0.0
+  ],
+  "RightToeBase": [
+   -0.2667,
+   0.0214,
+   0.097
+  ],
+  "RightToe_End": [
+   -0.2946,
+   0.0214,
+   0.1621
+  ],
+  "Spine": [
+   0.0035,
+   1.0813,
+   0.0554
+  ],
+  "Spine1": [
+   0.0035,
+   1.1921,
+   0.0485
+  ],
+  "Spine2": [
+   0.0035,
+   1.296,
+   0.0346
+  ],
+  "LeftShoulder": [
+   0.052,
+   1.4068,
+   0.0069
+  ],
+  "LeftArm": [
+   0.1697,
+   1.4137,
+   0.0069
+  ],
+  "LeftForeArm": [
+   0.3844,
+   1.3653,
+   -0.0
+  ],
+  "LeftHand": [
+   0.58,
+   1.3619,
+   -0.0121
+  ],
+  "Neck": [
+   0.0035,
+   1.4276,
+   0.0069
+  ],
+  "Head": [
+   0.0104,
+   1.5246,
+   0.0208
+  ],
+  "HeadTop_End": [
+   0.0269,
+   1.7558,
+   0.0538
+  ],
+  "RightShoulder": [
+   -0.0381,
+   1.4068,
+   0.0069
+  ],
+  "RightArm": [
+   -0.1559,
+   1.4137,
+   0.0069
+  ],
+  "RightForeArm": [
+   -0.3706,
+   1.3653,
+   0.0
+  ],
+  "RightHand": [
+   -0.5451,
+   1.3657,
+   -0.0122
+  ]
+ }
+}

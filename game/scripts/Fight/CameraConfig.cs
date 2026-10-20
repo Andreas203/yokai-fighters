@@ -53,7 +53,9 @@ public sealed record CameraConfig
 
 	/// <summary>
 	/// Highest point of a model above its feet, in metres: the top bone over every clip (ModelExtentTests checks it;
-	/// 1.732 m, Ryo) plus the 15 cm hair/ear allowance the HUD test uses. Kept below <see cref="HudClearPx"/>.
+	/// 1.732 m, the Meshy Ryo) plus the 15 cm hair/ear allowance the HUD test uses. Kept below <see cref="HudClearPx"/>.
+	/// YOK-146: the Tripo Ryo's top bone (<c>HeadTop_End</c>, at his hair top) reaches 1.791 m in a walk, with no hair
+	/// past it (ModelExtentTests.BodyAllowance), so he fits the same 1.9 m.
 	/// </summary>
 	public float ModelTopMeters { get; init; } = 1.9f;
 

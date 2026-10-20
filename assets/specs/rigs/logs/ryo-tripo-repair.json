@@ -1,0 +1,141 @@
+{
+ "tool": "tools/blender/repair_weights.py",
+ "fighter": "ryo-tripo",
+ "input": "<scratch>/ryo-tripo-canon.glb",
+ "output": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb",
+ "input_sha256": "ac69c25f46e7e2c1d410f60f0cc8f6156de60bb353c4449284cbed14c6b97e48",
+ "params": {
+  "region_bottom_m": 0.15,
+  "region_top_m": 0.14,
+  "smooth_pre_iters": 20,
+  "smooth_lambda": 0.5,
+  "side_band_m": 0.05,
+  "falloff_front_lo_m": -0.1,
+  "falloff_front_hi_m": 0.06,
+  "falloff_back_lo_m": -0.08,
+  "falloff_back_hi_m": 0.1,
+  "prop_bind": 0,
+  "prop_light_min": 0.55,
+  "prop_light_max_chroma": 0.25,
+  "prop_z_lo_m": -0.03,
+  "prop_min_verts": 20,
+  "prop_rings": 6,
+  "min_weight": 0.01,
+  "max_influences": 4,
+  "torso_fix": 0,
+  "side_on": 1,
+  "falloff_on": 1,
+  "legstrip_all": 0,
+  "pure_on": 0,
+  "pure_y0_m": 0.08,
+  "pure_y1_m": 0.14,
+  "pure_x0_m": 0.4,
+  "pure_x1_m": 0.46,
+  "pure_zbot0_m": 0.7,
+  "pure_zbot1_m": 0.78,
+  "pure_ztop_band_m": 0.05,
+  "pure_ztop_m": 1.25,
+  "pure_xflat_m": 0.2,
+  "pure_zslope": 1.8,
+  "band_smooth_iters": 0,
+  "band_z0_m": 0.0,
+  "band_z1_m": 0.0,
+  "band_x_m": 9.0,
+  "knee_iters": 0,
+  "knee_band_m": 0.1,
+  "knee_radius_m": 0.0,
+  "knee_fade_m": 0.06,
+  "shin_clean_m": 0.0,
+  "shin_blend_m": 0.04,
+  "crotch_x_m": 0.0,
+  "knee_split": 0
+ },
+ "frame": {
+  "hips_z": 0.9981,
+  "upleg_z": 0.9981,
+  "leg_z": 0.5617,
+  "mid_x": 0.0035
+ },
+ "region_verts": 9319,
+ "steps": [
+  {
+   "step": "smooth1",
+   "verts_changed": 8794,
+   "net_weight_by_bone": {
+    "Hips": -10.64,
+    "LeftUpLeg": -2.41,
+    "RightUpLeg": 13.05
+   }
+  },
+  {
+   "step": "side",
+   "verts_changed": 2964,
+   "net_weight_by_bone": {
+    "LeftUpLeg": -6.67,
+    "LeftLeg": -0.0,
+    "RightUpLeg": 6.67,
+    "RightLeg": 0.0
+   }
+  },
+  {
+   "step": "falloff",
+   "verts_changed": 8144,
+   "net_weight_by_bone": {
+    "Hips": 3257.45,
+    "LeftUpLeg": -2527.14,
+    "RightUpLeg": -730.32
+   }
+  },
+  {
+   "step": "props",
+   "verts_changed": 0,
+   "net_weight_by_bone": {}
+  },
+  {
+   "step": "tidy",
+   "verts_changed": 1605,
+   "net_weight_by_bone": {
+    "Hips": 4.04,
+    "LeftUpLeg": 0.67,
+    "RightUpLeg": 0.4,
+    "Spine": 1.11,
+    "Spine1": 0.25
+   }
+  },
+  {
+   "step": "total",
+   "verts_changed": 9249,
+   "net_weight_by_bone": {
+    "Hips": 3250.35,
+    "LeftUpLeg": -2537.62,
+    "LeftLeg": -0.07,
+    "RightUpLeg": -711.38,
+    "RightLeg": -0.04,
+    "Spine": 0.55,
+    "Spine1": -1.79
+   }
+  }
+ ],
+ "seam_weight_mismatch_before": 0.0,
+ "props": {
+  "patches": [
+   1315,
+   594,
+   379,
+   371,
+   191,
+   122,
+   61,
+   57,
+   57,
+   46,
+   30,
+   20
+  ],
+  "rigid_verts": 0,
+  "blend_verts": 0
+ },
+ "verts_touched": 9319,
+ "seam_weight_mismatch_after": 0.0,
+ "output_sha256": "034b20cfbf19f9bbec0c1fb24aee6b5d196311fd272a2aaf22fad703bd7030b2"
+}

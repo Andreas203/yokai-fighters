@@ -1,0 +1,113 @@
+{
+ "tool": "tools/blender/skin_clip_check.py",
+ "rigs": {
+  "tripo": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb"
+ },
+ "clips": {
+  "ryo-walk": {
+   "action": "retargeted_Armature",
+   "frames": [
+    2,
+    64
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 21,
+     "worst_frame": 13,
+     "worst_frame_bones": {
+      "Hips": 31,
+      "LeftArm": 4,
+      "LeftUpLeg": 3
+     },
+     "max_stretch": 5.501,
+     "frames_with_failing_edges": 63,
+     "mean_edges_over_1_8x": 30.1
+    }
+   },
+   "stills": [
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f013_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f013_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f013_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f016_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f016_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f016_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f048_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f048_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-walk_f048_tripo_pelvis.png"
+   ]
+  },
+  "ryo-heavy": {
+   "action": "retargeted_Armature.002",
+   "frames": [
+    28,
+    61
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 30,
+     "worst_frame": 28,
+     "worst_frame_bones": {
+      "Hips": 19,
+      "LeftUpLeg": 10,
+      "LeftForeArm": 5,
+      "RightForeArm": 4,
+      "RightUpLeg": 4,
+      "LeftArm": 3
+     },
+     "max_stretch": 7.685,
+     "frames_with_failing_edges": 34,
+     "mean_edges_over_1_8x": 152.1
+    }
+   },
+   "stills": [
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f028_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f028_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f028_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f038_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f038_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f038_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f041_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f041_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-heavy_f041_tripo_pelvis.png"
+   ]
+  },
+  "ryo-grab-2": {
+   "action": "retargeted_Armature.004",
+   "frames": [
+    30,
+    59
+   ],
+   "clip_rest_vs_rig_max_m": 0.0,
+   "per_rig": {
+    "tripo": {
+     "max_failing_edges": 20,
+     "worst_frame": 49,
+     "worst_frame_bones": {
+      "RightUpLeg": 12,
+      "Hips": 4,
+      "LeftArm": 3,
+      "LeftShoulder": 3,
+      "RightLeg": 2,
+      "RightArm": 2
+     },
+     "max_stretch": 7.23,
+     "frames_with_failing_edges": 30,
+     "mean_edges_over_1_8x": 54.0
+    }
+   },
+   "stills": [
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f035_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f035_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f035_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f041_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f041_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f041_tripo_pelvis.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f049_tripo_front.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f049_tripo_side.png",
+    "assets\\specs\\clips\\stills\\ryo-tripo-gate\\ryo-grab-2_f049_tripo_pelvis.png"
+   ]
+  }
+ }
+}

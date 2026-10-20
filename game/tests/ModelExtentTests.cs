@@ -16,6 +16,23 @@ public static class ModelExtentTests
 	/// <summary>Skin, fingers and toes past the last bone joint, in units (bones are joint centres).</summary>
 	public const int FleshPad = 20;
 
+	/// <summary>
+	/// YOK-146: flesh around an end-site bone (a Tripo <c>*_End</c>, e.g. <c>LeftToe_End</c> at the toe tip) and around
+	/// the joint that leads to one (<c>LeftToeBase</c>): the toes are already in the bones there, so only the skin
+	/// remains. Measured on the Tripo Ryo's rest mesh: the toe tip is 3.5 cm past <c>LeftToe_End</c>; 10 units = 5 cm.
+	/// Meshy rigs have no such bones (<c>head_end</c> is lower case), so they keep <see cref="FleshPad"/> everywhere.
+	/// </summary>
+	public const int EndSitePad = 10;
+
+	/// <summary>Pad (units) past bone <paramref name="b"/>: <see cref="EndSitePad"/> at or before an end site, else <see cref="FleshPad"/>.</summary>
+	public static int PadOf(Skeleton3D skel, int b)
+	{
+		if (skel.GetBoneName(b).EndsWith("_End", StringComparison.Ordinal)) return EndSitePad;
+		foreach (int c in skel.GetBoneChildren(b))
+			if (skel.GetBoneName(c).EndsWith("_End", StringComparison.Ordinal)) return EndSitePad;
+		return FleshPad;
+	}
+
 	/// <summary>YOK-102: the Oni's own club takes are cut on his 2.2 m rig (their GLBs live under an <c>oni/</c> folder) and
 	/// only his body plays them; Ryo's and the Kitsune's library still loads every catalogued clip, so their checks skip these.</summary>
 	public static bool OnOniRig(string? resPath) => resPath != null && resPath.Contains("/oni/");
@@ -31,6 +48,9 @@ public static class ModelExtentTests
 		var lib = model.Player.GetAnimationLibrary(FighterModel.LibraryName);
 		float front = 0, back = 0; string fc = "", bc = "";
 		top = 0; topClip = "";
+		// The reach is bone + FleshPad; a bone with a smaller pad (PadOf) is compared that much nearer.
+		var shave = new float[model.Skeleton.GetBoneCount()];
+		for (int b = 0; b < shave.Length; b++) shave[b] = (FleshPad - PadOf(model.Skeleton, b)) / 200f;
 		foreach (var name in lib.GetAnimationList())
 		{
 			if (OnOniRig(YokaiFighters.Fight.FightScene.Catalog[name.ToString()]?.ResPath)) continue;
@@ -48,8 +68,8 @@ public static class ModelExtentTests
 					var o = (xf * skel.GetBoneGlobalPose(b)).Origin;
 					float x = o.X;
 					if (o.Y > top) { top = o.Y; topClip = name; }
-					if (x > front) { front = x; fc = name; }
-					if (-x > back) { back = -x; bc = name; }
+					if (x - shave[b] > front) { front = x - shave[b]; fc = name; }
+					if (-x - shave[b] > back) { back = -x - shave[b]; bc = name; }
 				}
 				foreach (var mi in model.FindChildren("Tail*", "Node3D", true, false))
 					foreach (var m in ((Node)mi).FindChildren("*", "MeshInstance3D", true, false))
@@ -104,6 +124,28 @@ public static class ModelExtentTests
 		return top;
 	}
 
+	/// <summary>
+	/// The body mesh's reach past the top bone (m). A Meshy rig's top bone sits under the hair, so it is at least the
+	/// 15 cm hair allowance the HUD test always used. YOK-146: a rig whose top bone is at or above its rest mesh top
+	/// (the Tripo <c>HeadTop_End</c>, 6 mm over Ryo's hair) has no hair past it, so it gets only the mesh's own reach.
+	/// </summary>
+	public static float BodyAllowance(float restMesh, float restBone) =>
+		restBone >= restMesh ? 0f : Math.Max(HairAllowance, restMesh - restBone);
+
+	/// <summary>Hair and ears past a Meshy rig's top bone (m).</summary>
+	public const float HairAllowance = 0.15f;
+
+	/// <summary>Rest mesh top and rest top bone of a model (m above its feet).</summary>
+	public static (float Mesh, float Bone) RestTops(FighterModel model)
+	{
+		model.Player.Stop();
+		var skel = model.Skeleton;
+		skel.ResetBonePoses();
+		float bone = 0;
+		for (int b = 0; b < skel.GetBoneCount(); b++) bone = Math.Max(bone, (skel.GlobalTransform * skel.GetBoneGlobalRest(b)).Origin.Y);
+		return (MeshTop(skel, m => !UnderClub(m)), bone);
+	}
+
 	/// <summary>Highest club point per clip from the last <see cref="MeasureTop"/> (m), for the printout.</summary>
 	static readonly System.Collections.Generic.Dictionary<string, float> ClubTopByClip = new();
 
@@ -128,7 +170,7 @@ public static class ModelExtentTests
 		float restBone = 0;
 		for (int b = 0; b < skel.GetBoneCount(); b++) restBone = Math.Max(restBone, (skel.GlobalTransform * skel.GetBoneGlobalRest(b)).Origin.Y);
 		float restMesh = MeshTop(skel, m => !UnderClub(m));
-		float allowance = Math.Max(0.15f, restMesh - restBone);
+		float allowance = BodyAllowance(restMesh, restBone);
 		GD.Print($"YOK-133 rest {model.AnimSet.Fighter}: mesh top {restMesh:0.000} m, top bone {restBone:0.000} m");
 		// The club rides the hand bone rigidly. BoneAttachment3D only follows the skeleton on its deferred update, so the
 		// club is posed here from the bone itself: hand bone pose x (attachment -> club mesh), fixed for the clip.
@@ -208,9 +250,12 @@ public static class ModelExtentTests
 			if (model is null) continue; // no model: the capsule (BodyWidth) is what shows
 			var (front, back, fc, bc) = Measure(model, out float top, out string tc);
 			GD.Print($"YOK-39 reach {model.Name}: front {front} ({fc}), back {back} ({bc}); YOK-129 top bone {top:0.000} m ({tc})");
-			// YOK-129: the dynamic camera keeps the top bone + the HUD test's 15 cm hair allowance below the HUD band.
-			Assert.True(top + 0.15f <= YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters,
-				$"{model.Name}: top bone {top:0.000} m + 0.15 > CameraConfig.ModelTopMeters {YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters}");
+			// YOK-129: the dynamic camera keeps the top bone + the HUD test's 15 cm hair allowance below the HUD band
+			// (YOK-146: the body's own allowance, BodyAllowance; none past the Tripo HeadTop_End).
+			var (restMesh, restBone) = RestTops(model);
+			float allow = BodyAllowance(restMesh, restBone);
+			Assert.True(top + allow <= YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters,
+				$"{model.Name}: top bone {top:0.000} m + {allow:0.000} > CameraConfig.ModelTopMeters {YokaiFighters.Fight.CameraConfig.Default.ModelTopMeters}");
 			Assert.True(front * SimConfig.Scale <= c.ModelFrontReach, $"{model.Name}: front reach {front} ({fc}) > {c.ModelFrontReach / SimConfig.Scale}");
 			Assert.True(back * SimConfig.Scale <= c.ModelBackReach, $"{model.Name}: back reach {back} ({bc}) > {c.ModelBackReach / SimConfig.Scale}");
 		}

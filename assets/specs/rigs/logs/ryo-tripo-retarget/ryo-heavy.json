@@ -1,0 +1,48 @@
+{
+ "tool": "tools/blender/retarget_bvh.py",
+ "mode": "clip",
+ "source": "game/assets/generated/clips/ryo-heavy.glb",
+ "rig": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb",
+ "out": "game/assets/generated/clips/ryo-tripo/ryo-heavy.glb",
+ "source_frames": [
+  2,
+  62
+ ],
+ "out_frames": [
+  2,
+  62
+ ],
+ "rest_align": true,
+ "in_place": true,
+ "proxy_mesh": true,
+ "hip_ratio": 1.05178,
+ "map": {
+  "Hips": "Hips",
+  "Spine": "Spine02",
+  "Spine1": "Spine01",
+  "Spine2": "Spine",
+  "Neck": "neck",
+  "Head": "Head",
+  "LeftShoulder": "LeftShoulder",
+  "LeftArm": "LeftArm",
+  "LeftForeArm": "LeftForeArm",
+  "LeftHand": "LeftHand",
+  "LeftUpLeg": "LeftUpLeg",
+  "LeftLeg": "LeftLeg",
+  "LeftFoot": "LeftFoot",
+  "LeftToeBase": "LeftToeBase",
+  "RightShoulder": "RightShoulder",
+  "RightArm": "RightArm",
+  "RightForeArm": "RightForeArm",
+  "RightHand": "RightHand",
+  "RightUpLeg": "RightUpLeg",
+  "RightLeg": "RightLeg",
+  "RightFoot": "RightFoot",
+  "RightToeBase": "RightToeBase"
+ },
+ "unmapped_target_bones": [
+  "HeadTop_End",
+  "LeftToe_End",
+  "RightToe_End"
+ ]
+}

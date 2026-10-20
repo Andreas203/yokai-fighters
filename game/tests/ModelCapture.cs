@@ -7,7 +7,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-53 windowed screenshot tool (not a test): both rigged fighters mid-move with the YOK-22 hitbox overlay on.
-/// Run: godot --path game res://tests/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=ryo|wake]
 /// </summary>
 public partial class ModelCapture : Node
 {
@@ -27,6 +27,16 @@ public partial class ModelCapture : Node
 			// Knockdown → get-up join, close on the Kitsune: d = world frames since the throw put her down.
 			foreach (int d in new[] { 22, 24, 25, 26, 28, 34, 39, 40, 41, 43, 45, 47, 50, 54, 60, 67, 68 })
 				await Custom($"wake-d{d:00}", sc => Down(sc, d), closeup: 1);
+			GetTree().Quit();
+			return;
+		}
+		if (only == "ryo")
+		{
+			// YOK-146: the Ryo body the switch picks (FighterAnimSet.TripoRyo), for the Tripo/Meshy comparison.
+			await Custom("ryo-idle", sc => { for (int t = 0; t < 30; t++) sc.Step(FighterInput.None, FighterInput.None); }, closeup: 0);
+			await Shot("ryo-heavy-punch-active", "ryo-heavy-punch", null, 0, 12, boxes: true);
+			await Shot("ryo-heavy-kick-active", "ryo-heavy-kick", null, 0, 12, boxes: true);
+			await Shot("ryo-jab-active", "ryo-light-punch", null, 0, 5, boxes: true);
 			GetTree().Quit();
 			return;
 		}

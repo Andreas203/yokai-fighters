@@ -145,7 +145,8 @@ public sealed class FighterPresenter
 				var move = f.CurrentMove;
 				string? clip = null;
 				if (move != null && _moveClips.TryGetValue(move.Id, out var c)) clip = _set.MoveClip(c);
-				if (!_cat.Has(clip)) clip = move != null && move.IsThrow ? FallbackThrow() : C(PoseKind.Attack);
+				if (!_set.CanPlay(_cat[clip])) clip = move != null && move.IsThrow ? FallbackThrow() : C(PoseKind.Attack); // YOK-146: not on this body's skeleton either
+
 				bool restart = f.MoveFrame < _prevMoveFrame || move?.Id != _prevMoveId;
 				return (PoseKind.Attack, clip, 1, false, restart);
 			}
