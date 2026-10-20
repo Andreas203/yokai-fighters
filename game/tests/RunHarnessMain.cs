@@ -31,7 +31,7 @@ public partial class RunHarnessMain : Node
 			if (!Directory.Exists(dataDir)) throw new DirectoryNotFoundException($"--data {dataDir} is not a folder");
 			var bot = args.TryGetValue("bot", out var b) ? BotConfig.LoadFile(Path.GetFullPath(b, root)) : BotConfig.LoadDefault(dataDir);
 			string outDir = args.TryGetValue("out", out var o) ? Path.GetFullPath(o, root) : Path.Combine(root, "harness", "results", "whole-run");
-			var content = HarnessContent.Load(dataDir, ContentPaths.FixturesDir);
+			var content = HarnessContent.Load(dataDir, ContentPaths.FixturesDir) with { RawHitLog = args.ContainsKey("hit-log") }; // YOK-157: every hit line too
 			var clock = Stopwatch.StartNew(); // reporting only, never written to the file
 			var batch = RunHarness.PlayBatch(content, bot, seed, runs);
 			string path = HarnessReport.Write(batch, outDir);

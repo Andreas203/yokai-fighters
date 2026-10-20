@@ -78,7 +78,7 @@ public sealed class NewcomerBot
 	readonly AiView?[] _seen;
 	readonly BotKit.Press? _antiAir;
 	int _calls, _nextDecision;
-	bool _threatRolled;
+	bool _threatRolled, _jumpRolled;
 	AiView? _prev;
 	readonly List<(InputBits Bits, int Ticks)> _steps = new();
 	int _step, _stepTick, _sincePress;
@@ -117,18 +117,21 @@ public sealed class NewcomerBot
 
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
 		bool interruptible = _plan is PlanKind.None or PlanKind.Walk or PlanKind.Wait;
-		bool jumpShown = false;
 		if (prev is not null && prev.Tick != view.Tick)
 		{
 			FighterView po = prev.Fighter(1 - Self);
 			bool attackShown = o.Threatening && (!po.Threatening || po.MoveId != o.MoveId || o.MoveFrame < po.MoveFrame);
 			if (attackShown || Shots(view) > Shots(prev)) _threatRolled = false; // a new threat gets its own roll
-			jumpShown = o.Airborne && !po.Airborne;
 		}
 		// A threat = a swing in progress or one of the opponent's projectiles on screen. The bot rolls block_pct once per
 		// threat, on the first tick it sees it while free to react (not mid-move); a guard, once up, is held while it lasts.
 		bool threat = o.Threatening || Shots(view) > 0;
 		if (!threat) _threatRolled = false;
+		// YOK-157 (F4): a jump gets one anti_air_pct roll, on the first tick (of the delayed screen) the bot is free while it
+		// sees the opponent airborne, not only on the tick the jump first shows, when the bot is often mid-move. Free = no
+		// plan it must finish, and its own fighter (live screen) idle or in a move's recovery (the press is buffered), not in
+		// stun, knockdown or a throw, where the press would be lost.
+		if (!o.Airborne) _jumpRolled = false;
 		if (threat && interruptible && !_threatRolled)
 		{
 			_threatRolled = true;
@@ -138,10 +141,14 @@ public sealed class NewcomerBot
 				Stats.Blocks++;
 			}
 		}
-		else if (jumpShown && interruptible && _antiAir is { } aa && Roll(_cfg.AntiAirPct))
+		else if (o.Airborne && interruptible && (me.State is FighterState.Idle or FighterState.Attack) && !_jumpRolled && _antiAir is { } aa)
 		{
-			Start(PlanKind.Attack, (aa.Bits, 1), (InputBits.None, Math.Max(1, aa.Frames - 1)));
-			Stats.AntiAirs++;
+			_jumpRolled = true;
+			if (Roll(_cfg.AntiAirPct))
+			{
+				Start(PlanKind.Attack, (aa.Bits, 1), (InputBits.None, Math.Max(1, aa.Frames - 1)));
+				Stats.AntiAirs++;
+			}
 		}
 		if (_plan == PlanKind.Block && threat) _stepTick = 0;
 

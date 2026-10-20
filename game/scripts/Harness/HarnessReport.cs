@@ -11,7 +11,7 @@ namespace YokaiFighters.Harness;
 
 /// <summary>
 /// YOK-26: the batch results file the Sparring Partner reads (<c>harness/results/whole-run/</c>), kind
-/// <c>harness_results</c>, schema version 1: the bot config id, a summary next to the design targets (R4, R5, R9,
+/// <c>harness_results</c>, schema version 1 (YOK-157 log blocks are additive): the bot config id, a summary next to the design targets (R4, R5, R9,
 /// Y4) and every run in full. No clock, no machine names, fixed key order and number format, so the same seed and
 /// data write the same bytes.
 /// </summary>
@@ -142,6 +142,7 @@ public static class HarnessReport
 		foreach (var g in runs.GroupBy(r => string.Join(">", r.Nodes.Select(x => x.Id))).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal).Take(10))
 			w.WriteNumber(g.Key, g.Count());
 		w.WriteEndObject();
+		FightLogReport.WriteSummary(w, runs.SelectMany(r => r.Nodes).Where(x => x.Fight is not null).Select(x => x.Fight!)); // YOK-157: P5, P6/Y2
 		w.WriteEndObject();
 	}
 
@@ -224,6 +225,7 @@ public static class HarnessReport
 			w.WriteNumber("mistakes", f.Bot.Mistakes);
 			w.WriteEndObject();
 			w.WriteString("match_hash", f.MatchHash.ToString("x16"));
+			FightLogReport.WriteFight(w, f.Log); // YOK-157
 			w.WriteEndObject();
 		}
 		if (x.Card is { } c)

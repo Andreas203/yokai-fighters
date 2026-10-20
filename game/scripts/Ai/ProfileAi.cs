@@ -29,6 +29,8 @@ public sealed class ProfileAi
 	public int Self { get; }
 	public int ReactionFrames { get; }
 	public List<AiDecision>? Log { get; set; }
+	/// <summary>YOK-157: the AI is playing out a habit plan (Y2) this tick. Read-only; for the harness's habit-punish log.</summary>
+	public bool HabitPlanRunning => _plan is { Habit: true, Done: false };
 	/// <summary>YOK-57: the fight this AI is in. E22: ex_use / burst_use apply only in elder and Tanuki fights.</summary>
 	public AiFightTier Tier { get; }
 	/// <summary>YOK-99, Y5: aggression-bias points added by Tanuki wins (<see cref="TanukiPressure.AggressionBonus"/>); 0 = none.</summary>
