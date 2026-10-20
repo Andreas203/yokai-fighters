@@ -3,12 +3,23 @@
   "id": "merchant-shop-lines",
   "status": "proposed",
   "speaker": "Merchant",
-  "rules": ["S1", "S2", "S3", "S4", "R6", "T2", "T5", "A6"],
-  "notes": "YOK-159. Speech-bubble lines for the shop, bubble-sized (12 words or fewer). Warm shopkeeper, quietly covetous of Ryo's moves; he is the Tanuki, so no line names him or the copy rule. On a second run the hunger should read plainly. Placeholders: {move} only, filled with the copy target (T2). Variant 0 of greeting_row4 is S3 verbatim. This file is a different kind from story_card and lives in data/story/shop/ so StoryLibrary (top-level *.json, throws on other kinds) does not load it; it needs the schema addition named in the ticket report.",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "R6",
+    "T2",
+    "T5",
+    "A6"
+  ],
+  "notes": "YOK-159. Speech-bubble lines for the shop, bubble-sized (12 words or fewer). Warm shopkeeper, quietly covetous of Ryo's moves; he is the Tanuki, so no line names him or the copy rule. On a second run the hunger should read plainly. Placeholders: {move} (copy target, T2); item_focused also uses {name} and {card_text}, which are new. Variant 0 of greeting_row4 is S3 verbatim. This file is a different kind from story_card and lives in data/story/shop/ so StoryLibrary (top-level *.json, throws on other kinds) does not load it; it needs the schema addition named in the ticket report.",
   "events": {
     "greeting_row4": {
       "trigger": "Row 4 merchant visit, before the heal-or-shop choice (S3)",
-      "placeholders": ["move"],
+      "placeholders": [
+        "move"
+      ],
       "variants": [
         "That {move} of yours... I'd love one.",
         "Ah, Ryo! That {move} of yours... I'd love one. Only looking!"
@@ -24,14 +35,28 @@
       ]
     },
     "item_focused": {
-      "trigger": "A shelf item gains focus (hover or selection)",
-      "optional": true,
-      "placeholders": [],
-      "variants": [
-        "Ooh, a fine one. Borrowed ink, but lovely.",
-        "Every move wants a home. Perhaps yours?",
-        "Take a good look. Looking is free."
-      ]
+      "trigger": "A shelf item is hovered or focused: the bubble speaks a lead-in wrapping the item card text (designer decision, YOK-159)",
+      "placeholders": [
+        "name",
+        "card_text"
+      ],
+      "lead_ins": [
+        "Ah, {name}. {card_text}",
+        "{name}, for you. {card_text}",
+        "Look at this one: {name}. {card_text}",
+        "{name}! A good pick. {card_text}",
+        "Ooh, {name}. {card_text}",
+        "Care for {name}? {card_text}"
+      ],
+      "modifier_tags": [
+        "You choose which special wears it.",
+        "Pick the special that carries it."
+      ],
+      "unaffordable_tags": [
+        "A few more coins, though.",
+        "Not yet yours, friend."
+      ],
+      "notes": "{card_text} is the item card block from data/moves or data/modifiers, inserted verbatim (A12); lead-ins and tags never alter or paraphrase it. Order: lead-in (with card_text), then modifier tag, then unaffordable tag when they apply. Lead-ins at most 6 words excluding {card_text}; tags at most 6 words."
     },
     "bought_special": {
       "trigger": "Ryo buys a special (R6)",
