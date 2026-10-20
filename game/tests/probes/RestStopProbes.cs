@@ -371,7 +371,7 @@ public static class RestStopProbes
 					foreach (string b in bad) Assert.True(!text.Contains(b), $"{node}: '{p}' = '{text}' reveals '{b}' (S3)");
 				}
 				foreach (var n in AllNodes(screen))
-					if (n is TextureRect tr && tr.Texture?.ResourcePath is { } rp && !n.GetPath().ToString().Contains("Forecast"))
+					if (n is TextureRect tr && ((tr.Texture as AtlasTexture)?.Atlas?.ResourcePath ?? tr.Texture?.ResourcePath) is { } rp && !n.GetPath().ToString().Contains("Forecast"))
 						Assert.True(!rp.ToLowerInvariant().Contains("tanuki"), $"{node}: texture {rp} shows a Tanuki likeness");
 			}
 			finally { runner.RemoveChild(screen); screen.Free(); }
