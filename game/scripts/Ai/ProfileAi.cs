@@ -32,6 +32,12 @@ public sealed class ProfileAi
 	public const int DefaultGuardPct = 0;
 	/// <summary>YOK-165: how long the guard is held after the AI's own move ends (proposed, = <see cref="SpacingTicks"/>).</summary>
 	public const int GuardTicks = 10;
+	/// <summary>
+	/// YOK-165: the fewest ticks a hit keeps a fighter from acting: light hitstop (SimConfig.HitstopLight 6) + the shortest
+	/// hitstun in the move data (11). A held anti-air's repeated press never runs longer than this when the AI reacts
+	/// slower than it (see JumpPunish); AiGuardTests checks it against the config and data.
+	/// </summary>
+	public const int MinInterruptTicks = 17;
 
 	public BehaviourProfile Profile { get; }
 	public int Self { get; }
@@ -159,8 +165,10 @@ public sealed class ProfileAi
 
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		// YOK-165: an anti-air held for the first actionable tick is dropped (no draw) if the jumper shows landed by then.
-		if (_plan is { InHeldWait: true } held && FirstActionableTick(view) <= tick) held.ReleaseWait();
-		if (_plan is { InPressWindow: true } && !o.Airborne) _plan = null;
+		if (_plan is { InHeldWait: true } held && FirstActionableTick(view) <= tick) held.ReleaseWait(tick);
+		if (_plan is { AtPress: true } && !o.Airborne) _plan = null; // nothing pressed yet: drop the whole answer
+		else if (_plan is { Repeating: true } rp && (!o.Airborne || (view.Tick >= rp.ReleaseTick && AnswerShown(rp, s, prev))))
+			rp.StopRepeat(); // it may have started: keep the plan (its wait and guard tail), just stop pressing
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
 		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
 		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
@@ -202,11 +210,18 @@ public sealed class ProfileAi
 		if (p is not null && wait)
 		{
 			p.PressStep = 1; // Build puts the wait in step 0, the press in step 1
+			p.AnswerMoveId = pick.Do.Kind == ActionKind.Throw ? null : pick.Do.MoveId;
 			// A hit the AI cannot see yet (its own projectile's next hit) can add hitstop after the screen it predicted from,
-			// so the press is repeated for the answer's length minus one: the sim takes it on the first actionable tick and
-			// ignores the rest while the move plays (a slot request needs an actionable fighter; no cancels into one), so it
-			// can never start twice. The jumper landing on screen still drops it (Next).
-			p.HoldPress(Math.Max(1, p.MoveFrames - 1));
+			// so the press is repeated for up to the answer's length minus one: the sim takes it on the first actionable tick
+			// and ignores the rest while the move plays (a slot request needs an actionable fighter; no cancels into one).
+			// Next ends the repeats early, with no draw, once the screen shows the jumper landed or shows the AI busy
+			// (attack, hitstun, blockstun) at or after the release tick, so an anti-air hit out of its startup is not pressed
+			// again from the same roll. Before the first press, a landed jumper drops the whole plan (nothing has started).
+			// An AI slower than MinInterruptTicks cannot see a hit on its answer before it could act again, so its window
+			// is capped there: an interrupted answer is never pressed a second time from one roll.
+			int window = Math.Max(1, p.MoveFrames - 1);
+			if (ReactionFrames > MinInterruptTicks) window = Math.Min(window, MinInterruptTicks);
+			p.HoldPress(window);
 		}
 		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
 		return p;
@@ -232,6 +247,20 @@ public sealed class ProfileAi
 		// Its own press made after the screen it sees has not shown yet (the view is reaction frames old): the AI knows its
 		// own commitment, so it waits for that move too. Once the view reaches the press, the screen decides alone.
 		return _ownPressTick > view.Tick ? Math.Max(seen, _ownPressTick + _ownPressFrames) : seen;
+	}
+
+	/// <summary>
+	/// YOK-165: the screen (at or after the held press's release) shows the answer came out, or the AI newly hit or
+	/// blocking: its own answer on screen, any attack once the screen reaches the press when the id is unknown (a throw),
+	/// or a hitstun / blockstun that starts or is refreshed on this screen. Its earlier move still playing (hitstop the
+	/// prediction could not see) is not the answer, so the repeats go on.
+	/// </summary>
+	private bool AnswerShown(Plan rp, FighterView s, AiView? prev)
+	{
+		if (s.State == FighterState.Attack) return rp.AnswerMoveId is null ? s.MoveFrame <= s.MoveLastActive : s.MoveId == rp.AnswerMoveId;
+		if (s.State is not (FighterState.Hitstun or FighterState.Blockstun or FighterState.Thrown)) return false;
+		var ps = prev?.Fighter(Self);
+		return ps is not { } p || p.State != s.State || s.StunLeft > p.StunLeft;
 	}
 
 	/// <summary>YOK-165: an attacking answer to a jump that this kit can perform (side-effect free: no draw, no EX roll).</summary>
@@ -451,10 +480,17 @@ public sealed class ProfileAi
 		public bool AtPress => PressStep >= 0 && _i == PressStep && _t == 0;
 		/// <summary>YOK-165: still in the open-ended wait before a held anti-air's press.</summary>
 		public bool InHeldWait => PressStep > 0 && _i < PressStep;
-		public void ReleaseWait() { if (InHeldWait) { _i = PressStep; _t = 0; } }
+		public void ReleaseWait(int tick) { if (InHeldWait) { _i = PressStep; _t = 0; ReleaseTick = tick; } }
+		/// <summary>YOK-165: the held answer's move id as the screen shows it (null for a throw).</summary>
+		public string? AnswerMoveId { get; set; }
+		/// <summary>YOK-165: the tick the held wait was released (the first press).</summary>
+		public int ReleaseTick { get; private set; } = -1;
 		/// <summary>YOK-165: a held anti-air's press is sent on each of <paramref name="ticks"/> ticks (see JumpPunish).</summary>
 		public void HoldPress(int ticks) { _repeat = ticks; _steps[PressStep] = (_steps[PressStep].In, ticks); }
-		public bool InPressWindow => PressStep >= 0 && _i == PressStep;
+		/// <summary>YOK-165: past the first press, still repeating it.</summary>
+		public bool Repeating => PressStep >= 0 && _i == PressStep && _t > 0 && _t < _repeat;
+		/// <summary>YOK-165: send no more repeats; the step's length (and the plan after it) stays as built.</summary>
+		public void StopRepeat() => _repeat = Math.Min(_repeat, _t);
 		private int _repeat = 1;
 		/// <summary>YOK-165: the step that presses a move of the AI's own (-1 = none) and the move's length in ticks.</summary>
 		public int MoveStep { get; init; } = -1;

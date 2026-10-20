@@ -520,6 +520,118 @@ public static class AiGuardTests
 		Assert.True(bad.Count == 0, $"the anti-air starts after the burst, on the first actionable tick: {string.Join("; ", bad.Take(6))}");
 	}
 
+	/// <summary>
+	/// Code-critic round 3: once a held anti-air has started, the jumper landing on the AI's screen stops the repeats but
+	/// keeps the plan: no neutral decision (no draw) until the move and its guard tail are over, and the AI is in crouch
+	/// guard on its first free tick after it (guard opted in at 100).
+	/// </summary>
+	[Test]
+	public static void HeldAntiAir_JumperLandsMidMove_KeepsThePlanAndGuardTail()
+	{
+		const string Heavy = "normal:test-ryo-heavy-punch", Medium = "normal:test-ryo-medium-punch";
+		const int reaction = 15;
+		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "{{Heavy}}", "weight": 15 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }"""));
+		var m = NewMatch(c => c with { P2JumpPunishPct = 50, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+		Place(m, 200);
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: 100) { Log = new() };
+		int mediumTotal = m.P2.Moves.First(x => x.Id == "test-ryo-medium-punch").TotalFrames;
+		var air = new Dictionary<int, bool>();
+		var states = new Dictionary<int, (FighterState St, bool Guard, string? Id, int Frame)>();
+		for (int t = 1; t <= 3000 && m.Phase != MatchPhase.Over; t++)
+		{
+			m.P1.Health = m.P1.MaxHealth;
+			m.Step(t % 61 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
+			air[t] = m.P1.Airborne;
+			states[t] = (m.P2.State, m.P2.Guarding && m.P2.Crouching, m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null, m.P2.MoveFrame);
+		}
+		int checkedCases = 0;
+		var bad = new List<string>();
+		foreach (var d in ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react"))
+		{
+			// The held answer's start: the first medium punch frame 1 after the decision.
+			int start = Enumerable.Range(d.Tick, 80).FirstOrDefault(t => states.TryGetValue(t, out var s) && s.Id == "test-ryo-medium-punch" && s.Frame == 1);
+			if (start == 0 || start == d.Tick) continue; // not held (pressed at once) or not started
+			int end = start + mediumTotal; // first free tick
+			if (!states.ContainsKey(end + ProfileAi.GuardTicks)) continue;
+			// The jumper shows landed on the AI's screen while the move plays.
+			bool landsMidMove = Enumerable.Range(start + 1, mediumTotal - 2).Any(t => !air.GetValueOrDefault(t - reaction, true));
+			if (!landsMidMove) continue;
+			checkedCases++;
+			var during = ai.Log!.Where(x => x.Tick > start && x.Tick < end && x.Kind is "neutral" or "unavailable" or "guard" && x.Trigger != "self_attacked").ToList();
+			if (during.Count > 0) bad.Add($"{start}: {during.Count} decision(s) mid-move ({during[0].Kind} {during[0].Action} at {during[0].Tick})");
+			if (!states[end].Guard) bad.Add($"{start}: not in crouch guard on its first free tick {end} ({states[end].St})");
+		}
+		Assert.True(checkedCases >= 1, $"held anti-airs where the jumper lands mid-move ({checkedCases})");
+		Assert.True(bad.Count == 0, $"plan and guard tail kept, no draws mid-move: {string.Join("; ", bad.Take(5))}");
+	}
+
+	/// <summary>
+	/// Code-critic round 3: an anti-air hit out of its startup is not pressed again from the same roll. The AI is kept
+	/// busy in its own heavy punch so its answers are held; each time its medium punch starts, the test puts it in the
+	/// shortest interruption a hit can cause (light hitstop + the shortest hitstun = <see cref="ProfileAi.MinInterruptTicks"/>)
+	/// while Ryo is still in the air. At reaction 15 the screen showing the AI busy ends the repeats; at 30 the window cap
+	/// does. Either way every decided punish starts at most once.
+	/// </summary>
+	[Test]
+	public static void HeldAntiAir_HitInStartup_StartsAtMostOncePerRoll()
+	{
+		const string Heavy = "normal:test-ryo-heavy-punch", Medium = "normal:test-ryo-medium-punch";
+		var p = BehaviourProfile.Parse(Json("close", $$"""{ "when": "at_close_range", "do": "{{Heavy}}", "weight": 15 }, { "when": "opponent_jumping", "do": "{{Medium}}", "weight": 100 }"""));
+		foreach (int reaction in new[] { 15, 30 })
+		{
+			var m = NewMatch(c => c with { P2JumpPunishPct = 100, P1MaxHealth = 1_000_000, P2MaxHealth = 1_000_000 });
+			Place(m, 200);
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 5, reaction, guardPct: 0) { Log = new() };
+			var starts = new List<int>();
+			int interrupted = 0;
+			string? last = null; int lastFrame = 0;
+			for (int t = 1; t <= 3000 && m.Phase != MatchPhase.Over; t++)
+			{
+				m.P1.Health = m.P1.MaxHealth;
+				m.Step(t % 61 == 0 ? new FighterInput(InputBits.Up) : FighterInput.None, ai.Next(AiView.Capture(m)));
+				string? id = m.P2.State == FighterState.Attack ? m.P2.CurrentMove?.Id : null;
+				int frame = id is null ? 0 : m.P2.MoveFrame;
+				if (id == "test-ryo-medium-punch" && frame == 1 && (id != last || lastFrame != 1))
+				{
+					starts.Add(t);
+					if (m.P1.Airborne)
+					{
+						m.P2.State = FighterState.Hitstun; // the shortest a hit can stop it: acts again MinInterruptTicks + 1 later
+						m.P2.StunLeft = ProfileAi.MinInterruptTicks - 1;
+						interrupted++;
+						id = null; frame = 0;
+					}
+				}
+				last = id; lastFrame = frame;
+			}
+			var answers = ai.Log!.Where(d => d.Trigger == "opponent_jumping" && d.Kind == "react").Select(d => d.Tick).ToList();
+			Assert.True(answers.Count >= 20 && interrupted >= 10, $"reaction {reaction}: punishes decided ({answers.Count}), interrupted ({interrupted})");
+			var twice = new List<string>();
+			for (int i = 0; i < answers.Count; i++)
+			{
+				int from = answers[i], to = i + 1 < answers.Count ? answers[i + 1] : int.MaxValue;
+				int n = starts.Count(s => s >= from && s < to);
+				if (n > 1) twice.Add($"{from}: {n} starts");
+			}
+			Assert.True(twice.Count == 0, $"reaction {reaction}: one roll, at most one anti-air: {string.Join("; ", twice.Take(5))}");
+		}
+	}
+
+	/// <summary><see cref="ProfileAi.MinInterruptTicks"/> is no longer than any hit can stop a fighter: light hitstop + the
+	/// shortest hitstun in data/moves and the TEST FIXTURE moves.</summary>
+	[Test]
+	public static void MinInterruptTicks_MatchesConfigAndData()
+	{
+		int min = int.MaxValue;
+		foreach (var dir in new[] { ContentPaths.Data("moves"), ContentPaths.FixturesDir })
+			foreach (var f in Directory.GetFiles(dir, "*.json", SearchOption.AllDirectories))
+				foreach (System.Text.RegularExpressions.Match x in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(f), "\"hitstun\"\\s*:\\s*(\\d+)"))
+					min = Math.Min(min, int.Parse(x.Groups[1].Value));
+		Assert.True(min < int.MaxValue, "found hitstun values");
+		Assert.True(ProfileAi.MinInterruptTicks <= SimConfig.Default.HitstopLight + min,
+			$"MinInterruptTicks {ProfileAi.MinInterruptTicks} <= light hitstop {SimConfig.Default.HitstopLight} + shortest hitstun {min}");
+	}
+
 	/// <summary>The AI's decisions on the jumps (tick, kind, action, roll, pct), for pinning draw order.</summary>
 	static List<string> JumpLog(BehaviourProfile p, int? pct, uint seed = 11, int ticks = 1800)
 	{
