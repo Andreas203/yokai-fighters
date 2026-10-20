@@ -83,6 +83,8 @@ public sealed class NewcomerBot
 	readonly List<(InputBits Bits, int Ticks)> _steps = new();
 	int _step, _stepTick, _sincePress;
 	PlanKind _plan;
+	/// <summary>YOK-155: the plan is a standing guard; <see cref="Emit"/> resolves back from the delayed view every tick.</summary>
+	bool _holdAway;
 
 	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
 	public BotStats Stats { get; } = new();
@@ -132,7 +134,7 @@ public sealed class NewcomerBot
 			_threatRolled = true;
 			if (Roll(_cfg.BlockPct))
 			{
-				Start(PlanKind.Block, (Back(s, o), _cfg.BlockTicks));
+				Start(PlanKind.Block, (Back(s, o), _cfg.BlockTicks)); // still fixed at the start (YOK-26): tracking it changes 25 of 200 runs at idle_guard_pct 0
 				Stats.Blocks++;
 			}
 		}
@@ -148,7 +150,7 @@ public sealed class NewcomerBot
 			Decide(s, o);
 			_nextDecision = _calls + _cfg.DecideEvery;
 		}
-		return Emit(me.Facing);
+		return Emit(me.Facing, s, o);
 	}
 
 	void Decide(FighterView s, FighterView o)
@@ -203,6 +205,7 @@ public sealed class NewcomerBot
 	{
 		bool guard = IdleGuard();
 		Start(PlanKind.Wait, (guard ? Back(s, o) : InputBits.None, _cfg.WaitTicks));
+		_holdAway = guard;
 	}
 
 	/// <summary>YOK-155: one <c>idle_guard_pct</c> roll; 0 draws nothing from the RNG, so a 0 config plays exactly as before.</summary>
@@ -217,7 +220,12 @@ public sealed class NewcomerBot
 	{
 		if (dist > _cfg.PreferredMax) Approach(s, o);
 		else if (dist < _cfg.PreferredMin) Start(PlanKind.Walk, (Back(s, o), _cfg.WalkTicks));
-		else Start(PlanKind.Walk, (IdleGuard() || _rng.Next(2) != 0 ? Back(s, o) : Forward(s, o), _cfg.WalkTicks)); // YOK-155: in range, a guarded walk backs off
+		else
+		{
+			bool guard = IdleGuard(); // YOK-155: in range, a guarded walk backs off; one roll per plan, before the old coin flip
+			Start(PlanKind.Walk, (guard || _rng.Next(2) != 0 ? Back(s, o) : Forward(s, o), _cfg.WalkTicks));
+			_holdAway = guard;
+		}
 		Stats.Walks++;
 	}
 
@@ -241,6 +249,7 @@ public sealed class NewcomerBot
 	void Start(PlanKind kind, params (InputBits, int)[] steps)
 	{
 		_plan = kind;
+		_holdAway = false;
 		_steps.Clear();
 		_steps.AddRange(steps);
 		_step = _stepTick = _sincePress = 0;
@@ -254,14 +263,17 @@ public sealed class NewcomerBot
 
 	/// <summary>
 	/// The current plan step. Attack plans store directions as if facing right and are flipped by the fighter's
-	/// facing on the live screen; walk and block plans already hold absolute directions. Buttons go down on a step's first tick only.
+	/// facing on the live screen; walk and block plans already hold absolute directions. A YOK-155 guard plan (guarded wait or walk)
+	/// holds away from the opponent as the delayed view <paramref name="s"/>/<paramref name="o"/> shows it this tick,
+	/// so a cross-up mid-plan does not turn the guard into a walk forward. Buttons go down on a step's first tick only.
 	/// </summary>
-	FighterInput Emit(int facing)
+	FighterInput Emit(int facing, FighterView s, FighterView o)
 	{
 		if (_plan == PlanKind.None || _step >= _steps.Count) { Clear(); return FighterInput.None; }
 		var (bits, ticks) = _steps[_step];
 		_sincePress++;
 		if (_plan == PlanKind.Attack) bits = Flip(bits, facing);
+		if (_holdAway) bits = (bits & ~(InputBits.Left | InputBits.Right)) | Back(s, o);
 		if (_stepTick > 0) bits &= ~(InputBits.Attacks | InputBits.Special);
 		if (++_stepTick >= ticks) { _step++; _stepTick = 0; }
 		if (_step >= _steps.Count) _plan = PlanKind.None;

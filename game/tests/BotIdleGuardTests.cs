@@ -24,8 +24,9 @@ public static class BotIdleGuardTests
 		MistakePct = 0, IdleGuardPct = idleGuard, PreferredMin = 0, PreferredMax = 4000, PokeRange = 4000,
 	};
 
-	/// <summary>Per tick: Ryo's input, then whether he guarded and attacked on that tick. The opponent stands still.</summary>
-	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7)
+	/// <summary>Per tick: Ryo's input, then whether he guarded and attacked on that tick. The opponent stands still,
+	/// or with <paramref name="hopper"/> jumps forward over Ryo whenever it is grounded and idle (cross-ups).</summary>
+	static (List<(FighterInput In, bool Guarding, bool Attacking)> Ticks, NewcomerBot Bot) Play(BotFightConfig cfg, int ticks = 900, uint seed = 7, List<int>? sides = null, bool hopper = false)
 	{
 		var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
 		Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
@@ -35,7 +36,11 @@ public static class BotIdleGuardTests
 		for (int t = 0; t < ticks && m.Phase != MatchPhase.Over; t++)
 		{
 			var input = bot.Next(AiView.Capture(m));
-			m.Step(input, FighterInput.None);
+			var p2 = FighterInput.None;
+			if (hopper && !m.P2.Airborne && m.P2.State == FighterState.Idle)
+				p2 = new FighterInput(InputBits.Up | (m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right));
+			m.Step(input, p2);
+			if (m.Phase == MatchPhase.Fighting) sides?.Add(Math.Sign(m.P2.X - m.P1.X));
 			if (m.Phase == MatchPhase.Fighting) log.Add((input, m.P1.Guarding, m.P1.State == FighterState.Attack));
 		}
 		return (log, bot);
@@ -72,6 +77,32 @@ public static class BotIdleGuardTests
 			Assert.True(ticks[i].Guarding, $"tick {i}: standing guard up (C3)");
 		}
 		Assert.True(bot.Stats.IdleGuards > 0 && bot.Stats.Blocks == 0, $"idle guards counted ({bot.Stats.IdleGuards}), no reactive blocks");
+	}
+
+	/// <summary>
+	/// Test Breaker round 1: the opponent keeps jumping over Ryo. Once the delayed view has seen a side switch (P6: not
+	/// before) the held direction is away from the opponent again, so the guard is never stuck walking into it.
+	/// </summary>
+	[Test]
+	public static void IdleGuard_100_CrossUp_GuardFollowsTheDelayedSide()
+	{
+		var sides = new List<int>();
+		var cfg = Only(wait: 1) with { AntiAirPct = 0 }; // the hops would draw anti-airs, which drop the guard on purpose
+		var (ticks, _) = Play(cfg, 1200, 7, sides, hopper: true);
+		int first = ticks.FindIndex(t => t.In.Bits != InputBits.None), lag = cfg.ReactionFrames + 1, switches = 0, checkedTicks = 0;
+		for (int i = first + lag + 1; i < ticks.Count; i++)
+		{
+			int seen = sides[i - lag];
+			if (seen != sides[i - lag - 1]) switches++;
+			bool stable = true;
+			for (int k = i - lag; k <= i; k++) stable &= sides[k] == seen && seen != 0;
+			if (!stable) continue;
+			checkedTicks++;
+			InputBits away = seen > 0 ? InputBits.Left : InputBits.Right;
+			Assert.Equal(away, ticks[i].In.Bits, $"tick {i}: held away from the opponent on the side the bot saw");
+		}
+		Assert.True(switches >= 2, $"the opponent crossed Ryo ({switches} side switches)");
+		Assert.True(checkedTicks > 200, $"enough settled ticks checked ({checkedTicks})");
 	}
 
 	[Test]
