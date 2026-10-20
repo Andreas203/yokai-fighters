@@ -112,8 +112,32 @@ public static class BotLevelsTests
 		Bad("bot_id is an array", d => Lv(d, 1)["bot_id"] = new JsonArray());
 		Bad("status is a bool", d => Lv(d, 1)["status"] = true);
 		Bad("levels is an object", d => d["levels"] = new JsonObject());
+		Bad("bot_id is the mixed batch's name", d => Lv(d, 2)["bot_id"] = "bot-levels-mixed");
 		Bad("base file missing", d => d["base"] = "intermediate-kihon-bot");
 		Bad("base is a path", d => d["base"] = "../harness/newcomer-kihon-bot");
+	}
+
+	/// <summary>Test Breaker (YOK-170 round 1): a key written twice, in the levels file or in the base bot file, is a
+	/// FormatException like every other bad file (System.Text.Json itself throws ArgumentException).</summary>
+	[Test]
+	public static void DuplicateKeys_AreAFormatException_InLevelsAndBotFiles()
+	{
+		static bool Format(Action parse)
+		{
+			try { parse(); }
+			catch (FormatException) { return true; }
+			return false;
+		}
+		string levels = LevelsJson, bot = BaseJson(BotConfig.DefaultId);
+		Assert.True(Format(() => BotLevels.Parse(levels.Replace("\"id\": \"bot-levels\",", "\"id\": \"bot-levels\", \"id\": \"x\","), BaseJson)), "levels: top-level key twice");
+		Assert.True(Format(() => BotLevels.Parse(levels.Replace("\"reaction_frames\": 18,", "\"reaction_frames\": 18, \"reaction_frames\": 20,"), BaseJson)), "levels: fight key twice");
+		Assert.True(Format(() => BotLevels.Parse(levels.Replace("\"level\": \"skilled\",", "\"level\": \"skilled\", \"level\": \"expert\","), BaseJson)), "levels: level key twice");
+		string dupBot = bot.Replace("\"block_pct\": 50,", "\"block_pct\": 50, \"block_pct\": 60,");
+		Assert.True(dupBot != bot, "setup: the base file names block_pct");
+		Assert.True(Format(() => BotConfig.Parse(dupBot)), "bot file: key twice");
+		Assert.True(Format(() => BotLevels.Parse(levels, _ => dupBot)), "levels over a base file with a key twice");
+		Assert.True(Format(() => BotConfig.Parse(bot.Replace("\"block_pct\": 50", "\"block_pct\": \"50\""))), "bot file: a string for a number");
+		Assert.True(Format(() => BotConfig.Parse("{ not json")), "bot file: not JSON");
 	}
 
 	/// <summary>A mixed batch plays run i as level i mod 3, each the very run that level's own batch plays from that seed.</summary>

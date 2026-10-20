@@ -68,6 +68,8 @@ public sealed record BotLevels
 		try { return ParseChecked(json, baseJson); }
 		catch (InvalidOperationException e) { throw new FormatException($"bot levels: a value of the wrong kind: {e.Message}", e); }
 		catch (System.Text.Json.JsonException e) { throw new FormatException($"bot levels: not JSON: {e.Message}", e); }
+		// A key written twice in one object: System.Text.Json's JsonObject throws ArgumentException ("same key").
+		catch (ArgumentException e) { throw new FormatException($"bot levels: a key written twice: {e.Message}", e); }
 	}
 
 	static BotLevels ParseChecked(string json, Func<string, string> baseJson)
@@ -99,6 +101,7 @@ public sealed record BotLevels
 			string botId = (string?)lv["bot_id"] ?? throw new FormatException($"{where}: bot_id is missing");
 			if (!Name.IsMatch(botId)) throw new FormatException($"{where}: bad bot_id '{botId}'");
 			if (!botIds.Add(botId)) throw new FormatException($"{where}: bot_id '{botId}' is used twice");
+			if (botId == id + "-mixed") throw new FormatException($"{where}: bot_id '{botId}' is the mixed batch's results name");
 			if ((string?)lv["status"] is not ("final" or "proposed")) throw new FormatException($"{where}: status must be 'final' or 'proposed'");
 
 			var merged = JsonNode.Parse(baseText)!.AsObject();
