@@ -1,0 +1,148 @@
+# Astra brief: shop and dojo screen art (YOK-159)
+
+**Status: DRAFT.** Not approved. Nothing has been generated and no credits are spent by Asset Smith. The designer reviews this, settles the open questions at the bottom, then runs Astra (`gpt-6-astra`) in their own Codex session (AM7; decision-log 2026-10-15: Astra is costly, so it runs only from a settled brief, never for exploration).
+
+Follows the format of `docs/design/characters/astra-brief.md` and the conventions of the earlier Astra screen kit (commit c3782d7, recorded with its executed prompts in `assets/specs/ui-screen-plates.md`).
+
+## Sources
+
+| What | Where |
+|---|---|
+| Shop layout | `docs/design/screens/rough/merchant-shop.png`, `merchant-shop-states.png` and `rough/README.md` section 2, on branch `YOK-159-shop-shelf-mockup` |
+| Dojo layout | `docs/design/screens/rough/rest-stop-dojo.png` (main); built version `docs/screenshots/current/rest_stop_dojo*.png` on PR #201 (branch `YOK-109-dojo-pass`) |
+| Kit conventions | `assets/specs/ui-screen-plates.md`, plates in `game/assets/generated/ui/` |
+| Palette and style | `assets/specs/style.md` |
+| Merchant look | `assets/specs/tanuki.md` ("Merchant look (disguise)"), `docs/design/characters/tanuki/tanuki-merchant-astra-front.png` |
+| Dojo master | S3 in `docs/design/rules.md` (Master Sōen), `data/story/intro-soen.json` |
+
+Two things in the sources to settle before running (also in the open questions):
+
+1. The mockup files on `YOK-159-shop-shelf-mockup` are **revision 4** (README heading; ledger slip, 2-sentence bubble) and draw **2 items per shelf**. The decision log and the 3x3 request say 3 per shelf. This brief draws the cabinet as 3 columns x 3 rows. If the designer wants 2 columns, change the cabinet prompt before running.
+2. `rules.md` G1 and G2 are the never-cut list and the scope gate, not guise rules. The guise rule is **G4** (a yokai that fails the retarget gate uses its folklore human guise); "G1" and "G2" in `assets/specs/yok-102-job-list.md` are the Oni and Kappa guise contingencies. None of them covers the merchant portrait. There is no merchant-guise spec. The only merchant source is `assets/specs/tanuki.md` and the Tanuki merchant sheet; S3 says the merchant is the Tanuki in disguise and the shop mockup says "never the Tanuki here". This brief reads that as: the portrait is the **disguise, fully human**, with no animal tell.
+
+## Plates
+
+Sizes are the Astra output target ("generate at") and the size Asset Smith will save into the project ("saved at", Lanczos resize, as the kit did). All plates are generated at 2x or more of the saved size. Nine-slice margins are source-pixel left/top/right/bottom at the saved size and are confirmed at import.
+
+| ID | Plate | Generate at (min) | Saved at | Alpha | Nine-slice | Raw output | Imports to |
+|---|---|---|---|---|---|---|---|
+| S1 | Shop cabinet, 3x3, empty | 1600 x 1408 | 800 x 704 | transparent outside the frame | none (fixed art; cells are on a 3x3 grid, see S1) | `docs/design/screens/astra/shop-cabinet.png` | `game/assets/generated/ui/shop-cabinet.png` |
+| S2 | Hanging price tag, blank | 1568 x 560 | 392 x 140 | transparent | optional 76/16/24/16 | `.../astra/price-tag.png` | `.../ui/price-tag.png` |
+| S3a | Speech bubble body (no tail) | 1280 x 640 | 640 x 320 | transparent | 56/56/56/56 | `.../astra/speech-bubble.png` | `.../ui/speech-bubble.png` |
+| S3b | Speech bubble tail | 256 x 320 | 128 x 160 | transparent | none | `.../astra/speech-bubble-tail.png` | `.../ui/speech-bubble-tail.png` |
+| S4 | Ledger slip with red pin | 800 x 1120 | 400 x 560 | transparent | 28/28/28/28 (pin sits inside the top-right margin) | `.../astra/ledger-slip.png` | `.../ui/ledger-slip.png` |
+| S5 | Merchant portrait, human guise | 1080 x 1920 | 432 x 768 | transparent, rough ink lower cut | none | `.../astra/merchant-portrait.png` | `.../ui/merchant-portrait.png` |
+| D1 | Dojo master portrait | 1280 x 1120 | 512 x 448 | transparent, rough ink lower cut | none | `.../astra/dojo-master-portrait.png` | `.../ui/dojo-master-portrait.png` |
+| B1 | Shop backdrop, lantern stall | 1672 x 941 or larger, 16:9 | 1672 x 941 | opaque | none | `.../astra/shop-backdrop.png` | `.../ui/shop-backdrop.png` |
+| B2 | Dojo backdrop, interior | 1672 x 941 or larger, 16:9 | 1672 x 941 | opaque | none | `.../astra/dojo-backdrop.png` | `.../ui/dojo-backdrop.png` |
+
+Job count: 9 plates. S3a and S3b are one sheet (one job), so 8 jobs; as separate runs it is 9. Retakes are extra.
+
+**Not proposed: a trial-card frame.** The built dojo (PR #201) already draws the trial card and the Rest card on the kit's paper-card look with the red brush selection stroke, and `rice-card.png` (nine-slice 28) plus `selection-frame.png` (32, centre disabled) stretch to a wide card. A new frame would not add anything the player can see. If the designer wants a distinct dojo card (for example a plain wooden-board frame to separate trials from rewards), add it as D2 and say so; the prompt is not written because the look is undecided (open question 6).
+
+Shop plates all share one wood language (dark brown frame, warm straw back panel, flat), so S1, S2 and S4 read as one stall's furniture. Dojo plates reuse the paper and ink language already in the kit.
+
+## Shared style block (paste at the start of every prompt)
+
+Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes.
+
+## Shared negative block (append to every prompt)
+
+Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, lettering, numbers, kanji, watermark, logo, signature, extra limbs, extra fingers, held props or effects not described, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character, the Tanuki or any animal, weapons.
+
+## Palette
+
+From `assets/specs/style.md`: indigo `#2D3A5E`, ink `#1D1B21`, persimmon `#D8632C`, rice paper `#F1E8D4`, pine `#34483B`, fur white `#FBF6EC`, foxfire `#F2A23A`, shrine red `#B5332B`, brass `#B08A48`.
+
+PROPOSED (not in style.md; the mockup's wood, matched by eye): wood dark `#4A3425`, wood mid `#7A5535`, shelf back straw `#C9B58C`. Ochre `#8A6A3A` is the Kappa shell-rim proposal, reused for wood edges. The designer confirms or changes these (open question 7); Asset Smith then adds them to `style.md`.
+
+## Rules for every output
+
+- One standalone plate per image unless the table says a sheet. Plain flat colour: no baked shading, rim light, highlights, cast shadows or ambient occlusion. The engine adds focus glow, dimming and text.
+- **No text, lettering, numbers or kanji on any plate.** Tags, slips, bubbles, ledger headings, price, names and the merchant's and master's lines are drawn live by the engine. A plate that carries any glyph, or a fake glyph-like squiggle, is a retake.
+- Transparent plates: genuine alpha outside the art and inside dry-brush gaps, tight framing with small transparent padding, as the kit plates. No drop shadow, no halo, no matte colour in the alpha.
+- Nine-slice plates: all edge irregularity inside the outer margin, a uniform empty centre, straight edges. No chunky polygonal edges.
+- Backdrops: opaque, 16:9, no characters, no animals, no masks, no readable signs or lettering (paper lanterns and cloth are blank).
+- Match the kit's look: flat matte ukiyo-e cel colour, rough ink-brush outline. Attach `game/assets/generated/ui/rice-sheet.png`, `rice-card.png` and `night-backdrop.png` as style references to every job (identity references only where a prompt names them).
+- The shop and dojo screens show the Tanuki nowhere (forecast is text and a move icon). Nothing in these plates hints at it.
+- Do not bake in the item contents, price, slot count or any frame data: they are live.
+
+## Shop
+
+Layout facts the plates must respect (1080p mockup, rev 4): the scroll sheet covers roughly x 90 to 1830 and y 70 to 1010, so the backdrop shows only as an edge band. Cabinet is about 660 x 580 px at 1080p; items stand on shelves and a tag hangs below each item. The portrait box is 180 x 310 at the left, the bubble sits above it with its tail pointing down to the portrait, and the ledger slip is about 260 x 360 beside it.
+
+### S1 Shop cabinet (copy-paste)
+
+[style block] One standalone empty wooden display cabinet for a game shop screen, straight front view, flat and symmetrical, tight framing with small transparent padding, genuine transparent alpha outside the cabinet. A sturdy dark wood frame #4A3425 with a slightly overhanging top board, a warm straw-coloured flat back panel #C9B58C with faint vertical plank lines, and exactly three horizontal shelf boards in mid wood #7A5535 dividing the inside into three equal rows, each row wide and open and tall enough to stand a small paper talisman and a hanging tag. Nothing on the shelves, no items, no tags, no strings, no cloth. Thin even ink #1D1B21 outline, flat matte cel colour, no wood-grain noise. The interior rows are plain and evenly lit so live items read clearly on top. Aspect about 8:7. No text, no numbers, no kanji. [negative block]
+
+Engine note (for the build, not for the prompt): three columns are laid by the engine across each row; Asset Smith measures the inner rectangle and the three shelf-board tops at import and records the offsets here so the UI can place the nine cells.
+
+### S2 Price tag (copy-paste)
+
+[style block] One standalone blank hanging price tag for a game shop, side view, flat, tight framing with small transparent padding, genuine transparent alpha outside the tag. A wide rice-paper #F1E8D4 tag shape about 2.8:1, pointed at the left end with a small round hole near the point, a short loop of ink-coloured string through the hole ending in a short free tail, thin irregular ink #1D1B21 brush outline, flat matte paper with only the faintest fibre texture. Completely blank face with a large empty area for live text. No coin, no number, no mark, no seal. No text, no numbers, no kanji. [negative block]
+
+### S3 Speech bubble, body and tail (copy-paste, one sheet)
+
+[style block] One sheet with two separate pieces on a transparent background, genuine alpha, small gaps between them. Left, large: a blank wide rounded speech bubble body, landscape 2:1, rice-paper #F1E8D4 fill, a bold irregular ink #1D1B21 brush outline of even weight, with NO tail, straight edges and gentle rounded corners so it can be stretched, all brush irregularity within the outer 48 pixels, empty uniform centre. Right, small: the matching bubble tail alone, a short tapering triangular pennant of the same rice paper with the same ink outline on its two long sides and the open top edge left uncapped so it joins the body, pointing down and slightly left, about 4:5 portrait. Same hand, same line weight. No text, no numbers, no kanji, no characters. [negative block]
+
+### S4 Ledger slip (copy-paste)
+
+[style block] One standalone blank ledger slip for a game shop, a narrow portrait rice-paper #F1E8D4 slip about 5:7, nearly rectangular with fine torn fibrous edges, a thin irregular ink #1D1B21 outline inset slightly, flat matte paper, empty uniform centre, 9-slice-safe with all edge irregularity inside the outer 24 pixels. In the top-right corner, a single round shrine-red #B5332B pin pressed through the paper, flat, with a tiny ink rim. Genuine transparent alpha outside the slip, tight framing with small padding. Completely blank: no ruled lines, no header band, no text, no numbers, no kanji, no stamp. [negative block]
+
+### S5 Merchant portrait, human guise (copy-paste, attach `docs/design/characters/tanuki/tanuki-merchant-astra-front.png` as the identity reference)
+
+[style block] Image 1 is ONLY the flat matte cel colour and ink-brush illustration style reference; image 2 defines the merchant's costume and character. Create a standalone transparent half-length portrait of a cheerful travelling merchant, fully human, three-quarter view facing right, for a shop screen. A short round friendly person with a broad straw hat #B08A48 casting no shadow, warm half-smile, small kind eyes, plain muted brown kimono #6E5A48 with a rice-paper #F1E8D4 collar, a rice-paper cloth bundle strap crossing one shoulder, a red #B5332B cord at the chest, one hand raised to the chest in a welcoming gesture, empty. Human ears under the hat, no fur, no tail, no whiskers, no animal features, no leaf, no abacus or board. Head and body to the waist, rough ink lower cutout edge like a torn brush stroke, genuine alpha background, aspect 9:16 portrait. No text, no numbers, no kanji, no other characters. [negative block]
+
+## Dojo
+
+Layout facts (built screen, PR #201): the portrait box is about 410 x 360 at 1080p, left of the Rest and Training-trial scrolls, with the master's line box under it. Sheet covers about x 90 to 1830, so the backdrop again shows only as an edge band.
+
+### D1 Dojo master portrait (copy-paste, attach `game/assets/generated/ui/ryo-portrait.png` as the style reference)
+
+[style block] Image 1 is ONLY the flat matte cel colour and ink-brush illustration style and framing reference (a head and shoulders portrait with a rough ink lower cutout edge). Create a standalone transparent bust portrait of an elderly dojo master, three-quarter view facing right, for a game screen. A calm weathered woman with short silver-white hair tied back, a steady gentle gaze, deep smile lines, plain dark indigo #2D3A5E work robe with a rice-paper #F1E8D4 inner collar and a thin ink #1D1B21 sash, sleeves tucked, hands out of frame. A faint warmth of persimmon #D8632C only as a small flat colour in the collar trim. Unarmed, no weapons, no cup in frame, no headband, no jewellery. Head and shoulders only, rough ink lower cutout edge, genuine alpha background, landscape-leaning 8:7. No text, no numbers, no kanji, no other characters. [negative block]
+
+### B1 Shop backdrop, merchant's lantern stall (copy-paste, attach `game/assets/generated/ui/night-backdrop.png`)
+
+[style block] Edit the attached night-backdrop reference into a different 16:9 game menu backdrop with the same flat matte hand, same night mood, same palette and the same calm composition logic. A roadside merchant's lantern stall at the bend of a path at the edge of a bamboo valley at night. Heavy dark edges: on the far left a stall corner with a pine-green #34483B cloth awning edge, a row of blank rice-paper lanterns strung along the top with a warm persimmon #D8632C glow, wooden crates, gourds and rice-paper cloth bundles stacked low at the lower left and lower right, a few blank indigo cloth curtain strips hanging with no marks on them. Dark bamboo stalks and leaf silhouettes frame the far right. A small pale rice-paper #FBF6EC moon upper right, a vermilion #B5332B torii far in the hills, deep indigo #2D3A5E misty hills and layered forest. The entire centre band is calm, low detail and mid-dark indigo with a dark packed-earth path, so a paper sheet can sit on it; the brightest things are the moon and the lantern glow. No characters, no people, no animals, no masks, no Tanuki, no readable signs, no lettering, no numbers, no kanji. [negative block, plus: bright centre, neon, signboards]
+
+### B2 Dojo backdrop, interior (copy-paste, attach `game/assets/generated/ui/night-backdrop.png`)
+
+[style block] Edit the attached night-backdrop reference into a different 16:9 game menu backdrop with the same flat matte hand, same night mood and palette. The inside of a quiet wooden dojo at night, seen straight on. Heavy dark edges: thick ink #1D1B21 and dark wood #4A3425 pillars on the far left and far right, a heavy dark crossbeam across the top, wide mid-wood #7A5535 floor planks across the bottom band. Behind them a calm back wall of sliding paper screens in deep indigo #2D3A5E lit faintly from outside by moonlight, with one screen slid open on the far right showing dark bamboo silhouettes and a pale rice-paper #FBF6EC moon. A single paper lantern low at the lower left with a warm persimmon #D8632C glow, a straw-wrapped training post at the lower right edge, a low empty wooden tea table at the lower left edge, and a plain blank rice-paper hanging scroll on the back wall far left with nothing painted on it. The entire centre band is calm, low detail and mid-dark so a paper sheet can sit on it. No characters, no people, no animals, no masks, no Tanuki, no weapons, no readable signs, no lettering, no numbers, no kanji. [negative block, plus: bright centre, neon]
+
+## Costed alternative for the backdrops: Meshy text-to-image (designer picks)
+
+Astra's cost is not published in the repo and is the designer's call. If a backdrop does not need Astra's edit-from-reference quality, B1 and B2 are suited to `meshy_text_to_image` because they are opaque and need no alpha. The transparent plates (S1 to S5, D1) are not: Meshy's text-to-image does not return alpha, so they stay on Astra.
+
+| Option | Call | Credits per take | Worst case, 3 takes, both backdrops |
+|---|---|---|---|
+| Meshy, higher detail | `meshy_text_to_image`, `nano-banana-pro`, 16:9, highest resolution, no reference | 9 | 54 |
+| Meshy, cheaper | `meshy_text_to_image`, `nano-banana`, 16:9 | 3 | 18 |
+| Astra | designer's own Codex run | not known to Asset Smith | n/a |
+
+Prices are from `assets/specs/ui-night-backdrop.md` and earlier specs, not re-verified; a `meshy_check_balance` and price check happens at approval. A Meshy prompt is the B1 or B2 text above without the "Edit the attached..." sentence (no reference), prefixed with the style block from `assets/specs/style.md`. Trade-off: Astra can take the kit's `night-backdrop.png` as a reference and match its hand and mood exactly; Meshy text-only will match less closely and may need a retake. Nothing here is approved or run.
+
+## After the plates land
+
+Asset Smith checks each against this brief and writes the result into `assets/specs/ui-screen-plates.md` (new section) before the UI Designer wires them:
+
+- **Look (V1):** flat cel colour, even ink-brush edges, palette within tolerance, no baked shading, no painterly noise, matches `rice-sheet.png`, `rice-card.png` and `ryo-portrait.png` in hand and line weight.
+- **No text:** no glyph, fake glyph, number or kanji anywhere, including lantern paper, curtains, scroll and tag faces.
+- **Alpha:** genuine transparency, no matte fringe, no shadow; nine-slice plates stay clean when stretched to the in-engine size.
+- **Layout:** cabinet has three equal rows and three-column room (measured, offsets recorded); backdrops have a calm mid-dark centre and heavy edges; moon and brightest light not in the centre-left where the sheet heading sits.
+- **Merchant portrait:** reads as a human, no animal tell (ears, tail, whiskers, leaf, fur); consistent costume with the Tanuki merchant sheet. **Dojo master:** unarmed, matches the intro story card's character.
+- **Licence:** Astra output terms on the designer's plan: UNKNOWN, designer to confirm before shipping.
+- Verdict `ACCEPT`, or `RETAKE` with the exact prompt change, which goes back to the designer for approval. After 3 failed takes on one plate, propose a fallback and stop.
+
+## Open questions for the designer
+
+1. **Shelf grid.** The approved mockup on the branch is rev 4 with 2 items per shelf; the decision log and this request say 3. Is the cabinet 3 columns x 3 rows? (The brief assumes yes.)
+2. **Merchant guise.** No merchant-guise spec exists (G4 and the job-list G1/G2 cover the Oni, Kappa and Kitsune fighters only). Is a fully human trader, built from the Tanuki merchant sheet's costume, the intended portrait? Any subtle tell allowed (none is drawn), or none at all so the boss-node reveal lands?
+3. **Dojo master identity.** Is the dojo master Master Sōen (S3 intro, `intro-soen.json` uses "she", pours tea), or a separate character? The brief draws an elderly woman as Sōen. Should the face match a future Sōen story-card illustration?
+4. **Portrait framing.** Shop portrait as a tall half-length (432 x 768) and dojo as a head-and-shoulders bust (512 x 448) follow the two boxes in the mockups. Confirm, or use one bust format for both.
+5. **Bubble tail.** Body and tail as two pieces (nine-slice friendly) is proposed. The tail's position (down-left) is fixed to the mockup; if the portrait moves, the tail is mirrored or rotated in engine.
+6. **Dojo trial card.** No new plate proposed (the kit's paper card and brush cover it). Add D2 as a distinct dojo-board frame, yes or no?
+7. **Wood palette.** Confirm or replace the PROPOSED wood hexes (`#4A3425`, `#7A5535`, `#C9B58C`) before Astra runs.
+8. **Backdrop tool.** Astra, Meshy `nano-banana-pro` (9), or Meshy `nano-banana` (3), per backdrop?
+9. **Backdrop scope.** One per screen as requested (B1 shop, B2 dojo). Should the plain rest-stop screen (row 4 merchant option, before "Browse the shop") use B1 too, and practice mode use B2? The brief assumes yes (the dojo variant shares the shell).
+10. **Astra batching.** Run S3a/S3b as one sheet and the three paper plates (S2, S4, S3) as one sheet to save runs, or one plate per run?
+11. **Licence.** Output terms for Astra on the designer's plan.

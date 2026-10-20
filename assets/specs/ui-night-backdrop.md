@@ -1,5 +1,7 @@
 # Night backdrop for non-fight screens - spec
 
+**SUPERSEDED (2026-10-20)** by `game/assets/generated/ui/night-backdrop.png`, the Astra screen-kit plate (commit c3782d7, prompt N in `assets/specs/ui-screen-plates.md`), which `kit_backdrop.tscn` uses as its default `Art`. This Meshy job (N1) was never run (0 credits spent, see Takes) and is not to be run. Kept for the layout constraints only; the shop and dojo backdrops are briefed in `docs/design/screens/astra-brief-shop-dojo.md`.
+
 Status: PROPOSED, awaiting designer approval. **No Meshy job has been run and no generating tool was called.** Prices from earlier specs (`nano-banana-pro` 9, `nano-banana` 3), not re-verified; balance not checked.
 
 Used behind: Control select, Reward, Modifier target, Story card (and Settings, if it sits on a backdrop). Concepts: `control-select.png`, `reward.png`, `modifier-target.png`, `story-card.png`. Pause and Defeat sit over the fight stage; **dimming is done in engine** (a `ColorRect` of ink #1D1B21 at about 55% alpha), not generated. The Title uses its own plate in `ui-title-masks.md`.
