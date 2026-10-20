@@ -93,7 +93,7 @@ public static class AiGuardTests
 		Assert.True(none.GuardPct is null, "left out = null in the profile");
 		var kit = AiLoadout.From(NewMatch().P2);
 		Assert.Equal(ProfileAi.DefaultGuardPct, new ProfileAi(none, 1, kit, 1).GuardPct, "left out = the default");
-		Assert.Equal(50, ProfileAi.DefaultGuardPct, "the proposed default is 50");
+		Assert.Equal(0, ProfileAi.DefaultGuardPct, "designer 2026-10-20: off by default, profiles opt in");
 		var seventy = BehaviourProfile.Parse(Json("mid", BlockOnAttack, ", \"guard_pct\": 70"));
 		Assert.Equal((int?)70, seventy.GuardPct, "guard_pct 70 loads");
 		Assert.Equal(70, new ProfileAi(seventy, 1, kit, 1).GuardPct, "the profile's value");
@@ -340,13 +340,12 @@ public static class AiGuardTests
 	public static void GuardAndJumpPunish_ReplayIdentically_OldRecordingsStillRun()
 	{
 		var prof = Fixture("test-kitsune-aggressive");
-		Assert.True(prof.GuardPct is null, "the fixture names no guard_pct: the default applies");
+		Assert.True(prof.GuardPct is null, "the fixture names no guard_pct: the default (off) applies");
 		var m = NewMatch(c => c with { P2JumpPunishPct = 50 });
-		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 165);
-		Assert.Equal(ProfileAi.DefaultGuardPct, ai.GuardPct, "default guard");
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 165, guardPct: 50); // opted in
 		var rec = Play(m, ai, 165, 3000);
 		Assert.Equal((int?)50, rec.Header.P2JumpPunishPct, "the recording keeps the jump-punish pct");
-		Assert.Equal(ProfileAi.DefaultGuardPct, rec.Header.Ai!.GuardPct, "and the guard the AI played with");
+		Assert.Equal(50, rec.Header.Ai!.GuardPct, "and the guard the AI played with");
 		var back = ReplayRecording.FromBytes(rec.ToBytes());
 		var r = Replayer.Run(back, Catalog);
 		Assert.True(r.Ok, $"replays: {r}");
@@ -362,7 +361,7 @@ public static class AiGuardTests
 
 		// A recording as made before YOK-165: no guard, no tier rate. Neither is written, and it replays.
 		var oldM = NewMatch();
-		var old = Play(oldM, new ProfileAi(prof, 1, AiLoadout.From(oldM.P2), 7, guardPct: 0), 7, 1500);
+		var old = Play(oldM, new ProfileAi(prof, 1, AiLoadout.From(oldM.P2), 7), 7, 1500); // the default: guard off
 		string header = System.Text.Json.JsonSerializer.Serialize(old.Header);
 		Assert.True(!header.Contains("GuardPct") && !header.Contains("JumpPunishPct"), $"neither field is written: {header}");
 		Assert.True(Replayer.Run(ReplayRecording.FromBytes(old.ToBytes()), Catalog).Ok, "an old-style recording replays (absent guard = 0)");

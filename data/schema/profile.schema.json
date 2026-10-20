@@ -65,7 +65,7 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 100,
-      "description": "YOK-165 (Y4, P6): pre-emptive guard. Each time the AI settles in its preferred range to wait, and each time it commits to a move of its own (not its habit), it holds crouch guard (down-back) with this chance: while waiting, or through that move's recovery and a short beat after, before any attack shows. The roll is on the AI's own decision, never on anything the player pressed. 0 = it guards only on reaction. Left out = ProfileAi.DefaultGuardPct (50, proposed)."
+      "description": "YOK-165 (Y4, P6): pre-emptive guard. Each time the AI settles in its preferred range to wait, and each time it commits to a move of its own (not its habit), it holds crouch guard (down-back) with this chance: while waiting, or through that move's recovery and a short beat after, before any attack shows. The roll is on the AI's own decision, never on anything the player pressed. 0 = it guards only on reaction. Left out = ProfileAi.DefaultGuardPct, 0: off (designer 2026-10-20); a profile opts in by naming it."
     },
     "ex_use": {
       "description": "YOK-57 (E16, C5): when the AI picks a special and its own meter on screen covers the EX cost plus keep_meter, it asks for the EX version with chance_pct. Absent = never. E22: \"The standard-tier AI doesn't use EX or burst yet.\" Applied only in elder and Tanuki fights (the node decides, not the profile).",

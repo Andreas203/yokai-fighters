@@ -25,11 +25,11 @@ public sealed class ProfileAi
 	public const int SpacingWeight = 40;
 	public const int WalkTicks = 15, SpacingTicks = 10, BlockTicks = 20;
 	/// <summary>
-	/// YOK-165: pre-emptive guard rate when the profile names no <c>guard_pct</c> (<b>proposed</b>, awaiting the designer).
+	/// YOK-165: pre-emptive guard rate when the profile names no <c>guard_pct</c>: 0, off (designer 2026-10-20; profiles opt in).
 	/// Every strike normal hits within 15 frames, faster than any reaction tier (Y4), so a guard that waits to see the
 	/// swing is always late (YOK-154 F1). The guard is rolled on the AI's own decisions, never on anything Ryo pressed (P6).
 	/// </summary>
-	public const int DefaultGuardPct = 50;
+	public const int DefaultGuardPct = 0;
 	/// <summary>YOK-165: how long the guard is held after the AI's own move ends (proposed, = <see cref="SpacingTicks"/>).</summary>
 	public const int GuardTicks = 10;
 
