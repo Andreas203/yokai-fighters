@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using YokaiFighters.Audio;
 using YokaiFighters.Dev;
 using YokaiFighters.Fight;
 using YokaiFighters.SaveGame;
@@ -597,6 +598,7 @@ public partial class GameFlow : Node
 			ConfigureFight?.Invoke(fight);
 			ApplyDevStage(fight); // YOK-125: a dev jump's stage choice
 			Fight = fight;
+			MusicPlayer.Instance?.PlayBattleMusic();
 		}
 		else if (scene is INodeScene other)
 		{
@@ -650,6 +652,7 @@ public partial class GameFlow : Node
 		ConfigureFight?.Invoke(fight);
 		stop.Visible = false;
 		TrialFight = fight;
+		MusicPlayer.Instance?.PlayBattleMusic();
 		AddChild(fight);
 		MoveChild(fight, 1); // over the stop, under the menu layer
 	}
@@ -658,6 +661,7 @@ public partial class GameFlow : Node
 	{
 		if (TrialFight is { } fight && IsInstanceValid(fight)) { RemoveChild(fight); fight.QueueFree(); }
 		TrialFight = null;
+		MusicPlayer.Instance?.PlayMenuMusic();
 		if (NodeScene is RestStopScreen stop && IsInstanceValid(stop)) { stop.Visible = true; stop.TrialClosed(); }
 	}
 
@@ -671,5 +675,6 @@ public partial class GameFlow : Node
 		if (NodeScene is { } scene && IsInstanceValid(scene)) { RemoveChild(scene); scene.QueueFree(); }
 		Fight = null;
 		NodeScene = null;
+		MusicPlayer.Instance?.PlayMenuMusic();
 	}
 }
