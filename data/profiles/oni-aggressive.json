@@ -27,17 +27,42 @@
     {
       "when": "at_mid_range",
       "do": "dash_forward",
-      "weight": 55
+      "weight": 45
     },
     {
       "when": "at_mid_range",
       "do": "walk_forward",
+      "weight": 15
+    },
+    {
+      "when": "at_mid_range",
+      "do": "normal:oni-medium-kick",
       "weight": 20
     },
     {
       "when": "at_close_range",
+      "do": "normal:oni-heavy-punch",
+      "weight": 30
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-medium-punch",
+      "weight": 30
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-light-punch",
+      "weight": 25
+    },
+    {
+      "when": "at_close_range",
       "do": "throw",
-      "weight": 35
+      "weight": 15
+    },
+    {
+      "when": "opponent_blocking",
+      "do": "normal:oni-medium-punch",
+      "weight": 30
     },
     {
       "when": "opponent_attacking",
@@ -58,5 +83,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Anti-air (YOK-165): answers opponent_jumping with oni-medium-punch (8f startup, club swing y170-270), the single attacking answer so jump_punish_pct sets the rate. Oni aggressive (Y2): dashes in constantly; habit 70% so it is nameable in 2-3 fights. Oni normals now exist in data/moves but this profile still uses only generic actions plus the anti-air; close-range pokes and the Iron-Club Charge are not wired in yet."
+  "notes": "Oni aggressive (Y2): dashes in constantly; habit 70% unchanged. YOK-174 strikes: heavy club (oni-heavy-punch 16f startup, readable tell) at close range, medium punch and light punch as the fast pressure, medium kick as a mid-range poke after the dash-in, medium punch against a blocking opponent as a frame trap (8f, recovery 7). Throw cut from 35 to 15 so strikes dominate. Single attacking answer to opponent_jumping stays oni-medium-punch (YOK-165). Iron-Club Charge not wired (no special in data/moves). Kappa untouched."
 }

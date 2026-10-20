@@ -30,19 +30,39 @@
       "weight": 35
     },
     {
+      "when": "at_mid_range",
+      "do": "normal:oni-medium-kick",
+      "weight": 20
+    },
+    {
+      "when": "opponent_whiffed",
+      "do": "normal:oni-heavy-kick",
+      "weight": 60
+    },
+    {
       "when": "opponent_whiffed",
       "do": "dash_forward",
-      "weight": 70
+      "weight": 20
     },
     {
       "when": "opponent_in_recovery",
-      "do": "dash_forward",
-      "weight": 30
+      "do": "normal:oni-heavy-punch",
+      "weight": 40
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-light-punch",
+      "weight": 25
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-medium-punch",
+      "weight": 15
     },
     {
       "when": "at_close_range",
       "do": "throw",
-      "weight": 20
+      "weight": 12
     },
     {
       "when": "opponent_attacking",
@@ -51,13 +71,8 @@
     },
     {
       "when": "opponent_jumping",
-      "do": "normal:oni-medium-punch",
-      "weight": 40
-    },
-    {
-      "when": "opponent_jumping",
       "do": "block",
-      "weight": 20
+      "weight": 30
     }
   ],
   "rules": [
@@ -68,5 +83,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Anti-air (YOK-165): answers opponent_jumping with oni-medium-punch (8f startup, club swing y170-270), the single attacking answer so jump_punish_pct sets the rate. Oni patient (Y2): walks in, punishes whiffs; the whiff punish is a dash_forward stand-in for the Iron-Club Charge. Oni normals now exist in data/moves but this profile still uses only generic actions plus the anti-air; close-range pokes and the Iron-Club Charge are not wired in yet."
+  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. opponent_jumping stays block. Iron-Club Charge not wired (no special in data/moves)."
 }
