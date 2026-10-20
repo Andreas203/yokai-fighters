@@ -8,8 +8,15 @@
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="rule"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/kit/red_button.tscn" id="red_button"]
 
 [sub_resource type="StyleBoxEmpty" id="flat_empty"]
+
+[sub_resource type="StyleBoxEmpty" id="brush_pad"]
+content_margin_left = 24.0
+content_margin_top = 2.0
+content_margin_right = 24.0
+content_margin_bottom = 2.0
 
 [sub_resource type="StyleBoxFlat" id="coin_chip"]
 bg_color = Color(0.973, 0.945, 0.878, 1)
@@ -81,16 +88,16 @@ script = ExtResource("decor_script")
 [node name="FreeHanger" type="Control" parent="."]
 mouse_filter = 2
 offset_left = 590.0
-offset_top = 295.0
+offset_top = 280.0
 offset_right = 1240.0
-offset_bottom = 545.0
+offset_bottom = 540.0
 
 [node name="SecondHanger" type="Control" parent="."]
 mouse_filter = 2
 offset_left = 590.0
-offset_top = 575.0
+offset_top = 562.0
 offset_right = 1240.0
-offset_bottom = 825.0
+offset_bottom = 894.0
 
 [node name="ForecastHanger" type="Control" parent="."]
 mouse_filter = 2
@@ -206,7 +213,7 @@ mouse_filter = 2
 offset_left = 150.0
 offset_top = 665.0
 offset_right = 560.0
-offset_bottom = 895.0
+offset_bottom = 840.0
 theme_type_variation = &"PaperCard"
 
 [node name="Box" type="VBoxContainer" parent="LineBox"]
@@ -232,9 +239,9 @@ clip_text = true
 
 [node name="FreeCard" type="PanelContainer" parent="."]
 offset_left = 600.0
-offset_top = 322.0
+offset_top = 323.0
 offset_right = 1230.0
-offset_bottom = 520.0
+offset_bottom = 497.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -262,7 +269,7 @@ mouse_filter = 2
 theme_override_constants/separation = 16
 
 [node name="Icon" type="Panel" parent="FreeCard/Box/Top"]
-custom_minimum_size = Vector2(70, 70)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -274,7 +281,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("theme")
 theme_type_variation = &"PaperLabel"
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "+"
@@ -288,14 +295,14 @@ theme_override_constants/separation = 0
 [node name="Title" type="Label" parent="FreeCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 32
 text = "Free heal"
 
 [node name="Sub" type="Label" parent="FreeCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "Merchant's gift · costs nothing"
 
 [node name="Tag" type="Panel" parent="FreeCard/Box/Top"]
@@ -318,7 +325,7 @@ text = "FREE"
 [node name="Desc" type="Label" parent="FreeCard/Box"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
 text = "Restores 25% of max health"
 
@@ -359,9 +366,9 @@ theme_type_variation = &"HealthBar"
 
 [node name="SecondCard" type="PanelContainer" parent="."]
 offset_left = 600.0
-offset_top = 602.0
+offset_top = 605.0
 offset_right = 1230.0
-offset_bottom = 798.0
+offset_bottom = 845.0
 focus_mode = 2
 theme_type_variation = &"PaperCard"
 script = ExtResource("card_script")
@@ -389,7 +396,7 @@ mouse_filter = 2
 theme_override_constants/separation = 16
 
 [node name="Icon" type="Panel" parent="SecondCard/Box/Top"]
-custom_minimum_size = Vector2(70, 70)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -400,7 +407,7 @@ mouse_filter = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_type_variation = &"PaperLabel"
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "¥"
@@ -414,14 +421,14 @@ theme_override_constants/separation = 0
 [node name="Title" type="Label" parent="SecondCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 32
 text = "Browse the shop"
 
 [node name="Sub" type="Label" parent="SecondCard/Box/Top/Titles"]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"CaptionLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "Spend coins instead"
 
 [node name="Tag" type="Panel" parent="SecondCard/Box/Top"]
@@ -445,34 +452,39 @@ text = "SHOP"
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
 
 [node name="Coming" type="Label" parent="SecondCard/Box"]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"PersimmonLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = ""
 
 [node name="PickLine" type="Label" parent="."]
 mouse_filter = 2
-offset_left = 600.0
-offset_top = 836.0
-offset_right = 1240.0
-offset_bottom = 868.0
+offset_left = 720.0
+offset_top = 164.0
+offset_right = 1310.0
+offset_bottom = 226.0
 theme_override_font_sizes/font_size = 22
 autowrap_mode = 3
 
-[node name="ContinueButton" type="Button" parent="."]
+[node name="ContinueButton" parent="." instance=ExtResource("red_button")]
 visible = false
-offset_left = 600.0
+offset_left = 190.0
 offset_top = 852.0
-offset_right = 1000.0
-offset_bottom = 896.0
-theme_type_variation = &"RedButton"
-theme_override_font_sizes/font_size = 28
+offset_right = 520.0
+offset_bottom = 890.0
+custom_minimum_size = Vector2(0, 0)
+theme_override_font_sizes/font_size = 24
 text = "Continue to the map"
+theme_override_styles/normal = SubResource("brush_pad")
+theme_override_styles/hover = SubResource("brush_pad")
+theme_override_styles/pressed = SubResource("brush_pad")
+theme_override_styles/focus = SubResource("brush_pad")
+theme_override_styles/disabled = SubResource("brush_pad")
 
 [node name="Rule" type="ColorRect" parent="."]
 mouse_filter = 2

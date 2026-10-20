@@ -38,7 +38,6 @@ public partial class RestStopScreen : Control, INodeScene
 	public KitCard SecondCard { get; private set; } = null!;
 	public Button ContinueButton { get; private set; } = null!;
 
-	private static readonly Color FightHudSeal = Fight.FightHud.Seal;
 	private RunSession? _session;
 	private bool _ready;
 
@@ -60,10 +59,29 @@ public partial class RestStopScreen : Control, INodeScene
 		FreeCard.Activated += () => TakeFree();
 		SecondCard.Activated += () => OpenSecond(); // the shop (YOK-104); the trial (YOK-98) wires in here too
 		ContinueButton.Pressed += () => Leave();
-		foreach (string state in new[] { "normal", "hover", "pressed", "focus", "disabled" }) // the kit's RedButton has no fill of its own
-			ContinueButton.AddThemeStyleboxOverride(state, new StyleBoxFlat { BgColor = FightHudSeal, ContentMarginLeft = 24, ContentMarginRight = 24, ContentMarginTop = 6, ContentMarginBottom = 6, BorderColor = new Color("1D1B21"), BorderWidthBottom = state == "focus" ? 4 : 2, BorderWidthTop = 2, BorderWidthLeft = 2, BorderWidthRight = 2 });
+		// The scene's slim brush_pad margins carry no border, so keyboard focus needs its own mark: an ink outline drawn
+		// around the brush stroke (this screen only; the shared kit button is untouched).
+		var focusMark = new StyleBoxFlat { DrawCenter = false, BorderColor = new Color("1D1B21"), ExpandMarginLeft = 18, ExpandMarginRight = 18, ExpandMarginTop = 6, ExpandMarginBottom = 6 };
+		focusMark.SetBorderWidthAll(3);
+		focusMark.SetCornerRadiusAll(4);
+		ContinueButton.AddThemeStyleboxOverride("focus", focusMark);
+		foreach (var card in new Control[] { FreeCard, SecondCard, GetNode<Control>("LineBox") }) PadPaper(card);
 		GetNode<KeyChipFooter>("Footer").Alignment = BoxContainer.AlignmentMode.Begin;
 		Refresh();
+	}
+
+	/// <summary>
+	/// The rice-card texture draws its ink frame about 20 px inside its edge, so the kit's 28 px margins let text touch it
+	/// (and the speaker label cross the top border). Cards on this screen get margins that clear the frame; the style is
+	/// a copy, so the kit's own card is untouched.
+	/// </summary>
+	private static void PadPaper(Control card)
+	{
+		if (card.GetThemeStylebox("panel") is not StyleBoxTexture kit) return;
+		var padded = (StyleBoxTexture)kit.Duplicate();
+		padded.ContentMarginLeft = 46; padded.ContentMarginRight = 46;
+		padded.ContentMarginTop = 24; padded.ContentMarginBottom = 30;
+		card.AddThemeStyleboxOverride("panel", padded);
 	}
 
 	/// <summary>The free heal or the rest. A refused take (already chosen) changes nothing and the screen just redraws.</summary>
@@ -252,7 +270,7 @@ public partial class RestStopScreen : Control, INodeScene
 			? (m.ChosenTrial is { } t
 				? $"{t.Prompt}\nHeals {Dojo.TrialHealPercent}% either way; land it within {t.Attempts} tries to level {t.Special}."
 				: "Land the drill to level one special.")
-			: $"Buy an ability or release a binding.\nYou have {m.Coins} coins.";
+			: m.Second == RestStopOption.Ready ? $"Buy an ability or release a binding.\nYou have {m.Coins} coins." : "Buy an ability or release a binding."; // the coin chip shows the coins once the card is closed
 		L(card + "Coming").Text = m.Second switch
 		{
 			RestStopOption.NoTrial => "No trial for your specials.",
