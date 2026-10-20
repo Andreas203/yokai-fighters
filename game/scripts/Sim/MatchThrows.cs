@@ -166,11 +166,12 @@ public sealed partial class Match
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		MoveData? m = att.CurrentMove;
 		if (m is null || !m.IsThrow) { ToIdle(def); return; } // defensive: the thrower's clip ended early
-		def.PendingDamage += m.Damage;
+		int damage = Config.ScaleDamage(attIndex, m.Damage); // YOK-156, Y4
+		def.PendingDamage += damage;
 		SetState(def, FighterState.Knockdown, Config.KnockdownFrames); // set before AdvanceState: down this tick + 39 more
 		Slide(att, def, m.HitPushback ?? Config.HitPushback, 0);
-		Throw?.Invoke(this, new ThrowEvent(attIndex, m.Id, ThrowOutcome.Land, m.Damage));
-		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, att.MoveFrame, false, false, m.Damage));
+		Throw?.Invoke(this, new ThrowEvent(attIndex, m.Id, ThrowOutcome.Land, damage));
+		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, att.MoveFrame, false, false, damage));
 		OnConnect(attIndex, m, blocked: false, counter: false); // C5 meter (+6/+3), V2 hitstop as heavy (E12)
 	}
 

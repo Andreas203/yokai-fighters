@@ -28,6 +28,8 @@ public sealed class ReplayRecorder
 		h.P2MaxHealth = m.Config.P2MaxHealth;
 		h.P1StartHealth = m.Config.P1StartHealth;
 		h.P2StartHealth = m.Config.P2StartHealth;
+		h.P1DamagePct = m.Config.P1DamagePct; // YOK-156
+		h.P2DamagePct = m.Config.P2DamagePct;
 		h.Fighters = new[] { Capture(m.P1), Capture(m.P2) };
 		h.Ai = AiOf(ai, aiSeed);
 		h.RunHash = run?.StateHash().ToString("x16");
