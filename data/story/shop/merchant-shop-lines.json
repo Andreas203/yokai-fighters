@@ -1,0 +1,109 @@
+{
+  "kind": "merchant_shop_lines",
+  "id": "merchant-shop-lines",
+  "status": "proposed",
+  "speaker": "Merchant",
+  "rules": ["S1", "S2", "S3", "S4", "R6", "T2", "T5", "A6"],
+  "notes": "YOK-159. Speech-bubble lines for the shop, bubble-sized (12 words or fewer). Warm shopkeeper, quietly covetous of Ryo's moves; he is the Tanuki, so no line names him or the copy rule. On a second run the hunger should read plainly. Placeholders: {move} only, filled with the copy target (T2). Variant 0 of greeting_row4 is S3 verbatim. This file is a different kind from story_card and lives in data/story/shop/ so StoryLibrary (top-level *.json, throws on other kinds) does not load it; it needs the schema addition named in the ticket report.",
+  "events": {
+    "greeting_row4": {
+      "trigger": "Row 4 merchant visit, before the heal-or-shop choice (S3)",
+      "placeholders": ["move"],
+      "variants": [
+        "That {move} of yours... I'd love one.",
+        "Ah, Ryo! That {move} of yours... I'd love one. Only looking!"
+      ]
+    },
+    "greeting_row7": {
+      "trigger": "Row 7 merchant visit",
+      "placeholders": [],
+      "variants": [
+        "Back again! You've been busy. Your hands look well-practised.",
+        "Welcome, welcome. I've kept the best shelf for you.",
+        "You fight so beautifully now. Do show me again, sometime."
+      ]
+    },
+    "item_focused": {
+      "trigger": "A shelf item gains focus (hover or selection)",
+      "optional": true,
+      "placeholders": [],
+      "variants": [
+        "Ooh, a fine one. Borrowed ink, but lovely.",
+        "Every move wants a home. Perhaps yours?",
+        "Take a good look. Looking is free."
+      ]
+    },
+    "bought_special": {
+      "trigger": "Ryo buys a special (R6)",
+      "placeholders": [],
+      "variants": [
+        "Wonderful! Treat it kindly. Borrowed things always need it.",
+        "Sold! It will serve you well, while it lasts.",
+        "A new trick for the collection. I do love a collection."
+      ]
+    },
+    "bought_modifier": {
+      "trigger": "Ryo buys a modifier and attaches it to a special (R6, A2)",
+      "placeholders": [],
+      "variants": [
+        "A little polish on your move. Oh, it shines.",
+        "Clever! Even better than before. I'll remember it.",
+        "Sold! Watch that move now. Go on, I'll watch too."
+      ]
+    },
+    "cannot_afford": {
+      "trigger": "Ryo tries to buy with too few coins",
+      "placeholders": [],
+      "variants": [
+        "Ah, not quite enough coins. Win a few more, friend.",
+        "So close! Come back when your purse is heavier.",
+        "Fair is fair, I'm afraid. Even for you."
+      ]
+    },
+    "slot_full": {
+      "trigger": "Ryo tries to buy a special with every slot full; a replaced move loses its levels (A6)",
+      "placeholders": [],
+      "variants": [
+        "Hands full! Swap one out? It forgets everything, mind.",
+        "No room. Something must go, and its lessons with it.",
+        "You can't hold more. Pity. Choose carefully."
+      ]
+    },
+    "release_binding": {
+      "trigger": "Ryo pays 40 to release a binding (R6)",
+      "placeholders": [],
+      "variants": [
+        "Letting one go? Kind of you. Forty, if you please.",
+        "Off it drifts. A little sad, isn't it?",
+        "Free, then. I'd have kept it, but you're braver."
+      ]
+    },
+    "release_last_special": {
+      "trigger": "Ryo tries to release his last special (T5): the merchant refuses",
+      "placeholders": [],
+      "variants": [
+        "Not that one! It's all you have left.",
+        "Oh no, no. You'd be empty-handed. I won't allow it.",
+        "That one stays with you. Trust a shopkeeper."
+      ]
+    },
+    "shelf_empty": {
+      "trigger": "No items left on the shelf",
+      "placeholders": [],
+      "variants": [
+        "All gone! You've cleaned me out. Almost.",
+        "Nothing left but dust and good manners.",
+        "Empty shelves. Next time, perhaps something rarer."
+      ]
+    },
+    "leaving": {
+      "trigger": "Ryo leaves the shop",
+      "placeholders": [],
+      "variants": [
+        "Off you go. Do keep that move safe for me.",
+        "Safe road, Ryo. We'll surely meet again.",
+        "Goodbye, goodbye! Don't lose anything precious."
+      ]
+    }
+  }
+}
