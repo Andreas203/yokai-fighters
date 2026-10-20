@@ -29,6 +29,18 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-16 YOK-121: the HUD twist/copy strip is a scroll, shown for the first 10 s (600 ticks) of every fight, then it fades.
 - 2026-10-16 YOK-128: save format v4 adds `run.node_paid`, so a won node never pays coins or heals twice after Continue (R3, R8). Paid state is not in `StateHash` yet (two probes pin that; designer call).
 - 2026-10-17 YOK-98 (branch, not merged): dojo trial built. No save format change: the game saves only at node boundaries, so a trial is never in the file and a quit mid-trial restarts the node with attempts reset (M5); the save version stays 4 (the v5/v6/v7 order of #149, YOK-97, YOK-99 is untouched). Designer question: the dojo offers trials whose `status` is still `proposed` (all three shipped ones), with no status filter. Provisional, waiting on the designer: no trial for a special already at its top level; the card offers the first trial in slot order (no picker); the dummy is the dojo node's `opponent` (kitsune); a KO ends an attempt and the dummy starts each attempt at full health; combo steps are sampled on the completing hit; trial-fight damage never touches run health.
+- 2026-10-20 YOK-159 shop redesign (designer):
+  - The merchant speaks in speech bubbles, and the shop is a physical shelf with 2 items per shelf.
+  - On hover or focus the merchant speaks the item's description: a lead-in plus the card's plain line, verbatim.
+  - Frame data goes on a Tab/Y ledger slip and is never spoken.
+  - Bubbles follow S2 (at most 2 sentences).
+  - No copy hinting in the shop lines. The S3 row-4 story card keeps its line; the rules are unchanged.
+  - Status: mockup rev 2 on `YOK-159-shop-shelf-mockup` awaits approval; the merchant lines on `YOK-159-merchant-shop-lines` have a Rules Lawyer PASS and need a schema and loader in the build.
+- 2026-10-20 YOK-157 (designer):
+  - Under a held idle guard the bot lets the first jump it sees in each fight go, and may anti-air later jumps.
+  - P5 dominance is damage_pct plus a per-opponent-profile breakdown.
+  - Habit punish window: the designer said "no more than 3", unit unconfirmed (3 seconds or 3 hits). `PunishTailTicks = 30` stays proposed.
+- 2026-10-20 YOK-109 scope (designer): the shop items moved out of YOK-109 to YOK-159.
 
 ## Assets and spend (designer)
 - 2026-10-05 YOK-30: first pass approved at 163 credits.
