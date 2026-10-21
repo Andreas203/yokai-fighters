@@ -5,3 +5,4 @@ build/
 .claude/worktrees/
 .mcp.json
 .codex/config.toml
+.pytest_cache/
