@@ -243,6 +243,13 @@ def check_run_map(doc: dict) -> list[tuple[str, str]]:
 STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.tscn\Z", re.ASCII)
 
 
+def _load_json(f: Path):
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     """YOK-77: every tier named is defined, and every node type used by a run map in the same folder has an
     entry (the game's resolver refuses a node whose type has no Y4 tier)."""
@@ -255,6 +262,45 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             tier = entry.get("tier") if isinstance(entry, dict) else None
             if isinstance(tier, str) and tier not in tiers:
                 errs.append((f"{section}.{name}.tier", f"tier '{tier}' is not defined in 'tiers' (Y4)"))
+    # YOK-174: every opponent the table lists, and every yokai a run map in the same folder names, plays as a yokai
+    # (an opponent with a fighter as that fighter; else plays_as, else its own id) that must have a behaviour profile.
+    # Profiles are read next to this file's data folder (<data>/map/node-scenes.json -> <data>/profiles/).
+    profiled = {pp.get("yokai") for pp in (_load_json(f) for f in sorted((path.parent.parent / "profiles").glob("*.json"))) if isinstance(pp, dict)}
+    opponents = doc.get("opponents") if isinstance(doc.get("opponents"), dict) else {}
+
+    def plays_as(name: str):
+        entry = opponents.get(name)
+        if not isinstance(entry, dict):
+            return name
+        if isinstance(entry.get("fighter"), str):
+            return entry["fighter"]
+        return entry.get("plays_as", name)
+
+    named = [(f"opponents.{n}", n) for n in opponents]
+    for other in sorted(path.parent.glob("*.json")):
+        m = _load_json(other)
+        if isinstance(m, dict) and m.get("kind") == "run_map":
+            named += [(f"{other.name} node '{n.get('id')}'", n["yokai"]) for n in m.get("nodes") or []
+                      if isinstance(n, dict) and isinstance(n.get("yokai"), str)]
+    for name in (t.get("opponent") for t in types.values() if isinstance(t, dict)):
+        if isinstance(name, str):
+            named.append(("types opponent", name))
+    seen = set()
+    for where, name in named:
+        plays = plays_as(name)
+        if not isinstance(plays, str) or (where, plays) in seen:
+            continue
+        seen.add((where, plays))
+        if profiled and plays not in profiled:  # a folder with no profiles at all (a partial copy) is not checked
+            errs.append((where, f"'{name}' plays as '{plays}', which has no behaviour profile in {path.parent.parent.name}/profiles/ (Y1)"))
+    # YOK-174 (designer 2026-10-21): a named 'profile' must exist by id in profiles/ (the C# throws otherwise, NodeProfiles.WithNamed)
+    profile_ids = {pp.get("id") for pp in (_load_json(f) for f in sorted((path.parent.parent / "profiles").glob("*.json"))) if isinstance(pp, dict)}
+    for section in ("opponents", "nodes"):
+        entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
+        for name, entry in entries.items():
+            prof = entry.get("profile") if isinstance(entry, dict) else None
+            if profile_ids and isinstance(prof, str) and prof not in profile_ids:
+                errs.append((f"{section}.{name}.profile", f"profile '{prof}' is not in {path.parent.parent.name}/profiles/ (Y1)"))
     # YOK-144: every stage named is a scene under scenes/stage/ that exists (res:// = game/). STAGE_PATTERN is the
     # schema's $defs/stage pattern and NodeSceneTable.StagePattern; it also stops '..' from escaping the folder here.
     stages = [("default_stage", doc.get("default_stage"))]
@@ -869,6 +915,16 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             first = twist_of.setdefault(doc["elder"], f)
             if first != f:
                 failures.setdefault(f, []).append(("elder", f"'{doc['elder']}' already has a twist in {rel(first)} (Y2: one per elder)"))
+
+    # YOK-174 (Y1, AM13): a node names a profile by id, so one id must name one profile across the files checked
+    # together (BehaviourProfile.LoadDirectory throws on the same). data/samples/ is documentation.
+    profile_of: dict[str, Path] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "profile" and isinstance(doc.get("id"), str) \
+                and SAMPLES_DIR not in f.resolve().parents:
+            first = profile_of.setdefault(doc["id"], f)
+            if first != f:
+                failures.setdefault(f, []).append(("id", f"profile id '{doc['id']}' is already used by {rel(first)} (Y1)"))
 
     # YOK-153 (A11, M1): an unlock is saved by ability id alone, so one id must name one ability across the kinds
     # checked together: specials, their evolutions (A5), modifiers and cancel rules. data/samples/ is documentation

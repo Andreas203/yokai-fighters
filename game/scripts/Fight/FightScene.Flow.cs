@@ -245,6 +245,7 @@ public partial class FightScene
 		int i = Array.FindIndex(Profiles, p => p.Temperament == temperament);
 		if (i < 0) { GD.PushWarning($"FightScene: no {Opponent} profile with temperament '{temperament}'"); return false; }
 		_profileIndex = i;
+		DebugTemperament = temperament;
 		RebuildAi();
 		GD.Print($"FightScene: P2 AI profile {Profiles[i].Id} ({temperament})");
 		return true;
@@ -375,6 +376,12 @@ public partial class FightScene
 		AttachHitSounds(m);
 		SetUpTutorial(); // YOK-92: the new node may or may not be guided
 		RebuildAi();
+		if (AiSetupError is { } why) // YOK-174: a later node of a self-walked run (no GameFlow to refuse it) stops here too
+		{
+			GD.PushError($"FightScene: node '{Node.NodeId}' not started: {why}");
+			Render();
+			return;
+		}
 		StartRecording();
 		Shake.Stop();
 		_clock.Restart();

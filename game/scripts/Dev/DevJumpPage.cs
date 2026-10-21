@@ -50,7 +50,7 @@ public partial class DevJumpPage : VBoxContainer
 		_pool = FightScene.LoadAbilityPool();
 		_opponents = DevJump.Opponents();
 		Targets = DevJump.Targets();
-		Fight = Fight with { Temperament = DevJump.Temperaments(DevJump.FighterOf(Fight)).FirstOrDefault() };
+		Fight = Fight with { Temperament = DevJump.Temperaments(DevJump.PlaysAsOf(Fight)).FirstOrDefault() };
 		Draft = Draft with { Yokai = DevJump.DraftYokai(_pool).FirstOrDefault() ?? "kitsune" };
 		Build();
 		Ready += () => MenuInput.WrapVertical(_focus.Where(c => c.FocusMode != FocusModeEnum.None).ToArray());
@@ -163,7 +163,7 @@ public partial class DevJumpPage : VBoxContainer
 		_elder.SetPressedNoSignal(Fight.Elder);
 		_twistLine.Text = elder is null || tanuki ? "no elder" : $"{elder.Name}: {elder.Twist} ({DevJump.TwistNotBuilt})";
 
-		string fighter = DevJump.FighterOf(Fight);
+		string fighter = DevJump.PlaysAsOf(Fight); // YOK-174: whose profiles
 		var temps = DevJump.Temperaments(fighter);
 		Fill(_temperament, temps.Select(t => (t, true)));
 		int ti = Fight.Temperament is { } want ? temps.ToList().IndexOf(want) : -1;

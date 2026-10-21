@@ -1270,6 +1270,29 @@ public static class SaveTests
 		}, seed: 73);
 	});
 
+	/// <summary>YOK-174, Y1/Y2 + M5: a node's rolled temperament comes from the run's saved seed, so Continue inside the node fights the same profile.</summary>
+	[Test]
+	public static void Continue_InsideANode_FightsTheSameRolledTemperament_M5(Node runner) => WithTempFile(path =>
+	{
+		string node = "", profile = "", temperament = "";
+		WithBoot(runner, path, flow =>
+		{
+			(node, _, _, _) = SaveInsideRow2(flow);
+			var f = flow.Fight!;
+			temperament = f.Temperament;
+			profile = f.P2Ai!.Profile.Id;
+			Assert.Equal(NodeTemperament.Roll(flow.Session!.Seed, node), temperament, "the node fights its rolled temperament");
+			Assert.True(flow.ReturnToTitle(), "quit inside the node");
+		}, seed: 73);
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			Assert.True(flow.Session!.Node?.NodeId == node, "Continue loads the node it was saved in");
+			Assert.Equal(temperament, flow.Fight!.Temperament, "same temperament after Continue (M5)");
+			Assert.Equal(profile, flow.Fight.P2Ai!.Profile.Id, "same profile after Continue (M5)");
+		}, seed: 73);
+	});
+
 	[Test]
 	public static void Title_OlderVersionSave_IsContinued_OnTheRightNode(Node runner) => WithTempFile(path =>
 	{

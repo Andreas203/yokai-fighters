@@ -220,7 +220,8 @@ public static class DemoFlowTests
 	[Test]
 	public static void DebugMenu_SwitchesTemperament(Node runner) => WithScene(runner, s =>
 	{
-		Assert.Equal("aggressive", s.Temperament, "aggressive by default");
+		// YOK-174 (Y1/Y2): no fixed default any more; the node plays its seeded 50/50 roll (the demo's run seed varies)
+		Assert.Equal(Ai.NodeTemperament.Roll(s.Session!.Seed, s.Node!.NodeId), s.Temperament, "the node's rolled temperament by default");
 		Assert.True(s.SetTemperament("patient"), "patient exists");
 		Assert.Equal("patient", s.P2Ai!.Profile.Temperament, "AI rebuilt as patient");
 		Assert.True(!s.SetTemperament("sleepy"), "unknown temperament refused");

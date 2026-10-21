@@ -64,12 +64,36 @@ public partial class FightScene
 	/// <summary>YOK-77: the node's fighter's profiles, starting on the node's profile when it names one.</summary>
 	private void LoadNodeProfiles()
 	{
-		Profiles = LoadProfiles(Opponent);
-		if (Node?.Profile is not { } id) return;
-		int i = Array.FindIndex(Profiles, p => p.Id == id);
-		if (i >= 0) _profileIndex = i;
-		else GD.PushWarning($"FightScene: node '{Node.NodeId}' names profile '{id}', which {Opponent} does not have; using {Profiles[_profileIndex % Profiles.Length].Id}");
+		Profiles = LoadProfiles(Node is { } n && n.Fighter == Opponent ? n.MovesAndProfilesOf : Opponent); // YOK-174: the yokai's own profiles
+		_nodeProfileError = null;
+		if (Node is null || Profiles.Length == 0) return;
+		try
+		{
+			// YOK-174 (designer 2026-10-21): a named profile that is not the yokai's own (the apprentice's) comes from all of data/profiles/
+			Profiles = NodeProfiles.WithNamed(Node.NodeId, Profiles, Node.Profile, BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")));
+		}
+		catch (InvalidOperationException e)
+		{
+			_nodeProfileError = "FightScene: " + e.Message; // refused in RebuildAi, never a fallback profile
+			return;
+		}
+		if (Node.Profile is null && DebugTemperament is { } t && Array.FindIndex(Profiles, p => p.Temperament == t) is var d and >= 0)
+		{
+			_profileIndex = d; // E23: the temperament chosen in the debug menu holds over the roll
+			return;
+		}
+		// YOK-174, Y1/Y2: the node's named profile, else its seeded 50/50 temperament (same seed, same temperament; M5).
+		_profileIndex = Math.Max(0, NodeTemperament.Pick(Profiles, Node, Session?.Seed ?? 0)); // a named profile is in Profiles now
 	}
+
+	/// <summary>YOK-174: the node names a profile found nowhere; <see cref="RebuildAi"/> refuses the fight.</summary>
+	private string? _nodeProfileError;
+
+	/// <summary>YOK-174: why the AI could not be built (a profile names a move P2's kit lacks); null when it was. The fight does not run then.</summary>
+	public string? AiSetupError { get; private set; }
+
+	/// <summary>E23 debug: the temperament last chosen in the debug menu (F6/F9, --temperament=); null = each node rolls its own (YOK-174).</summary>
+	public string? DebugTemperament { get; private set; }
 
 	/// <summary>New AI over the current match (fight start, reset, temperament swap): empty delay buffer.</summary>
 	public void RebuildAi()
@@ -79,7 +103,25 @@ public partial class FightScene
 			var profile = Profiles[_profileIndex % Profiles.Length];
 			var pressure = Pressure;
 			int reaction = pressure.ReactionFrames(Node?.ReactionFrames ?? profile.ReactionFrames); // Y4: the node's row, Y5: minus Tanuki wins
-			P2Ai = new ProfileAi(profile, 1, AiLoadout.From(Match.P2), AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
+			var loadout = AiLoadout.From(Match.P2);
+			// YOK-174: on the real content a named move the kit lacks is an error, not a silent skip. TEST FIXTURE kits
+			// (Sources.FixturesOnly, MovesDir empty) never match the real profiles' move ids, so they are not checked.
+			string? why = _nodeProfileError;
+			if (why is null && !string.IsNullOrEmpty(Sources.MovesDir) && loadout.Missing(profile) is { Count: > 0 } missing)
+				why = $"FightScene: profile '{profile.Id}' names {string.Join(", ", missing)}, which P2's kit does not have";
+			if (why is not null)
+			{
+				// A throw here would be swallowed by Godot's callback and leave the scene half set up: refuse the fight
+				// instead. P2 has no AI, the clock stops, and the boot flow sends the player back to the title.
+				AiSetupError = why;
+				GD.PushError(AiSetupError);
+				P2Ai = null;
+				SetProcess(false);
+				Recorder?.OnAi(null, AiSeed);
+				return;
+			}
+			if (AiSetupError is not null) { AiSetupError = null; SetProcess(true); } // a refused node is behind us (restart, next node)
+			P2Ai = new ProfileAi(profile, 1, loadout, AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
 		}
 		else P2Ai = null;
 		Recorder?.OnAi(P2Ai, AiSeed); // YOK-49
@@ -94,6 +136,7 @@ public partial class FightScene
 	{
 		if (Profiles.Length == 0) return;
 		_profileIndex = (_profileIndex + 1) % Profiles.Length;
+		DebugTemperament = Profiles[_profileIndex].Temperament;
 		RebuildAi();
 		GD.Print($"FightScene: P2 AI profile {Profiles[_profileIndex].Id} ({Profiles[_profileIndex].Temperament})");
 	}

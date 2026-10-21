@@ -10,7 +10,7 @@
     "kind": { "const": "profile" },
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "status": { "$ref": "common.schema.json#/$defs/status" },
-    "yokai": { "enum": ["kitsune", "oni", "kappa", "tanuki"] },
+    "yokai": { "enum": ["kitsune", "oni", "kappa", "tanuki", "apprentice"], "description": "Whose profile it is. 'apprentice' (designer 2026-10-21): the row-1 apprentice's own profile; the node names it with 'profile' and plays as the Kitsune for body and kit, so it is never one of the Kitsune's temperaments." },
     "temperament": { "enum": ["aggressive", "patient", "boss"], "description": "'boss' only for the Tanuki." },
     "reaction": {
       "description": "Reaction-time tier and its frames (Y4). Y5 shaves 1 frame per Tanuki win at runtime; not stored here.",

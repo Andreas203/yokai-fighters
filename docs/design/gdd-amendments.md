@@ -251,3 +251,19 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 |---|---|---|
 | GDD modifier table (§ modifiers), Slippery Skin | "Throw-invulnerable during startup." | "Automatically breaks a throw attempted during this move's startup: a clash, no damage, like throw vs throw." |
 | rules.md modifier table | "Throw-invulnerable during startup" | The new line above. |
+
+## AM13 — The apprentice has its own behaviour profile (2026-10-21)
+
+**Status.** Decided by the designer on 2026-10-21 ("the apprentice gets its own profile").
+
+**Decision.** The row-1 apprentice fights with its own behaviour profile (`data/profiles/apprentice.json`, `yokai: "apprentice"`) instead of rolling one of the Kitsune's two temperaments. Its body and kit stay the Kitsune's (`plays_as: "kitsune"` in the node-scene table); the node names the profile, so it is never rolled and never joins the Kitsune's list. That makes 8 profiles: 3 yokai × 2 temperaments + the apprentice + the Tanuki. The apprentice is not a yokai, so Y2's "each yokai: two temperaments" does not apply to it.
+
+**Why.** With the seeded per-node temperament roll, an apprentice that rolled the patient Kitsune held full screen and the fight timed out, which a newcomer's first duel must not do. Work: YOK-174.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §10.4 Schedule and cut gates (p. 12), week 2 row; GDD short §4.6 Schedule and scope, week 2 row | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
+| rules.md G5, W2 | "33 abilities, 7 profiles" | "33 abilities, 8 profiles [AM13]" |
+| rules.md Y1 | "7 profiles: 3 yokai × 2 temperaments + Tanuki." | The new line above, with [AM13]. |

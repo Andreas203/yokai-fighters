@@ -107,6 +107,21 @@ class ValidateDataTest(unittest.TestCase):
             path.write_text(json.dumps(doc), encoding="utf-8")
             return run(path)
 
+    def test_profile_duplicate_id_across_files_fails(self):
+        """YOK-174 (Y1, AM13): a node names a profile by id, so two files with one id fail."""
+        import tempfile
+        text = (SAMPLES / "kitsune-patient.json").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = (Path(tmp) / x / "data" / "profiles" / "kitsune-patient.json" for x in ("a", "b"))
+            for f in (a, b):
+                f.parent.mkdir(parents=True)
+                f.write_text(text, encoding="utf-8")
+            code, out = run(a)
+            self.assertEqual(code, 0, out)
+            code, out = run(a, b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("profile id 'kitsune-patient' is already used by", out)
+
     def test_profile_ex_and_burst_use_optional_and_checked(self):
         # YOK-57 (E16, C6): both blocks optional (absent = no meter use), shape checked when present.
         self.assertEqual(self._profile(lambda d: None)[0], 0)
@@ -397,7 +412,7 @@ class ValidateDataTest(unittest.TestCase):
         code, out = self._map(other_layout)
         self.assertEqual(code, 0, out)
 
-    def _node_scenes(self, edit, with_map=True):
+    def _node_scenes(self, edit, with_map=True, with_profiles=False):
         """data/map/node-scenes.json with one edit, validated from a temp data/map/ folder next to the default map."""
         import json, shutil, tempfile
         doc = json.loads((ROOT / "data" / "map" / "node-scenes.json").read_text(encoding="utf-8"))
@@ -408,7 +423,26 @@ class ValidateDataTest(unittest.TestCase):
             path.write_text(json.dumps(doc), encoding="utf-8")
             if with_map:
                 shutil.copy(ROOT / "data" / "map" / "default-map.json", path.parent)
+            if with_profiles:  # YOK-174: the plays_as check reads <data>/profiles/ next to the file
+                shutil.copytree(ROOT / "data" / "profiles", Path(tmp) / "data" / "profiles")
             return run(path)
+
+    def test_node_scenes_every_opponent_and_map_yokai_plays_as_a_profiled_yokai(self):
+        """YOK-174 (Y1): opponents and every yokai a run map names must play as a yokai with a behaviour profile."""
+        self.assertEqual(self._node_scenes(lambda d: None, with_profiles=True)[0], 0)
+        cases = [
+            (lambda d: d["opponents"]["elder-oni"].update(plays_as="onii"), "'elder-oni' plays as 'onii'"),
+            (lambda d: d["opponents"].pop("elder-kappa"), "node 'r8-elder-kappa'"),
+            # AM13: with no opponents entry the apprentice plays as itself, which now has a profile, so that is no
+            # longer an error; a misspelt plays_as and a named profile that does not exist are.
+            (lambda d: d["opponents"]["apprentice"].update(plays_as="apprenticee"), "'apprentice' plays as 'apprenticee'"),
+            (lambda d: d["opponents"]["apprentice"].update(profile="no-such-profile"), "profile 'no-such-profile' is not in"),
+            (lambda d: d["opponents"]["kitsune"].update(plays_as="oni"), "plays_as"),
+        ]
+        for edit, expect in cases:
+            code, out = self._node_scenes(edit, with_profiles=True)
+            self.assertEqual(code, 1, out)
+            self.assertIn(expect, out)
 
     def test_node_scenes_validate_and_cover_the_maps(self):
         self.assertEqual(self._node_scenes(lambda d: None)[0], 0)

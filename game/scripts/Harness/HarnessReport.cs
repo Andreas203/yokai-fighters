@@ -63,8 +63,9 @@ public static class HarnessReport
 	}
 
 	public const string Caveats =
-		"Not representative yet: every yokai except the Kitsune and the Tanuki fights as a Kitsune stand-in (node-scenes.json fallback_fighter), " +
-		"so the Oni's own normals (in data/moves) and the Kappa are not played yet; the apprentice's half damage (Y4, YOK-156) is applied; the bot never takes the dojo trial (YOK-98) and shops " +
+		"Not representative yet: every yokai except the Kitsune and the Tanuki fights on the Kitsune's kit (node-scenes.json fallback_fighter), " +
+		"but with its own behaviour profiles and its own move files where data/moves has them (YOK-174: the Oni's five normals are in his kit but unused until his profiles name them, so Oni fights are throw-only for now; the Kappa has none, so it fights with its profiles' generic actions (walk, dash, block, throw) on the Kitsune's normals and throw, and neither has a special);" +
+		"each node's temperament is a seeded 50/50 roll from the run seed and node id unless node-scenes.json names a profile (see fight_mix); the apprentice's half damage (Y4, YOK-156) is applied; the bot never takes the dojo trial (YOK-98) and shops " +
 		"only when its config says so (the default newcomer heals at the merchant and rests at the dojo, R4's line), and fight time excludes menus (run length adds menu_seconds_per_node per node).";
 
 	/// <summary>The summary block alone (also printed by the command-line entry).</summary>
@@ -142,6 +143,7 @@ public static class HarnessReport
 		foreach (var g in runs.GroupBy(r => string.Join(">", r.Nodes.Select(x => x.Id))).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.Ordinal).Take(10))
 			w.WriteNumber(g.Key, g.Count());
 		w.WriteEndObject();
+		WriteFightMix(w, runs);
 		FightLogReport.WriteSummary(w, runs.SelectMany(r => r.Nodes).Where(x => x.Fight is not null).Select(x => x.Fight!)); // YOK-157: P5, P6/Y2
 		WriteLevels(w, runs);
 		w.WriteEndObject();
@@ -226,6 +228,33 @@ public static class HarnessReport
 		w.WriteEndObject();
 	}
 
+	/// <summary>
+	/// YOK-174: who the batch actually fought, so coverage is visible: one row per node tier × yokai (as the map names
+	/// it) × plays-as yokai × profile × fighter body, with fights and wins, in tier order then by name.
+	/// </summary>
+	static void WriteFightMix(Utf8JsonWriter w, List<RunRecord> runs)
+	{
+		string[] tiers = { "apprentice", "yokai", "elder", "tanuki" };
+		int TierOrder(string t) => Array.IndexOf(tiers, t) is var i and >= 0 ? i : tiers.Length;
+		w.WriteStartArray("fight_mix");
+		foreach (var g in runs.SelectMany(r => r.Nodes).Where(x => x.Fight is not null)
+			.GroupBy(x => (x.Tier, Yokai: x.Yokai ?? "", x.PlaysAs, x.Fight!.Profile, x.Fighter))
+			.OrderBy(g => TierOrder(g.Key.Tier)).ThenBy(g => g.Key.Tier, StringComparer.Ordinal)
+			.ThenBy(g => g.Key.Yokai, StringComparer.Ordinal).ThenBy(g => g.Key.PlaysAs, StringComparer.Ordinal).ThenBy(g => g.Key.Profile, StringComparer.Ordinal).ThenBy(g => g.Key.Fighter, StringComparer.Ordinal))
+		{
+			w.WriteStartObject();
+			w.WriteString("tier", g.Key.Tier);
+			w.WriteString("yokai", g.Key.Yokai);
+			w.WriteString("plays_as", g.Key.PlaysAs);
+			w.WriteString("profile", g.Key.Profile);
+			w.WriteString("fighter", g.Key.Fighter);
+			w.WriteNumber("fights", g.Count());
+			w.WriteNumber("won", g.Count(x => x.Fight!.Won));
+			w.WriteEndObject();
+		}
+		w.WriteEndArray();
+	}
+
 	static void WriteNode(Utf8JsonWriter w, NodeRecord x)
 	{
 		w.WriteStartObject();
@@ -234,6 +263,7 @@ public static class HarnessReport
 		w.WriteString("type", x.Type);
 		if (x.Yokai is null) w.WriteNull("yokai"); else w.WriteString("yokai", x.Yokai);
 		w.WriteString("fighter", x.Fighter);
+		if (x.PlaysAs.Length > 0) w.WriteString("plays_as", x.PlaysAs); // YOK-174
 		w.WriteString("tier", x.Tier);
 		w.WriteBoolean("stand_in", x.StandIn);
 		w.WriteString("action", x.Action);
