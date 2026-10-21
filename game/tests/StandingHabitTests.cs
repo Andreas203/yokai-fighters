@@ -239,13 +239,18 @@ public static class StandingHabitTests
 				int from = 0, pendingTick = -1;
 				FighterState prevState = m.P2.State;
 				string? prevMove = null;
+				int prevFrame = 0;
 				for (int i = 0; i < 20000; i++)
 				{
 					var b = ai.Next(AiView.Capture(m));
+					bool emitting = ai.HabitPlanRunning; // the press came from the habit plan, not a later neutral pick
 					m.Step(p1(m), b);
 					var v = AiView.Capture(m).Fighter(1);
-					bool moveStart = v.State == FighterState.Attack && v.MoveId == move && (prevState != FighterState.Attack || prevMove != move || v.MoveFrame <= 1);
-					prevState = v.State; prevMove = v.MoveId;
+					bool anyStart = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
+					// Code-critic r3: while a habit is pending, no other move may start (a buffered normal in place of the throw).
+					Assert.True(!(anyStart && pendingTick >= 0 && v.MoveId != move), $"{id} seed {seed}: {v.MoveId} started at {m.Tick} while the habit from {pendingTick} was pending");
+					bool moveStart = anyStart && v.MoveId == move && emitting;
+					prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
 					for (; from < log.Count; from++)
 					{
 						var d = log[from];
@@ -271,6 +276,111 @@ public static class StandingHabitTests
 			Assert.True(fired >= 30, $"{id}: habits fired under random pressure ({fired})");
 			Assert.Equal(fired - replaced - roundEnd, started, $"{id}: every fired habit starts its move");
 		}
+	}
+
+	/// <summary>
+	/// Code-critic r3 (Y2, designer: a fired habit always comes out): Ryo blocks until the Tanuki's throw habit fires, then
+	/// hits it the moment his blockstun ends (light kick, every tick he can), so it is hit or blocking inside its reaction window (40 here, longer than his blockstun), unseen
+	/// when its press is released. The first move it starts after the fire is the throw, never a buffered normal.
+	/// </summary>
+	[Test]
+	public static void Tanuki_HitRightAfterItsThrowHabitFires_StillThrows()
+	{
+		var p = Profile("tanuki-boss");
+		const string Throw = "ryo-generic-throw";
+		int fires = 0, throws = 0, interrupted = 0, cut = 0;
+		for (uint seed = 1; seed <= 4; seed++)
+		{
+			var m = NewMatch("ryo");
+			int kick = Array.FindIndex(m.P1.Moves, mv => mv.Id == "ryo-light-kick");
+			Assert.True(kick >= 0, "Ryo's light kick is in his kit");
+			var log = new List<AiDecision>();
+			var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 3100 + seed, reactionFrames: 40, tier: AiFightTier.Tanuki) { Log = log }; // slower than Ryo's blockstun, so he can hit it inside the window
+			int seen = 0, pendingTick = -1, pendingView = -1, prevFrame = 0, kickUntil = -1, lastStun = -1;
+			bool wasBlocking = false;
+			FighterState prevState = m.P2.State;
+			string? prevMove = null;
+			for (int i = 0; i < 30000 && m.Phase == MatchPhase.Fighting; i++)
+			{
+				var b = ai.Next(AiView.Capture(m));
+				var fire = log.LastOrDefault(d => d.Kind == "habit");
+				int fired = log.Count(d => d.Kind == "habit");
+				if (fired > seen) { seen = fired; fires++; pendingTick = m.Tick; pendingView = fire.ViewTick; }
+				// Ryo blocks; the moment his blockstun ends he kicks for 20 ticks, inside the Tanuki's reaction window, so the
+				// Tanuki is hit or blocking after the screen its habit roll is decided from.
+				if (wasBlocking && m.P1.State != FighterState.Blockstun) kickUntil = m.Tick + 20;
+				wasBlocking = m.P1.State == FighterState.Blockstun;
+				var back = m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right;
+				bool inReach = Math.Abs(m.P2.X - m.P1.X) / SimConfig.Scale < 130;
+				var fwd = m.P1.X < m.P2.X ? InputBits.Right : InputBits.Left;
+				var a = m.Tick < kickUntil ? (!m.P1.Actionable ? FighterInput.None : inReach ? FighterInput.Attack(kick) : new FighterInput(fwd)) : new FighterInput(back);
+				m.Step(a, b);
+				var v = AiView.Capture(m).Fighter(1);
+				if (v.State is FighterState.Hitstun or FighterState.Blockstun) lastStun = m.Tick;
+				bool start = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
+				if (start && pendingTick >= 0)
+				{
+					Assert.Equal(Throw, v.MoveId, $"seed {seed}: the first move after the habit fired at {pendingTick} is the throw (tick {m.Tick})");
+					throws++; if (lastStun >= pendingView) interrupted++;
+					pendingTick = -1;
+				}
+				prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
+			}
+			if (pendingTick >= 0) cut++;
+		}
+		GD.Print($"YOK-177 r3 tanuki hit after fire: {fires} fires, {throws} throws, {interrupted} of them after being hit or blocking, {cut} cut by the end");
+		Assert.True(fires >= 10, $"habits fired ({fires})");
+		Assert.Equal(fires - cut, throws, "every fire threw");
+		Assert.True(interrupted >= 3, $"some were hit or blocked before they could act ({interrupted})");
+	}
+
+	/// <summary>
+	/// Code-critic r3: the YOK-165 anti-air with a throw answer (the Kappa's, on the Kitsune kit) under random pressure.
+	/// The Kappa profile names no normal, so any Kitsune normal it starts is a throw press turned into a buffered normal.
+	/// Under the YOK-177 rule the throw answer is a slot request, so no normal starts within 60 ticks of a throw answer
+	/// (windows where it also threw on the raw buttons, from neutral or a reaction, are skipped).
+	/// </summary>
+	[Test]
+	public static void ThrowJumpAnswer_IsNeverSubstitutedByANormal()
+	{
+		var p = Profile("kappa-patient");
+		Assert.True(p.Behaviours.Any(b => b.When == Observation.OpponentJumping && b.Do.Kind == ActionKind.Throw), "the Kappa answers a jump with the throw");
+		int Run(bool rule, out int answers)
+		{
+			int subs = 0; answers = 0;
+			for (uint seed = 1; seed <= 4; seed++)
+			{
+				var m = NewMatch("kitsune", jumpPunishPct: 100);
+				var log = new List<AiDecision>();
+				int round = 0, from = 0, answerTick = -1, prevFrame = 0;
+				ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 4200 + seed + (uint)round * 7919u, standingHabits: rule) { Log = log };
+				var ai = NewAi();
+				var p1 = RandomP1(seed + 40);
+				FighterState prevState = m.P2.State;
+				string? prevMove = null;
+				for (int i = 0; i < 20000; i++)
+				{
+					var b = ai.Next(AiView.Capture(m));
+					m.Step(p1(m), b);
+					for (; from < log.Count; from++)
+					{
+						var d = log[from];
+						if (d.Kind == "react" && d.Trigger == "opponent_jumping" && d.Action == "throw") { answers++; answerTick = d.Tick; }
+						else if (d.Action == "throw" && d.Kind is "neutral" or "react" or "habit") answerTick = -1; // a raw-button throw: not this test's
+					}
+					var v = AiView.Capture(m).Fighter(1);
+					bool start = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
+					if (start && answerTick >= 0 && m.Tick - answerTick <= 60 && v.MoveId != AiLoadout.From(m.P2).ThrowMoveId) subs++;
+					prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
+					if (m.Phase == MatchPhase.Over) { m.Reset(); round++; ai = NewAi(); from = log.Count; answerTick = -1; prevState = m.P2.State; prevMove = null; }
+				}
+			}
+			return subs;
+		}
+		int now = Run(true, out int answersNow), old = Run(false, out int answersOld);
+		GD.Print($"YOK-177 r3 throw anti-air: {answersNow} throw answers, {now} substituted normals (old rule: {answersOld} answers, {old} substituted)");
+		Assert.True(answersNow >= 20, $"throw answers under random pressure ({answersNow})");
+		Assert.Equal(0, now, "no normal comes out in place of a throw answer");
 	}
 
 	static bool IsJumpAnswer(AiDecision d) => d.Kind == "react" && d.Trigger == "opponent_jumping" && d.Action.StartsWith("normal:");

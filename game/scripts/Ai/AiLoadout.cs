@@ -28,6 +28,15 @@ public sealed class AiLoadout
 	/// <summary>YOK-165: total frames of a special action's EX version; false if it has none.</summary>
 	public bool TryGetExFrames(AiAction a, out int frames) => _exActionFrames.TryGetValue(a.ToString(), out frames);
 	public int ThrowFrames { get; private set; }
+	/// <summary>YOK-177: the throw's move id and its slot in the kit (null / -1 = no throw).</summary>
+	public string? ThrowMoveId { get; private set; }
+	public int ThrowSlot { get; private set; } = -1;
+	/// <summary>
+	/// YOK-177: the throw as a direct slot request (like the normals' <see cref="FighterInput.Attack"/>), for held presses.
+	/// A request on a tick the fighter cannot act is ignored and buffers nothing, unlike the raw throw buttons, whose press
+	/// edge buffers a normal command that comes out instead once the fighter can act (Match.cs: the throw needs a fresh edge).
+	/// </summary>
+	public FighterInput ThrowRequest => ThrowSlot < 0 ? FighterInput.None : FighterInput.Attack(ThrowSlot);
 
 	public static AiLoadout From(Fighter f)
 	{
@@ -36,7 +45,7 @@ public sealed class AiLoadout
 		{
 			var m = f.Moves[i];
 			l._frames.TryAdd(m.Id, m.TotalFrames);
-			if (m.IsThrow) { if (l.ThrowButtons == InputBits.None) { l.ThrowButtons = m.ThrowButtons; l.ThrowFrames = m.TotalFrames; } }
+			if (m.IsThrow) { if (l.ThrowButtons == InputBits.None) { l.ThrowButtons = m.ThrowButtons; l.ThrowFrames = m.TotalFrames; l.ThrowMoveId = m.Id; l.ThrowSlot = i; } }
 			else if (m.IsNormal && !m.Air) l._moves.TryAdd("normal:" + m.Id, (FighterInput.Attack(i), m.TotalFrames));
 		}
 		for (int s = 1; s < f.Specials.Length; s++)

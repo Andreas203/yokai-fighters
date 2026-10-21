@@ -90,6 +90,8 @@ public sealed class ProfileAi
 	private int _ownPressTick = -1, _ownPressFrames;
 	/// <summary>YOK-177: the view tick of the last standing-trigger habit roll (-1 = none yet).</summary>
 	private int _standingRollTick = -1;
+	/// <summary>YOK-177: a fired standing habit a burst interrupted; it is resumed when the burst plan ends.</summary>
+	private Plan? _resume;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
@@ -118,7 +120,7 @@ public sealed class ProfileAi
 		AiView? prev = _prev;
 		_prev = view;
 
-		if (view.Phase != MatchPhase.Fighting) { _plan = null; return FighterInput.None; }
+		if (view.Phase != MatchPhase.Fighting) { _plan = null; _resume = null; return FighterInput.None; }
 
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
 		bool[] rose = _rose;
@@ -130,6 +132,7 @@ public sealed class ProfileAi
 			// YOK-57 (C6, E13): a burst out of a combo the AI sees itself in comes before everything else.
 			if (Burst(prev, view, s, tick) is { } burst)
 			{
+				if (_plan is { StandingHabit: true, Done: false } fired) _resume = fired; // YOK-177: the fired habit comes out after the burst
 				_plan = burst;
 				_ownPressTick = tick; _ownPressFrames = Math.Max(1, view.BurstFrames); // YOK-165: busy until press + BurstFrames
 				return _plan.Emit();
@@ -154,12 +157,12 @@ public sealed class ProfileAi
 				// YOK-177 (designer 2026-10-21: a fired habit always comes out): a standing-trigger habit is a held press like
 				// YOK-165's anti-air. Its wait is open-ended and released only when the latest screen predicts the AI free
 				// (re-checked every tick, so a re-hit or a longer stun keeps it waiting); see HabitPress for the press itself.
-				_plan = Build(h.Do, view, tick, true, standing ? int.MaxValue : wakeUp ? Math.Max(0, wake - tick) : 0);
+				_plan = Build(h.Do, view, tick, true, standing ? int.MaxValue : wakeUp ? Math.Max(0, wake - tick) : 0, heldThrow: standing);
 				if (standing && _plan is not null)
 				{
 					_plan.StandingHabit = true;
 					_plan.PressStep = 1; // Build puts the wait in step 0, the press in step 1
-					_plan.AnswerMoveId = h.Do.Kind == ActionKind.Throw ? null : h.Do.MoveId;
+					_plan.AnswerMoveId = h.Do.Kind == ActionKind.Throw ? _kit.ThrowMoveId : h.Do.MoveId; // code-critic r3: a substituted normal is not the throw
 					_plan.HoldPress(PressWindow(_plan, view));
 				}
 			}
@@ -211,6 +214,7 @@ public sealed class ProfileAi
 			bool shown = view.Tick >= rp.ReleaseTick && AnswerShown(rp, s, prev);
 			if (shown || !o.Airborne || tick - rp.ReleaseTick >= rp.Window) rp.EndPress(AnswerEnd(rp, view, s, shown) - tick);
 		}
+		if ((_plan is null || _plan.Done) && _resume is { } back) { _plan = back; _resume = null; if (back.InPress) back.Paused = true; } // YOK-177: HabitPress decides
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
 		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
 		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
@@ -248,11 +252,11 @@ public sealed class ProfileAi
 		// The wait is open-ended: Next releases it once the latest screen predicts the AI free (hitstop from a later hit,
 		// e.g. its own projectile's second hit, only shows on a later screen).
 		bool wait = FirstActionableTick(view) > tick;
-		var p = Build(pick.Do, view, tick, false, wait ? int.MaxValue : 0);
+		var p = Build(pick.Do, view, tick, false, wait ? int.MaxValue : 0, heldThrow: StandingHabits); // YOK-177: a throw answer is a slot request (old recordings: the raw buttons)
 		if (p is not null && wait)
 		{
 			p.PressStep = 1; // Build puts the wait in step 0, the press in step 1
-			p.AnswerMoveId = pick.Do.Kind == ActionKind.Throw ? null : pick.Do.MoveId;
+			p.AnswerMoveId = pick.Do.Kind == ActionKind.Throw ? (StandingHabits ? _kit.ThrowMoveId : null) : pick.Do.MoveId;
 			// A hit the AI cannot see yet (its own projectile's next hit) can add hitstop after the screen it predicted from,
 			// so the press is repeated for up to the answer's length minus one: the sim takes it on the first actionable tick
 			// and ignores the rest while the move plays (a slot request needs an actionable fighter; no cancels into one).
@@ -282,6 +286,10 @@ public sealed class ProfileAi
 	/// The press stops (no more repeats) when its window is spent or the screen shows a new hit or block on the AI; then,
 	/// once the screen has covered the whole window with no start (the press landed while the AI was busy, unseen), the
 	/// plan goes back to its open-ended wait and presses again when the latest screen predicts the AI free. No draw.
+	/// Code-critic r3: a throw habit (and, under the YOK-177 rule, a throw jump answer) is pressed as the throw's slot
+	/// request (<see cref="AiLoadout.ThrowRequest"/>), so a press while busy buffers no normal that could come out in its
+	/// place, and its start is checked by the throw's own move id, so another move on screen is never taken for it.
+	/// A burst that interrupts the plan resumes it afterwards (<c>_resume</c>).
 	/// </summary>
 	private void HabitPress(Plan hp, AiView view, FighterView s, AiView? prev, int tick)
 	{
@@ -393,7 +401,7 @@ public sealed class ProfileAi
 	/// </summary>
 	private bool StandingHabitDue(AiView view, FighterView s, FighterView o)
 	{
-		if (!StandingHabits || !Holds(Profile.Habit.When, RangeOf(s, o), o) || HabitPlanRunning) return false;
+		if (!StandingHabits || !Holds(Profile.Habit.When, RangeOf(s, o), o) || HabitPlanRunning || _resume is not null) return false;
 		if (_plan is { PressStep: >= 0, Done: false }) return false; // a held jump answer (YOK-165) is not overwritten
 		// A clock that went back (the match was reset under this AI) re-arms it.
 		if (_standingRollTick >= 0 && view.Tick >= _standingRollTick && view.Tick - _standingRollTick < StandingHabitRearmTicks) return false;
@@ -401,7 +409,7 @@ public sealed class ProfileAi
 		return true;
 	}
 
-	private Plan? Build(AiAction a, AiView view, int tick, bool habit, int preHold)
+	private Plan? Build(AiAction a, AiView view, int tick, bool habit, int preHold, bool heldThrow = false)
 	{
 		var (fwd, back) = Dirs(view.Fighter(Self), view.Fighter(1 - Self));
 		var none = FighterInput.None;
@@ -414,7 +422,7 @@ public sealed class ProfileAi
 			ActionKind.Jump => new[] { (new FighterInput(InputBits.Up), 2), (none, SimConfig.Default.JumpFrames) },
 			ActionKind.Block => new[] { (new FighterInput(back), BlockTicks) },
 			ActionKind.CrouchBlock => new[] { (new FighterInput(back | InputBits.Down), BlockTicks) },
-			ActionKind.Throw => _kit.ThrowButtons == InputBits.None ? null : new[] { (new FighterInput(_kit.ThrowButtons), 1), (none, _kit.ThrowFrames) },
+			ActionKind.Throw => _kit.ThrowButtons == InputBits.None ? null : new[] { (heldThrow ? _kit.ThrowRequest : new FighterInput(_kit.ThrowButtons), 1), (none, _kit.ThrowFrames) },
 			_ => _kit.TryGet(a, out var input, out int frames) ? MoveSteps(a, input, frames, view, tick) : null,
 		};
 		if (steps is null) return null;
