@@ -1,6 +1,6 @@
 # Process: daily review queue
 
-The designer reviews code once a day, not per ticket. This page says where finished code waits and in what order it is read. Digest format: `docs/digest_template.md`.
+The designer reviews code once a day, not per ticket. This page says where finished code waits and in what order it is read. Digest format: `docs/process/digest-template.md`.
 
 ## Linear facts
 - The team `Yokai-fighters` has these statuses only: Backlog, Todo, In Progress, Done, Canceled, Duplicate. There is **no review status**.
@@ -13,7 +13,7 @@ A ticket is **in the review queue** when all of these hold:
 3. Build and tests are green, Code Critic is PASS and Test Breaker is PASS (the goal agent applies the same two gates itself).
 4. A comment on the ticket says `READY FOR REVIEW` with the PR number, the gate verdicts and the open probe findings, if any.
 
-The producer reads the queue from that comment plus the open PR list; no extra Linear field is needed. Proposed (designer decision, not created): a label `ready-for-review`, added at step 4 and removed on merge, so the queue becomes one Linear filter.
+At step 4 the ticket also gets the Linear label `ready-for-review` (created 2026-10-20, YOK-37), removed on merge, so the queue is one Linear filter. The producer reads the queue from that filter plus the open PR list.
 
 Tickets with a failed gate are not in the queue: they go back to the author with the findings and stay In Progress with no `READY FOR REVIEW` comment.
 
@@ -27,11 +27,10 @@ Within the daily batch, review in this order:
 Stacked branches are reviewed base first.
 
 ## Cadence
-- Three production runs a day; the producer posts one digest at the end of the last run (template in `docs/digest_template.md`).
+- Three production runs a day; the producer posts one digest at the end of the last run (template in `docs/process/digest-template.md`).
 - Review budget is about 60 h across the build, so the queue is capped at what fits one sitting; the producer flags overflow in the digest instead of dropping tickets.
 - Data merges (after schema, Rules Lawyer and harness checks) skip the queue and are only listed in the digest. Code never merges without the designer.
 
-## Designer decisions needed
-- Create the `ready-for-review` label (or keep the comment-only convention above).
+## Open for the designer
 - Confirm the review order and the queue cap.
-- Where the daily digest lives: a comment on the epic F ticket (per YOK-37), and whether decisions in it are also appended to `docs/decision-log.md`.
+- Where the daily digest lives: a comment on the epic F ticket (per YOK-37). Decisions made in it are recorded as `change-tracking.md` says.

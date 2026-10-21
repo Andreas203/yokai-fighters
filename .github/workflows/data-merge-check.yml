@@ -1,5 +1,5 @@
 name: data-merge-check
-# YOK-34: a pull request that touches data/ runs the data merge check (docs/pipeline.md):
+# YOK-34: a pull request that touches data/ runs the data merge check (docs/process/data-merge-check.md):
 # schema -> rules -> whole-run harness (200 runs) -> headless test suite, after a fresh build,
 # stopping at the first failure. The verdict is advisory. Nothing here merges: the designer reviews
 # and merges every PR.

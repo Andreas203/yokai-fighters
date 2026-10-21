@@ -27,7 +27,7 @@ Verdicts (exit code):
   4 INCOMPLETE  every step that ran passed, but --only skipped some, --runs was under 200 or --no-build
                 was given: not a merge verdict
   5 NOTHING TO MERGE  --base shows no changed file: no verdict
-Designer decisions 2026-10-17: empty diff, dirty tree and full batch + build (docs/pipeline.md).
+Designer decisions 2026-10-17: empty diff, dirty tree and full batch + build (docs/process/data-merge-check.md).
 
 MERGEABLE is a verdict only. Nothing here merges: the designer still reviews and merges every
 data PR until they say otherwise (CLAUDE.md, Pipeline).
