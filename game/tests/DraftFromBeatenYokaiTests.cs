@@ -11,7 +11,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-178 (A7, A8, A9, R6, R8, M5): a won node's draft comes from the yokai beaten (<see cref="NodeContext.DraftYokai"/>,
 /// the table's <c>plays_as</c>), never from the stand-in body that fights for it (<see cref="NodeContext.Fighter"/>,
-/// the Kitsune today). The shop's "not bound this run" uses the same identity (<see cref="NodeContext.BoundAs"/>).
+/// the Kitsune today). The shop's "not bound this run" uses the same identity (<see cref="NodeContext.DraftYokai"/>; an elder binds its yokai).
 /// </summary>
 public static class DraftFromBeatenYokaiTests
 {
@@ -61,9 +61,9 @@ public static class DraftFromBeatenYokaiTests
 	public static void StandInNodes_FightAsTheKitsuneBody_TheBugsPrecondition()
 	{
 		var oni = Table().Resolve(DefaultMap().Node("r2-oni")).Context;
-		Assert.True(oni is { Fighter: "kitsune", StandIn: true, Yokai: "oni", DraftYokai: "oni", BoundAs: "oni" }, $"r2-oni: body {oni.Fighter}, draft {oni.DraftYokai}");
+		Assert.True(oni is { Fighter: "kitsune", StandIn: true, Yokai: "oni", DraftYokai: "oni", BindingName: "oni" }, $"r2-oni: body {oni.Fighter}, draft {oni.DraftYokai}");
 		var elder = Table().Resolve(DefaultMap().Node("r5-elder-oni")).Context;
-		Assert.True(elder is { Fighter: "kitsune", DraftYokai: "oni", BoundAs: "elder-oni" }, $"r5-elder-oni: draft {elder.DraftYokai}, bound as {elder.BoundAs}");
+		Assert.True(elder is { Fighter: "kitsune", DraftYokai: "oni", BindingName: "elder-oni" }, $"r5-elder-oni: draft {elder.DraftYokai}, card {elder.BindingName}");
 	}
 
 	[Test]
@@ -134,13 +134,28 @@ public static class DraftFromBeatenYokaiTests
 	}
 
 	[Test]
-	public static void Shop_ElderBindsItsOwnId_TheOpenQuestionStaysOpen()
+	public static void Shop_BeatingAnElder_BindsItsYokai()
 	{
-		// rules.md open question: whether binding an elder binds its yokai for the shop. Unchanged: 'elder-oni' as written.
+		// Designer 2026-10-21 (R6): beating an elder binds its yokai. After the Elder Oni the row-7 merchant sells no Oni commons.
 		var pool = FightScene.LoadAbilityPool();
 		var s = At(pool, new[] { "r1-apprentice", "r2-kappa", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kappa" }, "r7-merchant");
-		Assert.Equal("kitsune,apprentice,kappa,elder-oni", string.Join(",", s.BoundYokai()), "no 'oni', and no Kitsune body for the elder");
+		Assert.Equal("kitsune,apprentice,kappa,oni,elder-oni", string.Join(",", s.BoundYokai()), "the Elder Oni binds the Oni (then its own id); no Kitsune body");
+		Assert.True(pool.Modifiers.Any(m => m.Source == "oni" && m.Rarity == "common" && pool.IsAvailable(m)), "the Oni has unlocked commons to withhold");
 		var mods = MerchantShop.ModifierShelfFor(s.Run, pool, s.BoundYokai());
-		Assert.True(mods.Count > 0 && mods.All(m => m.Source == "oni"), "the Oni's commons are still sold (open): " + string.Join(",", mods.Select(m => m.Id)));
+		var specials = MerchantShop.ShelfFor(s.Run, pool, s.BoundYokai());
+		Assert.True(mods.All(m => m.Source != "oni") && specials.All(x => x.Source != "oni"), "no Oni commons on the shelf: " + string.Join(",", mods.Select(m => m.Id)));
+		var nine = Table().Resolve(DefaultMap().Node("r5-nine-tails")).Context;
+		var kappa = Table().Resolve(DefaultMap().Node("r8-elder-kappa")).Context;
+		Assert.True(nine.DraftYokai == "kitsune" && kappa.DraftYokai == "kappa", "Nine-Tails binds the Kitsune, Elder Kappa the Kappa");
+	}
+
+	[Test]
+	public static void BindingCard_NamesTheElder_ElseTheYokai()
+	{
+		// Designer 2026-10-21: elders are named "Elder Oni" on the binding card; the apprentice binds the Kitsune.
+		string Name(string node) => Story.StoryLibrary.DisplayName(Table().Resolve(DefaultMap().Node(node)).Context.BindingName);
+		Assert.Equal("Elder Oni", Name("r5-elder-oni"), "elder");
+		Assert.Equal("Oni", Name("r2-oni"), "duel");
+		Assert.Equal("Kitsune", Name("r1-apprentice"), "apprentice");
 	}
 }

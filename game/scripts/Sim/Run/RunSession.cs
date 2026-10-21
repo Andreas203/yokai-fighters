@@ -248,9 +248,9 @@ public sealed class RunSession
 
 	/// <summary>
 	/// R6: the yokai bound this run, in walk order, once each: for every completed node that binds (R3), the yokai it
-	/// binds as (<see cref="NodeContext.BoundAs"/>, YOK-178: the yokai whose abilities its draft offered, A8, never the
+	/// binds as (<see cref="NodeContext.DraftYokai"/>, YOK-178: the yokai whose abilities its draft offered, A8, never the
 	/// stand-in body), then the yokai the map names there when that is another id (the apprentice: Kitsune, then
-	/// apprentice). An elder binds its own id as written (<c>elder-oni</c>), not its yokai: open for the designer.
+	/// apprentice). An elder binds its yokai (Elder Oni: <c>oni</c>, then <c>elder-oni</c>; designer 2026-10-21).
 	/// Worked out from the walk, so it needs no saved state of its own.
 	/// </summary>
 	public IReadOnlyList<string> BoundYokai()
@@ -260,7 +260,7 @@ public sealed class RunSession
 		{
 			var ctx = Scenes.Resolve(Map.Graph.Node(id)).Context;
 			if (!ctx.Binds) continue;
-			if (!bound.Contains(ctx.BoundAs)) bound.Add(ctx.BoundAs);
+			if (!bound.Contains(ctx.DraftYokai)) bound.Add(ctx.DraftYokai);
 			if (ctx.Yokai is { } yokai && !bound.Contains(yokai)) bound.Add(yokai);
 		}
 		return bound;
