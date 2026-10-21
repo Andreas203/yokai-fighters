@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using YokaiFighters.Fight;
-using YokaiFighters.SaveGame;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Tests;
@@ -20,11 +19,11 @@ public static class DraftFromBeatenYokaiTests
 	static NodeSceneTable Table() => NodeSceneTable.Default(MapDir);
 	static MapGraph DefaultMap() => FileMapSource.Default(MapDir).Load();
 
-	static readonly string[] ToR5 = { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" };
+	internal static readonly string[] ToR5 = { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant" };
 	static readonly string[] ToR8 = { "r1-apprentice", "r2-oni", "r3-oni", "r4-merchant", "r5-elder-oni", "r6-kappa", "r7-dojo" };
 
 	/// <summary>A session that walked <paramref name="walk"/> and has entered <paramref name="node"/>.</summary>
-	static RunSession At(AbilityPool pool, string[] walk, string node, uint seed = 11, NodeSceneTable? table = null)
+	internal static RunSession At(AbilityPool pool, string[] walk, string node, uint seed = 11, NodeSceneTable? table = null)
 	{
 		var g = DefaultMap();
 		var run = RunState.NewRun(pool);
@@ -107,21 +106,6 @@ public static class DraftFromBeatenYokaiTests
 		}
 		Assert.True(elderRare, "the Elder Oni offers the Oni's rare on some seed (A9)");
 	});
-
-	[Test]
-	public static void M5_ContinueIntoTheNode_OffersTheSameCards()
-	{
-		var pool = FightScene.LoadAbilityPool();
-		foreach (var (walk, node) in new[] { (new[] { "r1-apprentice" }, "r2-oni"), (ToR5, "r5-elder-oni"), (new[] { "r1-apprentice", "r2-kappa" }, "r3-kappa") })
-		{
-			var live = At(pool, walk, node, 29);
-			var back = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(live)))).Data.Run!.Restore(pool, DefaultMap(), Table());
-			static string Ids(RunSession s) => string.Join(",", s.WinFight(700)!.Offer.Cards.Select(c => $"{c.Kind}:{c.AbilityId}:{c.Source}"));
-			string a = Ids(live), b = Ids(back);
-			Assert.Equal(a, b, $"{node}: the entry save brings back the same offer");
-			Assert.True(a.Contains(":" + Table().Resolve(DefaultMap().Node(node)).Context.DraftYokai), $"{node}: {a}");
-		}
-	}
 
 	[Test]
 	public static void Shop_BodyIsNeverBound_TheBeatenYokaiIs() => MerchantShopTests.OnFixtures(() =>
