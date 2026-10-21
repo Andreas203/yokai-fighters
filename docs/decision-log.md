@@ -231,4 +231,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **AM13 apprentice profile (Y1):** the apprentice gets its own behaviour profile (`data/profiles/apprentice.json`, `yokai: "apprentice"`), named by its node; it still plays as the Kitsune for body and kit. 8 profiles now. Reason: a patient Kitsune apprentice timed out. YOK-174.
 - **Temperament roll (Y1/Y2, YOK-174):** each yokai node rolls its temperament, seeded per node from the run seed, 50/50 aggressive/patient. A node that names a profile keeps it.
 - **YOK-165 accepted**, with the YOK-176 follow-up.
+- **No round timer (YOK-179):** fights go to KO. The harness's `max_fight_ticks` is only a safety cap, now 108000 ticks (30 min); a fight it stops is a **stall**, its own outcome, never a loss (counted per profile and per level). Still not overridable per bot level (YOK-170).
+- **Exchange ratio means hits (YOK-179):** `exchange_ratio` = unblocked hits landed / taken (null without the hit log); the damage ratio is `damage_ratio`; `hit_exchange_ratio` is dropped. Results before YOK-179 used the old names.
+- **Harness applies elder twists (YOK-179):** elder fights in the harness carry their twist as the fight scene does; elder numbers from batches 1-3 are not comparable.
 - **A late anti-air counts.**

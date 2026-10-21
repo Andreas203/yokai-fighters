@@ -109,7 +109,7 @@ public static class RunHarnessTests
 		Assert.Equal(locked!.Slot, boss!.OpponentCopiedSlot, "T0/T1: the Tanuki fought with TanukiKit and the copy in Ryo's slot");
 		Assert.Equal(15, boss.ReactionFrames, "Y4: the Tanuki reacts in 15 frames");
 		Assert.Equal("tanuki-boss", boss.Profile, "the Tanuki's own profile");
-		Assert.True(boss.Ticks > 0 && (boss.Won || boss.TimedOut || boss.HealthLeft == 0), "the fight ran to an end");
+		Assert.True(boss.Ticks > 0 && (boss.Won || boss.Stalled || boss.HealthLeft == 0), "the fight ran to an end");
 		Assert.Equal(boss.Won, run.Won, "the run's outcome is the boss fight's");
 	}
 
@@ -171,7 +171,7 @@ public static class RunHarnessTests
 		Assert.Equal(10, root.GetProperty("runs").GetArrayLength(), "every run");
 		var s = root.GetProperty("summary");
 		foreach (string k in new[] { "runs", "reached_tanuki", "beat_tanuki", "reach_tanuki_pct", "beat_tanuki_pct_of_reached", "R5_reach_target_pct",
-			"R5_beat_target_pct", "runs_ended_by_row", "fights_timed_out", "arrival_health", "damage_per_duel", "run_length", "copy_locked", "cards_picked", "routes" })
+			"R5_beat_target_pct", "runs_ended_by_row", "fights_stalled", "runs_stalled", "stalls_by_profile", "elder_twists", "arrival_health", "damage_per_duel", "run_length", "copy_locked", "cards_picked", "routes" })
 			Assert.True(s.TryGetProperty(k, out _), $"summary.{k}");
 		foreach (string k in new[] { "row_4", "row_7", "tanuki", "R4_target_heal4_rest7" })
 			Assert.True(s.GetProperty("arrival_health").TryGetProperty(k, out _), $"arrival_health.{k}");
@@ -183,7 +183,7 @@ public static class RunHarnessTests
 			foreach (string k in new[] { "seed", "outcome", "row_reached", "route", "final_health", "coins", "fight_ticks", "estimated_minutes", "copy_locked", "cards_picked", "nodes" })
 				Assert.True(run.TryGetProperty(k, out _), $"run.{k}");
 			string outcome = run.GetProperty("outcome").GetString()!;
-			Assert.True(outcome is "won" or "lost", "outcome");
+			Assert.True(outcome is "won" or "lost" or "stalled", "outcome");
 			foreach (var node in run.GetProperty("nodes").EnumerateArray())
 			{
 				foreach (string k in new[] { "id", "row", "type", "tier", "action", "arrival_health", "leave_health", "coins_won" })
