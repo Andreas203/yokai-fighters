@@ -143,6 +143,14 @@ public static class HarnessTwistTests
 		int byProfile = sum.GetProperty("stalls_by_profile").EnumerateObject().Sum(p => p.Value.GetInt32());
 		Assert.Equal(3, byProfile, "stalls counted per opponent profile");
 		Assert.Equal(3, sum.GetProperty("levels").GetProperty(shortCap.Level ?? "none").GetProperty("duels_stalled").GetInt32(), "stalls counted per level");
+		// C1: a stall is neither a win nor a loss, so it leaves every win/reach denominator (here all three runs did).
+		Assert.Equal(JsonValueKind.Null, sum.GetProperty("reach_tanuki_pct").ValueKind, "reach: 0 decided runs, null");
+		Assert.Equal(3, sum.GetProperty("reach_excluded_stalls").GetInt32(), "the stalls left out of reach");
+		Assert.Equal(0, sum.GetProperty("runs_ended_by_row").EnumerateObject().Count(), "no run was lost");
+		Assert.Equal(3, sum.GetProperty("runs_stalled_by_row").GetProperty("1").GetInt32(), "three runs stalled on row 1");
+		var lvl = sum.GetProperty("levels").GetProperty(shortCap.Level ?? "none");
+		Assert.Equal(JsonValueKind.Null, lvl.GetProperty("run_win_pct").ValueKind, "run win %: no decided run");
+		Assert.Equal(JsonValueKind.Null, lvl.GetProperty("duel_win_pct").ValueKind, "duel win %: no decided duel");
 		Assert.True(root.GetProperty("caveats").GetString()!.Contains("stall"), "the caveats say a stall is not a loss");
 	}
 }

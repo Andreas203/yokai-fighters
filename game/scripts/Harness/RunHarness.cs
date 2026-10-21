@@ -107,7 +107,7 @@ public static class RunHarness
 			var n = new NodeRecord
 			{
 				Id = node.NodeId, Row = node.Row, Type = node.Type, Yokai = node.Yokai, Fighter = node.Fighter, PlaysAs = node.MovesAndProfilesOf, Tier = node.Tier,
-				StandIn = node.StandIn, ArrivalHealth = session.Run.Health, ArrivalCoins = session.Run.Coins,
+				StandIn = node.StandIn, Elder = node.Elder, ArrivalHealth = session.Run.Health, ArrivalCoins = session.Run.Coins,
 			};
 			rec.Nodes.Add(n);
 			if (node.Type == NodeTypeRegistry.Boss && session.CopyLocked) rec.CopyLocked = session.LockedCopy;
@@ -286,6 +286,8 @@ public sealed class NodeRecord
 	public string PlaysAs { get; init; } = "";
 	public required string Tier { get; init; }
 	public bool StandIn { get; init; }
+	/// <summary>YOK-179: the map node's elder flag (<see cref="NodeContext.Elder"/>), which decides its twist (<see cref="ElderTwists.For"/>).</summary>
+	public bool Elder { get; init; }
 	public int ArrivalHealth { get; init; }
 	public int ArrivalCoins { get; init; }
 	public int LeaveHealth { get; set; }

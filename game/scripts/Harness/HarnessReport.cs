@@ -69,7 +69,8 @@ public static class HarnessReport
 		"only when its config says so (the default newcomer heals at the merchant and rests at the dojo, R4's line), and fight time excludes menus (run length adds menu_seconds_per_node per node). " +
 		"YOK-179: elder nodes fight with their twist (data/twists/, applied as the fight scene does; elder_twists counts how often each fired; Elder Oni's armour cannot fire while the Oni has no special). " +
 		"levels.exchange_ratio counts unblocked hits landed / taken (designer 2026-10-21; null without the hit log) and levels.damage_ratio is damage dealt / taken; results before YOK-179 used exchange_ratio for the damage ratio and hit_exchange_ratio for hits. " +
-		"There is no round timer (designer 2026-10-21): fights go to KO, and max_fight_ticks is only a safety cap; a fight it stops is a stall, not a loss (outcome 'stalled', counted in fights_stalled, stalls_by_profile and per level in levels.<level>.duels_stalled), and its run ends there.";
+		"There is no round timer (designer 2026-10-21): fights go to KO, and max_fight_ticks is only a safety cap; a fight it stops is a stall, not a loss (outcome 'stalled', counted in fights_stalled, stalls_by_profile and per level in levels.<level>.duels_stalled), and its run ends there. " +
+		"Stalls count as neither wins nor losses: reach_tanuki_pct, beat_tanuki_pct_of_reached, run_win_pct and duel_win_pct leave them out of the denominator (the counts left out are reach_excluded_stalls, beat_excluded_stalls, runs_stalled, duels_stalled), and runs_ended_by_row counts lost runs only (stalled runs are in runs_stalled_by_row).";
 
 	/// <summary>The summary block alone (also printed by the command-line entry).</summary>
 	public static string SummaryJson(BatchResult b)
@@ -84,17 +85,24 @@ public static class HarnessReport
 	{
 		var runs = b.Runs;
 		int n = runs.Count, reached = runs.Count(r => r.ReachedTanuki), beat = runs.Count(r => r.BeatTanuki);
+		var st = Stalls.Of(runs);
 		w.WriteStartObject();
 		w.WriteNumber("runs", n);
 		w.WriteNumber("reached_tanuki", reached);
 		w.WriteNumber("beat_tanuki", beat);
-		Pct(w, "reach_tanuki_pct", reached, n);
-		Pct(w, "beat_tanuki_pct_of_reached", beat, reached);
+		// YOK-179 (C1, PR #214): a stall is neither a win nor a loss, so a stalled run leaves the denominator it is undecided for.
+		Pct(w, "reach_tanuki_pct", reached, n - st.BeforeTanuki);
+		w.WriteNumber("reach_excluded_stalls", st.BeforeTanuki);
+		Pct(w, "beat_tanuki_pct_of_reached", beat, reached - st.AtTanuki);
+		w.WriteNumber("beat_excluded_stalls", st.AtTanuki);
 		Range(w, "R5_reach_target_pct", ReachTarget);
 		Range(w, "R5_beat_target_pct", BeatTarget);
 
-		w.WriteStartObject("runs_ended_by_row");
-		foreach (var g in runs.Where(r => !r.Won).GroupBy(r => r.RowReached).OrderBy(g => g.Key)) w.WriteNumber(g.Key.ToString(), g.Count());
+		w.WriteStartObject("runs_ended_by_row"); // runs lost, by row; YOK-179: stalled runs are in runs_stalled_by_row
+		foreach (var g in runs.Where(r => !r.Won && !r.Stalled).GroupBy(r => r.RowReached).OrderBy(g => g.Key)) w.WriteNumber(g.Key.ToString(), g.Count());
+		w.WriteEndObject();
+		w.WriteStartObject("runs_stalled_by_row");
+		foreach (var g in runs.Where(r => r.Stalled).GroupBy(r => r.RowReached).OrderBy(g => g.Key)) w.WriteNumber(g.Key.ToString(), g.Count());
 		w.WriteEndObject();
 		// YOK-179: stalls (no KO by the safety cap) are their own outcome, by opponent profile here and by bot level in levels.
 		w.WriteNumber("max_fight_ticks", b.Bot.Fight.MaxFightTicks);
@@ -174,20 +182,25 @@ public static class HarnessReport
 		{
 			var lr = g.ToList();
 			int n = lr.Count, reached = lr.Count(r => r.ReachedTanuki), beat = lr.Count(r => r.BeatTanuki), won = lr.Count(r => r.Won);
+			var st = Stalls.Of(lr);
 			var duels = lr.SelectMany(r => r.Nodes).Where(x => x.Fight is not null).Select(x => x.Fight!).ToList();
 			long dealt = duels.Sum(f => (long)f.DamageDealt), taken = duels.Sum(f => (long)f.DamageTaken);
 			w.WriteStartObject(g.Key);
 			w.WriteNumber("runs", n);
 			w.WriteNumber("reached_tanuki", reached);
-			Pct(w, "reach_tanuki_pct", reached, n);
+			// YOK-179 (C1): stalls are left out of every win/reach denominator; the counts left out sit next to each.
+			Pct(w, "reach_tanuki_pct", reached, n - st.BeforeTanuki);
+			w.WriteNumber("reach_excluded_stalls", st.BeforeTanuki);
 			w.WriteNumber("beat_tanuki", beat);
-			Pct(w, "beat_tanuki_pct_of_reached", beat, reached);
-			Pct(w, "run_win_pct", won, n);
+			Pct(w, "beat_tanuki_pct_of_reached", beat, reached - st.AtTanuki);
+			w.WriteNumber("beat_excluded_stalls", st.AtTanuki);
+			Pct(w, "run_win_pct", won, n - st.Runs);
+			w.WriteNumber("runs_stalled", st.Runs);
 			w.WriteNumber("duels", duels.Count);
 			w.WriteNumber("duels_won", duels.Count(f => f.Won));
-			Pct(w, "duel_win_pct", duels.Count(f => f.Won), duels.Count);
-			w.WriteNumber("duels_stalled", duels.Count(f => f.Stalled)); // YOK-179
-			w.WriteNumber("runs_stalled", lr.Count(r => r.Stalled));
+			int duelsStalled = duels.Count(f => f.Stalled);
+			Pct(w, "duel_win_pct", duels.Count(f => f.Won), duels.Count - duelsStalled);
+			w.WriteNumber("duels_stalled", duelsStalled); // excluded from duel_win_pct
 			w.WriteNumber("damage_dealt", dealt);
 			w.WriteNumber("damage_taken", taken);
 			// Designer 2026-10-21: the exchange ratio counts HITS (Ryo's unblocked hits landed / the opponent's), from the hit
@@ -211,7 +224,7 @@ public static class HarnessReport
 	static void WriteElderTwists(Utf8JsonWriter w, List<RunRecord> runs)
 	{
 		w.WriteStartObject("elder_twists");
-		foreach (var g in runs.SelectMany(r => r.Nodes).Where(x => x.Tier == "elder" && x.Fight is not null)
+		foreach (var g in runs.SelectMany(r => r.Nodes).Where(x => x.Elder && x.Fight is not null) // the node's elder flag, as ElderTwists.For
 			.GroupBy(x => x.Yokai ?? "").OrderBy(g => g.Key, StringComparer.Ordinal))
 		{
 			var fights = g.Select(x => x.Fight!).ToList();
@@ -227,6 +240,13 @@ public static class HarnessReport
 			w.WriteEndObject();
 		}
 		w.WriteEndObject();
+	}
+
+	/// <summary>YOK-179: stalled runs, split by whether they stalled before reaching the Tanuki or at the Tanuki's fight.</summary>
+	readonly record struct Stalls(int Runs, int BeforeTanuki, int AtTanuki)
+	{
+		public static Stalls Of(IReadOnlyCollection<RunRecord> runs) => new(runs.Count(r => r.Stalled),
+			runs.Count(r => r.Stalled && !r.ReachedTanuki), runs.Count(r => r.Stalled && r.ReachedTanuki));
 	}
 
 	static void Ratio(Utf8JsonWriter w, string name, long num, long den)
@@ -309,6 +329,7 @@ public static class HarnessReport
 		if (x.PlaysAs.Length > 0) w.WriteString("plays_as", x.PlaysAs); // YOK-174
 		w.WriteString("tier", x.Tier);
 		w.WriteBoolean("stand_in", x.StandIn);
+		if (x.Elder) w.WriteBoolean("elder", true); // YOK-179: the map's elder flag (its twist)
 		w.WriteString("action", x.Action);
 		if (x.Bought.Count > 0)
 		{
