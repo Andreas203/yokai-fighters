@@ -233,7 +233,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **YOK-165 accepted**, with the YOK-176 follow-up.
 - **A late anti-air counts.**
 - **Habit punish window (P6/Y2, YOK-169):** a habit counts as punished by an unblocked Ryo hit while the habit's plan runs, or within the next 3 hits exchanged after it ends. Blocked connects DO count toward the 3; a landed throw counts once; throw breaks and clashes don't. KO damage is tallied in full. Supersedes the plain "next 3 hits" line above. Rules: Y4.
-- **"Exchange ratio" (Y4, R5) means hits:** unblocked hits landed / unblocked hits taken, target 4.5:1. Written into Y4. Harness change: YOK-179.
+- **"Exchange ratio" (Y4, R5) means hits:** unblocked hits landed / unblocked hits taken. Written into Y4 without a number. Context: 4.5:1 is the Sparring Partner's derived reference (YOK-154 analysis of the ratio implied by Y4's damage-per-duel targets), not a designer-set target. Harness change: YOK-179.
 - **E23 debug temperament is sticky:** a choice made with F9 or `--temperament=` stays in effect across later nodes until changed.
 - **E22 constants:** `GuardTicks` 10 (how long an AI that opts into `guard_pct` keeps guarding after its own move's recovery; YOK-165; the guard ships off, `DefaultGuardPct` 0). Tier `jump_punish_pct`: apprentice 50, yokai 50, elder 100, Tanuki 100 (absolute chance; a late anti-air counts), recorded in Y4.
 - **G3 balance gate (2026-10-21):** no cuts yet. Fix the batch-3 bugs (YOK-177/178/179), rerun as batch 4 (YOK-185), then decide. The newcomer playtest (YOK-50) calibrates whether the bot or the fights get retuned.
