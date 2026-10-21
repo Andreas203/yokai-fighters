@@ -24,6 +24,23 @@ public sealed class ProfileAi
 	/// <summary>Neutral weight of "move to the preferred range" next to the profile's standing behaviours (proposed).</summary>
 	public const int SpacingWeight = 40;
 	public const int WalkTicks = 15, SpacingTicks = 10, BlockTicks = 20;
+	/// <summary>
+	/// YOK-165: pre-emptive guard rate when the profile names no <c>guard_pct</c>: 0, off (designer 2026-10-20; profiles opt in).
+	/// Every strike normal hits within 15 frames, faster than any reaction tier (Y4), so a guard that waits to see the
+	/// swing is always late (YOK-154 F1). The guard is rolled on the AI's own decisions, never on anything Ryo pressed (P6).
+	/// </summary>
+	public const int DefaultGuardPct = 0;
+	/// <summary>YOK-165: how long the guard is held after the AI's own move ends (proposed, = <see cref="SpacingTicks"/>).</summary>
+	public const int GuardTicks = 10;
+	/// <summary>YOK-165: the shortest hitstun in the move data (11); AiGuardTests checks it against data/moves and the fixtures.</summary>
+	public const int ShortestHitstun = 11;
+
+	/// <summary>
+	/// YOK-165: the fewest ticks a hit keeps a fighter from acting in this fight: the light hitstop the screen's fight
+	/// runs with (<see cref="AiView.LightHitstop"/>: 6, or 0 with hitstop off) + <see cref="ShortestHitstun"/>. A held
+	/// anti-air's repeated press never runs longer than this when the AI reacts slower than it (see JumpPunish).
+	/// </summary>
+	public static int MinInterruptTicks(AiView view) => view.LightHitstop + ShortestHitstun;
 
 	public BehaviourProfile Profile { get; }
 	public int Self { get; }
@@ -37,6 +54,13 @@ public sealed class ProfileAi
 	public int AggressionBonus { get; }
 	/// <summary>The bias the neutral weights use: the profile's own plus <see cref="AggressionBonus"/>, within 0-100.</summary>
 	public int Aggression => (int)Math.Clamp((long)Profile.AggressionBias + AggressionBonus, 0, 100); // long: no overflow before the clamp
+	/// <summary>
+	/// YOK-165: 0-100, the chance the AI holds crouch guard (down-back: blocks lows and mids, E6) instead of standing
+	/// open (a) when it settles in its preferred range to wait and (b) through its own move's recovery and
+	/// <see cref="GuardTicks"/> after it. Ctor argument, else the profile's <c>guard_pct</c>, else <see cref="DefaultGuardPct"/>.
+	/// 0 = no roll at all, so the draw order is the one from before YOK-165 (old replays record no guard and read as 0).
+	/// </summary>
+	public int GuardPct { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -48,11 +72,14 @@ public sealed class ProfileAi
 	private int _blockedInRow;
 	private string? _oppLastSpecial;
 	private int _comboHits, _burstPressTick = -1;
+	/// <summary>YOK-165: the tick the AI last pressed a move of its own and that move's length (its own plan, not the screen).</summary>
+	private int _ownPressTick = -1, _ownPressFrames;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
-		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0)
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null)
 	{
+		GuardPct = Math.Clamp(guardPct ?? profile.GuardPct ?? DefaultGuardPct, 0, 100);
 		Tier = tier;
 		AggressionBonus = aggressionBonus;
 		Profile = profile;
@@ -83,7 +110,12 @@ public sealed class ProfileAi
 		{
 			Events(prev, view, rose);
 			// YOK-57 (C6, E13): a burst out of a combo the AI sees itself in comes before everything else.
-			if (Burst(prev, view, s, tick) is { } burst) { _plan = burst; return _plan.Emit(); }
+			if (Burst(prev, view, s, tick) is { } burst)
+			{
+				_plan = burst;
+				_ownPressTick = tick; _ownPressFrames = Math.Max(1, view.BurstFrames); // YOK-165: busy until press + BurstFrames
+				return _plan.Emit();
+			}
 		}
 
 		// The habit (Y2) first. A wake-up habit is rolled when the AI sees itself go down and pre-holds its
@@ -106,10 +138,24 @@ public sealed class ProfileAi
 		}
 
 		// Event reactions: each weight is a percent rate per occurrence (anti-air rate, block habit...).
+		// YOK-165, Y4: with a tier jump-punish rate, the jump's attacking answers are one roll at that rate (JumpPunish),
+		// taken where the first opponent_jumping behaviour sits in the list; its other answers roll by weight after a miss.
 		if (_plan is not { Habit: true })
+		{
+			int? jumpRate = rose[(int)Observation.OpponentJumping] ? view.JumpPunishPct(Self) : null;
+			bool jumpRolled = false;
 			foreach (var b in Profile.Behaviours)
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
+				if (jumpRate is { } rate && b.When == Observation.OpponentJumping)
+				{
+					if (!jumpRolled)
+					{
+						jumpRolled = true;
+						if (JumpPunish(rate, view, tick) is { } punish) { _plan = punish; break; }
+					}
+					if (b.Do.IsMove) continue; // the attacks had their one roll
+				}
 				int roll = _rng.Next(100);
 				if (roll >= b.Weight) continue;
 				var p = Build(b.Do, view, tick, false, 0);
@@ -118,10 +164,133 @@ public sealed class ProfileAi
 				_plan = p;
 				break;
 			}
+		}
 
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
+		// YOK-165: an anti-air held for the first actionable tick is dropped (no draw) if the jumper shows landed by then.
+		if (_plan is { InHeldWait: true } held && FirstActionableTick(view) <= tick) held.ReleaseWait(tick);
+		if (_plan is { AtPress: true } && !o.Airborne) _plan = null; // nothing pressed yet: drop the whole answer
+		else if (_plan is { InPress: true } rp && tick > rp.ReleaseTick)
+		{
+			// It may have started: stop pressing (no draw) once the screen shows the answer out or a new hit/block on the AI,
+			// the jumper landed, or the window is spent; the rest of the plan is timed from the answer's start.
+			bool shown = view.Tick >= rp.ReleaseTick && AnswerShown(rp, s, prev);
+			if (shown || !o.Airborne || tick - rp.ReleaseTick >= rp.Window) rp.EndPress(AnswerEnd(rp, view, s, shown) - tick);
+		}
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
-		return _plan.Emit();
+		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
+		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
+	}
+
+	/// <summary>
+	/// YOK-165, Y4: the fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) is the
+	/// absolute chance the AI answers a jump it sees with an attack (designer 2026-10-20: elders and the Tanuki 100,
+	/// apprentice and yokai 50). One draw at that rate; on a hit, a weighted pick among the profile's attacking answers
+	/// to <c>opponent_jumping</c> that this kit can perform (a second draw only when there are several). Null, so the
+	/// other answers (block...) roll by weight, on a miss, or when no attacking answer is performable (no draw at all).
+	/// </summary>
+	private Plan? JumpPunish(int rate, AiView view, int tick)
+	{
+		int total = 0, count = 0;
+		Behaviour? pick = null;
+		foreach (var b in Profile.Behaviours)
+			if (CanPunishWith(b)) { total += b.Weight; count++; pick ??= b; }
+		if (pick is null) return null;
+		int roll = _rng.Next(100);
+		if (roll >= rate) return null;
+		if (count > 1)
+		{
+			int w = _rng.Next(total);
+			foreach (var b in Profile.Behaviours)
+			{
+				if (!CanPunishWith(b)) continue;
+				if (w < b.Weight) { pick = b; break; }
+				w -= b.Weight;
+			}
+		}
+		// Test-breaker YOK-165: a press while the AI is still in its own move is dropped by the sim, so (like the wake-up habit)
+		// the answer waits for its first actionable tick, predicted from its own state on screen. No draw is added: Build's
+		// EX and guard rolls happen now, as before; the plan is dropped at the press if the jumper shows landed (Next).
+		// The wait is open-ended: Next releases it once the latest screen predicts the AI free (hitstop from a later hit,
+		// e.g. its own projectile's second hit, only shows on a later screen).
+		bool wait = FirstActionableTick(view) > tick;
+		var p = Build(pick.Do, view, tick, false, wait ? int.MaxValue : 0);
+		if (p is not null && wait)
+		{
+			p.PressStep = 1; // Build puts the wait in step 0, the press in step 1
+			p.AnswerMoveId = pick.Do.Kind == ActionKind.Throw ? null : pick.Do.MoveId;
+			// A hit the AI cannot see yet (its own projectile's next hit) can add hitstop after the screen it predicted from,
+			// so the press is repeated for up to the answer's length minus one: the sim takes it on the first actionable tick
+			// and ignores the rest while the move plays (a slot request needs an actionable fighter; no cancels into one).
+			// Next ends the press, with no draw, once the screen at or after the release shows the answer out or a new hit or
+			// block on the AI, the jumper landed, or the window is spent, and times the rest of the plan (wait, guard tail)
+			// from the answer's start. Before the first press, a landed jumper drops the whole plan (nothing has started).
+			// An AI slower than MinInterruptTicks cannot see a hit on its answer before it could act again, so its window
+			// is capped there: an interrupted answer is never pressed a second time from one roll.
+			int window = Math.Max(1, p.MoveFrames - 1);
+			int minInterrupt = MinInterruptTicks(view);
+			if (ReactionFrames > minInterrupt) window = Math.Min(window, minInterrupt);
+			p.HoldPress(window);
+		}
+		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
+		return p;
+	}
+
+	/// <summary>
+	/// YOK-165: the first tick the AI can act, predicted from its own fighter on the (delayed) screen, the way the wake-up
+	/// habit predicts its wake tick: its own move's remaining frames (total from its kit), or the stun left (+ the get-up
+	/// after a knockdown). Hitstop holds every count. States with no visible count (dash, jump, thrown) predict nothing
+	/// (0 = act now, as before).
+	/// </summary>
+	private int FirstActionableTick(AiView view)
+	{
+		FighterView s = view.Fighter(Self);
+		int left = s.State switch
+		{
+			FighterState.Attack when s.MoveId is not null && _kit.TryGetTotalFrames(s.MoveId, s.MoveIsEx, out int total) => Math.Max(0, total - s.MoveFrame),
+			FighterState.Hitstun or FighterState.Blockstun or FighterState.Burst or FighterState.Landing or FighterState.WakeUp => s.StunLeft,
+			FighterState.Knockdown => s.StunLeft + view.WakeUpFrames,
+			_ => -1,
+		};
+		int seen = left < 0 ? 0 : view.Tick + view.HitstopLeft + left + 1;
+		// Its own press made after the screen it sees has not shown yet (the view is reaction frames old): the AI knows its
+		// own commitment, so it waits for that move too. Once the view reaches the press, the screen decides alone.
+		return _ownPressTick > view.Tick ? Math.Max(seen, _ownPressTick + _ownPressFrames) : seen;
+	}
+
+	/// <summary>
+	/// YOK-165: the screen (at or after the held press's release) shows the answer came out, or the AI newly hit or
+	/// blocking: its own answer on screen, any attack once the screen reaches the press when the id is unknown (a throw),
+	/// or a hitstun / blockstun that starts or is refreshed on this screen. Its earlier move still playing (hitstop the
+	/// prediction could not see) is not the answer, so the repeats go on.
+	/// </summary>
+	private int AnswerEnd(Plan rp, AiView view, FighterView s, bool shown)
+	{
+		if (!shown) return rp.ReleaseTick + rp.MoveFrames; // not on screen yet: as if it came out on the release tick
+		if (s.State != FighterState.Attack) return 0;      // hit or blocking: the answer is over, go on to the rest now
+		// On screen: its start is view.Tick - MoveFrame + 1; the end below also counts the hitstop the screen shows.
+		return view.Tick + view.HitstopLeft + Math.Max(0, rp.MoveFrames - s.MoveFrame) + 1;
+	}
+
+	private bool AnswerShown(Plan rp, FighterView s, AiView? prev)
+	{
+		if (s.State == FighterState.Attack) return rp.AnswerMoveId is null ? s.MoveFrame <= s.MoveLastActive : s.MoveId == rp.AnswerMoveId;
+		if (s.State is not (FighterState.Hitstun or FighterState.Blockstun or FighterState.Thrown)) return false;
+		var ps = prev?.Fighter(Self);
+		return ps is not { } p || p.State != s.State || s.StunLeft > p.StunLeft;
+	}
+
+	/// <summary>YOK-165: an attacking answer to a jump that this kit can perform (side-effect free: no draw, no EX roll).</summary>
+	private bool CanPunishWith(Behaviour b) => b.When == Observation.OpponentJumping && b.Do.IsMove && _kit.CanDo(b.Do);
+
+	/// <summary>YOK-165: roll the pre-emptive guard (no draw at all when <see cref="GuardPct"/> is 0).</summary>
+	private bool RollGuard(int tick, AiView view, string trigger)
+	{
+		if (GuardPct <= 0) return false;
+		int roll = _rng.Next(100);
+		bool guard = roll < GuardPct;
+		if (guard) Record(tick, view, "guard", trigger, "crouch_block", roll, GuardPct);
+		return guard;
 	}
 
 	private Plan Neutral(AiView view, FighterView s, FighterView o, int tick)
@@ -151,6 +320,9 @@ public sealed class ProfileAi
 		var (fwd, back) = Dirs(s, o);
 		InputBits bits = diff > 0 ? back : diff < 0 ? fwd : InputBits.None; // preferred band is farther: back off
 		Record(tick, view, "neutral", Observation.Neutral, diff > 0 ? "space_back" : diff < 0 ? "space_forward" : "hold", roll, SpacingWeight);
+		// YOK-165: settled in its band, it waits in crouch guard rather than standing open (walking back already guards, C3).
+		if (diff == 0 && RollGuard(tick, view, "self_waiting"))
+			return new Plan(false, (new FighterInput(back | InputBits.Down), SpacingTicks)) { Guard = new[] { true } };
 		return new Plan(false, (new FighterInput(bits), SpacingTicks));
 	}
 
@@ -168,15 +340,44 @@ public sealed class ProfileAi
 			ActionKind.Block => new[] { (new FighterInput(back), BlockTicks) },
 			ActionKind.CrouchBlock => new[] { (new FighterInput(back | InputBits.Down), BlockTicks) },
 			ActionKind.Throw => _kit.ThrowButtons == InputBits.None ? null : new[] { (new FighterInput(_kit.ThrowButtons), 1), (none, _kit.ThrowFrames) },
-			_ => _kit.TryGet(a, out var input, out int frames) ? new[] { (MaybeEx(a, input, view, tick), 1), (none, Math.Max(1, frames - 1)) } : null,
+			_ => _kit.TryGet(a, out var input, out int frames) ? MoveSteps(a, input, frames, view, tick) : null,
 		};
 		if (steps is null) return null;
-		if (preHold <= 0) return new Plan(habit, steps);
+		// YOK-165: after a move of its own (whiffed or not) it may hold crouch guard through the recovery, so it is guarding
+		// on its first free frame, and a beat after. Not after the habit: that stays as punishable as the profile says (Y2).
+		bool[]? guardSteps = null;
+		if (!habit && a.IsMove && RollGuard(tick, view, "self_attacked"))
+		{
+			var guard = new FighterInput(back | InputBits.Down);
+			var tail = new (FighterInput, int)[steps.Length + 1];
+			Array.Copy(steps, tail, steps.Length);
+			guardSteps = new bool[tail.Length];
+			for (int i = 1; i < tail.Length; i++) // the wait steps and the tail; the press stays as built
+			{
+				tail[i] = (guard, i < steps.Length ? steps[i].Item2 : GuardTicks);
+				guardSteps[i] = true;
+			}
+			steps = tail;
+		}
+		// YOK-165: a move's press step and length, so the AI knows when its own press makes it busy until (FirstActionableTick).
+		int moveFrames = !a.IsMove ? 0 : a.Kind == ActionKind.Throw ? _kit.ThrowFrames : 1 + steps[1].Item2;
+		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames };
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
 		Array.Copy(steps, 0, all, 1, steps.Length);
-		return new Plan(habit, all);
+		bool[]? guardAll = null;
+		if (guardSteps is not null) { guardAll = new bool[all.Length]; Array.Copy(guardSteps, 0, guardAll, 1, guardSteps.Length); }
+		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames };
+	}
+
+	/// <summary>A normal or special: the press, then wait out the move. YOK-165: when <see cref="MaybeEx"/> asks for the EX
+	/// version (same draw as before), the wait is the EX move's own length, so the AI knows how long its own press keeps it busy.</summary>
+	private (FighterInput, int)[] MoveSteps(AiAction a, FighterInput plain, int frames, AiView view, int tick)
+	{
+		var press = MaybeEx(a, plain, view, tick);
+		if (press != plain && _kit.TryGetExFrames(a, out int exFrames)) frames = exFrames;
+		return new[] { (press, 1), (FighterInput.None, Math.Max(1, frames - 1)) };
 	}
 
 	/// <summary>
@@ -287,12 +488,47 @@ public sealed class ProfileAi
 		private readonly (FighterInput In, int Ticks)[] _steps;
 		private int _i, _t;
 		public Plan(bool habit, params (FighterInput, int)[] steps) { Habit = habit; _steps = steps; }
+		/// <summary>YOK-165: the steps that are the pre-emptive guard. Their "back" is re-read every tick in <see cref="Emit"/>,
+		/// so a cross-up the AI sees mid-plan does not leave it holding down-forward.</summary>
+		public bool[]? Guard { get; init; }
 		public bool Done => _i >= _steps.Length;
-		public FighterInput Emit()
+		/// <summary>YOK-165: the step that presses a held anti-air (-1 = none); <see cref="AtPress"/> = it emits on this tick.</summary>
+		public int PressStep { get; set; } = -1;
+		public bool AtPress => PressStep >= 0 && _i == PressStep && _t == 0;
+		/// <summary>YOK-165: still in the open-ended wait before a held anti-air's press.</summary>
+		public bool InHeldWait => PressStep > 0 && _i < PressStep;
+		public void ReleaseWait(int tick) { if (InHeldWait) { _i = PressStep; _t = 0; ReleaseTick = tick; } }
+		/// <summary>YOK-165: the held answer's move id as the screen shows it (null for a throw).</summary>
+		public string? AnswerMoveId { get; set; }
+		/// <summary>YOK-165: the tick the held wait was released (the first press).</summary>
+		public int ReleaseTick { get; private set; } = -1;
+		/// <summary>YOK-165: a held anti-air's press is sent every tick from the release until <see cref="EndPress"/>, which
+		/// Next calls at the latest <paramref name="window"/> ticks after the release (see JumpPunish).</summary>
+		public void HoldPress(int window) { Window = window; _repeat = int.MaxValue; _steps[PressStep] = (_steps[PressStep].In, int.MaxValue); }
+		public int Window { get; private set; }
+		/// <summary>YOK-165: in the press step of a released held anti-air.</summary>
+		public bool InPress => PressStep >= 0 && _i == PressStep && ReleaseTick >= 0;
+		/// <summary>YOK-165: stop pressing now and wait <paramref name="remaining"/> more ticks (the answer's predicted end,
+		/// timed from its start) before the rest of the plan (the guard tail, if any). 0 = go straight to the rest.</summary>
+		public void EndPress(int remaining)
+		{
+			if (!InPress) return;
+			_i = PressStep + 1; _t = 0;
+			if (_i >= _steps.Length) return;
+			if (remaining > 0) _steps[_i] = (_steps[_i].In, remaining);
+			else _i++;
+		}
+		private int _repeat = 1;
+		/// <summary>YOK-165: the step that presses a move of the AI's own (-1 = none) and the move's length in ticks.</summary>
+		public int MoveStep { get; init; } = -1;
+		public int MoveFrames { get; init; }
+		public bool AtMovePress => MoveStep >= 0 && _i == MoveStep && _t == 0;
+		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;
 			var (input, ticks) = _steps[_i];
-			var result = _t == 0 ? input : new FighterInput(input.Bits);
+			if (back != InputBits.None && Guard is { } g && g[_i]) input = new FighterInput(back | InputBits.Down);
+			var result = _t == 0 || (_i == PressStep && _t < _repeat) ? input : new FighterInput(input.Bits);
 			if (++_t >= ticks) { _i++; _t = 0; }
 			return result;
 		}

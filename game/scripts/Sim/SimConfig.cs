@@ -107,6 +107,15 @@ public sealed partial record SimConfig
 		return pct == FullDamagePct ? damage : damage * pct / 100;
 	}
 
+	/// <summary>
+	/// YOK-165, Y4: percent of the other fighter's jumps each side's AI answers with its anti-air (an attacking
+	/// <c>opponent_jumping</c> behaviour). The node's tier sets P2's (<c>jump_punish_pct</c> in node-scenes.json). The
+	/// sim never reads it: <see cref="YokaiFighters.Ai.AiView.Capture"/> hands it to the AI with the fight's other
+	/// fixed constants. Null = the profile's own weights, left out of the replay fingerprint as YOK-156's damage pct is.
+	/// </summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public int? P1JumpPunishPct { get; init; }
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public int? P2JumpPunishPct { get; init; }
+
 	/// <summary>V4: the round-ending blow plays this many world frames at half speed.</summary>
 	public int KoSlowFrames { get; init; } = 30;
 	public int KoSlowDivisor { get; init; } = 2;

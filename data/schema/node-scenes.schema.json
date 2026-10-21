@@ -16,7 +16,7 @@
     "default_stage": { "description": "YOK-144, presentation only: the stage scene for a fight node whose id and type name none. Left out = the fight scene's default, the bamboo grove.", "$ref": "#/$defs/stage" },
     "fallback_fighter": { "description": "Kit that fights for a yokai with no 'fighter' under 'opponents' (logged when used).", "$ref": "common.schema.json#/$defs/id" },
     "tiers": {
-      "description": "Y4 rows: reaction delay in frames per tier, and the damage the tier's opponent deals (damage_dealt_pct).",
+      "description": "Y4 rows: reaction delay in frames per tier, the damage the tier's opponent deals (damage_dealt_pct) and how often it anti-airs a jump (jump_punish_pct).",
       "type": "object",
       "minProperties": 1,
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
@@ -26,7 +26,8 @@
         "additionalProperties": false,
         "properties": {
           "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 },
-          "damage_dealt_pct": { "description": "YOK-156, Y4: percent of its move damage the tier's opponent deals to Ryo, rounded down per hit (the apprentice deals half: 50). Left out = 100.", "type": "integer", "minimum": 1, "maximum": 100 }
+          "damage_dealt_pct": { "description": "YOK-156, Y4: percent of its move damage the tier's opponent deals to Ryo, rounded down per hit (the apprentice deals half: 50). Left out = 100.", "type": "integer", "minimum": 1, "maximum": 100 },
+          "jump_punish_pct": { "description": "YOK-165, Y4: percent of Ryo's jumps the tier's opponent answers with its anti-air (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100). The absolute chance a jump the AI sees is answered with an attack: one roll at this rate, then a weighted pick among the profile's attacking 'opponent_jumping' answers; on a miss its other answers (block...) roll by their own weights. Left out = the profile's own weights.", "type": "integer", "minimum": 0, "maximum": 100 }
         }
       }
     },

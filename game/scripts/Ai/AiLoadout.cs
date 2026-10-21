@@ -13,7 +13,20 @@ public sealed class AiLoadout
 	private readonly Dictionary<string, (FighterInput Input, int Frames)> _moves = new();
 	/// <summary>YOK-57: specials with an EX version: the EX slot request and its meter cost (ex.meter_cost).</summary>
 	private readonly Dictionary<string, (FighterInput Input, int Cost)> _ex = new();
+	/// <summary>YOK-165: every move id in the kit (normals, air normals, throw, plain specials) → total frames, so the AI can
+	/// tell from its own move on screen when it acts again. EX versions share their special's id, so they are kept apart.</summary>
+	private readonly Dictionary<string, int> _frames = new(), _exFrames = new();
+	/// <summary>YOK-165: per special action ("special:id"), its EX version's total frames.</summary>
+	private readonly Dictionary<string, int> _exActionFrames = new();
 	public InputBits ThrowButtons { get; private set; }
+
+	/// <summary>YOK-165: total frames of one of this fighter's own moves by id (<paramref name="ex"/> = its EX version, as the
+	/// screen shows it, <see cref="FighterView.MoveIsEx"/>); false for an id not in the kit.</summary>
+	public bool TryGetTotalFrames(string moveId, bool ex, out int frames) =>
+		ex ? _exFrames.TryGetValue(moveId, out frames) || _frames.TryGetValue(moveId, out frames) : _frames.TryGetValue(moveId, out frames);
+
+	/// <summary>YOK-165: total frames of a special action's EX version; false if it has none.</summary>
+	public bool TryGetExFrames(AiAction a, out int frames) => _exActionFrames.TryGetValue(a.ToString(), out frames);
 	public int ThrowFrames { get; private set; }
 
 	public static AiLoadout From(Fighter f)
@@ -22,9 +35,16 @@ public sealed class AiLoadout
 		for (int i = 0; i < f.Moves.Length; i++)
 		{
 			var m = f.Moves[i];
+			l._frames.TryAdd(m.Id, m.TotalFrames);
 			if (m.IsThrow) { if (l.ThrowButtons == InputBits.None) { l.ThrowButtons = m.ThrowButtons; l.ThrowFrames = m.TotalFrames; } }
 			else if (m.IsNormal && !m.Air) l._moves.TryAdd("normal:" + m.Id, (FighterInput.Attack(i), m.TotalFrames));
 		}
+		for (int s = 1; s < f.Specials.Length; s++)
+			if (f.Specials[s] is { } sp)
+			{
+				l._frames.TryAdd(sp.Move.Id, sp.Move.TotalFrames);
+				if (sp.ExMove is { } exm) l._exFrames.TryAdd(exm.Id, exm.TotalFrames);
+			}
 		for (int s = 1; s < f.Specials.Length; s++)
 			if (f.Specials[s] is { } eq && l._moves.TryAdd("special:" + eq.Data.Id, (FighterInput.Special((SpecialSlot)s), eq.Move.TotalFrames)))
 				l.AddEx("special:" + eq.Data.Id, (SpecialSlot)s, eq);
@@ -32,6 +52,7 @@ public sealed class AiLoadout
 		string copied = "special:" + BehaviourProfile.CopiedSpecial;
 		l._moves.Remove(copied);
 		l._ex.Remove(copied);
+		l._exActionFrames.Remove(copied);
 		if (f.CopiedSlot != SpecialSlot.None && f.Specials[(int)f.CopiedSlot] is { } c)
 		{
 			l._moves[copied] = (FighterInput.Special(f.CopiedSlot), c.Move.TotalFrames);
@@ -42,7 +63,11 @@ public sealed class AiLoadout
 
 	private void AddEx(string key, SpecialSlot slot, EquippedSpecial eq)
 	{
-		if (eq.ExMove is not null && eq.Data.HasEx) _ex[key] = (FighterInput.Special(slot, ex: true), eq.Data.ExCost);
+		if (eq.ExMove is not null && eq.Data.HasEx)
+		{
+			_ex[key] = (FighterInput.Special(slot, ex: true), eq.Data.ExCost);
+			_exActionFrames[key] = eq.ExMove.TotalFrames; // YOK-165
+		}
 	}
 
 	/// <summary>YOK-57: the EX request for a special action and its meter cost; false if it has no EX version.</summary>
@@ -75,6 +100,10 @@ public sealed class AiLoadout
 		}
 		return missing;
 	}
+
+	/// <summary>YOK-165: this kit can perform the move action (a throw needs throw buttons; a normal or special must be in
+	/// the loadout). No side effects: the AI checks it before a weighted pick, without drawing.</summary>
+	public bool CanDo(AiAction a) => a.Kind == ActionKind.Throw ? ThrowButtons != InputBits.None : TryGet(a, out _, out _);
 
 	public bool TryGet(AiAction a, out FighterInput input, out int frames)
 	{
