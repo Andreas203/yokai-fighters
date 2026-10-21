@@ -239,7 +239,7 @@ public static class BotIdleGuardTests
 		var on = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content) with { StandingHabits = true }, bot, 1, 3);
 		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
 		var runsOn = docOn.RootElement.GetProperty("runs");
-		var wantOn = new[] { "367b1b3bf4c1bca8", "5ce8fc2d6fad7d38", "4da4fed1fb16ea60" };
+		var wantOn = new[] { "154d762679e8fa9e", "c5a8b3d97602d4e5", "3eead3f9f53bac43" };
 		var gotOn = Enumerable.Range(0, wantOn.Length).Select(i => runsOn[i].GetProperty("session_hash").GetString()).ToArray();
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", gotOn), "runs seed 1-3 with YOK-177 standing habits");
 	}

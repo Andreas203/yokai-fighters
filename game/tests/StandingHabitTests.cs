@@ -94,6 +94,21 @@ public static class StandingHabitTests
 		return _ => AiHarness.RandomInput(rng, ref held, ref left);
 	}
 
+	/// <summary>Random pressure that mostly blocks: 30-tick stretches, 70% holding back, else random raw input (attacks,
+	/// jumps, throws), so the Tanuki's opponent_blocking habit fires and is then interrupted by Ryo's hits.</summary>
+	static Func<Match, FighterInput> RandomTurtle(uint seed)
+	{
+		var pick = new SimRng(seed ^ 0x7177u);
+		var random = RandomP1(seed);
+		bool turtle = true;
+		return m =>
+		{
+			if (m.Tick % 30 == 0) turtle = pick.Next(100) < 70;
+			var r = random(m);
+			return turtle ? Turtle(m) : r;
+		};
+	}
+
 	static void InBand(Tally t, int pct, string who)
 	{
 		double rate = t.Rolls == 0 ? 0 : 100.0 * t.Fired / t.Rolls;
@@ -195,6 +210,67 @@ public static class StandingHabitTests
 		string header = System.Text.Json.JsonSerializer.Serialize(old.Header);
 		Assert.True(!header.Contains("StandingHabits"), $"the field is not written for the old rule: {header}");
 		Assert.True(Replayer.Run(ReplayRecording.FromBytes(old.ToBytes()), Catalog).Ok, "an old-style recording replays");
+	}
+
+	/// <summary>
+	/// Designer 2026-10-21 (YOK-177): a fired habit always comes out, even when the AI is hit or blocks again before it
+	/// can act. Under random pressure every fired habit starts its move, unless a jump answer replaces it or the round
+	/// ends first. Both standing-habit profiles, three seeds each.
+	/// </summary>
+	[Test]
+	public static void FiredHabit_AlwaysStartsItsMove_UnderRandomPressure()
+	{
+		foreach (var (id, opponent, move, tier) in new[]
+		{
+			("apprentice", "kitsune", "kitsune-heavy-punch", AiFightTier.Standard),
+			("tanuki-boss", "ryo", "ryo-generic-throw", AiFightTier.Tanuki),
+		})
+		{
+			var p = Profile(id);
+			int fired = 0, started = 0, replaced = 0, roundEnd = 0;
+			for (uint seed = 1; seed <= 3; seed++)
+			{
+				var m = NewMatch(opponent, jumpPunishPct: 50);
+				var log = new List<AiDecision>();
+				int round = 0;
+				ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 900 + seed + (uint)round * 7919u, tier: tier) { Log = log };
+				var ai = NewAi();
+				var p1 = id == "tanuki-boss" ? RandomTurtle(seed) : RandomP1(seed);
+				int from = 0, pendingTick = -1;
+				FighterState prevState = m.P2.State;
+				string? prevMove = null;
+				for (int i = 0; i < 20000; i++)
+				{
+					var b = ai.Next(AiView.Capture(m));
+					m.Step(p1(m), b);
+					var v = AiView.Capture(m).Fighter(1);
+					bool moveStart = v.State == FighterState.Attack && v.MoveId == move && (prevState != FighterState.Attack || prevMove != move || v.MoveFrame <= 1);
+					prevState = v.State; prevMove = v.MoveId;
+					for (; from < log.Count; from++)
+					{
+						var d = log[from];
+						if (d.Kind == "habit")
+						{
+							Assert.True(pendingTick < 0, $"{id} seed {seed}: a habit fired at {d.Tick} while the one from {pendingTick} had not come out");
+							fired++; pendingTick = d.Tick;
+						}
+						else if (pendingTick >= 0 && d.Trigger == "opponent_jumping" && d.Kind == "react") { replaced++; pendingTick = -1; }
+					}
+					if (pendingTick >= 0 && moveStart && m.Tick >= pendingTick) { started++; pendingTick = -1; }
+					if (m.Phase == MatchPhase.Over)
+					{
+						if (pendingTick >= 0) { roundEnd++; pendingTick = -1; }
+						m.Reset(); round++;
+						ai = NewAi(); from = log.Count;
+						prevState = m.P2.State; prevMove = null;
+					}
+				}
+				if (pendingTick >= 0) roundEnd++; // still to come out when the run stopped
+			}
+			GD.Print($"YOK-177 always-out {id}: {fired} fired, {started} started, {replaced} replaced by a jump answer, {roundEnd} cut by the round end");
+			Assert.True(fired >= 30, $"{id}: habits fired under random pressure ({fired})");
+			Assert.Equal(fired - replaced - roundEnd, started, $"{id}: every fired habit starts its move");
+		}
 	}
 
 	static bool IsJumpAnswer(AiDecision d) => d.Kind == "react" && d.Trigger == "opponent_jumping" && d.Action.StartsWith("normal:");

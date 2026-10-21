@@ -87,7 +87,7 @@ public static class AiGuardTests
 		// YOK-177: the same opponent with standing-trigger habits on (the apprentice's at_close_range habit rolls) is a new run.
 		var on = RunHarness.PlayBatch(content with { StandingHabits = true }, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
-		Assert.Equal("367b1b3bf4c1bca8", docOn.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "the legacy opponent with YOK-177 standing habits");
+		Assert.Equal("154d762679e8fa9e", docOn.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "the legacy opponent with YOK-177 standing habits");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------

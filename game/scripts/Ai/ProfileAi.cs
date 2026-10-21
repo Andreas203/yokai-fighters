@@ -151,10 +151,17 @@ public sealed class ProfileAi
 			if (fire && !covered)
 			{
 				int wake = view.Tick + view.HitstopLeft + s.StunLeft + 1 + (s.State == FighterState.Knockdown ? view.WakeUpFrames : 0);
-				// YOK-177: a standing-trigger habit waits out the AI's own move or stun, so its press is not lost while busy.
-				int hold = wakeUp ? wake - tick : standing ? FirstActionableTick(view) - tick : 0;
-				_plan = Build(h.Do, view, tick, true, Math.Max(0, hold));
-				if (standing && _plan is not null) _plan.StandingHabit = true;
+				// YOK-177 (designer 2026-10-21: a fired habit always comes out): a standing-trigger habit is a held press like
+				// YOK-165's anti-air. Its wait is open-ended and released only when the latest screen predicts the AI free
+				// (re-checked every tick, so a re-hit or a longer stun keeps it waiting); see HabitPress for the press itself.
+				_plan = Build(h.Do, view, tick, true, standing ? int.MaxValue : wakeUp ? Math.Max(0, wake - tick) : 0);
+				if (standing && _plan is not null)
+				{
+					_plan.StandingHabit = true;
+					_plan.PressStep = 1; // Build puts the wait in step 0, the press in step 1
+					_plan.AnswerMoveId = h.Do.Kind == ActionKind.Throw ? null : h.Do.MoveId;
+					_plan.HoldPress(PressWindow(_plan, view));
+				}
 			}
 		}
 
@@ -195,7 +202,8 @@ public sealed class ProfileAi
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		// YOK-165: an anti-air held for the first actionable tick is dropped (no draw) if the jumper shows landed by then.
 		if (_plan is { InHeldWait: true } held && FirstActionableTick(view) <= tick) held.ReleaseWait(tick);
-		if (_plan is { AtPress: true } && !o.Airborne) _plan = null; // nothing pressed yet: drop the whole answer
+		if (_plan is { InPress: true, StandingHabit: true } hp) { if (tick > hp.ReleaseTick) HabitPress(hp, view, s, prev, tick); } // YOK-177
+		else if (_plan is { AtPress: true } && !o.Airborne) _plan = null; // nothing pressed yet: drop the whole answer
 		else if (_plan is { InPress: true } rp && tick > rp.ReleaseTick)
 		{
 			// It may have started: stop pressing (no draw) once the screen shows the answer out or a new hit/block on the AI,
@@ -253,13 +261,35 @@ public sealed class ProfileAi
 			// from the answer's start. Before the first press, a landed jumper drops the whole plan (nothing has started).
 			// An AI slower than MinInterruptTicks cannot see a hit on its answer before it could act again, so its window
 			// is capped there: an interrupted answer is never pressed a second time from one roll.
-			int window = Math.Max(1, p.MoveFrames - 1);
-			int minInterrupt = MinInterruptTicks(view);
-			if (ReactionFrames > minInterrupt) window = Math.Min(window, minInterrupt);
-			p.HoldPress(window);
+			p.HoldPress(PressWindow(p, view));
 		}
 		Record(tick, view, p is null ? "unavailable" : "react", Observation.OpponentJumping, pick.Do.ToString(), roll, rate);
 		return p;
+	}
+
+	/// <summary>YOK-165: how long a held press is repeated: the move's length minus one, capped at
+	/// <see cref="MinInterruptTicks"/> for an AI slower than that (an interrupted move is never pressed twice from one press).</summary>
+	private int PressWindow(Plan p, AiView view)
+	{
+		int window = Math.Max(1, p.MoveFrames - 1);
+		int minInterrupt = MinInterruptTicks(view);
+		return ReactionFrames > minInterrupt ? Math.Min(window, minInterrupt) : window;
+	}
+
+	/// <summary>
+	/// YOK-177 (designer 2026-10-21: a fired habit always comes out): the held habit press, each tick after its release.
+	/// Once the screen shows its move started at or after the release, the press ends and the rest is timed from it.
+	/// The press stops (no more repeats) when its window is spent or the screen shows a new hit or block on the AI; then,
+	/// once the screen has covered the whole window with no start (the press landed while the AI was busy, unseen), the
+	/// plan goes back to its open-ended wait and presses again when the latest screen predicts the AI free. No draw.
+	/// </summary>
+	private void HabitPress(Plan hp, AiView view, FighterView s, AiView? prev, int tick)
+	{
+		bool started = view.Tick >= hp.ReleaseTick && s.State == FighterState.Attack
+			&& view.Tick - s.MoveFrame + 1 >= hp.ReleaseTick && (hp.AnswerMoveId is null || s.MoveId == hp.AnswerMoveId);
+		if (started) { hp.EndPress(AnswerEnd(hp, view, s, true) - tick); return; }
+		if (tick - hp.ReleaseTick >= hp.Window || (view.Tick >= hp.ReleaseTick && AnswerShown(hp, s, prev))) hp.Paused = true;
+		if (hp.Paused && view.Tick >= hp.ReleaseTick + hp.Window) hp.Rewait();
 	}
 
 	/// <summary>
@@ -557,8 +587,13 @@ public sealed class ProfileAi
 		public bool InPress => PressStep >= 0 && _i == PressStep && ReleaseTick >= 0;
 		/// <summary>YOK-165: stop pressing now and wait <paramref name="remaining"/> more ticks (the answer's predicted end,
 		/// timed from its start) before the rest of the plan (the guard tail, if any). 0 = go straight to the rest.</summary>
+		/// <summary>YOK-177: a held habit press that stopped repeating while the screen catches up (emits nothing).</summary>
+		public bool Paused { get; set; }
+		/// <summary>YOK-177: back to the open-ended wait before the press (the press was never seen to start).</summary>
+		public void Rewait() { _i = 0; _t = 0; ReleaseTick = -1; Paused = false; }
 		public void EndPress(int remaining)
 		{
+			Paused = false;
 			if (!InPress) return;
 			_i = PressStep + 1; _t = 0;
 			if (_i >= _steps.Length) return;
@@ -573,6 +608,7 @@ public sealed class ProfileAi
 		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;
+			if (Paused && _i == PressStep) return FighterInput.None;
 			var (input, ticks) = _steps[_i];
 			if (back != InputBits.None && Guard is { } g && g[_i]) input = new FighterInput(back | InputBits.Down);
 			var result = _t == 0 || (_i == PressStep && _t < _repeat) ? input : new FighterInput(input.Bits);
