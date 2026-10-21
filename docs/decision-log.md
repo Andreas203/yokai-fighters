@@ -238,3 +238,8 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **E22 constants:** `GuardTicks` 10 (how long an AI that opts into `guard_pct` keeps guarding after its own move's recovery; YOK-165; the guard ships off, `DefaultGuardPct` 0). Tier `jump_punish_pct`: apprentice 50, yokai 50, elder 100, Tanuki 100 (absolute chance; a late anti-air counts), recorded in Y4.
 - **G3 balance gate (2026-10-21):** no cuts yet. Fix the batch-3 bugs (YOK-177/178/179), rerun as batch 4 (YOK-185), then decide. The newcomer playtest (YOK-50) calibrates whether the bot or the fights get retuned.
 - **No round timer (C1):** fights go to KO. The harness cap is only a safety limit; stalls are reported separately. No AM needed: the GDD sets no timer, so this fills a gap.
+- **R6:** beating an elder counts as binding its yokai for the shop. Open question removed from rules.md. YOK-178.
+- **Naming:** elders are named "Elder <yokai>" (e.g. "Elder Oni") on the binding card and screens.
+- **Y2 Tanuki habit:** the throw triggers after ONE blocked hit (the first blockstun it sees), not "keeps blocking".
+- **Y2/E22 standing-condition habits:** fire when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds (approved). Listed in E22.
+- **Y2 fired habits always come out,** even if the AI is hit before it can act. Exceptions: a jump answer replacing a standing habit plan (Y4), and the round or fight ending. YOK-177.
