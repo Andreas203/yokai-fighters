@@ -1,8 +1,10 @@
 # Decision log
 
-A compact history of the decisions made so far, for agents to load as memory. Built on 2026-10-13 from Linear comments and decision tickets, `docs/design/gdd-amendments.md`, `docs/design/rules.md` and git history. When this log disagrees with rules.md, the amendments or the PDF, the sources of truth in CLAUDE.md win and this log gets fixed. Add new decisions at the bottom of the matching section, one line each, with date, ticket and who made the call.
+The append-only history of decisions: one line per decision, with date, ticket and who made the call. Agents load it as memory before planning. Built on 2026-10-13 from Linear comments and decision tickets, `docs/design/gdd-amendments.md`, `docs/design/rules.md` and git history. When this log disagrees with rules.md, the amendments or the PDF, the sources of truth in CLAUDE.md win and this log gets fixed.
 
-Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11-07.
+This file records what was decided, not what is still open. Open questions and approvals waiting on the designer live in Linear: the tracker is YOK-189, and each question is a ticket with the `decision` label. `docs/process/change-tracking.md` says where each kind of change is recorded.
+
+Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11-07 (first commit 2026-10-06).
 
 ## Design amendments (designer, they win over the PDF)
 - **AM1** 2026-10-05: visuals are generated through the Meshy MCP and sound is sourced. Every job needs designer approval of the job and its credits. Cap of 3 takes per move, then an F5 substitute.
@@ -19,6 +21,9 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **AM8** 2026-10-15, approved 2026-10-16 by the designer (merge of PR #133, YOK-120): closer fixed camera, screen 1,920 → 1,440 units, screen walls 1,520 → 960 (960 + 2 × 240 = 1,440: a fighter facing away shows its 240 front reach outside; first try 1,040 clipped by up to 40, found by test-breaker; derived in SimConfig); stage stays 3,840; V7 steady camera and F4 ~25° FOV unchanged (camera moves closer); walk speed unchanged (~1.9 s across the new screen, C2). Values tunable in SimConfig.
 - **AM9** 2026-10-16, approved by the designer 2026-10-16 (YOK-129, PR #145): Guilty Gear Strive-style dynamic camera, replacing AM8's fixed one. Eased zoom from 1,060 units (close; Ryo's stance ~52% of the screen height) to 1,540 (screen walls; ~36%). Camera at 1.2 m at every zoom, pitch 0.5° down (close) → 3° up (widest), so the feet sit ~88–90% down the frame (designer review 2026-10-16: was 1.2 → 1.4 m and 1° down, which left ~20% empty floor at the walls). Rises partway on jumps and never puts a head under the HUD. Walls 960 → 1,060. FOV 25° kept. V3 shake goes through the current width. V7 push-ins layer on top. Presentation only: StateHash changes only through the walls. Amends V7 and E1.
 - **AM10** 2026-10-17, designer decision (YOK-133, after Code Critic): the camera frames the tallest body in the fight (Oni: club 3.124 m, framed for 3.15 m). In tall-body fights only: the presentation view may widen to ~1,900 units (sim screen stays 1,540), the feet line is 1,040 px (~96%), the camera may sit above 1.2 m while the HUD floor binds and rise up to 0.25 m per tick. Ryo vs Kitsune unchanged. Amends E1, V7 and AM9.
+- **AM11** 2026-10-20 (YOK-142, YOK-171): Sumo Stance: the longer the hold, the faster its dash, up to a maximum speed; replaces "+20% damage".
+- **AM12** 2026-10-20 (YOK-172): Slippery Skin automatically breaks a throw attempted during the carrying move's startup (a clash, no damage).
+- **AM13** 2026-10-21 (YOK-174): the apprentice has its own behaviour profile, so there are 8 profiles (Y1, G5).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
@@ -168,42 +173,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - 2026-10-17 meta-unlock deadline (designer): **extended, no cut.** YOK-89 now has until 2026-10-21 (the balance gate) to merge; if it hasn't, the meta-unlock layer is cut and YOK-86 canceled.
 
 ## Waiting on the designer
-- **YOK-146 (Tripo Ryo):** decided 2026-10-20, see Backlog refinement 2026-10-20. Waiting only on the deep-crouch retake route.
-- **YOK-115 (AM5):** Tripo plan and licence, Tripo MCP or manual runs, AccuRIG 2 licence, Auto-Rig Pro, ActorCore, mocap tool, Cascadeur.
-- **YOK-36 open rules:**
-  - Credit and sound spend, plan tier and licence.
-  - Practice-mode trials.
-  - From PR #105: all answered 2026-10-20 except the shop's item count (balance decides), whether Ryo may leave a rest stop without choosing, healing at full health, and the level the Tanuki fight shows for the copied move.
-- **YOK-102:** run Astra from `docs/design/characters/astra-brief.md`; palette hexes, Oni/Kappa heights, guise fallbacks (G1, G2) and the Meshy licence. 0 Meshy credits approved; mesh lines (96 first pass) wait for the sheets.
-- **YOK-103 and YOK-89:**
-  - Whether to allow a 4th critic round (the `-4.0` fix at `RewardDraft.cs:166-167`).
-  - Unset values: River Pull, Trickster's Angle, Oni's Hide, Iron Will.
-  - Cancel triggers for Oni Chain and Fox Step.
-  - The River Grab clip.
-- **YOK-91:** merge or hold the provisional Oni, Kappa and Tanuki profiles.
-- **YOK-26 harness:**
-  - A 3-minute fight cap, per-run AI seeds (fixed seed 27 today), and 45 s per node.
-  - First batch: **0 of 200 runs reached the Tanuki** (target 50–70%, R5).
-- **YOK-30:** U3 and S6 retakes (3 credits each), the Meshy licence, and Ryo's simplified outfit.
-- **YOK-69:**
-  - Close PR #72.
-  - Ryo's HUD portrait.
-  - Worktree and screenshot cleanup.
-  - A hand play-through with a pad.
-- **YOK-71:** fonts. Specimen sheet in progress (2026-10-20); the designer picks from it.
-- **YOK-85, 87, 88:**
-  - Coins keyed by node type or by row.
-  - Start Game overwriting a save without asking.
-  - Where the Tanuki win count lives.
-  - S2 card length against the GDD's own 3–4 sentence cards.
-  - A card for losing to the Tanuki.
-- **YOK-96, 104, 106:** reopening the shop, and whether "met" is per save or per run.
-- **YOK-50 and YOK-46:** whether the demo newcomer playtest and the Rules Lawyer pass on the demo content are still needed.
-- **Vault (YOK-3/4/5):**
-  - Oni and Kappa voices, and the tail count.
-  - The order of the 12 unlocks.
-  - Which modifiers a cut keeps.
-- **Review queue, in suggested order (2026-10-17; #105–#108 merged):** #148 harness (YOK-26) → #147 Oni/Kappa bodies (YOK-131; captures first) → #150 Oni normals (YOK-132) → #149 elder twists (YOK-90, carries YOK-106, save v5) → #151 tutorial (YOK-92).
+Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo copy is in git history at `b438e31`.
 
 ## Designer decisions 2026-10-20
 - **Lv 2 steps (A4/E21):** movesmith proposes one step per remaining special; the designer approves (proposal in progress on branch YOK-36-lv2-steps).
