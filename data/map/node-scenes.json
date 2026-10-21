@@ -23,7 +23,7 @@
   "opponents": {
     "kitsune": { "fighter": "kitsune" },
     "tanuki": { "fighter": "tanuki", "kit": "copy_of_ryo" },
-    "apprentice": { "tier": "apprentice", "plays_as": "kitsune" },
+    "apprentice": { "tier": "apprentice", "plays_as": "kitsune", "profile": "apprentice" },
     "nine-tailed-kitsune": { "plays_as": "kitsune" },
     "elder-oni": { "plays_as": "oni" },
     "elder-kappa": { "plays_as": "kappa" }

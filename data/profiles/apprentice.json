@@ -1,0 +1,32 @@
+{
+  "kind": "profile",
+  "id": "apprentice",
+  "status": "proposed",
+  "yokai": "apprentice",
+  "temperament": "aggressive",
+  "reaction": { "tier": "apprentice", "frames": 30 },
+  "aggression_bias": 65,
+  "preferred_range": "close",
+  "habit": {
+    "id": "heavy-punch-up-close",
+    "description": "Winds up a big heavy punch whenever you are in her face. Block it, then hit her back while she recovers.",
+    "when": "at_close_range",
+    "do": "normal:kitsune-heavy-punch",
+    "chance_pct": 60
+  },
+  "tell_cover_pct": 0,
+  "behaviours": [
+    { "when": "at_full_screen", "do": "walk_forward", "weight": 50 },
+    { "when": "at_full_screen", "do": "dash_forward", "weight": 20 },
+    { "when": "at_mid_range", "do": "walk_forward", "weight": 60 },
+    { "when": "at_mid_range", "do": "normal:kitsune-medium-kick", "weight": 15 },
+    { "when": "at_close_range", "do": "normal:kitsune-light-punch", "weight": 30 },
+    { "when": "at_close_range", "do": "normal:kitsune-medium-punch", "weight": 20 },
+    { "when": "at_close_range", "do": "throw", "weight": 10 },
+    { "when": "opponent_jumping", "do": "normal:kitsune-heavy-punch", "weight": 30 },
+    { "when": "opponent_whiffed", "do": "normal:kitsune-medium-punch", "weight": 40 },
+    { "when": "opponent_knocked_down", "do": "walk_forward", "weight": 40 }
+  ],
+  "rules": ["Y1", "Y2", "Y4", "Y6", "P6", "E22"],
+  "notes": "Row-1 apprentice (YOK-174), its own profile; no temperament roll. Schema has no 'apprentice' temperament, so temperament is 'aggressive' (it walks in) and yokai 'kitsune' (the kit it plays as); the node must name id 'apprentice' directly. Habit: heavy punch (startup 10f, recovery 20f) at close range 60%: one slow, clear tell and a wide punish window, teaches block-then-punish. No Foxfire: the zoning game is the Kitsune yokai's, and projectiles would keep a newcomer at range and cause timeouts. Throw is rare (10) so throw-break is seen but not constant. It never blocks, so a newcomer's hits land and fights end by KO. No EX or burst (E22). One jump answer (heavy punch, 30). Expected habit frequency: 60% of close-range decisions. Damage per duel is judged by the harness against Y4 (110 newcomer / 80 average, half damage per hit); expected near those, to be verified."
+}

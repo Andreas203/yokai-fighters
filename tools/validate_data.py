@@ -293,6 +293,14 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
         seen.add((where, plays))
         if profiled and plays not in profiled:  # a folder with no profiles at all (a partial copy) is not checked
             errs.append((where, f"'{name}' plays as '{plays}', which has no behaviour profile in {path.parent.parent.name}/profiles/ (Y1)"))
+    # YOK-174 (designer 2026-10-21): a named 'profile' must exist by id in profiles/ (the C# throws otherwise, NodeProfiles.WithNamed)
+    profile_ids = {pp.get("id") for pp in (_load_json(f) for f in sorted((path.parent.parent / "profiles").glob("*.json"))) if isinstance(pp, dict)}
+    for section in ("opponents", "nodes"):
+        entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
+        for name, entry in entries.items():
+            prof = entry.get("profile") if isinstance(entry, dict) else None
+            if profile_ids and isinstance(prof, str) and prof not in profile_ids:
+                errs.append((f"{section}.{name}.profile", f"profile '{prof}' is not in {path.parent.parent.name}/profiles/ (Y1)"))
     # YOK-144: every stage named is a scene under scenes/stage/ that exists (res:// = game/). STAGE_PATTERN is the
     # schema's $defs/stage pattern and NodeSceneTable.StagePattern; it also stops '..' from escaping the folder here.
     stages = [("default_stage", doc.get("default_stage"))]

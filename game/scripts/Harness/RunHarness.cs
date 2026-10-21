@@ -14,6 +14,16 @@ namespace YokaiFighters.Harness;
 public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGraph Map, INodeSceneResolver Scenes,
 	Func<string, BehaviourProfile[]> Profiles)
 {
+	/// <summary>Every profile in data/profiles/, where a node's named profile is looked up (<see cref="ProfilesForNode"/>).</summary>
+	public BehaviourProfile[] AllProfiles { get; init; } = Array.Empty<BehaviourProfile>();
+
+	/// <summary>
+	/// YOK-174: the profiles <paramref name="node"/> fights with: its plays-as yokai's (<see cref="Profiles"/>) plus the
+	/// node's named profile from all of data/profiles/ when it is not one of them. Throws when it is found nowhere.
+	/// </summary>
+	public BehaviourProfile[] ProfilesForNode(NodeContext node) =>
+		NodeProfiles.WithNamed(node.NodeId, Profiles(node.MovesAndProfilesOf), node.Profile, AllProfiles);
+
 	/// <summary>YOK-157: tally each fight's hits, throws and habit rolls into <see cref="FightRecord.Log"/> (listening only; on by default).</summary>
 	public bool HitLog { get; init; } = true;
 	/// <summary>YOK-157: also keep every hit as a raw line (<c>hit_log</c> in the results; large, off by default). Needs <see cref="HitLog"/>.</summary>
@@ -28,7 +38,7 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 		var fixtures = BehaviourProfile.LoadDirectory(Path.Combine(fixturesDir, "profiles"));
 		var content = new HarnessContent(sources, AbilityPool.Load(sources, Path.Combine(dataDir, "modifiers")),
 			MapLoader.LoadFile(Path.Combine(mapDir, mapFile)), NodeSceneTable.Default(mapDir),
-			fighter => ProfilesFor(fighter, all, fixtures));
+			fighter => ProfilesFor(fighter, all, fixtures)) { AllProfiles = all };
 		content.CheckProfiles();
 		return content;
 	}
@@ -51,7 +61,9 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 			var m = new Match(null, null, kit.Moves);
 			kit.Equip(m.P2);
 			var loadout = AiLoadout.From(m.P2);
-			var profiles = Profiles(node.MovesAndProfilesOf);
+			BehaviourProfile[] profiles;
+			try { profiles = ProfilesForNode(node); } // the named profile (the apprentice's) is checked against this kit too
+			catch (InvalidOperationException e) { problems.Add(e.Message); continue; }
 			if (profiles.Length == 0) problems.Add($"node '{node.NodeId}': no behaviour profile for '{node.MovesAndProfilesOf}'");
 			foreach (var p in profiles)
 				if (loadout.Missing(p) is { Count: > 0 } missing)
@@ -61,13 +73,8 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 	}
 
 	/// <summary>Same lookup as <c>FightScene.LoadProfiles</c>: own profiles, else the fixtures; sorted by temperament (aggressive first).</summary>
-	public static BehaviourProfile[] ProfilesFor(string fighter, BehaviourProfile[] all, BehaviourProfile[] fixtures)
-	{
-		var own = Array.FindAll(all, p => p.Yokai == fighter);
-		if (own.Length == 0) own = (BehaviourProfile[])fixtures.Clone();
-		Array.Sort(own, (a, b) => string.CompareOrdinal(a.Temperament, b.Temperament));
-		return own;
-	}
+	public static BehaviourProfile[] ProfilesFor(string fighter, BehaviourProfile[] all, BehaviourProfile[] fixtures) =>
+		NodeProfiles.Of(fighter, all, fixtures);
 }
 
 /// <summary>
@@ -145,7 +152,7 @@ public static class RunHarness
 	{
 		var node = session.Node!;
 		var m = NodeFight.NewMatch(content.Sources, session.Run, session, node.Fighter, bot.Scheme);
-		var profiles = content.Profiles(node.MovesAndProfilesOf); // YOK-174: the yokai's own profiles, even on a stand-in kit
+		var profiles = content.ProfilesForNode(node); // YOK-174: the yokai's own profiles (even on a stand-in kit) plus the node's named one
 		if (profiles.Length == 0) throw new InvalidOperationException($"no behaviour profile for '{node.MovesAndProfilesOf}'");
 		int pi = Math.Max(0, NodeTemperament.Pick(profiles, node, session.Seed)); // YOK-174, Y1/Y2: named profile, else the seeded 50/50 temperament roll
 		uint step = (uint)session.Step;

@@ -112,6 +112,45 @@ public static class PerYokaiProfileTests
 		Assert.True(message is not null && message.Contains("oni-aggressive") && message.Contains("normal:kitsune-heavy-punch"), "load fails naming the profile and move: " + message);
 	}
 
+	/// <summary>Designer 2026-10-21: the apprentice's own profile (yokai "apprentice") is never one of the Kitsune's temperaments.</summary>
+	[Test]
+	public static void Apprentice_OwnProfile_NotInTheKitsuneList()
+	{
+		var kitsune = Content.Profiles("kitsune");
+		Assert.Equal(2, kitsune.Length, "the Kitsune list has exactly its two temperaments: " + string.Join(", ", kitsune.Select(p => p.Id)));
+		Assert.Equal("kitsune-aggressive,kitsune-patient", string.Join(",", kitsune.Select(p => p.Id)), "aggressive first");
+		Assert.Equal(2, FightScene.LoadProfiles("kitsune").Length, "the fight scene's Kitsune list (F9 cycle, index-0 default) too");
+		Assert.Equal(1, Content.AllProfiles.Count(p => p.Id == "apprentice" && p.Yokai == "apprentice"), "data/profiles/apprentice.json is the apprentice's own");
+	}
+
+	[Test]
+	public static void Apprentice_NodeFightsWithItsNamedProfile_OnTheKitsuneKit_EverySeed()
+	{
+		var node = Resolve("apprentice");
+		Assert.Equal("apprentice", node.Profile, "node-scenes names the apprentice profile");
+		Assert.Equal("kitsune", node.MovesAndProfilesOf, "it still plays as the Kitsune for body and kit");
+		var profiles = Content.ProfilesForNode(node);
+		Assert.Equal("kitsune-aggressive,kitsune-patient,apprentice", string.Join(",", profiles.Select(p => p.Id)), "the Kitsune's two plus the named one");
+		for (uint seed = 1; seed <= 20; seed++)
+			Assert.Equal("apprentice", profiles[NodeTemperament.Pick(profiles, node, seed)].Id, $"seed {seed}: no roll, the named profile");
+		var kit = Kit.LoadAs(node.MovesAndProfilesOf, node.Fighter, Sources);
+		var m = new Match(null, null, kit.Moves);
+		kit.Equip(m.P2);
+		Assert.Equal(0, AiLoadout.From(m.P2).Missing(profiles[^1]).Count, "CheckProfiles: the apprentice profile names only Kitsune-kit moves");
+	}
+
+	[Test]
+	public static void NamedProfile_FoundNowhere_Throws_InTheHarnessAndItsCheck()
+	{
+		var node = Resolve("apprentice") with { Profile = "no-such-profile" };
+		string? message = null;
+		try { Content.ProfilesForNode(node); } catch (InvalidOperationException e) { message = e.Message; }
+		Assert.True(message is not null && message.Contains("no-such-profile"), "ProfilesForNode throws naming the profile: " + message);
+		message = null;
+		try { NodeProfiles.WithNamed("n", Content.Profiles("kitsune"), "no-such-profile", Content.AllProfiles); } catch (InvalidOperationException e) { message = e.Message; }
+		Assert.True(message is not null, "the fight scene's lookup throws too (refused in RebuildAi, never a fallback)");
+	}
+
 	[Test]
 	public static void Temperament_SeededRollPerNode_Deterministic_BothAppear_AboutHalf()
 	{
@@ -155,8 +194,10 @@ public static class PerYokaiProfileTests
 		foreach (var r in batch.Runs)
 			foreach (var n in r.Nodes.Where(n => n.Fight is not null && n.Type != "boss"))
 			{
+				seen.Add(n.Fight!.Profile);
+				if (n.Yokai == "apprentice") { Assert.Equal("apprentice", n.Fight.Profile, $"seed {r.Seed} {n.Id}: the named profile, no roll"); continue; }
 				string want = NodeTemperament.Roll(r.Seed, n.Id);
-				Assert.True(n.Fight!.Profile.EndsWith("-" + want), $"seed {r.Seed} {n.Id}: profile {n.Fight.Profile} plays the rolled {want}");
+				Assert.True(n.Fight.Profile.EndsWith("-" + want), $"seed {r.Seed} {n.Id}: profile {n.Fight.Profile} plays the rolled {want}");
 				seen.Add(n.Fight.Profile);
 			}
 		foreach (string p in new[] { "kitsune-aggressive", "kitsune-patient", "oni-aggressive", "oni-patient", "kappa-aggressive", "kappa-patient" })
@@ -173,7 +214,8 @@ public static class PerYokaiProfileTests
 		{
 			string want = n.Yokai switch { "oni" or "elder-oni" => "oni", "kappa" or "elder-kappa" => "kappa", "tanuki" => "tanuki", _ => "kitsune" };
 			Assert.Equal(want, n.PlaysAs, $"{n.Id}: plays as");
-			Assert.True(n.Fight!.Profile.StartsWith(want), $"{n.Id}: profile {n.Fight.Profile} is {want}'s");
+			string owner = n.Yokai == "apprentice" ? "apprentice" : want; // designer 2026-10-21: its own profile on the Kitsune's body
+			Assert.True(n.Fight!.Profile.StartsWith(owner), $"{n.Id}: profile {n.Fight.Profile} is {owner}'s");
 		}
 		Assert.True(fights.Any(n => n.PlaysAs == "oni") && fights.Any(n => n.PlaysAs == "kappa"), "20 runs reach Oni and Kappa nodes");
 		string json = HarnessReport.ToJson(batch);
