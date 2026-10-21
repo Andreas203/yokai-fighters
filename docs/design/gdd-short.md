@@ -1,6 +1,6 @@
 # Yokai Fighters
 
-> Markdown transcription of Yokai_Fighters_GDD_Short.pdf. The PDF plus docs/design/gdd-amendments.md remain the source of truth; if this file disagrees with the PDF, the PDF wins and this file gets fixed.
+> Markdown transcription of Yokai_Fighters_GDD_Short.pdf. The PDF plus docs/design/gdd-amendments.md remain the source of truth; if this file disagrees with the PDF, the PDF wins and this file gets fixed. Amendment callouts (lines starting **Amended by**) are not in the PDF: each names the amendments that replace part of that section.
 
 <!-- page 1 -->
 
@@ -49,6 +49,8 @@ Win: defeat the Tanuki in a seventh duel. Loss: health carries between duels; at
 
 ### 1.4 Audience and story
 
+> **Amended by** [AM2](gdd-amendments.md#am2) the binding line. Where they disagree with this section, the amendments win.
+
 Primary audience: roguelite players curious about fighting games. Secondary: fighting-game fans wanting deep solo content, served by the Kata bonus, cancel depth, a frame-data toggle and a practice mode; if Kata is cut, cancel depth alone, an accepted trade. Inspirations: Hades, Slay the Spire, Street Fighter 6.
 
 <!-- page 2 -->
@@ -62,6 +64,8 @@ Story beats. Every run that reaches the boss sees the merchant unmasked as the T
 ## 2. Game Mechanics
 
 ### 2.1 Fighting
+
+> **Amended by** [AM8](gdd-amendments.md#am8) closer camera, [AM9](gdd-amendments.md#am9) dynamic zoom, [AM10](gdd-amendments.md#am10) tall-body framing. Where they disagree with this section, the amendments win.
 
 Ryo walks, dashes, jumps, blocks by holding back, throws, and uses six normal attacks. He starts every run with two Lv 1 specials: Spirit Wave (a projectile) and Rising Talisman (an anti-air). Meter powers EX specials, a once-per-fight burst breaks an opponent's combo, and counterhits reward reading the opponent.
 
@@ -81,6 +85,8 @@ Kata ("form") uses six buttons and motion inputs, such as ↓↘→ + punch, and
 
 ### 2.4 The yokai
 
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM11](gdd-amendments.md#am11) Sumo Stance, [AM12](gdd-amendments.md#am12) Slippery Skin, [AM13](gdd-amendments.md#am13) the apprentice's own profile. Where they disagree with this section, the amendments win.
+
 Each yokai comes in two temperaments, aggressive and patient, so repeat fights play differently. Every path passes two elders, whose offers always include a cancel rule. Each elder's twist shows as a map icon, a one-line intro card and a first-time callout. Rare abilities (cancel rules and each yokai's second special) come only from elders; everything else is common.
 
 | Yokai | Archetype | How it fights | Elder twist |
@@ -92,6 +98,8 @@ Each yokai comes in two temperaments, aggressive and patient, so repeat fights p
 Difficulty curve. Reactions tighten through the run (apprentice 30 frames, yokai 22, elders 18, Tanuki 15), and each Tanuki win, up to three, makes yokai 1 frame faster and more aggressive as the illusion grows stronger.
 
 ### 2.5 The Tanuki
+
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows. Where they disagree with this section, the amendments win.
 
 The Tanuki is a boss with its own fixed moveset, drawn from tanuki folklore. It mixes every archetype's tricks, so no single habit or build beats it, and it fights with the boss's 15-frame reactions.
 
@@ -124,6 +132,8 @@ At each rest stop, a forecast shows the Tanuki's expected cost from the player's
 
 ### 2.7 Rest stops and coins
 
+> **Amended by** [AM3](gdd-amendments.md#am3) quitting mid-node, [AM4](gdd-amendments.md#am4) merchant stock and coins. Where they disagree with this section, the amendments win.
+
 | Stop | Where | What it offers |
 |---|---|---|
 | Merchant | Always at row 4; one option at row 7 | Choose one per visit: a free heal (25%), or shopping, where coins buy common abilities from yokai you haven't bound this run (50) or release a binding to free a slot (40). Bought abilities show in grey borrowed ink and never carry over. Never sells rares or cancel rules. |
@@ -139,6 +149,8 @@ At each rest stop, a forecast shows the Tanuki's expected cost from the player's
 | Best special carried at Lv 2 | No | Yes | Yes | Yes |
 
 ## 3. AI Architecture
+
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator. Where they disagree with this section, the amendments win.
 
 The AI agents are development tools: an orchestrator leading three teams. Each is described by what the player sees because of it; section 4.1 gives each one's development role.
 
@@ -161,6 +173,8 @@ How they work together. Clip Matcher picks each clip first, so frame data comes 
 ## 4. Technical Strategy
 
 ### 4.1 Agent roles
+
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator. Where they disagree with this section, the amendments win.
 
 | Agent | Development role (one sentence) |
 |---|---|
@@ -190,6 +204,8 @@ How they work together. Clip Matcher picks each clip first, so frame data comes 
 
 ### 4.3 Engine and assets
 
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators and rigging, [AM7](gdd-amendments.md#am7) Astra concept art. Where they disagree with this section, the amendments win.
+
 Built in Godot 4 (.NET) with C#, in 2.5D: 3D fighters and stages, with all gameplay on a 2D plane under a narrow-FOV camera. Assets are pre-bought and unified by a toon shader. The Tanuki's model and clips come from the purchased packs, like every yokai. All throws are generic: the attacker plays a grab clip and the defender its standard knockdown, so no paired throw animations are needed.
 
 <!-- page 5 -->
@@ -197,6 +213,8 @@ Built in Godot 4 (.NET) with C#, in 2.5D: 3D fighters and stages, with all gamep
 Week 1 go/no-go gate: walk, heavy and throw clips must retarget onto each yokai without clipping tails, shell or club; a yokai that fails uses its folklore human guise.
 
 ### 4.4 Token budget
+
+> **Amended by** [AM1](gdd-amendments.md#am1) agent budget lines. Where they disagree with this section, the amendments win.
 
 Code and UI revisions are priced as 3-turn MCP loops (change, build, fix).
 
@@ -220,6 +238,8 @@ Spend is front-loaded: about 4.5M in week 1, 10.1M in week 2, 8M in week 3 and 2
 A deterministic 60-tick loop. Frame data only means something if a frame is always exactly one step. Animations are stepped by exact frames with AnimationPlayer.Seek(), and hitboxes are 2D rectangles in move data rather than physics shapes, so whole-run bot tests are repeatable. API: Claude, with prompt caching, the Message Batches API for overnight content and web search for the scouts.
 
 ### 4.6 Schedule and scope
+
+> **Amended by** [AM1](gdd-amendments.md#am1) week 1 row, [AM13](gdd-amendments.md#am13) week 2 row. Where they disagree with this section, the amendments win.
 
 | Week | Milestone (5 weeks to a polished build) |
 |---|---|
