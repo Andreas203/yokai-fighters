@@ -59,7 +59,9 @@ public static class BotLevelsTests
 	{
 		// YOK-174: all three re-pinned (were a4a30e288fb83033, 28a9873a8981ac73, 9be8a5bed90de1fa): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
-		var want = new[] { "d573ca8d44add598", "d0fd95d189fe78ed", "974faac26a455244" };
+		// YOK-177: re-pinned again (were d573ca8d44add598, d0fd95d189fe78ed, 974faac26a455244): the apprentice's at_close_range
+		// habit (a standing trigger) now rolls, which changes every run's first fight.
+		var want = new[] { "68d7593305af15f5", "c5a8b3d97602d4e5", "2314265a00affa16" };
 		var legacy = AiGuardTests.LegacyOpponent(Content); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		var level = Hashes(RunHarness.PlayBatch(legacy, Levels["newcomer"], 1, 3));
 		var file = Hashes(RunHarness.PlayBatch(legacy, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));

@@ -34,6 +34,15 @@ public sealed class ProfileAi
 	public const int GuardTicks = 10;
 	/// <summary>YOK-165: the shortest hitstun in the move data (11); AiGuardTests checks it against data/moves and the fixtures.</summary>
 	public const int ShortestHitstun = 11;
+	/// <summary>
+	/// YOK-177 (Y2): a habit whose trigger is a standing condition (<c>at_close_range</c>, <c>opponent_blocking</c>...) is
+	/// rolled when the condition becomes true on the AI's view, and again every this many view ticks while it keeps
+	/// holding; a re-entry within this many ticks of the last roll does not roll (proposed: 60 = 1 s, longer than any
+	/// move in the kits, so each roll is played out before the next, and a fighter walking on a range edge cannot
+	/// make it roll every few ticks). Entry-only would leave a player who stays in range never seeing the tell again
+	/// after one miss; a roll every tick would turn 60% into ~100%.
+	/// </summary>
+	public const int StandingHabitRearmTicks = 60;
 
 	/// <summary>
 	/// YOK-165: the fewest ticks a hit keeps a fighter from acting in this fight: the light hitstop the screen's fight
@@ -61,6 +70,11 @@ public sealed class ProfileAi
 	/// 0 = no roll at all, so the draw order is the one from before YOK-165 (old replays record no guard and read as 0).
 	/// </summary>
 	public int GuardPct { get; }
+	/// <summary>
+	/// YOK-177: a standing-condition habit trigger fires (<see cref="StandingHabitRearmTicks"/>). False = the rule before
+	/// YOK-177, when such a habit never rolled; only replays of recordings made before it pass false (<c>AiSetup.StandingHabits</c>).
+	/// </summary>
+	public bool StandingHabits { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -74,11 +88,14 @@ public sealed class ProfileAi
 	private int _comboHits, _burstPressTick = -1;
 	/// <summary>YOK-165: the tick the AI last pressed a move of its own and that move's length (its own plan, not the screen).</summary>
 	private int _ownPressTick = -1, _ownPressFrames;
+	/// <summary>YOK-177: the view tick of the last standing-trigger habit roll (-1 = none yet).</summary>
+	private int _standingRollTick = -1;
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
-		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null)
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null, bool standingHabits = true)
 	{
+		StandingHabits = standingHabits;
 		GuardPct = Math.Clamp(guardPct ?? profile.GuardPct ?? DefaultGuardPct, 0, 100);
 		Tier = tier;
 		AggressionBonus = aggressionBonus;
@@ -106,7 +123,8 @@ public sealed class ProfileAi
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
 		bool[] rose = _rose;
 		Array.Clear(rose);
-		if (prev is not null && prev.Tick != view.Tick)
+		bool fresh = prev is not null && prev.Tick != view.Tick;
+		if (fresh)
 		{
 			Events(prev, view, rose);
 			// YOK-57 (C6, E13): a burst out of a combo the AI sees itself in comes before everything else.
@@ -121,8 +139,8 @@ public sealed class ProfileAi
 		// The habit (Y2) first. A wake-up habit is rolled when the AI sees itself go down and pre-holds its
 		// direction through the knockdown and the wake-up, so it comes out on the first actionable frame (and is punishable).
 		var h = Profile.Habit;
-		bool wakeUp = h.When == Observation.SelfGotUp;
-		if (rose[(int)(wakeUp ? Observation.SelfKnockedDown : h.When)])
+		bool wakeUp = h.When == Observation.SelfGotUp, standing = !BehaviourProfile.IsEvent(h.When);
+		if (standing ? fresh && StandingHabitDue(view, s, o) : rose[(int)(wakeUp ? Observation.SelfKnockedDown : h.When)])
 		{
 			int roll = _rng.Next(100);
 			bool fire = roll < h.ChancePct, covered = false;
@@ -133,7 +151,9 @@ public sealed class ProfileAi
 			if (fire && !covered)
 			{
 				int wake = view.Tick + view.HitstopLeft + s.StunLeft + 1 + (s.State == FighterState.Knockdown ? view.WakeUpFrames : 0);
-				_plan = Build(h.Do, view, tick, true, wakeUp ? Math.Max(0, wake - tick) : 0);
+				// YOK-177: a standing-trigger habit waits out the AI's own move or stun, so its press is not lost while busy.
+				int hold = wakeUp ? wake - tick : standing ? FirstActionableTick(view) - tick : 0;
+				_plan = Build(h.Do, view, tick, true, Math.Max(0, hold));
 			}
 		}
 
@@ -301,7 +321,7 @@ public sealed class ProfileAi
 		for (int i = 0; i < w.Length; i++)
 		{
 			var b = Profile.Behaviours[i];
-			bool holds = b.When == Observation.Neutral || b.When == range || (b.When == Observation.OpponentBlocking && o.State == FighterState.Blockstun);
+			bool holds = Holds(b.When, range, o);
 			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Aggression : 150 - Aggression) / 100);
 			total += w[i];
 		}
@@ -324,6 +344,24 @@ public sealed class ProfileAi
 		if (diff == 0 && RollGuard(tick, view, "self_waiting"))
 			return new Plan(false, (new FighterInput(back | InputBits.Down), SpacingTicks)) { Guard = new[] { true } };
 		return new Plan(false, (new FighterInput(bits), SpacingTicks));
+	}
+
+	/// <summary>A standing observation holds on this screen (neutral always; a range band; the opponent in blockstun).</summary>
+	private static bool Holds(Observation when, Observation range, FighterView o) =>
+		when == Observation.Neutral || when == range || (when == Observation.OpponentBlocking && o.State == FighterState.Blockstun);
+
+	/// <summary>
+	/// YOK-177 (Y2, P6): the standing-condition habit is due on this (fresh) view: its condition holds on screen, no habit
+	/// plan is still playing, and the last roll was at least <see cref="StandingHabitRearmTicks"/> view ticks ago (or there
+	/// was none). So the first roll comes the moment the condition becomes true, then one per re-arm period while it holds.
+	/// </summary>
+	private bool StandingHabitDue(AiView view, FighterView s, FighterView o)
+	{
+		if (!StandingHabits || !Holds(Profile.Habit.When, RangeOf(s, o), o) || HabitPlanRunning) return false;
+		// A clock that went back (the match was reset under this AI) re-arms it.
+		if (_standingRollTick >= 0 && view.Tick >= _standingRollTick && view.Tick - _standingRollTick < StandingHabitRearmTicks) return false;
+		_standingRollTick = view.Tick;
+		return true;
 	}
 
 	private Plan? Build(AiAction a, AiView view, int tick, bool habit, int preHold)

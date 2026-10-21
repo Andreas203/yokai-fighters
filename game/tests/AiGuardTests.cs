@@ -82,7 +82,8 @@ public static class AiGuardTests
 		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
 		var batch = RunHarness.PlayBatch(content, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
-		Assert.Equal("201847ea51c823ea", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165");
+		// YOK-177: re-pinned from 201847ea51c823ea: the apprentice's standing at_close_range habit now rolls (only that differs from the old opponent).
+		Assert.Equal("d82ce47836a36015", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165 (with YOK-177 standing habits)");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------
