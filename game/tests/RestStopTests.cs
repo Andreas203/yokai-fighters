@@ -99,6 +99,25 @@ public static class RestStopTests
 	});
 
 	[Test]
+	public static void Forecast_RyosDamageModifier_IsNotInTheCost() => OnFixtures(() =>
+	{
+		var s = AtStop("merchant");
+		var want = CopyRule.Target(s.Run)!;
+		var owned = s.Run[want.Slot]!;
+		Assert.True(owned.Modifier is null, "fixture: the target special wears no modifier yet");
+		var mod = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"test-hard-hitter\",\"name\":\"Hard Hitter\",\"source\":\"oni\",\"applies_to\":{\"requires\":[]}," +
+			"\"effects\":[{\"target\":\"damage\",\"op\":\"add\",\"value\":25}],\"card\":{\"plain\":\"Hits 25 harder.\",\"frames\":\"Damage +25\"}}");
+		s.Run.Attach(want.Slot, mod);
+		var d = owned.Data;
+		int lv = s.Run[want.Slot]!.Level;
+		int ryos = d.Build(lv, false, mod, null).Damage;
+		var f = RestStopScreenForecast.For(s)!;
+		Assert.True(f.SpecialId == d.Id, "the modifier does not change the target (T2)");
+		Assert.True(ryos != f.Cost, $"Ryo's own build with the modifier ({ryos}) is not the forecast ({f.Cost})");
+		Assert.Equal(d.Build(Math.Min(lv, CopyRule.HighestUnevolvedLevel), false, null, null).Damage, f.Cost, "T4: the copy, and so its cost, never has Ryo's modifier");
+	});
+
+	[Test]
 	public static void Forecast_AfterTheLock_ReadsTheLockedCopy_NotTheCurrentBest() => OnFixtures(() =>
 	{
 		var s = AtStop("boss");
