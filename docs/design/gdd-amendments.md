@@ -274,7 +274,7 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 **Decision.** The Tanuki's habit (AM4) throws after ONE blocked hit, the first blockstun it sees, 60% of the time. It no longer waits for the player to "keep blocking". The counter is unchanged: break the throw. Work: YOK-177.
 
-**Why.** "Keeps blocking" had no measurable trigger for the view-delayed AI (P6, E22); one blocked hit is a condition it can see on screen.
+**Why.** Designer decision 2026-10-21: the trigger in AM4 was ambiguous; the designer chose one blocked hit.
 
 ### Text replaced
 
