@@ -148,7 +148,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 ## Y — Yokai
 
 - **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 8 profiles: 3 yokai × 2 temperaments + the apprentice + Tanuki [AM13].
-- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws after one blocked hit, the first blockstun it sees (60%) [AM4; designer 2026-10-21]. A habit whose trigger is a standing condition fires when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds. A fired habit always comes out, even if the AI is hit before it can act; the only exceptions are a jump answer replacing a standing habit plan (Y4) and the round or fight ending (YOK-177).
+- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws after one blocked hit, the first blockstun it sees (60%) [AM4, AM14]. A habit whose trigger is a standing condition fires when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds. A fired habit always comes out, even if the AI is hit before it can act; the only exceptions are a jump answer replacing a standing habit plan (Y4) and the round or fight ending (YOK-177).
 
   | Yokai | Aggressive | Patient | Habit to punish | Elder twist |
   |---|---|---|---|---|

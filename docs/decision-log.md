@@ -243,3 +243,4 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **Y2 Tanuki habit:** the throw triggers after ONE blocked hit (the first blockstun it sees), not "keeps blocking".
 - **Y2/E22 standing-condition habits:** fire when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds (approved). Listed in E22.
 - **Y2 fired habits always come out,** even if the AI is hit before it can act. Exceptions: a jump answer replacing a standing habit plan (Y4), and the round or fight ending. YOK-177.
+- **AM14 written** for the Tanuki one-blocked-hit habit, because AM4 said "keeps blocking" and an amendment wins over rules.md.
