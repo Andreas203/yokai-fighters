@@ -198,7 +198,16 @@ public sealed record BehaviourProfile
 		var files = Directory.GetFiles(dir, "*.json");
 		Array.Sort(files, StringComparer.Ordinal);
 		var list = new List<BehaviourProfile>();
-		foreach (var f in files) list.Add(LoadFile(f));
+		var byId = new Dictionary<string, string>(StringComparer.Ordinal);
+		foreach (var f in files)
+		{
+			var p = LoadFile(f);
+			// YOK-174: a node names a profile by id (NodeProfiles.WithNamed), so two files with one id would be ambiguous
+			if (byId.TryGetValue(p.Id, out var first))
+				throw new FormatException($"profile id '{p.Id}' is used by both {Path.GetFileName(first)} and {Path.GetFileName(f)}");
+			byId[p.Id] = f;
+			list.Add(p);
+		}
 		return list.ToArray();
 	}
 }

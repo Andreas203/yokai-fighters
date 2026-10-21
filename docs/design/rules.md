@@ -147,7 +147,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## Y — Yokai
 
-- **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 7 profiles: 3 yokai × 2 temperaments + Tanuki.
+- **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 8 profiles: 3 yokai × 2 temperaments + the apprentice + Tanuki [AM13].
 - **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws when the player keeps blocking (60%) [AM4].
 
   | Yokai | Aggressive | Patient | Habit to punish | Elder twist |

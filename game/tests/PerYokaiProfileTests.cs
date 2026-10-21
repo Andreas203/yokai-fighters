@@ -151,6 +151,25 @@ public static class PerYokaiProfileTests
 		Assert.True(message is not null, "the fight scene's lookup throws too (refused in RebuildAi, never a fallback)");
 	}
 
+	/// <summary>A node names a profile by id, so two files with one id are a load error (validate_data checks the same).</summary>
+	[Test]
+	public static void LoadDirectory_DuplicateProfileId_Throws()
+	{
+		string dir = Path.Combine(Path.GetTempPath(), "yok174-dup-" + Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(dir);
+		try
+		{
+			string text = File.ReadAllText(Path.Combine(ContentPaths.Data("profiles"), "apprentice.json"));
+			File.WriteAllText(Path.Combine(dir, "a.json"), text);
+			Assert.Equal(1, BehaviourProfile.LoadDirectory(dir).Length, "one file loads");
+			File.WriteAllText(Path.Combine(dir, "b.json"), text);
+			string? message = null;
+			try { BehaviourProfile.LoadDirectory(dir); } catch (FormatException e) { message = e.Message; }
+			Assert.True(message is not null && message.Contains("'apprentice'") && message.Contains("a.json") && message.Contains("b.json"), "duplicate id names both files: " + message);
+		}
+		finally { Directory.Delete(dir, true); }
+	}
+
 	[Test]
 	public static void Temperament_SeededRollPerNode_Deterministic_BothAppear_AboutHalf()
 	{

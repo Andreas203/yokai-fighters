@@ -916,6 +916,16 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first != f:
                 failures.setdefault(f, []).append(("elder", f"'{doc['elder']}' already has a twist in {rel(first)} (Y2: one per elder)"))
 
+    # YOK-174 (Y1, AM13): a node names a profile by id, so one id must name one profile across the files checked
+    # together (BehaviourProfile.LoadDirectory throws on the same). data/samples/ is documentation.
+    profile_of: dict[str, Path] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "profile" and isinstance(doc.get("id"), str) \
+                and SAMPLES_DIR not in f.resolve().parents:
+            first = profile_of.setdefault(doc["id"], f)
+            if first != f:
+                failures.setdefault(f, []).append(("id", f"profile id '{doc['id']}' is already used by {rel(first)} (Y1)"))
+
     # YOK-153 (A11, M1): an unlock is saved by ability id alone, so one id must name one ability across the kinds
     # checked together: specials, their evolutions (A5), modifiers and cancel rules. data/samples/ is documentation
     # and may reuse real ids.
