@@ -203,7 +203,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Oni and Kappa voices, and the tail count.
   - The order of the 12 unlocks.
   - Which modifiers a cut keeps.
-- **Standing-trigger habit re-arm (Y2, YOK-177, proposed):** a habit on a standing condition (`at_close_range`, `opponent_blocking`) rolls when the condition becomes true on the AI's view, then at most once per 60 view ticks while it holds (`ProfileAi.StandingHabitRearmTicks`). Effect on the apprentice: about 30 rolls and 18 heavy punches per fight. Designer to confirm 60 or name another rate.
+- **Standing-trigger habit re-arm (Y2, YOK-177, approved 2026-10-21):** a habit on a standing condition (`at_close_range`, `opponent_blocking`) rolls when the condition becomes true on the AI's view, then at most once per 60 view ticks while it holds (`ProfileAi.StandingHabitRearmTicks`). Effect on the apprentice: about 30 rolls and 18 heavy punches per fight. Approved 2026-10-21.
 - **Review queue, in suggested order (2026-10-17; #105–#108 merged):** #148 harness (YOK-26) → #147 Oni/Kappa bodies (YOK-131; captures first) → #150 Oni normals (YOK-132) → #149 elder twists (YOK-90, carries YOK-106, save v5) → #151 tutorial (YOK-92).
 
 ## Designer decisions 2026-10-20
@@ -233,3 +233,4 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **Temperament roll (Y1/Y2, YOK-174):** each yokai node rolls its temperament, seeded per node from the run seed, 50/50 aggressive/patient. A node that names a profile keeps it.
 - **YOK-165 accepted**, with the YOK-176 follow-up.
 - **A late anti-air counts.**
+- **YOK-177 held throws:** fired standing habits always come out (Tanuki throw habit on the first blockstun seen, 60-tick re-arm approved). The held throw jump answer is a slot request under the YOK-177 rule, which changes the Kappa profiles in tier-rate fights; approved.

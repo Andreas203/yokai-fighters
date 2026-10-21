@@ -252,7 +252,7 @@ public sealed class ProfileAi
 		// The wait is open-ended: Next releases it once the latest screen predicts the AI free (hitstop from a later hit,
 		// e.g. its own projectile's second hit, only shows on a later screen).
 		bool wait = FirstActionableTick(view) > tick;
-		var p = Build(pick.Do, view, tick, false, wait ? int.MaxValue : 0, heldThrow: StandingHabits); // YOK-177: a throw answer is a slot request (old recordings: the raw buttons)
+		var p = Build(pick.Do, view, tick, false, wait ? int.MaxValue : 0, heldThrow: StandingHabits); // YOK-177: a throw answer is a slot request (old recordings: the raw buttons). This changes event-habit profiles with a throw anti-air (the Kappa) in tier-rate fights: designer-approved 2026-10-21
 		if (p is not null && wait)
 		{
 			p.PressStep = 1; // Build puts the wait in step 0, the press in step 1

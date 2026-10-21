@@ -42,9 +42,9 @@ public static class StandingHabitTests
 	/// <summary>Plays <paramref name="ticks"/> ticks (rounds restarted with a new AI as AiHarness does); counts the habit's
 	/// rolls and fires, and the AI's starts of <paramref name="startMove"/>.</summary>
 	static Tally Play(BehaviourProfile p, Func<Match, FighterInput> p1, int ticks, uint seed, string startMove, bool standing = true,
-		AiFightTier tier = AiFightTier.Standard, string opponent = "kitsune")
+		AiFightTier tier = AiFightTier.Standard, string opponent = "kitsune", int? jumpPunishPct = null)
 	{
-		var m = NewMatch(opponent);
+		var m = NewMatch(opponent, jumpPunishPct);
 		var t = new Tally();
 		int round = 0;
 		ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), seed + (uint)round * 7919u, tier: tier, standingHabits: standing) { Log = t.Log };
@@ -151,6 +151,8 @@ public static class StandingHabitTests
 		Assert.Equal(0, Play(Profile("tanuki-boss"), Turtle, 6000, 177, "ryo-generic-throw", false, AiFightTier.Tanuki, "ryo").Rolls, "tanuki, old rule");
 	}
 
+	/// <summary>Event-habit profiles with no tier jump-punish rate (the profiles' own weights): the YOK-177 rule changes nothing.
+	/// With a tier rate, see <see cref="EventHabits_AtTierRate_OnlyTheThrowAntiAirChanges"/>.</summary>
 	[Test]
 	public static void EventHabits_AreUnchanged()
 	{
@@ -165,6 +167,89 @@ public static class StandingHabitTests
 			checkedCount++;
 		}
 		Assert.True(checkedCount >= 6, $"every event-habit profile checked ({checkedCount})");
+	}
+
+	/// <summary>Throw jump answers under random pressure: answers, those whose throw started within 60 ticks, and normals
+	/// started in that window (a throw press turned into a buffered normal). Windows with a raw-button throw are skipped.</summary>
+	static (int Answers, int Started, int Substituted, uint Hash) ThrowAnswerStats(BehaviourProfile p, bool rule, int jumpPunishPct, int seeds = 4, int ticks = 20000)
+	{
+		int answers = 0, started = 0, subs = 0;
+		uint hash = 2166136261u;
+		for (uint seed = 1; seed <= seeds; seed++)
+		{
+			var m = NewMatch("kitsune", jumpPunishPct);
+			string throwId = AiLoadout.From(m.P2).ThrowMoveId!;
+			var log = new List<AiDecision>();
+			int round = 0, from = 0, answerTick = -1, prevFrame = 0;
+			ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 5300 + seed + (uint)round * 7919u, standingHabits: rule) { Log = log };
+			var ai = NewAi();
+			var p1 = RandomP1(seed + 50);
+			FighterState prevState = m.P2.State;
+			string? prevMove = null;
+			for (int i = 0; i < ticks; i++)
+			{
+				var b = ai.Next(AiView.Capture(m));
+				m.Step(p1(m), b);
+				hash = (hash ^ (uint)(m.StateHash() & 0xFFFFFFFF)) * 16777619u;
+				for (; from < log.Count; from++)
+				{
+					var d = log[from];
+					if (d.Kind == "react" && d.Trigger == "opponent_jumping" && d.Action == "throw") { answers++; answerTick = d.Tick; }
+					else if (d.Action == "throw" && d.Kind is "neutral" or "react" or "habit") answerTick = -1;
+				}
+				var v = AiView.Capture(m).Fighter(1);
+				bool start = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
+				if (start && answerTick >= 0 && m.Tick - answerTick <= 60)
+				{
+					if (v.MoveId == throwId) started++; else subs++;
+					answerTick = -1;
+				}
+				prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
+				if (m.Phase == MatchPhase.Over) { m.Reset(); round++; ai = NewAi(); from = log.Count; answerTick = -1; prevState = m.P2.State; prevMove = null; }
+			}
+		}
+		return (answers, started, subs, hash);
+	}
+
+	/// <summary>
+	/// Code-critic r4, designer-approved 2026-10-21: with a tier jump-punish rate (50, the apprentice and yokai tier), the
+	/// YOK-177 rule changes event-habit profiles in one place only: a held throw jump answer (the Kappa's) is the throw's
+	/// slot request, so it comes out reliably where main's raw buttons sometimes lost it or turned it into a normal.
+	/// Profiles without a throw answer to a jump play the identical fight. The old behaviour is shown with the flag off.
+	/// </summary>
+	[Test]
+	public static void EventHabits_AtTierRate_OnlyTheThrowAntiAirChanges()
+	{
+		int same = 0, kappas = 0, oldSubs = 0, nowStarted = 0, nowAnswers = 0, oldStarted = 0, oldAnswers = 0;
+		foreach (var p in BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")))
+		{
+			if (!BehaviourProfile.IsEvent(p.Habit.When)) continue;
+			bool throwAnswer = p.Behaviours.Any(b => b.When == Observation.OpponentJumping && b.Do.Kind == ActionKind.Throw);
+			if (!throwAnswer)
+			{
+				var on = Play(p, RandomP1(5), 5000, 9, "kitsune-throw", jumpPunishPct: 50);
+				var off = Play(p, RandomP1(5), 5000, 9, "kitsune-throw", standing: false, jumpPunishPct: 50);
+				Assert.Equal(off.Hash, on.Hash, $"{p.Id}: no throw answer to a jump, so the same fight at the tier rate");
+				Assert.True(on.Log.SequenceEqual(off.Log), $"{p.Id}: the same decisions at the tier rate");
+				same++;
+				continue;
+			}
+			var now = ThrowAnswerStats(p, true, 50);
+			var old = ThrowAnswerStats(p, false, 50);
+			GD.Print($"YOK-177 r4 {p.Id} at jump_punish 50: YOK-177 {now.Answers} throw answers, {now.Started} throws, {now.Substituted} normals; " +
+				$"main {old.Answers} answers, {old.Started} throws, {old.Substituted} normals");
+			Assert.True(now.Answers >= 20, $"{p.Id}: throw answers ({now.Answers})");
+			Assert.Equal(0, now.Substituted, $"{p.Id}: no throw answer turns into a normal");
+			Assert.True(now.Hash != old.Hash, $"{p.Id}: the fight differs from main's at the tier rate (designer-approved)");
+			Assert.True((long)now.Started * old.Answers >= (long)old.Started * now.Answers,
+				$"{p.Id}: throws per answer at least main's ({now.Started}/{now.Answers} vs {old.Started}/{old.Answers})");
+			oldSubs += old.Substituted; nowStarted += now.Started; nowAnswers += now.Answers; oldStarted += old.Started; oldAnswers += old.Answers;
+			kappas++;
+		}
+		Assert.True(same >= 4 && kappas == 2, $"profiles checked: {same} unchanged, {kappas} with a throw anti-air");
+		// Rare on main, so counted over both Kappa profiles: main lost or substituted some throw answers that now come out.
+		Assert.True(oldSubs > 0 || (long)nowStarted * oldAnswers > (long)oldStarted * nowAnswers,
+			$"main lost or substituted some throw answers ({oldSubs} normals, {oldStarted}/{oldAnswers} vs {nowStarted}/{nowAnswers})");
 	}
 
 	[Test]
