@@ -184,6 +184,16 @@ class PassingSamplesTest(unittest.TestCase):
             code, rep = violations(DATA, tmp)
         self.assertEqual(code, 0, rep["violations"])
 
+    def test_harness_bot_levels_is_a_known_kind(self):
+        # YOK-170 adds data/harness/bot-levels.json (kind harness_bot_levels); no rule here reads it, and it is not unknown
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "harness").mkdir()
+            Path(tmp, "harness", "bot-levels.json").write_text(json.dumps(
+                {"kind": "harness_bot_levels", "id": "bot-levels", "base": "newcomer-kihon-bot", "levels": []}))
+            code, rep = violations(DATA, tmp)
+        self.assertEqual(code, 0, rep["violations"])
+
 
 class GraphTest(unittest.TestCase):
     def test_find_loops_two_hop_and_self(self):
