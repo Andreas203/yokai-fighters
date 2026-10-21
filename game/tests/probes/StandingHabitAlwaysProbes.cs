@@ -36,16 +36,16 @@ public static class StandingHabitAlwaysProbes
 
 	sealed class Res { public int Fired, Doubles, Replaced, Cut, Lost, Rounds; }
 
-	static Res Track(string prof, string opp, AiFightTier tier, Func<Match, FighterInput> p1, int ticks, string move, int react, int? jp, bool standing = true)
+	static Res Track(string prof, string opp, AiFightTier tier, Func<Match, FighterInput> p1, int ticks, string move, int react, int? jp, bool standing = true, BehaviourProfile? custom = null, AiAction? act = null)
 	{
-		var p = Profile(prof);
+		var p = custom ?? Profile(prof);
 		var m = NewMatch(opp, jp);
 		var log = new List<AiDecision>();
 		int round = 0;
 		ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 5000u + (uint)round, react, tier, standingHabits: standing) { Log = log };
 		var ai = NewAi();
 		var r = new Res(); var trace = new List<(int i, string s)>();
-		bool pending = false, wasMove = false; int starts = 0, from = 0, firedAt = 0, tickNow = 0;
+		bool pending = false, wasMove = false; int prevFrame = 0; int starts = 0, from = 0, firedAt = 0, tickNow = 0;
 		void Close(bool cut)
 		{
 			if (!pending) return;
@@ -66,9 +66,10 @@ public static class StandingHabitAlwaysProbes
 			}
 			var v = AiView.Capture(m).Fighter(1);
 			trace.Add((i, "[" + v.State.ToString()[..2] + (v.MoveId ?? "").Replace("kitsune-", "") + "/" + b.Bits + "]")); if (trace.Count > 400) trace.RemoveAt(0);
-			bool isMove = v.State == FighterState.Attack && v.MoveId == move;
-			if (isMove && !wasMove && pending && i - firedAt < 150) starts++;
-			wasMove = isMove;
+			bool isMove = v.State == FighterState.Attack && (act is { } aa ? AiLoadout.From(m.P2).IsScreenMoveOf(aa, v.MoveId) : v.MoveId == move);
+			// a start is a new Attack state or the frame counter going back (same move back-to-back)
+			if (isMove && (!wasMove || v.MoveFrame < prevFrame) && pending && i - firedAt < 150) starts++;
+			wasMove = isMove; prevFrame = v.MoveFrame;
 			if (m.Phase == MatchPhase.Over) { Close(true); m.Reset(); round++; ai = NewAi(); wasMove = false; }
 		}
 		Close(true);
@@ -171,5 +172,24 @@ public static class StandingHabitAlwaysProbes
 		Assert.Equal(a.Fired, b.Fired, "fired");
 		Assert.Equal(a.Replaced, b.Replaced, "replaced");
 		Assert.Equal(a.Lost, b.Lost, "lost");
+	}
+
+	// Special habit: a standing at_close_range habit whose action is a special must be recognised as started (no double press).
+	[Test]
+	public static void SpecialHabit_IsRecognisedAsStarted_NoDoubles()
+	{
+		var path = System.IO.Path.Combine(ContentPaths.Data("profiles"), "apprentice.json");
+		var text = System.Text.RegularExpressions.Regex.Replace(System.IO.File.ReadAllText(path), "\"do\": \"normal:kitsune-heavy-punch\"", "\"do\": \"special:foxfire\"");
+		var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "apprentice-special-probe.json");
+		System.IO.File.WriteAllText(tmp, text.Replace("\"id\": \"apprentice\"", "\"id\": \"apprentice\""));
+		var prof = BehaviourProfile.LoadFile(tmp);
+		Assert.True(prof.Habit.Do.Kind == ActionKind.Special, "the probe profile's habit is a special");
+		foreach (int react in new[] { 1, 30 })
+		{
+			var r = Track("", "kitsune", AiFightTier.Standard, Mash(), 30000, "", react, null, true, prof, prof.Habit.Do);
+			Assert.True(r.Fired >= 20, $"react {react}: fired {r.Fired}");
+			Assert.Equal(0, r.Doubles, $"react {react}: special habit pressed twice");
+			Assert.Equal(0, r.Lost, $"react {react}: special habit lost (fired {r.Fired}, replaced {r.Replaced})");
+		}
 	}
 }
