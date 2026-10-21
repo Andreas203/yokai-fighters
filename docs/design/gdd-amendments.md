@@ -256,7 +256,7 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 **Status.** Decided by the designer on 2026-10-21 ("the apprentice gets its own profile").
 
-**Decision.** The row-1 apprentice fights with its own behaviour profile (`data/profiles/apprentice.json`, `yokai: "apprentice"`) instead of rolling one of the Kitsune's two temperaments. Its body and kit stay the Kitsune's (`plays_as: "kitsune"` in the node-scene table); the node names the profile, so it is never rolled and never joins the Kitsune's list. That makes 8 profiles: 3 yokai × 2 temperaments + the apprentice + the Tanuki.
+**Decision.** The row-1 apprentice fights with its own behaviour profile (`data/profiles/apprentice.json`, `yokai: "apprentice"`) instead of rolling one of the Kitsune's two temperaments. Its body and kit stay the Kitsune's (`plays_as: "kitsune"` in the node-scene table); the node names the profile, so it is never rolled and never joins the Kitsune's list. That makes 8 profiles: 3 yokai × 2 temperaments + the apprentice + the Tanuki. The apprentice is not a yokai, so Y2's "each yokai: two temperaments" does not apply to it.
 
 **Why.** With the seeded per-node temperament roll, an apprentice that rolled the patient Kitsune held full screen and the fight timed out, which a newcomer's first duel must not do. Work: YOK-174.
 
@@ -264,5 +264,6 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 | Where | Was | Now |
 |---|---|---|
-| GDD build plan, week 2 (extended p. milestone table; short § build plan) | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
+| GDD extended §10.4 Schedule and cut gates (p. 12), week 2 row; GDD short §4.6 Schedule and scope, week 2 row | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
+| rules.md G5, W2 | "33 abilities, 7 profiles" | "33 abilities, 8 profiles [AM13]" |
 | rules.md Y1 | "7 profiles: 3 yokai × 2 temperaments + Tanuki." | The new line above, with [AM13]. |
