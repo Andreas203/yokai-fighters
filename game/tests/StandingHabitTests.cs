@@ -24,10 +24,11 @@ public static class StandingHabitTests
 	static ReplayCatalog Catalog => _catalog ??= ReplayCatalog.FromRepo(RepoRoot);
 	static BehaviourProfile Profile(string id) => BehaviourProfile.LoadFile(ContentPaths.Data("profiles") + "/" + id + ".json");
 
-	static Match NewMatch(string opponent = "kitsune")
+	static Match NewMatch(string opponent = "kitsune", int? jumpPunishPct = null)
 	{
 		FightScene.Run = null;
-		return NodeFight.NewMatch(FightScene.Sources, null, null, opponent, FightScene.DefaultScheme);
+		return NodeFight.NewMatch(FightScene.Sources, null, null, opponent, FightScene.DefaultScheme,
+			shape: jumpPunishPct is null ? null : c => c with { P2JumpPunishPct = jumpPunishPct });
 	}
 
 	sealed class Tally
@@ -194,5 +195,89 @@ public static class StandingHabitTests
 		string header = System.Text.Json.JsonSerializer.Serialize(old.Header);
 		Assert.True(!header.Contains("StandingHabits"), $"the field is not written for the old rule: {header}");
 		Assert.True(Replayer.Run(ReplayRecording.FromBytes(old.ToBytes()), Catalog).Ok, "an old-style recording replays");
+	}
+
+	static bool IsJumpAnswer(AiDecision d) => d.Kind == "react" && d.Trigger == "opponent_jumping" && d.Action.StartsWith("normal:");
+
+	/// <summary>
+	/// Code-critic YOK-177 (Y4, YOK-165: the Tanuki punishes every seen jump): Ryo blocks until the throw habit fires, then
+	/// jumps out. The running habit plan must not stop the jump being answered: one jump-punish roll per jump at the
+	/// Tanuki's 100, and the anti-air comes out.
+	/// </summary>
+	[Test]
+	public static void Tanuki_JumpOverItsThrowHabit_IsStillAnswered()
+	{
+		var p = Profile("tanuki-boss");
+		var m = NewMatch("ryo", jumpPunishPct: 100);
+		var log = new List<AiDecision>();
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 1771, tier: AiFightTier.Tanuki) { Log = log };
+		bool jumping = false, wasAir = false;
+		int seenHabits = 0, jumps = 0, overHabit = 0, answered = 0, started = 0, jumpTick = -1, from = 0;
+		string? answer = null;
+		for (int i = 0; i < 40000 && m.Phase == MatchPhase.Fighting; i++)
+		{
+			var b = ai.Next(AiView.Capture(m));
+			int fired = log.Count(d => d.Kind == "habit");
+			if (fired > seenHabits) { seenHabits = fired; jumping = true; }
+			var back = m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right;
+			var a = new FighterInput(jumping && m.P1.Actionable ? InputBits.Up : back);
+			m.Step(a, b);
+			if (m.P1.Airborne && !wasAir)
+			{
+				jumps++; jumpTick = m.Tick; jumping = false; answer = null;
+				if (ai.HabitPlanRunning) overHabit++;
+			}
+			for (; from < log.Count; from++)
+				if (jumpTick >= 0 && IsJumpAnswer(log[from]) && log[from].ViewTick >= jumpTick) { answered++; answer = log[from].Action[7..]; }
+			var v = AiView.Capture(m).Fighter(1);
+			if (answer is not null && v.State == FighterState.Attack && v.MoveId == answer) { started++; answer = null; }
+			if (!m.P1.Airborne && wasAir) jumpTick = -1;
+			wasAir = m.P1.Airborne;
+		}
+		GD.Print($"YOK-177 tanuki jump-over-habit: {jumps} jumps, {overHabit} while the habit ran, {answered} answered, {started} answers started");
+		Assert.True(overHabit >= 5, $"jumps out of a running throw habit ({overHabit} of {jumps})");
+		Assert.True(answered >= jumps - 1, $"every jump answered at the Tanuki's 100 ({answered} of {jumps})");
+		Assert.True(started * 10 >= answered * 8, $"the anti-air comes out ({started} of {answered})");
+	}
+
+	/// <summary>
+	/// Code-critic YOK-177 advisory: a standing habit does not overwrite a held jump answer (YOK-165) while it waits or
+	/// presses. Ryo jumps up in the apprentice's face; between an answer and its start (or Ryo landing) no habit rolls.
+	/// </summary>
+	[Test]
+	public static void Apprentice_HabitDoesNotOverwriteAHeldJumpAnswer()
+	{
+		var p = Profile("apprentice");
+		var m = NewMatch("kitsune", jumpPunishPct: 100);
+		var log = new List<AiDecision>();
+		var ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 1772) { Log = log };
+		int from = 0, answers = 0, habitsWhilePending = 0, round = 0;
+		string? pending = null;
+		for (int i = 0; i < 30000; i++)
+		{
+			var b = ai.Next(AiView.Capture(m));
+			int gap = Math.Abs(m.P2.X - m.P1.X) / SimConfig.Scale;
+			var fwd = m.P1.X < m.P2.X ? InputBits.Right : InputBits.Left;
+			var a = new FighterInput(!m.P1.Actionable ? InputBits.None : gap >= ProfileAi.CloseRange ? fwd : m.Tick % 45 == 0 ? InputBits.Up : InputBits.None);
+			m.Step(a, b);
+			for (; from < log.Count; from++)
+			{
+				var d = log[from];
+				if (IsJumpAnswer(d)) { answers++; pending = d.Action[7..]; }
+				else if (d.Kind.StartsWith("habit") && pending is not null) habitsWhilePending++;
+			}
+			var v = AiView.Capture(m).Fighter(1);
+			if (pending is not null && ((v.State == FighterState.Attack && v.MoveId == pending) || !m.P1.Airborne)) pending = null;
+			if (m.Phase == MatchPhase.Over)
+			{
+				m.Reset(); round++;
+				ai = new ProfileAi(p, 1, AiLoadout.From(m.P2), 1772 + (uint)round) { Log = log };
+				pending = null;
+			}
+		}
+		GD.Print($"YOK-177 apprentice held answers: {answers} answers, {log.Count(d => d.Kind == "habit")} habits fired, {habitsWhilePending} while pending");
+		Assert.True(answers >= 30, $"jumps answered in her face ({answers})");
+		Assert.True(log.Any(d => d.Kind == "habit"), "and her habit fires in the same fight");
+		Assert.Equal(0, habitsWhilePending, "no habit roll while a jump answer is still to come out");
 	}
 }

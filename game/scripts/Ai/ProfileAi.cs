@@ -154,19 +154,25 @@ public sealed class ProfileAi
 				// YOK-177: a standing-trigger habit waits out the AI's own move or stun, so its press is not lost while busy.
 				int hold = wakeUp ? wake - tick : standing ? FirstActionableTick(view) - tick : 0;
 				_plan = Build(h.Do, view, tick, true, Math.Max(0, hold));
+				if (standing && _plan is not null) _plan.StandingHabit = true;
 			}
 		}
 
 		// Event reactions: each weight is a percent rate per occurrence (anti-air rate, block habit...).
 		// YOK-165, Y4: with a tier jump-punish rate, the jump's attacking answers are one roll at that rate (JumpPunish),
 		// taken where the first opponent_jumping behaviour sits in the list; its other answers roll by weight after a miss.
-		if (_plan is not { Habit: true })
+		// YOK-177 (Y4): a standing-trigger habit plan (the Tanuki's throw at a blocker) does not stop a seen jump being
+		// answered: only the opponent_jumping answers roll then, and a hit replaces the habit. An event habit still holds
+		// everything off, so those profiles draw as before.
+		bool jumpOverHabit = _plan is { Habit: true, StandingHabit: true, Done: false } && rose[(int)Observation.OpponentJumping];
+		if (_plan is not { Habit: true } || jumpOverHabit)
 		{
 			int? jumpRate = rose[(int)Observation.OpponentJumping] ? view.JumpPunishPct(Self) : null;
 			bool jumpRolled = false;
 			foreach (var b in Profile.Behaviours)
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
+				if (jumpOverHabit && b.When != Observation.OpponentJumping) continue;
 				if (jumpRate is { } rate && b.When == Observation.OpponentJumping)
 				{
 					if (!jumpRolled)
@@ -358,6 +364,7 @@ public sealed class ProfileAi
 	private bool StandingHabitDue(AiView view, FighterView s, FighterView o)
 	{
 		if (!StandingHabits || !Holds(Profile.Habit.When, RangeOf(s, o), o) || HabitPlanRunning) return false;
+		if (_plan is { PressStep: >= 0, Done: false }) return false; // a held jump answer (YOK-165) is not overwritten
 		// A clock that went back (the match was reset under this AI) re-arms it.
 		if (_standingRollTick >= 0 && view.Tick >= _standingRollTick && view.Tick - _standingRollTick < StandingHabitRearmTicks) return false;
 		_standingRollTick = view.Tick;
@@ -523,6 +530,8 @@ public sealed class ProfileAi
 	private sealed class Plan
 	{
 		public bool Habit { get; }
+		/// <summary>YOK-177: a habit plan from a standing trigger; a seen jump may still be answered over it.</summary>
+		public bool StandingHabit { get; set; }
 		private readonly (FighterInput In, int Ticks)[] _steps;
 		private int _i, _t;
 		public Plan(bool habit, params (FighterInput, int)[] steps) { Habit = habit; _steps = steps; }

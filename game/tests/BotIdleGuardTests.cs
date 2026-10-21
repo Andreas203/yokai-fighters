@@ -225,9 +225,7 @@ public static class BotIdleGuardTests
 		var batch = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content), bot, 1, 3); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		// YOK-174: all three re-pinned (were 1144460045766550, cd0500c43b604051, 8091329b164ab95a): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
-		// YOK-177: re-pinned again (were 201847ea51c823ea, d1e10892cbb135b5, e6080dde358a775a): the apprentice's at_close_range habit
-		// (a standing trigger) now rolls, which changes every run's first fight. The opponent is otherwise the legacy one.
-		var want = new[] { "d82ce47836a36015", "5ce8fc2d6fad7d38", "60ed85ae00c7d89e" };
+		var want = new[] { "201847ea51c823ea", "d1e10892cbb135b5", "e6080dde358a775a" };
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
 		var got = Enumerable.Range(0, want.Length).Select(i => runs[i].GetProperty("session_hash").GetString()).ToArray();
@@ -236,5 +234,13 @@ public static class BotIdleGuardTests
 			foreach (var node in run.GetProperty("nodes").EnumerateArray())
 				if (node.TryGetProperty("fight", out var f))
 					Assert.Equal(0, f.GetProperty("bot").GetProperty("idle_guards").GetInt32(), "no idle guards at 0");
+
+		// YOK-177: the same batch with standing-trigger habits on (the apprentice's at_close_range habit rolls).
+		var on = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content) with { StandingHabits = true }, bot, 1, 3);
+		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
+		var runsOn = docOn.RootElement.GetProperty("runs");
+		var wantOn = new[] { "367b1b3bf4c1bca8", "5ce8fc2d6fad7d38", "4da4fed1fb16ea60" };
+		var gotOn = Enumerable.Range(0, wantOn.Length).Select(i => runsOn[i].GetProperty("session_hash").GetString()).ToArray();
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", gotOn), "runs seed 1-3 with YOK-177 standing habits");
 	}
 }
