@@ -105,7 +105,7 @@ public partial class FightScene
 				Recorder?.OnAi(null, AiSeed);
 				return;
 			}
-			AiSetupError = null;
+			if (AiSetupError is not null) { AiSetupError = null; SetProcess(true); } // a refused node is behind us (restart, next node)
 			P2Ai = new ProfileAi(profile, 1, loadout, AiSeed, reaction, TierOf(Node), pressure.AggressionBonus);
 		}
 		else P2Ai = null;

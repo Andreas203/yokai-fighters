@@ -223,7 +223,7 @@ public static class BotIdleGuardTests
 	{
 		var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = 0 } };
 		var batch = RunHarness.PlayBatch(Content, bot, 1, 3);
-		// YOK-174: seed 2 re-pinned (cd0500c43b604051, was e75276f37981d48f): its row-2 node now rolls its temperament (designer, Y1/Y2).
+		// YOK-174: seed 2 re-pinned (cd0500c43b604051, was e75276f37981d48f): its nodes now roll their temperament (designer, Y1/Y2), first diverging at r1-apprentice.
 		var want = new[] { "1144460045766550", "cd0500c43b604051", "8091329b164ab95a" };
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
