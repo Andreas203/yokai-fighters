@@ -58,7 +58,7 @@ public static class RunHarness
 		fight ??= FightNode;
 		var session = RunSession.Start(content.Pool, content.Map, content.Scenes, seed);
 		var runBot = new RunBot(bot.Run, Mix(seed, 0x524F5554u));
-		var rec = new RunRecord { Seed = seed };
+		var rec = new RunRecord { Seed = seed, Level = bot.Level };
 		while (!session.IsOver)
 		{
 			string id = runBot.ChooseRoute(session, session.Reachable());
@@ -162,6 +162,17 @@ public static class RunHarness
 		return batch;
 	}
 
+	/// <summary>
+	/// YOK-170: a mixed batch. Run i is played on seed <paramref name="baseSeed"/> + i by level i mod the level count (file
+	/// order), so it is the same run as run i of that level's own batch from the same seed.
+	/// </summary>
+	public static BatchResult PlayMixed(HarnessContent content, BotLevels levels, uint baseSeed, int runs)
+	{
+		var batch = new BatchResult(levels.Levels[0], baseSeed, $"{levels.Id}-mixed");
+		for (int i = 0; i < runs; i++) batch.Runs.Add(PlayRun(content, levels.Levels[i % levels.Levels.Count], baseSeed + (uint)i));
+		return batch;
+	}
+
 	/// <summary>A seed for one consumer of a run (route, AI, bot), so changing one never shifts another's rolls.</summary>
 	public static uint Mix(uint seed, uint tag)
 	{
@@ -219,6 +230,8 @@ public sealed class NodeRecord
 public sealed class RunRecord
 {
 	public uint Seed { get; init; }
+	/// <summary>YOK-170: the bot's skill level for this run (null: a bot file played on its own).</summary>
+	public string? Level { get; init; }
 	public bool Won { get; set; }
 	public int RowReached { get; set; }
 	public string EndNode { get; set; } = "";
@@ -239,8 +252,11 @@ public sealed class RunRecord
 
 public sealed class BatchResult
 {
+	/// <summary>The bot (a mixed batch: its first level; each run records its own <see cref="RunRecord.Level"/>).</summary>
 	public BotConfig Bot { get; }
+	/// <summary>The results file's <c>bot</c> and file-name stem: the bot id, or <c>&lt;levels id&gt;-mixed</c> (YOK-170).</summary>
+	public string Name { get; }
 	public uint BaseSeed { get; }
 	public List<RunRecord> Runs { get; } = new();
-	public BatchResult(BotConfig bot, uint baseSeed) { Bot = bot; BaseSeed = baseSeed; }
+	public BatchResult(BotConfig bot, uint baseSeed, string? name = null) { Bot = bot; BaseSeed = baseSeed; Name = name ?? bot.Id; }
 }

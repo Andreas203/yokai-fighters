@@ -30,7 +30,7 @@ public static class HarnessReport
 	/// <summary>R4: health on arriving at the Tanuki for the newcomer's heal@4 + rest@7 line (the bot's), and heal@4 + train@7.</summary>
 	public const int ArrivalHealRestTarget = 520, ArrivalHealTrainTarget = 370;
 
-	public static string FileName(BatchResult b) => $"{b.Bot.Id}-n{b.Runs.Count}-s{b.BaseSeed}.json";
+	public static string FileName(BatchResult b) => $"{b.Name}-n{b.Runs.Count}-s{b.BaseSeed}.json";
 
 	public static string Write(BatchResult b, string dir)
 	{
@@ -48,7 +48,7 @@ public static class HarnessReport
 			w.WriteStartObject();
 			w.WriteString("kind", Kind);
 			w.WriteNumber("schema_version", SchemaVersion);
-			w.WriteString("bot", b.Bot.Id);
+			w.WriteString("bot", b.Name);
 			w.WriteNumber("base_seed", b.BaseSeed);
 			w.WriteNumber("runs_played", b.Runs.Count);
 			w.WriteString("caveats", Caveats);
@@ -143,13 +143,58 @@ public static class HarnessReport
 			w.WriteNumber(g.Key, g.Count());
 		w.WriteEndObject();
 		FightLogReport.WriteSummary(w, runs.SelectMany(r => r.Nodes).Where(x => x.Fight is not null).Select(x => x.Fight!)); // YOK-157: P5, P6/Y2
+		WriteLevels(w, runs);
 		w.WriteEndObject();
+	}
+
+	/// <summary>
+	/// YOK-170: per bot level (in the order the levels first appear; "none" for a bot file played on its own): reach (R5),
+	/// win rates (runs won, Tanuki beaten of reached, duels won) and the exchange ratio, damage dealt / damage taken over
+	/// every duel; with the hit log on, also Ryo's unblocked hits / the opponent's.
+	/// </summary>
+	static void WriteLevels(Utf8JsonWriter w, List<RunRecord> runs)
+	{
+		w.WriteStartObject("levels");
+		foreach (var g in runs.GroupBy(r => r.Level ?? "none"))
+		{
+			var lr = g.ToList();
+			int n = lr.Count, reached = lr.Count(r => r.ReachedTanuki), beat = lr.Count(r => r.BeatTanuki), won = lr.Count(r => r.Won);
+			var duels = lr.SelectMany(r => r.Nodes).Where(x => x.Fight is not null).Select(x => x.Fight!).ToList();
+			long dealt = duels.Sum(f => (long)f.DamageDealt), taken = duels.Sum(f => (long)f.DamageTaken);
+			w.WriteStartObject(g.Key);
+			w.WriteNumber("runs", n);
+			w.WriteNumber("reached_tanuki", reached);
+			Pct(w, "reach_tanuki_pct", reached, n);
+			w.WriteNumber("beat_tanuki", beat);
+			Pct(w, "beat_tanuki_pct_of_reached", beat, reached);
+			Pct(w, "run_win_pct", won, n);
+			w.WriteNumber("duels", duels.Count);
+			w.WriteNumber("duels_won", duels.Count(f => f.Won));
+			Pct(w, "duel_win_pct", duels.Count(f => f.Won), duels.Count);
+			w.WriteNumber("damage_dealt", dealt);
+			w.WriteNumber("damage_taken", taken);
+			Ratio(w, "exchange_ratio", dealt, taken);
+			if (duels.Count > 0 && duels.All(f => f.Log is not null))
+			{
+				long Clean(int side) => duels.Sum(f => (long)f.Log!.Moves[side].Values.Sum(t => t.Hits - t.Blocked));
+				Ratio(w, "hit_exchange_ratio", Clean(0), Clean(1));
+			}
+			w.WriteEndObject();
+		}
+		w.WriteEndObject();
+	}
+
+	static void Ratio(Utf8JsonWriter w, string name, long num, long den)
+	{
+		if (den == 0) w.WriteNull(name);
+		else w.WriteNumber(name, Math.Round((double)num / den, 2, MidpointRounding.AwayFromZero));
 	}
 
 	static void WriteRun(Utf8JsonWriter w, RunRecord r)
 	{
 		w.WriteStartObject();
 		w.WriteNumber("seed", r.Seed);
+		if (r.Level is null) w.WriteNull("level"); else w.WriteString("level", r.Level); // YOK-170
 		w.WriteString("outcome", r.Won ? "won" : "lost");
 		w.WriteNumber("row_reached", r.RowReached);
 		w.WriteString("end_node", r.EndNode);

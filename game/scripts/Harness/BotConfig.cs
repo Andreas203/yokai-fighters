@@ -66,6 +66,8 @@ public sealed record BotConfig
 	public required ControlScheme Scheme { get; init; }
 	public required BotFightConfig Fight { get; init; }
 	public required BotRunConfig Run { get; init; }
+	/// <summary>YOK-170: the skill level this config was built as (<see cref="BotLevels"/>); null for a bot file played on its own.</summary>
+	public string? Level { get; init; }
 
 	public static readonly IReadOnlyDictionary<string, InputBits> Buttons = new Dictionary<string, InputBits>
 	{
@@ -78,7 +80,17 @@ public sealed record BotConfig
 	/// <summary>The default bot from a data folder (<c>data/harness/newcomer-kihon-bot.json</c>).</summary>
 	public static BotConfig LoadDefault(string dataDir) => LoadFile(Path.Combine(dataDir, "harness", DefaultId + ".json"));
 
+	/// <summary>Strict: every bad file is a <see cref="FormatException"/>, including bad JSON, a value of the wrong JSON kind
+	/// (InvalidOperationException from the casts) and a key written twice (ArgumentException from JsonObject).</summary>
 	public static BotConfig Parse(string json)
+	{
+		try { return ParseChecked(json); }
+		catch (InvalidOperationException e) { throw new FormatException($"bot config: a value of the wrong kind: {e.Message}", e); }
+		catch (System.Text.Json.JsonException e) { throw new FormatException($"bot config: not JSON: {e.Message}", e); }
+		catch (ArgumentException e) { throw new FormatException($"bot config: a key written twice: {e.Message}", e); }
+	}
+
+	static BotConfig ParseChecked(string json)
 	{
 		var o = JsonNode.Parse(json)?.AsObject() ?? throw new FormatException("empty bot config");
 		if ((string?)o["kind"] != Kind) throw new FormatException($"kind is not '{Kind}'");
