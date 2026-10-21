@@ -53,11 +53,10 @@ public static class AiGuardTests
 	}
 
 	/// <summary>
-	/// The harness content with the opponent as it was before YOK-156 and YOK-165: no tier jump-punish rate (the
-	/// profiles' own weights) and full damage (no apprentice half). Profiles stay as loaded (GuardPct untouched, so their
-	/// fingerprints too): the guard is off by default and the legacy test below checks no shipped profile opts in. For
-	/// tests that pin whole-run hashes of older batches (BotIdleGuardTests' pins predate YOK-156, which is why that test
-	/// failed on main before this).
+	/// The harness content with the opponent as it was on main before YOK-165: no tier jump-punish rate (the profiles'
+	/// own weights). Profiles stay as loaded (GuardPct untouched, so their fingerprints too): the guard is off by default
+	/// and the legacy test below checks no shipped profile opts in. For tests that pin whole-run hashes made before
+	/// YOK-165 (BotIdleGuardTests' YOK-166 pins).
 	/// </summary>
 	public static HarnessContent LegacyOpponent(HarnessContent c) => c with
 	{
@@ -69,21 +68,21 @@ public static class AiGuardTests
 		public NodeScene Resolve(MapNodeData node)
 		{
 			var s = inner.Resolve(node);
-			return s with { Context = s.Context with { JumpPunishPct = null, DamageDealtPct = SimConfig.FullDamagePct } };
+			return s with { Context = s.Context with { JumpPunishPct = null } };
 		}
 	}
 
 	[Test]
 	public static void LegacyOpponent_PlaysTheOldHashes()
 	{
-		// The first run of the main batch committed before YOK-156 (BotIdleGuardTests pins it too), bot idle guard 0.
+		// The first run of main's batch before YOK-165 (BotIdleGuardTests pins it too, YOK-166), bot idle guard 0.
 		foreach (var p in BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")))
 			Assert.True(p.GuardPct is null or 0, $"{p.Id}: no shipped profile opts in to the guard (else LegacyOpponent is not legacy)");
 		var content = LegacyOpponent(HarnessContent.Load(ContentPaths.DataDir, ContentPaths.FixturesDir));
 		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
 		var batch = RunHarness.PlayBatch(content, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
-		Assert.Equal("c7b99e223b9a0450", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard 0, no tier rate, full damage = the opponent from before YOK-156 and YOK-165");
+		Assert.Equal("1144460045766550", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------
