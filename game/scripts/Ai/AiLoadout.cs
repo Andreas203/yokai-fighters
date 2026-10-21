@@ -46,7 +46,7 @@ public sealed class AiLoadout
 			var m = f.Moves[i];
 			l._frames.TryAdd(m.Id, m.TotalFrames);
 			if (m.IsThrow) { if (l.ThrowButtons == InputBits.None) { l.ThrowButtons = m.ThrowButtons; l.ThrowFrames = m.TotalFrames; l.ThrowMoveId = m.Id; l.ThrowSlot = i; } }
-			else if (m.IsNormal && !m.Air) l._moves.TryAdd("normal:" + m.Id, (FighterInput.Attack(i), m.TotalFrames));
+			else if (m.IsNormal && !m.Air && l._moves.TryAdd("normal:" + m.Id, (FighterInput.Attack(i), m.TotalFrames))) l._screen["normal:" + m.Id] = (m.Id, null);
 		}
 		for (int s = 1; s < f.Specials.Length; s++)
 			if (f.Specials[s] is { } sp)
@@ -56,19 +56,34 @@ public sealed class AiLoadout
 			}
 		for (int s = 1; s < f.Specials.Length; s++)
 			if (f.Specials[s] is { } eq && l._moves.TryAdd("special:" + eq.Data.Id, (FighterInput.Special((SpecialSlot)s), eq.Move.TotalFrames)))
+			{
 				l.AddEx("special:" + eq.Data.Id, (SpecialSlot)s, eq);
+				l._screen["special:" + eq.Data.Id] = (eq.Move.Id, eq.ExMove?.Id);
+			}
 		// YOK-94, T0: "special:copied" = the slot the Tanuki's copy sits in (none on any other fighter: the action is skipped).
 		string copied = "special:" + BehaviourProfile.CopiedSpecial;
 		l._moves.Remove(copied);
 		l._ex.Remove(copied);
 		l._exActionFrames.Remove(copied);
+		l._screen.Remove(copied);
 		if (f.CopiedSlot != SpecialSlot.None && f.Specials[(int)f.CopiedSlot] is { } c)
 		{
 			l._moves[copied] = (FighterInput.Special(f.CopiedSlot), c.Move.TotalFrames);
 			l.AddEx(copied, f.CopiedSlot, c);
+			l._screen[copied] = (c.Move.Id, c.ExMove?.Id);
 		}
+		if (l.ThrowMoveId is { } t) l._screen["throw"] = (t, null);
 		return l;
 	}
+
+	private readonly Dictionary<string, (string Plain, string? Ex)> _screen = new();
+
+	/// <summary>
+	/// YOK-177: the move id(s) an action shows on screen when it starts: a normal's id, a special's move (and its EX
+	/// move), the copied special's, the throw's. False for anything else (walk, block...) or an action the kit lacks.
+	/// </summary>
+	public bool IsScreenMoveOf(AiAction a, string? moveId) =>
+		moveId is not null && _screen.TryGetValue(a.ToString(), out var ids) && (ids.Plain == moveId || ids.Ex == moveId);
 
 	private void AddEx(string key, SpecialSlot slot, EquippedSpecial eq)
 	{

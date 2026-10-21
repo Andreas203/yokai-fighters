@@ -300,15 +300,19 @@ public static class StandingHabitTests
 	/// <summary>
 	/// Designer 2026-10-21 (YOK-177): a fired habit always comes out, even when the AI is hit or blocks again before it
 	/// can act. Under random pressure every fired habit starts its move, unless a jump answer replaces it or the round
-	/// ends first. Both standing-habit profiles, three seeds each.
+	/// ends first. Both standing-habit profiles, at the profile's reaction and at 1, three seeds each. A start is a fresh
+	/// start edge (MoveFrame back to its start), so a habit move straight after the same move is counted.
 	/// </summary>
 	[Test]
 	public static void FiredHabit_AlwaysStartsItsMove_UnderRandomPressure()
 	{
-		foreach (var (id, opponent, move, tier) in new[]
+		// Test-breaker r2: reaction 1 too, where a fired habit's move often starts back-to-back with the same move.
+		foreach (var (id, opponent, move, tier, react) in new (string, string, string, AiFightTier, int?)[]
 		{
-			("apprentice", "kitsune", "kitsune-heavy-punch", AiFightTier.Standard),
-			("tanuki-boss", "ryo", "ryo-generic-throw", AiFightTier.Tanuki),
+			("apprentice", "kitsune", "kitsune-heavy-punch", AiFightTier.Standard, null),
+			("apprentice", "kitsune", "kitsune-heavy-punch", AiFightTier.Standard, 1),
+			("tanuki-boss", "ryo", "ryo-generic-throw", AiFightTier.Tanuki, null),
+			("tanuki-boss", "ryo", "ryo-generic-throw", AiFightTier.Tanuki, 1),
 		})
 		{
 			var p = Profile(id);
@@ -318,7 +322,7 @@ public static class StandingHabitTests
 				var m = NewMatch(opponent, jumpPunishPct: 50);
 				var log = new List<AiDecision>();
 				int round = 0;
-				ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 900 + seed + (uint)round * 7919u, tier: tier) { Log = log };
+				ProfileAi NewAi() => new(p, 1, AiLoadout.From(m.P2), 900 + seed + (uint)round * 7919u, react, tier) { Log = log };
 				var ai = NewAi();
 				var p1 = id == "tanuki-boss" ? RandomTurtle(seed) : RandomP1(seed);
 				int from = 0, pendingTick = -1;
@@ -357,9 +361,9 @@ public static class StandingHabitTests
 				}
 				if (pendingTick >= 0) roundEnd++; // still to come out when the run stopped
 			}
-			GD.Print($"YOK-177 always-out {id}: {fired} fired, {started} started, {replaced} replaced by a jump answer, {roundEnd} cut by the round end");
-			Assert.True(fired >= 30, $"{id}: habits fired under random pressure ({fired})");
-			Assert.Equal(fired - replaced - roundEnd, started, $"{id}: every fired habit starts its move");
+			GD.Print($"YOK-177 always-out {id} reaction {react?.ToString() ?? "profile"}: {fired} fired, {started} started, {replaced} replaced by a jump answer, {roundEnd} cut by the round end");
+			Assert.True(fired >= 30, $"{id}/{react}: habits fired under random pressure ({fired})");
+			Assert.Equal(fired - replaced - roundEnd, started, $"{id}/{react}: every fired habit starts its move");
 		}
 	}
 

@@ -163,6 +163,7 @@ public sealed class ProfileAi
 					_plan.StandingHabit = true;
 					_plan.PressStep = 1; // Build puts the wait in step 0, the press in step 1
 					_plan.AnswerMoveId = h.Do.Kind == ActionKind.Throw ? _kit.ThrowMoveId : h.Do.MoveId; // code-critic r3: a substituted normal is not the throw
+					_plan.HabitAction = h.Do; // its start is read by the move ids the kit shows for it (plain or EX, the copied special, the throw)
 					_plan.HoldPress(PressWindow(_plan, view));
 				}
 			}
@@ -205,6 +206,7 @@ public sealed class ProfileAi
 		// Neutral: a weighted pick among standing behaviours that hold now, plus spacing toward the preferred range.
 		// YOK-165: an anti-air held for the first actionable tick is dropped (no draw) if the jumper shows landed by then.
 		if (_plan is { InHeldWait: true } held && FirstActionableTick(view) <= tick) held.ReleaseWait(tick);
+		if (_resume is { InPress: true } rs && tick > rs.ReleaseTick) HabitPress(rs, view, s, prev, tick); // YOK-177: a burst over it does not hide its start
 		if (_plan is { InPress: true, StandingHabit: true } hp) { if (tick > hp.ReleaseTick) HabitPress(hp, view, s, prev, tick); } // YOK-177
 		else if (_plan is { AtPress: true } && !o.Airborne) _plan = null; // nothing pressed yet: drop the whole answer
 		else if (_plan is { InPress: true } rp && tick > rp.ReleaseTick)
@@ -293,10 +295,15 @@ public sealed class ProfileAi
 	/// </summary>
 	private void HabitPress(Plan hp, AiView view, FighterView s, AiView? prev, int tick)
 	{
-		bool started = view.Tick >= hp.ReleaseTick && s.State == FighterState.Attack
-			&& view.Tick - s.MoveFrame + 1 >= hp.ReleaseTick && (hp.AnswerMoveId is null || s.MoveId == hp.AnswerMoveId);
+		// Test-breaker r2: only a fresh start of the habit's own move counts (an earlier move with the same id still on
+		// screen, its MoveFrame held by hitstop, is not it); views are consecutive, so no start edge is skipped.
+		FighterView? ps = prev?.Fighter(Self);
+		bool started = view.Tick >= hp.ReleaseTick && s.State == FighterState.Attack && hp.HabitAction is { } act && _kit.IsScreenMoveOf(act, s.MoveId)
+			&& (ps is not { } p || p.State != FighterState.Attack || p.MoveId != s.MoveId || p.MoveFrame > s.MoveFrame);
 		if (started) { hp.EndPress(AnswerEnd(hp, view, s, true) - tick); return; }
-		if (tick - hp.ReleaseTick >= hp.Window || (view.Tick >= hp.ReleaseTick && AnswerShown(hp, s, prev))) hp.Paused = true;
+		bool newStun = view.Tick >= hp.ReleaseTick && (s.State is FighterState.Hitstun or FighterState.Blockstun or FighterState.Thrown or FighterState.Knockdown)
+			&& (ps is not { } q || q.State != s.State || s.StunLeft > q.StunLeft);
+		if (tick - hp.ReleaseTick >= hp.Window || newStun) hp.Paused = true;
 		if (hp.Paused && view.Tick >= hp.ReleaseTick + hp.Window) hp.Rewait();
 	}
 
@@ -570,6 +577,8 @@ public sealed class ProfileAi
 		public bool Habit { get; }
 		/// <summary>YOK-177: a habit plan from a standing trigger; a seen jump may still be answered over it.</summary>
 		public bool StandingHabit { get; set; }
+		/// <summary>YOK-177: the standing habit's action, so HabitPress knows its move on screen.</summary>
+		public AiAction? HabitAction { get; set; }
 		private readonly (FighterInput In, int Ticks)[] _steps;
 		private int _i, _t;
 		public Plan(bool habit, params (FighterInput, int)[] steps) { Habit = habit; _steps = steps; }
