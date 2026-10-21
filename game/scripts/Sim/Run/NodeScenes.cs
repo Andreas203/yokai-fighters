@@ -38,6 +38,14 @@ public sealed record NodeContext(
 	public string? PlaysAs { get; init; }
 	/// <summary>YOK-174: <see cref="PlaysAs"/> with its default.</summary>
 	public string MovesAndProfilesOf => PlaysAs ?? Fighter;
+	/// <summary>YOK-178, A7/A8: the yokai whose abilities a won node offers = the yokai beaten, never the stand-in
+	/// body (<see cref="Fighter"/>): <see cref="MovesAndProfilesOf"/>, so the Oni offers the Oni's cards, an elder its
+	/// yokai's (<c>plays_as</c>), the apprentice the Kitsune's (GDD p.1: "the first duel is an apprentice Kitsune").</summary>
+	public string DraftYokai => MovesAndProfilesOf;
+	/// <summary>YOK-178, R6: the yokai a won binding node counts as bound, the same identity as <see cref="DraftYokai"/>,
+	/// except an elder, which binds its own id as written (<c>elder-oni</c>): whether binding an elder binds its yokai
+	/// for the shop is open for the designer (rules.md, open questions). Also the name on the binding card.</summary>
+	public string BoundAs => Elder && Yokai is { } elder ? elder : DraftYokai;
 	/// <summary>YOK-165, Y4: percent of Ryo's jumps this node's opponent answers with its anti-air, from the tier's
 	/// <c>jump_punish_pct</c> (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100); null when the tier
 	/// names none = the profile's own anti-air weights decide, as before YOK-165.</summary>

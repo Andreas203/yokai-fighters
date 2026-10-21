@@ -222,7 +222,7 @@ public sealed class RunSession
 		CoinsWon = node.Coins;
 		Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
-			Draft = RewardDraft.Build(Run, Pool, node.Fighter, Seed + (uint)Step, node.Elder);
+			Draft = RewardDraft.Build(Run, Pool, node.DraftYokai, Seed + (uint)Step, node.Elder); // YOK-178: the yokai beaten, not the body (A7, A8)
 		return Draft;
 	}
 
@@ -247,11 +247,10 @@ public sealed class RunSession
 	}
 
 	/// <summary>
-	/// R6: the yokai bound this run, in walk order, once each: the fighter of every completed node that binds (R3).
-	/// That is the yokai whose own abilities its draft offered (A8), so the merchant's shop never sells them.
-	/// While a node is a stand-in (its yokai fights with another fighter's kit) both names count: the yokai the map
-	/// names was bound, and the stand-in's abilities were the ones offered. Names are compared as written: an
-	/// elder's yokai id (<c>elder-oni</c>) is not mapped to its yokai (open question for the designer).
+	/// R6: the yokai bound this run, in walk order, once each: for every completed node that binds (R3), the yokai it
+	/// binds as (<see cref="NodeContext.BoundAs"/>, YOK-178: the yokai whose abilities its draft offered, A8, never the
+	/// stand-in body), then the yokai the map names there when that is another id (the apprentice: Kitsune, then
+	/// apprentice). An elder binds its own id as written (<c>elder-oni</c>), not its yokai: open for the designer.
 	/// Worked out from the walk, so it needs no saved state of its own.
 	/// </summary>
 	public IReadOnlyList<string> BoundYokai()
@@ -261,8 +260,8 @@ public sealed class RunSession
 		{
 			var ctx = Scenes.Resolve(Map.Graph.Node(id)).Context;
 			if (!ctx.Binds) continue;
-			if (!bound.Contains(ctx.Fighter)) bound.Add(ctx.Fighter);
-			if (ctx.StandIn && ctx.Yokai is { } yokai && !bound.Contains(yokai)) bound.Add(yokai);
+			if (!bound.Contains(ctx.BoundAs)) bound.Add(ctx.BoundAs);
+			if (ctx.Yokai is { } yokai && !bound.Contains(yokai)) bound.Add(yokai);
 		}
 		return bound;
 	}
