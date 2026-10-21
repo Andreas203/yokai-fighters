@@ -75,14 +75,14 @@ public static class AiGuardTests
 	[Test]
 	public static void LegacyOpponent_PlaysTheOldHashes()
 	{
-		// The first run of main's batch before YOK-165 (BotIdleGuardTests pins it too, YOK-166), bot idle guard 0.
+		// The first run of main's batch before YOK-165 (BotIdleGuardTests pins it too; YOK-174 re-pinned it from 1144460045766550), bot idle guard 0.
 		foreach (var p in BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")))
 			Assert.True(p.GuardPct is null or 0, $"{p.Id}: no shipped profile opts in to the guard (else LegacyOpponent is not legacy)");
 		var content = LegacyOpponent(HarnessContent.Load(ContentPaths.DataDir, ContentPaths.FixturesDir));
 		var bot = BotConfig.LoadDefault(ContentPaths.DataDir);
 		var batch = RunHarness.PlayBatch(content, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
-		Assert.Equal("1144460045766550", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165");
+		Assert.Equal("201847ea51c823ea", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------
