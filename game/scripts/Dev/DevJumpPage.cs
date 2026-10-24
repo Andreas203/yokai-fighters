@@ -275,7 +275,7 @@ public partial class DevJumpPage : VBoxContainer
 	{
 		error = null;
 		var run = DevRunStates.Source.Build(pool);
-		string yokai = StoryLibrary.DisplayName(fight.Opponent == DevJump.TanukiId ? "kitsune" : fight.Opponent);
+		string yokai = DevJump.NameOf(fight);
 		string? move = CopyRule.Target(run)?.Data.Name;
 		Control screen;
 		Action<DevScreenHost> wire;

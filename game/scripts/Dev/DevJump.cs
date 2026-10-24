@@ -144,6 +144,9 @@ public static class DevJump
 	/// <summary>YOK-174: the yokai whose behaviour profiles (and own move files) the setup's opponent fights with.</summary>
 	public static string PlaysAsOf(DevFightSetup setup) => Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context.MovesAndProfilesOf;
 
+	/// <summary>YOK-187: the name the lose and demo-complete cards use for the setup's foe: the yokai (an elder as "Elder Oni"), never the stand-in body.</summary>
+	public static string NameOf(DevFightSetup setup) => StoryLibrary.DisplayName(Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context.BindingName);
+
 	/// <summary>Temperaments of the fighter's profiles (data/profiles/; Y1), aggressive first.</summary>
 	public static IReadOnlyList<string> Temperaments(string fighter) =>
 		FightScene.LoadProfiles(fighter).Select(p => p.Temperament).Distinct().ToArray();

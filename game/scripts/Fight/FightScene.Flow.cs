@@ -183,7 +183,7 @@ public partial class FightScene
 		if (!OwnsSession) { CompleteScreen.SetText(RunWonTitle, RunWonText); return; } // a real run: placeholder until the win card exists
 		try
 		{
-			var (title, text) = LoadStory().DemoComplete(Story.StoryLibrary.DisplayName(Opponent));
+			var (title, text) = LoadStory().DemoComplete(OpponentName);
 			CompleteScreen.SetText(title, text);
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
@@ -224,7 +224,7 @@ public partial class FightScene
 	private void ShowTwistIntro()
 	{
 		if (TwistCard == null || OwnsSession || !Node.Elder || Twist is not { } twist) return;
-		string name = Story.StoryLibrary.DisplayName(Opponent);
+		string name = OpponentName;
 		var line = TwistCopy.Intro(twist, TwistCopy.Story, name);
 		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E");
 	}
@@ -233,7 +233,7 @@ public partial class FightScene
 	{
 		_suppress = HeldBits(); // the Enter/Space/A that closed the card must not fire a Special
 		if (!FirstMeeting || Twist is not { } twist) return;
-		_hud.ShowTwistCallout(TwistCopy.Callout(twist, TwistCopy.Story, Story.StoryLibrary.DisplayName(Opponent)).Text, twist.Icon);
+		_hud.ShowTwistCallout(TwistCopy.Callout(twist, TwistCopy.Story, OpponentName).Text, twist.Icon);
 	}
 
 	/// <summary>The temperament P2's AI plays (from its profile), e.g. "aggressive".</summary>
