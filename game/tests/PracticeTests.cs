@@ -196,6 +196,15 @@ public static class PracticeTests
 			Assert.True(!scene.InPractice && scene.Dummy is null, "an ordinary fight has no dummy");
 			Assert.True(!scene.HandlePracticeKey(FightScene.PracticeResetKey) && !scene.ResetPractice() && scene.CyclePracticeStance() is null, "practice keys do nothing");
 			Assert.True(scene.BuildPauseSummary().Position.StartsWith("Duel"), "the pause line is the run's");
+			// Code Critic advisory: PracticeMode set on a fight that is already running changes nothing.
+			scene.PracticeMode = true;
+			Assert.True(!scene.InPractice && scene.Dummy is null, "PracticeMode set after _Ready does not make a running fight practice");
+			Assert.True(scene.BuildPauseSummary().Position.StartsWith("Duel"), "the pause line is still the run's (no dummy dereferenced)");
+			Assert.True(!scene.HandlePracticeKey(FightScene.PracticeResetKey) && !scene.ResetPractice() && scene.CyclePracticeStance() is null, "practice keys still do nothing");
+			for (int t = 0; t < 20; t++) scene.Step(new FighterInput(InputBits.Right), FighterInput.None);
+			var before = scene.Match;
+			scene.RestartRun();
+			Assert.True(scene.PracticeResets == 0 && !ReferenceEquals(before, scene.Match), "Restart is still the run's restart (a new match), not a practice reset");
 		}
 		finally { runner.RemoveChild(scene); scene.QueueFree(); FightScene.Opponent = foe; }
 	}

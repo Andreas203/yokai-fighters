@@ -33,7 +33,8 @@ public readonly record struct TitleEntryState(TitleEntry Entry, bool Enabled, st
 public sealed class ScreenRouter
 {
 	public const string NoSaveReason = "No saved run yet.";
-	public const string NoPracticeReason = "Practice mode is not built yet.";
+	/// <summary>Practice's reason while it is disabled (the router's default; the boot flow enables it, YOK-197).</summary>
+	public const string NoPracticeReason = "Practice is unavailable.";
 
 	private readonly Dictionary<TitleEntry, string> _disabled = new()
 	{

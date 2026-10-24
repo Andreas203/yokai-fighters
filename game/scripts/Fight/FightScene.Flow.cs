@@ -138,7 +138,7 @@ public partial class FightScene
 	/// <summary>Called first in _Ready: the run, and the first fight built from it.</summary>
 	private void SetUpRun()
 	{
-		if (InPractice) { SetUpPracticeRun(); return; } // YOK-197: the dojo dummy, outside any run
+		if (PracticeMode && !InTrial) { SetUpPracticeRun(); return; } // YOK-197: the dojo dummy, outside any run (creates Dummy, so InPractice)
 		if (Session is { } hosted) { Pool = hosted.Pool; RunSeed = hosted.Seed; }
 		else
 		{

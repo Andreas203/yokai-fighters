@@ -31,6 +31,7 @@ public partial class FightScene
 	public const string PracticeNodeType = "dojo";
 
 	/// <summary>Set before the scene enters the tree: practice mode instead of a run's node.</summary>
+	/// <remarks>Read once, when <c>_Ready</c> builds the match; setting it later changes nothing (<see cref="InPractice"/> follows the dummy).</remarks>
 	public bool PracticeMode { get; set; }
 	/// <summary>The training dummy (practice mode only; null otherwise).</summary>
 	public PracticeDummy? Dummy { get; private set; }
@@ -38,7 +39,8 @@ public partial class FightScene
 	public int PracticeResets { get; private set; }
 	private Label? _practiceLabel;
 
-	public bool InPractice => PracticeMode && !InTrial;
+	/// <summary>True once the scene was set up as practice (it has a dummy); never for a trial or a fight already running.</summary>
+	public bool InPractice => Dummy is not null && !InTrial;
 
 	/// <summary>A dojo node as the node-scene table resolves it: the dummy's fighter, tier and stage (R7's dojo).</summary>
 	public static NodeContext PracticeNode() =>

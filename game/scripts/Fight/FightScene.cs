@@ -179,7 +179,7 @@ public partial class FightScene : Node3D
 		Recorder?.OnScheme(player, scheme); // YOK-49
 	}
 
-	/// <summary>Debug builds: F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
+	/// <summary>Debug builds, and practice mode in every build (YOK-197): F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
 	public void ToggleScheme(int player)
 	{
 		SetScheme(player, SchemeOf(player) == ControlScheme.Kihon ? ControlScheme.Kata : ControlScheme.Kihon);
@@ -230,7 +230,7 @@ public partial class FightScene : Node3D
 		SetUpPractice(); // YOK-197: practice has no recording and shows its controls
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
-		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
+		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds and in practice (YOK-197).
 		if (!OS.IsDebugBuild() && !InPractice) GetNode("DebugOverlay").QueueFree(); // YOK-197: practice keeps it in every build
 		Render();
 	}
