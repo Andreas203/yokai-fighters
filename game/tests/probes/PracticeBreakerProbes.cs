@@ -221,11 +221,15 @@ public static class PracticeBreakerProbes
 
 	// Designer attention: F4 (E18, debug builds) flips P1's scheme in practice; the brief says no route may.
 	[Test]
+	// Pins the current behaviour: F4 on the overlay flips P1's scheme in practice (E18; the overlay is live in practice, YOK-197).
+	// Waiting on the designer (YOK-197 PR): if practice locks the scheme, invert this to Assert.Equal(before, ...).
 	public static void Scheme_F4DebugOverlay_InPractice(Node runner) => WithPractice(runner, s =>
 	{
 		var before = s.Match.P1.Input.Scheme;
 		s.ToggleScheme(0);
-		Assert.Equal(before, s.Match.P1.Input.Scheme, "F4 must not change the scheme in practice (brief); E18 allows F4 in debug builds");
+		Assert.True(before != s.Match.P1.Input.Scheme, "F4 flips P1's scheme in practice (E18); designer to confirm or lock it");
+		s.ToggleScheme(0);
+		Assert.Equal(before, s.Match.P1.Input.Scheme, "a second F4 flips it back");
 	});
 
 	[Test]
