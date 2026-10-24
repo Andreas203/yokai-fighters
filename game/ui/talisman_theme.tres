@@ -2,18 +2,12 @@
 
 [ext_resource type="StyleBox" path="res://ui/kit/paper_sheet_style.tres" id="k_sheet"]
 [ext_resource type="StyleBox" path="res://ui/kit/paper_card_style.tres" id="k_card"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSerif-Bold.ttf" id="k_font"]
 
-; Fonts. No font files are in the project, so the kit asks the OS for a bold serif (first match wins) and the
-; engine default stays the fallback. OPEN DECISION: ship a licensed serif + brush font so every machine looks the same.
-[sub_resource type="SystemFont" id="font_serif"]
-font_names = PackedStringArray("Georgia", "Palatino", "Noto Serif", "DejaVu Serif", "Times New Roman", "serif")
-font_weight = 700
-antialiasing = 1
-subpixel_positioning = 1
-
+; Fonts. Bundled so Windows and Linux measure text identically (YOK-168); final choice is YOK-71.
 ; Brush-style heading stand-in: the same serif, emboldened and slanted. Replace with a brush font when one is approved.
 [sub_resource type="FontVariation" id="font_heading"]
-base_font = SubResource("font_serif")
+base_font = ExtResource("k_font")
 variation_embolden = 0.2
 variation_transform = Transform2D(1, 0, 0.12, 1, 0, 0)
 
@@ -243,7 +237,7 @@ border_width_bottom = 4
 border_color = Color(0.114, 0.106, 0.129, 1)
 
 [resource]
-default_font = SubResource("font_serif")
+default_font = ExtResource("k_font")
 default_font_size = 26
 BodyLabel/base_type = &"Label"
 BodyLabel/colors/font_color = Color(0.114, 0.106, 0.129, 1)
