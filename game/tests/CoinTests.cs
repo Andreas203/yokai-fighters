@@ -262,7 +262,7 @@ public static class CoinTests
 				expected += pay;
 				perRow.Add($"{node.Row}:{s.Run.Coins}");
 				if (node.Row == 8)
-					Assert.True(s.Draft is { } d && d.Offer.Yokai == node.Fighter, $"{id}: the row-8 elder pays with its draft instead (R8)");
+					Assert.True(s.Draft is { } d && d.Offer.Yokai == node.DraftYokai, $"{id}: the row-8 elder pays with its draft of its own yokai instead (R8; YOK-178: not the stand-in body)");
 				var draft = s.Draft;
 				if (draft is not null)
 				{

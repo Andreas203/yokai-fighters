@@ -215,7 +215,7 @@
     },
     {
       "id": "elder-twists", "title": "Elder twists, with their map icon, intro card and callout",
-      "rules": ["Y3"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "rules": ["Y3"], "gdd": "5.1", "terms": ["8 profiles"], "milestone": "8 profiles",
       "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["profile-ai", "run-flow"],
       "evidence": [{"symbol": "class ElderTwist\\w*\\b", "in": "game/scripts/*"}, {"test": "Twist"}]
     },
@@ -238,6 +238,12 @@
       "evidence": [{"symbol": "class (RunBot|RunHarness|WholeRunHarness)\\b", "in": "game/scripts/*"}, {"test": "^RunHarnessTests\\."}]
     },
     {
+      "id": "practice-mode", "title": "Practice mode: the dojo scene with a training dummy, from the title screen",
+      "rules": ["V10"], "gdd": "8", "terms": ["placeholder screens"], "milestone": "placeholder screens",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["dojo-trials"],
+      "evidence": [{"symbol": "class Practice\\w*\\b", "in": "game/scripts/*"}, {"test": "^Practice"}]
+    },
+    {
       "id": "hit-feedback", "title": "Hit sparks, frame-timed impact sound and level presets",
       "rules": ["V5", "V6", "V8"], "gdd": "3.7", "terms": ["colour-only presets"], "milestone": "polish",
       "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["frame-stepped-models"],
@@ -251,10 +257,10 @@
       "evidence": [{"file": "data/modifiers/*.json", "min": 14}, {"file": "data/cancels/*.json", "min": 3}]
     },
     {
-      "id": "profiles-7", "title": "The 7 behaviour profiles",
-      "rules": ["Y2"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "id": "profiles-8", "title": "The 8 behaviour profiles (AM13)",
+      "rules": ["Y2"], "gdd": "5.1", "terms": ["8 profiles"], "milestone": "8 profiles",
       "kind": "content", "owner": "habit-writer", "size": 3, "needs": [],
-      "evidence": [{"file": "data/profiles/*.json", "min": 7}]
+      "evidence": [{"file": "data/profiles/*.json", "min": 8}]
     },
     {
       "id": "story-card-schedule", "title": "Every card on the story schedule",

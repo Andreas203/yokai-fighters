@@ -12,6 +12,7 @@ Order of authority: the PDFs plus the amendments, then `rules.md`. Everything el
 | [`design/gdd-extended.md`](design/gdd-extended.md), [`design/gdd-short.md`](design/gdd-short.md) | Word-for-word transcriptions of the PDFs. **Amended by** callouts mark each section an amendment replaces | designer |
 | [`design/gdd-amendments.md`](design/gdd-amendments.md) | Every approved change to the PDF (AM1…), with an index. **This is how the GDD changes** | designer |
 | [`design/rules.md`](design/rules.md) | The current rules with citable IDs (C4, T2, A8…). Every agent works from it; the Rules Lawyer cites it | designer, rules-lawyer |
+| [`design/controls.md`](design/controls.md) | Default keyboard and pad bindings for both schemes, fights and menus (YOK-25); the code is the source of truth | gameplay-programmer |
 | [`../vault/Home.md`](../vault/Home.md) | The design as linked notes, one topic per note, for the content agents | designer |
 | [`moves/move_list.md`](moves/move_list.md), [`moves/clip_needs.md`](moves/clip_needs.md) | The must-ship move list (YOK-14) and what each clip must show | movesmith, animator |
 | [`design/characters/`](design/characters/) | Character concepts and references; [`astra-brief.md`](design/characters/astra-brief.md) is the fighter concept brief | designer, asset-smith |

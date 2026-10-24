@@ -19,7 +19,14 @@ public static class MenuInputPathTests
 
 	// ---- input helpers: events go through Viewport.PushInput, the same path as the keyboard and pad ----
 
-	static void Push(Node n, InputEvent e) => n.GetViewport().PushInput(e);
+	// YOK-161: every event is disposed once the viewport has handled it (PushInput is synchronous). Left to the GC, the
+	// C# wrappers of these RefCounted events were still pending finalization when Godot shut down, and the .NET
+	// finalizer thread then freed them after the C# language had finalized: "Leaked unsafe reference" for each, then
+	// FATAL at csharp_script.cpp:1220 (_instance_binding_free_callback) and an illegal instruction, rc=132.
+	static void Push(Node n, InputEvent e)
+	{
+		using (e) n.GetViewport().PushInput(e);
+	}
 	static void Tap(Node n, Key k, bool shift = false)
 	{
 		Push(n, new InputEventKey { Keycode = k, PhysicalKeycode = k, Pressed = true, ShiftPressed = shift });

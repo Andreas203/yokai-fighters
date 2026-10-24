@@ -95,9 +95,23 @@ public partial class CopyTalisman : Control
 		_icon.Texture = art;
 		_icon.Visible = art != null;
 		_letter.Visible = art == null && t != null;
-		_letter.Text = t is null || t.Data.Name.Length == 0 ? "" : t.Data.Name[..1].ToUpperInvariant();
+		_letter.Text = t is null || t.Data.Name.Length == 0 ? "" : t.Data.Name[..Cuts(t.Data.Name)[1]].ToUpperInvariant();
 		FitName();
 		QueueRedraw();
+	}
+
+	/// <summary>
+	/// YOK-162: the offsets the name may be cut at: 0, the start of every text element (grapheme cluster) and
+	/// <c>s.Length</c>. A cut anywhere else hands Godot half a surrogate pair, and Godot 4.7.2 turns a lone surrogate
+	/// from C# into a string with garbage code points ("Invalid unicode codepoint (ffffffff)", then
+	/// U_ILLEGAL_ARGUMENT_ERROR in text_server_adv's ScriptIterator), which crashed the process at random. Cutting here
+	/// also keeps a combining mark with its letter.
+	/// </summary>
+	public static int[] Cuts(string s)
+	{
+		var cuts = new System.Collections.Generic.List<int> { 0 };
+		for (int i = 0; i < s.Length;) cuts.Add(i += System.Globalization.StringInfo.GetNextTextElementLength(s, i));
+		return cuts.ToArray();
 	}
 
 	/// <summary>
@@ -123,14 +137,14 @@ public partial class CopyTalisman : Control
 			string joined = line.Length == 0 ? t : (line.EndsWith('-') ? line + t : line + " " + t);
 			if (W(joined) <= width) { line = joined; continue; }
 			Flush();
-			while (width > 0 && t.Length > 1 && W(t) > width) // a single word wider than the slot: break it with a hyphen
+			int[] cuts;
+			while (width > 0 && (cuts = Cuts(t)).Length > 2 && W(t) > width) // a single word wider than the slot: break it with a hyphen
 			{
 				rewrite = true;
-				int n = t.Length - 1;
-				while (n > 2 && W(t[..n] + "-") > width) n--;
-				n = System.Math.Max(1, n);
-				lines.Add(t[..n] + "-");
-				t = t[n..];
+				int k = cuts.Length - 2; // text elements kept on this line: as many as fit, at least two, unless the word has only two
+				while (k > 2 && W(t[..cuts[k]] + "-") > width) k--;
+				lines.Add(t[..cuts[k]] + "-");
+				t = t[cuts[k]..];
 			}
 			line = t;
 		}
@@ -139,7 +153,8 @@ public partial class CopyTalisman : Control
 		{
 			rewrite = true;
 			string last = lines[NameMaxLines - 1].TrimEnd('-');
-			while (last.Length > 1 && W(last + "…") > width) last = last[..^1];
+			int[] lastCuts;
+			while ((lastCuts = Cuts(last)).Length > 2 && W(last + "…") > width) last = last[..lastCuts[^2]];
 			lines = lines.GetRange(0, NameMaxLines - 1);
 			lines.Add(last + "…");
 		}

@@ -183,6 +183,13 @@ public sealed class ClipCatalog
 			if (el.ValueKind != JsonValueKind.Object
 				|| !Pair(el, "frames", out int a, out int b) || !Pair(el, "ticks", out int ta, out int tb))
 				return $"segment {i} needs frames [a, b] and ticks [ta, tb] as integers";
+			// YOK-164: the schema's segment allows only frames, ticks and a string note; refuse the rest like it does.
+			// A repeated key counts once, its last copy (as TryGetProperty and the validator's json.loads read it).
+			var last = new Dictionary<string, JsonElement>();
+			foreach (var prop in el.EnumerateObject()) last[prop.Name] = prop.Value;
+			foreach (var (key, value) in last)
+				if (key is not ("frames" or "ticks") && (key != "note" || value.ValueKind != JsonValueKind.String))
+					return $"segment {i}: unexpected {(key == "note" ? "non-string note" : $"key '{key}'")}";
 			list.Add(new RetimeSegment(a, b, ta, tb));
 			i++;
 		}

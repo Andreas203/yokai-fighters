@@ -114,6 +114,8 @@ The Tanuki is a boss with its own fixed moveset, drawn from tanuki folklore. It 
 
 ### 2.6 Health and tuning
 
+> **Amended by** [AM15](gdd-amendments.md#am15) the forecast's expected cost. Where they disagree with this section, the amendments win.
+
 A run is exactly 6 duels (the row-1 apprentice included) plus the Tanuki, and rows 4 and 7 are always rest stops. Ryo has 1,000 health, binding a yokai restores 50, and wins pay 25 coins per duel on rows 1–6 and 50 for the row-5 elder (the row-8 elder pays a rare ability instead), so every coin can be spent at a rest stop.
 
 | Duel cost | Apprentice (row 1) | Yokai (rows 2, 3, 6) | Elder (rows 5, 8) | Tanuki |
@@ -204,7 +206,7 @@ How they work together. Clip Matcher picks each clip first, so frame data comes 
 
 ### 4.3 Engine and assets
 
-> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators and rigging, [AM7](gdd-amendments.md#am7) Astra concept art. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators and rigging, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton. Where they disagree with this section, the amendments win.
 
 Built in Godot 4 (.NET) with C#, in 2.5D: 3D fighters and stages, with all gameplay on a 2D plane under a narrow-FOV camera. Assets are pre-bought and unified by a toon shader. The Tanuki's model and clips come from the purchased packs, like every yokai. All throws are generic: the attacker plays a grab clip and the defender its standard knockdown, so no paired throw animations are needed.
 
