@@ -63,6 +63,7 @@ KIND_SCHEMA = {
     "fighter": "fighter.schema.json",
     "harness_bot": "harness-bot.schema.json",
     "harness_bot_levels": "harness-bot-levels.schema.json",
+    "level_preset": "level-preset.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -77,6 +78,7 @@ DIR_KIND = {
     "trials": ("trial",),
     "fighters": ("fighter",),
     "harness": ("harness_bot", "harness_bot_levels"),
+    "presets": ("level_preset",),
 }
 # Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
 TRIAL_KATA_ONLY = ("motion", "precision", "kata")
@@ -644,6 +646,44 @@ def load_specials(docs: dict) -> dict[str, dict]:
     return found
 
 
+def preset_named(special: dict, level) -> object:
+    """The preset id a special names at a level (V8): levels.1.preset, levels.2.preset, levels.3.evolution.preset."""
+    lv = (special.get("levels") or {}).get(str(level)) if isinstance(special.get("levels"), dict) else None
+    if not isinstance(lv, dict):
+        return None
+    if level == 3:
+        evo = lv.get("evolution")
+        return evo.get("preset") if isinstance(evo, dict) else None
+    return lv.get("preset")
+
+
+def check_level_preset(doc: dict, specials: dict[str, dict]) -> list[tuple[str, str]]:
+    """YOK-198 (V8, A5): what LevelPresetLibrary also refuses, plus the special it dresses agreeing with it."""
+    errs: list[tuple[str, str]] = []
+    sid, level, pid = doc.get("special"), doc.get("level"), doc.get("id")
+    spark = doc.get("spark") if isinstance(doc.get("spark"), dict) else {}
+    for where, v in (("level", level), ("spark.scale_pct", spark.get("scale_pct")),
+                     ("spark.frames", spark.get("frames")), ("spark.sheet_columns", spark.get("sheet_columns"))):
+        if v is not None and not is_int(v):
+            errs.append((where, f"{v!r} must be a whole number (the loader reads integers only)"))
+    if isinstance(sid, str):
+        special = specials.get(sid)
+        if special is None:
+            errs.append(("special", f"special '{sid}' not found (expected data/moves/{sid}.json, kind special) (V8)"))
+        elif is_int(level) and 1 <= level <= 3:
+            named = preset_named(special, level)
+            where = "levels.3.evolution.preset" if level == 3 else f"levels.{level}.preset"
+            if named != pid:
+                said = f"names preset '{named}'" if isinstance(named, str) else "names no preset"
+                errs.append(("special", f"special '{sid}' {said} at Lv {level} ({where}), not '{pid}' (V8)"))
+    textures = spark.get("textures") if isinstance(spark.get("textures"), dict) else {}
+    for kind in ("hit", "block", "counter"):
+        t = textures.get(kind)
+        if isinstance(t, str) and not (ROOT / "game" / t).is_file():
+            errs.append((f"spark.textures.{kind}", f"game/{t} does not exist"))
+    return errs
+
+
 def check_trial(doc: dict, move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
     """YOK-105 (R7): the checks of the game's TrialLoader the schema cannot express. Kihon-completable steps,
     one step lands the trial's own special, distance min <= max, block / counterhit steps only against an
@@ -766,6 +806,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             card = doc.get(key)
             if isinstance(card, str) and not (DATA / "story" / f"{card}.json").is_file():
                 errs.append((key, f"story card '{card}' not found (expected data/story/{card}.json) (Y3)"))
+    elif kind == "level_preset":  # YOK-198 (V8)
+        errs.extend(check_level_preset(doc, specials or {}))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
@@ -948,6 +990,17 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first != (f, what):
                 failures.setdefault(f, []).append(
                     (where, f"ability id '{aid}' is already the {first[1]} in {rel(first[0])} (A11: one id per ability, so an unlock names one)"))
+
+    # YOK-198 (V8): one preset per special and level across the files checked together (LevelPresetLibrary throws
+    # on the same). data/samples/ is documentation.
+    preset_of: dict[tuple, Path] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "level_preset" and isinstance(doc.get("special"), str) \
+                and is_int(doc.get("level")) and SAMPLES_DIR not in f.resolve().parents:
+            first = preset_of.setdefault((doc["special"], doc["level"]), f)
+            if first != f:
+                failures.setdefault(f, []).append(
+                    ("level", f"'{doc['special']}' Lv {doc['level']} already has a preset in {rel(first)} (V8: one per level)"))
 
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:

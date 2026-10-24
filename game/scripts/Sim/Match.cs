@@ -305,37 +305,62 @@ public sealed partial class Match
 	/// </summary>
 	private void ResolveHits()
 	{
-		bool hit0 = Connects(P1, P2), hit1 = Connects(P2, P1);
+		bool hit0 = Connects(P1, P2, out var at0), hit1 = Connects(P2, P1, out var at1);
 		if (!hit0 && !hit1) return;
 		// Snapshot both moves before either hit applies: a trade interrupts both (C7: both counterhit).
 		MoveData? m0 = P1.CurrentMove, m1 = P2.CurrentMove;
 		int f0 = P1.MoveFrame, f1 = P2.MoveFrame;
 		// YOK-90: a repeated special the elder reflects lands on its user instead.
-		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0); else ApplyHit(0, m0!, f0, m1 != null); }
-		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1); else ApplyHit(1, m1!, f1, m0 != null); }
+		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0, at0); else ApplyHit(0, m0!, f0, m1 != null, contact: at0); }
+		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1, at1); else ApplyHit(1, m1!, f1, m0 != null, contact: at1); }
 		ResolvePositions(stackalloc int[2]);
 	}
 
-	private bool Connects(Fighter att, Fighter def)
+	/// <param name="at">YOK-198: where it connected (<see cref="HurtContact"/>), for the hit spark only.</param>
+	private bool Connects(Fighter att, Fighter def, out (int X, int Y) at)
 	{
+		at = default;
 		MoveData? m = att.CurrentMove;
 		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
 		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
 		InvulnAgainst kind = att.Airborne ? InvulnAgainst.Strike | InvulnAgainst.Air : InvulnAgainst.Strike;
 		if (def.CurrentMove?.InvulnAt(def.MoveFrame, kind) == true) return false; // YOK-21: properties.invuln
 		foreach (var hb in m.Hitboxes)
-			if (hb.Covers(att.MoveFrame) && HurtOverlaps(def, WorldBox(att, hb.Box))) return true;
+			if (hb.Covers(att.MoveFrame) && HurtContact(def, WorldBox(att, hb.Box), out at)) return true;
 		return false;
 	}
 
 	/// <summary>A world box against the defender's hurtboxes: its move's boxes on this frame, else its stance box.</summary>
-	private bool HurtOverlaps(Fighter def, (int x0, int y0, int x1, int y1) a)
+	private bool HurtOverlaps(Fighter def, (int x0, int y0, int x1, int y1) a) => HurtContact(def, a, out _);
+
+	/// <summary>
+	/// <see cref="HurtOverlaps"/>, plus where: the centre of the first overlap found (world centi-units, integer
+	/// halves round toward zero). YOK-198: it only rides on <see cref="ImpactEvent.At"/> for the hit spark; no
+	/// sim state reads it.
+	/// </summary>
+	private bool HurtContact(Fighter def, (int x0, int y0, int x1, int y1) a, out (int X, int Y) at)
 	{
 		MoveData? dm = def.CurrentMove;
-		if (dm is null) return Overlaps(a, WorldBox(def, BodyHurtbox(def)));
+		if (dm is null) return Contact(a, WorldBox(def, BodyHurtbox(def)), out at);
 		foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
-			if (hu.Covers(def.MoveFrame) && Overlaps(a, WorldBox(def, hu.Box))) return true;
+			if (hu.Covers(def.MoveFrame) && Contact(a, WorldBox(def, hu.Box), out at)) return true;
+		at = default;
 		return false;
+	}
+
+	private static bool Contact((int x0, int y0, int x1, int y1) a, (int x0, int y0, int x1, int y1) b, out (int X, int Y) at)
+	{
+		at = default;
+		if (!Overlaps(a, b)) return false;
+		at = ((Math.Max(a.x0, b.x0) + Math.Min(a.x1, b.x1)) / 2, (Math.Max(a.y0, b.y0) + Math.Min(a.y1, b.y1)) / 2);
+		return true;
+	}
+
+	/// <summary>YOK-198: the middle of a fighter's stance body box, where a landed throw's spark goes.</summary>
+	private (int X, int Y) BodyCentre(Fighter f)
+	{
+		var (x0, y0, x1, y1) = WorldBox(f, BodyHurtbox(f));
+		return ((x0 + x1) / 2, (y0 + y1) / 2);
 	}
 
 	/// <summary>Hurtbox of a fighter not in a move, by stance (SimConfig: proposed sizes).</summary>
@@ -360,7 +385,8 @@ public sealed partial class Match
 	/// the defender's own move turned back on it; like a projectile, the elder's own move is untouched and the push
 	/// is away from the elder.</param>
 	/// <param name="remoteDir">YOK-136: non-zero = the hit came from an aftershock facing this way; handled like a projectile's.</param>
-	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, bool reflected = false, int remoteDir = 0)
+	/// <param name="contact">YOK-198: where the boxes met, before any push; passed on in <see cref="ImpactEvent.At"/> only.</param>
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, bool reflected = false, int remoteDir = 0, (int X, int Y) contact = default)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
@@ -424,7 +450,7 @@ public sealed partial class Match
 		}
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
-		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
+		OnConnect(attIndex, m, blocked, counter, contact); // C5 meter, V2 hitstop (YOK-20)
 		return blocked;
 	}
 

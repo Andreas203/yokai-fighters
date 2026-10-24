@@ -4,9 +4,12 @@ namespace YokaiFighters.Sim;
 
 /// <summary>
 /// A move connected, as presentation needs it (YOK-20): its V2 strength, the hitstop it started and
-/// whether it shakes the screen (V3: heavy hits and EX only, never lights).
+/// whether it shakes the screen (V3: heavy hits and EX only, never lights). YOK-198: <paramref name="At"/> = where
+/// it connected in world centi-units (the centre of the striking box's overlap with the defender's hurtbox, before
+/// pushback; a landed throw: the defender's body centre), for the hit spark. Presentation only: no sim state.
 /// </summary>
-public readonly record struct ImpactEvent(int Attacker, string MoveId, HitStrength Strength, int Hitstop, bool Blocked, bool Counter, bool Shake);
+public readonly record struct ImpactEvent(int Attacker, string MoveId, HitStrength Strength, int Hitstop, bool Blocked, bool Counter, bool Shake,
+	(int X, int Y) At = default);
 
 /// <summary>YOK-20: meter (C5), burst (C6) and hitstop (V2), hooked into Match's step order.</summary>
 public sealed partial class Match
@@ -53,7 +56,7 @@ public sealed partial class Match
 	}
 
 	/// <summary>C5 meter and V2 hitstop for one connect. Called from ApplyHit.</summary>
-	private void OnConnect(int attIndex, MoveData m, bool blocked, bool counter)
+	private void OnConnect(int attIndex, MoveData m, bool blocked, bool counter, (int X, int Y) at)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		int max = Config.MeterMax;
@@ -67,7 +70,7 @@ public sealed partial class Match
 		int stop = Config.Hitstop(m.Strength, counter);
 		HitstopLeft = Math.Max(HitstopLeft, stop); // a trade freezes for the longer of the two
 		bool shake = m.Ex || (!blocked && m.Strength == HitStrength.Heavy);
-		Impact?.Invoke(this, new ImpactEvent(attIndex, m.Id, m.Strength, stop, blocked, counter, shake));
+		Impact?.Invoke(this, new ImpactEvent(attIndex, m.Id, m.Strength, stop, blocked, counter, shake, at));
 	}
 
 	/// <summary>All three punches pressed within BurstPressWindow ticks, the last one this tick, all still held.</summary>

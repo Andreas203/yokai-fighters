@@ -17,6 +17,7 @@ mkdir -p "$OUT"
 
 mkdir -p "$OUT/data" "$OUT/fixtures"
 for d in cancels clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
+if [ -d "$REPO/data/presets" ]; then cp -r "$REPO/data/presets" "$OUT/data/presets"; fi  # YOK-198: level presets (V8), once asset-smith adds them
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
 if command -v powershell.exe >/dev/null; then
