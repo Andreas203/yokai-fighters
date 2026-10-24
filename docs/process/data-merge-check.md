@@ -83,14 +83,13 @@ changes `tools/` or `game/` is a code change anyway: REVIEW at best. Godot, the 
 also live in `$RUNNER_TEMP`, so the checkout is clean when the check reads its scope. While the base has
 no checker yet (the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW.
 
-A PR can save a cache under any key in its own PR scope, and the cache is extracted with absolute paths
-(YOK-202). So the Godot cache is restored first, before the base checker is on disk, and it holds only
-the release zip, which must match the SHA-256 pinned in the workflow (`GODOT_ZIP_SHA256`): a cached zip
-that does not match fails the job, and Godot is unzipped fresh from the verified zip. The base checker's
-folder is emptied before extraction, its files are hashed right after, and the check step re-hashes them
-and refuses to run if anything changed. Residual risk: a crafted cache can still write other paths the
-runner user can write (for example the tool cache Python is set up from) before any check sees it;
-dropping the cache from this workflow would close that too.
+This workflow uses no cache (YOK-202). A PR can save a cache under any key in its own PR scope, and a
+restored cache is extracted with absolute paths, so it could write any path the runner user can (the
+base checker, the tool cache Python is set up from, `.git/config`) before anything checks it. Godot is
+downloaded fresh on every run and must match the SHA-256 pinned in the workflow (`GODOT_ZIP_SHA256`)
+before it is unzipped. The base checker's folder is emptied before extraction, its files are hashed right
+after, and the check step re-hashes them and refuses to run if anything changed. `ci.yml` keeps its
+Godot cache: it trusts no base checker, so a PR that poisons its own cache only fools its own check.
 Every action is pinned to a commit SHA, with its version tag in a comment.
 
 ## Designer decisions (2026-10-17)
