@@ -19,5 +19,11 @@ public static class TextCuts
 
 	/// <summary>The whole first text element of <paramref name="name"/>, upper-cased; <paramref name="empty"/> when there is none.</summary>
 	public static string Badge(string? name, string empty = "?")
-		=> string.IsNullOrEmpty(name) ? empty : name[..Cuts(name)[1]].ToUpperInvariant();
+	{
+		if (string.IsNullOrEmpty(name)) return empty;
+		string first = name[..Cuts(name)[1]];
+		// StringInfo hands a lone surrogate back as its own element; Godot 4.7.2 mis-decodes it (YOK-162), so show the fallback.
+		if (first.Length == 1 && char.IsSurrogate(first[0])) return empty;
+		return first.ToUpperInvariant();
+	}
 }

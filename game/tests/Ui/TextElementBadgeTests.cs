@@ -36,6 +36,8 @@ public static class TextElementBadgeTests
 		foreach (var (n, b) in Cases) Assert.Equal(b, TextCuts.Badge(n), $"badge of '{n}'");
 		Assert.Equal("?", TextCuts.Badge(""), "empty name");
 		Assert.Equal("?", TextCuts.Badge(null), "null name");
+		Assert.Equal("?", TextCuts.Badge("\uD800abc"), "lone high surrogate");
+		Assert.Equal("+", TextCuts.Badge("\uDC00abc", "+"), "lone low surrogate");
 		Assert.Equal("+", TextCuts.Badge("", "+"), "custom empty mark");
 		Assert.Equal(TextCuts.Cuts("a" + Astral).Length, CopyTalisman.Cuts("a" + Astral).Length, "CopyTalisman.Cuts forwards");
 	}
