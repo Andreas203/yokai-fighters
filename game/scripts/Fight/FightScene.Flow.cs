@@ -301,7 +301,7 @@ public partial class FightScene
 		if (offer is null) { FinishNode(); return; }
 		Draft = new DraftRewardSource(offer, DemoRun);
 		string line;
-		try { line = Draft.BindingLine(Story.StoryLibrary.DisplayName(Opponent)); }
+		try { line = Draft.BindingLine(Story.StoryLibrary.DisplayName(Node?.BindingName ?? Opponent)); } // YOK-178: the yokai bound, not the body
 		catch (Exception e) when (e is System.IO.IOException or FormatException or System.Text.Json.JsonException
 			or KeyNotFoundException or InvalidOperationException)
 		{
