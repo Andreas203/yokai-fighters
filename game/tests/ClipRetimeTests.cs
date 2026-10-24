@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using Godot;
 using YokaiFighters.Fight;
+using Environment = System.Environment;
 
 namespace YokaiFighters.Tests;
 
@@ -134,5 +138,159 @@ public static class ClipRetimeTests
 			Assert.True(!notesOnly.Has("ryo-curve"), "notesOnly ignores structured fields, the curve included");
 		}
 		finally { System.IO.Directory.Delete(dir, true); }
+	}
+
+	// ---- YOK-164: the curve engine end to end: the gates agree, and both Quake timings play through Seek() ----
+
+	static string Repo => Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
+
+	/// <summary>
+	/// The shared case list both gates run (tools/test_validate_data.py runs the same file through the clip schema and
+	/// validate_data.semantic): the loader takes a curve exactly when the validator does.
+	/// </summary>
+	[Test]
+	public static void ValidatorAndLoaderAgreeOnTheSharedCases()
+	{
+		using var doc = JsonDocument.Parse(File.ReadAllText($"{Repo}/game/tests/fixtures/clip-retime-gate/cases.json"));
+		var cases = doc.RootElement.GetProperty("cases");
+		Assert.True(cases.GetArrayLength() >= 30, "the case list is there");
+		string dir = Path.Combine(Path.GetTempPath(), "yf-retime-gate-" + Environment.ProcessId);
+		Directory.CreateDirectory(dir);
+		try
+		{
+			foreach (var c in cases.EnumerateArray())
+			{
+				string name = c.GetProperty("name").GetString()!;
+				string trim = c.GetProperty("trim") is { ValueKind: JsonValueKind.Array } t ? $",\"trim_start\":{t[0]},\"trim_end\":{t[1]}" : "";
+				File.WriteAllText(Path.Combine(dir, name + ".json"),
+					$"{{\"kind\":\"clip\",\"id\":\"{name}\",\"frames_total\":{c.GetProperty("frames_total")},\"file\":\"assets/generated/clips/ryo/a.glb\"{trim},\"retime\":{c.GetProperty("retime").GetRawText()}}}");
+			}
+			var cat = ClipCatalog.Load(dir, _ => true);
+			var wrong = new List<string>();
+			foreach (var c in cases.EnumerateArray())
+			{
+				string name = c.GetProperty("name").GetString()!;
+				if (cat.Has(name) != c.GetProperty("accept").GetBoolean())
+					wrong.Add($"{name}: loader {(cat.Has(name) ? "accepted" : "refused: " + cat.Problems.Find(x => x.StartsWith(name + ":")))}");
+			}
+			Assert.True(wrong.Count == 0, "validator and loader disagree:\n" + string.Join("\n", wrong));
+		}
+		finally { Directory.Delete(dir, true); }
+	}
+
+	/// <summary>
+	/// The rules table's Quake timing, 22/5/26, as a TEST FIXTURE curve over the same take and trim as
+	/// data/clips/oni-quake.json (made up here to show the curve engine plays it within F2's limits; YOK-137 leaves the
+	/// choice to the designer, and the real curve, if chosen, is the animator's).
+	/// </summary>
+	static ClipCatalog QuakeTableTimingFixture(ClipInfo quake)
+	{
+		// 22/5/26 = 53 frames: startup snaps to the overhead peak (2x), holds 4 frames (the tell), the slam falls
+		// at 16/11x, 5 active frames at 1x, recovery eases out at 16/26x.
+		const string curve = "[{\"frames\":[1,9],\"ticks\":[0,16]},{\"frames\":[9,12],\"ticks\":[16,16]},{\"frames\":[12,23],\"ticks\":[16,32]},"
+			+ "{\"frames\":[23,27],\"ticks\":[32,36]},{\"frames\":[27,53],\"ticks\":[36,52]}]";
+		string dir = Path.Combine(Path.GetTempPath(), "yf-quake-table-" + Environment.ProcessId);
+		Directory.CreateDirectory(dir);
+		try
+		{
+			string file = quake.ResPath["res://".Length..];
+			File.WriteAllText(Path.Combine(dir, "oni-quake.json"),
+				$"{{\"kind\":\"clip\",\"id\":\"oni-quake\",\"frames_total\":53,\"trim_start\":{quake.TrimStart},\"trim_end\":{quake.TrimEnd},\"file\":\"{file}\",\"retime\":{curve}}}");
+			return ClipCatalog.Load(dir, _ => true);
+		}
+		finally { Directory.Delete(dir, true); }
+	}
+
+	static (int Start, int End) HitWindowOf(string clipId)
+	{
+		using var doc = JsonDocument.Parse(File.ReadAllText($"{Repo}/data/clips/{clipId}.json"));
+		return (doc.RootElement.GetProperty("hit_start").GetInt32(), doc.RootElement.GetProperty("hit_end").GetInt32());
+	}
+
+	/// <summary>
+	/// Plays every game frame of <paramref name="clipId"/> on the Oni's body through <see cref="FighterModel.Apply"/>
+	/// (one Seek per 60 Hz tick, F3) and returns the playhead tick of each frame. Checks it equals the curve's tick and
+	/// that the played motion keeps F2's limits: each frame advances 0 or 0.5-2 raw ticks, a held tick shows on at most
+	/// 4 frames. Seeking the frames again backwards gives the same playheads (deterministic, no carried state).
+	/// </summary>
+	static double[] PlayThroughSeek(Node runner, ClipCatalog cat, string clipId, string label)
+	{
+		var info = cat[clipId]!;
+		var model = FighterModel.Create(FighterAnimSet.Oni, FightScene.Catalog);
+		Assert.True(model != null, "the Oni's model loads");
+		runner.AddChild(model);
+		try
+		{
+			Assert.True(model!.Player.CallbackModeProcess == AnimationMixer.AnimationCallbackModeProcess.Manual, "the AnimationPlayer never advances on its own");
+			Assert.True(model.Has(clipId), $"{clipId} is in the Oni's library");
+			string anim = FighterModel.LibraryName + "/" + clipId;
+			double length = model.Player.GetAnimation(anim).Length;
+			var ticks = new double[info.FramesTotal + 1];
+			for (int f = 1; f <= info.FramesTotal; f++)
+			{
+				model.Apply(new PoseSample(PoseKind.Attack, clipId, f, null, 0, 1f), cat, 1, f);
+				PoseIsTheTakeAt(model, anim, info.TimeAt(f), $"{label} frame {f}");
+				var (name, time) = model.Playhead;
+				// A seek onto the very end of a non-looping animation finishes it (Godot clears the current animation,
+				// the pose stays, checked above); everywhere else the playhead is the curve's time. Length is a float32.
+				if (info.TimeAt(f) >= length - 1e-6 && string.IsNullOrEmpty(name)) { ticks[f] = info.RawTickAt(f); continue; }
+				Assert.Equal(anim, name, $"{label} frame {f}: playing the clip (t {info.TimeAt(f):R}, length {length:R})");
+				Assert.True(Math.Abs(time - info.TimeAt(f)) < 1e-6, $"{label} frame {f}: seek {time} = curve time {info.TimeAt(f)}");
+				ticks[f] = time * ClipInfo.RawTicksPerSecond;
+			}
+			int held = 1;
+			for (int f = 2; f <= info.FramesTotal; f++)
+			{
+				double step = ticks[f] - ticks[f - 1];
+				held = Math.Abs(step) < 1e-6 ? held + 1 : 1;
+				Assert.True(held <= ClipCatalog.RetimeMaxHoldFrames, $"{label} frame {f}: a tick held on {held} frames");
+				Assert.True(Math.Abs(step) < 1e-6 || (step > 0.5 - 1e-6 && step < 2 + 1e-6), $"{label} frame {f}: advances {step:0.###} ticks (0.5x-2x)");
+			}
+			for (int f = info.FramesTotal; f >= 1; f--)
+			{
+				model.Apply(new PoseSample(PoseKind.Attack, clipId, f, null, 0, 1f), cat, 1, f);
+				PoseIsTheTakeAt(model, anim, ticks[f] / ClipInfo.RawTicksPerSecond, $"{label} frame {f} again");
+			}
+			return ticks;
+		}
+		finally { runner.RemoveChild(model); model!.Free(); }
+	}
+
+	/// <summary>Every bone the take rotates is posed as the take at <paramref name="t"/> seconds.</summary>
+	static void PoseIsTheTakeAt(FighterModel model, string animName, double t, string label)
+	{
+		var anim = model.Player.GetAnimation(animName);
+		int bones = 0;
+		for (int i = 0; i < anim.GetTrackCount(); i++)
+		{
+			if (anim.TrackGetType(i) != Animation.TrackType.Rotation3D) continue;
+			var path = anim.TrackGetPath(i);
+			if (path.GetSubNameCount() == 0) continue;
+			int b = model.Skeleton.FindBone(path.GetSubName(0));
+			if (b < 0) continue;
+			var want = anim.RotationTrackInterpolate(i, t);
+			var got = model.Skeleton.GetBonePoseRotation(b);
+			Assert.True(Math.Abs(want.Dot(got)) > 1 - 1e-5, $"{label}: {path.GetSubName(0)} posed as the take at {t * ClipInfo.RawTicksPerSecond:0.###} ticks");
+			bones++;
+		}
+		Assert.True(bones >= 10, $"{label}: the take rotates the skeleton ({bones} bones)");
+	}
+
+	/// <summary>YOK-137's two Quake timings: the clip's own curve (data/clips/oni-quake.json, read as is) and the
+	/// table's 22/5/26 fixture, both played frame by frame on the Oni through Seek().</summary>
+	[Test]
+	public static void OniQuake_BothTimingsPlayThroughTheCurveAndSeek(Node runner)
+	{
+		var quake = FightScene.Catalog["oni-quake"];
+		Assert.True(quake?.Retime is { Count: > 0 }, "oni-quake is catalogued with its retime curve");
+		var (hs, he) = HitWindowOf("oni-quake");
+		var clip = PlayThroughSeek(runner, FightScene.Catalog, "oni-quake", $"clip {hs - 1}/{he - hs + 1}/{quake!.FramesTotal - he}");
+
+		var table = QuakeTableTimingFixture(quake);
+		Assert.True(table.Problems.Count == 0 && table["oni-quake"]?.Retime != null, "the 22/5/26 curve is inside F2's limits: " + string.Join("; ", table.Problems));
+		Assert.Equal(53, table["oni-quake"]!.FramesTotal, "22 + 5 + 26 frames");
+		var fixture = PlayThroughSeek(runner, table, "oni-quake", "table 22/5/26");
+		Assert.True(Math.Abs(clip[hs] - fixture[23]) < 1e-6, $"both timings land the first active frame on the same pose of the take ({clip[hs]} vs {fixture[23]})");
+		Assert.True(Math.Abs(clip[quake.FramesTotal] - fixture[53]) < 1e-6, "both end on the take's last trimmed tick");
 	}
 }
