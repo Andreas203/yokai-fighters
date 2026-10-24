@@ -18,7 +18,7 @@ public static class RestStopPortraitProbes
 		var saved = FightScene.Sources; var savedRun = FightScene.Run; var savedFoe = FightScene.Opponent;
 		FightScene.Sources = FightScene.FixtureSources; FightScene.Run = null;
 		try { body(); }
-		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; RestStopScreenForecast.CostSource = null; }
+		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; }
 	}
 
 	static RunSession AtStop(string type)

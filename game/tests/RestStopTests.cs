@@ -12,7 +12,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-96: the rest-stop screen. The Tanuki forecast (T6: before the lock from the current best special, after it from
-/// <see cref="RunSession.LockedCopy"/>, the expected cost from one swappable method), the merchant's heal (R6) and the
+/// <see cref="RunSession.LockedCopy"/>, the expected cost = the copy's damage per hit from data, YOK-173), the merchant's heal (R6) and the
 /// dojo's rest (R7) taken once, refused choices changing nothing, the scene's controls, and the boot flow: a
 /// merchant node runs this screen, and quitting mid-node then Continue shows it again with no choice taken (M5).
 /// </summary>
@@ -30,7 +30,7 @@ public static class RestStopTests
 		FightScene.Sources = FightScene.FixtureSources;
 		FightScene.Run = null;
 		try { body(); }
-		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; RestStopScreenForecast.CostSource = null; }
+		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; }
 	}
 
 	static RunSession NewSession() =>
@@ -87,7 +87,7 @@ public static class RestStopTests
 	// ---- the Tanuki forecast (T6) ----
 
 	[Test]
-	public static void Forecast_BeforeTheLock_NamesTheCurrentBestSpecial_ItsLevelAndTheCostFromOneMethod() => OnFixtures(() =>
+	public static void Forecast_BeforeTheLock_NamesTheCurrentBestSpecial_ItsLevelAndItsDamagePerHit() => OnFixtures(() =>
 	{
 		var s = AtStop("merchant");
 		Assert.True(!s.CopyLocked, "the lock is the Tanuki's node (T1): not yet");
@@ -95,13 +95,26 @@ public static class RestStopTests
 		var f = RestStopScreenForecast.For(s)!;
 		Assert.True(f.SpecialId == want.Data.Id && f.Slot == want.Slot && f.Level == want.MoveLevel && f.RyoLevel == want.Level && !f.Locked, "the forecast is CopyRule.Target (T2)");
 		Assert.True(f.Name.Length > 0, "it names the move");
-		Assert.True(f.Cost == RestStopScreenForecast.PlaceholderCost && f.CostIsPlaceholder, "the stand-in cost is flagged as a placeholder");
+		Assert.True(f.Cost == want.Build().Damage && f.Cost > 0, "the cost is the copy's damage per hit, from data (T6)");
+	});
 
-		RestStopScreenForecast.CostSource = t => t.Data.Id == want.Data.Id ? 321 : null;
-		var real = RestStopScreenForecast.For(s)!;
-		Assert.True(real.Cost == 321 && !real.CostIsPlaceholder, "the cost comes from the one method, and is no longer called a placeholder");
-		RestStopScreenForecast.CostSource = _ => null;
-		Assert.True(RestStopScreenForecast.For(s)!.Cost == null, "no data yet reads as no figure");
+	[Test]
+	public static void Forecast_RyosDamageModifier_IsNotInTheCost() => OnFixtures(() =>
+	{
+		var s = AtStop("merchant");
+		var want = CopyRule.Target(s.Run)!;
+		var owned = s.Run[want.Slot]!;
+		Assert.True(owned.Modifier is null, "fixture: the target special wears no modifier yet");
+		var mod = ModifierLoader.Parse("{\"kind\":\"modifier\",\"id\":\"test-hard-hitter\",\"name\":\"Hard Hitter\",\"source\":\"oni\",\"applies_to\":{\"requires\":[]}," +
+			"\"effects\":[{\"target\":\"damage\",\"op\":\"add\",\"value\":25}],\"card\":{\"plain\":\"Hits 25 harder.\",\"frames\":\"Damage +25\"}}");
+		s.Run.Attach(want.Slot, mod);
+		var d = owned.Data;
+		int lv = s.Run[want.Slot]!.Level;
+		int ryos = d.Build(lv, false, mod, null).Damage;
+		var f = RestStopScreenForecast.For(s)!;
+		Assert.True(f.SpecialId == d.Id, "the modifier does not change the target (T2)");
+		Assert.True(ryos != f.Cost, $"Ryo's own build with the modifier ({ryos}) is not the forecast ({f.Cost})");
+		Assert.Equal(d.Build(Math.Min(lv, CopyRule.HighestUnevolvedLevel), false, null, null).Damage, f.Cost, "T4: the copy, and so its cost, never has Ryo's modifier");
 	});
 
 	[Test]
@@ -267,7 +280,8 @@ public static class RestStopTests
 			Assert.Equal("Row 4 · the merchant's lantern", L(screen, "RowLine").Text, "row line");
 			Assert.Equal(want.Data.Name, L(screen, "Forecast/SpecialName").Text, "the forecast names the copy target");
 			Assert.Equal($"Lv {want.MoveLevel}", L(screen, "Forecast/LevelTag/LevelLabel").Text, "and its level");
-			Assert.True(L(screen, "Forecast/CostValue").Text.StartsWith("~") && screen.GetNode<Control>("Forecast/Placeholder").Visible, "the expected cost, labelled a placeholder");
+			Assert.Equal($"{RestStopScreenForecast.ExpectedCost(want)} per hit", L(screen, "Forecast/CostValue").Text, "the expected cost: the copy's damage per hit (T6)");
+			Assert.True(screen.GetNodeOrNull("Forecast/Placeholder") == null && !L(screen, "Forecast/CostMeaning").Text.Contains("fights so far"), "no placeholder label, no fight-history wording (YOK-173)");
 			Assert.True(!screen.FreeCard.CardDisabled && !screen.SecondCard.CardDisabled && L(screen, "SecondCard/Box/Coming").Text == "", "free heal open, the shop card open too (YOK-104)");
 			Assert.True(L(screen, "FreeCard/Box/Desc").Text.Contains("+250") && !screen.ContinueButton.Visible, "heal preview, no Continue yet");
 
@@ -415,7 +429,7 @@ public static class RestStopTests
 		try
 		{
 			Assert.True(RestStopScreenForecast.For(bare) == null, "no forecast");
-			Assert.True(!empty.GetNode<Control>("Forecast/LevelTag").Visible && !empty.GetNode<Control>("Forecast/Placeholder").Visible, "no level tag, no placeholder");
+			Assert.True(!empty.GetNode<Control>("Forecast/LevelTag").Visible && empty.GetNodeOrNull("Forecast/Placeholder") == null, "no level tag, no placeholder");
 			Assert.True(L(empty, "Forecast/CostValue").Text == "" && !L(empty, "Forecast/LockNote").Text.Contains("Locks when you enter") && !L(empty, "Forecast/CopyNote").Text.StartsWith("Copied at your level"), "no stale cost, lock or copy line");
 		}
 		finally { runner.RemoveChild(empty); empty.Free(); }

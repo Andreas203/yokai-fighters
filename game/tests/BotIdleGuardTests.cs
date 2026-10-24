@@ -234,5 +234,13 @@ public static class BotIdleGuardTests
 			foreach (var node in run.GetProperty("nodes").EnumerateArray())
 				if (node.TryGetProperty("fight", out var f))
 					Assert.Equal(0, f.GetProperty("bot").GetProperty("idle_guards").GetInt32(), "no idle guards at 0");
+
+		// YOK-177: the same batch with standing-trigger habits on (the apprentice's at_close_range habit rolls).
+		var on = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content) with { StandingHabits = true }, bot, 1, 3);
+		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
+		var runsOn = docOn.RootElement.GetProperty("runs");
+		var wantOn = new[] { "154d762679e8fa9e", "c5a8b3d97602d4e5", "3eead3f9f53bac43" };
+		var gotOn = Enumerable.Range(0, wantOn.Length).Select(i => runsOn[i].GetProperty("session_hash").GetString()).ToArray();
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", gotOn), "runs seed 1-3 with YOK-177 standing habits");
 	}
 }

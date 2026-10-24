@@ -81,6 +81,10 @@ public sealed class AiSetup
 	/// file when 0, so a recording made before the guard existed reads as no guard and still replays.</summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public int GuardPct { get; set; }
+	/// <summary>YOK-177: the AI rolled standing-condition habits (<see cref="ProfileAi.StandingHabits"/>). Every recording
+	/// made since writes true; left out (false) = a recording made before YOK-177, replayed with the old rule.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public bool StandingHabits { get; set; }
 }
 
 /// <summary>

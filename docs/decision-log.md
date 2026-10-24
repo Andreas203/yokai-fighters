@@ -203,6 +203,7 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
   - Oni and Kappa voices, and the tail count.
   - The order of the 12 unlocks.
   - Which modifiers a cut keeps.
+- **Standing-trigger habit re-arm (Y2, YOK-177, approved 2026-10-21):** a habit on a standing condition (`at_close_range`, `opponent_blocking`) rolls when the condition becomes true on the AI's view, then at most once per 60 view ticks while it holds (`ProfileAi.StandingHabitRearmTicks`). Effect on the apprentice: about 30 rolls and 18 heavy punches per fight. Approved 2026-10-21.
 - **Review queue, in suggested order (2026-10-17; #105–#108 merged):** #148 harness (YOK-26) → #147 Oni/Kappa bodies (YOK-131; captures first) → #150 Oni normals (YOK-132) → #149 elder twists (YOK-90, carries YOK-106, save v5) → #151 tutorial (YOK-92).
 
 ## Designer decisions 2026-10-20
@@ -233,3 +234,16 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **YOK-165 accepted**, with the YOK-176 follow-up.
 - **YOK-179 implementation** (the no-timer and exchange-ratio decisions themselves are recorded in the 2026-10-21 entries): `max_fight_ticks` 108000 (30 min, safety cap, still not per level); a capped fight is outcome `stalled`, left out of win/reach denominators (`fights_stalled`, `runs_stalled`, `stalls_by_profile`, `levels.<level>.duels_stalled`); `exchange_ratio` = hits, `damage_ratio` = damage, `hit_exchange_ratio` dropped. Harness elder fights now carry their twist, so elder numbers from batches 1-3 are not comparable.
 - **A late anti-air counts.**
+- **Habit punish window (P6/Y2, YOK-169):** a habit counts as punished by an unblocked Ryo hit while the habit's plan runs, or within the next 3 hits exchanged after it ends. Blocked connects DO count toward the 3; a landed throw counts once; throw breaks and clashes don't. KO damage is tallied in full. Supersedes the plain "next 3 hits" line above. Rules: Y4.
+- **"Exchange ratio" (Y4, R5) means hits:** unblocked hits landed / unblocked hits taken. Written into Y4 without a number. Context: 4.5:1 is the Sparring Partner's derived reference (YOK-154 analysis of the ratio implied by Y4's damage-per-duel targets), not a designer-set target. Harness change: YOK-179.
+- **E23 debug temperament is sticky:** a choice made with F9 or `--temperament=` stays in effect across later nodes until changed.
+- **E22 constants:** `GuardTicks` 10 (how long an AI that opts into `guard_pct` keeps guarding after its own move's recovery; YOK-165; the guard ships off, `DefaultGuardPct` 0). Tier `jump_punish_pct`: apprentice 50, yokai 50, elder 100, Tanuki 100 (absolute chance; a late anti-air counts), recorded in Y4.
+- **G3 balance gate (2026-10-21):** no cuts yet. Fix the batch-3 bugs (YOK-177/178/179), rerun as batch 4 (YOK-185), then decide. The newcomer playtest (YOK-50) calibrates whether the bot or the fights get retuned.
+- **No round timer (C1):** fights go to KO. The harness cap is only a safety limit; stalls are reported separately. No AM needed: the GDD sets no timer, so this fills a gap.
+- **R6:** beating an elder counts as binding its yokai for the shop. Open question removed from rules.md. YOK-178.
+- **Naming:** elders are named "Elder <yokai>" (e.g. "Elder Oni") on the binding card and screens.
+- **Y2 Tanuki habit:** the throw triggers after ONE blocked hit (the first blockstun it sees), not "keeps blocking".
+- **Y2/E22 standing-condition habits:** fire when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds (approved). Listed in E22.
+- **Y2 fired habits always come out,** even if the AI is hit before it can act. Exceptions: a jump answer replacing a standing habit plan (Y4), and the round or fight ending. YOK-177.
+- **AM14 written** for the Tanuki one-blocked-hit habit, because AM4 said "keeps blocking" and an amendment wins over rules.md.
+- **YOK-177 held throws:** fired standing habits always come out (Tanuki throw habit on the first blockstun seen, 60-tick re-arm approved). The held throw jump answer is a slot request under the YOK-177 rule, which changes the Kappa profiles in tier-rate fights; approved.

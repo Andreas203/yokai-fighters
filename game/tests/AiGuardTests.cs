@@ -61,6 +61,7 @@ public static class AiGuardTests
 	public static HarnessContent LegacyOpponent(HarnessContent c) => c with
 	{
 		Scenes = new LegacyScenes(c.Scenes),
+		StandingHabits = false, // YOK-177: standing-trigger habits never rolled before it
 	};
 
 	sealed class LegacyScenes(INodeSceneResolver inner) : INodeSceneResolver
@@ -83,6 +84,10 @@ public static class AiGuardTests
 		var batch = RunHarness.PlayBatch(content, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		Assert.Equal("201847ea51c823ea", doc.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "guard off, no tier rate = the opponent from before YOK-165");
+		// YOK-177: the same opponent with standing-trigger habits on (the apprentice's at_close_range habit rolls) is a new run.
+		var on = RunHarness.PlayBatch(content with { StandingHabits = true }, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
+		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
+		Assert.Equal("154d762679e8fa9e", docOn.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "the legacy opponent with YOK-177 standing habits");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------
