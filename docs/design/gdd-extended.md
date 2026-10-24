@@ -381,6 +381,8 @@ Row 1                       Apprentice              ★ elder (twist icon)   ■
 
 ### 6.2 Health and routes
 
+> **Amended by** [AM15](gdd-amendments.md#am15) the forecast's expected cost. Where they disagree with this section, the amendments win.
+
 Binding a yokai restores 50 health. The values below are tuned by the harness; the targets are fixed.
 
 | Route to the boss | Health on arrival |
@@ -482,7 +484,7 @@ Content runs as a pipeline with a gatekeeper: Rules Lawyer returns broken drafts
 
 ### 10.1 Engine, assets and constraints
 
-> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators, rigging and clip sources, [AM7](gdd-amendments.md#am7) Astra concept art. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators, rigging and clip sources, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton. Where they disagree with this section, the amendments win.
 
 - Engine: Godot 4 (.NET) with C#. All assets are pre-bought and unified by a toon shader.
 - Week 1 go/no-go gate: walk, heavy and throw clips must retarget onto each yokai without clipping tails, shell or club; a yokai that fails uses its folklore human guise.

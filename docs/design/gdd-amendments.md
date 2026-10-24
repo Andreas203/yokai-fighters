@@ -20,6 +20,8 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM12](#am12) | 2026-10-20 | Slippery Skin breaks throws during startup | modifier table, E12 | YOK-172 |
 | [AM13](#am13) | 2026-10-21 | The apprentice has its own behaviour profile | Y1, G5 | YOK-174 |
 | [AM14](#am14) | 2026-10-21 | The Tanuki's throw habit triggers after one blocked hit | Y2 | YOK-177, PR #214 |
+| [AM15](#am15) | 2026-10-20 | The forecast's expected cost is the copied move's damage per hit | T6 | YOK-173, PR #217 |
+| [AM16](#am16) | 2026-10-19 | Tripo's skeleton becomes the shared skeleton | F6 | YOK-146 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -145,7 +147,7 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 - **Clip measurement**: a scripted check that reports foot slide and joint jitter per 60-tick frame and renders the hit-frame stills, so a take's verdict rests on numbers.
 - **Clip sources** beyond the generators: **video motion capture** (Rokoko Vision, Move.ai Move One, DeepMotion or Plask) of a performance the designer records, and **ActorCore** motion-capture packs bought by the designer. **Cascadeur** may be used only for its automatic physics pass on an existing clip, never to pose keys.
 
-**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
+**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on *(replaced by AM16: Tripo's skeleton since 2026-10-19)*. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
 
 **Retiming curves (F2).** A measured clip may carry a **retiming curve**: a short list of segments mapping game frames onto clip time, so startup can be snappy, the pose holds through the active frames and recovery eases out. Each segment plays between 0.5× and 2× the clip's speed (first pass, designer may change), and a held pose lasts at most 4 frames. Frame data is written from the clip *as retimed*. Retiming stays data, played through `AnimationPlayer.Seek()` (F3).
 
@@ -337,3 +339,40 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 |---|---|---|
 | AM4, "The Tanuki's habit" (and its table row) | "throws when the player keeps blocking, 60% of the time" | "throws after one blocked hit, the first blockstun it sees, 60%" |
 | rules.md Y2 | "throws when the player keeps blocking (60%) [AM4]" | "throws after one blocked hit, the first blockstun it sees (60%) [AM4, AM14]" |
+
+<a id="am15"></a>
+
+## AM15 — The forecast's expected cost is the copied move's damage per hit (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20, written as an amendment on 2026-10-24 (YOK-196). Built in YOK-173 (PR #217).
+
+**Decision.** The rest-stop forecast's "expected cost" is the copied move's damage per hit at Ryo's level, read from move data. It is always available, so there is no "not enough fights" state. It is no longer estimated from the player's own fights.
+
+**Why.** An estimate from the player's own fights has nothing to show at the row-4 rest stop of a first run and swings with a few fights; a number from data is defined from the first stop and tells the player what the copied move does.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §6.2 Health and routes (p. 10) | "its expected cost from the player's own fights" | "its expected cost: the copied move's damage per hit at Ryo's level, from data" |
+| GDD short §2.6 Health and tuning | "the Tanuki's expected cost from the player's own fights" | As above. |
+| rules.md T6 | "expected cost … (decided 2026-10-20)" | Same text, tagged [AM15]. |
+
+<a id="am16"></a>
+
+## AM16 — Tripo's skeleton becomes the shared skeleton (2026-10-19)
+
+**Status.** Decided by the designer on 2026-10-19 on YOK-146 (Option A), written as an amendment on 2026-10-24 (YOK-196).
+
+**Decision.** The shared humanoid skeleton that every clip plays on is Tripo's, rebuilt from the Tripo Ryo (`assets/specs/rigs/skeleton.md`). Bones carry bare names (`Hips`, not `mixamorig:Hips`), and fingers are merged into the hand (25 joints). The Meshy skeleton stays on file as "Previous shared skeleton (Meshy)" (`skeleton-meshy.json`) for Kitsune, Oni and Kappa until their Tripo rebuilds (YOK-147/148/149). Ryo's heavy punch and heavy kick come from video motion capture.
+
+**Why.** The Tripo Ryo was chosen over the Meshy one; making its skeleton the shared one avoids a bone map for the player character, whose clips matter most.
+
+**What does not change.** One shared skeleton, the Rig Specialist's bone map for every other rig, and the G4 gate (AM5). Every job still needs the designer's approval and its cost.
+
+### Text replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM5, "Rig source of truth" | "today the Meshy skeleton that Ryo and Kitsune passed the gate on" | "Tripo's skeleton, from the Tripo Ryo; the Meshy skeleton stays as the previous one until each rig is rebuilt" |
+| rules.md F6 | "one shared humanoid skeleton (today Meshy's)" | "one shared humanoid skeleton (Tripo's since 2026-10-19 [AM16]; the Meshy skeleton stays for rigs not yet rebuilt)" |

@@ -50,11 +50,11 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 ## F — Frame data and engine constraints
 
 - **F1** Every move has startup, active and recovery frames.
-- **F2** Clip first: the Animator specs the move's clip, the designer approves the take, the Animator makes it (generator, motion capture or a bought pack), cleans it, measures it and may give it a retiming curve [AM5]; then Movesmith writes frame data from that clip's real timing as retimed. A retiming segment plays between 0.5× and 2× the clip's speed and a held pose lasts at most 4 frames (first pass). Frame data that doesn't match its clip is invalid.
+- **F2** Clip first: the Animator specs the move's clip, the designer approves the take, the Animator makes it (generator, motion capture or a bought pack), cleans it, measures it and may give it a retiming curve [AM1, AM5]; then Movesmith writes frame data from that clip's real timing as retimed. A retiming segment plays between 0.5× and 2× the clip's speed and a held pose lasts at most 4 frames (first pass). Frame data that doesn't match its clip is invalid.
 - **F3** Animations step by exact frames via `AnimationPlayer.Seek()`. Hitboxes are 2D rectangles stored in move data, not physics shapes.
 - **F4** Gameplay lives on a flat 2D plane (fixed Z); 3D is presentation only. Perspective camera, ~25° FOV.
-- **F5** No hand-keyed animation [AM5]: clips come from a generator, motion capture of a real performance, or a bought motion-capture pack, plus scripted cleanup and retiming and Cascadeur's automatic physics pass; nobody poses or edits keys by hand. A move gets at most 3 takes across all sources; if none is usable, it becomes a mechanically equivalent move on an approved clip.
-- **F6** Visual assets are generated, sound is sourced [AM1, AM5, AM7]. Generators: Tripo or Meshy, the designer's choice per job. Models: turnaround (a generator's 2D image model, or Astra run by the designer from Asset Smith's brief [AM7]) → Image-to-3D → auto-rig (the generator's or AccuRIG 2, whichever passes the Rig Specialist's check) → Blender check and extra bones → glTF into Godot. Every rig plays clips on one shared humanoid skeleton (today Meshy's) through the Rig Specialist's bone map. Clips: generator library or prompt, video motion capture, or ActorCore packs; cleaned and retargeted in Blender by script, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: generator 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs, capture sessions and purchases the designer has approved at the approved cost.
+- **F5** No hand-keyed animation [AM1, AM5]: clips come from a generator, motion capture of a real performance, or a bought motion-capture pack, plus scripted cleanup and retiming and Cascadeur's automatic physics pass; nobody poses or edits keys by hand. A move gets at most 3 takes across all sources; if none is usable, it becomes a mechanically equivalent move on an approved clip.
+- **F6** Visual assets are generated, sound is sourced [AM1, AM5, AM7, AM16]. Generators: Tripo or Meshy, the designer's choice per job. Models: turnaround (a generator's 2D image model, or Astra run by the designer from Asset Smith's brief [AM7]) → Image-to-3D → auto-rig (the generator's or AccuRIG 2, whichever passes the Rig Specialist's check) → Blender check and extra bones → glTF into Godot. Every rig plays clips on one shared humanoid skeleton (Tripo's since 2026-10-19 [AM16]; the Meshy skeleton stays for rigs not yet rebuilt) through the Rig Specialist's bone map. Clips: generator library or prompt, video motion capture, or ActorCore packs; cleaned and retargeted in Blender by script, in place (no root motion), one clip shared by every fighter's rig. Stages: generated props over generated backdrops. UI/VFX textures and backdrops: generator 2D image models. Sound and music: bought packs. Agents write specs, run jobs and check results, but run only jobs, capture sessions and purchases the designer has approved at the approved cost.
 
 ## E — Engine defaults (designer-approved 2026-10-06; E1's screen and wall numbers changed by AM8, approved 2026-10-16)
 
@@ -179,7 +179,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20). In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20) [AM15]. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
 
 ## R — The run
 
@@ -210,7 +210,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## V — Presentation and feel
 
-- **V1** Toon-shaded 3D, ink outlines, muted ukiyo-e palette (persimmon, indigo, rice paper, pine). UI = paper talismans, brush strokes, red seals. Generated assets are made to this look by prompt and unified by one toon shader and outline pass; no baked PBR detail or painterly texture.
+- **V1** Toon-shaded 3D, ink outlines, muted ukiyo-e palette (persimmon, indigo, rice paper, pine). UI = paper talismans, brush strokes, red seals. Generated assets [AM1] are made to this look by prompt and unified by one toon shader and outline pass; no baked PBR detail or painterly texture.
 - **V2** Hitstop: light 6, medium 9, heavy 12 frames; counterhit +4.
 - **V3** Screen shake: heavy hits and EX only, 2–4 px for 6 frames. Never on lights.
 - **V4** Round-ending blow: 30 frames at half speed, then the ink-stroke binding.
