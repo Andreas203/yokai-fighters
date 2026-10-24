@@ -51,11 +51,11 @@ public sealed partial class Match
 		repeat > 0 && Fighters[holder].Twist is { Effect: TwistEffect.ReflectRepeatedSpecial } t && repeat >= t.Repeat;
 
 	/// <summary>Reflect, strike: the move is spent and lands on its user, as if the elder had hit with it.</summary>
-	private void ReflectStrike(int attIndex, MoveData m, int frame)
+	private void ReflectStrike(int attIndex, MoveData m, int frame, (int X, int Y) at)
 	{
 		Fighters[attIndex].MoveConnected = true;
 		TwistTriggered?.Invoke(this, new TwistEvent(1 - attIndex, TwistEffect.ReflectRepeatedSpecial, m.Id));
-		ApplyHit(1 - attIndex, m, frame, defenderWasAttacking: false, projectile: null, reflected: true);
+		ApplyHit(1 - attIndex, m, frame, defenderWasAttacking: false, at, projectile: null, reflected: true);
 	}
 
 	/// <summary>Reflect, projectile: it turns around and is the elder's from now on (it can hit or be blocked by its firer).</summary>

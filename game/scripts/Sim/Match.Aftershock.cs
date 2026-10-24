@@ -81,9 +81,9 @@ public sealed partial class Match
 		for (int k = 0; k < Aftershocks.Count; k++)
 		{
 			var a = Aftershocks[k];
-			if (!a.Live || !AftershockConnects(a)) continue;
+			if (!a.Live || !AftershockConnects(a, out var at)) continue;
 			Fighter def = Fighters[1 - a.Owner];
-			bool blocked = ApplyHit(a.Owner, a.Move, a.ReplayFrame, def.CurrentMove != null, remoteDir: a.Dir);
+			bool blocked = ApplyHit(a.Owner, a.Move, a.ReplayFrame, def.CurrentMove != null, at, remoteDir: a.Dir);
 			Aftershocks.RemoveAt(k--);
 			any = true;
 			AftershockChanged?.Invoke(this, new AftershockEvent(a.Owner, a.Move.Id,
@@ -92,13 +92,14 @@ public sealed partial class Match
 		if (any) ResolvePositions(stackalloc int[2]);
 	}
 
-	private bool AftershockConnects(Aftershock a)
+	private bool AftershockConnects(Aftershock a, out (int X, int Y) at)
 	{
+		at = default;
 		Fighter def = Fighters[1 - a.Owner];
 		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
 		if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Strike) == true) return false;
 		foreach (var hb in a.Move.Hitboxes)
-			if (hb.Covers(a.ReplayFrame) && HurtOverlaps(def, a.WorldBox(hb.Box))) return true;
+			if (hb.Covers(a.ReplayFrame) && HurtContact(def, a.WorldBox(hb.Box), out at)) return true;
 		return false;
 	}
 

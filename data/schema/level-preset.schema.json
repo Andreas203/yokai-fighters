@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/level-preset.schema.json",
+  "title": "Level preset",
+  "description": "data/presets/<id>.json (V8, A5; YOK-198): how one special looks at one level. A special names its preset per level (levels.1.preset, levels.2.preset, levels.3.evolution.preset); this file says which special and level it is for, and the validator checks the two agree. Presentation only: the sim never reads a preset. A special with no preset file at a level gets the default hit spark, coloured by the move's source (V5). Authored by asset-smith (AM5) once the VFX textures are approved.",
+  "type": "object",
+  "required": ["kind", "id", "special", "level", "colour"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "level_preset" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "special": { "$ref": "common.schema.json#/$defs/id", "description": "The special (data/moves/<id>.json, kind special) this preset dresses." },
+    "level": { "type": "integer", "minimum": 1, "maximum": 3, "description": "1-3 (A3). Lv 3 is the evolution's preset (A5)." },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "colour": { "$ref": "#/$defs/hex", "description": "The move's colour at this level (V8). The hit spark uses it unless spark.colour is set." },
+    "spark": {
+      "description": "The hit spark this special makes at this level. Every field is optional; a field left out keeps the default spark's value.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "colour": { "$ref": "#/$defs/hex", "description": "Spark tint; left out = the preset's colour." },
+        "scale_pct": { "type": "integer", "minimum": 25, "maximum": 400, "description": "Size against the default spark for the same hit (100 = unchanged)." },
+        "frames": { "type": "integer", "minimum": 2, "maximum": 60, "description": "Ticks the spark shows (60 per second, F3); left out = the default (the hit's hitstop plus the fade)." },
+        "textures": {
+          "description": "Spark images by outcome, paths relative to game/ (e.g. vfx/hit_sparks/foxfire-lv2-hit.png). An outcome left out uses the default spark image for it.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hit": { "$ref": "#/$defs/texture" },
+            "block": { "$ref": "#/$defs/texture" },
+            "counter": { "$ref": "#/$defs/texture" }
+          }
+        },
+        "sheet_columns": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Frames laid side by side in each image (a one-row flipbook played once over the spark's life); 1 = a still image." },
+        "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true: author images white or greyscale). false = show the image's own colours." }
+      }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "texture": { "type": "string", "pattern": "^[a-z0-9_-]+(/[a-z0-9_-]+)*\\.(png|webp)$" }
+  }
+}

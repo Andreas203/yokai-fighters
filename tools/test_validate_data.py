@@ -642,3 +642,110 @@ class AbilityIdsAcrossKindsTest(unittest.TestCase):
             code, out = run(special, mod)
             self.assertEqual(code, 1, out)
             self.assertIn(f"ability id '{evo}' is already the evolution", out)
+
+
+class LevelPresetTest(unittest.TestCase):
+    """YOK-198 (V8): level-preset schema and the checks LevelPresetLibrary mirrors."""
+    FIXTURE = ROOT / "game" / "tests" / "fixtures" / "presets" / "great-wave.json"
+
+    def _write(self, folder, doc, name=None):
+        import json
+        f = Path(folder) / f"{name or doc['id']}.json"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(doc), encoding="utf-8")
+        return f
+
+    def _doc(self, **changes):
+        import json
+        doc = json.loads(self.FIXTURE.read_text(encoding="utf-8"))
+        doc.update(changes)
+        return doc
+
+    def test_fixture_is_valid(self):
+        code, out = run(self.FIXTURE)
+        self.assertEqual(code, 0, out)
+
+    def test_special_must_name_this_preset_at_this_level(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc(level=2)))
+            self.assertEqual(code, 1, out)
+            self.assertIn("special 'test-spirit-wave' names no preset at Lv 2", out)
+            code, out = run(self._write(tmp, self._doc(id="other-wave"), "other-wave"))
+            self.assertEqual(code, 1, out)
+            self.assertIn("names preset 'great-wave' at Lv 3 (levels.3.evolution.preset), not 'other-wave'", out)
+
+    def test_unknown_special(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc(special="no-such-special")))
+            self.assertEqual(code, 1, out)
+            self.assertIn("special 'no-such-special' not found", out)
+
+    def test_schema_refusals(self):
+        import tempfile
+        cases = [
+            (dict(level=4), "level"), (dict(level=3.0), "whole number"), (dict(colour="#12345"), "colour"),
+            (dict(colour="red"), "colour"), (dict(sound="x"), "Additional properties"),
+            (dict(spark={"scale_pct": 10}), "spark.scale_pct"), (dict(spark={"glow": 1}), "Additional properties"),
+            (dict(spark={"textures": {"hit": "../x.png"}}), "spark.textures.hit"),
+            (dict(spark={"textures": {"hit": "res://x.png"}}), "spark.textures.hit"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+            doc = self._doc()
+            doc.pop("colour")
+            code, out = run(self._write(tmp, doc))
+            self.assertEqual(code, 1, out)
+            self.assertIn("'colour' is a required property", out)
+
+    def test_trailing_newline_refused_like_the_loader(self):
+        """Test-breaker probe: re.search's $ matches before a trailing newline; the validator matches whole, like \\z."""
+        import tempfile
+        cases = [
+            (dict(colour="#102030\n"), "colour: '#102030\\n' is not a #RRGGBB colour"),
+            (dict(special="test-spirit-wave\n"), "special: 'test-spirit-wave\\n' is not a lowercase kebab-case id"),
+            (dict(spark={"colour": "#102030\n"}), "spark.colour"),
+            (dict(spark={"textures": {"hit": "a/b.png\n"}}), "spark.textures.hit: 'a/b.png\\n' is not a .png/.webp path"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
+    def test_texture_must_exist_under_game(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc(spark={"textures": {"block": "vfx/hit_sparks/missing.png"}})))
+            self.assertEqual(code, 1, out)
+            self.assertIn("spark.textures.block: game/vfx/hit_sparks/missing.png does not exist", out)
+            real = "assets/generated/characters/kappa/shell_base_color.png"
+            self.assertTrue((ROOT / "game" / real).is_file())
+            code, out = run(self._write(tmp, self._doc(spark={"textures": {"hit": real}})))
+            self.assertEqual(code, 0, out)
+
+    def test_one_preset_per_special_and_level(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            a = self._write(Path(tmp) / "a", self._doc())
+            b = self._write(Path(tmp) / "b", self._doc())
+            code, out = run(a, b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("'test-spirit-wave' Lv 3 already has a preset", out)
+
+    def test_presets_folder_takes_only_level_presets(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "data" / "presets", self._doc())
+            code, out = run(f)
+            self.assertEqual(code, 0, out)
+            g = self._write(Path(tmp) / "data" / "presets", {"kind": "fighter", "id": "ryo"})
+            code, out = run(g)
+            self.assertEqual(code, 1, out)
+            self.assertIn("files in data/presets/ must be kind 'level_preset'", out)

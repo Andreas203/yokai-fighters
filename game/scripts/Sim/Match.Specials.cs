@@ -254,9 +254,9 @@ public sealed partial class Match
 			Fighter def = Fighters[1 - p.Owner];
 			if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) continue;
 			if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Projectile) == true) continue;
-			if (!HurtOverlaps(def, p.WorldBox())) continue;
+			if (!HurtContact(def, p.WorldBox(), out var at)) continue;
 			if (Reflects(1 - p.Owner, p.Repeat)) { ReflectProjectile(p); continue; } // YOK-90: turned around, no hit
-			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p, reflected: p.Reflected);
+			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, at, p, reflected: p.Reflected);
 			p.HitsLeft--;
 			any = true;
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(p.Owner, p.Move.Id,

@@ -229,6 +229,7 @@ public partial class FightScene : Node3D
 		Match.Impact += (_, e) => Shake.OnImpact(e);
 		SetUpHitSounds();
 		AttachHitSounds(Match);
+		SetUpHitSparks(); // YOK-198: V5/V8 hit sparks and the V6 sound-cue hook
 		SetUpAi(); // YOK-27
 		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
@@ -244,6 +245,7 @@ public partial class FightScene : Node3D
 	public override void _ExitTree()
 	{
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		DetachHitSparks(); // YOK-198
 		MusicPlayer.Instance?.PlayMenuMusic();
 	}
 
@@ -380,6 +382,7 @@ public partial class FightScene : Node3D
 		_camera.VOffset = vy;
 
 		RenderProjectiles();
+		RenderHitSparks(); // YOK-198
 		_hud.Refresh(Match);
 	}
 

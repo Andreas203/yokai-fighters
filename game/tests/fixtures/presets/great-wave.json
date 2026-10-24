@@ -1,0 +1,15 @@
+{
+  "kind": "level_preset",
+  "id": "great-wave",
+  "special": "test-spirit-wave",
+  "level": 3,
+  "status": "proposed",
+  "rules": ["V5", "V8", "A5"],
+  "colour": "#2D3A5E",
+  "spark": {
+    "colour": "#F1E8D4",
+    "scale_pct": 140,
+    "sheet_columns": 4
+  },
+  "notes": "TEST FIXTURE (YOK-198), not game content: the Lv 3 preset of the fixture special test-spirit-wave, whose evolution names preset 'great-wave'. Values are arbitrary test numbers. No image: the art seam uses the default spark image for the outcome. Real presets live in data/presets/ and are asset-smith's (AM5)."
+}
