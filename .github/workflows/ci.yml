@@ -17,6 +17,10 @@ permissions:
 
 env:
   GODOT_VERSION: 4.7.2
+  # SHA-256 of Godot_v4.7.2-stable_mono_linux_x86_64.zip: the digest GitHub lists for the asset on the
+  # godotengine/godot-builds 4.7.2-stable release, checked on a fresh download whose SHA-512 matches the
+  # release's official SHA512-SUMS.txt. Change it together with GODOT_VERSION.
+  GODOT_ZIP_SHA256: 129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247
 
 jobs:
   build-test:
@@ -35,9 +39,10 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      # Same path and key as data-merge-check, so the two workflows share one cached download. Restore and
-      # save are split so the download is saved right away: actions/cache's post step saves only when the
-      # whole job passes, and a red suite would otherwise download Godot on every run.
+      # Same path and key as data-merge-check. Neither workflow runs on a push to main, so a cache is saved
+      # per PR ref (and per manually dispatched ref): each PR downloads Godot once, then reuses it on re-runs.
+      # Restore and save are split so the download is saved right away: actions/cache's post step saves only
+      # when the whole job passes, and a red suite would otherwise download Godot on every run.
       - name: Restore Godot
         id: godot-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -51,8 +56,11 @@ jobs:
           base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
           mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
           curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          echo "${GODOT_ZIP_SHA256}  godot.zip" | sha256sum -c -
           unzip -q godot.zip && rm godot.zip
 
+      # Keep Save Godot before any step that runs PR code (Build, Import, Test suite): the cache then holds
+      # only the verified download, never anything the PR's code could have written into GODOT_DIR.
       - name: Save Godot
         if: steps.godot-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -74,7 +82,7 @@ jobs:
 
       # The whole suite runs in one process. A crash at exit after the TESTS line (YOK-161, YOK-162) does not
       # change the verdict, which is the TESTS line; it is reported as a warning. A crash or hang before the
-      # TESTS line fails the job.
+      # TESTS line fails the job; a hang after it, killed by the timeout (exit 124), is a warning of its own.
       - name: Test suite
         run: |
           log="$RUNNER_TEMP/ci/suite.log"
@@ -85,10 +93,12 @@ jobs:
           totals=$(grep '^TESTS ' "$log" | tail -n 1 || true)
           fails=$(grep '^FAIL ' "$log" || true)
           nfail=$(printf '%s' "$fails" | grep -c '^FAIL ' || true)
+          # Informational only, no floor: [Test] attributes found in game/ (passed + failed should match it).
+          expected=$(grep -rhE '^\s*\[Test\]' --include=*.cs game | wc -l)
           {
             echo "### Headless test suite"
             echo
-            echo "\`${totals:-no TESTS line: the runner did not finish (exit $code)}\`"
+            echo "\`${totals:-no TESTS line: the runner did not finish (exit $code)}\` ($expected [Test] methods found in game/)"
             if [ -n "$fails" ]; then
               echo; echo "Failing tests ($nfail):"; echo '```'; printf '%s\n' "$fails"; echo '```'
             fi
@@ -108,7 +118,9 @@ jobs:
           if [ "$failed" != 0 ] || [ "$nfail" != 0 ] || [ "$passed" = 0 ]; then
             echo "::error::$totals ($nfail FAIL line(s))"; exit 1
           fi
-          if [ "$code" != 0 ]; then
+          if [ "$code" = 124 ]; then
+            echo "::warning::$totals, but Godot hung after TESTS, killed by timeout (exit 124)"
+          elif [ "$code" != 0 ]; then
             echo "::warning::$totals, but Godot exited with code $code after the TESTS line (exit crash, see YOK-161/YOK-162)"
           else
             echo "::notice::$totals"
