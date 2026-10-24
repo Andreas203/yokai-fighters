@@ -11,8 +11,6 @@ name: ci
 on:
   pull_request:
   workflow_dispatch:
-  push:
-    branches: ["YOK-190-*"]   # TEMPORARY: lets the branch verify the workflow before it is on main
 
 permissions:
   contents: read
@@ -37,10 +35,12 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      # Same path and key as data-merge-check, so the two workflows share one cached download.
-      - name: Cache Godot
+      # Same path and key as data-merge-check, so the two workflows share one cached download. Restore and
+      # save are split so the download is saved right away: actions/cache's post step saves only when the
+      # whole job passes, and a red suite would otherwise download Godot on every run.
+      - name: Restore Godot
         id: godot-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.GODOT_DIR }}
           key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
@@ -52,6 +52,13 @@ jobs:
           mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
           curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
           unzip -q godot.zip && rm godot.zip
+
+      - name: Save Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.GODOT_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
 
       - name: Locate Godot
         run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
@@ -136,4 +143,5 @@ jobs:
         run: python -I -m unittest discover -s tools -p 'test_*.py' -v
 
       - name: Goal agent tests
+        if: success() || failure()   # still report when the tool tests failed
         run: python -I -m unittest discover -s tools/goal_agent -p 'test_*.py' -v
