@@ -71,6 +71,6 @@ public partial class FightScene
 			Match.Impact += OnImpactSpark;
 			Sparks.Clear();
 		}
-		SparkLayer?.Draw(Sparks.Visible(Match.Tick));
+		SparkLayer?.Draw(Sparks.Visible(Match));
 	}
 }

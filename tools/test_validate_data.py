@@ -679,6 +679,22 @@ class LevelPresetTest(unittest.TestCase):
             self.assertEqual(code, 1, out)
             self.assertIn("'colour' is a required property", out)
 
+    def test_trailing_newline_refused_like_the_loader(self):
+        """Test-breaker probe: re.search's $ matches before a trailing newline; the validator matches whole, like \\z."""
+        import tempfile
+        cases = [
+            (dict(colour="#102030\n"), "colour: '#102030\\n' is not a #RRGGBB colour"),
+            (dict(special="test-spirit-wave\n"), "special: 'test-spirit-wave\\n' is not a lowercase kebab-case id"),
+            (dict(spark={"colour": "#102030\n"}), "spark.colour"),
+            (dict(spark={"textures": {"hit": "a/b.png\n"}}), "spark.textures.hit: 'a/b.png\\n' is not a .png/.webp path"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
     def test_texture_must_exist_under_game(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:

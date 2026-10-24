@@ -37,6 +37,11 @@ public sealed partial class Match
 	public int KoFrame { get; private set; }
 	/// <summary>0 or 1 when someone won, -1 for a double KO or while fighting.</summary>
 	public int Winner { get; private set; } = -1;
+	/// <summary>
+	/// YOK-198: times <see cref="Reset"/> ran (1 after construction). Presentation uses it to tell a reset match from
+	/// the one it was following (hit sparks). Bookkeeping only: no sim rule reads it and it is not in StateHash.
+	/// </summary>
+	public int Resets { get; private set; }
 
 	private int _koTicks;
 
@@ -72,6 +77,7 @@ public sealed partial class Match
 		_projectileSerial = 0;
 		ResetTwistState(); // YOK-90
 		ResetAftershocks(); // YOK-136
+		Resets++; // YOK-198: presentation bookkeeping, outside StateHash
 	}
 
 	/// <summary>Queue damage on a fighter; applied at the end of the current world frame.</summary>

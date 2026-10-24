@@ -38,9 +38,10 @@ public sealed class LevelPresetLibrary
 	public const string Kind = "level_preset";
 	public static readonly LevelPresetLibrary Empty = new(Array.Empty<LevelPreset>());
 
-	static readonly Regex IdPattern = new("^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.CultureInvariant);
-	static readonly Regex HexPattern = new("^#[0-9A-Fa-f]{6}$", RegexOptions.CultureInvariant);
-	static readonly Regex TexturePattern = new(@"^[a-z0-9_-]+(/[a-z0-9_-]+)*\.(png|webp)$", RegexOptions.CultureInvariant);
+	// \z, not $: .NET's $ also matches before a trailing newline ("a\n" would pass).
+	static readonly Regex IdPattern = new(@"\A[a-z0-9]+(-[a-z0-9]+)*\z", RegexOptions.CultureInvariant);
+	static readonly Regex HexPattern = new(@"\A#[0-9A-Fa-f]{6}\z", RegexOptions.CultureInvariant);
+	static readonly Regex TexturePattern = new(@"\A[a-z0-9_-]+(/[a-z0-9_-]+)*\.(png|webp)\z", RegexOptions.CultureInvariant);
 	static readonly HashSet<string> TopFields = new() { "kind", "id", "special", "level", "status", "rules", "colour", "spark", "notes" };
 	static readonly HashSet<string> SparkFields = new() { "colour", "scale_pct", "frames", "textures", "sheet_columns", "tint" };
 	static readonly HashSet<string> TextureFields = new() { "hit", "block", "counter" };
@@ -53,7 +54,9 @@ public sealed class LevelPresetLibrary
 	{
 		var list = presets.ToList();
 		foreach (var p in list)
-			if (!_byLevel.TryAdd((p.Special, p.Level), p))
+			if (p.Level is < 1 or > 3)
+				throw new FormatException($"level preset '{p.Id}': level {p.Level} is outside 1-3 (A3)");
+			else if (!_byLevel.TryAdd((p.Special, p.Level), p))
 				throw new FormatException($"level presets '{_byLevel[(p.Special, p.Level)].Id}' and '{p.Id}' both dress '{p.Special}' Lv {p.Level}");
 		All = list;
 	}

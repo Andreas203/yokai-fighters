@@ -141,6 +141,9 @@ public sealed class HitSparks
 
 	private readonly List<HitSpark> _sparks = new();
 	private int _lastTick = -1;
+	/// <summary>The match the sparks belong to, and its <see cref="Match.Resets"/> when they were spawned.</summary>
+	private Match? _match;
+	private int _resets;
 
 	public LevelPresetLibrary Presets { get; set; }
 
@@ -153,6 +156,7 @@ public sealed class HitSparks
 	{
 		_sparks.Clear();
 		_lastTick = -1;
+		_match = null;
 	}
 
 	/// <summary>
@@ -162,6 +166,7 @@ public sealed class HitSparks
 	/// </summary>
 	public HitCue OnImpact(Match match, in ImpactEvent e)
 	{
+		Follow(match);
 		Sync(match.Tick);
 		var (source, special, level) = Identify(match, e.Attacker, e.MoveId);
 		var kind = HitSparkStyle.KindOf(e);
@@ -174,14 +179,35 @@ public sealed class HitSparks
 		return new HitCue(match.Tick, e.Attacker, e.MoveId, source, special, level, e.Strength, kind, e.At.X, e.At.Y);
 	}
 
-	/// <summary>The sparks showing on <paramref name="tick"/>, oldest first; spent ones are dropped.</summary>
+	/// <summary>The sparks of <paramref name="match"/> showing on its current tick (what the scene draws).</summary>
+	public List<HitSparkFrame> Visible(Match match)
+	{
+		Follow(match);
+		return Visible(match.Tick);
+	}
+
+	/// <summary>
+	/// The sparks showing on <paramref name="tick"/> of the match they came from, oldest first; spent ones are dropped.
+	/// Sparks are frames of that match only: if it was reset since, or is not on <paramref name="tick"/> (another
+	/// match's tick was asked for), they are gone. Callers holding the match use <see cref="Visible(Match)"/>.
+	/// </summary>
 	public List<HitSparkFrame> Visible(int tick)
 	{
+		if (_match != null && (_match.Resets != _resets || _match.Tick != tick)) Clear();
 		Sync(tick);
 		var shown = new List<HitSparkFrame>(_sparks.Count);
 		_sparks.RemoveAll(s => tick - s.SpawnTick >= s.Look.Frames);
 		foreach (var s in _sparks) shown.Add(HitSparkStyle.FrameOf(s, tick - s.SpawnTick));
 		return shown;
+	}
+
+	/// <summary>Another match, or the same one reset since (YOK-198 probes): the old sparks are gone.</summary>
+	private void Follow(Match match)
+	{
+		if (ReferenceEquals(match, _match) && match.Resets == _resets) return;
+		Clear();
+		_match = match;
+		_resets = match.Resets;
 	}
 
 	/// <summary>A tick earlier than the last one seen means the match was reset: its sparks are gone.</summary>

@@ -657,11 +657,27 @@ def preset_named(special: dict, level) -> object:
     return lv.get("preset")
 
 
+# YOK-198: the schema's patterns, matched whole. jsonschema runs them with re.search, where $ also matches before a
+# trailing newline ("a\n" would pass); LevelPresetLibrary anchors with \z, so both refuse it.
+PRESET_ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
+PRESET_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+PRESET_TEXTURE = re.compile(r"[a-z0-9_-]+(/[a-z0-9_-]+)*\.(png|webp)")
+
+
 def check_level_preset(doc: dict, specials: dict[str, dict]) -> list[tuple[str, str]]:
     """YOK-198 (V8, A5): what LevelPresetLibrary also refuses, plus the special it dresses agreeing with it."""
     errs: list[tuple[str, str]] = []
     sid, level, pid = doc.get("special"), doc.get("level"), doc.get("id")
     spark = doc.get("spark") if isinstance(doc.get("spark"), dict) else {}
+    tex = spark.get("textures") if isinstance(spark.get("textures"), dict) else {}
+    for where, v, pat, what in (("id", pid, PRESET_ID, "a lowercase kebab-case id"),
+                                ("special", sid, PRESET_ID, "a lowercase kebab-case id"),
+                                ("colour", doc.get("colour"), PRESET_HEX, "a #RRGGBB colour"),
+                                ("spark.colour", spark.get("colour"), PRESET_HEX, "a #RRGGBB colour"),
+                                *((f"spark.textures.{k}", tex.get(k), PRESET_TEXTURE, "a .png/.webp path relative to game/")
+                                  for k in ("hit", "block", "counter"))):
+        if isinstance(v, str) and not pat.fullmatch(v):
+            errs.append((where, f"{v!r} is not {what} (matched whole: no trailing newline)"))
     for where, v in (("level", level), ("spark.scale_pct", spark.get("scale_pct")),
                      ("spark.frames", spark.get("frames")), ("spark.sheet_columns", spark.get("sheet_columns"))):
         if v is not None and not is_int(v):
