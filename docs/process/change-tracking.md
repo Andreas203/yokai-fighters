@@ -51,3 +51,5 @@ Each entry is the PR's `## Changelog` line, or the PR title when that line is mi
 - the amendments index and the `## AMn` headings disagree.
 
 A new kind of document is fine. Give it a home in `DOC_HOMES` and a row in `docs/README.md` in the same PR.
+
+The `ci` workflow (`.github/workflows/ci.yml`, on every PR) builds the game, runs the full headless test suite and runs the Python tool tests; `data-merge-check` runs on PRs that touch `data/**`. Neither merges or pushes.
