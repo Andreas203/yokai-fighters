@@ -19,6 +19,10 @@ permissions:
 
 env:
   GODOT_VERSION: 4.7.2
+  # SHA-256 of Godot_v4.7.2-stable_mono_linux_x86_64.zip, as in ci.yml: the digest GitHub lists for the asset on
+  # the godotengine/godot-builds 4.7.2-stable release, cross-checked against the release's SHA512-SUMS.txt.
+  # Change it together with GODOT_VERSION.
+  GODOT_ZIP_SHA256: 129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247
 
 jobs:
   check:
@@ -32,25 +36,76 @@ jobs:
       - name: Paths outside the checkout
         run: |
           echo "GODOT_DIR=$RUNNER_TEMP/godot-bin" >> "$GITHUB_ENV"
+          echo "GODOT_ZIP_DIR=$RUNNER_TEMP/godot-zip" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/data-merge"
+
+      # YOK-202: the Godot cache is restored FIRST, before the base checker exists on disk. A PR can save a
+      # crafted cache under this key in its own PR scope, and actions/cache extracts with tar -P, so a cache
+      # restored after the extraction could overwrite the base checker. Only the release zip is cached, and
+      # it is checked against GODOT_ZIP_SHA256 before use: a hit that does not match fails the job.
+      - name: Restore Godot
+        id: godot-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.GODOT_ZIP_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-zip-${{ env.GODOT_ZIP_SHA256 }}
+
+      - name: Download and verify Godot
+        env:
+          HIT: ${{ steps.godot-cache.outputs.cache-hit }}
+        run: |
+          zip="$GODOT_ZIP_DIR/godot.zip"
+          if [ "$HIT" = true ]; then
+            if ! echo "${GODOT_ZIP_SHA256}  $zip" | sha256sum -c -; then
+              echo "::error::The cached Godot zip does not match the pinned SHA-256: the cache was tampered with. Delete it (gh cache delete) and re-run."
+              exit 1
+            fi
+          else
+            rm -rf "$GODOT_ZIP_DIR" && mkdir -p "$GODOT_ZIP_DIR"
+            base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+            curl -fsSL -o "$zip" "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+            echo "${GODOT_ZIP_SHA256}  $zip" | sha256sum -c -
+          fi
+          # Extract fresh from the verified zip, never into anything a cache may have left behind.
+          rm -rf "$GODOT_DIR" && mkdir -p "$GODOT_DIR"
+          unzip -q "$zip" -d "$GODOT_DIR"
+
+      # Saves only the verified zip, and before any step that runs PR code.
+      - name: Save Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.GODOT_ZIP_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-zip-${{ env.GODOT_ZIP_SHA256 }}
+
+      - name: Locate Godot
+        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
 
       # The checker and its validators come from the BASE branch, never from the PR: a PR could otherwise
       # edit tools/ to call itself mergeable. They are extracted outside the checkout and run on the PR's
       # data/ with --tools. (Any change to tools/ or game/ is itself a code change: REVIEW at best.)
+      # The folder is emptied first, so nothing restored earlier can sit inside it, and its contents are
+      # hashed: the check step re-hashes them and refuses to run if anything changed in between (YOK-202).
       - name: Extract the base branch's checker
+        id: base-checker
         run: |
           base="origin/${GITHUB_BASE_REF:-main}"
-          mkdir -p "$RUNNER_TEMP/base"
+          rm -rf "$RUNNER_TEMP/base" && mkdir -p "$RUNNER_TEMP/base"
           git archive "$base" tools | tar -x -C "$RUNNER_TEMP/base"
           if [ -f "$RUNNER_TEMP/base/tools/data_merge_check.py" ]; then
-            echo "TOOLS=$RUNNER_TEMP/base/tools" >> "$GITHUB_ENV"
+            tools="$RUNNER_TEMP/base/tools"
             echo "CHECKER=base" >> "$GITHUB_ENV"
           else
             # Bootstrap: the base has no checker yet (the PR that adds it). Run the PR's, never as a merge verdict.
             echo "::warning::The base branch has no tools/data_merge_check.py; running the PR's own checker, verdict capped at REVIEW"
-            echo "TOOLS=$GITHUB_WORKSPACE/tools" >> "$GITHUB_ENV"
+            tools="$GITHUB_WORKSPACE/tools"
             echo "CHECKER=pr" >> "$GITHUB_ENV"
           fi
+          echo "TOOLS=$tools" >> "$GITHUB_ENV"
+          # Every path with its type, mode and link target, then every file's content.
+          h=$(cd "$tools" && { find . -printf '%y %m %p -> %l\n' | LC_ALL=C sort; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
+          echo "tools_sha256=$h" >> "$GITHUB_OUTPUT"
+          echo "checker files hashed: $h"
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
@@ -63,27 +118,17 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Cache Godot
-        id: godot-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.GODOT_DIR }}
-          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
-
-      - name: Download Godot
-        if: steps.godot-cache.outputs.cache-hit != 'true'
-        run: |
-          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
-          mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
-          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
-          unzip -q godot.zip && rm godot.zip
-
-      - name: Locate Godot
-        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
-
       # Defaults only: 200 runs and a fresh build + import (designer 2026-10-17: anything less is INCOMPLETE).
       - name: Data merge check
+        env:
+          TOOLS_SHA256: ${{ steps.base-checker.outputs.tools_sha256 }}
         run: |
+          # YOK-202: the checker must be the files hashed right after extraction, byte for byte.
+          now=$(cd "$TOOLS" && { find . -printf '%y %m %p -> %l\n' | LC_ALL=C sort; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
+          if [ "$now" != "$TOOLS_SHA256" ]; then
+            echo "::error::The checker's files changed after they were extracted (hash $now, expected $TOOLS_SHA256); not running it"
+            exit 1
+          fi
           base="origin/${GITHUB_BASE_REF:-main}"
           set +e
           # -I: the checker imports nothing from the checkout. The PR's game code runs inside this step
