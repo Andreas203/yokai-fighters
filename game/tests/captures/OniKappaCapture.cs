@@ -7,7 +7,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-131 windowed screenshot tool (not a test): a dev-jump Oni fight, a Kappa fight and an Elder Oni fight,
-/// walked in to close range, plus Oni stills mid-swing (MP, the club swing), in the heavy (HP, the overhead club) and the heavy kick (his highest club point), and Ryo vs the Kitsune (YOK-133 framing comparison). Run: godot --path game res://tests/oni_kappa_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// walked in to close range, plus Oni stills mid-swing (MP, the club swing), in the heavy (HP, the overhead club) and the heavy kick (his highest club point), and Ryo vs the Kitsune (YOK-133 framing comparison). Run: godot --path game res://tests/captures/oni_kappa_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class OniKappaCapture : Node
 {

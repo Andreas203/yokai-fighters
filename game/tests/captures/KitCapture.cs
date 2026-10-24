@@ -5,7 +5,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// Screenshot tool (not a test): both pages of the kit gallery, written over docs/screenshots/current/kit/.
-/// Run: godot --path game res://tests/kit_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;   (and again with --resolution 1280x720)
+/// Run: godot --path game res://tests/captures/kit_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;   (and again with --resolution 1280x720)
 /// Also runs <see cref="KitGallery.Audit"/> on both pages and exits 1 on any problem.
 /// </summary>
 public partial class KitCapture : Node

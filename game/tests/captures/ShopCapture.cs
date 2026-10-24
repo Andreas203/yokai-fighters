@@ -9,7 +9,7 @@ namespace YokaiFighters.Tests;
 /// Windowed screenshot tool (not a test) for the shop (YOK-104, rebuilt for YOK-159 rev 3): greeting, a focused item with
 /// the merchant speaking it, the ledger slip open, a bought item, cannot afford, slot full, the modifier target step, the
 /// release confirm, the T5 lock, shelf empty, and a shelf with more items than the cabinet shows.
-/// Run: godot --path game res://tests/shop_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720]
+/// Run: godot --path game res://tests/captures/shop_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720]
 /// </summary>
 public partial class ShopCapture : Node
 {

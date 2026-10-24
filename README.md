@@ -489,7 +489,7 @@ Everything in [`tools/goal_agent/`](tools/goal_agent/) was written for this game
 | Deliverable | Where |
 |---|---|
 | Source code | [`tools/goal_agent/`](tools/goal_agent/): about 1,450 lines of Python, standard library only, plus 22 unit tests |
-| Working feature | [`game/scripts/Sim/Run/CopyRule.cs`](game/scripts/Sim/Run/CopyRule.cs), the changes to [`RunState.cs`](game/scripts/Sim/Run/RunState.cs), and [`game/tests/CopyRuleTests.cs`](game/tests/CopyRuleTests.cs) |
+| Working feature | [`game/scripts/Sim/Run/CopyRule.cs`](game/scripts/Sim/Run/CopyRule.cs), the changes to [`RunState.cs`](game/scripts/Sim/Run/RunState.cs), and [`game/tests/Sim/Run/CopyRuleTests.cs`](game/tests/Sim/Run/CopyRuleTests.cs) |
 | Feature documentation | this section |
 
 ### How the agent works

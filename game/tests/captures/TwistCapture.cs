@@ -9,7 +9,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// Windowed screenshot tool (not a test) for YOK-139: the map with elder twist icons (row 5 reachable, Nine-Tails focused),
 /// then the elder fight's intro card, and the first-meeting callout with the HUD strip.
-/// Run: godot --path game res://tests/twist_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p]
+/// Run: godot --path game res://tests/captures/twist_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p]
 /// </summary>
 public partial class TwistCapture : Node
 {

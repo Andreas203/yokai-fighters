@@ -3,7 +3,7 @@ using YokaiFighters.Fight;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>Windowed screenshot of the start screen: godot --path game res://tests/start_capture.tscn --resolution 1920x1080 -- out=&lt;png&gt;</summary>
+/// <summary>Windowed screenshot of the start screen: godot --path game res://tests/captures/start_capture.tscn --resolution 1920x1080 -- out=&lt;png&gt;</summary>
 public partial class StartCapture : Node
 {
 	public override async void _Ready()

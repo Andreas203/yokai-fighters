@@ -6,7 +6,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// Windowed screenshot tool (not a test), YOK-74: the HUD in a yokai, an elder and the Tanuki fight (plus the Tanuki fight 10 s in, strip gone, YOK-121) (AM6: the talisman shows only in the last).
-/// Run: godot --path game res://tests/copy_hud_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; tag=1080
+/// Run: godot --path game res://tests/captures/copy_hud_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; tag=1080
 /// </summary>
 public partial class CopyHudCapture : Node
 {

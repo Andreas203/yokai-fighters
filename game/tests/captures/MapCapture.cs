@@ -10,7 +10,7 @@ namespace YokaiFighters.Tests;
 /// Windowed screenshot tool (not a test) for YOK-78 / YOK-108: the map screen on a real run session (the real pool and the default map)
 /// at the start, and part-way through the walk (rows 1-4 done, health 840, the first card of each draft taken, row 5 reachable).
 /// Also the standalone way to run the screen for review: it needs no boot flow.
-/// Run: godot --path game res://tests/map_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p] [stub=12]
+/// Run: godot --path game res://tests/captures/map_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p] [stub=12]
 /// </summary>
 public partial class MapCapture : Node
 {

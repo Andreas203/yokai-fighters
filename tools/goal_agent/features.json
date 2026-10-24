@@ -111,8 +111,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["reward-draft"],
       "evidence": [{"symbol": "class CopyRule\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^CopyRuleTests\\.", "min": 5}],
       "build": {
-        "files": ["game/scripts/Sim/Run/CopyRule.cs", "game/scripts/Sim/Run/RunState.cs", "game/tests/CopyRuleTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/SpecialData.cs", "game/scripts/Sim/Fighter.Specials.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RewardDraftTests.cs"],
+        "files": ["game/scripts/Sim/Run/CopyRule.cs", "game/scripts/Sim/Run/RunState.cs", "game/tests/Sim/Run/CopyRuleTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/SpecialData.cs", "game/scripts/Sim/Fighter.Specials.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/Sim/Run/RewardDraftTests.cs"],
         "brief": "Answer one question from the run state alone, at any moment of a run: which special would the Tanuki copy right now, and what does its copy consist of. Nothing here locks the target (T1 is the next feature) or builds the Tanuki's fighter (T0). T3's first tie-break needs to know which special gained a level most recently, which the run does not record today."
       }
     },
@@ -122,8 +122,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["copy-target", "run-flow"],
       "evidence": [{"symbol": "LockedCopy", "in": "game/scripts/Sim/Run/RunSession.cs"}, {"test": "^CopyLockTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/RunSession.cs", "game/tests/CopyLockTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/RunSession.cs", "game/tests/Sim/Run/CopyLockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "The run session fixes the Tanuki's copy at the moment Ryo enters the boss node and keeps it for the rest of the run, whatever happens to Ryo's slots afterwards. Before that moment nothing is locked. RunSession already marks the place with its T1 hook."
       }
     },
@@ -145,8 +145,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "\\bCoins\\b", "in": "game/scripts/Sim/Run/RunState.cs"}, {"test": "^CoinTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/tests/CoinTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/RunMap.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/tests/Sim/Run/CoinTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/RunMap.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Ryo's coins are part of the run state and are paid when a duel is won. Spending them is the merchant's shop, a later feature: give it a way to spend that refuses what Ryo cannot afford. The rare ability the row-8 elder pays instead of coins is already the elder's reward draft."
       }
     },
@@ -156,8 +156,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Merchant\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^MerchantTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Merchant.cs", "game/tests/MerchantTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Merchant.cs", "game/tests/Sim/Run/MerchantTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Only the first half of R6: at a merchant stop Ryo may take the free heal, once, as his one choice at that stop. Shopping is a later feature that will share the same stop, so the choice must be recorded in a way the shop can also use. Sim only: merchant nodes are stand-in fights in data/map/node-scenes.json today and the rest-stop screen belongs to ui-designer, so do not change how nodes resolve to scenes."
       }
     },
@@ -173,8 +173,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Dojo\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^DojoTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Dojo.cs", "game/tests/DojoTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Dojo.cs", "game/tests/Sim/Run/DojoTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Only the rest half of R7: at a dojo stop Ryo may rest, once, as his one choice at that stop. The training trial is a later feature that will share the same stop. Sim only: do not change how nodes resolve to scenes."
       }
     },
@@ -196,8 +196,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Unlocks\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^UnlockTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Unlocks.cs", "game/tests/UnlockTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Unlocks.cs", "game/tests/Sim/Run/UnlockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "From how a run ended, how many abilities unlock, and which ones given a fixed order of locked ability ids. Saving the result between runs is a later feature."
       }
     },

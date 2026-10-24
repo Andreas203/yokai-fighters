@@ -5,7 +5,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// Windowed screenshot tool (not a test) for YOK-52: binding line, three cards, frame-data view, modifier target step.
-/// Run: godot --path game res://tests/reward_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/captures/reward_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class RewardCapture : Node
 {

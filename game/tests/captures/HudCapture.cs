@@ -6,7 +6,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// Windowed screenshot tool (not a test): renders the fight HUD mid-fight and on the lose screen, saves PNGs, quits.
-/// Run: godot --path game res://tests/hud_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/captures/hud_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class HudCapture : Node
 {

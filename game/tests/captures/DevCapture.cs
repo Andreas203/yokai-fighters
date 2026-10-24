@@ -9,7 +9,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-123 screenshot tool (not a test): the DEV badge and the dev menu on the title, over the pause menu, and in a fight.
-/// Run: godot --path game res://tests/dev_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/captures/dev_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// The boot scene is instanced (not the current scene), so no save or settings file is read or written.
 /// </summary>
 public partial class DevCapture : Node

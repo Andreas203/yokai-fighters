@@ -13,7 +13,7 @@ namespace YokaiFighters.Tests;
 /// screen), with a screenshot at each step. The one scripted part is Ryo's hands in the fight: P1's input source
 /// is a debug-strike tapper so the duel ends in a second; the Kitsune's AI, the fixed-step clock, the HUD and the
 /// screens are the game's own.
-/// Run: godot --path game res://tests/flow_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/captures/flow_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class FlowCapture : Node
 {

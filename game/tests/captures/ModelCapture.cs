@@ -7,7 +7,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-53 windowed screenshot tool (not a test): both rigged fighters mid-move with the YOK-22 hitbox overlay on.
-/// Run: godot --path game res://tests/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=ryo|wake]
+/// Run: godot --path game res://tests/captures/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=ryo|wake]
 /// </summary>
 public partial class ModelCapture : Node
 {

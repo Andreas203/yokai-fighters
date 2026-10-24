@@ -10,7 +10,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-33 windowed screenshot tool (not a test): every Ryo and Kitsune move on its first and last hitbox frame (and a
 /// projectile's spawn frame) with the YOK-22 box overlay on, cropped around the fighters.
-/// Run: godot --path game res://tests/hitbox_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=&lt;move id&gt;]
+/// Run: godot --path game res://tests/captures/hitbox_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=&lt;move id&gt;]
 /// </summary>
 public partial class HitboxCapture : Node
 {

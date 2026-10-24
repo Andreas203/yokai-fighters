@@ -32,4 +32,4 @@ Non-code: `export_presets.cfg` ("Windows Desktop", x86_64, embedded PCK, `tests/
 - Stage props: the clear band is a test (`StageTests`), not code: nothing nearer than z −8 within |x| < 10.5 m, lanterns at z ≤ −10, nothing in front of z −2.
 - Every rig imports Y-up facing +Z; a rig that faces elsewhere is fixed in the rig pipeline, never by a per-variant `Yaw` or rotated `Model`. New body: New Inherited Scene from `BaseFighter.tscn`, set `Fighter`, add the GLB as `Model`, point `FighterAnimSet.ScenePath` at it.
 - Keep `Animator` callback mode Manual (enforced in code): frames are stepped with `Seek` from the sim tick (F3).
-- Screenshots: the `tests/*_capture.tscn` tools write to `docs/screenshots/current/`.
+- Screenshots: the `tests/captures/*_capture.tscn` tools write to `docs/screenshots/current/`.

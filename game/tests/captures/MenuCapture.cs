@@ -5,7 +5,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-58 screenshot tool (not a test): every menu mockup screen to a PNG.
-/// Run: godot --path game res://tests/menu_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=name,name]
+/// Run: godot --path game res://tests/captures/menu_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=name,name]
 /// </summary>
 public partial class MenuCapture : Node
 {

@@ -23,25 +23,29 @@ dotnet build
 | `tests/run_harness.tscn` | `RunHarnessMain.cs` | Whole-run bot batch, see [harness.md](harness.md). |
 | `tests/ai_harness.tscn` | `AiHarnessMain.cs` | `-- [--profile id] [--p1 thrower\|jumper\|random\|idle] [--reaction N] [--seed N] [--ticks N] [--sweep] [--trace]` → `harness/results/ai/` (git-ignored). |
 | `tests/replay.tscn` | `ReplayMain.cs` | `-- --replay <file.yfr\|folder\|user://replays>`: OK/FAIL per file, exit 0/1. |
-| `tests/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
+| `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
 | `tests/bone_probe.tscn` | `BoneProbe.cs` | Prints a rig's bones (`-- out=<f> meshy`). |
 
 ## Fixtures (`tests/fixtures/`)
 
 Everything here is **TEST FIXTURE** data: made-up numbers for tests, never copied to `data/`. `moves/` (`test-jab`, `test-sweep`, `test-dodge`), `ryo-normals/` (C8 timings), `ryo-air-normals/` (E19 jump-ins), `throws/` (C4/E4 throw), `specials/` (Spirit Wave, Rising Talisman), `rewards/` (Foxfire, Will-o'-wisp, Fox's Patience), `profiles/` (Kitsune aggressive/patient on the fixture kit), `trials/` (Spirit Wave trial), `presets/`, `old_fighters/`. Shared accept/reject lists run by both C# and `tools/test_validate_data.py`: `modifier-gate/cases.json`, `clip-retime-gate/cases.json`. Kit fallbacks load fixtures only while `data/moves/` has none of that kind; tests that touch the scene or pool load fixtures explicitly (`FightScene.FixtureSources`, `AbilityPool.LoadFixtures`).
 
-## Test classes by area
+## Test classes by folder
 
-| Area | Classes |
+Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools are in `tests/captures/`, and the entry scenes above stay at `tests/`. The runner finds classes by reflection, so a folder is only for people.
+
+| Folder | Classes |
 |---|---|
-| Sim core | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `InputParserTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
-| Sim/Run | `RewardDraftTests`, `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests` |
-| Ai | `AiTests` (P6: identical P1 streams → identical AI output until t + reaction), `AiMeterTests`, `AiGuardTests`, `AiGuardHitstopTests`, `StandingHabitTests`, `PerYokaiProfileTests`, `TanukiPressureTests`, `ApprenticeDamageTests` |
-| Harness | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
-| Tutorial | `TutorialTests` |
-| Replay | `ReplayTests` |
-| SaveGame / Settings | `SaveTests`, `SettingsTests` |
-| Flow | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
-| Fight presentation | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
-| Ui | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests`, `StoryTests` |
-| Dev | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |
+| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
+| `tests/Sim/Input/` | `InputParserTests` |
+| `tests/Sim/Run/` | `RewardDraftTests`, `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests` |
+| `tests/Ai/` | `AiTests` (P6: identical P1 streams → identical AI output until t + reaction), `AiMeterTests`, `AiGuardTests`, `AiGuardHitstopTests`, `StandingHabitTests`, `PerYokaiProfileTests`, `TanukiPressureTests`, `ApprenticeDamageTests` |
+| `tests/Harness/` | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
+| `tests/Tutorial/` | `TutorialTests` |
+| `tests/Replay/` | `ReplayTests` |
+| `tests/SaveGame/`, `tests/Settings/` | `SaveTests`; `SettingsTests` |
+| `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
+| `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
+| `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
+| `tests/Story/` | `StoryTests` |
+| `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |

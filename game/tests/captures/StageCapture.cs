@@ -8,7 +8,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-39 windowed screenshot tool (not a test), YOK-129 dynamic camera set: the bamboo grove at close range, mid range,
 /// the screen walls, both corners and a jump-in, each after the camera has eased in.
-/// Run: godot --path game res://tests/stage_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [--stage=placeholder]
+/// Run: godot --path game res://tests/captures/stage_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [--stage=placeholder]
 /// </summary>
 public partial class StageCapture : Node
 {

@@ -10,7 +10,7 @@ namespace YokaiFighters.Tests;
 /// Windowed capture tool (not a test) for YOK-73: the real boot scene's title on a temp save file, first with no
 /// save (Continue greyed with its reason), then booted again after a run was saved inside its first node (Continue
 /// lit with the run summary). Never touches the player's save or settings.
-/// Run: godot --path game res://tests/title_continue_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
+/// Run: godot --path game res://tests/captures/title_continue_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class TitleContinueCapture : Node
 {
