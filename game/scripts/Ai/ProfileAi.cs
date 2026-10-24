@@ -214,8 +214,22 @@ public sealed class ProfileAi
 			// It may have started: stop pressing (no draw) once the screen shows the answer out or a new hit/block on the AI,
 			// the jumper landed, or the window is spent; the rest of the plan is timed from the answer's start.
 			bool shown = view.Tick >= rp.ReleaseTick && AnswerShown(rp, s, prev);
-			if (shown || !o.Airborne || tick - rp.ReleaseTick >= rp.Window) rp.EndPress(AnswerEnd(rp, view, s, shown) - tick);
+			if (shown || !o.Airborne || tick - rp.ReleaseTick >= rp.Window)
+			{
+				rp.EndPress(AnswerEnd(rp, view, s, shown) - tick);
+				// YOK-176: the guard counts only frozen steps AnswerEnd did not: not shown, it timed the answer from the release
+				// (screens already passed are gone); shown as the answer, it counted this screen's hitstop; shown as a hit or
+				// block on the AI, the rest starts now, so the steps from now on (screen tick - 1 freezes step tick).
+				rp.CountFrom = !shown ? Math.Max(rp.ReleaseTick, view.Tick)
+					: s.State == FighterState.Attack ? view.Tick + view.HitstopLeft : tick - 1;
+			}
 		}
+		// YOK-176: both fighters are frozen through hitstop while the plan's ticks run, so a guard tail after the AI's own
+		// move would end early by each connect's hitstop (E14: on block too). Every screen at or after the press that shows
+		// hitstop is one frozen sim step (the step after it), so it adds one tick to the current guard step; the tail then
+		// still covers the first free tick + GuardTicks. A screen that shows the hitstop only after the tail has ended
+		// cannot add to it (P6: the AI never sees it in time). Only own-move plans with guard steps count (no draw).
+		if (fresh && view.HitstopLeft > 0 && _plan is { } gp && view.Tick >= gp.CountFrom) gp.ExtendGuard();
 		if ((_plan is null || _plan.Done) && _resume is { } back) { _plan = back; _resume = null; if (back.InPress) back.Paused = true; } // YOK-177: HabitPress decides
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
 		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
@@ -451,14 +465,16 @@ public sealed class ProfileAi
 		}
 		// YOK-165: a move's press step and length, so the AI knows when its own press makes it busy until (FirstActionableTick).
 		int moveFrames = !a.IsMove ? 0 : a.Kind == ActionKind.Throw ? _kit.ThrowFrames : 1 + steps[1].Item2;
-		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames };
+		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames, CountFrom = guardSteps is null ? int.MaxValue : tick };
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
 		Array.Copy(steps, 0, all, 1, steps.Length);
 		bool[]? guardAll = null;
 		if (guardSteps is not null) { guardAll = new bool[all.Length]; Array.Copy(guardSteps, 0, guardAll, 1, guardSteps.Length); }
-		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames };
+		// YOK-176: a held press (open-ended wait) starts counting hitstop when Next ends the press; a fixed wait, at the press.
+		int countFrom = guardAll is null || preHold == int.MaxValue ? int.MaxValue : tick + preHold;
+		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames, CountFrom = countFrom };
 	}
 
 	/// <summary>A normal or special: the press, then wait out the move. YOK-165: when <see cref="MaybeEx"/> asks for the EX
@@ -622,6 +638,15 @@ public sealed class ProfileAi
 		public int MoveStep { get; init; } = -1;
 		public int MoveFrames { get; init; }
 		public bool AtMovePress => MoveStep >= 0 && _i == MoveStep && _t == 0;
+		/// <summary>YOK-176: the first screen tick whose hitstop lengthens this plan's guard (its own move's press, or for a held
+		/// answer the screen after the one its end was timed from); int.MaxValue = never (no guard steps).</summary>
+		public int CountFrom { get; set; } = int.MaxValue;
+		/// <summary>YOK-176: one more tick on the current step if it is a guard step (one frozen sim step); else nothing.</summary>
+		public void ExtendGuard()
+		{
+			if (Done || Guard is not { } g || !g[_i]) return;
+			_steps[_i] = (_steps[_i].In, _steps[_i].Ticks + 1);
+		}
 		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;
