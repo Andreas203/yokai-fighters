@@ -66,6 +66,26 @@ public partial class TestRunner : Node
 		}
 		if (only != null && pass + fail == 0) { GD.PrintErr($"FAIL TestRunner: only={only} matches no tests"); fail++; }
 		GD.Print($"TESTS {pass} passed, {fail} failed");
+		await DrainFinalizers();
 		GetTree().Quit(fail == 0 && pass > 0 ? 0 : 1);
+	}
+
+	/// <summary>
+	/// YOK-161: finalize every unreachable C# wrapper while the engine is still fully up. Godot 4.7.2 disposes the
+	/// wrappers that are still reachable when it shuts down, but one that is already garbage and only pending
+	/// finalization is left to the .NET finalizer thread, which can run it after the C# language has finalized:
+	/// <c>GodotObject.Finalize</c> -> <c>godotsharp_internal_refcounted_disposed</c> -> FATAL
+	/// <c>csharp_lang &amp;&amp; !csharp_lang->script_bindings.is_empty()</c> (csharp_script.cpp:1220) and an illegal
+	/// instruction, rc=132, after "TESTS n passed". Repro on main: <c>-- only=MenuInputPathTests</c> crashed 3 runs in 4.
+	/// One frame first, so the last class's QueueFree'd nodes are gone and their RefCounted fields are garbage too.
+	/// </summary>
+	private async System.Threading.Tasks.Task DrainFinalizers()
+	{
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		for (int i = 0; i < 2; i++) // a finalizer can release the last reference to another wrapper
+		{
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+		}
 	}
 }
