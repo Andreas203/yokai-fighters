@@ -106,13 +106,10 @@ public sealed class TrialRun
 	{
 		var d = Trial.Dummy;
 		var dummy = Match.P2;
-		InputBits back = dummy.Facing > 0 ? InputBits.Left : InputBits.Right;
 		bool due = d.Every > 0 && (AttemptTick - 1) % d.Every == 0; // tick 1, 1 + Every, ...
 		switch (d.Action)
 		{
-			case TrialDummyAction.Crouch: return new FighterInput(InputBits.Down);
-			case TrialDummyAction.Guard: return new FighterInput(back);
-			case TrialDummyAction.CrouchGuard: return new FighterInput(InputBits.Down | back);
+			case TrialDummyAction.Crouch or TrialDummyAction.Guard or TrialDummyAction.CrouchGuard: return HeldInput(d.Action, dummy.Facing);
 			case TrialDummyAction.Jump: return new FighterInput(due ? InputBits.Up : InputBits.None);
 			case TrialDummyAction.Attack:
 				if (due) foreach (string id in d.Moves) { int i = Array.FindIndex(dummy.Moves, m => m.Id == id); if (i >= 0) _dummyQueue.Enqueue(i); }
@@ -120,6 +117,22 @@ public sealed class TrialRun
 				return default;
 			default: return default;
 		}
+	}
+
+	/// <summary>
+	/// A held dummy stance as input for a dummy facing <paramref name="facing"/> (+1 = right): crouch holds down, guard
+	/// holds back (away from Ryo), crouch guard both; every other action holds nothing. Shared with practice mode (YOK-197).
+	/// </summary>
+	public static FighterInput HeldInput(TrialDummyAction action, int facing)
+	{
+		InputBits back = facing > 0 ? InputBits.Left : InputBits.Right;
+		return action switch
+		{
+			TrialDummyAction.Crouch => new FighterInput(InputBits.Down),
+			TrialDummyAction.Guard => new FighterInput(back),
+			TrialDummyAction.CrouchGuard => new FighterInput(InputBits.Down | back),
+			_ => default,
+		};
 	}
 
 	TrialStep? Current => StepsMet < Trial.Steps.Count ? Trial.Steps[StepsMet] : null;

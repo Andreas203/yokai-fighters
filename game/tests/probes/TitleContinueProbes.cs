@@ -83,7 +83,8 @@ public static class TitleContinueProbes
 	static void NotBuiltNotSaid(GameFlow flow)
 	{
 		Assert.True(!flow.Title.DisabledReason(TitleEntry.Continue).Contains("not built", StringComparison.OrdinalIgnoreCase), "Continue's reason must not say 'not built': " + flow.Title.DisabledReason(TitleEntry.Continue));
-		Assert.Equal(ScreenRouter.NoPracticeReason, flow.Title.DisabledReason(TitleEntry.Practice), "Practice keeps its own reason");
+		// YOK-197: Practice is built and never reads the save, so a bad save leaves it lit with no reason (it used to keep NoPracticeReason).
+		Assert.True(!flow.Title.PracticeButton.Disabled && flow.Title.DisabledReason(TitleEntry.Practice) == "", "Practice stays lit whatever the save holds");
 	}
 
 	// Ticket: a corrupt file gives "The save file could not be read...". A zero-byte file is not a save.

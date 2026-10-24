@@ -1210,10 +1210,72 @@ public static class SaveTests
 	// ---- YOK-73: the title's Continue through the real boot and its buttons ----
 	// No save: greyed with the accurate reason. A saved run: lit, and Continue loads the node it was saved in, from its
 	// entry state (M5: health, coins, slots). Older, newer and corrupt files by the save file's own conventions, with
-	// story progress kept apart from the run (M4). Practice stays greyed with its own reason whatever the save holds.
+	// story progress kept apart from the run (M4). YOK-197: Practice is lit whatever the save holds (it never reads it).
 
-	static void PracticeStaysGreyed(GameFlow flow, string what) =>
-		Assert.True(flow.Title.PracticeButton.Disabled && flow.Title.DisabledReason(TitleEntry.Practice) == ScreenRouter.NoPracticeReason, $"{what}: Practice stays greyed with its reason");
+	static void PracticeIsLit(GameFlow flow, string what) =>
+		Assert.True(!flow.Title.PracticeButton.Disabled && flow.Router.Entry(TitleEntry.Practice).Enabled && flow.Title.DisabledReason(TitleEntry.Practice) == "", $"{what}: Practice is lit, whatever the save holds");
+
+	/// <summary>YOK-197: a practice session through the boot: KOs (reset), the reset key, a stance change, the pause menu's Restart, then Quit to title.</summary>
+	static void PlayPractice(GameFlow flow)
+	{
+		Press(flow.Title.PracticeButton);
+		Assert.Equal(Screen.Practice, flow.Router.Current, "in practice");
+		var fight = flow.Practice!;
+		for (int t = 0; t < 1200; t++)
+		{
+			if (t == 300) fight.HandlePracticeKey(FightScene.PracticeStanceKey);
+			if (t == 600) fight.HandlePracticeKey(FightScene.PracticeResetKey);
+			if (t == 900) fight.RestartRun();
+			fight.Step(new FighterInput(t < 60 ? InputBits.Right : t % 2 == 0 ? InputBits.DebugStrike : InputBits.None), FighterInput.None);
+		}
+		Assert.True(fight.PracticeResets >= 3, "the dummy was KO'd and reset: " + fight.PracticeResets);
+		Assert.True(flow.Session is null, "no run session on the flow");
+		Assert.True(fight.RequestTitle() && flow.Router.Current == Screen.Title, "Quit to title");
+	}
+
+	[Test]
+	public static void Practice_NoSave_WritesNoFile_M5_AM3(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			PracticeIsLit(flow, "no save");
+			PlayPractice(flow);
+			PlayPractice(flow);
+			Assert.True(!File.Exists(path) && Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 0, "practice wrote no save file (and no backup or temp file)");
+			Assert.True(flow.Saved.Run is null && flow.Saved.Unlocks.Count == 0, "no run and no unlock in memory to save either");
+			Assert.True(flow.Title.ContinueButton.Disabled, "and the title still has no run to continue");
+		}, seed: 197);
+	});
+
+	[Test]
+	public static void Practice_WithASavedRun_LeavesTheFileByteForByte_AndContinueResumesIt_M5_AM3(Node runner) => WithTempFile(path =>
+	{
+		(string node, int health, int coins, string slots) entry = default;
+		byte[] before = Array.Empty<byte>();
+		string[] filesBefore = Array.Empty<string>();
+		WithBoot(runner, path, flow =>
+		{
+			entry = SaveInsideRow2(flow);
+			Assert.True(flow.ReturnToTitle(), "quit inside the node: the run waits in the file");
+			before = File.ReadAllBytes(path);
+			filesBefore = Directory.GetFiles(Path.GetDirectoryName(path)!).OrderBy(f => f).ToArray();
+			var unlocks = flow.Saved.Unlocks.ToArray();
+			PracticeIsLit(flow, "with a save");
+			PlayPractice(flow);
+			Assert.True(File.ReadAllBytes(path).SequenceEqual(before), "practice left the save file byte for byte");
+			Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).OrderBy(f => f).SequenceEqual(filesBefore), "and wrote no other file beside it");
+			Assert.True(flow.Saved.Unlocks.SequenceEqual(unlocks), "unlocks unchanged");
+			Assert.True(!flow.Title.ContinueButton.Disabled, "Continue is still lit");
+		}, seed: 197);
+
+		WithBoot(runner, path, flow =>
+		{
+			Press(flow.Title.ContinueButton);
+			var s = flow.Session!;
+			Assert.True(flow.Router.Current == Screen.Fight && s.Node?.NodeId == entry.node, $"Continue resumes the node saved before practice ({entry.node})");
+			Assert.True(s.Run.Health == entry.health && s.Run.Coins == entry.coins && Slots(s) == entry.slots, "with the health, coins and slots it was saved with");
+		}, seed: 197);
+	});
 
 	/// <summary>Plays row 1 through the boot (won, first card drafted), then enters row 2: the file now holds the run inside that node.</summary>
 	static (string node, int health, int coins, string slots) SaveInsideRow2(GameFlow flow)
@@ -1238,7 +1300,7 @@ public static class SaveTests
 			Assert.True(flow.Title.ContinueButton.Disabled && !flow.Router.Entry(TitleEntry.Continue).Enabled, "no save: Continue is greyed");
 			Assert.Equal(ScreenRouter.NoSaveReason, reason, "with the no-save reason");
 			Assert.True(!reason.Contains("not built", StringComparison.OrdinalIgnoreCase), "saving exists: the reason does not say it is not built: " + reason);
-			PracticeStaysGreyed(flow, "no save");
+			PracticeIsLit(flow, "no save");
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null && !File.Exists(path), "pressing it does nothing and writes nothing");
 		}, seed: 73);
@@ -1261,7 +1323,7 @@ public static class SaveTests
 		WithBoot(runner, path, flow =>
 		{
 			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a save: Continue is lit");
-			PracticeStaysGreyed(flow, "with a save");
+			PracticeIsLit(flow, "with a save");
 			Press(flow.Title.ContinueButton);
 			var s = flow.Session!;
 			Assert.True(flow.Router.Current == Screen.Fight && s.Node?.NodeId == entry.node, $"Continue loads the node it was saved in ({entry.node})");
@@ -1314,7 +1376,7 @@ public static class SaveTests
 		{
 			Assert.Equal(SaveLoadStatus.OlderVersion, flow.SaveLoaded!.Status, "read as an older file");
 			Assert.True(!flow.Title.ContinueButton.Disabled, "an older save is still offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
-			PracticeStaysGreyed(flow, "older save");
+			PracticeIsLit(flow, "older save");
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "Continue loads the saved node");
 			Assert.True(flow.Fight!.Match.P1.Health == health && flow.Session.Run.Coins == 0, "with the entry health, and no coins (version 1 had none)");
@@ -1339,7 +1401,7 @@ public static class SaveTests
 			Assert.Equal(SaveLoadStatus.NewerVersion, flow.SaveLoaded!.Status, "read as a newer file");
 			Assert.True(flow.Saved.Story.Has(StoryProgress.Intro), "story progress is read on its own (M4)");
 			Assert.Equal(newer, File.ReadAllText(path), "booting leaves the newer file as it is");
-			PracticeStaysGreyed(flow, "newer save");
+			PracticeIsLit(flow, "newer save");
 			Assert.True(!flow.Title.ContinueButton.Disabled && flow.Router.Entry(TitleEntry.Continue).Enabled, "a newer file with a valid run is offered: " + flow.Title.DisabledReason(TitleEntry.Continue));
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Fight && flow.Session!.Node?.NodeId == node, "the known fields continue on the saved node");
@@ -1361,7 +1423,7 @@ public static class SaveTests
 		{
 			string reason = flow.Title.DisabledReason(TitleEntry.Continue);
 			Assert.True(flow.Title.ContinueButton.Disabled && reason.StartsWith("The save file could not be read"), "corrupt: greyed with its own reason: " + reason);
-			PracticeStaysGreyed(flow, "corrupt save");
+			PracticeIsLit(flow, "corrupt save");
 			Press(flow.Title.ContinueButton);
 			Assert.True(flow.Router.Current == Screen.Title && flow.Session == null, "nothing starts");
 			Assert.Equal(corrupt, File.ReadAllText(path), "the file is left as it was");

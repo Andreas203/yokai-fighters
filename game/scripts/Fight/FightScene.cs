@@ -227,10 +227,11 @@ public partial class FightScene : Node3D
 		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
 		SetUpTrialLabel(); // YOK-98: a dojo trial has no recording and shows its prompt
+		SetUpPractice(); // YOK-197: practice has no recording and shows its controls
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
 		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
-		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
+		if (!OS.IsDebugBuild() && !InPractice) GetNode("DebugOverlay").QueueFree(); // YOK-197: practice keeps it in every build
 		Render();
 	}
 

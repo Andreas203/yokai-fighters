@@ -138,6 +138,7 @@ public partial class FightScene
 	/// <summary>Called first in _Ready: the run, and the first fight built from it.</summary>
 	private void SetUpRun()
 	{
+		if (InPractice) { SetUpPracticeRun(); return; } // YOK-197: the dojo dummy, outside any run
 		if (Session is { } hosted) { Pool = hosted.Pool; RunSeed = hosted.Seed; }
 		else
 		{
@@ -237,7 +238,8 @@ public partial class FightScene
 	}
 
 	/// <summary>The temperament P2's AI plays (from its profile), e.g. "aggressive".</summary>
-	public string Temperament => Profiles.Length == 0 ? "" : Profiles[_profileIndex % Profiles.Length].Temperament;
+	public string Temperament => Profiles.Length == 0 || InPractice ? "" : // YOK-197: the practice dummy has no temperament
+Profiles[_profileIndex % Profiles.Length].Temperament;
 
 	/// <summary>Debug: P2 plays the named temperament (aggressive / patient); false if no profile has it.</summary>
 	public bool SetTemperament(string temperament)
@@ -286,6 +288,7 @@ public partial class FightScene
 	private void CheckDuelOver()
 	{
 		if (InTrial) { CheckTrial(); return; } // YOK-98: attempts, not a duel result
+		if (InPractice) { CheckPractice(); return; } // YOK-197: a KO puts the fighters back
 		if (Stage != DemoStage.Fighting || Match.Phase != MatchPhase.Over) return;
 		if (Recorder is { } rec) { DuelRecordings.Add(rec.Finish(Match)); Recorder = null; }
 		var session = Session!;
@@ -342,6 +345,7 @@ public partial class FightScene
 	public void RestartRun()
 	{
 		if (Paused) PauseMenu!.Close(); // a restart from anywhere leaves no menu up
+		if (InPractice) { _suppress = HeldBits(); ResetPractice(); return; } // YOK-197: Restart = reset positions
 		HideFlowScreens();
 		if (!OwnsSession && RunRestartRequested is { } host) { host(); return; }
 		PickRunSeed();
