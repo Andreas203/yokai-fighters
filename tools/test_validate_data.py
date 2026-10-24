@@ -21,6 +21,7 @@ def run(*paths):
 
 
 GATE_CASES = ROOT / "game" / "tests" / "fixtures" / "modifier-gate" / "cases.json"
+RETIME_CASES = ROOT / "game" / "tests" / "fixtures" / "clip-retime-gate" / "cases.json"
 
 
 class ValidateDataTest(unittest.TestCase):
@@ -277,6 +278,29 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn(("file", "game/assets/generated/clips/ryo/nope.glb does not exist"), sem(file="assets/generated/clips/ryo/nope.glb"))
         bare = {k: x for k, x in good.items() if k not in ("trim_start", "trim_end", "speed_scale", "file")}
         self.assertEqual([], [e.message for e in v.iter_errors(bare)], "the fields are optional")
+
+    def test_clip_retime_gate_cases_match_the_loader(self):
+        """YOK-164: the retime curves ClipRetimeTests.ValidatorAndLoaderAgreeOnTheSharedCases loads through ClipCatalog."""
+        import json
+        cases = json.loads(RETIME_CASES.read_text(encoding="utf-8"))["cases"]
+        self.assertGreaterEqual(len(cases), 30)
+        path = ROOT / "data" / "clips" / "ryo-get-up.json"
+        base = json.loads(path.read_text(encoding="utf-8"))
+        for k in ("trim_start", "trim_end", "speed_scale"):
+            base.pop(k, None)
+        v = validate_data.load_validators()["clip"]
+        ids = validate_data.load_rule_ids()
+        wrong = []
+        for c in cases:
+            doc = dict(base, frames_total=c["frames_total"], retime=c["retime"])
+            if c["trim"] is not None:
+                doc["trim_start"], doc["trim_end"] = c["trim"]
+            errs = [e.message for e in v.iter_errors(doc)]
+            if not errs:
+                errs = [m for _, m in validate_data.semantic(doc, path, ids, {})]
+            if (not errs) != c["accept"]:
+                wrong.append(f"{c['name']}: validator {'accepted' if not errs else 'refused: ' + '; '.join(errs)}")
+        self.assertEqual(wrong, [], "\n".join(wrong))
 
     def test_clip_retime_curve(self):
         """YOK-113 (F2, AM5): retime segments are contiguous, cover frames_total, 0.5x-2x, holds <= 4 frames."""
