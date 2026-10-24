@@ -14,7 +14,7 @@ dotnet build
 - `tests/test_runner.tscn` (`TestRunner.cs`) runs every public static `[Test]` method (optionally taking the runner `Node`), prints `PASS/FAIL`, exits 0/1. It awaits a frame between classes and drains finalizers before quitting (`DrainFinalizers`: a pending RefCounted wrapper at shutdown crashes Godot). Tests that build `InputEvent`s dispose them after `PushInput`. Add tests as new static classes; no NuGet.
 - Build and test with the Godot 4.7.2 mono build; CI runs the same (`.github/workflows/`).
 - `tests/probes/` = test-breaker's probe tests (`*Probes.cs`); they run with the suite. Only test-breaker writes there.
-- Isolation rules enforced by tests: `Sim/`, `Ai/`, `Replay/` never reference Godot, settings, saves or dev mode; `Tutorial/` and `SaveGame/` have no clock, floats or randomness; only `SaveTests`, `*SaveTests` and `SaveProbes` may name the save store.
+- Isolation rules enforced by tests: `Sim/`, `Ai/`, `Replay/` never reference Godot, settings, saves or dev mode; `Tutorial/` and `SaveGame/` have no clock, floats or randomness; naming the save store is an explicit list in `SaveProbes.Isolation_*`, not a name suffix (see [savegame.md](savegame.md)).
 
 ## Entry scenes (not tests)
 
