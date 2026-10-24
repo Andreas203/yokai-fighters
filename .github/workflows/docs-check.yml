@@ -1,0 +1,20 @@
+name: docs-check
+# YOK-188: every PR keeps the Markdown navigable (docs/process/change-tracking.md):
+# no dead relative links, no .md outside its known homes, no proposal files, amendments index in step.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Docs check
+        run: python3 -I tools/check_docs.py
+      - name: Tool tests
+        run: python3 -I -m unittest discover -s tools -p 'test_check_docs.py'

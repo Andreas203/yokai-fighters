@@ -2,7 +2,36 @@
 
 Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the designer has approved since the PDF was written. **Where an amendment and the PDF disagree, the amendment wins.** `docs/design/rules.md` reflects both. Each amendment names the PDF sections it replaces; everything it does not name stands as written.
 
+## Index
+
+| AM | Approved | Change | Rules | Ticket / PR |
+|---|---|---|---|---|
+| [AM1](#am1) | 2026-10-05 | Visual assets are generated, sound is sourced | F2, F5, V1 | — |
+| [AM2](#am2) | 2026-10-06 | The binding line promises freedom | S3 | — |
+| [AM3](#am3) | 2026-10-11 | Quitting mid-node restarts the node | M5 | — |
+| [AM4](#am4) | 2026-10-11/12 | Rulings on the Tanuki, the shop and coins | T0, Y2, R6, R8 | PR #105 |
+| [AM5](#am5) | 2026-10-15 | Rigging and animation get their own specialists and tools | F2, F5, F6, G4 | YOK-110–115 |
+| [AM6](#am6) | 2026-10-15 | The copy-target talisman shows only in the Tanuki fight | T6 | — |
+| [AM7](#am7) | 2026-10-16 | Fighter concept art and turnarounds may come from Astra | F6 | YOK-102 |
+| [AM8](#am8) | 2026-10-16 | Closer fight camera, screen walls brought in (superseded in part by AM9) | E1, C2 | YOK-120, PR #133 |
+| [AM9](#am9) | 2026-10-16 | Dynamic fight camera in the style of Guilty Gear Strive | E1, V7 | YOK-129, PR #145 |
+| [AM10](#am10) | 2026-10-17 | The camera frames the tallest fighter in the fight | E1, V7 | YOK-133 |
+| [AM11](#am11) | 2026-10-20 | Sumo Stance: holding gives a faster dash, not more damage | modifier table | YOK-142, YOK-171 |
+| [AM12](#am12) | 2026-10-20 | Slippery Skin breaks throws during startup | modifier table, E12 | YOK-172 |
+| [AM13](#am13) | 2026-10-21 | The apprentice has its own behaviour profile | Y1, G5 | YOK-174 |
+| [AM14](#am14) | 2026-10-21 | The Tanuki's throw habit triggers after one blocked hit | Y2 | YOK-177, PR #214 |
+
+### Adding an amendment
+An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
+1. Add `<a id="amN"></a>` and a `## AMN — <change> (<date>)` section at the end, with its **Sections replaced** table (Where / Was / Now).
+2. Add its row to the index above (`tools/check_docs.py` fails if a heading and the index disagree).
+3. Update the rules it changes in `docs/design/rules.md`, tagged `[AMN]`.
+4. Add or extend the `> **Amended by**` callout under each GDD section it replaces in `gdd-extended.md` and `gdd-short.md`.
+5. Add one line under "Design amendments" in `docs/decision-log.md`.
+
 ---
+
+<a id="am1"></a>
 
 ## AM1 — Visual assets are generated, sound is sourced (2026-10-05)
 
@@ -43,6 +72,8 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 
 ---
 
+<a id="am2"></a>
+
 ## AM2 — The binding line promises freedom (2026-10-06)
 
 **Decision.** Ryo's line at every binding changes from a promise to *give back* to a promise to *set the yokai's spirit free*. He still apologises first. The ending pays off the new promise.
@@ -58,6 +89,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am3"></a>
+
 ## AM3 — Quitting mid-node restarts the node (2026-10-11)
 
 **Decision.** The game saves only at node boundaries (run start, node entered, node completed). Quitting to the title inside a node and choosing Continue puts Ryo back at the start of that node with the health, coins and slots he entered with. A fight in progress restarts; a heal, rest or reward pick taken but not completed with the node is not kept. This is allowed: it is not an exploit to close. The route pick is still committed (R1): Continue always re-enters the same node.
@@ -69,6 +102,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | GDD §6 run structure (save behaviour) | Not specified | As above. Rule M5 in `docs/design/rules.md`. |
 
 ---
+
+<a id="am4"></a>
 
 ## AM4 — Rulings on the Tanuki, the shop and coins (2026-10-11 and 2026-10-12)
 
@@ -90,6 +125,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Coins | No cap stated | No cap, for now. Rule R8. |
 
 ---
+
+<a id="am5"></a>
 
 ## AM5 — Rigging and animation get their own specialists and tools (2026-10-15)
 
@@ -127,6 +164,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am6"></a>
+
 ## AM6 — The copy-target talisman shows only in the Tanuki fight (2026-10-15)
 
 **Decision.** The fight HUD shows the copy-target talisman only in the Tanuki's fight. In every other fight (the yokai, the elders) the HUD carries no copy target. Outside fights the target stays visible all run: the map still shows the glowing copy-target talisman, and the rest-stop forecast still names the move, its level and its expected cost.
@@ -145,6 +184,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am7"></a>
+
 ## AM7 — Fighter concept art and turnarounds may come from Astra (2026-10-16)
 
 **Decision.** A fighter's concept front and its front/side/back turnaround may be made in **Astra** (`gpt-6-astra`, run by the designer in Codex) instead of a generator's 2D image model. The designer chooses the source per character. For Oni, Kappa and the Tanuki the designer chose Astra (YOK-102). Asset Smith writes the settled brief (`docs/design/characters/astra-brief.md`), the designer runs it and drops the sheets in `docs/design/characters/<name>/`, and Asset Smith checks them before any mesh job is listed for approval. Meshes, rigs and clips still come from the tools AM1 and AM5 name.
@@ -160,6 +201,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | AM1 pipeline, 3D models | Concept turnaround from Meshy's 2D image models | From a generator's 2D image model or from Astra, the designer's choice per character. Rule F6. |
 
 ---
+
+<a id="am8"></a>
 
 ## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
 
@@ -180,6 +223,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera is closer to the plane. |
 
 ---
+
+<a id="am9"></a>
 
 ## AM9 — Dynamic fight camera in the style of Guilty Gear Strive (2026-10-16, approved 2026-10-16)
 
@@ -204,6 +249,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 ---
 
+<a id="am10"></a>
+
 ## AM10 — The camera frames the tallest fighter in the fight (2026-10-17)
 
 **Status.** Decided by the designer on 2026-10-17 for YOK-133, after Code Critic's review: "frame for the tallest fighter in the fight", allow the wider view, amend E1 and V7, accept a 0.25 m rise per tick. It amends AM9 for fights with a tall body. Ryo vs the Kitsune (and every body no taller than 1.9 m) keeps AM9's camera exactly.
@@ -224,6 +271,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 ---
 
+<a id="am11"></a>
+
 ## AM11 — Sumo Stance: holding gives a faster dash, not more damage (2026-10-20)
 
 **Status.** Decided by the designer on 2026-10-20 for YOK-142. It answers the open question "what does holding charge mean for Sumo Stance without a new animation".
@@ -239,6 +288,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 
 ---
 
+<a id="am12"></a>
+
 ## AM12 — Slippery Skin breaks throws during startup (2026-10-20)
 
 **Status.** Decided by the designer on 2026-10-20. It answers the open question on Slippery Skin against E12/E17, where "throw-invulnerable" would have done nothing.
@@ -251,6 +302,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 |---|---|---|
 | GDD modifier table (§ modifiers), Slippery Skin | "Throw-invulnerable during startup." | "Automatically breaks a throw attempted during this move's startup: a clash, no damage, like throw vs throw." |
 | rules.md modifier table | "Throw-invulnerable during startup" | The new line above. |
+
+<a id="am13"></a>
 
 ## AM13 — The apprentice has its own behaviour profile (2026-10-21)
 
@@ -267,6 +320,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 | GDD extended §10.4 Schedule and cut gates (p. 12), week 2 row; GDD short §4.6 Schedule and scope, week 2 row | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
 | rules.md G5, W2 | "33 abilities, 7 profiles" | "33 abilities, 8 profiles [AM13]" |
 | rules.md Y1 | "7 profiles: 3 yokai × 2 temperaments + Tanuki." | The new line above, with [AM13]. |
+
+<a id="am14"></a>
 
 ## AM14 — The Tanuki's throw habit triggers after one blocked hit (2026-10-21)
 

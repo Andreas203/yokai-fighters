@@ -39,4 +39,4 @@ A ticket the producer marks as one the goal agent can write may skip step 1: on 
 **balance**: run `sparring-partner` on the latest `harness/results/`, then run `producer` again to ticket its recommendations.
 
 ## 3. Report
-Finish with a short summary for the designer: tickets done, tickets in review (with branches), tickets blocked and why, and any decisions waiting on them (generation jobs to run, purchases, scope/balance gate cuts, open questions in `docs/design/rules.md`).
+Finish with a short summary for the designer: tickets done, tickets in review (with branches), tickets blocked and why, and any decisions waiting on them (generation jobs to run, purchases, scope/balance gate cuts, open questions in `docs/design/rules.md`). Record the pass as `docs/process/change-tracking.md` says: each new question waiting on the designer becomes a `decision`-labelled ticket listed on the designer queue (YOK-189), each decision made becomes one line in `docs/decision-log.md`, and no new tracking `.md` file is written.
