@@ -178,6 +178,8 @@ public static class BootFlowTests
 		Assert.True(flow.Title.Visible && !flow.ControlSelect.Visible, "title shown, control select hidden");
 		Assert.True(flow.Fight == null && !flow.GetChildren().OfType<FightScene>().Any(), "no fight scene (so no sim) behind the menus");
 		Assert.True(!flow.Title.StartButton.Disabled && !flow.Title.SettingsButton.Disabled && !flow.Title.QuitButton.Disabled, "Start, Settings, Quit live");
+		Assert.True(!flow.Title.PracticeButton.Disabled && flow.Title.PracticeButton.FocusMode == Control.FocusModeEnum.All, "YOK-197: Practice is lit at boot");
+		flow.Router.Disable(TitleEntry.Practice, ScreenRouter.NoPracticeReason); // the greyed path still works for both entries
 		foreach (var (button, entry, reason) in new[]
 		{
 			(flow.Title.ContinueButton, TitleEntry.Continue, ScreenRouter.NoSaveReason),

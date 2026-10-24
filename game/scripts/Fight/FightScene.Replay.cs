@@ -28,7 +28,11 @@ public partial class FightScene
 	private void StepSim(FighterInput p1, FighterInput p2)
 	{
 		if (Trial is { } trial) { trial.Step(p1); p2 = trial.LastDummyInput; } // YOK-98: the dummy's scripted input, not P2's
-		else Match.Step(p1, p2);
+		else
+		{
+			if (Dummy is { } dummy) p2 = dummy.Input(Match.P2); // YOK-197: the practice dummy's held stance, not P2's
+			Match.Step(p1, p2);
+		}
 		ObserveTutorial(); // YOK-92
 		_lastP1 = p1.Bits; // YOK-pause-flow-wiring: what was held going into a pause
 		ObservePresentation(); // YOK-53: clip frames follow the sim tick

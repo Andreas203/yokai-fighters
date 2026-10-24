@@ -101,7 +101,7 @@ public partial class FightScene
 				: new(slot.ToString(), "Empty", 0, ""));
 		return new PauseRunSummary(
 			Health(Story.StoryLibrary.DisplayName(Kit.Ryo).ToUpperInvariant(), Match.P1), Health(foe, Match.P2),
-			$"Duel {Duel} of {Duels} · vs {foe}", slots);
+			InPractice ? PracticeLine(foe) : $"Duel {Duel} of {Duels} · vs {foe}", slots); // YOK-197
 
 		static PauseFighterSummary Health(string name, Fighter f) => new(name, Math.Max(0, f.Health), f.MaxHealth);
 	}
@@ -128,6 +128,7 @@ public partial class FightScene
 
 	public override void _UnhandledInput(InputEvent e)
 	{
+		if (HandlePracticeInput(e)) { GetViewport().SetInputAsHandled(); return; } // YOK-197: F5 stance, Backspace / pad Back reset
 		// The open menu (a child, so it is asked first) takes Esc / Start to resume; this only ever opens it.
 		if (MenuInput.Pause(e) && TryPause()) GetViewport().SetInputAsHandled();
 	}

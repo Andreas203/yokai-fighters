@@ -226,10 +226,15 @@ public partial class GameFlow : Node
 		ControlSelect.BackRequested += () => Router.Back();
 		ControlSelect.Started += () => Router.Confirm();
 
+		Router.Enable(TitleEntry.Practice); // YOK-197: practice never reads the save, so it is always there
 		foreach (var entry in Router.Entries) Title.SetEntry(entry);
 		Router.EntryChanged += Title.SetEntry;
 		Router.Changed += OnScreenChanged;
-		Router.Activated += entry => { if (entry == TitleEntry.Continue) ContinueRun(); };
+		Router.Activated += entry =>
+		{
+			if (entry == TitleEntry.Continue) ContinueRun();
+			else if (entry == TitleEntry.Practice) Router.StartPractice();
+		};
 		RefreshContinue();
 		Router.Quit += () => { if (QuitAction != null) QuitAction(); else GetTree().Quit(); };
 
@@ -543,7 +548,7 @@ public partial class GameFlow : Node
 	private void OnScreenChanged(Screen from, Screen to)
 	{
 		if (from == Screen.Settings) Title.CloseSettings();
-		if (from == Screen.Fight) EndFight();
+		if (from is Screen.Fight or Screen.Practice) EndFight();
 		if (from == Screen.Map) Map.Visible = false;
 		switch (to)
 		{
@@ -573,6 +578,11 @@ public partial class GameFlow : Node
 				Title.Visible = false;
 				ControlSelect.Close();
 				BeginFight();
+				break;
+			case Screen.Practice:
+				Title.Visible = false;
+				ControlSelect.Close();
+				BeginPractice(); // YOK-197
 				break;
 		}
 	}

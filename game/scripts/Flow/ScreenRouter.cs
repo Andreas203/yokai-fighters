@@ -5,7 +5,12 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Flow;
 
 /// <summary>The top-level screens of the game. Boot enters <see cref="Title"/>.</summary>
-public enum Screen { Title, ControlSelect, Settings, Fight, Map }
+public enum Screen
+{
+	Title, ControlSelect, Settings, Fight, Map,
+	/// <summary>YOK-197: practice mode, the fight scene against a training dummy outside any run (GDD 8: no new screen to draw).</summary>
+	Practice,
+}
 
 /// <summary>The title menu's entries, top to bottom (docs/design/screens/title.png).</summary>
 public enum TitleEntry { Start, Continue, Practice, Settings, Quit }
@@ -21,14 +26,15 @@ public readonly record struct TitleEntryState(TitleEntry Entry, bool Enabled, st
 /// <see cref="Current"/> is <see cref="Screen.Fight"/>.
 /// <para>
 /// Continue and Practice start disabled with a reason. Continue is enabled by the boot flow while the save file holds
-/// a run (YOK-87, <see cref="ContinueRun"/>); practice mode is not built: its ticket calls <see cref="Enable"/> and
-/// listens to <see cref="Activated"/>.
+/// a run (YOK-87, <see cref="ContinueRun"/>); YOK-197: the boot flow enables Practice and answers its
+/// <see cref="Activated"/> with <see cref="StartPractice"/> (Title → Practice → Title).
 /// </para>
 /// </summary>
 public sealed class ScreenRouter
 {
 	public const string NoSaveReason = "No saved run yet.";
-	public const string NoPracticeReason = "Practice mode is not built yet.";
+	/// <summary>Practice's reason while it is disabled (the router's default; the boot flow enables it, YOK-197).</summary>
+	public const string NoPracticeReason = "Practice is unavailable.";
 
 	private readonly Dictionary<TitleEntry, string> _disabled = new()
 	{
@@ -121,7 +127,7 @@ public sealed class ScreenRouter
 	/// <summary>Kata or Kihon for the next run (control select, or the settings sheet). Refused once the run is on (map or fight).</summary>
 	public bool ChooseScheme(ControlScheme scheme)
 	{
-		if (Current is Screen.Fight or Screen.Map) return false;
+		if (Current is Screen.Fight or Screen.Map or Screen.Practice) return false;
 		if (scheme == Scheme) return true;
 		Scheme = scheme;
 		SchemeChanged?.Invoke(scheme);
@@ -169,10 +175,18 @@ public sealed class ScreenRouter
 		return true;
 	}
 
-	/// <summary>Leave the fight or the map for the title (pause menu "Quit to title"). False anywhere else.</summary>
+	/// <summary>YOK-197: Practice on the title, once enabled: the practice fight runs (no run, no control select: the scheme is the saved setting).</summary>
+	public bool StartPractice()
+	{
+		if (Current != Screen.Title || !Entry(TitleEntry.Practice).Enabled) return false;
+		Go(Screen.Practice);
+		return true;
+	}
+
+	/// <summary>Leave the fight, the map or practice for the title (pause menu "Quit to title"). False anywhere else.</summary>
 	public bool ReturnToTitle()
 	{
-		if (Current is not (Screen.Fight or Screen.Map)) return false;
+		if (Current is not (Screen.Fight or Screen.Map or Screen.Practice)) return false;
 		Go(Screen.Title);
 		return true;
 	}
