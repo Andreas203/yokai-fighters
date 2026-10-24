@@ -112,7 +112,7 @@ Every action is pinned to a commit SHA, with its version tag in a comment.
 
 ## Samples
 
-`tools/tests/merge_fixtures/` holds sample changes laid over `data/` by `tools/test_data_merge_check.py`:
+`tools/tests/merge_fixtures/` holds sample changes laid over `data/` by `tools/tests/test_data_merge_check.py`:
 
 | Sample | Expected |
 |---|---|

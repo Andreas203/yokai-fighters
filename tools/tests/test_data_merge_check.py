@@ -1,4 +1,4 @@
-"""Tests for tools/data_merge_check.py (YOK-34). Run: python3 -m unittest tools.test_data_merge_check
+"""Tests for tools/data_merge_check.py (YOK-34). Run: python3 -I -m unittest discover -s tools -p 'test_data_merge_check.py'
 
 Each case copies data/, tools/ and rules.md into a temp checkout (game/ is a symlink to the real one), lays a
 sample change over its data/ and runs the check on it. The schema step needs jsonschema in this interpreter;
@@ -12,10 +12,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import data_merge_check as dmc  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 MERGE_FIX = ROOT / "tools" / "tests" / "merge_fixtures"
 RULES_FIX = ROOT / "tools" / "tests" / "rules_fixtures"
 
@@ -93,7 +93,7 @@ class SampleChangesTest(unittest.TestCase):
 
     def test_cancel_loop_is_caught_before_the_harness(self):
         # A rule that is not once per combo is refused by the schema already (once_per_combo: const true);
-        # check_rules finds the loop itself when read without the schema (tools/test_check_rules.py).
+        # check_rules finds the loop itself when read without the schema (tools/tests/test_check_rules.py).
         with Checkout(RULES_FIX / "cancel-loop") as c:
             code, rep = c.check("--only", "schema,rules")
         self.assertEqual(code, dmc.FAIL)
@@ -102,7 +102,7 @@ class SampleChangesTest(unittest.TestCase):
 
     def test_missing_kihon_slot_is_caught_before_the_harness(self):
         # The schema already requires input.kihon, so it fails there; check_rules catches it too (K2) when
-        # read without the schema (tools/test_check_rules.py).
+        # read without the schema (tools/tests/test_check_rules.py).
         with Checkout(RULES_FIX / "missing-kihon") as c:
             code, rep = c.check("--only", "schema,rules")
         st = status(rep)

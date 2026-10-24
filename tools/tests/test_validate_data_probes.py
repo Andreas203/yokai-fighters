@@ -8,10 +8,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import validate_data  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_TRIAL = ROOT / "game" / "tests" / "fixtures" / "trials" / "test-spirit-wave-trial.json"
 FIXTURE_THROW = ROOT / "game" / "tests" / "fixtures" / "throws" / "test-ryo-throw.json"
 MOVES = ROOT / "data" / "moves"

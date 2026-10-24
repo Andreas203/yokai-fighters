@@ -28,7 +28,7 @@ dotnet build
 
 ## Fixtures (`tests/fixtures/`)
 
-Everything here is **TEST FIXTURE** data: made-up numbers for tests, never copied to `data/`. `moves/` (`test-jab`, `test-sweep`, `test-dodge`), `ryo-normals/` (C8 timings), `ryo-air-normals/` (E19 jump-ins), `throws/` (C4/E4 throw), `specials/` (Spirit Wave, Rising Talisman), `rewards/` (Foxfire, Will-o'-wisp, Fox's Patience), `profiles/` (Kitsune aggressive/patient on the fixture kit), `trials/` (Spirit Wave trial), `presets/`, `old_fighters/`. Shared accept/reject lists run by both C# and `tools/test_validate_data.py`: `modifier-gate/cases.json`, `clip-retime-gate/cases.json`. Kit fallbacks load fixtures only while `data/moves/` has none of that kind; tests that touch the scene or pool load fixtures explicitly (`FightScene.FixtureSources`, `AbilityPool.LoadFixtures`).
+Everything here is **TEST FIXTURE** data: made-up numbers for tests, never copied to `data/`. `moves/` (`test-jab`, `test-sweep`, `test-dodge`), `ryo-normals/` (C8 timings), `ryo-air-normals/` (E19 jump-ins), `throws/` (C4/E4 throw), `specials/` (Spirit Wave, Rising Talisman), `rewards/` (Foxfire, Will-o'-wisp, Fox's Patience), `profiles/` (Kitsune aggressive/patient on the fixture kit), `trials/` (Spirit Wave trial), `presets/`, `old_fighters/`. Shared accept/reject lists run by both C# and `tools/tests/test_validate_data.py`: `modifier-gate/cases.json`, `clip-retime-gate/cases.json`. Kit fallbacks load fixtures only while `data/moves/` has none of that kind; tests that touch the scene or pool load fixtures explicitly (`FightScene.FixtureSources`, `AbilityPool.LoadFixtures`).
 
 ## Test classes by folder
 

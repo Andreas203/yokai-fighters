@@ -1,4 +1,4 @@
-"""Test Breaker probes for tools/data_merge_check.py (YOK-34). Run: python3 -I -m unittest tools.test_data_merge_check_breaker
+"""Test Breaker probes for tools/data_merge_check.py (YOK-34). Run: python3 -I -m unittest discover -s tools -p 'test_data_merge_check_breaker.py'
 Real temp git repos decide the scope; the four steps are stubbed unless a probe says otherwise."""
 import io
 import json
@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import data_merge_check as dmc  # noqa: E402
 
 GIT = ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
@@ -615,7 +615,7 @@ class ToolsOptionProbes(unittest.TestCase):
         self.assertIn(code, (dmc.FAIL, dmc.SETUP), text)
 
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parents[1]  # tools/, the scripts under test
 
 
 class RealValidatorRootProbes(unittest.TestCase):

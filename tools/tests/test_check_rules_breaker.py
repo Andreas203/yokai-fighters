@@ -3,10 +3,10 @@ Each probe overlays a temp folder on data/. The rule ID in each comment is where
 import copy, io, json, os, sys, tempfile, unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import check_rules  # noqa: E402
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+DATA = Path(__file__).resolve().parents[2] / "data"
 
 
 def real(rel):

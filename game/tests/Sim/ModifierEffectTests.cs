@@ -137,7 +137,7 @@ public static class ModifierEffectTests
 	}
 
 	/// <summary>
-	/// The shared case list both gates run (tools/test_validate_data.py runs the same file through validate_data.py):
+	/// The shared case list both gates run (tools/tests/test_validate_data.py runs the same file through validate_data.py):
 	/// the loader accepts a case exactly when it parses and builds on every special it applies to, at every level,
 	/// plain and EX: what AbilityPool does at load.
 	/// </summary>

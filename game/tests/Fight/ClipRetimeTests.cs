@@ -145,7 +145,7 @@ public static class ClipRetimeTests
 	static string Repo => Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
 
 	/// <summary>
-	/// The shared case list both gates run (tools/test_validate_data.py runs the same file through the clip schema and
+	/// The shared case list both gates run (tools/tests/test_validate_data.py runs the same file through the clip schema and
 	/// validate_data.semantic): the loader takes a curve exactly when the validator does.
 	/// </summary>
 	[Test]
