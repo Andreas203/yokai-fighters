@@ -350,7 +350,6 @@ public partial class RestStopScreen : Control, INodeScene
 			L(f0 + "CopyNote").Text = "The Tanuki has nothing of yours to copy.";
 			L(f0 + "CostValue").Text = "";
 			L(f0 + "CostMeaning").Text = "";
-			GetNode<Control>(f0 + "Placeholder").Visible = false;
 			L(f0 + "LockNote").Text = _session is { CopyLocked: true } ? "Locked for this run: no copy." : "";
 			return;
 		}
@@ -358,12 +357,12 @@ public partial class RestStopScreen : Control, INodeScene
 		L(f0 + "CopyNote").Text = f.RyoLevel > f.Level
 			? $"Ryo's Lv {f.RyoLevel} evolution is not copied: Lv {f.Level}."
 			: "Copied at your level, never your modifier or evolution.";
-		L(f0 + "CostValue").Text = f.Cost is { } c ? $"~{c} health" : "Not enough fights yet";
-		GetNode<ProgressBar>(f0 + "CostBar/Fill").Value = f.Cost ?? 0;
-		GetNode<Control>(f0 + "Placeholder").Visible = f.CostIsPlaceholder;
+		// T6 (YOK-173): damage per hit of the copy, from data at the copy's level (T4 cap); always a figure.
+		L(f0 + "CostValue").Text = $"{f.Cost} per hit";
+		GetNode<ProgressBar>(f0 + "CostBar/Fill").Value = f.Cost;
 		L(f0 + "CostMeaning").Text = DetailVisible
 			? $"Detail: slot {f.Slot}; Ryo has it at Lv {f.RyoLevel}, the copy runs Lv {f.Level}."
-			: "Average health you lose per fight to this move, from your own fights so far.";
+			: $"Health each hit of the copy takes from you, from the move's data at Lv {f.Level}.";
 		L(f0 + "LockNote").Text = f.Locked
 			? "Locked for this run: this is the move the Tanuki copies."
 			: "Locks when you enter the Tanuki's node.";
