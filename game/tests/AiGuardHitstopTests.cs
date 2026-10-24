@@ -161,6 +161,119 @@ public static class AiGuardHitstopTests
 			Assert.True(la[i].Kind == lb[i].Kind && la[i].Roll == lb[i].Roll && la[i].Action == lb[i].Action, $"decision {i}: same kind and roll ({la[i]} vs {lb[i]})");
 	}
 
+	// --- Scripted held jump answer (code-critic advisories) ---------------------------------------------
+
+	/// <summary>What the AI's own fighter shows from the answer's release T on: its medium-punch answer (frame 1 on T,
+	/// held through hitstop), a fresh blockstun from T+2, or nothing (the press never shows).</summary>
+	enum AfterRelease { Answer, Blockstun, Nothing }
+
+	const int JumpScreen = 40, HeavyStart = JumpScreen - 2, HeavyFrames = 34, MediumFrames = 21; // fixture 10+4+20, 6+3+12
+	/// <summary>The release: its own heavy (on screen from HeavyStart) predicts it free on HeavyStart + 34.</summary>
+	const int Release = HeavyStart + HeavyFrames;
+
+	static FighterView Busy(string id, int frame, int first, int last) =>
+		new(75 * SimConfig.Scale, 0, -1, FighterState.Attack, 0, false, false, 1000, 0, id, false, frame, first, last, false) { MaxHealth = 1000 };
+
+	/// <summary>
+	/// P1 jumps (screen 40) while the AI (tier rate 100) is in its own heavy punch, so the AI holds its medium-punch answer
+	/// for its first actionable tick, <see cref="Release"/>, and presses it every tick until Next ends the press. Hitstop is
+	/// shown on screen Release + k for each k with <paramref name="hitstop"/>(k) &gt; 0. Returns the crouch-guard ticks
+	/// straight after the last press.
+	/// </summary>
+	static int HeldGuardRun(int reaction, AfterRelease after, Func<int, int> hitstop)
+	{
+		var prof = BehaviourProfile.Parse("""
+			{ "kind": "profile", "id": "test-guard-hitstop-held", "yokai": "kitsune", "temperament": "patient",
+			  "reaction": { "tier": "tanuki", "frames": 15 }, "aggression_bias": 50, "preferred_range": "mid",
+			  "habit": { "id": "jumps-after-knockdown", "description": "d", "when": "self_got_up", "do": "jump", "chance_pct": 60 },
+			  "behaviours": [ { "when": "opponent_jumping", "do": "normal:test-ryo-medium-punch", "weight": 100 } ], "rules": ["Y4"] }
+			""");
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(NewMatch().P2), 7, reaction, guardPct: 100);
+		int Hs(int n) => hitstop(n - Release);
+		FighterView P2(int n)
+		{
+			if (n >= HeavyStart && n < HeavyStart + HeavyFrames) return Busy("test-ryo-heavy-punch", n - HeavyStart + 1, 11, 14);
+			if (n < Release) return Idle(75 * SimConfig.Scale, -1);
+			switch (after)
+			{
+				case AfterRelease.Answer:
+					int frame = 1;
+					for (int k = Release; k < n; k++) if (Hs(k) == 0) frame++; // frozen steps hold the frame
+					return frame <= MediumFrames ? Busy("test-ryo-medium-punch", frame, 7, 9) : Idle(75 * SimConfig.Scale, -1);
+				case AfterRelease.Blockstun:
+					int stun = 12 - (n - Release - 2);
+					return n < Release + 2 || stun <= 0 ? Idle(75 * SimConfig.Scale, -1)
+						: Idle(75 * SimConfig.Scale, -1) with { State = FighterState.Blockstun, StunLeft = stun };
+				default: return Idle(75 * SimConfig.Scale, -1);
+			}
+		}
+		var outs = new Dictionary<int, FighterInput>();
+		for (int n = 0; n < 160; n++)
+		{
+			var p1 = n >= JumpScreen ? Idle(-75 * SimConfig.Scale, 1) with { Y = 100 * SimConfig.Scale, Airborne = true } : Idle(-75 * SimConfig.Scale, 1);
+			var view = new AiView(n, MatchPhase.Fighting, Hs(n), p1, P2(n), Array.Empty<ProjectileView>())
+				{ LightHitstop = 6, WakeUpFrames = SimConfig.Default.WakeUpFrames, BurstFrames = SimConfig.Default.BurstFrames, P2JumpPunishPct = 100 };
+			outs[n + 1] = ai.Next(view);
+		}
+		Assert.Equal(Release, FirstPress(outs), $"reaction {reaction}: the held answer is first pressed on its predicted first actionable tick");
+		int last = Release;
+		while (outs[last + 1].Move != 0) last++;
+		int run = 0;
+		while (outs.TryGetValue(last + 1 + run, out var o) && o.Move == 0 && o.Bits == GuardBits) run++;
+		return run;
+	}
+
+	static Func<int, int> Spans(params (int From, int To)[] spans) =>
+		k => spans.Where(s => k >= s.From && k <= s.To).Select(s => s.To - k + 1).DefaultIfEmpty(0).Max();
+
+	/// <summary>
+	/// (a) Reaction 15: the first screen at or after the release that shows the answer (screen T, frame 1) also shows
+	/// hitstop 6, then 5 ... 1. AnswerEnd counts that freeze from the screen; the guard does not count it again (+6, not +12).
+	/// A later freeze on the answer's screens is still counted once.
+	/// </summary>
+	[Test]
+	public static void HeldAnswer_HitstopOnItsFirstShownScreen_CountedOnce()
+	{
+		int none = HeldGuardRun(15, AfterRelease.Answer, _ => 0);
+		Assert.Equal(MediumFrames - 15 + ProfileAi.GuardTicks, none, "no hitstop: the answer's end (T + 21) less the tick it is seen + GuardTicks");
+		Assert.Equal(none + 6, HeldGuardRun(15, AfterRelease.Answer, Spans((0, 5))), "hitstop 6..1 on the answer's first screens: once, through AnswerEnd");
+		Assert.Equal(none + 6 + 3, HeldGuardRun(15, AfterRelease.Answer, Spans((0, 5), (10, 12))), "and a later 3-screen freeze: + 3");
+	}
+
+	/// <summary>(b) Reaction 5: a fresh blockstun on the AI (screen T+2, seen on tick T+7) ends the press and the tail starts at
+	/// once. Hitstop counts from screen tick - 1 = T+6 (it freezes step T+7): of the screens T..T+10, only T+6..T+10 count.</summary>
+	[Test]
+	public static void HeldAnswer_EndedByAFreshBlockstun_CountsFromTickMinusOne()
+	{
+		Assert.Equal(ProfileAi.GuardTicks, HeldGuardRun(5, AfterRelease.Blockstun, _ => 0), "no hitstop: the tail alone");
+		Assert.Equal(ProfileAi.GuardTicks + 5, HeldGuardRun(5, AfterRelease.Blockstun, Spans((0, 10))), "screens T+6..T+10: 5 frozen steps in the tail");
+		Assert.Equal(ProfileAi.GuardTicks, HeldGuardRun(5, AfterRelease.Blockstun, Spans((0, 5))), "screens T..T+5 freeze steps before the tail: none count");
+	}
+
+	/// <summary>(c) Reaction 30 (window capped at 17): the press ends on tick T+17 before any screen at or after the release has
+	/// shown, so the answer is timed from the release, and freezes shown from T on are counted (T is seen on the last guard tick).</summary>
+	[Test]
+	public static void HeldAnswer_NotShown_Reaction30_CountsFromTheRelease()
+	{
+		int none = HeldGuardRun(30, AfterRelease.Answer, _ => 0);
+		Assert.Equal(MediumFrames - 17 + ProfileAi.GuardTicks, none, "no hitstop: T + 21 less tick T+17 + GuardTicks");
+		Assert.Equal(none + 6, HeldGuardRun(30, AfterRelease.Answer, Spans((0, 5))), "screens T..T+5: + 6");
+		Assert.Equal(none, HeldGuardRun(30, AfterRelease.Answer, Spans((-3, -1))), "screens before the release: not counted");
+	}
+
+	/// <summary>Code-critic advisory 2: reaction 5, the answer never shows, so the press runs its whole window (20) and ends on
+	/// tick T+20 with the screen at T+15. The freezes on screens T..T+14, seen while the press repeated, push the answer's end
+	/// (timed from the release) and so the guard; screens before the release do not.</summary>
+	[Test]
+	public static void HeldAnswer_NotShown_FreezesSeenWhilePressing_Counted()
+	{
+		int none = HeldGuardRun(5, AfterRelease.Nothing, _ => 0);
+		Assert.Equal(MediumFrames - 20 + ProfileAi.GuardTicks, none, "no hitstop: T + 21 less tick T+20 + GuardTicks");
+		Assert.Equal(none + 6, HeldGuardRun(5, AfterRelease.Nothing, Spans((2, 7))), "screens T+2..T+7, seen while pressing: + 6");
+		Assert.Equal(none + 5, HeldGuardRun(5, AfterRelease.Nothing, Spans((13, 17))), "screens T+13..T+17 straddling the press's end: + 5");
+		Assert.Equal(none, HeldGuardRun(5, AfterRelease.Nothing, Spans((-3, -1))), "screens before the release: not counted");
+	}
+
 	// --- In the fight ----------------------------------------------------------------------------------
 
 	/// <summary>

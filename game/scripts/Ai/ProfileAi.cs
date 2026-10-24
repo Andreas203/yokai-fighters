@@ -216,10 +216,12 @@ public sealed class ProfileAi
 			bool shown = view.Tick >= rp.ReleaseTick && AnswerShown(rp, s, prev);
 			if (shown || !o.Airborne || tick - rp.ReleaseTick >= rp.Window)
 			{
-				rp.EndPress(AnswerEnd(rp, view, s, shown) - tick);
-				// YOK-176: the guard counts only frozen steps AnswerEnd did not: not shown, it timed the answer from the release
-				// (screens already passed are gone); shown as the answer, it counted this screen's hitstop; shown as a hit or
-				// block on the AI, the rest starts now, so the steps from now on (screen tick - 1 freezes step tick).
+				// YOK-176: not shown, the answer is timed from the release, so the hitstop screens seen from the release on while
+				// the press repeated (Plan.FrozenWhilePressing) push its end; shown, the screen's own timing replaces them.
+				rp.EndPress(AnswerEnd(rp, view, s, shown) + (shown ? 0 : rp.FrozenWhilePressing) - tick);
+				// The guard then counts only frozen steps AnswerEnd did not: not shown, the screens from this one on; shown as
+				// the answer, after this screen's hitstop (AnswerEnd counted it); shown as a hit or block on the AI, the rest
+				// starts now, so the steps from now on (screen tick - 1 freezes step tick).
 				rp.CountFrom = !shown ? Math.Max(rp.ReleaseTick, view.Tick)
 					: s.State == FighterState.Attack ? view.Tick + view.HitstopLeft : tick - 1;
 			}
@@ -607,7 +609,12 @@ public sealed class ProfileAi
 		public bool AtPress => PressStep >= 0 && _i == PressStep && _t == 0;
 		/// <summary>YOK-165: still in the open-ended wait before a held anti-air's press.</summary>
 		public bool InHeldWait => PressStep > 0 && _i < PressStep;
-		public void ReleaseWait(int tick) { if (InHeldWait) { _i = PressStep; _t = 0; ReleaseTick = tick; } }
+		public void ReleaseWait(int tick)
+		{
+			if (!InHeldWait) return;
+			_i = PressStep; _t = 0; ReleaseTick = tick;
+			if (Guard is not null) CountFrom = tick; // YOK-176: freezes from the first press on (counted while it repeats)
+		}
 		/// <summary>YOK-165: the held answer's move id as the screen shows it (null for a throw).</summary>
 		public string? AnswerMoveId { get; set; }
 		/// <summary>YOK-165: the tick the held wait was released (the first press).</summary>
@@ -628,6 +635,7 @@ public sealed class ProfileAi
 		{
 			Paused = false;
 			if (!InPress) return;
+			FrozenWhilePressing = 0;
 			_i = PressStep + 1; _t = 0;
 			if (_i >= _steps.Length) return;
 			if (remaining > 0) _steps[_i] = (_steps[_i].In, remaining);
@@ -641,11 +649,16 @@ public sealed class ProfileAi
 		/// <summary>YOK-176: the first screen tick whose hitstop lengthens this plan's guard (its own move's press, or for a held
 		/// answer the screen after the one its end was timed from); int.MaxValue = never (no guard steps).</summary>
 		public int CountFrom { get; set; } = int.MaxValue;
-		/// <summary>YOK-176: one more tick on the current step if it is a guard step (one frozen sim step); else nothing.</summary>
+		/// <summary>YOK-176: hitstop screens from the release on, seen while a held press repeats; Next adds them to the
+		/// answer's end when it ends the press without seeing the answer (the end is then timed from the release).</summary>
+		public int FrozenWhilePressing { get; private set; }
+		/// <summary>YOK-176: one frozen sim step: one more tick on the current step if it is a guard step, or, in a held
+		/// press, one more to add at <see cref="EndPress"/>; else nothing.</summary>
 		public void ExtendGuard()
 		{
-			if (Done || Guard is not { } g || !g[_i]) return;
-			_steps[_i] = (_steps[_i].In, _steps[_i].Ticks + 1);
+			if (Done || Guard is not { } g) return;
+			if (g[_i]) _steps[_i] = (_steps[_i].In, _steps[_i].Ticks + 1);
+			else if (InPress) FrozenWhilePressing++;
 		}
 		public FighterInput Emit(InputBits back = InputBits.None)
 		{
