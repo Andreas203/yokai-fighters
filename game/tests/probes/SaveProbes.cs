@@ -660,7 +660,7 @@ public static class SaveProbes
 			bool tempPathSave = name == "PracticeBreakerProbes.cs";
 			if (tempPathSave)
 			{
-				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("\"save.json\""), name + " reaches the player's save path");
+				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json"), name + " reaches the player's save path");
 			}
 			else if (inMemorySave)
 			{
