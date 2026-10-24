@@ -25,6 +25,8 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM12** 2026-10-20 (YOK-172): Slippery Skin automatically breaks a throw attempted during the carrying move's startup (a clash, no damage).
 - **AM13** 2026-10-21 (YOK-174): the apprentice has its own behaviour profile, so there are 8 profiles (Y1, G5).
 - **AM14** 2026-10-21 (YOK-177, PR #214): the Tanuki's throw habit triggers after one blocked hit, the first blockstun it sees (Y2).
+- **AM15** 2026-10-20, written 2026-10-24 (YOK-173, YOK-196): the forecast's expected cost is the copied move's damage per hit at Ryo's level, from data, not from the player's own fights (T6).
+- **AM16** 2026-10-19, written 2026-10-24 (YOK-146, YOK-196): Tripo's skeleton becomes the shared skeleton; the Meshy one stays for rigs not yet rebuilt (F6, amends AM5).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
@@ -218,3 +220,4 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 - **AM14 written** for the Tanuki one-blocked-hit habit, because AM4 said "keeps blocking" and an amendment wins over rules.md.
 - **YOK-177 held throws:** fired standing habits always come out (Tanuki throw habit on the first blockstun seen, 60-tick re-arm approved). The held throw jump answer is a slot request under the YOK-177 rule, which changes the Kappa profiles in tier-rate fights; approved.
 - **Standing-trigger habit re-arm (Y2, YOK-177, approved 2026-10-21):** a habit on a standing condition (`at_close_range`, `opponent_blocking`) rolls when the condition becomes true on the AI's view, then at most once per 60 view ticks while it holds (`ProfileAi.StandingHabitRearmTicks`). Effect on the apprentice: about 30 rolls and 18 heavy punches per fight. Approved 2026-10-21.
+- 2026-10-24 YOK-196 (designer: "update the GDD as necessary with the amendments"): the GDD-changing decisions without an amendment were written as AM15 (forecast cost) and AM16 (Tripo skeleton); [AM1] tags added to F2, F5 and V1. The shop shelf (YOK-159) and the Codex runtime of the UI Designer fill gaps the GDD leaves, so they stay log lines; the designer may still class them as amendments (YOK-189).
