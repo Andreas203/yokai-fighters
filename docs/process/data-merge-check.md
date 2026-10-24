@@ -83,13 +83,16 @@ changes `tools/` or `game/` is a code change anyway: REVIEW at best. Godot, the 
 also live in `$RUNNER_TEMP`, so the checkout is clean when the check reads its scope. While the base has
 no checker yet (the PR that adds it), the PR's own checker runs and its verdict is capped at REVIEW.
 
+The base is resolved once to a commit SHA from the full ref `refs/remotes/origin/<base branch>`, and that
+SHA feeds both `git archive` and `--base`: a short ref such as `origin/main` would lose to a PR author's tag
+of the same name. On a pull request the event's base commit must be that SHA or behind it, or the job fails.
 This workflow uses no cache (YOK-202). A PR can save a cache under any key in its own PR scope, and a
 restored cache is extracted with absolute paths, so it could write any path the runner user can (the
 base checker, the tool cache Python is set up from, `.git/config`) before anything checks it. Godot is
 downloaded fresh on every run and must match the SHA-256 pinned in the workflow (`GODOT_ZIP_SHA256`)
 before it is unzipped. The base checker's folder is emptied before extraction, its files are hashed right
-after, and the check step re-hashes them and refuses to run if anything changed. `ci.yml` keeps its
-Godot cache: it trusts no base checker, so a PR that poisons its own cache only fools its own check.
+after, and the check step re-hashes them and refuses to run if anything changed. `ci.yml` (YOK-190, PR #230)
+keeps its Godot cache: it trusts no base checker, so a PR that poisons its own cache only fools its own check.
 Every action is pinned to a commit SHA, with its version tag in a comment.
 
 ## Designer decisions (2026-10-17)
