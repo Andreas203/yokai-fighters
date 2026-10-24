@@ -22,7 +22,7 @@ Items marked **Full game** are stretch goals and must not be built in the 5-week
 
 ## C — Combat basics
 
-- **C1** One round, 60 ticks/s, deterministic. Ryo has 1,000 health that carries across the run.
+- **C1** One round, 60 ticks/s, deterministic. Ryo has 1,000 health that carries across the run. **No round timer: a fight goes on until one fighter is KO'd** (designer, 2026-10-21; the GDD sets no timer, so this fills a gap). The harness's tick cap is only a safety limit; a capped fight is a stall, reported separately and not counted as a win or a loss.
 - **C2** Movement: walk crosses the screen in ~2.5 s (measured on the original 1,920-unit screen: 12.8 units/tick; ~1.9 s across AM8's 1,440-unit screen); dash 18 frames; jump 40 frames airtime.
 - **C3** Block by holding back. Lows must be blocked crouching (Oni Quake hits low).
 - **C4** Throws are generic: attacker plays a grab clip, defender a standard knockdown. Startup 5, break window 7 frames (press throw), 120 damage. **No paired throw animations anywhere.**
@@ -81,8 +81,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E19** Air normals (E11): any punch gives Ryo's air punch, any kick his air kick; one per jump; touchdown ends the move into 3 landing frames (per-move override), during which the fighter can't block and can be thrown. Facing is fixed for the whole jump.
 - **E20** Reward draft (A2–A4, A7, A12): percentage effects round to the nearest whole number, so Fox's Patience's +25% meter on block turns the 3 of C5 into 4. The UPGRADE card names one owned special (chosen by the run's seed); the player picks only a MODIFIER's target. A special that already carries a modifier can't take another. If the pool can't fill three cards, extra NEW or MODIFIER cards fill in, otherwise fewer cards show. Card text lives in each special's or modifier's `card` block; there is no separate `data/cards/` folder.
 - **E21** Lv 2 steps (A4, designer decision YOK-41): Spirit Wave recovers 4 frames faster; Rising Talisman recovers 6 frames faster. Both are relative to the clip-derived Lv 1 recovery. Damage-only steps are out (P1). Every other special gets one step: movesmith proposes one step per remaining special and the designer approves it (proposal in progress on branch YOK-36-lv2-steps; decided 2026-10-20).
-- **E22** Behaviour-profile AI (Y2, Y4, P6): the AI sees a read-only snapshot of the screen, its own fighter included, delayed by its reaction frames (apprentice 30, yokai 22, elders 18, Tanuki 15). Habits are data: trigger → action → chance, and `tell_cover_pct` hides the tell some of the time (a per-tier difficulty knob, default 0). First-pass spacing: close under 250 units, mid under 600; neutral spacing weight 40; walk plans 15 ticks, block plans 20. The standard-tier AI doesn't use EX or burst yet.
-- **E23** Demo flow (YOK-39): each new run draws a new reward-draft seed (duel n uses seed + n, so a replay of the run offers the same cards). Restart keeps the temperament chosen in the debug menu (F9). Replaying a finished duel with R is debug-only, so players can't skip the reward. The "demo complete" text is a story card.
+- **E22** Behaviour-profile AI (Y2, Y4, P6): the AI sees a read-only snapshot of the screen, its own fighter included, delayed by its reaction frames (apprentice 30, yokai 22, elders 18, Tanuki 15). Habits are data: trigger → action → chance, and `tell_cover_pct` hides the tell some of the time (a per-tier difficulty knob, default 0). First-pass spacing: close under 250 units, mid under 600; neutral spacing weight 40; walk plans 15 ticks, block plans 20. Standing-condition habits re-roll at most once per 60 view ticks (approved 2026-10-21). `GuardTicks` 10: how long an AI that opts into `guard_pct` keeps guarding after its own move's recovery (YOK-165; the guard ships off, `DefaultGuardPct` 0). The standard-tier AI doesn't use EX or burst yet.
+- **E23** Demo flow (YOK-39): each new run draws a new reward-draft seed (duel n uses seed + n, so a replay of the run offers the same cards). A debug temperament choice (F9 or `--temperament=`) is sticky: it stays in effect across later nodes, and across restart, until changed. Replaying a finished duel with R is debug-only, so players can't skip the reward. The "demo complete" text is a story card.
 - **E24** Wake-up (C4, E4): after the 40-frame knockdown the fighter has a 28-frame wake-up: invulnerable, can't be thrown, can't act. The model rolls onto its front over the first 10 frames, then plays the get-up. Total down time is 68 frames. A held jump leaves on the first actionable frame (the Kitsune's habit, Y2).
 
 ## X — Cancels
@@ -148,7 +148,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 ## Y — Yokai
 
 - **Y1** In-game AI is a deterministic C# state machine reading behaviour profiles. 8 profiles: 3 yokai × 2 temperaments + the apprentice + Tanuki [AM13].
-- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws when the player keeps blocking (60%) [AM4].
+- **Y2** Each yokai: two temperaments and exactly one learnable, punishable habit. The Tanuki's habit: it throws after one blocked hit, the first blockstun it sees (60%) [AM4, AM14]. A habit whose trigger is a standing condition fires when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds. A fired habit always comes out, even if the AI is hit before it can act; the only exceptions are a jump answer replacing a standing habit plan (Y4) and the round or fight ending (YOK-177).
 
   | Yokai | Aggressive | Patient | Habit to punish | Elder twist |
   |---|---|---|---|---|
@@ -166,7 +166,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
   | Elder (rows 5, 8) | 18f | 280 / 200 |
   | Tanuki (boss) | 15f | 350 / 250 |
 
-  The damage-per-duel figures are harness targets only, not rules the game enforces. Half damage (apprentice, and the Y6 guided first fight) floors per hit. Enemy jump punishing scales by tier, from per-tier data: apprentice and yokai punish a jump 50% of the time; elders and the Tanuki 100%. The opponent AI may guard pre-emptively. The test bot's reactive Block follows cross-ups, with a new R5 baseline. The bot has several skill levels across runs, and `idle_guard` depends on the level. A habit's punish window is the next 3 hits; a KO tallies the full hit's damage. (Decided 2026-10-20: YOK-165, 166, 169, 170.)
+  The damage-per-duel figures are harness targets only, not rules the game enforces. Half damage (apprentice, and the Y6 guided first fight) floors per hit. Enemy jump punishing scales by tier, from per-tier data: apprentice and yokai punish a jump 50% of the time; elders and the Tanuki 100%. The opponent AI may guard pre-emptively. The test bot's reactive Block follows cross-ups, with a new R5 baseline. The bot has several skill levels across runs, and `idle_guard` depends on the level. A habit counts as punished by an unblocked Ryo hit while the habit's plan runs, or within the next 3 hits exchanged after it ends. Blocked connects count toward the 3; a landed throw counts once; throw breaks and clashes don't count. A KO tallies the full hit's damage (YOK-169). **Exchange ratio** (here and in R5) means hits: unblocked hits landed ÷ unblocked hits taken (harness, YOK-179). Tier `jump_punish_pct` values (absolute chance; a late anti-air counts): apprentice 50, yokai 50, elder 100, Tanuki 100. (Decided 2026-10-20: YOK-165, 166, 169, 170; 2026-10-21: punish window, exchange ratio.)
 
 - **Y5** Each Tanuki win (max 3) makes yokai react 1 frame faster and pushes them toward aggressive.
 - **Y6** The apprentice fight is guided (and at half damage, Y4): prompts teach blocking, throw, throw break, meter, burst and one cancel.
@@ -188,7 +188,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).
-- **R6** Merchant: free heal 25% of max health **or** shop. The shop shows items on a physical shelf, 3 per shelf; a bought item rolls up in place; the merchant has no idle line. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
+- **R6** Merchant: free heal 25% of max health **or** shop. The shop shows items on a physical shelf, 3 per shelf; a bought item rolls up in place; the merchant has no idle line. Beating an elder counts as binding its yokai for the shop (YOK-178). Elders are named "Elder <yokai>" (e.g. "Elder Oni") on the binding card and screens. Shop sells common abilities from yokai not bound this run (50 coins): common specials and common modifiers alike; a bought modifier attaches to a special the player picks, by the usual attach rule (A2) [AM4]. Release a binding: Ryo pays 40 [AM4]. Bought abilities are grey "borrowed ink" and never carry over. Never sells rares or cancel rules.
 - **R7** Dojo: rest (heal 30% of max health) **or** training trial. Trial heals 15% either way, levels the special if landed within 3 attempts. Trials are hand-authored and Kihon-completable.
 - **R8** Coins: 25 per duel on rows 1–6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead. No cap on coins held, for now [AM4].
 - **R9** Target run length 25–40 minutes for a first-time player.
@@ -224,7 +224,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 - **G1** Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - **G2** Scope gate (end of week 1): cut Kata, then the meta-unlock layer (carry-over and story stay).
-- **G3** Balance gate (mid week 3): modifiers 14 → 8 (six unlocked stay, locked drop to 2), then dojo trials, then colour-only presets.
+- **G3** Balance gate (mid week 3): modifiers 14 → 8 (six unlocked stay, locked drop to 2), then dojo trials, then colour-only presets. Status 2026-10-21: no cuts yet; fix the batch-3 bugs (YOK-177, 178, 179), rerun as batch 4 (YOK-185), then decide. The newcomer playtest (YOK-50) calibrates whether the bot or the fights get retuned. Fights go to KO (C1).
 - **G4** Week-1 retarget go/no-go: generated walk, heavy and throw clips must play on each yokai's auto-rig without clipping tails/shell/club; failing yokai use their folklore human guise.
 - **G5** Schedule: W1 move list, fighters generated and auto-rigged, retarget gate, sound packs, combat core, both schemes, AI framework, test bot. W2 33 abilities, 8 profiles [AM13], Tanuki + copy rule, map/merchant/dojo/unlocks with placeholder screens, whole-run harness, first playtest. W3 final screens/HUD, story cards, integration, balance gate, feature freeze. W4–5 polish only.
 
@@ -235,6 +235,6 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - Designer hours for approving generation jobs (the GDD budgets 10 h for purchases and gates).
 - Whether practice mode unlocks trials for every special or only owned ones.
 - Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
-- The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked. Whether binding an elder counts as binding its yokai for the shop.
+- The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked.
 - What the Tanuki does when it copies a charged special such as Sumo Stance (AM11, T4).
 - In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
