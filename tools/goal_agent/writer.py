@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MAP_FILE = "docs/codebase-map/goal-agent.md"
+SCRIPTS = "game/scripts/"
+MAP_ROW_MAX = 600  # tools/check_docs.py MAP_ROW_MAX
 MAP_HEADING = "## Built by the goal agent (`tools/goal_agent/`)"
 MAP_INTRO = ("Features written by the goal agent and accepted by its gates (build, tests, re-scan, code-critic, "
              "test-breaker). Each still needs the designer's review before it merges.")
@@ -158,8 +160,23 @@ def apply(root: Path, change: Change, feature: dict) -> dict[str, str | None]:
     if MAP_HEADING not in text:
         text = text.rstrip("\n") + f"\n\n{MAP_HEADING}\n{MAP_INTRO}\n"
     entry = f"- **`{feature['id']}`** ({', '.join(feature['rules'])}): {change.map_entry}"
-    map_path.write_text(text.rstrip("\n") + f"\n{entry}\n", encoding="utf-8")
+    text = text.rstrip("\n")
+    text += ("\n\n" if text.rsplit("\n", 1)[-1].startswith("|") else "\n") + entry + "\n"
+    scripts = sorted(p for p in change.files if p.startswith(SCRIPTS) and p.endswith(".cs"))
+    if scripts:  # one map row per new script, so the docs check (tools/check_docs.py) passes on the branch
+        text += "\n| File | Added for |\n|---|---|\n" + "".join(map_row(p, feature, change.map_entry) for p in scripts)
+    map_path.write_text(text, encoding="utf-8")
     return snapshot
+
+
+def map_row(path: str, feature: dict, summary: str) -> str:
+    """A codebase-map table row for a new script, at most MAP_ROW_MAX characters."""
+    head = f"| `{path[len(SCRIPTS):]}` | "
+    body = f"Goal agent, `{feature['id']}` ({', '.join(feature['rules'])}): {summary}".replace("|", "\\|")
+    room = MAP_ROW_MAX - len(head) - len(" |")
+    if len(body) > room:
+        body = body[:room - 1].rstrip("\\") + "…"
+    return f"{head}{body} |\n"
 
 
 def revert(root: Path, snapshot: dict[str, str | None]) -> None:

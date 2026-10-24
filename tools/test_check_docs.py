@@ -112,7 +112,7 @@ class CheckDocsTest(unittest.TestCase):
 
     def test_map_every_script_has_exactly_one_row(self):
         files = {"game/scripts/Sim/A.cs": "", "game/scripts/Sim/Run/B.cs": "", "game/scripts/Top.cs": "",
-                 "docs/codebase-map/README.md": self.MAP_INDEX,
+                 "docs/codebase-map/README.md": self.MAP_INDEX + "| [Run](run.md#top) | `game/scripts/Sim/Run/` |\n",
                  "docs/codebase-map/sim.md": "| File | What |\n|---|---|\n"
                                             "| `Sim/A.cs`, `game/scripts/Top.cs` | uses `Sim/Run/B.cs` |\n"
                                             "| (cont.) | more on `Sim/Run/B.cs` |\n"
@@ -132,8 +132,40 @@ class CheckDocsTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("map: game/scripts/Sim/B.cs: not in any area file", out)
         self.assertIn("map: game/scripts/Sim/A.cs: has 2 rows (docs/codebase-map/other.md, docs/codebase-map/sim.md)", out)
-        self.assertIn("map: docs/codebase-map/sim.md: row for game/scripts/Sim/Gone.cs, which git does not track", out)
-        self.assertIn("map: docs/codebase-map/other.md: row for game/scripts/Sim/C.cs", out)
+        self.assertIn("map: docs/codebase-map/sim.md: row for game/scripts/Sim/Gone.cs, which is not a tracked file", out)
+        self.assertIn("map: docs/codebase-map/other.md: row for game/scripts/Sim/C.cs, which is deleted; drop the row", out)
+        self.assertNotIn("Sim/C.cs: not in any area file", out)
+
+    def test_map_a_deleted_script_needs_no_row(self):
+        files = {"game/scripts/Sim/A.cs": "", "game/scripts/Sim/B.cs": "",
+                 "docs/codebase-map/README.md": self.MAP_INDEX, "docs/codebase-map/sim.md": "| `Sim/A.cs` | a |\n"}
+        with Repo(files) as r:
+            (r.root / "game/scripts/Sim/B.cs").unlink()
+            self.assertEqual(r.check()[0], 0)
+
+    def test_map_first_cells_name_only_scripts(self):
+        files = {"game/scripts/Sim/A.cs": "", "game/tests/FooTests.cs": "",
+                 "docs/codebase-map/README.md": self.MAP_INDEX,
+                 "docs/codebase-map/sim.md": "| `Sim/A.cs` | a |\n| `tests/FooTests.cs` | relative test |\n"
+                                            "| `game/tests/FooTests.cs` | full test path |\n"
+                                            "| `tests/run.tscn` | `tests/FooTests.cs` in a later cell is fine |\n"}
+        with Repo(files) as r:
+            code, out = r.check()
+        self.assertEqual(code, 1)
+        self.assertIn("map: docs/codebase-map/sim.md: first cell names `tests/FooTests.cs`, which is not under game/scripts/", out)
+        self.assertIn("map: docs/codebase-map/sim.md: first cell names `game/tests/FooTests.cs`, which is not under game/scripts/", out)
+        self.assertNotIn("game/scripts/tests/", out)
+        self.assertEqual(out.count("map:"), 2)
+
+    def test_map_area_files_must_be_linked_from_the_index(self):
+        files = {"game/scripts/Sim/A.cs": "", "game/scripts/Ui/B.cs": "",
+                 "docs/codebase-map/README.md": self.MAP_INDEX,
+                 "docs/codebase-map/sim.md": "| `Sim/A.cs` | a |\n", "docs/codebase-map/ui.md": "| `Ui/B.cs` | b |\n"}
+        with Repo(files) as r:
+            code, out = r.check()
+        self.assertEqual(code, 1)
+        self.assertIn("map: docs/codebase-map/ui.md: not linked from docs/codebase-map/README.md", out)
+        self.assertNotIn("sim.md: not linked", out)
 
     def test_map_untracked_scripts_are_ignored_and_a_missing_index_is_reported(self):
         with Repo({"game/scripts/Sim/A.cs": "", "docs/codebase-map/sim.md": "| `Sim/A.cs` | a |\n"}) as r:

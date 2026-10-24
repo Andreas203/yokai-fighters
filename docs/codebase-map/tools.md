@@ -15,7 +15,7 @@ Python dev tools (none ship in the game). Run Python with `-I`. Index: [README.m
 
 | File | What it is and how to run it |
 |---|---|
-| `tools/check_docs.py` | Docs check over git-tracked `.md`: links resolve, every file in `DOC_HOMES`, no proposal/to-do names, amendment index = headings, and the codebase map (`docs/codebase-map/`: every `game/scripts/**/*.cs` in exactly one area file, no entry for a missing file, rows ≤ 600 chars, area files ≤ 40 KB, index < 8 KB). Exit 0 / 1 / 2. Tests `tools/test_check_docs.py`. |
+| `tools/check_docs.py` | Docs check over git-tracked `.md`: links resolve, every file in `DOC_HOMES`, no proposal/to-do names, amendment index = headings, and the codebase map (`docs/codebase-map/`: every `game/scripts/**/*.cs` in exactly one area file, no row for an untracked or deleted file, first cells name only scripts, every area linked from the index, rows ≤ 600 chars, area files ≤ 40 KB, index < 8 KB). Exit 0 / 1 / 2. Tests `tools/test_check_docs.py`. |
 | `tools/changelog.py` | Writes `CHANGELOG.md` from merged PRs by build week (`## Changelog` line, else the title; `none` leaves it out); `--check` exits 1 when stale. Never edit `CHANGELOG.md` by hand. |
 | `tools/sync_codex.py` | Generates the Codex copies of the crew from `.claude/agents/*.md` → `.codex/agents/*.toml` and `.claude/skills/*/SKILL.md` → `.agents/skills/`; edit the sources, never the copies. |
 | `tools/export-windows.sh` | Windows export: Godot `--export-release`, copy `data/{clips,modifiers,moves,profiles,story,map,...}` and kit-fallback fixtures to `build/windows/`, zip to `build/YokaiFighters-Demo-Windows.zip`. Needs the 4.7.2 mono templates. |
