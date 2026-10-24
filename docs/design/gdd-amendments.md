@@ -19,6 +19,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM11](#am11) | 2026-10-20 | Sumo Stance: holding gives a faster dash, not more damage | modifier table | YOK-142, YOK-171 |
 | [AM12](#am12) | 2026-10-20 | Slippery Skin breaks throws during startup | modifier table, E12 | YOK-172 |
 | [AM13](#am13) | 2026-10-21 | The apprentice has its own behaviour profile | Y1, G5 | YOK-174 |
+| [AM14](#am14) | 2026-10-21 | The Tanuki's throw habit triggers after one blocked hit | Y2 | YOK-177, PR #214 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -319,6 +320,8 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 | GDD extended §10.4 Schedule and cut gates (p. 12), week 2 row; GDD short §4.6 Schedule and scope, week 2 row | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
 | rules.md G5, W2 | "33 abilities, 7 profiles" | "33 abilities, 8 profiles [AM13]" |
 | rules.md Y1 | "7 profiles: 3 yokai × 2 temperaments + Tanuki." | The new line above, with [AM13]. |
+
+<a id="am14"></a>
 
 ## AM14 — The Tanuki's throw habit triggers after one blocked hit (2026-10-21)
 

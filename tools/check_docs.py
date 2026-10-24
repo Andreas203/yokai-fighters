@@ -37,7 +37,7 @@ DOC_HOMES = [
     "docs/design/*", "docs/process/*.md", "docs/crew/*.md", "docs/moves/*.md", "docs/coursework/*.md",
     "docs/screenshots/*README.md",
     "assets/specs/*", "assets/shortlists/*.md",
-    "harness/reports/*.md",
+    "harness/reports/*.md", "harness/results/*README.md",
     "vault/*",
     "tools/*/runs/*/trace.md", "tools/blender/fixtures/*.md",
     "game/assets/*README.md",

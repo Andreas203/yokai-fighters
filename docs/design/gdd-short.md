@@ -85,7 +85,7 @@ Kata ("form") uses six buttons and motion inputs, such as ↓↘→ + punch, and
 
 ### 2.4 The yokai
 
-> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM11](gdd-amendments.md#am11) Sumo Stance, [AM12](gdd-amendments.md#am12) Slippery Skin, [AM13](gdd-amendments.md#am13) the apprentice's own profile. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM11](gdd-amendments.md#am11) Sumo Stance, [AM12](gdd-amendments.md#am12) Slippery Skin, [AM13](gdd-amendments.md#am13) the apprentice's own profile, [AM14](gdd-amendments.md#am14) the Tanuki habit's trigger. Where they disagree with this section, the amendments win.
 
 Each yokai comes in two temperaments, aggressive and patient, so repeat fights play differently. Every path passes two elders, whose offers always include a cancel rule. Each elder's twist shows as a map icon, a one-line intro card and a first-time callout. Rare abilities (cancel rules and each yokai's second special) come only from elders; everything else is common.
 

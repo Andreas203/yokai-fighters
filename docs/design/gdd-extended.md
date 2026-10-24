@@ -310,7 +310,7 @@ Launch a slow fox flame.   Lv 1 → Lv 2: recovers 4       Your uppercut can't b
 
 ### 5.1 Profiles
 
-> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM13](gdd-amendments.md#am13) the apprentice's own profile. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM13](gdd-amendments.md#am13) the apprentice's own profile, [AM14](gdd-amendments.md#am14) the Tanuki habit's trigger. Where they disagree with this section, the amendments win.
 
 In-game yokai are a deterministic C# state machine reading behaviour profiles that Habit Writer drafts. Each yokai has two temperaments, so repeat fights play differently, and one learnable habit that an attentive player can punish.
 

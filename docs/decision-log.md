@@ -24,6 +24,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM11** 2026-10-20 (YOK-142, YOK-171): Sumo Stance: the longer the hold, the faster its dash, up to a maximum speed; replaces "+20% damage".
 - **AM12** 2026-10-20 (YOK-172): Slippery Skin automatically breaks a throw attempted during the carrying move's startup (a clash, no damage).
 - **AM13** 2026-10-21 (YOK-174): the apprentice has its own behaviour profile, so there are 8 profiles (Y1, G5).
+- **AM14** 2026-10-21 (YOK-177, PR #214): the Tanuki's throw habit triggers after one blocked hit, the first blockstun it sees (Y2).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
