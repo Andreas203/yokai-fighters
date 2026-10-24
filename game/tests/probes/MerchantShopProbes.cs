@@ -352,7 +352,8 @@ public static class MerchantShopProbes
 		root["routes"]!.AsArray().Add(new JsonObject { ["from"] = "boss-tanuki", ["to"] = "z-merchant" });
 		var g = MapLoader.Parse(root.ToJsonString());
 		var pool = Pool();
-		var walk = new[] { "r1-apprentice", "r2-kitsune", "r3-oni", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-merchant", "r8-elder-kappa" };
+		// YOK-178 (designer 2026-10-21): an elder binds its yokai, so the walk ends at the Elder Oni to leave the Kappa unbound and on the shelf.
+		var walk = new[] { "r1-apprentice", "r2-kitsune", "r3-oni", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-merchant", "r8-elder-oni" };
 		var run = RunState.Restore(600, With((SpecialSlot.C, "test-foxfire", 2)).Select(x => (x.Item1, new OwnedSpecial(S(pool, x.Item2), x.Item3, null))));
 		run.RestoreLevelledOrder(0, 0, 1, 0); run.RestoreCoins(500);
 		run.SetMap(RunMap.Restore(g, new RunMapSnapshot(g.Id, walk, walk[^1])));

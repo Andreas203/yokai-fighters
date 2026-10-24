@@ -65,6 +65,12 @@ public static class BotLevelsTests
 		var file = Hashes(RunHarness.PlayBatch(legacy, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));
 		Assert.Equal(string.Join(" ", want), string.Join(" ", file), "the base file's batch (pinned)");
 		Assert.Equal(string.Join(" ", want), string.Join(" ", level), "the newcomer level's batch is the same runs");
+
+		// YOK-177: with standing-trigger habits on (the apprentice's at_close_range habit rolls), new pins.
+		var wantOn = new[] { "cf6713769fe717d7", "f18751e91e881a0e", "9e001f30a06b1cb0" };
+		var on = legacy with { StandingHabits = true };
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3))), "the base file's batch with standing habits (pinned)");
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, Levels["newcomer"], 1, 3))), "the newcomer level's, the same");
 	}
 
 	[Test]
@@ -173,11 +179,13 @@ public static class BotLevelsTests
 		{
 			var s = lv.Value;
 			Assert.Equal(2, s.GetProperty("runs").GetInt32(), $"{lv.Name}: 2 of the 6 runs");
-			foreach (string k in new[] { "reach_tanuki_pct", "beat_tanuki_pct_of_reached", "run_win_pct", "duel_win_pct", "exchange_ratio", "hit_exchange_ratio" })
+			foreach (string k in new[] { "reach_tanuki_pct", "beat_tanuki_pct_of_reached", "run_win_pct", "duel_win_pct", "exchange_ratio", "damage_ratio" })
 				Assert.True(s.TryGetProperty(k, out _), $"{lv.Name}: {k}");
 			long dealt = s.GetProperty("damage_dealt").GetInt64(), taken = s.GetProperty("damage_taken").GetInt64();
-			Assert.True(taken > 0 && Math.Abs(s.GetProperty("exchange_ratio").GetDouble() - Math.Round((double)dealt / taken, 2)) < 1e-9,
-				$"{lv.Name}: exchange ratio = damage dealt / taken");
+			Assert.True(taken > 0 && Math.Abs(s.GetProperty("damage_ratio").GetDouble() - Math.Round((double)dealt / taken, 2)) < 1e-9,
+				$"{lv.Name}: damage ratio = damage dealt / taken");
+			Assert.True(s.GetProperty("exchange_ratio").ValueKind == System.Text.Json.JsonValueKind.Number,
+				$"{lv.Name}: exchange ratio (hits, designer 2026-10-21) is there with the hit log on");
 		}
 	}
 

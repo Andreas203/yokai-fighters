@@ -30,7 +30,10 @@ public sealed record BotFightConfig
 	public required int ThrowWeight { get; init; }
 	public required int JumpWeight { get; init; }
 	public required int WaitWeight { get; init; }
-	/// <summary>A fight with no KO by then counts as lost (rules.md writes no round timer).</summary>
+	/// <summary>
+	/// YOK-179: a safety cap only. There is no round timer (designer 2026-10-21): fights go to KO, and a fight with no KO
+	/// by then is a stall (<see cref="FightRecord.Stalled"/>), never a loss. Not overridable per level (YOK-170).
+	/// </summary>
 	public required int MaxFightTicks { get; init; }
 }
 

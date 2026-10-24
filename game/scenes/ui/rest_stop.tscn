@@ -649,7 +649,7 @@ offset_right = 474.0
 offset_bottom = 348.0
 theme_type_variation = &"SealLabel"
 theme_override_font_sizes/font_size = 48
-text = "~190 health"
+text = "60 per hit"
 
 [node name="CostBar" type="Control" parent="Forecast"]
 mouse_filter = 2
@@ -706,18 +706,7 @@ offset_bottom = 456.0
 theme_type_variation = &"CaptionLabel"
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
-text = "Average health you lose per fight to this move, from your own fights so far."
-
-[node name="Placeholder" type="Label" parent="Forecast"]
-mouse_filter = 2
-offset_left = 22.0
-offset_top = 458.0
-offset_right = 474.0
-offset_bottom = 482.0
-theme_type_variation = &"PersimmonLabel"
-theme_override_font_sizes/font_size = 18
-autowrap_mode = 3
-text = "PLACEHOLDER: no cost formula yet"
+text = "Health each hit of the copy takes from you, from the move's data at Lv 1."
 
 [node name="LockNote" type="Label" parent="Forecast"]
 mouse_filter = 2

@@ -62,7 +62,7 @@ VERDICT = {MERGEABLE: "MERGEABLE", FAIL: "FAIL", SETUP: "SETUP", REVIEW: "REVIEW
            NOTHING: "NOTHING TO MERGE"}
 FULL_RUNS = 200   # designer 2026-10-17: MERGEABLE needs the full 200-run batch and a fresh build
 MAX_LINES = 25          # lines of a failing step's output kept in the report
-HARNESS_OUTCOMES = {"won", "lost"}
+HARNESS_OUTCOMES = {"won", "lost", "stalled"}  # YOK-179: a stall (no KO by the safety cap) is not a loss
 
 
 class Step:
@@ -282,12 +282,12 @@ def step_harness(root: Path, st: Step, godot: str, runs: int, seed: int) -> None
     if played != runs or len(recorded) != runs:
         problems.append(f"{played!r} runs played, {len(recorded)} recorded; asked for {runs}")
     if bad:
-        problems.append(f"runs without a won/lost outcome, seeds {bad[:10]}")
+        problems.append(f"runs without a won/lost/stalled outcome, seeds {bad[:10]}")
     s = batch.get("summary") if isinstance(batch.get("summary"), dict) else {}
     st.notes = [f"for the Sparring Partner, not gating: reached Tanuki {s.get('reach_tanuki_pct')}% "
                 f"(R5 target {s.get('R5_reach_target_pct')}), beat {s.get('beat_tanuki_pct_of_reached')}% of those "
                 f"(R5 target {s.get('R5_beat_target_pct')}), runs ended by row {s.get('runs_ended_by_row')}, "
-                f"fights timed out {s.get('fights_timed_out')}"]
+                f"fights stalled {s.get('fights_stalled')}"]
     if problems:
         st.status, st.summary, st.details = "fail", "harness results are incomplete", problems
     else:

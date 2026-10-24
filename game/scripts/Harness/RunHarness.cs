@@ -16,6 +16,9 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 {
 	/// <summary>Every profile in data/profiles/, where a node's named profile is looked up (<see cref="ProfilesForNode"/>).</summary>
 	public BehaviourProfile[] AllProfiles { get; init; } = Array.Empty<BehaviourProfile>();
+	/// <summary>YOK-177: the AI rolls standing-trigger habits (<see cref="ProfileAi.StandingHabits"/>); false = the rule
+	/// before YOK-177, for tests pinning older whole-run hashes (AiGuardTests.LegacyOpponent).</summary>
+	public bool StandingHabits { get; init; } = true;
 
 	/// <summary>
 	/// YOK-174: the profiles <paramref name="node"/> fights with: its plays-as yokai's (<see cref="Profiles"/>) plus the
@@ -28,6 +31,8 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 	public bool HitLog { get; init; } = true;
 	/// <summary>YOK-157: also keep every hit as a raw line (<c>hit_log</c> in the results; large, off by default). Needs <see cref="HitLog"/>.</summary>
 	public bool RawHitLog { get; init; }
+	/// <summary>YOK-179 (P5, Y3): every elder's twist (<c>data/twists/</c>, as <c>FightScene.Twists</c>); an elder node's fight gets its own.</summary>
+	public ElderTwists Twists { get; init; } = ElderTwists.None;
 
 	/// <summary>The game's content: <c>data/</c> (moves, modifiers, map, node scenes, profiles) with the TEST FIXTURE fallbacks.</summary>
 	public static HarnessContent Load(string dataDir, string fixturesDir, string mapFile = "default-map.json")
@@ -38,7 +43,8 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 		var fixtures = BehaviourProfile.LoadDirectory(Path.Combine(fixturesDir, "profiles"));
 		var content = new HarnessContent(sources, AbilityPool.Load(sources, Path.Combine(dataDir, "modifiers")),
 			MapLoader.LoadFile(Path.Combine(mapDir, mapFile)), NodeSceneTable.Default(mapDir),
-			fighter => ProfilesFor(fighter, all, fixtures)) { AllProfiles = all };
+			fighter => ProfilesFor(fighter, all, fixtures))
+		{ AllProfiles = all, Twists = ElderTwists.LoadDir(Path.Combine(dataDir, ElderTwists.Folder)) };
 		content.CheckProfiles();
 		return content;
 	}
@@ -104,7 +110,7 @@ public static class RunHarness
 			var n = new NodeRecord
 			{
 				Id = node.NodeId, Row = node.Row, Type = node.Type, Yokai = node.Yokai, Fighter = node.Fighter, PlaysAs = node.MovesAndProfilesOf, Tier = node.Tier,
-				StandIn = node.StandIn, ArrivalHealth = session.Run.Health, ArrivalCoins = session.Run.Coins,
+				StandIn = node.StandIn, Elder = node.Elder, ArrivalHealth = session.Run.Health, ArrivalCoins = session.Run.Coins,
 			};
 			rec.Nodes.Add(n);
 			if (node.Type == NodeTypeRegistry.Boss && session.CopyLocked) rec.CopyLocked = session.LockedCopy;
@@ -118,6 +124,9 @@ public static class RunHarness
 				rec.FightTicks += n.Fight.Ticks;
 				if (!n.Fight.Won)
 				{
+					// YOK-179: a stall (no KO by the safety cap) is not a loss; the walk still has to end, so the session
+					// closes it the way a loss does, and the record says stalled.
+					rec.Stalled = n.Fight.Stalled;
 					session.LoseFight();
 					break;
 				}
@@ -147,11 +156,26 @@ public static class RunHarness
 		return rec;
 	}
 
-	/// <summary>One node's fight: Ryo (bot) vs the node's opponent (profile AI at the node's reaction frames), to a KO or the cap.</summary>
-	public static FightRecord FightNode(HarnessContent content, BotConfig bot, RunSession session, uint runSeed)
+	/// <summary>One node's fight: Ryo (bot) vs the node's opponent (profile AI at the node's reaction frames), to a KO or the safety cap.</summary>
+	public static FightRecord FightNode(HarnessContent content, BotConfig bot, RunSession session, uint runSeed) =>
+		PlayFight(content, bot, session, runSeed, NewNodeMatch(content, bot, session));
+
+	/// <summary>
+	/// The entered node's match as the fight scene builds it (<c>FightScene.NewDuel</c>): <see cref="NodeFight.NewMatch"/>,
+	/// then the node's elder twist on P2 through <see cref="ElderTwists.Apply"/> (YOK-179; YOK-90: from the node's elder,
+	/// whoever stands in; cleared off an elder node).
+	/// </summary>
+	public static Match NewNodeMatch(HarnessContent content, BotConfig bot, RunSession session)
+	{
+		var m = NodeFight.NewMatch(content.Sources, session.Run, session, session.Node!.Fighter, bot.Scheme);
+		content.Twists.Apply(m, session.Node);
+		return m;
+	}
+
+	/// <summary>Plays <paramref name="m"/> (the entered node's match, <see cref="NewNodeMatch"/> or the fight scene's) to a KO or <see cref="BotFightConfig.MaxFightTicks"/>.</summary>
+	public static FightRecord PlayFight(HarnessContent content, BotConfig bot, RunSession session, uint runSeed, Match m)
 	{
 		var node = session.Node!;
-		var m = NodeFight.NewMatch(content.Sources, session.Run, session, node.Fighter, bot.Scheme);
 		var profiles = content.ProfilesForNode(node); // YOK-174: the yokai's own profiles (even on a stand-in kit) plus the node's named one
 		if (profiles.Length == 0) throw new InvalidOperationException($"no behaviour profile for '{node.MovesAndProfilesOf}'");
 		int pi = Math.Max(0, NodeTemperament.Pick(profiles, node, session.Seed)); // YOK-174, Y1/Y2: named profile, else the seeded 50/50 temperament roll
@@ -160,11 +184,13 @@ public static class RunHarness
 		if (loadout.Missing(profiles[pi]) is { Count: > 0 } missing) // YOK-174: never skip a named move silently
 			throw new InvalidOperationException($"node '{node.NodeId}': profile '{profiles[pi].Id}' names {string.Join(", ", missing)}, which {node.MovesAndProfilesOf} on {node.Fighter}'s kit does not have");
 		var ai = new ProfileAi(profiles[pi], 1, loadout, Mix(runSeed, 0xA1000000u + step), node.ReactionFrames,
-			AiFightTiers.Of(node)); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
+			AiFightTiers.Of(node), standingHabits: content.StandingHabits); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
 		var ryo = new NewcomerBot(bot.Fight, BotKit.From(m.P1), Mix(runSeed, 0xB0700000u + step));
 		FightLog? log = null;
 		if (content.HitLog) { log = new FightLog(content.RawHitLog); log.Attach(m, ai); }
 		int ryoStart = m.P1.Health, foeStart = m.P2.Health;
+		int twistFired = 0;
+		m.TwistTriggered += (_, _) => twistFired++; // YOK-179: listening only
 		int t = 0;
 		while (m.Phase != MatchPhase.Over && t < bot.Fight.MaxFightTicks)
 		{
@@ -175,13 +201,15 @@ public static class RunHarness
 			m.Step(ryoIn, aiIn);
 			t++;
 		}
-		bool timedOut = m.Phase != MatchPhase.Over;
+		bool stalled = m.Phase != MatchPhase.Over; // YOK-179: no round timer (designer 2026-10-21); the cap only stops a stall
 		return new FightRecord
 		{
 			Profile = profiles[pi].Id,
 			ReactionFrames = ai.ReactionFrames,
-			Won = !timedOut && m.Winner == 0, // a double KO is a loss, as in the fight scene
-			TimedOut = timedOut,
+			Won = !stalled && m.Winner == 0, // a double KO is a loss, as in the fight scene
+			Stalled = stalled,
+			Twist = m.P2.Twist?.Id,
+			TwistFired = twistFired,
 			Ticks = t,
 			DamageTaken = ryoStart - m.P1.Health,
 			DamageDealt = foeStart - m.P2.Health,
@@ -232,7 +260,12 @@ public sealed class FightRecord
 	public required string Profile { get; init; }
 	public int ReactionFrames { get; init; }
 	public bool Won { get; init; }
-	public bool TimedOut { get; init; }
+	/// <summary>YOK-179: no KO by the safety cap (<c>max_fight_ticks</c>). Not a loss: fights go to KO (no round timer, designer 2026-10-21).</summary>
+	public bool Stalled { get; init; }
+	/// <summary>YOK-179: the elder twist the opponent fought with (P5, Y3), null off an elder node.</summary>
+	public string? Twist { get; init; }
+	/// <summary>YOK-179: how many times the twist changed what happened (<see cref="Match.TwistTriggered"/>).</summary>
+	public int TwistFired { get; init; }
 	public int Ticks { get; init; }
 	public int DamageTaken { get; init; }
 	public int DamageDealt { get; init; }
@@ -256,6 +289,8 @@ public sealed class NodeRecord
 	public string PlaysAs { get; init; } = "";
 	public required string Tier { get; init; }
 	public bool StandIn { get; init; }
+	/// <summary>YOK-179: the map node's elder flag (<see cref="NodeContext.Elder"/>), which decides its twist (<see cref="ElderTwists.For"/>).</summary>
+	public bool Elder { get; init; }
 	public int ArrivalHealth { get; init; }
 	public int ArrivalCoins { get; init; }
 	public int LeaveHealth { get; set; }
@@ -274,6 +309,8 @@ public sealed class RunRecord
 	/// <summary>YOK-170: the bot's skill level for this run (null: a bot file played on its own).</summary>
 	public string? Level { get; init; }
 	public bool Won { get; set; }
+	/// <summary>YOK-179: the run ended on a stalled fight (no KO by the safety cap), not a loss.</summary>
+	public bool Stalled { get; set; }
 	public int RowReached { get; set; }
 	public string EndNode { get; set; } = "";
 	public int FinalHealth { get; set; }
