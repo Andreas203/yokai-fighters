@@ -59,7 +59,7 @@ public partial class ShopItem : Control
 		PriceLabel.HorizontalAlignment = bought || coins ? HorizontalAlignment.Center : HorizontalAlignment.Left;
 		PriceLabel.Position = new Vector2(bought || coins ? FaceX : FaceX + FaceW / 2 + 6, TagY + 28); PriceLabel.Size = new Vector2(bought || coins ? FaceW : FaceW / 2 - 6, 18);
 		TypeText = e.Kind == ShopKind.Special ? "SPECIAL" : "MODIFIER";
-		GlyphLabel.Text = e.Name.Length > 0 ? e.Name[..1].ToUpperInvariant() : "?";
+		GlyphLabel.Text = TextCuts.Badge(e.Name);
 		GlyphLabel.ThemeTypeVariation = "PaperLabel"; GlyphLabel.HorizontalAlignment = HorizontalAlignment.Center; GlyphLabel.VerticalAlignment = VerticalAlignment.Center;
 		GlyphLabel.AddThemeFontSizeOverride("font_size", 20);
 		GlyphLabel.Size = new Vector2(30, 30); GlyphLabel.ClipText = true;
