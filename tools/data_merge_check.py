@@ -190,7 +190,10 @@ def scope_of(entries: list[tuple[str, str, str]]) -> tuple[list[str], list[str]]
 
 def step_schema(root: Path, st: Step, py: str, tools: Path | None = None) -> None:
     # YOK_CONTENT_ROOT: the validator checks ROOT's data/ even when it comes from another tools/ (CI: the base's)
-    code, out = run([py, str((tools or root / "tools") / "validate_data.py")], cwd=root,
+    # -I when the check itself runs isolated (CI: python -I), as check_rules.py always is. Not always: -I also
+    # hides the user site-packages, where a local `pip install --user jsonschema` lives (YOK-202).
+    iso = ["-I"] if sys.flags.isolated else []
+    code, out = run([py, *iso, str((tools or root / "tools") / "validate_data.py")], cwd=root,
                     env={**os.environ, "YOK_CONTENT_ROOT": str(root)})
     last = tail(out, 1)
     st.summary = last[0] if last else f"exit {code}"

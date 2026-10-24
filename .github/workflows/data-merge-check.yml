@@ -19,6 +19,10 @@ permissions:
 
 env:
   GODOT_VERSION: 4.7.2
+  # SHA-256 of Godot_v4.7.2-stable_mono_linux_x86_64.zip, as in ci.yml (YOK-190, PR #230): the digest GitHub lists for the asset on
+  # the godotengine/godot-builds 4.7.2-stable release, cross-checked against the release's SHA512-SUMS.txt.
+  # Change it together with GODOT_VERSION.
+  GODOT_ZIP_SHA256: 129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247
 
 jobs:
   check:
@@ -32,25 +36,69 @@ jobs:
       - name: Paths outside the checkout
         run: |
           echo "GODOT_DIR=$RUNNER_TEMP/godot-bin" >> "$GITHUB_ENV"
+          echo "GODOT_ZIP_DIR=$RUNNER_TEMP/godot-zip" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/data-merge"
+
+      # YOK-202: no cache in this workflow. A PR can save a cache under any key in its own PR scope, and
+      # actions/cache extracts with tar -P, so restoring one would let the PR write any path the runner user
+      # can (the base checker, the tool cache Python comes from, .git/config) before anything checks it.
+      # Godot is downloaded fresh every run and checked against GODOT_ZIP_SHA256 before it is unzipped.
+      # (ci.yml (YOK-190, PR #230) keeps its cache: it trusts no base checker, so a PR fooling it only fools its own check.)
+      - name: Download and verify Godot
+        run: |
+          rm -rf "$GODOT_ZIP_DIR" "$GODOT_DIR" && mkdir -p "$GODOT_ZIP_DIR" "$GODOT_DIR"
+          zip="$GODOT_ZIP_DIR/godot.zip"
+          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+          curl -fsSL -o "$zip" "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          echo "${GODOT_ZIP_SHA256}  $zip" | sha256sum -c -
+          unzip -q "$zip" -d "$GODOT_DIR" && rm "$zip"
+
+      - name: Locate Godot
+        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
 
       # The checker and its validators come from the BASE branch, never from the PR: a PR could otherwise
       # edit tools/ to call itself mergeable. They are extracted outside the checkout and run on the PR's
       # data/ with --tools. (Any change to tools/ or game/ is itself a code change: REVIEW at best.)
+      # The folder is emptied first, so nothing left on the runner can sit inside it, and its contents are
+      # hashed: the check step re-hashes them and refuses to run if anything changed in between (YOK-202).
+      # The base is resolved once, from the full remote-tracking ref, to a commit SHA that both git archive
+      # and --base use. Never a short ref: git resolves refs/tags/<name> before refs/remotes/<name>, so a
+      # PR author's tag named "origin/main" would otherwise supply the checker and the diff base.
       - name: Extract the base branch's checker
+        id: base-checker
+        env:
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          base="origin/${GITHUB_BASE_REF:-main}"
-          mkdir -p "$RUNNER_TEMP/base"
+          ref="refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+          base=$(git rev-parse --verify --quiet "${ref}^{commit}" || true)
+          if [ -z "$base" ]; then
+            echo "::error::$ref does not resolve to a commit; not running the check"; exit 1
+          fi
+          # On a pull request the event's base commit must be that branch's tip or behind it (the branch can
+          # move on between the event and this run); anything else fails closed.
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            if [ -z "$EVENT_BASE_SHA" ] || ! git merge-base --is-ancestor "$EVENT_BASE_SHA" "$base"; then
+              echo "::error::$ref ($base) is not the PR's base ($EVENT_BASE_SHA) or ahead of it; not running the check"; exit 1
+            fi
+          fi
+          echo "base_sha=$base" >> "$GITHUB_OUTPUT"
+          echo "base: $ref = $base"
+          rm -rf "$RUNNER_TEMP/base" && mkdir -p "$RUNNER_TEMP/base"
           git archive "$base" tools | tar -x -C "$RUNNER_TEMP/base"
           if [ -f "$RUNNER_TEMP/base/tools/data_merge_check.py" ]; then
-            echo "TOOLS=$RUNNER_TEMP/base/tools" >> "$GITHUB_ENV"
+            tools="$RUNNER_TEMP/base/tools"
             echo "CHECKER=base" >> "$GITHUB_ENV"
           else
             # Bootstrap: the base has no checker yet (the PR that adds it). Run the PR's, never as a merge verdict.
             echo "::warning::The base branch has no tools/data_merge_check.py; running the PR's own checker, verdict capped at REVIEW"
-            echo "TOOLS=$GITHUB_WORKSPACE/tools" >> "$GITHUB_ENV"
+            tools="$GITHUB_WORKSPACE/tools"
             echo "CHECKER=pr" >> "$GITHUB_ENV"
           fi
+          echo "TOOLS=$tools" >> "$GITHUB_ENV"
+          # Every path with its type, mode and link target, then every file's content.
+          h=$(cd "$tools" && { find . -printf '%y %m %p -> %l\n' | LC_ALL=C sort; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
+          echo "tools_sha256=$h" >> "$GITHUB_OUTPUT"
+          echo "checker files hashed: $h"
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
@@ -63,28 +111,22 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Cache Godot
-        id: godot-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.GODOT_DIR }}
-          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
-
-      - name: Download Godot
-        if: steps.godot-cache.outputs.cache-hit != 'true'
-        run: |
-          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
-          mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
-          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
-          unzip -q godot.zip && rm godot.zip
-
-      - name: Locate Godot
-        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
-
       # Defaults only: 200 runs and a fresh build + import (designer 2026-10-17: anything less is INCOMPLETE).
       - name: Data merge check
+        env:
+          TOOLS_SHA256: ${{ steps.base-checker.outputs.tools_sha256 }}
+          BASE_SHA: ${{ steps.base-checker.outputs.base_sha }}
         run: |
-          base="origin/${GITHUB_BASE_REF:-main}"
+          # YOK-202: the checker must be the files hashed right after extraction, byte for byte.
+          now=$(cd "$TOOLS" && { find . -printf '%y %m %p -> %l\n' | LC_ALL=C sort; find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
+          if [ "$now" != "$TOOLS_SHA256" ]; then
+            echo "::error::The checker's files changed after they were extracted (hash $now, expected $TOOLS_SHA256); not running it"
+            exit 1
+          fi
+          base="$BASE_SHA"   # the commit the checker was extracted from, never a short ref
+          if ! printf '%s' "$base" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::No resolved base commit ('$base'); not running the check"; exit 1
+          fi
           set +e
           # -I: the checker imports nothing from the checkout. The PR's game code runs inside this step
           # (harness, suite), so it gets no runner file command: it cannot write the summary, env, path,
