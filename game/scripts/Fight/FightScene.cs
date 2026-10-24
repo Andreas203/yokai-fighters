@@ -101,6 +101,12 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-56: whom P2 (the AI) fights as; its kit loads from data like Ryo's.</summary>
 	public static string Opponent { get; set; } = "kitsune";
 
+	/// <summary>YOK-187: the name the screens show for the foe = the yokai fought, never the stand-in body (<see cref="Opponent"/>):
+	/// the node's <see cref="NodeContext.BindingName"/> ("Oni", "Elder Oni"), else the body's own name (no node).</summary>
+	public string OpponentName => Story.StoryLibrary.DisplayName(Node is { } n && n.Fighter == Opponent ? n.BindingName : Opponent);
+	/// <summary>YOK-187: the yokai (not the body) for the foe's portrait: the node's <see cref="NodeContext.DraftYokai"/>, else <see cref="Opponent"/>.</summary>
+	public string OpponentYokai => Node is { } n && n.Fighter == Opponent ? n.DraftYokai : Opponent;
+
 	/// <summary>
 	/// YOK-90: every elder's twist, from data/twists/ (loaded on first use; a test may set its own). An elder node's
 	/// fight puts its twist on P2, whoever stands in (<see cref="ElderTwists.Apply"/>).
@@ -130,7 +136,7 @@ public partial class FightScene : Node3D
 	{
 		try
 		{
-			var (title, text) = LoadStory().LoseScreen(Story.StoryLibrary.DisplayName(Opponent));
+			var (title, text) = LoadStory().LoseScreen(OpponentName);
 			_hud.SetLoseText(title, text);
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
@@ -215,7 +221,7 @@ public partial class FightScene : Node3D
 		_cameraRig = GetNode<Node3D>("CameraRig"); // YOK-39: scenes/camera_rig.tscn
 		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
-		_hud.ShowOpponent(Opponent); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.ShowOpponent(OpponentYokai, OpponentName); // YOK-77: the HUD's own _Ready ran before the node set the opponent
 		_hud.TitleRequested += () => LeaveForTitle();
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst

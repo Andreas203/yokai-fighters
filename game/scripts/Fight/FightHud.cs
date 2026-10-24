@@ -18,6 +18,7 @@ public partial class FightHud : CanvasLayer
 
 	private string _opponentId = "";
 	private string _opponentName = "";
+	private string? _shownRaw;
 	private TextureRect _portrait = null!, _burstArt = null!;
 	private Label _burstLetter = null!, _temperament = null!;
 
@@ -100,6 +101,8 @@ public partial class FightHud : CanvasLayer
 	public bool TwistStripVisible => _twistStrip.Visible;
 	public string TwistKicker => _twistKicker.Text;
 	public string TwistLine => _twistText.Text;
+	/// <summary>YOK-187: the opponent name the health label shows (upper case), e.g. "ELDER ONI".</summary>
+	public string OpponentLabel => _opponentName;
 
 	private void ShowRun()
 	{
@@ -157,7 +160,7 @@ public partial class FightHud : CanvasLayer
 		if (_lineTwistId != twist.Id || _lineText == null)
 		{
 			_lineTwistId = twist.Id;
-			_lineText = TwistCopy.Label(twist, TwistCopy.Story, Story.StoryLibrary.DisplayName(FightScene.Opponent)).Text;
+			_lineText = TwistCopy.Label(twist, TwistCopy.Story, GetParent() is FightScene f ? f.OpponentName : Story.StoryLibrary.DisplayName(FightScene.Opponent)).Text;
 		}
 		return _lineText;
 	}
@@ -232,7 +235,7 @@ public partial class FightHud : CanvasLayer
 		if (!_ready) return; // before _Ready
 		View ??= new MatchHudView(m);
 		_match = m;
-		ShowOpponent(FightScene.Opponent);
+		if (GetParent() is FightScene host) ShowOpponent(host.OpponentYokai, host.OpponentName); else ShowOpponent(FightScene.Opponent);
 		_temperament.Text = GetParent() is FightScene fight ? fight.Temperament.ToUpperInvariant() : "";
 		for (int i = 0; i < 2; i++)
 		{
@@ -287,11 +290,13 @@ public partial class FightHud : CanvasLayer
 		_ => $"res://assets/generated/ui/{opponent}-portrait.png",
 	};
 
-	public void ShowOpponent(string id)
+	/// <summary>YOK-187: <paramref name="id"/> picks the portrait (the yokai), <paramref name="name"/> the health label ("Elder Oni"); null = <paramref name="id"/>'s own name.</summary>
+	public void ShowOpponent(string id, string? name = null)
 	{
-		if (_opponentId == id) return;
+		if (_opponentId == id && _shownRaw == name) return; // Refresh calls this every frame: rebuild only on a change
 		_opponentId = id;
-		_opponentName = Story.StoryLibrary.DisplayName(id).ToUpperInvariant();
+		_shownRaw = name;
+		_opponentName = (name ?? Story.StoryLibrary.DisplayName(id)).ToUpperInvariant();
 		string path = PortraitPath(id);
 		_portrait.Texture = path.Length > 0 && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
 		_portrait.Visible = _portrait.Texture != null;

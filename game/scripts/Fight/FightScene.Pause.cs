@@ -93,7 +93,7 @@ public partial class FightScene
 	/// </summary>
 	public PauseRunSummary BuildPauseSummary()
 	{
-		string foe = Story.StoryLibrary.DisplayName(Opponent);
+		string foe = OpponentName;
 		var slots = new List<PauseSlotSummary>();
 		foreach (var slot in new[] { SpecialSlot.A, SpecialSlot.B, SpecialSlot.C, SpecialSlot.D })
 			slots.Add(DemoRun[slot] is { } owned
