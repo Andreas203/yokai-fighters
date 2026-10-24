@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Measure a Meshy animation GLB for the clip gate (F2, G4). numpy only.
 
-Usage: python tools/measure_clip.py <clip.glb> [--no-mesh] [--json out.json]
+Usage: python tools/measure_clip_proxies.py <clip.glb> [--no-mesh] [--json out.json]
 
 Resamples the clip to 60 ticks (linear / slerp), runs FK and linear-blend skinning
 and reports: ticks, root drift/sway, planted-foot shift, max joint rotation per tick,
