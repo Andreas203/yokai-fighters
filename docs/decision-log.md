@@ -233,4 +233,16 @@ Build week 2 of 5 (first commit 2026-10-06). Milestones in Linear: W1 ends 10-10
 - **Temperament roll (Y1/Y2, YOK-174):** each yokai node rolls its temperament, seeded per node from the run seed, 50/50 aggressive/patient. A node that names a profile keeps it.
 - **YOK-165 accepted**, with the YOK-176 follow-up.
 - **A late anti-air counts.**
+- **Habit punish window (P6/Y2, YOK-169):** a habit counts as punished by an unblocked Ryo hit while the habit's plan runs, or within the next 3 hits exchanged after it ends. Blocked connects DO count toward the 3; a landed throw counts once; throw breaks and clashes don't. KO damage is tallied in full. Supersedes the plain "next 3 hits" line above. Rules: Y4.
+- **"Exchange ratio" (Y4, R5) means hits:** unblocked hits landed / unblocked hits taken. Written into Y4 without a number. Context: 4.5:1 is the Sparring Partner's derived reference (YOK-154 analysis of the ratio implied by Y4's damage-per-duel targets), not a designer-set target. Harness change: YOK-179.
+- **E23 debug temperament is sticky:** a choice made with F9 or `--temperament=` stays in effect across later nodes until changed.
+- **E22 constants:** `GuardTicks` 10 (how long an AI that opts into `guard_pct` keeps guarding after its own move's recovery; YOK-165; the guard ships off, `DefaultGuardPct` 0). Tier `jump_punish_pct`: apprentice 50, yokai 50, elder 100, Tanuki 100 (absolute chance; a late anti-air counts), recorded in Y4.
+- **G3 balance gate (2026-10-21):** no cuts yet. Fix the batch-3 bugs (YOK-177/178/179), rerun as batch 4 (YOK-185), then decide. The newcomer playtest (YOK-50) calibrates whether the bot or the fights get retuned.
+- **No round timer (C1):** fights go to KO. The harness cap is only a safety limit; stalls are reported separately. No AM needed: the GDD sets no timer, so this fills a gap.
+- **R6:** beating an elder counts as binding its yokai for the shop. Open question removed from rules.md. YOK-178.
+- **Naming:** elders are named "Elder <yokai>" (e.g. "Elder Oni") on the binding card and screens.
+- **Y2 Tanuki habit:** the throw triggers after ONE blocked hit (the first blockstun it sees), not "keeps blocking".
+- **Y2/E22 standing-condition habits:** fire when the condition becomes true, then may re-roll at most once every 60 view ticks while it holds (approved). Listed in E22.
+- **Y2 fired habits always come out,** even if the AI is hit before it can act. Exceptions: a jump answer replacing a standing habit plan (Y4), and the round or fight ending. YOK-177.
+- **AM14 written** for the Tanuki one-blocked-hit habit, because AM4 said "keeps blocking" and an amendment wins over rules.md.
 - **YOK-177 held throws:** fired standing habits always come out (Tanuki throw habit on the first blockstun seen, 60-tick re-arm approved). The held throw jump answer is a slot request under the YOK-177 rule, which changes the Kappa profiles in tier-rate fights; approved.

@@ -1579,4 +1579,20 @@ public static class SaveTests
 			Assert.True(flow.Session is { } s && s.Pool.Unlocked.Contains(id) && Shelved(s, id), "a continued run reads the unlocks too");
 		});
 	});
+
+	/// <summary>YOK-178, M5: Continue into a node brings back the same draft, from the yokai beaten (A7).</summary>
+	[Test]
+	public static void YOK178_ContinueIntoANode_OffersTheSameCards()
+	{
+		var pool = FightScene.LoadAbilityPool();
+		foreach (var (walk, node) in new[] { (new[] { "r1-apprentice" }, "r2-oni"), (DraftFromBeatenYokaiTests.ToR5, "r5-elder-oni"), (new[] { "r1-apprentice", "r2-kappa" }, "r3-kappa") })
+		{
+			var live = DraftFromBeatenYokaiTests.At(pool, walk, node, 29);
+			var back = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(live)))).Data.Run!.Restore(pool, DefaultMap(), Table());
+			static string Ids(RunSession s) => string.Join(",", s.WinFight(700)!.Offer.Cards.Select(c => $"{c.Kind}:{c.AbilityId}:{c.Source}"));
+			string a = Ids(live), b = Ids(back);
+			Assert.Equal(a, b, $"{node}: the entry save brings back the same offer");
+			Assert.True(a.Contains(":" + Table().Resolve(DefaultMap().Node(node)).Context.DraftYokai), $"{node}: {a}");
+		}
+	}
 }

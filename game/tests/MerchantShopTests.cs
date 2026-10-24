@@ -26,7 +26,7 @@ public static partial class MerchantShopTests
 	static readonly string[] Walk = { "r1-apprentice", "r2-kitsune", "r3-oni" };
 	const string Merchant4 = "r4-merchant";
 
-	static void OnFixtures(Action body)
+	internal static void OnFixtures(Action body)
 	{
 		var saved = FightScene.Sources;
 		var savedRun = FightScene.Run;
@@ -59,7 +59,7 @@ public static partial class MerchantShopTests
 	}
 
 	/// <summary>Fixture pool + kappa commons (D, C), oni common (D), oni rare (D), kappa locked common (D), kitsune common (D).</summary>
-	static AbilityPool ShopPool()
+	internal static AbilityPool ShopPool()
 	{
 		var fx = FightScene.LoadAbilityPool();
 		var extra = new[]

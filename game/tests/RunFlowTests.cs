@@ -151,7 +151,7 @@ public static class RunFlowTests
 			Assert.Equal(node.Binds && !last, draft != null, $"{id}: a draft after a bound duel (A7), none on a stand-in stop or the last node");
 			if (draft != null)
 			{
-				Assert.True(draft.Offer.Yokai == node.Fighter && draft.Offer.Cards.Count > 0, $"{id}: cards from the yokai beaten");
+				Assert.True(draft.Offer.Yokai == node.DraftYokai && draft.Offer.Cards.Count > 0, $"{id}: cards from the yokai beaten, not the stand-in body (A7, YOK-178)");
 				Assert.True(!session.CompleteNode().Ok && session.Node != null, $"{id}: not completed before the pick");
 				var card = draft.Offer.Cards[0];
 				Assert.True(draft.Pick(0, card.Targets.Count > 0 ? card.Targets[0].Slot : null).Ok, $"{id}: picked {card.AbilityId}");
