@@ -250,6 +250,10 @@ public static class ClipRetimeTests
 			{
 				model.Apply(new PoseSample(PoseKind.Attack, clipId, f, null, 0, 1f), cat, 1, f);
 				PoseIsTheTakeAt(model, anim, ticks[f] / ClipInfo.RawTicksPerSecond, $"{label} frame {f} again");
+				var (name, time) = model.Playhead;
+				if (info.TimeAt(f) >= length - 1e-6 && string.IsNullOrEmpty(name)) continue; // the end seek, as above
+				Assert.Equal(anim, name, $"{label} frame {f} again: playing the clip");
+				Assert.True(Math.Abs(time * ClipInfo.RawTicksPerSecond - ticks[f]) < 1e-6, $"{label} frame {f} again: same playhead {time * ClipInfo.RawTicksPerSecond} = {ticks[f]}");
 			}
 			return ticks;
 		}

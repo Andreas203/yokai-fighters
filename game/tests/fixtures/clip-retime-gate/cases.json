@@ -69,6 +69,10 @@
       "retime": [{ "frames": [1, 33], "ticks": [22, 54], "speed": 2 }] },
     { "name": "bad-note-not-a-string", "frames_total": 33, "trim": [22, 102], "accept": false,
       "retime": [{ "frames": [1, 33], "ticks": [22, 54], "note": 3 }] },
+    { "name": "duplicate-note", "frames_total": 33, "trim": [22, 102], "accept": true,
+      "retime": [{ "frames": [1, 33], "ticks": [22, 54], "note": 3, "note": "x" }] },
+    { "name": "bad-duplicate-note-last-not-a-string", "frames_total": 33, "trim": [22, 102], "accept": false,
+      "retime": [{ "frames": [1, 33], "ticks": [22, 54], "note": "x", "note": 3 }] },
     { "name": "bad-segment-not-an-object", "frames_total": 33, "trim": [22, 102], "accept": false,
       "retime": [[1, 33, 22, 54]] }
   ]
