@@ -204,11 +204,11 @@ public static class BotLevelsProbes
 	public static void Summary_ZeroDamageFights_RatioIsNull_NoDivisionByZero()
 	{
 		using (var d = LevelDoc(0, 0))
-			Assert.Equal(JsonValueKind.Null, Lvl(d).GetProperty("exchange_ratio").ValueKind, "0/0 is null, not NaN or 0");
+			Assert.Equal(JsonValueKind.Null, Lvl(d).GetProperty("damage_ratio").ValueKind, "0/0 is null, not NaN or 0");
 		using (var d = LevelDoc(50, 0))
-			Assert.Equal(JsonValueKind.Null, Lvl(d).GetProperty("exchange_ratio").ValueKind, "x/0 is null");
+			Assert.Equal(JsonValueKind.Null, Lvl(d).GetProperty("damage_ratio").ValueKind, "x/0 is null");
 		using (var d = LevelDoc(0, 40))
-			Assert.Equal(0.0, Lvl(d).GetProperty("exchange_ratio").GetDouble(), "0/40 is 0");
+			Assert.Equal(0.0, Lvl(d).GetProperty("damage_ratio").GetDouble(), "0/40 is 0");
 	}
 
 	[Test]
@@ -216,8 +216,10 @@ public static class BotLevelsProbes
 	{
 		using var d = LevelDoc(3, 8); // 0.375
 		var s = Lvl(d);
-		Assert.Equal(0.38, s.GetProperty("exchange_ratio").GetDouble(), "3/8 = 0.375 -> 0.38");
-		Assert.True(!s.TryGetProperty("hit_exchange_ratio", out _), "no hit log: no hit_exchange_ratio");
+		Assert.Equal(0.38, s.GetProperty("damage_ratio").GetDouble(), "3/8 = 0.375 -> 0.38");
+		// YOK-179, designer 2026-10-21: exchange_ratio counts hits, so with no hit log it is null; hit_exchange_ratio is gone.
+		Assert.Equal(JsonValueKind.Null, s.GetProperty("exchange_ratio").ValueKind, "no hit log: exchange_ratio (hits) is null");
+		Assert.True(!s.TryGetProperty("hit_exchange_ratio", out _), "hit_exchange_ratio is gone");
 		Assert.Equal(3L, s.GetProperty("damage_dealt").GetInt64(), "damage dealt");
 		Assert.Equal(8L, s.GetProperty("damage_taken").GetInt64(), "damage taken");
 		Assert.Equal(1, s.GetProperty("duels").GetInt32(), "one duel");

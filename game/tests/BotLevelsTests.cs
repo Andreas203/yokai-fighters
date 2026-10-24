@@ -179,11 +179,13 @@ public static class BotLevelsTests
 		{
 			var s = lv.Value;
 			Assert.Equal(2, s.GetProperty("runs").GetInt32(), $"{lv.Name}: 2 of the 6 runs");
-			foreach (string k in new[] { "reach_tanuki_pct", "beat_tanuki_pct_of_reached", "run_win_pct", "duel_win_pct", "exchange_ratio", "hit_exchange_ratio" })
+			foreach (string k in new[] { "reach_tanuki_pct", "beat_tanuki_pct_of_reached", "run_win_pct", "duel_win_pct", "exchange_ratio", "damage_ratio" })
 				Assert.True(s.TryGetProperty(k, out _), $"{lv.Name}: {k}");
 			long dealt = s.GetProperty("damage_dealt").GetInt64(), taken = s.GetProperty("damage_taken").GetInt64();
-			Assert.True(taken > 0 && Math.Abs(s.GetProperty("exchange_ratio").GetDouble() - Math.Round((double)dealt / taken, 2)) < 1e-9,
-				$"{lv.Name}: exchange ratio = damage dealt / taken");
+			Assert.True(taken > 0 && Math.Abs(s.GetProperty("damage_ratio").GetDouble() - Math.Round((double)dealt / taken, 2)) < 1e-9,
+				$"{lv.Name}: damage ratio = damage dealt / taken");
+			Assert.True(s.GetProperty("exchange_ratio").ValueKind == System.Text.Json.JsonValueKind.Number,
+				$"{lv.Name}: exchange ratio (hits, designer 2026-10-21) is there with the hit log on");
 		}
 	}
 
