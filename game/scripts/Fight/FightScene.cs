@@ -238,6 +238,7 @@ public partial class FightScene : Node3D
 	public override void _ExitTree()
 	{
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		DetachHitSparks(); // YOK-198
 		MusicPlayer.Instance?.PlayMenuMusic();
 	}
 

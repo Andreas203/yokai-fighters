@@ -256,7 +256,7 @@ public sealed partial class Match
 			if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Projectile) == true) continue;
 			if (!HurtContact(def, p.WorldBox(), out var at)) continue;
 			if (Reflects(1 - p.Owner, p.Repeat)) { ReflectProjectile(p); continue; } // YOK-90: turned around, no hit
-			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p, reflected: p.Reflected, contact: at);
+			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, at, p, reflected: p.Reflected);
 			p.HitsLeft--;
 			any = true;
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(p.Owner, p.Move.Id,

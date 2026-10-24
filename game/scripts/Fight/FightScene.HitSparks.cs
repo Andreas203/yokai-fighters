@@ -7,8 +7,8 @@ namespace YokaiFighters.Fight;
 /// <summary>
 /// YOK-198 partial: hit sparks (V5, V8) and the frame-timed hit-sound hook (V6). Presentation only: the scene
 /// listens to <see cref="Match.Impact"/>, spawns a spark and raises one <see cref="HitCue"/> per impact; nothing here
-/// is read by the sim, the AI, replays or the harness. Hooks elsewhere: <c>SetUpHitSparks()</c> in <c>_Ready</c> and
-/// <c>RenderHitSparks()</c> in <c>Render</c>. A replaced match (rematch, next node) is picked up on its first render
+/// is read by the sim, the AI, replays or the harness. Hooks elsewhere: <c>SetUpHitSparks()</c> in <c>_Ready</c>,
+/// <c>RenderHitSparks()</c> in <c>Render</c> and <c>DetachHitSparks()</c> in <c>_ExitTree</c>. A replaced match (rematch, next node) is picked up on its first render
 /// (<c>ReplaceMatch</c> and <c>_Ready</c> both render before any tick), and <see cref="HitSparks"/> drops its sparks
 /// when the tick goes back (a reset).
 /// </summary>
@@ -53,6 +53,13 @@ public partial class FightScene
 		var cue = Sparks.OnImpact(m, e);
 		LastHitCue = cue;
 		HitCues.Play(cue);
+	}
+
+	/// <summary>Stops listening to the match (from <c>_ExitTree</c>): a match that outlives the scene never calls back into it.</summary>
+	private void DetachHitSparks()
+	{
+		if (_sparkMatch != null) _sparkMatch.Impact -= OnImpactSpark;
+		_sparkMatch = null;
 	}
 
 	private void RenderHitSparks()

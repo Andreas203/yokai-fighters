@@ -61,8 +61,140 @@ public static class HitSparkTests
 		}
 	}
 
+	// --- ImpactEvent.At on every other hit path (throw, projectile, aftershock, reflect) --------------------
+
+	const int S = SimConfig.Scale;
+	static SpecialData[] Starters() => SpecialLoader.LoadDirectory(ProjectSettings.GlobalizePath(FightScene.FixtureSpecialsDir));
+	static MoveData ThrowMove() => MoveLoader.LoadDirectory(ProjectSettings.GlobalizePath(FightScene.FixtureThrowsDir)).Single();
+
+	/// <summary>An impact with both fighters' stance hurtboxes and move state as they stood before the tick that raised it.</summary>
+	sealed record Caught(ImpactEvent E, (int x0, int y0, int x1, int y1)[] Stance, bool[] InMove);
+
+	/// <summary>
+	/// Steps ticks 1..n, snapshotting both stance boxes before each step. A fighter standing still with no move does not
+	/// move within a tick before hits resolve, so its pre-step box is where it stood when the hit was found, before the push.
+	/// </summary>
+	static List<Caught> Capture(Match m, int n, Func<int, FighterInput> p1, Func<int, FighterInput>? p2 = null)
+	{
+		var got = new List<Caught>();
+		var stance = new (int x0, int y0, int x1, int y1)[2];
+		var inMove = new bool[2];
+		m.Impact += (_, e) => got.Add(new Caught(e, ((int, int, int, int)[])stance.Clone(), (bool[])inMove.Clone()));
+		for (int t = 1; t <= n; t++)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				stance[i] = Match.WorldBox(m.Fighters[i], m.BodyHurtbox(m.Fighters[i]));
+				inMove[i] = m.Fighters[i].CurrentMove != null;
+			}
+			m.Step(p1(t), p2?.Invoke(t) ?? Idle);
+		}
+		return got;
+	}
+
+	/// <summary>At is set (not the world origin) and inside fighter <paramref name="who"/>'s stance box before the push.</summary>
+	static void AssertInStance(Caught c, int who, string what)
+	{
+		var (x, y) = c.E.At;
+		var b = c.Stance[who];
+		Assert.True(c.E.At != default, $"{what}: At is set");
+		Assert.True(!c.InMove[who], $"{what}: fighter {who} was in no move, so its stance box is its hurtbox");
+		Assert.True(x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1, $"{what}: At ({x},{y}) inside fighter {who}'s box {b} before the push");
+	}
+
 	[Test]
-	public static void Sparks_NeverChangeTheSim()
+	public static void At_Throw_IsTheDefendersBodyCentre()
+	{
+		var moves = Normals().Append(ThrowMove()).ToArray();
+		var m = new Match(null, moves, moves);
+		m.P1.X = -m.Config.BodyWidth / 2;
+		m.P2.X = m.Config.BodyWidth / 2;
+		const InputBits Throw = InputBits.LightPunch | InputBits.LightKick;
+		var got = Capture(m, 40, t => t == 1 ? In(Throw) : Idle);
+		Assert.Equal(1, got.Count, "one impact: the landed throw");
+		Assert.True(got[0].E.MoveId == ThrowMove().Id, "it is the throw");
+		AssertInStance(got[0], 1, "throw");
+		var b = got[0].Stance[1];
+		Assert.Equal(((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2), got[0].E.At, "throw: the stance box's centre");
+	}
+
+	[Test]
+	public static void At_Projectile_IsInsideTheDefendersHurtbox()
+	{
+		var n = Normals();
+		var m = new Match(null, n, n);
+		foreach (var f in m.Fighters) FightScene.EquipStarters(f, Starters());
+		m.P1.X = -300 * S;
+		m.P2.X = 300 * S;
+		var got = Capture(m, 80, t => t == 1 ? FighterInput.Special(SpecialSlot.A) : Idle);
+		Assert.Equal(1, got.Count, "one impact: the wave");
+		Assert.True(m.Projectiles.Count == 0, "the projectile hit and despawned");
+		AssertInStance(got[0], 1, "projectile");
+		Assert.True(got[0].E.At.X > 0, "on the defender's side of the stage, far from the firer");
+	}
+
+	[Test]
+	public static void At_Aftershock_IsInsideTheDefendersHurtbox()
+	{
+		var q = PushBoxAftershockFixture();
+		var cfg = SimConfig.Default with { HitstopEnabled = false };
+		var m = new Match(cfg, new[] { q }, new[] { q });
+		m.P1.X = -60 * S;
+		m.P2.X = 60 * S;
+		var got = Capture(m, 60, t => t == 1 ? FighterInput.Attack(0) : Idle);
+		Assert.Equal(2, got.Count, "the quake and its aftershock");
+		AssertInStance(got[0], 1, "quake");
+		AssertInStance(got[1], 1, "aftershock (the defender was pushed by the first quake; its box is taken the tick before)");
+	}
+
+	/// <summary>The Lv 3 test quake (TEST FIXTURE numbers, same as PushBoxAftershockTests): a low pound with a 30-frame aftershock.</summary>
+	static MoveData PushBoxAftershockFixture() => SpecialLoader.Parse("""
+	{
+	  "kind": "special", "id": "test-quake", "name": "TEST FIXTURE", "source": "test-quaker", "starter": false,
+	  "rarity": "rare", "locked": true, "clip": "test-quake", "rules": ["A5"],
+	  "input": { "kata": { "slot": "D", "motion": "22" }, "kihon": { "slot": "D", "direction": "down" } },
+	  "card": { "plain": "TEST FIXTURE", "frames": "9 / 3 / 20" },
+	  "levels": {
+	    "1": { "frame_data": {
+	      "startup": 9, "active": 3, "recovery": 20, "damage": 50, "hitstun": 20, "blockstun": 15,
+	      "hitboxes": [ { "frames": [10, 12], "rect": { "x": 0, "y": 0, "w": 300, "h": 110 } } ],
+	      "hurtboxes": [ { "frames": [1, 32], "rect": { "x": -45, "y": 0, "w": 90, "h": 320 } } ],
+	      "properties": { "low": true } } },
+	    "2": { "status": "proposed", "tuning": { "target": "recovery", "op": "add", "value": -2 } },
+	    "3": { "evolution": { "id": "test-aftershock", "name": "TEST FIXTURE", "preset": "test-aftershock",
+	      "changes": [ { "target": "properties.aftershock_delay", "op": "set", "value": 30 } ] } }
+	  }
+	}
+	""").Build(3, false);
+
+	[Test]
+	public static void At_ReflectedStrike_IsWhereTheElderCaughtIt()
+	{
+		var n = Normals();
+		var m = new Match(null, n, n);
+		foreach (var f in m.Fighters) FightScene.EquipStarters(f, Starters());
+		m.P2.Twist = new ElderTwist("t-reflect", "nine-tailed-kitsune", TwistEffect.ReflectRepeatedSpecial, 2, 0, "twist.t", null, null, null);
+		var talisman = FighterInput.Special(SpecialSlot.B);
+		m.P1.X = -60 * S;
+		m.P2.X = 60 * S;
+		m.Step(talisman, Idle);
+		for (int t = 0; t < 150; t++) m.Step(Idle, Idle);
+		m.P1.X = -60 * S;
+		m.P2.X = 60 * S;
+		var got = Capture(m, 30, t => t == 1 ? talisman : Idle);
+		Assert.Equal(1, got.Count, "one impact: the reflected talisman");
+		Assert.Equal(1, got[0].E.Attacker, "raised as the elder's hit");
+		// The spark is where Ryo's talisman met the elder's body (the overlap the reflect was caught at), not on Ryo.
+		AssertInStance(got[0], 1, "reflect");
+	}
+
+	/// <summary>
+	/// A match with a spark listener and one without, both on this branch, stay hash-identical every tick: listening
+	/// never feeds back. (That the YOK-198 sim edit itself is payload-only is shown by the frame-exact suites, e.g.
+	/// ReplayTests, MeterBurstHitstopTests, ThrowTests, passing unchanged; the repo keeps no golden hashes from main.)
+	/// </summary>
+	[Test]
+	public static void Sparks_ListeningLeavesTheMatchUnchanged()
 	{
 		var n = Normals();
 		int lp = SlotOf(n, InputBits.LightPunch), hp = SlotOf(n, InputBits.HeavyPunch);

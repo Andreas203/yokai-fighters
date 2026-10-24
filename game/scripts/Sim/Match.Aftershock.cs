@@ -83,7 +83,7 @@ public sealed partial class Match
 			var a = Aftershocks[k];
 			if (!a.Live || !AftershockConnects(a, out var at)) continue;
 			Fighter def = Fighters[1 - a.Owner];
-			bool blocked = ApplyHit(a.Owner, a.Move, a.ReplayFrame, def.CurrentMove != null, remoteDir: a.Dir, contact: at);
+			bool blocked = ApplyHit(a.Owner, a.Move, a.ReplayFrame, def.CurrentMove != null, at, remoteDir: a.Dir);
 			Aftershocks.RemoveAt(k--);
 			any = true;
 			AftershockChanged?.Invoke(this, new AftershockEvent(a.Owner, a.Move.Id,

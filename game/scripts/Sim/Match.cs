@@ -311,8 +311,8 @@ public sealed partial class Match
 		MoveData? m0 = P1.CurrentMove, m1 = P2.CurrentMove;
 		int f0 = P1.MoveFrame, f1 = P2.MoveFrame;
 		// YOK-90: a repeated special the elder reflects lands on its user instead.
-		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0, at0); else ApplyHit(0, m0!, f0, m1 != null, contact: at0); }
-		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1, at1); else ApplyHit(1, m1!, f1, m0 != null, contact: at1); }
+		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0, at0); else ApplyHit(0, m0!, f0, m1 != null, at0); }
+		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1, at1); else ApplyHit(1, m1!, f1, m0 != null, at1); }
 		ResolvePositions(stackalloc int[2]);
 	}
 
@@ -385,8 +385,8 @@ public sealed partial class Match
 	/// the defender's own move turned back on it; like a projectile, the elder's own move is untouched and the push
 	/// is away from the elder.</param>
 	/// <param name="remoteDir">YOK-136: non-zero = the hit came from an aftershock facing this way; handled like a projectile's.</param>
-	/// <param name="contact">YOK-198: where the boxes met, before any push; passed on in <see cref="ImpactEvent.At"/> only.</param>
-	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null, bool reflected = false, int remoteDir = 0, (int X, int Y) contact = default)
+	/// <param name="contact">YOK-198: where the boxes met, before any push; passed on in <see cref="ImpactEvent.At"/> only. Required, so a new hit path cannot leave it at the world origin.</param>
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, (int X, int Y) contact, Projectile? projectile = null, bool reflected = false, int remoteDir = 0)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching

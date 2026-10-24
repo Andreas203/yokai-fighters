@@ -55,7 +55,7 @@ public sealed partial class Match
 	{
 		Fighters[attIndex].MoveConnected = true;
 		TwistTriggered?.Invoke(this, new TwistEvent(1 - attIndex, TwistEffect.ReflectRepeatedSpecial, m.Id));
-		ApplyHit(1 - attIndex, m, frame, defenderWasAttacking: false, projectile: null, reflected: true, contact: at);
+		ApplyHit(1 - attIndex, m, frame, defenderWasAttacking: false, at, projectile: null, reflected: true);
 	}
 
 	/// <summary>Reflect, projectile: it turns around and is the elder's from now on (it can hit or be blocked by its firer).</summary>
