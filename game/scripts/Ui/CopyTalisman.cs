@@ -101,11 +101,6 @@ public partial class CopyTalisman : Control
 	}
 
 	/// <summary>
-	/// The name at <see cref="NameSize"/>, always. Spaces and hyphens wrap it (two lines). Only when a word is wider than
-	/// the slot, or the name needs more than two lines, is the text rewritten: the word breaks with a hyphen, and a name
-	/// still too long ends in an ellipsis. Names that fit keep their text unchanged.
-	/// </summary>
-	/// <summary>
 	/// YOK-162: the offsets the name may be cut at: 0, the start of every text element (grapheme cluster) and
 	/// <c>s.Length</c>. A cut anywhere else hands Godot half a surrogate pair, and Godot 4.7.2 turns a lone surrogate
 	/// from C# into a string with garbage code points ("Invalid unicode codepoint (ffffffff)", then
@@ -119,6 +114,11 @@ public partial class CopyTalisman : Control
 		return cuts.ToArray();
 	}
 
+	/// <summary>
+	/// The name at <see cref="NameSize"/>, always. Spaces and hyphens wrap it (two lines). Only when a word is wider than
+	/// the slot, or the name needs more than two lines, is the text rewritten: the word breaks with a hyphen, and a name
+	/// still too long ends in an ellipsis. Names that fit keep their text unchanged.
+	/// </summary>
 	private void FitName()
 	{
 		_name.AddThemeFontSizeOverride("font_size", NameSize);
@@ -141,7 +141,7 @@ public partial class CopyTalisman : Control
 			while (width > 0 && (cuts = Cuts(t)).Length > 2 && W(t) > width) // a single word wider than the slot: break it with a hyphen
 			{
 				rewrite = true;
-				int k = cuts.Length - 2; // text elements kept on this line: as many as fit, at least two
+				int k = cuts.Length - 2; // text elements kept on this line: as many as fit, at least two, unless the word has only two
 				while (k > 2 && W(t[..cuts[k]] + "-") > width) k--;
 				lines.Add(t[..cuts[k]] + "-");
 				t = t[cuts[k]..];
