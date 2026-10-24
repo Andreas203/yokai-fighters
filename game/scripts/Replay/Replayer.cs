@@ -241,7 +241,8 @@ public static class Replayer
 		if (a.AggressionBonus < 0 || a.AggressionBonus > TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin)
 			throw new ReplaySetupException($"AI aggression bonus {a.AggressionBonus} is outside 0-{TanukiPressure.MaxWins * TanukiPressure.AggressionPerWin}");
 		if (a.GuardPct < 0 || a.GuardPct > 100) throw new ReplaySetupException($"AI guard {a.GuardPct} is outside 0-100");
-		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus, a.GuardPct); // YOK-165: absent = 0, no guard
+		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus, a.GuardPct, // YOK-165: absent = 0, no guard
+			a.StandingHabits); // YOK-177: absent = a recording from before standing-trigger habits rolled
 	}
 }
 

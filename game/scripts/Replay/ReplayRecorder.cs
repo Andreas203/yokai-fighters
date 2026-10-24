@@ -45,6 +45,7 @@ public sealed class ReplayRecorder
 		FightTier = ai.Tier == AiFightTier.Standard ? null : ai.Tier.ToString().ToLowerInvariant(),
 		AggressionBonus = ai.AggressionBonus,
 		GuardPct = ai.GuardPct, // YOK-165
+		StandingHabits = ai.StandingHabits, // YOK-177
 	};
 
 	static FighterSetup Capture(Fighter f)

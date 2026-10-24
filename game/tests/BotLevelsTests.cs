@@ -65,6 +65,12 @@ public static class BotLevelsTests
 		var file = Hashes(RunHarness.PlayBatch(legacy, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));
 		Assert.Equal(string.Join(" ", want), string.Join(" ", file), "the base file's batch (pinned)");
 		Assert.Equal(string.Join(" ", want), string.Join(" ", level), "the newcomer level's batch is the same runs");
+
+		// YOK-177: with standing-trigger habits on (the apprentice's at_close_range habit rolls), new pins.
+		var wantOn = new[] { "cf6713769fe717d7", "f18751e91e881a0e", "9e001f30a06b1cb0" };
+		var on = legacy with { StandingHabits = true };
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3))), "the base file's batch with standing habits (pinned)");
+		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, Levels["newcomer"], 1, 3))), "the newcomer level's, the same");
 	}
 
 	[Test]
