@@ -655,7 +655,14 @@ public static class SaveProbes
 			files++;
 			string t = File.ReadAllText(f);
 			bool inMemorySave = name == "MerchantShopSaveTests.cs" || name == "MerchantShopSaveProbes.cs";
-			if (inMemorySave)
+			// YOK-204: the practice probes (YOK-197) write a SaveStore under a temp dir to prove practice never touches the save,
+			// so they may name SaveStore, but never the player's path nor the current scene.
+			bool tempPathSave = name == "PracticeBreakerProbes.cs";
+			if (tempPathSave)
+			{
+				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("\"save.json\""), name + " reaches the player's save path");
+			}
+			else if (inMemorySave)
 			{
 				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json") && !t.Contains("new SaveStore(") && !t.Contains("GameFlow") && !t.Contains("SaveStore.FileName"), name + " reaches a save file or the player's path");
 			}
