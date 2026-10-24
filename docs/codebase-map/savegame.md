@@ -1,0 +1,11 @@
+# SaveGame: the save file
+
+`game/scripts/SaveGame/`, namespace `YokaiFighters.SaveGame`. The run in progress, unlocks and story progress (M4) in `user://save.json` (dev mode: `save.dev.json`). Pure C#, no clock, no randomness: the same data writes the same bytes. The sim never reads it (`Sim/`, `Ai/`, `Replay/` are test-scanned). `Flow/GameFlow.cs` is the only caller; save points are node boundaries only (M5, AM3): merchant and dojo choices and trials are never saved. Only `SaveTests`/`SaveProbes` may name the store. Index: [README.md](README.md).
+
+| File | What it is and its public surface |
+|---|---|
+| `SaveGame/SaveData.cs` | Immutable `SaveData`: `Run` (`RunSave?`), `Unlocks` (award order, M1), `Story` (`StoryProgress`: flags `Seen`/`Has`/`With`, `EldersMet`/`HasMetElder`), `CarryOver` (M3), `TanukiWins` (Y5); `WithRun`, `WithUnlock`, `WithStory`, `WithElderMet`, `WithCarryOver`, `WithTanukiWin()`. `RunSave(Seed, MapId, Visited, Current, Health, Slots)` + `MapFile`, `MapFingerprint`, `FirstMeeting`, `NodePaid`, `OffRoute`; `SlotSave(Slot, Special, Level, Modifier, Levelled, Borrowed, ModifierBorrowed)`. |
+| (cont.) | `RunSave.Capture(session, mapFile)` (refused when over or an offer is open), `Restore(pool, graph, scenes, notes, allowOffRoute)` → an equal `RunSession` or `FormatException` with the reason. `IsMapFileName(name)`. |
+| `SaveGame/SaveStore.cs` | Path injected. JSON `CurrentVersion` 7 (v2 coins + copy lock, v3 borrowed, v4 `node_paid`, v5 `elders_met`/`first_meeting`, v6 `carry_over`, v7 `tanuki_wins`). `Load()` never throws → `SaveLoad(Data, Status, Problems)`; run, unlocks and story read separately (a broken run is dropped alone). A non-whole version is `NewerVersion`. `Save(data)` = flushed temp + rename. **Never destroys a file it could not fully read**: the first write after a lossy load backs it up to a fresh `.bak` name; `WriteBlocked` after a refused read. |
+| (cont.) | **Adding run state**: a defaulted property on `RunSave`, read in `SaveStore.Run`, written in `Serialize`, and `CurrentVersion` raised. Tests `SaveTests`. |
+| `SaveGame/ElderMeetings.cs` | Y3, M4, M5: `ElderOf(node)` (from `MapNodeData.Elder`, no hard-coded ids), `Enter(saved, node, out first)` (node-entered save point marks the elder met), `Resume(saved, session, out first)` (Continue into a node). Not in any `StateHash`. |

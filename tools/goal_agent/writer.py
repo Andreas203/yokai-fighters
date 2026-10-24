@@ -17,7 +17,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-MAP_FILE = "docs/codebase-map.md"
+MAP_FILE = "docs/codebase-map/goal-agent.md"
 MAP_HEADING = "## Built by the goal agent (`tools/goal_agent/`)"
 MAP_INTRO = ("Features written by the goal agent and accepted by its gates (build, tests, re-scan, code-critic, "
              "test-breaker). Each still needs the designer's review before it merges.")

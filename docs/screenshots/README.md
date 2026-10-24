@@ -15,4 +15,4 @@ The designs these screens are being rebuilt towards are in `docs/design/screens/
 ## Rules
 - A new capture of a screen overwrites its file in `current/`. No per-ticket folders.
 - Before/after evidence for a ticket goes in the PR, not in the repo.
-- Capture tools and their arguments are listed in `docs/codebase-map.md`.
+- Capture tools and their arguments are listed in `docs/codebase-map/tests.md`.
