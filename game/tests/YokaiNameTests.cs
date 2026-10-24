@@ -28,12 +28,12 @@ public static class YokaiNameTests
 		scene.Session = jump.Session;
 		scene.FirstMeeting = true;
 		var savedStory = TwistCopy.Story;
-		var twist = FightScene.Twists.For(yokai == "oni" && elder ? "elder-oni" : yokai, elder);
+		var twist = FightScene.Twists.For(elder ? DevJump.ElderOf(yokai)?.ElderYokai : yokai, elder);
 		if (twist != null) TwistCopy.Story = LibFor(twist);
 		runner.AddChild(scene);
 		try
 		{
-			Assert.Equal("kitsune", FightScene.Opponent, "the body is still the Kitsune stand-in");
+			if (yokai != "tanuki") Assert.Equal("kitsune", FightScene.Opponent, "the body is still the Kitsune stand-in");
 			body(scene, scene.GetNode<FightHud>("Hud"));
 		}
 		finally { TwistCopy.Story = savedStory; scene.QueueFree(); }
@@ -49,12 +49,35 @@ public static class YokaiNameTests
 			var pause = s.BuildPauseSummary();
 			Assert.True(pause.Position.EndsWith("vs " + name), "pause line: " + pause.Position);
 			Assert.Equal(name.ToUpperInvariant(), pause.Opponent.Name.ToUpperInvariant(), "pause health name");
-			Assert.True(!hud.LoseText.Contains("Kitsune") || hud.LoseText.Contains(name), "lose screen: " + hud.LoseText);
+			var (_, card) = FightScene.LoadStory().LoseScreen(name); // what ApplyLoseCard (FightScene._Ready) fills in
+			Assert.True(card.Length > 0 && hud.LoseText == card, "lose screen holds the card filled with the yokai: " + hud.LoseText);
+			Assert.True(hud.LoseText.Contains(name), "lose screen names " + name + ": " + hud.LoseText);
 		});
 	}
 
 	[Test] public static void OniNode_ShowsOni(Node runner) => Check(runner, "oni", false, "Oni");
 	[Test] public static void ElderNode_ShowsElderOni(Node runner) => Check(runner, "oni", true, "Elder Oni");
+
+	[Test] public static void TanukiNode_ShowsTanuki(Node runner) => Check(runner, "tanuki", false, "Tanuki");
+	/// <summary>Whatever BindingName yields today for the Kitsune's elder (designer and habit-writer own the string).</summary>
+	[Test] public static void KitsuneElder_ShowsItsBindingName(Node runner) =>
+		Check(runner, "kitsune", true, StoryLibrary.DisplayName(DevJump.ElderOf("kitsune")!.ElderYokai));
+	[Test]
+	public static void ApprenticeNode_ShowsKitsune(Node runner)
+	{
+		var saved = (FightScene.Sources, FightScene.Run);
+		FightScene.Sources = FightScene.FixtureSources; FightScene.Run = null;
+		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		scene.ExternalDrive = true;
+		runner.AddChild(scene);
+		try
+		{
+			Assert.Equal("Kitsune", scene.OpponentName, "apprentice");
+			Assert.Equal("KITSUNE", scene.GetNode<FightHud>("Hud").OpponentLabel, "HUD");
+			Assert.True(scene.GetNode<FightHud>("Hud").LoseText.Contains("Kitsune"), "lose text");
+		}
+		finally { scene.QueueFree(); (FightScene.Sources, FightScene.Run) = saved; }
+	}
 
 	[Test]
 	public static void ElderNode_TwistSurfacesNameTheElder(Node runner) => WithNode(runner, "oni", true, (s, hud) =>

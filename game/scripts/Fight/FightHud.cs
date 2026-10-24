@@ -18,6 +18,7 @@ public partial class FightHud : CanvasLayer
 
 	private string _opponentId = "";
 	private string _opponentName = "";
+	private string? _shownRaw;
 	private TextureRect _portrait = null!, _burstArt = null!;
 	private Label _burstLetter = null!, _temperament = null!;
 
@@ -292,10 +293,10 @@ public partial class FightHud : CanvasLayer
 	/// <summary>YOK-187: <paramref name="id"/> picks the portrait (the yokai), <paramref name="name"/> the health label ("Elder Oni"); null = <paramref name="id"/>'s own name.</summary>
 	public void ShowOpponent(string id, string? name = null)
 	{
-		string shown = (name ?? Story.StoryLibrary.DisplayName(id)).ToUpperInvariant();
-		if (_opponentId == id && _opponentName == shown) return;
+		if (_opponentId == id && _shownRaw == name) return; // Refresh calls this every frame: rebuild only on a change
 		_opponentId = id;
-		_opponentName = shown;
+		_shownRaw = name;
+		_opponentName = (name ?? Story.StoryLibrary.DisplayName(id)).ToUpperInvariant();
 		string path = PortraitPath(id);
 		_portrait.Texture = path.Length > 0 && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
 		_portrait.Visible = _portrait.Texture != null;
