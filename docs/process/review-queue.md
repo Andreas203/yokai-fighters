@@ -10,7 +10,7 @@ The designer reviews code once a day, not per ticket. This page says where finis
 A ticket is **in the review queue** when all of these hold:
 1. Status is In Progress.
 2. The branch `YOK-<n>-<brief-name>` is pushed and its PR is open and linked on the ticket.
-3. Build and tests are green, Code Critic is PASS and Test Breaker is PASS (the goal agent applies the same two gates itself).
+3. Build and tests are green, Code Critic is PASS and Test Breaker is PASS (the goal agent applies the same two gates itself). "Build and tests green" means the PR's `ci` checks pass (`.github/workflows/ci.yml`, YOK-190): `build and test` (Godot 4.7.2 build, import and the full headless suite, judged by its `TESTS` line) and `python tool tests`.
 4. A comment on the ticket says `READY FOR REVIEW` with the PR number, the gate verdicts and the open probe findings, if any.
 
 At step 4 the ticket also gets the Linear label `ready-for-review` (created 2026-10-20, YOK-37), removed on merge, so the queue is one Linear filter. The producer reads the queue from that filter plus the open PR list.
