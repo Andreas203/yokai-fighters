@@ -1,7 +1,7 @@
 # Oni rig
 
 Ticket: YOK-112 ("Rig trial on Oni: generator auto-rig vs AccuRIG 2"), following YOK-102. Owner: rig-specialist. Rules: F5, F6, G4, T0, E15, AM5.
-Model spec and acceptance: `assets/specs/oni.md` (asset-smith, O3 and O5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`.
+Model spec and acceptance: `assets/specs/characters/oni.md` (asset-smith, O3 and O5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`.
 
 **Verdict: ACCEPT (rig and weights, 2026-10-16).** The club is the open item: **G4 NO-GO for the club in the shared walk and the heavy's recovery** (see "G4 gate" below).
 

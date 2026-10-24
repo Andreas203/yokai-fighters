@@ -1,6 +1,6 @@
 # Kappa (fighter) - generation spec
 
-Ticket: YOK-102. Status: DRAFT, awaiting designer approval (see `yok-102-job-list.md`). No job run.
+Ticket: YOK-102. Status: DRAFT, awaiting designer approval (see `jobs/yok-102-job-list.md`). No job run.
 References: none yet (`docs/design/characters/kappa/` does not exist). The concept front view (K1) becomes the turnaround reference. Source: `vault/01-vibe/Characters.md`, `vault/02-mechanics/Yokai.md`.
 
 ## Character

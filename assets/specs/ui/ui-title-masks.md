@@ -24,7 +24,7 @@ All `meshy_text_to_image`, model `nano-banana` (as in `ui-paper-demo.md`), aspec
 
 First pass: M1-M3 = 9 credits. With optional M4 and B1 = 15 credits. Take cap 3 per job. A retake costs 3 per job and needs fresh approval.
 
-Colour notes: the Oni and Kappa looks come from `vault/01-vibe/Characters.md` (kanabo club, tusks and "oni red" sparks; river spirit with a head dish and "kappa teal" sparks). No fighter reference images exist yet for Oni or Kappa, so these masks are folklore-led and must be checked against the Oni and Kappa sheets when those land. The kitsune markings follow `assets/specs/kitsune.md` and the Characters note (full white fox mask, red markings).
+Colour notes: the Oni and Kappa looks come from `vault/01-vibe/Characters.md` (kanabo club, tusks and "oni red" sparks; river spirit with a head dish and "kappa teal" sparks). No fighter reference images exist yet for Oni or Kappa, so these masks are folklore-led and must be checked against the Oni and Kappa sheets when those land. The kitsune markings follow `assets/specs/characters/kitsune.md` and the Characters note (full white fox mask, red markings).
 
 ## Rig plan
 Not applicable. 2D UI textures. ui-designer layers the masks in Godot (idle sway or bob may be driven from the tick count, deterministic).

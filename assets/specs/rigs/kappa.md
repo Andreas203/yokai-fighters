@@ -1,7 +1,7 @@
 # Kappa rig
 
 Ticket: YOK-102 (rig follow-up), on the rigger the YOK-112 trial chose (Meshy). Owner: rig-specialist. Rules: F5, F6, G4, T0, E15, AM5.
-Model spec and acceptance: `assets/specs/kappa.md` (asset-smith, K3 and K5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`. Trial: `assets/specs/rigs/oni.md`.
+Model spec and acceptance: `assets/specs/characters/kappa.md` (asset-smith, K3 and K5 ACCEPT). Shared skeleton: `assets/specs/rigs/skeleton.md`. Trial: `assets/specs/rigs/oni.md`.
 
 **Verdict: ACCEPT (rig, weights, shell), 2026-10-16, after the leg re-pose.**
 - The rest pose now PASSes: legs at 4.2 and 4.5 deg, against 18-19 before; Ryo is at 4.1 and 4.3.

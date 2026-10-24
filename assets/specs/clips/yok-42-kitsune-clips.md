@@ -69,7 +69,7 @@ Rules for the data: every level reuses the base Foxfire clip (A5, F6); no new cl
 
 ## Bamboo grove at dusk: stage preset (V9): spec section
 
-The stage assets are generated per `assets/specs/bamboo-grove-dusk.md` (YOK-29/30). This preset is the Godot-side assembly and mood, to be written as data once the schema exists (no preset or stage schema exists yet). It adds no generation cost.
+The stage assets are generated per `assets/specs/stages/bamboo-grove-dusk.md` (YOK-29/30). This preset is the Godot-side assembly and mood, to be written as data once the schema exists (no preset or stage schema exists yet). It adds no generation cost.
 
 | Item | Value |
 |---|---|

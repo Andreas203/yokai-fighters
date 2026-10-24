@@ -1,6 +1,6 @@
 # HUD ornaments - spec
 
-Status: PROPOSED, awaiting designer approval. **No Meshy job has been run and no generating tool was called.** Prices from earlier specs (`ryo.md` R1: `nano-banana-pro` image-to-image 9; `ui-paper-demo.md`: `nano-banana` 3), not re-verified; balance not checked.
+Status: PROPOSED, awaiting designer approval. **No Meshy job has been run and no generating tool was called.** Prices from earlier specs (`characters/ryo.md` R1: `nano-banana-pro` image-to-image 9; `ui-paper-demo.md`: `nano-banana` 3), not re-verified; balance not checked.
 
 Target: `docs/design/screens/hud.png`. Bars, meter segments, "B" letter, name and numbers are live controls on a K1/K3-style paper plate (`ui-screen-kit.md`).
 
@@ -41,7 +41,7 @@ Not applicable. 2D UI textures.
 ## Acceptance criteria
 1. Look (V1): flat cel, even ink outline, palette matches the sheet and `style.md`, matte, no glow, no painterly noise. Reads at 200 px.
 2. **Unarmed**: no sword, hilt, blade, or any held item. Fail on any weapon.
-3. Likeness to the sheet: undercut with the lock over the right eye, collar to the nose, vermilion mark under the left eye, earring, indigo coat (not white), no headband. Consistent with the accepted Ryo model colours (`assets/specs/ryo.md`).
+3. Likeness to the sheet: undercut with the lock over the right eye, collar to the nose, vermilion mark under the left eye, earring, indigo coat (not white), no headband. Consistent with the accepted Ryo model colours (`assets/specs/characters/ryo.md`).
 4. Alpha: clean cut, no white halo, no crop of the head.
 5. H2: flat 2D, matte, no real character, no 3D bevel, empty centre, reads as a stamp at 64 px.
 6. Licence: UNKNOWN (plan terms not verifiable from the MCP). Designer to confirm before shipping.

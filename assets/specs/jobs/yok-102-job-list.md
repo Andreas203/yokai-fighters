@@ -18,22 +18,22 @@ Rows below are the original draft table. Status by line: O1, O2, K1, K2, T1, T2 
 
 | ID | Job | Tool | Model | Settings (short) | Credits | Spec |
 |---|---|---|---|---|---|---|
-| O1 | Oni concept front | text_to_image | nano-banana-pro | 2:3, no weapon | 9 | oni.md |
-| O2 | Oni turnaround | image_to_image | nano-banana-pro | multi-view, ref O1, T-pose | 9 | oni.md |
-| K1 | Kappa concept front | text_to_image | nano-banana-pro | 2:3 | 9 | kappa.md |
-| K2 | Kappa turnaround | image_to_image | nano-banana-pro | multi-view, ref K1, T-pose | 9 | kappa.md |
-| T1 | Tanuki merchant concept | text_to_image | nano-banana-pro | 2:3 | 9 | tanuki.md |
-| T2 | Tanuki true-form concept | text_to_image | nano-banana-pro | 2:3 | 9 | tanuki.md |
-| O3 | Oni mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~2.0 m | 30 | oni.md |
-| O4 | Club image: **done in Astra** (`oni-club-astra.png`), not run in Meshy | — | — | — | 0 | oni.md |
-| O5 | Club mesh (separate, rigid) from `oni-club-astra.png` | image_to_3d | meshy-6-lite | 4k tri, 2K tex, pivot at grip, ~1.2 m | 15 | oni.md |
-| K3 | Kappa mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~1.5 m | 30 | kappa.md |
-| K4 | Shell image (recommended, designer chooses) | text_to_image | nano-banana | 1:1 | 3 | kappa.md |
-| K5 | Shell mesh (separate, rigid) | image_to_3d | meshy-6-lite | 3k tri, 2K tex | 15 | kappa.md |
-| T3 | Tanuki true-form turnaround (OPTIONAL) | image_to_image | nano-banana-pro | multi-view, ref T2 | 9 | tanuki.md |
-| T4 | Tanuki true-form mesh (OPTIONAL) | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose | 30 | tanuki.md |
-| G1 | Oni human-guise fallback chain (CONTINGENCY) | 2D + image_to_3d | as above | only if G4 gate fails | 48 | oni.md |
-| G2 | Kappa human-guise fallback chain (CONTINGENCY) | 2D + image_to_3d | as above | only if G4 gate fails | 48 | kappa.md |
+| O1 | Oni concept front | text_to_image | nano-banana-pro | 2:3, no weapon | 9 | characters/oni.md |
+| O2 | Oni turnaround | image_to_image | nano-banana-pro | multi-view, ref O1, T-pose | 9 | characters/oni.md |
+| K1 | Kappa concept front | text_to_image | nano-banana-pro | 2:3 | 9 | characters/kappa.md |
+| K2 | Kappa turnaround | image_to_image | nano-banana-pro | multi-view, ref K1, T-pose | 9 | characters/kappa.md |
+| T1 | Tanuki merchant concept | text_to_image | nano-banana-pro | 2:3 | 9 | characters/tanuki.md |
+| T2 | Tanuki true-form concept | text_to_image | nano-banana-pro | 2:3 | 9 | characters/tanuki.md |
+| O3 | Oni mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~2.0 m | 30 | characters/oni.md |
+| O4 | Club image: **done in Astra** (`oni-club-astra.png`), not run in Meshy | — | — | — | 0 | characters/oni.md |
+| O5 | Club mesh (separate, rigid) from `oni-club-astra.png` | image_to_3d | meshy-6-lite | 4k tri, 2K tex, pivot at grip, ~1.2 m | 15 | characters/oni.md |
+| K3 | Kappa mesh + texture | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose, ~1.5 m | 30 | characters/kappa.md |
+| K4 | Shell image (recommended, designer chooses) | text_to_image | nano-banana | 1:1 | 3 | characters/kappa.md |
+| K5 | Shell mesh (separate, rigid) | image_to_3d | meshy-6-lite | 3k tri, 2K tex | 15 | characters/kappa.md |
+| T3 | Tanuki true-form turnaround (OPTIONAL) | image_to_image | nano-banana-pro | multi-view, ref T2 | 9 | characters/tanuki.md |
+| T4 | Tanuki true-form mesh (OPTIONAL) | image_to_3d | meshy-7.1 | 15k tri, 2K tex, no PBR, t-pose | 30 | characters/tanuki.md |
+| G1 | Oni human-guise fallback chain (CONTINGENCY) | 2D + image_to_3d | as above | only if G4 gate fails | 48 | characters/oni.md |
+| G2 | Kappa human-guise fallback chain (CONTINGENCY) | 2D + image_to_3d | as above | only if G4 gate fails | 48 | characters/kappa.md |
 
 Mesh lines use the front view of the accepted O2/K2 turnaround (or the Astra turnaround, see conflict below).
 

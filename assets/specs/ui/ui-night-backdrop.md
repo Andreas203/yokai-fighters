@@ -1,6 +1,6 @@
 # Night backdrop for non-fight screens - spec
 
-**SUPERSEDED (2026-10-20)** by `game/assets/generated/ui/night-backdrop.png`, the Astra screen-kit plate (commit c3782d7, prompt N in `assets/specs/ui-screen-plates.md`), which `kit_backdrop.tscn` uses as its default `Art`. This Meshy job (N1) was never run (0 credits spent, see Takes) and is not to be run. Kept for the layout constraints only; the shop and dojo backdrops are briefed in `docs/design/screens/astra-brief-shop-dojo.md`.
+**SUPERSEDED (2026-10-20)** by `game/assets/generated/ui/night-backdrop.png`, the Astra screen-kit plate (commit c3782d7, prompt N in `assets/specs/ui/ui-screen-plates.md`), which `kit_backdrop.tscn` uses as its default `Art`. This Meshy job (N1) was never run (0 credits spent, see Takes) and is not to be run. Kept for the layout constraints only; the shop and dojo backdrops are briefed in `docs/design/screens/astra-brief-shop-dojo.md`.
 
 Status: PROPOSED, awaiting designer approval. **No Meshy job has been run and no generating tool was called.** Prices from earlier specs (`nano-banana-pro` 9, `nano-banana` 3), not re-verified; balance not checked.
 
@@ -30,7 +30,7 @@ Not applicable. Static 2D. Engine may add a slow leaf-drift or lantern flicker d
 ## Acceptance criteria
 1. Look (V1): flat cel layers, even ink-brush edges, palette within tolerance (indigo, pine, shrine red, persimmon, paper), no painterly noise, no film grain, no photographic depth-of-field.
 2. Composition: calm mid-dark centre; moon, torii, lantern present; no text or lettering anywhere (including signs and torii plaques); no figures.
-3. Consistency: same night mood, moon and torii as the fight stage (`bamboo-grove-dusk.md`) and the concept set; reads as one world with the in-fight stage when the Pause/Defeat dimming is applied.
+3. Consistency: same night mood, moon and torii as the fight stage (`stages/bamboo-grove-dusk.md`) and the concept set; reads as one world with the in-fight stage when the Pause/Defeat dimming is applied.
 4. Size: delivered at least 1920x1080 (upscale if the tool returns less; note it), crisp at 1080p, no banding in the sky.
 5. Licence: UNKNOWN (plan terms not verifiable from the MCP). Designer to confirm before shipping.
 

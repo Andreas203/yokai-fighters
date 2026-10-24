@@ -1,6 +1,6 @@
 # Tanuki's tea house (V9, final boss stage) - stage generation spec
 
-Ticket: YOK-152. Status: **APPROVED first pass, S1-S10, 60 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S10, 60 credits. Seasons change on beats, round start only (option B); the wiring is a gameplay follow-up, not asset-smith's; art cost is unchanged. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (Tripo for the meshes possible; would need re-costing).
+Ticket: YOK-152. Status: **APPROVED first pass, S1-S10, 60 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S10, 60 credits. Seasons change on beats, round start only (option B); the wiring is a gameplay follow-up, not asset-smith's; art cost is unchanged. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/stages/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (Tripo for the meshes possible; would need re-costing).
 
 Gameplay is a flat plane (F4). E1: stage 3,840 units (19.2 m) wide; camera shows 1,060 to about 1,900 units. The Tanuki fights as Ryo with Ryo's model (T0), so the stage must hold two Ryo-shaped silhouettes (indigo coats): keep the back wall warm and light so indigo reads against it.
 
@@ -17,7 +17,7 @@ The back wall is one backdrop image with the screen openings left as flat blank 
 - Meshy props pivot at the mesh centre: re-pivot to the base in Godot.
 - Strips come back gritty unless told "flat vector cel shapes, no grit, no noise, seamless".
 - Props at or under about 3k tris.
-- Do not draw a kettle transformation or any tanuki figure in the art (`tanuki.md`: no kettle transformation drawn; the merchant and true form are separate art). A plain tea kettle as furniture is fine.
+- Do not draw a kettle transformation or any tanuki figure in the art (`characters/tanuki.md`: no kettle transformation drawn; the merchant and true form are separate art). A plain tea kettle as furniture is fine.
 
 ## Prompts (after the style block)
 

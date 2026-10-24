@@ -1,7 +1,7 @@
 # Ryo regeneration and re-rig (spec only)
 
-Ticket: YOK-116. Status: **NOT NEEDED.** The free weight repair was accepted and swapped in on 2026-10-15 (`assets/specs/rigs/ryo-weight-repair.md`). No job was run and no credits were spent. Kept on file in case the outfit is revisited. Take 2 in `assets/specs/ryo.md` stays the live model, with its repaired weights.
-Inputs read: `assets/specs/ryo.md` (takes 1 and 2), `docs/decision-log.md` (YOK-30 open points: Ryo's simplified outfit, retakes need new approval), `docs/design/characters/ryo/README.md`, `assets/specs/rigs/skeleton.md` (YOK-111, on its own branch), and the `tools/blender/rig_check.py` report and stills from the YOK-110 run on `ryo-rigged.glb` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`).
+Ticket: YOK-116. Status: **NOT NEEDED.** The free weight repair was accepted and swapped in on 2026-10-15 (`assets/specs/rigs/ryo-weight-repair.md`). No job was run and no credits were spent. Kept on file in case the outfit is revisited. Take 2 in `assets/specs/characters/ryo.md` stays the live model, with its repaired weights.
+Inputs read: `assets/specs/characters/ryo.md` (takes 1 and 2), `docs/decision-log.md` (YOK-30 open points: Ryo's simplified outfit, retakes need new approval), `docs/design/characters/ryo/README.md`, `assets/specs/rigs/skeleton.md` (YOK-111, on its own branch), and the `tools/blender/rig_check.py` report and stills from the YOK-110 run on `ryo-rigged.glb` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`).
 
 ## 1. What the rig check found
 
@@ -105,10 +105,10 @@ Downstream spend, **not in this ask** (separate approval after the model is acce
 | Frame data (`data/moves/`) | Frames come from clip frames, which do not change if the clips are reused. Hitboxes are 2D rectangles in move data, not mesh. A re-fetched clip with new timing means `animator` re-measures and `movesmith` re-derives that move. | Only for re-fetched clips |
 | Hurtbox and spacing | T-pose span and rest width shift slightly with the leg stance; the T-pose is not used as the rest hurtbox. Height stays 1.75 m. | Check in an in-engine render |
 | Known clip WARNs (idle guard turned about 50 deg; `ryo-crouch` arms near the knees, CrouchLookAroundBow) | Not changed by this job; `ryo-crouch` is the first to re-judge since the mesh change targets it | Re-judge `ryo-crouch` |
-| HUD portrait (`ui-hud-ornaments.md` H1, `portrait-ryo.png`) | Made from the sheet reference, not the 3D model; a trouser cut change does not touch a bust | No, unless the face changes |
+| HUD portrait (`ui/ui-hud-ornaments.md` H1, `portrait-ryo.png`) | Made from the sheet reference, not the 3D model; a trouser cut change does not touch a bust | No, unless the face changes |
 | Rig spec and gate | `rig-specialist` re-runs `rig_check.py` and updates the Ryo column in `skeleton.md` (rig task id, bone heads) | Yes |
 | Kitsune | Own rig; unaffected. Her stress poses are outside this ticket. | No |
-| Spec files | `assets/specs/ryo.md` gets a pointer to this file when a take is accepted | Yes |
+| Spec files | `assets/specs/characters/ryo.md` gets a pointer to this file when a take is accepted | Yes |
 
 ## Takes
 None. No job has been run.

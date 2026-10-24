@@ -1,6 +1,6 @@
 # UI screen kit - spec
 
-Status: PROPOSED, awaiting designer approval of each job and its credits. **No Meshy job has been run and no generating tool was called.** Credit costs are taken from earlier specs (`ui-paper-demo.md`, `ryo.md`: `nano-banana` 3, `nano-banana-pro` 9 per image); the balance was not checked and the per-tool prices are not re-verified against the MCP.
+Status: PROPOSED, awaiting designer approval of each job and its credits. **No Meshy job has been run and no generating tool was called.** Credit costs are taken from earlier specs (`ui-paper-demo.md`, `characters/ryo.md`: `nano-banana` 3, `nano-banana-pro` 9 per image); the balance was not checked and the per-tool prices are not re-verified against the MCP.
 
 Targets: the 11 concepts in `docs/design/screens/` (layout targets only). Text, bars, meters, buttons, key chips and the dimmed overlays are live Godot controls. This kit is only the hand-inked paper and brush material that StyleBox work cannot fake.
 

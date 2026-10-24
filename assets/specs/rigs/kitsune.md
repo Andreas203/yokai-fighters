@@ -1,7 +1,7 @@
 # Kitsune rig
 
 Ticket: YOK-111 (carries over YOK-30 rig and YOK-31 retarget gate). Owner: rig-specialist. Rules: F6, G4, T0, E15, AM5.
-Model spec and acceptance: `assets/specs/kitsune.md` (asset-smith). Shared skeleton: `assets/specs/rigs/skeleton.md`.
+Model spec and acceptance: `assets/specs/characters/kitsune.md` (asset-smith). Shared skeleton: `assets/specs/rigs/skeleton.md`.
 
 **Verdict: ACCEPT** (carried over from the closed G4 gate; designer decision 2026-10-06, Kitsune GO with the sleeve flare accepted). Scripted rig check pending (YOK-110).
 
@@ -46,7 +46,7 @@ Full report: `assets/specs/clips/retarget_gate.md`. Stills: `assets/specs/clips/
 | Heavy (preset 194) | WARN, accepted | Sleeve flare on contact frames (above); hakama coherent in the wide stance |
 | Grab / throw | Source FAIL (389), retarget OK | T01 is the 259 shove, head-trimmed from tick 30 (E15); Kitsune's take is `clips/kitsune/kitsune-throw.glb` (YOK-42) |
 
-Decision 2026-10-06: **Kitsune GO.** No folklore human-guise fallback needed. The fallback stays on file in `assets/specs/kitsune.md` (tail-less, plain kimono, mask kept on).
+Decision 2026-10-06: **Kitsune GO.** No folklore human-guise fallback needed. The fallback stays on file in `assets/specs/characters/kitsune.md` (tail-less, plain kimono, mask kept on).
 
 ## Stress poses (pending)
 High kick, deep crouch, full arm raise, torso twist and the grab have not been rendered as rig stills yet, with the real tail fan and sway. The arm raise (sleeves) and high kick (hakama, tails) are the poses to watch. Stills go to `assets/specs/rigs/stills/kitsune-*.png` when `rig_check.py` lands.

@@ -1,6 +1,6 @@
 # Oni (fighter) - generation spec
 
-Ticket: YOK-102. Status: DRAFT, awaiting designer approval (see `yok-102-job-list.md`). No job run.
+Ticket: YOK-102. Status: DRAFT, awaiting designer approval (see `jobs/yok-102-job-list.md`). No job run.
 References: none yet (sheet and front view do not exist; `docs/design/characters/oni/` is empty). The concept front view is made first (O1) and becomes the reference for the turnaround. Source: `vault/01-vibe/Characters.md`, `vault/02-mechanics/Yokai.md`.
 
 ## Character

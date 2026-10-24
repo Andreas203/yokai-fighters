@@ -4,7 +4,7 @@
 
 Dojo half: not approved. Nothing has been generated and no credits are spent by Asset Smith. The designer reviews this, settles the open questions at the bottom, then runs Astra (`gpt-6-astra`) in their own Codex session (AM7; decision-log 2026-10-15: Astra is costly, so it runs only from a settled brief, never for exploration).
 
-Follows the format of `docs/design/characters/astra-brief.md` and the conventions of the earlier Astra screen kit (commit c3782d7, recorded with its executed prompts in `assets/specs/ui-screen-plates.md`).
+Follows the format of `docs/design/characters/astra-brief.md` and the conventions of the earlier Astra screen kit (commit c3782d7, recorded with its executed prompts in `assets/specs/ui/ui-screen-plates.md`).
 
 ## Sources
 
@@ -12,15 +12,15 @@ Follows the format of `docs/design/characters/astra-brief.md` and the convention
 |---|---|
 | Shop layout | `docs/design/screens/rough/merchant-shop.png`, `merchant-shop-states.png` and `rough/README.md` section 2, on branch `YOK-159-shop-shelf-mockup` |
 | Dojo layout | `docs/design/screens/rough/rest-stop-dojo.png` (main); built version `docs/screenshots/current/rest_stop_dojo*.png` on PR #201 (branch `YOK-109-dojo-pass`) |
-| Kit conventions | `assets/specs/ui-screen-plates.md`, plates in `game/assets/generated/ui/` |
+| Kit conventions | `assets/specs/ui/ui-screen-plates.md`, plates in `game/assets/generated/ui/` |
 | Palette and style | `assets/specs/style.md` |
-| Merchant look | `assets/specs/tanuki.md` ("Merchant look (disguise)"), `docs/design/characters/tanuki/tanuki-merchant-astra-front.png` |
+| Merchant look | `assets/specs/characters/tanuki.md` ("Merchant look (disguise)"), `docs/design/characters/tanuki/tanuki-merchant-astra-front.png` |
 | Dojo master | S3 in `docs/design/rules.md` (Master Sōen), `data/story/intro-soen.json` |
 
 Two things in the sources to settle before running (also in the open questions):
 
 1. The mockup files on `YOK-159-shop-shelf-mockup` are **revision 4** (README heading; ledger slip, 2-sentence bubble) and draw **2 items per shelf**. The decision log and the 3x3 request say 3 per shelf. This brief draws the cabinet as 3 columns x 3 rows. If the designer wants 2 columns, change the cabinet prompt before running.
-2. `rules.md` G1 and G2 are the never-cut list and the scope gate, not guise rules. The guise rule is **G4** (a yokai that fails the retarget gate uses its folklore human guise); "G1" and "G2" in `assets/specs/yok-102-job-list.md` are the Oni and Kappa guise contingencies. None of them covers the merchant portrait. There is no merchant-guise spec. The only merchant source is `assets/specs/tanuki.md` and the Tanuki merchant sheet; S3 says the merchant is the Tanuki in disguise and the shop mockup says "never the Tanuki here". This brief reads that as: the portrait is the **disguise, fully human**, with no animal tell.
+2. `rules.md` G1 and G2 are the never-cut list and the scope gate, not guise rules. The guise rule is **G4** (a yokai that fails the retarget gate uses its folklore human guise); "G1" and "G2" in `assets/specs/jobs/yok-102-job-list.md` are the Oni and Kappa guise contingencies. None of them covers the merchant portrait. There is no merchant-guise spec. The only merchant source is `assets/specs/characters/tanuki.md` and the Tanuki merchant sheet; S3 says the merchant is the Tanuki in disguise and the shop mockup says "never the Tanuki here". This brief reads that as: the portrait is the **disguise, fully human**, with no animal tell.
 
 ## Plates
 
@@ -159,11 +159,11 @@ Astra's cost is not published in the repo and is the designer's call. If a backd
 | Meshy, cheaper | `meshy_text_to_image`, `nano-banana`, 16:9 | 3 | 18 |
 | Astra | designer's own Codex run | not known to Asset Smith | n/a |
 
-Prices are from `assets/specs/ui-night-backdrop.md` and earlier specs, not re-verified; a `meshy_check_balance` and price check happens at approval. A Meshy prompt is the B1 or B2 text above without the "Edit the attached..." sentence (no reference), prefixed with the style block from `assets/specs/style.md`. Trade-off: Astra can take the kit's `night-backdrop.png` as a reference and match its hand and mood exactly; Meshy text-only will match less closely and may need a retake. Nothing here is approved or run.
+Prices are from `assets/specs/ui/ui-night-backdrop.md` and earlier specs, not re-verified; a `meshy_check_balance` and price check happens at approval. A Meshy prompt is the B1 or B2 text above without the "Edit the attached..." sentence (no reference), prefixed with the style block from `assets/specs/style.md`. Trade-off: Astra can take the kit's `night-backdrop.png` as a reference and match its hand and mood exactly; Meshy text-only will match less closely and may need a retake. Nothing here is approved or run.
 
 ## After the plates land
 
-Asset Smith checks each against this brief and writes the result into `assets/specs/ui-screen-plates.md` (new section) before the UI Designer wires them:
+Asset Smith checks each against this brief and writes the result into `assets/specs/ui/ui-screen-plates.md` (new section) before the UI Designer wires them:
 
 - **Look (V1):** flat cel colour, even ink-brush edges, palette within tolerance, no baked shading, no painterly noise, matches `rice-sheet.png`, `rice-card.png` and `ryo-portrait.png` in hand and line weight.
 - **No text:** no glyph, fake glyph, number or kanji anywhere, including lantern paper, curtains, scroll and tag faces.

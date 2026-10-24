@@ -195,7 +195,7 @@ The outputs are in the project itself, where the game and the next agent read th
 | Stage | Agent | Where it is |
 |---|---|---|
 | References | asset-smith | The chosen stylised references: [Ryo E](docs/design/characters/ryo/references/ryo-ref-e.png), [Kitsune D](docs/design/characters/kitsune/references/kitsune-ref-d.png) |
-| Models and stage | asset-smith | The approved job list [`assets/specs/yok-29-job-list.md`](assets/specs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](game/assets/generated/characters/); the [stage backdrop](game/assets/generated/stage/bamboo-grove/backdrop.png) |
+| Models and stage | asset-smith | The approved job list [`assets/specs/jobs/yok-29-job-list.md`](assets/specs/jobs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](game/assets/generated/characters/); the [stage backdrop](game/assets/generated/stage/bamboo-grove/backdrop.png) |
 | Retarget gate | clip-matcher | The gate report [`assets/specs/clips/retarget_gate.md`](assets/specs/clips/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](assets/specs/clips/stills/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](assets/specs/clips/stills/retarget-gate/ryo-grab-2.png)) |
 | Clips | clip-matcher | [`data/clips/`](data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](data/clips/kitsune-foxfire.json); stills in [`assets/specs/clips/stills/`](assets/specs/clips/stills/) |
 | Reward content | movesmith | Modifier files that passed rules-lawyer: [`will-o-wisp.json`](data/modifiers/will-o-wisp.json), [`fox-patience.json`](data/modifiers/fox-patience.json) |

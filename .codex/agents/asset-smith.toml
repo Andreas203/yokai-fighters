@@ -19,7 +19,7 @@ Visual assets are generated, not bought (F6, AM1 and AM5 in `docs/design/gdd-ame
 - **UI (V1)**: paper, brush stroke, ink and red-seal textures. **VFX**: hit sparks in source colours (V5), projectile and level-preset textures for your presets (below).
 
 ## Specs
-Write `assets/specs/<asset-id>.md` for each asset:
+Write `assets/specs/<kind>/<asset-id>.md` for each asset, in the folder for its kind: `characters/` (fighters and human guises), `stages/`, `ui/` (`ui-*.md` screen and HUD art); a job list that spans several assets goes in `jobs/`. `style.md` stays at the top of `assets/specs/`.
 1. **Prompt**: built from `assets/specs/style.md`, never restating a franchise, artist or existing character. Fighters: front/side/back turnaround first, from `meshy_image_to_image` on the reference image in `docs/design/characters/`, or from Astra when the designer chooses it (AM7): then write a settled brief in `docs/design/characters/astra-brief.md`, the designer runs it, and you check the sheets. Only the chosen front view goes to `meshy_image_to_3d`.
 2. **Job chain**: the generator and each call in order with its settings: image model and reference strength; Image-to-3D model, topology, target poly count and texture resolution. Stop at the unrigged mesh in T-pose: `rig-specialist` takes it from there.
 3. **Rig notes** for `rig-specialist`: the parts a humanoid skeleton can't drive (tails, sleeves, coat tail, shell, club) and whether you modelled each as a separate mesh or part of the body.

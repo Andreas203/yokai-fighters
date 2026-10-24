@@ -36,5 +36,5 @@ The current Meshy images are flat visual references, not final concept art. Asse
 ## Open questions (designer)
 
 1. Tail count: three for the common Kitsune and nine for the elder, or one count for both with the elder told apart by colour and VFX only (a level preset)?
-2. Tails and sleeves need extra bones with sway, or procedural sway driven from the tick count to stay deterministic; record the choice in Asset Smith's rig plan (`assets/specs/kitsune.md`).
+2. Tails and sleeves need extra bones with sway, or procedural sway driven from the tick count to stay deterministic; record the choice in Asset Smith's rig plan (`assets/specs/characters/kitsune.md`).
 3. Does the aggressive temperament get its own idle (leaning forward, tails flared), or share this patient stance?

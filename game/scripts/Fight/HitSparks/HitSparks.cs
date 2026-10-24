@@ -73,7 +73,7 @@ public static class HitSparkStyle
 	/// <summary>V5: the spark colour of a move's source (its file's <c>source</c>, or an elder's yokai).</summary>
 	public static uint SourceColour(string? source) => source switch
 	{
-		"ryo" or "tanuki" => Ink, // the Tanuki fights as Ryo, with Ryo's ink (assets/specs/tanuki.md)
+		"ryo" or "tanuki" => Ink, // the Tanuki fights as Ryo, with Ryo's ink (assets/specs/characters/tanuki.md)
 		"kitsune" or "nine-tailed-kitsune" => Foxfire,
 		"oni" or "elder-oni" => OniRed,
 		"kappa" or "elder-kappa" => KappaTeal,
