@@ -27,8 +27,9 @@ public static class BambooGroveStage
 	/// YOK-39 clear band: behind the fighting area (|x| &lt; <see cref="ClearBandHalfX"/>, the stage plus a margin) no
 	/// prop's footprint comes nearer than <see cref="ClearBandBackZ"/>, so nothing sits right behind a fighter and reads
 	/// as attached to them. Lanterns (small, fighter-sized) stay at or behind <see cref="LanternMaxZ"/> everywhere.
-	/// Lanterns sit by parallax so that in the standard framings each shows in a gap between the fighters: at z -12 a
-	/// lantern appears at about (x - camera x) x 0.5.
+	/// Lanterns sit by parallax so that in the standard framings each shows in a gap between the fighters: a lantern at
+	/// depth z appears at about (x - camera x) x d / (d - z), d the camera's distance from the Z = 0 plane (about 6.7 m
+	/// close, 9.8 m wide), so at the front lanterns' z -10.9 to -11.5 about x 0.38 close to x 0.47 wide.
 	/// </summary>
 	public const float ClearBandHalfX = 10.5f, ClearBandBackZ = -8f, LanternMaxZ = -10f;
 

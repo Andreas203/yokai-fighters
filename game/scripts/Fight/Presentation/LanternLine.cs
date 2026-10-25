@@ -24,6 +24,8 @@ public partial class LanternLine : Node3D
 	public const string Prefix = "PathLantern";
 	/// <summary>The range <see cref="Recede"/> is clamped to: 0 would give scale-0 lanterns (a singular basis), 1 would stack a row on its near point.</summary>
 	public const float MinRecede = 0.2f, MaxRecede = 0.95f;
+	/// <summary>The range <see cref="NearScale"/> is clamped to: a near-zero scale gives a singular basis, a huge one lanterns bigger than the grove.</summary>
+	public const float MinNearScale = 0.05f, MaxNearScale = 5f;
 
 	private Vector3 _nearLeft = new(-1.7f, 0, -13.7f), _nearRight = new(2.3f, 0, -13.9f);
 	private float _vanishU = 0.53f, _recede = 0.65f, _nearScale = 0.6f;
@@ -40,8 +42,8 @@ public partial class LanternLine : Node3D
 	[Export(PropertyHint.Range, "0,8,1")] public int PerSide { get => _perSide; set { _perSide = value; Changed(); } }
 	/// <summary>Each lantern keeps this fraction of the previous one's distance to the vanish point, and of its scale (clamped to [<see cref="MinRecede"/>, <see cref="MaxRecede"/>]).</summary>
 	[Export(PropertyHint.Range, "0.2,0.95,0.01")] public float Recede { get => _recede; set { _recede = value; Changed(); } }
-	/// <summary>Scale of the nearest lantern of each row (the grove's front lanterns are about 0.7-0.8).</summary>
-	[Export] public float NearScale { get => _nearScale; set { _nearScale = value; Changed(); } }
+	/// <summary>Scale of the nearest lantern of each row (the grove's front lanterns are about 0.7-0.8; clamped to [<see cref="MinNearScale"/>, <see cref="MaxNearScale"/>]).</summary>
+	[Export(PropertyHint.Range, "0.05,5,0.01")] public float NearScale { get => _nearScale; set { _nearScale = value; Changed(); } }
 	/// <summary>How many of each row's nearest lanterns keep their OmniLight3D (lights cost; far ones glow by fill).</summary>
 	[Export(PropertyHint.Range, "0,8,1")] public int LitPerSide { get => _litPerSide; set { _litPerSide = value; Changed(); } }
 	/// <summary>The backdrop quad the line converges on (its centre, width and depth).</summary>
@@ -51,7 +53,8 @@ public partial class LanternLine : Node3D
 	public readonly record struct Placement(string Name, Vector3 Position, float Scale, float YawDegrees, bool Lit);
 
 	/// <summary>Pure layout of both rows toward <paramref name="vanish"/> (see the class summary). <paramref name="recede"/> is
-	/// clamped to [<see cref="MinRecede"/>, <see cref="MaxRecede"/>], so every lantern lies between its row's near point and the
+	/// clamped to [<see cref="MinRecede"/>, <see cref="MaxRecede"/>] and <paramref name="nearScale"/> to
+	/// [<see cref="MinNearScale"/>, <see cref="MaxNearScale"/>], so every lantern lies between its row's near point and the
 	/// vanish point (never in front of it), each one deeper and smaller than the last, never scale 0.</summary>
 	public static List<Placement> Placements(Vector3 nearLeft, Vector3 nearRight, Vector3 vanish, int perSide, float recede, float nearScale, int litPerSide)
 	{
@@ -60,6 +63,7 @@ public partial class LanternLine : Node3D
 		if (!float.IsFinite(recede) || !float.IsFinite(nearScale) || !(nearScale > 0f) || !Finite(nearLeft) || !Finite(nearRight) || !Finite(vanish))
 			return list;
 		recede = Mathf.Clamp(recede, MinRecede, MaxRecede);
+		nearScale = Mathf.Clamp(nearScale, MinNearScale, MaxNearScale);
 		foreach (var (side, near) in new[] { ("L", nearLeft), ("R", nearRight) })
 		{
 			float k = 1f;
@@ -102,8 +106,10 @@ public partial class LanternLine : Node3D
 		return xf;
 	}
 
-	public List<Placement> Placements() =>
-		Placements(NearLeft, NearRight, VanishPoint(), PerSide, Recede, NearScale, Mathf.Min(LitPerSide, LightBudgetPerSide()));
+	public List<Placement> Placements() => Placements(VanishPoint());
+
+	private List<Placement> Placements(Vector3 vanish) =>
+		Placements(NearLeft, NearRight, vanish, PerSide, Recede, NearScale, Mathf.Min(LitPerSide, LightBudgetPerSide()));
 
 	/// <summary>
 	/// Lights each row may keep: what is left of <see cref="BambooGroveStage.MaxLanternLights"/> after the stage's other
@@ -167,7 +173,10 @@ public partial class LanternLine : Node3D
 		var scene = GD.Load<PackedScene>(LitLanternScene);
 		if (scene is null) return;
 		Transform3D world = WorldOf(this);
-		foreach (var p in Placements())
+		Vector3 vanish = VanishPoint();
+		// The backdrop's world depth: the vanish point lies on the quad, at the floor.
+		float backZ = (world * vanish).Z;
+		foreach (var p in Placements(vanish))
 		{
 			// Guard: a lantern whose world depth is in front of the lantern depth (or not a number) is not built (BambooGroveStage.LanternMaxZ).
 			float z = (world * p.Position).Z;
@@ -177,6 +186,16 @@ public partial class LanternLine : Node3D
 				continue;
 			}
 			var lantern = scene.Instantiate<Node3D>();
+			// Guard: a lantern whose back (centre z - footprint radius, world) is at or behind the backdrop pokes through it; not built.
+			// Footprint radius as StageTests measures it: half the largest horizontal extent of the unscaled lantern, times its scale.
+			Aabb own = BambooGroveStage.LocalBounds(lantern);
+			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * p.Scale * world.Basis.Scale.Y;
+			if (!(z - radius > backZ))
+			{
+				GD.PushWarning($"LanternLine: {p.Name} at world z {z} (radius {radius}) is at or behind the backdrop at z {backZ}; skipped");
+				lantern.Free();
+				continue;
+			}
 			lantern.Name = p.Name;
 			lantern.Transform = new Transform3D(new Basis(Vector3.Up, Mathf.DegToRad(p.YawDegrees)).Scaled(Vector3.One * p.Scale), p.Position);
 			if (!p.Lit) lantern.GetNodeOrNull("Pivot/Light")?.Free();
