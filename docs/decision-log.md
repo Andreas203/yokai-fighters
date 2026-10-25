@@ -82,6 +82,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
   - **Fingers removed, weights merged into the hand** (E15 mitts): 25 joints.
   - **The Tripo GLB is rebuilt by script** (`tools/blender/canon_tripo_rig.py`): its joints carry no transforms and its inverse binds are in a Z-up frame, so it tears raw. Then the `ryo-tripo` pelvis repair. Metre bones, 1.75 m. Expect the same on every Tripo file.
   - **Rig ACCEPT for the test branch (provisional):** deep-crouch volume FAIL from the painted charm and pouch; everything else PASS or WARN. Stopgap clips in `game/assets/generated/clips/ryo-tripo/` (Meshy clips retargeted by script). G4 for the Tripo set stays open until the real clips. 0 credits, no jobs (`assets/specs/rigs/ryo-tripo.md`).
+- 2026-10-25 YOK-109 screen concepts (Astra, `gpt-6-astra` via Codex): one take each for M1 map, H1 HUD copy target, H2 talisman states, E1 elder-twist board, run from the settled brief; no Meshy credits. Saved in `docs/design/screens/`; acceptance notes in `astra-brief-map-hud-twist.md`. Retakes need a new approval.
 
 ## Tooling and process
 - 2026-10-11 YOK-59/62: UI moved to the Codex ui-designer (Astra). Its 18 generated plates replaced Meshy plates, because Claude's kit (#74) was not close enough to the concepts.

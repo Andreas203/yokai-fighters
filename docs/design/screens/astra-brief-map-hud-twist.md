@@ -112,3 +112,14 @@ Still open, not blocking Astra: README 1–5, 7, 11–13 (map orientation, statu
 
 Built-in image_gen; six initial image requests, two per screen, plus two targeted map-v1 corrections. Every request specifies 1672×941 and a visible ROUGH PROTOTYPE strip. No Astra or game code. Exact Sol prompts are in [the prompt manifest](rough/sol/prompts.json). Inputs are the corresponding original rough PNG plus reward.png (map), hud.png (HUD), or story-card.png (elder). v1 asks for restrained paper/ink and pine cloth. v2 explores stronger brush edges, a darker backdrop, a brushed persimmon route and indigo elder cloth. Image-model deviations are review notes, never instructions to change rules.
 
+## Astra run record (2026-10-25)
+
+One take per image, run from this brief with the Sol variant, the rough and the finished-style concept attached. All four are 1672x941, with no prototype strip and no annotations.
+
+| ID | Output | Verdict | Notes |
+|---|---|---|---|
+| M1 | [map.png](map.png) | Accept as layout and style target, with misses | Brushed persimmon route, legend, focus panel and twist seals are right. Misses: the Oni and Kappa cards get invented faces (the brief asked for placeholders), the merchant card uses a money bag marked "$", and some card text is garbled ("papred tivee", "Kuel", the Nine-Tails card). Text stays live in the game, so the garbling does not reach the build. Retake only if the designer wants the portraits fixed. |
+| H1 | [hud-copy-target.png](hud-copy-target.png) | Accept | Locked talisman and strip both read Lv 3. The Tanuki's side is empty and the plane is clear. Ryo has no red headband here, unlike his other art. |
+| H2 | [hud-copy-target-states.png](hud-copy-target-states.png) | Accept | All six states are present with the right text. B (Rising Talisman) and D (Oni's Hide) reuse the flame icon; the build uses each move's own icon (YOK-81). |
+| E1 | [elder-twist-card.png](elder-twist-card.png) | Accept | The full mask stays on, and the story-data text is verbatim. The reflect stamp is drawn as circling arrows where the map draws opposing arrows; the build should use one icon for both. |
+
