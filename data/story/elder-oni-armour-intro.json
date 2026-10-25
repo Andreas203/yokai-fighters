@@ -3,13 +3,14 @@
   "id": "elder-oni-armour-intro",
   "status": "proposed",
   "trigger": "Intro card (Y3): entering the Elder Oni elder node",
-  "text": "The Elder Oni plants its club in the snow: \"Hit me mid-swing and I will finish the swing.\"",
+  "text": "The Elder Oni plants his club in the snow before the gate: \"Hit me mid-swing and I will finish the swing.\"",
   "placeholders": [],
   "speaker": "Elder Oni",
   "rules": [
     "S1",
     "S2",
+    "S5",
     "Y3"
   ],
-  "notes": "Voice for Oni/Kappa is a proposal (vault Characters open question): Oni proud and blunt, Kappa formal and polite."
+  "notes": "Oni voice settled (S5): proud and blunt, a guardian holding his ground. Kappa voice is still a proposal (vault Characters open question). Teaches 'armour on every special' in one line (Y3)."
 }
