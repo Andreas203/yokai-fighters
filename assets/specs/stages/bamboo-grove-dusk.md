@@ -63,3 +63,64 @@ Total 48/48. Outputs in `game/assets/generated/stage/bamboo-grove/`: `backdrop.p
 - S4/S5 lantern: **PASS**. 2,788 tris, same pivot note.
 - S6 ground strip: **RETAKE recommended (3 credits, not approved)**: gritty photographic texture, off-style against the flat cel look; grey letterbox border (art about x 103-1240, y 173-595); tiling seam unverified. Suggested prompt change: add "flat vector cel shapes, no grit, no noise, seamless". Usable as a placeholder after crop.
 - Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.
+
+## Retake R1: lit lantern path to a river glimpse (YOK-209)
+
+Status: **PROPOSED, not approved, nothing run, 0 credits spent.** Designer request 2026-10-25: "in the background of the bamboo scene can we make the lanterns appear lit and possibly lead to a river". Replaces S1 only; props S2-S6 stay. Take cap 3 for the backdrop (take 1 above is used for the original; the cap counts retakes of this request, as for YOK-151).
+
+### Intent
+Same stage identity (V9, Kitsune's bamboo grove at dusk). Added: a stone path winding back through the bamboo, lined with small stone lanterns lit persimmon, ending at a small far glimpse of a river at dusk.
+
+### Water colour
+Muted indigo `#2D3A5E` with persimmon afterglow reflected in flat bands, NOT water teal `#3E7F86`. Why: teal is Kappa's colour (V5 spark, riverbank water), so teal here would make the grove read as the riverbank stage. Indigo water also stays inside the grove's own palette (pine, indigo, persimmon, rice paper).
+
+### How the two stages stay distinct
+| | Bamboo grove (this) | Lantern riverbank (YOK-151) |
+|---|---|---|
+| Subject | Bamboo, path, river a far small glimpse | River is the whole band behind the fighters |
+| Lanterns | Fixed square stone lanterns on the path, small persimmon window | Round paper lanterns floating on the water |
+| Light | Dusk afterglow: persimmon low in the sky, pine and indigo mist | Deep indigo night with stars |
+| Water | Muted indigo, under 10% of the frame | Teal `#3E7F86`, most of the frame |
+| Ground | Stone path through bamboo | Bank, reeds, mooring post |
+Rule for the take: no floating or round paper lanterns, no teal, no stars, no bridge, no reeds.
+
+### Placement (for the YOK-208 3D lanterns)
+Fractions of image width and height, 16:9 full frame (the quad shows the backdrop whole; if the camera crops it, re-measure on the take).
+- Path: enters bottom edge at about 0.40-0.60 W (calm lower third, kept plain), winds slightly right then left, narrows to a vanishing point at about 0.50 W, 0.52 H (horizon).
+- Painted lanterns: 4-5 per side, pairs spaced evenly along the path edges, nearest pair about 0.30 W and 0.70 W at about 0.62 H, farthest pair at about 0.47 W and 0.53 W at 0.54 H. Small and in the upper-middle band so they never sit under the fighters. The real 3D lanterns stand in front, so painted ones should be smaller and fainter than the near ones.
+- River glimpse: a small horizontal sliver centred about 0.46-0.56 W, between 0.46 and 0.52 H, at the end of the path, framed by bamboo on both sides. Under 10% of the frame area.
+- Persimmon afterglow sky stays above the river, centred near 0.50 W.
+- Lower third (below 0.67 H): calm, low contrast, no lanterns, no water.
+
+### Prompt (after the style block)
+Backdrop R1 (`meshy_text_to_image`, `nano-banana-pro`, `aspect_ratio: 16:9`):
+> Wide stage backdrop, a bamboo grove at dusk seen from a low flat viewpoint, dense pine-green bamboo stalks in layered depth fading into indigo mist, a pale stone path entering at the bottom centre and winding back through the bamboo to a vanishing point at the middle of the frame, small square stone garden lanterns evenly spaced on both sides of the path with their windows glowing flat persimmon orange, the lanterns getting smaller with distance, at the far end of the path a small narrow glimpse of a calm river in muted indigo with flat persimmon reflection bands, persimmon-orange dusk afterglow low in the sky above the river between the stalks, empty calm and uncluttered in the lower third, no characters, no text, no stars, no paper lanterns, full-bleed to the image edges with no border, frame or letterbox. Flat cel colours, soft ink-brush edges, lantern glow as a flat orange fill with no bloom or halo. Palette: pine #34483B, indigo #2D3A5E, persimmon #D8632C, rice paper #F1E8D4. Avoid: [negative prompt], teal water, bright blue sky, bridge, boats.
+
+Alternative A2 (`meshy_image_to_image`, `nano-banana-pro`, reference `game/assets/generated/stage/bamboo-grove/backdrop.png` cropped of its grey border first, reference strength per tool default, 16:9): same prompt prefixed with "Keep the bamboo layering, palette and composition of the reference; add" and the lantern, path and river clauses above. Keeps the accepted look. Risk: the old letterbox or its faint path may carry over, and the path rarely moves far from the reference.
+
+### Job chain and cost
+| # | Tool | Settings | Credits |
+|---|---|---|---|
+| R1 | `meshy_text_to_image` | backdrop R1, `nano-banana-pro`, 16:9 | 9 |
+| A2 | `meshy_image_to_image` | alternative, `nano-banana-pro`, 16:9, reference = cropped current backdrop | 9 (assumed same tier as R1; verify against the tool's published cost before running) |
+
+| Plan | Credits |
+|---|---|
+| Recommended: R1 take 1 | 9 |
+| Worst case, R1 three takes (cap) | 27 |
+| Optional A2 one take on top | +9 |
+Grove spend precedent: S1 cost 9 per take and "Retakes need a new approval" (docs/decision-log.md, YOK-30 first pass 163 credits; running stage total cap 195 across YOK-150/151/152 does not apply to this retake, which is new work, so the designer sets its own cap). Props, rigs and clips: 0.
+
+### Recommendation
+R1 (text-to-image). The composition changes substantially (path, lanterns, river); image-to-image would anchor to the old layout. Run A2 only if R1 take 1 loses the grove's look.
+
+### Acceptance criteria (checked after each take, written under `## Acceptance`)
+- Full-bleed: no grey letterbox or border; check edge pixels of all four sides. Otherwise crop as in take 1.
+- Palette within tolerance; lantern glow flat orange with no bloom; water indigo, no teal; no stars, paper lanterns, bridge, characters or text.
+- Path and lanterns sit within the placement fractions above (about 0.05 W tolerance); river under 10% of frame.
+- Lower third calm; checked by screenshot at 720p with both fighters and the YOK-208 lanterns in place.
+- Reads as the grove, not the riverbank (table above); toon shader and ink outline hold up, no painterly noise.
+- Licence: plan tier unknown, flagged.
+
+### Takes (R1)
+None run. Balance not checked.
