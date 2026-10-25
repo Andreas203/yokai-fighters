@@ -8,6 +8,7 @@
     "yokai"
   ],
   "speaker": "narrator",
+  "later_loss": { "row_min": 1, "row_max": 3 },
   "rules": [
     "S1",
     "S2",

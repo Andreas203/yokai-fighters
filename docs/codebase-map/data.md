@@ -12,7 +12,7 @@
 | `cancel_rule` | `cancel-rule.schema.json` | `data/cancels/` | Source, offering elder, always rare, path from/into/on, `once_per_combo: true` (X3). `CancelRuleLoader`. |
 | `profile` | `profile.schema.json` | `data/profiles/` | Yokai, temperament, reaction tier + frames, aggression, preferred range, the habit, weighted behaviours, `tell_cover_pct`, `ex_use`, `burst_use`, `guard_pct`. `when` values are on-screen observations only (P6). `BehaviourProfile`. |
 | `clip` | `clip.schema.json` | `data/clips/` | Source, clip, frames_total, hit_start, hit_end, retarget notes, `trim_start`/`trim_end`, `speed_scale`, `file` (GLB under `game/`), `yaw_offset`, `retime` curve. `ClipCatalog`. |
-| `story_card` | `story-card.schema.json` | `data/story/` | Id, status, trigger (S3), title, text (S2, max 280), `placeholders` (S4), speaker. `StoryLibrary`. |
+| `story_card` | `story-card.schema.json` | `data/story/` | Id, status, trigger (S3), title, text (S2, max 280), `placeholders` (S4), speaker, `later_loss` (S3: yokai?, `row_min`/`row_max`). `StoryLibrary`. |
 | `merchant_shop_lines` | `merchant-shop-lines.schema.json` | `data/story/shop/` | Merchant event lines and item lead-ins (S1, S2). `MerchantShopLines`. |
 | `run_map` | `run-map.schema.json` | `data/map/` | R1, R2, Y3: `schema_version` 1, `nodes` (id, row, open `type`, `yokai`, `elder`, `label`, `payload`), `routes`. `MapLoader`. |
 | `node_scenes` | `node-scenes.schema.json` | `data/map/` | R2, R3, A7, Y4: `default_scene`, `default_stage`, `fallback_fighter`, `tiers` (`reaction_frames`, `damage_dealt_pct`, `jump_punish_pct`), `types`, `nodes`, `rows`, `opponents` (`fighter`, `kit`, `plays_as`, `tier`, `profile`), `coins`. `NodeSceneTable`. |

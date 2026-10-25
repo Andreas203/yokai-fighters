@@ -12,6 +12,9 @@ public sealed record StoryCardData(string Id, string? Title, string Text, IReadO
 {
 	static readonly Regex Slot = new(@"\{([^{}]*)\}");
 
+	/// <summary>YOK-212, S3: the card's <c>later_loss</c> (a later-loss wake-up card), or null for every other card.</summary>
+	public LaterLoss? LaterLoss { get; init; }
+
 	/// <summary>S4: fill {yokai}/{move} with the run's names. A placeholder the card uses but the caller didn't give throws.</summary>
 	public string FillText(string? yokai = null, string? move = null) => Fill(Text, yokai, move);
 
@@ -23,6 +26,16 @@ public sealed record StoryCardData(string Id, string? Title, string Text, IReadO
 		"move" when move is not null => move,
 		var name => throw new InvalidOperationException($"story card '{Id}': no value for {{{name}}}"),
 	});
+}
+
+/// <summary>
+/// YOK-212, S3 "later losses: variants by row reached and winning yokai": a card's <c>later_loss</c> field. The card
+/// shows for a loss on a map row from <see cref="RowMin"/> to <see cref="RowMax"/> (both included) to <see cref="Yokai"/>
+/// (an elder counts as its yokai); a null yokai = any yokai, the row band's card.
+/// </summary>
+public sealed record LaterLoss(string? Yokai, int RowMin, int RowMax)
+{
+	public bool Covers(int row) => row >= RowMin && row <= RowMax;
 }
 
 /// <summary>
@@ -47,12 +60,37 @@ public sealed class StoryLibrary : Ui.IStorySource
 	/// <summary>S3: "Forgive me, {yokai}. I'll set your spirit free." with the yokai's display name.</summary>
 	public string BindingLine(string yokai) => this[BindingLineId].FillText(yokai: yokai);
 
-	/// <summary>Lose screen title and text for the yokai that won.</summary>
-	public (string? Title, string Text) LoseScreen(string yokai)
+	/// <summary>Lose screen title and text for the yokai that won, off the map (no row): the <c>lose-screen</c> card.</summary>
+	public (string? Title, string Text) LoseScreen(string yokai) => LoseScreen(yokai, null, null);
+
+	/// <summary>YOK-212: the <see cref="LaterLossCard"/> for <paramref name="winner"/> on <paramref name="row"/>, {yokai} = <paramref name="name"/> (the name shown, e.g. "Elder Oni").</summary>
+	public (string? Title, string Text) LoseScreen(string name, string? winner, int? row)
 	{
-		var c = this[LoseScreenId];
-		return (c.FillTitle(yokai: yokai), c.FillText(yokai: yokai));
+		var c = LaterLossCard(winner, row);
+		return (c.FillTitle(yokai: name), c.FillText(yokai: name));
 	}
+
+	/// <summary>
+	/// YOK-212, S3: the wake-up card for a loss to <paramref name="winner"/> (a yokai id; an elder already as its yokai,
+	/// <c>NodeContext.DraftYokai</c>) on map row <paramref name="row"/>, read from each card's <c>later_loss</c>. First a
+	/// card naming that yokai whose rows cover the row; else a card naming no yokai (the row band) that covers it; else
+	/// <c>lose-screen</c> (also with no row: a fight off the map). Tie-break when several cards match in one step: the
+	/// narrower row range, then the lower id (ordinal). Pure: no RNG, the same cards and loss always give the same card.
+	/// </summary>
+	public StoryCardData LaterLossCard(string? winner, int? row)
+	{
+		if (row is int r)
+		{
+			var covering = _cards.Values.Where(c => c.LaterLoss?.Covers(r) == true).ToList();
+			var pick = (winner is null ? null : Narrowest(covering.Where(c => c.LaterLoss!.Yokai == winner)))
+				?? Narrowest(covering.Where(c => c.LaterLoss!.Yokai is null));
+			if (pick is not null) return pick;
+		}
+		return this[LoseScreenId];
+	}
+
+	static StoryCardData? Narrowest(IEnumerable<StoryCardData> cards) => cards
+		.OrderBy(c => c.LaterLoss!.RowMax - c.LaterLoss.RowMin).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault();
 
 	/// <summary>YOK-53 (for YOK-48): demo-complete card title and text, {yokai} = the yokai just bound.</summary>
 	public (string? Title, string Text) DemoComplete(string yokai)
@@ -78,7 +116,22 @@ public sealed class StoryLibrary : Ui.IStorySource
 			? p.EnumerateArray().Select(e => e.GetString() ?? "").ToArray() : Array.Empty<string>();
 		foreach (var name in ph)
 			if (name is not ("yokai" or "move")) throw new FormatException($"story card '{id}': unknown placeholder '{name}'");
-		return new StoryCardData(id, title, Str("text"), ph, Str("speaker"));
+		return new StoryCardData(id, title, Str("text"), ph, Str("speaker")) { LaterLoss = ParseLaterLoss(r, id) };
+	}
+
+	/// <summary>YOK-212: <c>later_loss</c> = { yokai? (id), row_min, row_max } (rows from 1, min no higher than max); absent = null.</summary>
+	static LaterLoss? ParseLaterLoss(JsonElement card, string id)
+	{
+		if (!card.TryGetProperty("later_loss", out var t)) return null;
+		if (t.ValueKind != JsonValueKind.Object) throw new FormatException($"story card '{id}': later_loss must be an object");
+		int Row(string name) => t.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n) && n >= 1
+			? n : throw new FormatException($"story card '{id}': later_loss.{name} must be a whole row number from 1");
+		string? yokai = !t.TryGetProperty("yokai", out var y) ? null
+			: y.ValueKind == JsonValueKind.String && y.GetString() is { Length: > 0 } s ? s
+			: throw new FormatException($"story card '{id}': later_loss.yokai must be a yokai id");
+		int min = Row("row_min"), max = Row("row_max");
+		if (min > max) throw new FormatException($"story card '{id}': later_loss.row_min {min} is above row_max {max}");
+		return new LaterLoss(yokai, min, max);
 	}
 
 	public static StoryCardData LoadFile(string path) => Parse(File.ReadAllText(path));

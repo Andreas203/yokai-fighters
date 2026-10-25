@@ -21,6 +21,17 @@
     },
     "speaker": { "type": "string", "minLength": 1, "description": "Who says it, e.g. Ryo, narrator, Master Soen, Tanuki." },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "later_loss": {
+      "type": "object",
+      "required": ["row_min", "row_max"],
+      "additionalProperties": false,
+      "description": "YOK-212 (S3): marks a later-loss wake-up card. It shows when Ryo loses on a map row from row_min to row_max (both included; the default map puts the Tanuki on row 9) to the named yokai; an elder counts as its yokai (elder-oni = oni). Left out = not a later-loss card. The game picks a card naming the yokai, else one naming none (the row band), else lose-screen; ties: narrower row range, then lower id. tools/validate_data.py checks row_min <= row_max.",
+      "properties": {
+        "yokai": { "$ref": "common.schema.json#/$defs/id", "description": "The yokai that won (a yokai id, never an elder's). Left out = any yokai: the row band's card." },
+        "row_min": { "type": "integer", "minimum": 1 },
+        "row_max": { "type": "integer", "minimum": 1 }
+      }
+    },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }
   }
 }

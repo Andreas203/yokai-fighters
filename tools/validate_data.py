@@ -808,6 +808,9 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         if tier and tanuki != (tier == "tanuki"):
             errs.append(("reaction.tier", "the 'tanuki' reaction tier is for the Tanuki only, and the Tanuki must use it (Y4)"))
     elif kind == "story_card":  # S4: the game fills exactly the listed run names
+        later = doc.get("later_loss")  # YOK-212 (S3): a later-loss card's rows read low to high (the schema can't say so)
+        if isinstance(later, dict) and isinstance(later.get("row_min"), int) and isinstance(later.get("row_max"), int) and later["row_min"] > later["row_max"]:
+            errs.append(("later_loss", f"row_min {later['row_min']} is above row_max {later['row_max']} (S3)"))
         listed = {x for x in doc.get("placeholders") or [] if isinstance(x, str)}
         used: set[str] = set()
         for key in ("title", "text"):
