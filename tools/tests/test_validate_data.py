@@ -404,6 +404,44 @@ class ValidateDataTest(unittest.TestCase):
         schema = json.loads((ROOT / "data" / "schema" / "story-card.schema.json").read_text(encoding="utf-8"))
         self.assertEqual(schema["allOf"][0]["then"]["properties"]["text"]["maxLength"], validate_data.INTRO_CARD_MAX, "schema and validator agree")
 
+    def _card_with(self, **fields):
+        import json, tempfile
+        card = json.loads((ROOT / "data" / "story" / "binding-line.json").read_text(encoding="utf-8"))
+        card.pop("placeholders", None)
+        card["id"] = "glyph-card"
+        card["text"] = "Plain words only."
+        card.update(fields)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "data" / "story" / "glyph-card.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(card), encoding="utf-8")
+            return run(path)
+
+    def test_story_card_text_allows_precomposed_accents_and_nfc_equivalents(self):
+        for text in ("Master S\u014den bows.", "Caf\u00e9, na\u00efve, \u00fcber.", "S" + "o\u0304" + "en bows."):  # the last: o + combining macron is NFC-normalised to the precomposed one
+            code, out = self._card_with(text=text)
+            self.assertEqual(code, 0, f"{text!r}: {out}")
+        code, out = self._card_with(speaker="Master S\u014den")
+        self.assertEqual(code, 0, out)
+
+    def test_story_card_text_rejects_emoji_joiners_variation_selectors_and_combining_marks(self):
+        cases = {
+            "an emoji or flag": "The fox \U0001F98A waits.",
+            "an emoji or flag (regional-indicator flag)": "Flag \U0001F1EF\U0001F1F5 here.",
+            "a zero-width joiner": "ab\u200dcd",
+            "a variation selector": "ab\ufe0fcd",
+            "a combining mark": "a\u0301\u0302\u0303b stacked",
+        }
+        for label, text in cases.items():
+            code, out = self._card_with(text=text)
+            self.assertEqual(code, 1, label)
+            self.assertIn("crashes on Linux", out, label)
+            self.assertIn("text contains " + label.split(" (")[0], out, label)
+        for field in ("title", "speaker"):
+            code, out = self._card_with(**{field: "Fox \U0001F98A"})
+            self.assertEqual(code, 1, field)
+            self.assertIn(f"{field} contains an emoji or flag", out)
+
     def test_story_card_kind_only_in_story_folder(self):
         import json, tempfile
         card = json.loads((ROOT / "data" / "story" / "binding-line.json").read_text(encoding="utf-8"))

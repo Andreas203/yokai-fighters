@@ -5,6 +5,12 @@
   "description": "One story card in data/story/<id>.json (S1-S4): one or two sentences in the game's tone, shown at a fixed moment of the run. Templated names ({yokai}, {move}) are filled from the player's run (S4); every placeholder used in title or text must be listed in placeholders, and every listed one used.",
   "type": "object",
   "required": ["kind", "id", "status", "trigger", "text", "speaker", "rules"],
+  "$defs": {
+    "noEmoji": {
+      "not": { "pattern": "[\\U0001F000-\\U0001FAFF\\u231A-\\u23FF\\u2600-\\u27BF\\u2B00-\\u2BFF\\u200D\\uFE00-\\uFE0F]" },
+      "description": "No emoji, regional-indicator flags, zero-width joiners or variation selectors: Godot 4.7.2's text server crashes on Linux shaping long runs of them (YOK-109). Combining marks are checked by tools/validate_data.py after NFC normalisation, so precomposed accents (ō, é) stay allowed."
+    }
+  },
   "additionalProperties": false,
   "allOf": [
     {
@@ -17,15 +23,15 @@
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "status": { "$ref": "common.schema.json#/$defs/status" },
     "trigger": { "type": "string", "minLength": 1, "description": "When the card shows (the S3 schedule entry it implements)." },
-    "title": { "type": "string", "minLength": 1, "maxLength": 60, "description": "Optional heading shown above the text." },
-    "text": { "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2). Elder-twist intro cards (id ending in -intro) are capped at 260 characters: the hanging scroll shows the quote whole (YOK-109)." },
+    "title": { "allOf": [{ "$ref": "#/$defs/noEmoji" }], "type": "string", "minLength": 1, "maxLength": 60, "description": "Optional heading shown above the text." },
+    "text": { "allOf": [{ "$ref": "#/$defs/noEmoji" }], "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2). Elder-twist intro cards (id ending in -intro) are capped at 260 characters: the hanging scroll shows the quote whole (YOK-109)." },
     "placeholders": {
       "type": "array",
       "items": { "enum": ["yokai", "move"] },
       "uniqueItems": true,
       "description": "Run names the game fills in (S4): {yokai} = the yokai's display name, {move} = the copy target's move name."
     },
-    "speaker": { "type": "string", "minLength": 1, "description": "Who says it, e.g. Ryo, narrator, Master Soen, Tanuki." },
+    "speaker": { "allOf": [{ "$ref": "#/$defs/noEmoji" }], "type": "string", "minLength": 1, "description": "Who says it, e.g. Ryo, narrator, Master Soen, Tanuki." },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }
   }

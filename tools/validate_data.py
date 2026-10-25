@@ -95,6 +95,29 @@ def rel(path: Path) -> str:
 INTRO_CARD_MAX = 260  # YOK-109: story-card.schema.json caps *-intro cards here (other story cards keep 280)
 
 
+# YOK-109: Godot 4.7.2's text server aborts on Linux (an out-of-bounds index in glyph shaping) when a Label is resized around a long
+# run of emoji, zero-width joiners or combining marks. Story-card text is shown in Labels, so the data may not contain them.
+_EMOJI_RANGES = ((0x1F000, 0x1FAFF), (0x1FC00, 0x1FFFD), (0x231A, 0x23FF), (0x2600, 0x27BF), (0x2B00, 0x2BFF), (0x2934, 0x2935), (0x203C, 0x203C), (0x2049, 0x2049))
+CARD_TEXT_FIELDS = ("title", "text", "speaker")
+
+
+def forbidden_glyph(text: str) -> tuple[str, str] | None:
+    """(what, character) for the first emoji (incl. regional-indicator flags), zero-width joiner, variation selector or combining mark
+    in `text` after NFC normalisation (so o + U+0304 counts as the precomposed ō and passes), else None."""
+    import unicodedata
+    for ch in unicodedata.normalize("NFC", text):
+        cp = ord(ch)
+        if cp == 0x200D:
+            return "a zero-width joiner", ch
+        if 0xFE00 <= cp <= 0xFE0F or 0xE0100 <= cp <= 0xE01EF:
+            return "a variation selector", ch
+        if any(lo <= cp <= hi for lo, hi in _EMOJI_RANGES):
+            return "an emoji or flag", ch
+        if unicodedata.category(ch) == "Mn":
+            return "a combining mark", ch
+    return None
+
+
 def load_validators() -> dict[str, Draft202012Validator]:
     schemas = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(SCHEMA_DIR.glob("*.schema.json"))]
     registry = Registry().with_resources((s["$id"], Resource.from_contents(s)) for s in schemas)
@@ -820,6 +843,9 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
         for name in sorted(listed - used):
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
+        for key in CARD_TEXT_FIELDS:  # YOK-109: no emoji, ZWJ or combining marks (engine crash on Linux)
+            if isinstance(doc.get(key), str) and (bad := forbidden_glyph(doc[key])):
+                errs.append((key, f"{key} contains {bad[0]} (U+{ord(bad[1]):04X}); Godot 4.7.2's text server crashes on Linux when it shapes long runs of emoji, zero-width joiners and combining marks, so use plain letters or a precomposed accent"))
         # YOK-109 (Y3): mirrors the schema's -intro cap: the elder-twist scroll's quote box holds 260 characters whole
         if str(doc.get("id", "")).endswith("-intro") and isinstance(doc.get("text"), str) and len(doc["text"]) > INTRO_CARD_MAX:
             errs.append(("text", f"an elder-twist intro card (id ending -intro) is capped at {INTRO_CARD_MAX} characters, this one has {len(doc['text'])} (Y3)"))
