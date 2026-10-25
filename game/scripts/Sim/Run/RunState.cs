@@ -284,11 +284,53 @@ public sealed class RunState
 		Coins = coins;
 	}
 
+	readonly List<CancelRuleData> _cancelRules = new();
+
+	/// <summary>
+	/// YOK-186: the cancel rules Ryo holds this run, in the order taken (X1: none at the start; X2: at most
+	/// <see cref="Fighter.MaxCancelRules"/>). Only an elder's draft gives one (A9); the shop never sells one (R6).
+	/// </summary>
+	public IReadOnlyList<CancelRuleData> CancelRules => _cancelRules;
+
+	public bool HoldsCancelRule(string id)
+	{
+		foreach (var c in _cancelRules) if (c.Id == id) return true;
+		return false;
+	}
+
+	/// <summary>X2: Ryo can take <paramref name="rule"/>: he holds fewer than two and not this one.</summary>
+	public bool CanHoldCancelRule(CancelRuleData rule) => _cancelRules.Count < Fighter.MaxCancelRules && !HoldsCancelRule(rule.Id);
+
+	/// <summary>YOK-186: Ryo holds <paramref name="rule"/> for the rest of the run. Throws, changing nothing, when <see cref="CanHoldCancelRule"/> is false.</summary>
+	public void HoldCancelRule(CancelRuleData rule)
+	{
+		if (!CanHoldCancelRule(rule))
+			throw new InvalidOperationException(HoldsCancelRule(rule.Id) ? $"{rule.Id} is already held" : $"Ryo already holds {Fighter.MaxCancelRules} cancel rules (X2)");
+		_cancelRules.Add(rule);
+	}
+
+	/// <summary>
+	/// YOK-186: puts back a saved run's cancel rules, replacing any held. Throws, changing nothing, on more than
+	/// <see cref="Fighter.MaxCancelRules"/> (X2) or one listed twice.
+	/// </summary>
+	public void RestoreCancelRules(IEnumerable<CancelRuleData> rules)
+	{
+		var list = new List<CancelRuleData>();
+		foreach (var r in rules)
+		{
+			if (list.Exists(x => x.Id == r.Id)) throw new ArgumentException($"cancel rule {r.Id} is listed twice");
+			list.Add(r);
+		}
+		if (list.Count > Fighter.MaxCancelRules) throw new ArgumentException($"{list.Count} cancel rules: Ryo holds at most {Fighter.MaxCancelRules} (X2)");
+		_cancelRules.Clear();
+		_cancelRules.AddRange(list);
+	}
+
 	/// <summary>The next fight's config: Ryo (P1) starts with the carried health.</summary>
 	public SimConfig MatchConfig(SimConfig? baseConfig = null) =>
 		(baseConfig ?? SimConfig.Default) with { P1MaxHealth = MaxHealth, P1StartHealth = Health };
 
-	/// <summary>Puts the run's specials (levels, modifiers) on the fighter, replacing whatever it had.</summary>
+	/// <summary>Puts the run's specials (levels, modifiers) and held cancel rules (YOK-186) on the fighter, replacing whatever it had.</summary>
 	public void ApplyTo(Fighter f, SimConfig? config = null)
 	{
 		for (int i = 1; i < _slots.Length; i++)
@@ -296,6 +338,8 @@ public sealed class RunState
 			if (_slots[i] is { } s) f.Equip((SpecialSlot)i, s.Data, s.Level, s.Modifier, config);
 			else f.Unequip((SpecialSlot)i);
 		}
+		f.CancelRules.Clear();
+		foreach (var c in _cancelRules) f.HoldCancelRule(c.Rule);
 	}
 
 	public ulong StateHash()
@@ -327,6 +371,12 @@ public sealed class RunState
 		int borrowedMods = 0;
 		for (int i = 1; i < _slots.Length; i++) if (_slots[i] is { ModifierBorrowed: true }) borrowedMods |= 1 << i;
 		if (borrowedMods != 0) h = Fnv.Mix(Fnv.MixString(h, "borrowed-modifier"), borrowedMods);
+		// YOK-186, X1: held cancel rules are run state. A run that holds none keeps the hash it had before.
+		if (_cancelRules.Count > 0)
+		{
+			h = Fnv.MixString(h, "cancel-rules");
+			foreach (var c in _cancelRules) h = Fnv.MixString(h, c.Id);
+		}
 		return h;
 	}
 }

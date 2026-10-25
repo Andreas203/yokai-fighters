@@ -247,6 +247,7 @@ public static class CoinTests
 			var s = NewSession(graph, 77);
 			int expected = 0;
 			var perRow = new List<string>();
+			int r8Paid = 0;
 			while (!s.IsOver)
 			{
 				var reachable = s.Reachable();
@@ -257,6 +258,10 @@ public static class CoinTests
 				int before = s.Run.Coins;
 				int pay = node.Row switch { 5 => 50, 4 or 7 or 8 or 9 => 0, _ => 25 }; // R8 written out by row (R1: one node per row)
 				s.WinFight(600);
+				// R8: the row-8 elder pays a rare instead; with no rare in its offer, the PROVISIONAL 50 (YOK-186).
+				if (node.Row == 8 && s.Draft?.Offer.Cards.Any(c => c.Rare) != true) pay = 50;
+				int row8 = node.Row == 8 ? pay : 0;
+				r8Paid += row8;
 				Assert.Equal(before + pay, s.Run.Coins, $"{id}: row {node.Row} pays {pay}");
 				Assert.Equal(pay, s.CoinsWon, $"{id}: the node's payout");
 				expected += pay;
@@ -272,11 +277,11 @@ public static class CoinTests
 				Assert.True(s.CompleteNode().Ok, $"{id}: completed");
 			}
 			Assert.True(s.Ended is { Won: true, RowReached: 9 }, "the walk reached the Tanuki's node");
-			Assert.Equal("1:25, 2:50, 3:75, 4:75, 5:125, 6:150, 7:150, 8:150, 9:150", string.Join(", ", perRow), $"walk {variant}: coins after each row");
-			Assert.Equal(150, expected, "25 x 4 duels + 50 for the row-5 elder");
+			Assert.Equal($"1:25, 2:50, 3:75, 4:75, 5:125, 6:150, 7:150, 8:{150 + r8Paid}, 9:{150 + r8Paid}", string.Join(", ", perRow), $"walk {variant}: coins after each row");
+			Assert.Equal(150 + r8Paid, expected, "25 x 4 duels + 50 for the row-5 elder (+ the provisional row-8 50 when it had no rare)");
 			totals.Add(s.Run.Coins);
 		}
-		Assert.True(totals.SetEquals(new[] { 150 }), "every route arrives at the Tanuki with 150 coins");
+		Assert.True(totals.IsSubsetOf(new[] { 150, 200 }), "every route arrives at the Tanuki with 150 coins, or 200 when its row-8 elder had no rare (PROVISIONAL, YOK-186)");
 		Assert.True(seenNodes.Count >= 12, $"the three walks cover most of the map ({seenNodes.Count} nodes)");
 	});
 

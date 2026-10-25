@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace YokaiFighters.Sim;
 
@@ -222,8 +223,29 @@ public sealed class RunSession
 		CoinsWon = node.Coins;
 		Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
-			Draft = RewardDraft.Build(Run, Pool, node.DraftYokai, Seed + (uint)Step, node.Elder); // YOK-178: the yokai beaten, not the body (A7, A8)
+			Draft = RewardDraft.Build(Run, Pool, node.DraftYokai, Seed + (uint)Step, node.Elder, // YOK-178: the yokai beaten, not the body (A7, A8)
+				elderId: node.Elder ? node.BindingName : null); // YOK-186: the elder's own id, which its cancel rule's offered_by names (X4)
+		// R8: an elder whose node pays no coins pays a rare ability instead. PROVISIONAL (YOK-186, designer's open
+		// question, not in rules.md): when its offer holds no rare card at all, it pays what the other elders pay
+		// (the row-5 elder's 50 in the data), so the reward is never empty.
+		if (node.Elder && node.Coins == 0 && Draft?.Offer.Cards.Any(c => c.Rare) != true && R8FallbackCoins() is > 0 and var fallback)
+		{
+			CoinsWon = fallback;
+			Run.AddCoins(fallback);
+		}
 		return Draft;
+	}
+
+	/// <summary>
+	/// PROVISIONAL (YOK-186, see <see cref="WinFight"/>): the most coins any elder node of this map pays (R8: the row-5
+	/// elder's 50), read from the node-scene table; 0 when no elder pays coins.
+	/// </summary>
+	public int R8FallbackCoins()
+	{
+		int most = 0;
+		foreach (var n in Map.Graph.Nodes)
+			if (n.Elder) most = Math.Max(most, Scenes.Resolve(n).Context.Coins);
+		return most;
 	}
 
 	/// <summary>The entered node is done: its routes open, or the run is won if it has none. Refused while its offer is unpicked.</summary>

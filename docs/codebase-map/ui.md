@@ -6,10 +6,10 @@
 
 | File | What it is and its public surface |
 |---|---|
-| `Ui/IRewardSource.cs` | Screen contract: `CardView`, `TargetView`, `RewardOffer`, `IRewardSource` (`Offer`, `Pick(cardIndex, targetId?)`), `IStorySource` (implemented by `StoryLibrary` and `DraftRewardSource`), TEST FIXTURE `StubRewardSource`. |
-| `Ui/DraftRewardSource.cs` | Wraps an `IRewardDraft` + `RunState` as `IRewardSource`: offer `Targets` = slots A–D with `Eligible`/`WhyNot`; `Pick(cardIndex, targetId)` maps the id to its slot and throws when the draft refuses; `LastResult`. Story defaults to `FightScene.LoadStory()`. |
+| `Ui/IRewardSource.cs` | Screen contract: `CardKind` (NewMove, Upgrade, Modifier, CancelRule), `CardView` (`Rare`, YOK-186), `TargetView`, `RewardOffer`, `IRewardSource` (`Offer`, `Pick(cardIndex, targetId?)`), `IStorySource` (implemented by `StoryLibrary` and `DraftRewardSource`), TEST FIXTURE `StubRewardSource`. |
+| `Ui/DraftRewardSource.cs` | Wraps an `IRewardDraft` + `RunState` as `IRewardSource`: offer `Targets` = slots A–D with `Eligible`/`WhyNot`; `Pick(cardIndex, targetId)` maps the id to its slot and throws when the draft refuses; `LastResult`. A cancel-rule card becomes `CancelRule` tagged "RARE - CANCEL RULE"; a rare NEW is tagged "RARE - NEW - Lv 1" (YOK-186). Story defaults to `FightScene.LoadStory()`. |
 | `Ui/RewardScreen.cs` | `scenes/ui/reward_screen.tscn`: card step + modifier target step, frame-data toggle (A12); Left/Right, Enter, Esc, Tab, pad; event `Picked(card, target)`, `Dismiss()`. Tests `RewardScreenTests`. |
-| `Ui/RewardCard.cs` | `reward_card.tscn`: crest, name, source, tag, art via `AbilityArt.ForId` (modifiers use `Fallback`), plain text, frame-data panel, `LevelPips` for Lv 3. |
+| `Ui/RewardCard.cs` | `reward_card.tscn`: crest, name, source, tag, art via `AbilityArt.ForId` (modifiers and cancel rules use `Fallback`), `RareGold` crest and tag on a `Rare` card (YOK-186, provisional colour), plain text, frame-data panel, `LevelPips` for Lv 3. |
 | `Ui/TargetCard.cs` | `target_card.tscn`: one slot A–D for a modifier: art, name, level, reason; selected and ineligible states. |
 | `Ui/StoryCard.cs` | `story_card.tscn`: `Display(text)`, event `Finished`, `Dismiss()` (hides without `Finished`). Tests `StoryScreenTests`. |
 | `Ui/AbilityArt.cs` | `ui/ability_art.tres` lookup: `ForId(moveId)` → icon, `Fallback` for null/empty/unknown. Used by reward, target, move-list, pause, rest stop, shop and the HUD talisman. Tests `AbilityArtTests`, `AbilityIconScreensTests`. |
