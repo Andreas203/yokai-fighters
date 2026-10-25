@@ -13,5 +13,5 @@
   "spark": {
     "colour": "#F2A23A"
   },
-  "notes": "Colour-only (YOK-213). Lv 2 colour shift: Persimmon #D8632C, the dusk-glow orange, for the flame. Spark stays Foxfire #F2A23A so the hit still reads as a kitsune source (V5). Default spark image."
+  "notes": "Colour-only (YOK-213). Lv 2 colour shift: Persimmon #D8632C (style.md palette), the dusk-glow orange, for the flame. Spark stays Foxfire #F2A23A so the hit still reads as a kitsune source (V5). Default spark image."
 }
