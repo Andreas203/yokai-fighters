@@ -104,11 +104,12 @@ public static class TwistScrollRound3BreakerProbes
 			}
 	}
 
-	// Emoji, ZWJ sequences and combining marks at the cut: the cut falls between text elements (no lone surrogate, no mark that starts the tail).
+	// Precomposed letters and BMP punctuation (what the validator allows) at the cut: it falls between text elements and the shown text is a prefix of the original.
 	[Test]
-	public static void Trim_EmojiAndCombiningMarks_NeverSplitAnElement(Node host)
+	public static void Trim_PrecomposedLettersAndBmpPunctuation_CutsBetweenElements(Node host)
 	{
-		string[] units = { "ab \U0001F468\u200D\U0001F469\u200D\U0001F467\u200D\U0001F466 ", "ab \U0001F1EF\U0001F1F5 ", "abc a\u0301\u0302\u0303 ", "ab \U0001F98A ", "ééé ", "\U0001F468‍\U0001F469‍\U0001F467‍\U0001F466 ", "\U0001F1EF\U0001F1F5 ", "á̂̃̄ ", "\U0001F98A fox " };
+		// Only text the story-card validator allows (no emoji, ZWJ, variation selectors or combining marks): precomposed letters and BMP punctuation.
+		string[] units = { "\u00E9\u00E9\u00E9 ", "caf\u00E9 \u014Dni na\u00EFve \u00FCber ", "\u201CShow me,\u201D he said \u2014 it\u2019s a trick\u2026 ", "\u2014\u2014\u2014\u2026\u2026 ", "\u00E9\u00E9\u00E9 \u2019" };
 		foreach (string unit in units)
 			for (int extra = 0; extra < 6; extra++)
 			{
@@ -117,7 +118,7 @@ public static class TwistScrollRound3BreakerProbes
 				card.Display(text, "K", null, "E", "Elder Oni", null, FightHud.PortraitPath("kitsune"));
 				var s = card.Scroll!;
 				string shown = s.Quote;
-				if (!s.QuoteTrimmed) { card.QueueFree(); continue; } // glyphs the font lacks measure as nothing: not a trim case
+				if (!s.QuoteTrimmed) { card.QueueFree(); continue; } // not a trim case
 				Assert.True(shown.EndsWith("…"), "unit " + System.Text.Json.JsonSerializer.Serialize(unit) + ": trimmed with an ellipsis");
 				string prefix = shown[..^1];
 				Assert.True(text.StartsWith(prefix), "prefix of the original");
