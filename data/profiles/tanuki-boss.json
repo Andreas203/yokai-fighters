@@ -12,7 +12,7 @@
   "preferred_range": "mid",
   "habit": {
     "id": "throws-at-a-turtle",
-    "description": "When the player keeps blocking, the Tanuki grabs. Mix in a throw break or step out instead of holding guard.",
+    "description": "After the first hit you block, the Tanuki grabs (60%). Break the throw.",
     "when": "opponent_blocking",
     "do": "throw",
     "chance_pct": 60
@@ -98,5 +98,5 @@
     "E13",
     "E16"
   ],
-  "notes": "Tanuki (T0): Ryo's normals, generic throw and starters, plus the one copied special (T2-T4) through special:copied, which resolves to the special locked at T1 (YOK-94); no special id is named here. Habit (throws at a blocking opponent, 60%) confirmed by the designer on 2026-10-11. Y5 raises aggression_bias at runtime. YOK-57 (proposed, needs Rules Lawyer and the designer): ex_use 40% when the copied special has an EX and a bar shows; burst_use 50% from the second hit of a combo."
+  "notes": "Tanuki (T0): Ryo's normals, generic throw and starters, plus the one copied special (T2-T4) through special:copied, which resolves to the special locked at T1 (YOK-94); no special id is named here. Habit (throws after one blocked hit, the first blockstun it sees, 60%): the 60% throw was confirmed by the designer on 2026-10-11 (AM4); the trigger was reworded to one blocked hit by AM14 (2026-10-21, YOK-177). The habit id throws-at-a-turtle is kept so code and tests stay untouched. Y5 raises aggression_bias at runtime. YOK-57 (proposed, needs Rules Lawyer and the designer): ex_use 40% when the copied special has an EX and a bar shows; burst_use 50% from the second hit of a combo."
 }
