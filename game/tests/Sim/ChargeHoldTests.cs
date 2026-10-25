@@ -121,16 +121,16 @@ public static class ChargeHoldTests
 	[Test]
 	public static void ReleaseBeforeTheWindow_StartsThePlainSpecial()
 	{
-		string late = Charge(min: 5, extra: """, { "target": "damage", "op": "add", "value": 7, "when": "charge_released" }""");
+		string late = Charge(min: 5, extra: """, { "target": "recovery", "op": "add", "value": 7, "when": "charge_released" }""");
 		var (x0, started, x1, m) = Dash(4, late);
 		Assert.Equal(6, started, "a release still starts the special");
 		Assert.Equal(0, x1 - x0, "held 4 < min 5: no dash");
 		Assert.Equal(0, m.P1.ChargeSpeed, "no charge speed");
 		Assert.True(!m.P1.ActiveConditions.HasFlag(StartConditions.ChargeReleased), "not charge_released");
-		int plain = m.P1.ActiveMove!.Damage;
+		int plain = m.P1.ActiveMove!.Recovery;
 		var (y0, _, y1, m2) = Dash(5, late);
 		Assert.Equal(Startup * 14 * S, y1 - y0, "held 5 = min: dashes");
-		Assert.Equal(plain + 7, m2.P1.ActiveMove!.Damage, "and a charge_released effect applies to the build that plays");
+		Assert.Equal(plain + 7, m2.P1.ActiveMove!.Recovery, "and a charge_released effect applies to the build that plays");
 	}
 
 	[Test]
@@ -180,6 +180,55 @@ public static class ChargeHoldTests
 		Assert.True(m.P1.ActiveEx, "Special + punch on the press: the EX build plays on release (E16)");
 		Assert.Equal(18, m.P1.ChargeSpeed, "with the charge dash");
 		Assert.True(m.P1.Meter < 300, "EX meter spent on release");
+	}
+
+	/// <summary>E16 / E18: the second EX button up to 2 ticks after the command still makes it EX while bracing; 3 ticks is too late.</summary>
+	[Test]
+	public static void Ex_LateSecondButton_WhileBracing()
+	{
+		foreach (var (late, ex) in new[] { (1, true), (2, true), (3, false) })
+		{
+			var m = Setup();
+			m.P1.Meter = 300;
+			for (int t = 1; t <= 13; t++)
+			{
+				var input = KihonHold(t, 10);
+				if (t == 1 + late) input = input.With(InputBits.LightKick);
+				m.Step(input, Idle);
+			}
+			Assert.Equal(ex, m.P1.ActiveEx, $"Kihon LK {late} tick(s) after Special: EX {ex}");
+			Assert.Equal(18, m.P1.ChargeSpeed, $"Kihon +{late}: still the 10-tick dash");
+			Assert.Equal(ex, m.P1.Meter < 300, $"Kihon +{late}: meter spent only for EX");
+		}
+		// Kata: 623 + LP on tick 3, MP two ticks later, LP held 10 ticks.
+		var k = Setup(scheme: ControlScheme.Kata);
+		k.P1.Meter = 300;
+		FighterInput In(int t) => t switch
+		{
+			1 => new FighterInput(InputBits.Right),
+			2 => new FighterInput(InputBits.Down),
+			3 => new FighterInput(InputBits.Down | InputBits.Right | InputBits.LightPunch),
+			5 => new FighterInput(InputBits.LightPunch | InputBits.MediumPunch),
+			<= 13 => new FighterInput(InputBits.LightPunch),
+			_ => Idle,
+		};
+		for (int t = 1; t <= 15; t++) k.Step(In(t), Idle);
+		Assert.True(k.P1.ActiveEx, "Kata second punch 2 ticks late: EX");
+		Assert.Equal(18, k.P1.ChargeSpeed, "Kata: 10 ticks held");
+		// A tap released on the next tick: the EX window still counts from the command, through the move's first frames.
+		var tap = Setup();
+		tap.P1.Meter = 300;
+		tap.Step(KihonHold(1, 0), Idle);
+		tap.Step(Idle, Idle);              // released: the special starts (frame 1 = command frame 2)
+		tap.Step(new FighterInput(InputBits.LightKick), Idle); // command frame 3: still in the window
+		Assert.True(tap.P1.ActiveEx, "tap, then LK on command frame 3: EX");
+		var tooLate = Setup();
+		tooLate.P1.Meter = 300;
+		tooLate.Step(KihonHold(1, 0), Idle);
+		tooLate.Step(Idle, Idle);
+		tooLate.Step(Idle, Idle);
+		tooLate.Step(new FighterInput(InputBits.LightKick), Idle); // command frame 4
+		Assert.True(!tooLate.P1.ActiveEx, "LK on command frame 4: too late, plain");
 	}
 
 	[Test]

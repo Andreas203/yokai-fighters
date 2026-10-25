@@ -108,6 +108,7 @@ public sealed partial class Match
 				f.BraceButtons = buttons;
 				f.BraceTrigger = trigger;
 				f.BraceHeld = 0;
+				f.BraceFrame = 1;
 				return true;
 			}
 			return StartSpecial(i, eq, slot, ex, precision, buttons, chargeHeld: 0);
@@ -133,11 +134,24 @@ public sealed partial class Match
 		Fighter f = Fighters[i];
 		EquippedSpecial? eq = f.Specials[(int)f.BraceSlot];
 		if (eq?.Move.Charge is not { } spec) { ToIdle(f); return; }
+		// E16 / E18: the second EX button may come up to ExPressWindow - 1 ticks after the command, as for any special.
+		if (++f.BraceFrame <= Config.ExPressWindow && !f.BraceEx && eq.ExMove != null)
+		{
+			InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;
+			if ((now & ~f.BraceButtons) != 0 && ExPair(f.BraceButtons | now))
+			{
+				f.BraceEx = true; // the meter is spent on release (no meter: the plain version, E16)
+				f.BraceButtons |= now;
+				if (f.BraceTrigger != InputBits.Special) f.BraceTrigger |= now; // Kata: either button keeps the hold
+				f.Input.TryConsume(out _); // the second press re-parsed as the same special; used up here
+			}
+		}
 		bool held = (f.Input.Buffer.At(0) & f.BraceTrigger) != 0;
 		if (held) f.BraceHeld++;
 		if (held && f.BraceHeld < spec.WindowMax) return;
-		var (slot, ex, precision, buttons, ticks) = (f.BraceSlot, f.BraceEx, f.BracePrecision, f.BraceButtons, f.BraceHeld);
+		var (slot, ex, precision, buttons, ticks, lead) = (f.BraceSlot, f.BraceEx, f.BracePrecision, f.BraceButtons, f.BraceHeld, f.BraceFrame - 1);
 		if (!StartSpecial(i, eq, slot, ex, precision, buttons, ticks)) ToIdle(f);
+		else f.BraceLead = lead; // TryExUpgrade's window keeps counting from the command, not the release
 	}
 
 	/// <param name="chargeHeld">YOK-171: ticks a charge was held (0 = tapped), or -1 for a special without a charge.</param>
@@ -213,7 +227,7 @@ public sealed partial class Match
 	{
 		Fighter f = Fighters[i];
 		if (f.ActiveSpecial == SpecialSlot.None || f.ActiveEx || f.SpecialButtons == InputBits.None
-			|| f.MoveFrame > Config.ExPressWindow) return false;
+			|| f.MoveFrame + f.BraceLead > Config.ExPressWindow) return false; // YOK-171: from the command, through a hold
 		EquippedSpecial? eq = f.Specials[(int)f.ActiveSpecial];
 		if (eq?.ExMove is null) return false;
 		InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;

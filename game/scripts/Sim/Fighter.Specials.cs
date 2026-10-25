@@ -85,6 +85,10 @@ public sealed partial class Fighter
 	public InputBits BraceTrigger;
 	/// <summary>YOK-171: ticks the trigger has stayed held after the command tick.</summary>
 	public int BraceHeld;
+	/// <summary>YOK-171: world frames since the command (1 = the command tick), for the late EX button (E16, E18).</summary>
+	public int BraceFrame;
+	/// <summary>YOK-171: frames the hold took before the special's frame 1 (BraceFrame at release - 1): the EX window counts from the command.</summary>
+	public int BraceLead;
 	/// <summary>YOK-171: the released charge's dash, gameplay units per tick, moved on each startup frame of the special (0 = none).</summary>
 	public int ChargeSpeed;
 
@@ -167,7 +171,7 @@ public sealed partial class Fighter
 		BraceSlot = SpecialSlot.None;
 		BraceEx = BracePrecision = false;
 		BraceButtons = BraceTrigger = InputBits.None;
-		BraceHeld = 0;
+		BraceHeld = BraceFrame = BraceLead = 0;
 		ChargeSpeed = 0;
 	}
 
@@ -195,12 +199,13 @@ public sealed partial class Fighter
 			foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
 		}
 		// YOK-171: the hold and the released dash, mixed only once one exists, so fights without a charge hash as before.
-		if (BraceSlot != SpecialSlot.None || ChargeSpeed != 0)
+		if (BraceSlot != SpecialSlot.None || ChargeSpeed != 0 || BraceLead != 0)
 		{
 			h = Fnv.Mix(h, (int)BraceSlot | (BraceEx ? 16 : 0) | (BracePrecision ? 32 : 0));
 			h = Fnv.Mix(h, (int)BraceButtons);
 			h = Fnv.Mix(h, (int)BraceTrigger);
 			h = Fnv.Mix(h, BraceHeld);
+			h = Fnv.Mix(h, BraceFrame | BraceLead << 16);
 			h = Fnv.Mix(h, ChargeSpeed);
 		}
 		if (Twist is { } tw) // YOK-90: mixed only in twist fights, so every other recording keeps its hashes
