@@ -1,5 +1,5 @@
 {
-  "about": "YOK-164 TEST FIXTURE: retime curves both gates run. ClipRetimeTests.ValidatorAndLoaderAgreeOnTheSharedCases loads each case through ClipCatalog.Load; tools/test_validate_data.py runs it through the clip schema and validate_data.semantic on ryo-get-up.json with frames_total, trim and retime replaced. trim null = no trim_start/trim_end fields. accept = both gates take it (F2, AM5: 0.5x-2x per segment, a held tick on at most 4 frames). Made-up curves, not clip data.",
+  "about": "YOK-164 TEST FIXTURE: retime curves both gates run. ClipRetimeTests.ValidatorAndLoaderAgreeOnTheSharedCases loads each case through ClipCatalog.Load; tools/tests/test_validate_data.py runs it through the clip schema and validate_data.semantic on ryo-get-up.json with frames_total, trim and retime replaced. trim null = no trim_start/trim_end fields. accept = both gates take it (F2, AM5: 0.5x-2x per segment, a held tick on at most 4 frames). Made-up curves, not clip data.",
   "cases": [
     { "name": "good-snap-hold-stretch", "frames_total": 33, "trim": [22, 102], "accept": true,
       "retime": [{ "frames": [1, 5], "ticks": [22, 30], "note": "startup snaps" }, { "frames": [5, 8], "ticks": [30, 30], "note": "hit pose holds" }, { "frames": [8, 12], "ticks": [30, 32] }, { "frames": [12, 33], "ticks": [32, 53] }] },

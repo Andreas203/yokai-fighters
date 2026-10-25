@@ -12,7 +12,7 @@ Run (Blender 4.x, headless):
       --out <dir>/ryo-rigged-repaired.glb \
       [--log <dir>/repair_log.json] [--set key=value ...]   # override a PARAMS entry below
 
-Why (assets/specs/ryo-regen.md): the take-2 T-pose has the legs ~4 deg apart, so the auto-skin
+Why (assets/specs/characters/ryo-regen.md): the take-2 T-pose has the legs ~4 deg apart, so the auto-skin
 splits crotch, seat and lower-belly verts between Hips and both UpLeg bones. In a deep crouch
 the belly/sash verts above the hip joint still carry 0.2-0.3 UpLeg weight and get dragged into
 the body (Hips volume ratio 0.686).

@@ -19,4 +19,4 @@
 | `Dev/DevRunStatePage.cs` | Thin page over `DevRunEditor`: slots A–D, coins, health, depth, seed, `CopyLabel`, `StatusLabel`, Apply → `GameFlow.AdoptDevSession`, presets. |
 | `Dev/DevScreenHost.cs` | Dev viewer (CanvasLayer 110): one screen scene over an opaque backdrop; `Finish()` frees it. |
 
-Tests `DevModeTests`; captures `tests/dev_capture.tscn` → `docs/screenshots/current/dev/`.
+Tests `DevModeTests`; captures `tests/captures/dev_capture.tscn` → `docs/screenshots/current/dev/`.

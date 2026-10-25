@@ -27,7 +27,7 @@ public static class TrialProbes
 	}
 
 	// KnownOpen: tools/validate_data.py keeps the LAST duplicate key (json.loads) and accepts; the loader refuses.
-	// tools/test_validate_data_probes.py pins the validator half. Flip both when the validator rejects duplicates.
+	// tools/tests/test_validate_data_probes.py pins the validator half. Flip both when the validator rejects duplicates.
 	[Test]
 	public static void KnownOpen_DuplicateKey_LoaderRefuses()
 	{

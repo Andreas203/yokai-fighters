@@ -1,5 +1,5 @@
 {
-  "about": "YOK-103: one list of modifier effects, read by BOTH gates: tools/test_validate_data.py (the validator must accept or reject each) and ModifierEffectTests.ValidatorAndLoaderAgreeOnTheSharedCases (the C# loader must do the same when it parses the modifier and builds it on every special it applies to). Each case is wrapped in an otherwise valid modifier file. Numbers written 2.0 and 1e1 are deliberate: a whole number in any JSON notation counts on both sides. Not game content.",
+  "about": "YOK-103: one list of modifier effects, read by BOTH gates: tools/tests/test_validate_data.py (the validator must accept or reject each) and ModifierEffectTests.ValidatorAndLoaderAgreeOnTheSharedCases (the C# loader must do the same when it parses the modifier and builds it on every special it applies to). Each case is wrapped in an otherwise valid modifier file. Numbers written 2.0 and 1e1 are deliberate: a whole number in any JSON notation counts on both sides. Not game content.",
   "cases": [
     { "name": "plain-damage", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 10 }] },
     { "name": "whole-number-as-2-point-0", "accept": true, "requires": [], "effects": [{ "target": "damage", "op": "add", "value": 2.0 }] },

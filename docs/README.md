@@ -48,7 +48,7 @@ Order of authority: the PDFs plus the amendments, then `rules.md`. Everything el
 
 | Location | What it is | Owner |
 |---|---|---|
-| [`../assets/specs/`](../assets/specs/) | Generation specs and acceptance results: [`style.md`](../assets/specs/style.md) (shared style and palette), one file per fighter and stage, `ui-*.md` for screen art, `rigs/`, `clips/`, `texture/` | asset-smith, rig-specialist, animator |
+| [`../assets/specs/`](../assets/specs/) | Generation specs and acceptance results: [`style.md`](../assets/specs/style.md) (shared style and palette), `characters/` (one file per fighter), `stages/`, `ui/` (`ui-*.md` screen art), `jobs/` (generation job lists), `rigs/`, `clips/`, `texture/` | asset-smith, rig-specialist, animator |
 | [`../assets/shortlists/`](../assets/shortlists/) | Sound and music pack comparisons | sound-scout |
 | [`../harness/reports/`](../harness/reports/) | Balance gate reports; raw runs are in `harness/results/` | sparring-partner |
 | [`../harness/results/`](../harness/results/) | Raw bot runs; a `README.md` per folder says how each batch was built | gameplay-programmer |

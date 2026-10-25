@@ -335,7 +335,7 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
 # loader does (game/scripts/Sim/SpecialData.cs: Effects.Apply, SpecialData.Build / Legal; MoveLoader):
 # it builds every level and EX version of each special, and every modifier on every special it applies
 # to, and reports what the game would refuse to load. Both sides run the shared case list
-# game/tests/fixtures/modifier-gate/cases.json (tools/test_validate_data.py, ModifierEffectTests), which
+# game/tests/fixtures/modifier-gate/cases.json (tools/tests/test_validate_data.py, ModifierEffectTests), which
 # is what keeps the two copies in step. The loader itself is still the last word: the game suite builds
 # the real pool from data/ (ModifierEffectTests.EveryDataModifierLoadsOnEverySpecialItAppliesTo).
 

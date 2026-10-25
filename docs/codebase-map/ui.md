@@ -72,7 +72,7 @@
 
 ## Screen kit (`Ui/Kit/`, scenes `game/scenes/ui/kit/`, resources `game/ui/kit/`)
 
-Generated text-free plates supply paper, brush, ornaments and scenery (prompts and margins in `assets/specs/ui-screen-plates.md`); all text stays live. Gallery `scenes/ui/kit/kit_gallery.tscn` (keys 1–5). Tests `KitScreenTests`.
+Generated text-free plates supply paper, brush, ornaments and scenery (prompts and margins in `assets/specs/ui/ui-screen-plates.md`); all text stays live. Gallery `scenes/ui/kit/kit_gallery.tscn` (keys 1–5). Tests `KitScreenTests`.
 
 | File | What it is and its public surface |
 |---|---|

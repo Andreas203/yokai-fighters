@@ -12,7 +12,7 @@ You sit between `asset-smith` (accepted model) and `animator` (clips). A rig you
 ## Read first
 - `docs/design/rules.md` — F3, F5, F6, G4, T0, E15.
 - `docs/design/gdd-amendments.md` — AM1 and AM5.
-- `assets/specs/<fighter>.md` (Asset Smith's spec and acceptance) and `assets/specs/rigs/` (rigs already passed).
+- `assets/specs/characters/<fighter>.md` (Asset Smith's spec and acceptance) and `assets/specs/rigs/` (rigs already passed).
 - `docs/moves/clip_needs.md` — the extreme poses the rig must survive.
 - The Linear ticket (`YOK-<n>`) you were given.
 
