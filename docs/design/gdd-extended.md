@@ -86,7 +86,7 @@ A rural Japanese province at the end of autumn, folded into an illusion by the T
 
 ### 2.3 Story structure
 
-> **Amended by** [AM2](gdd-amendments.md#am2) the binding line. Where they disagree with this section, the amendments win.
+> **Amended by** [AM2](gdd-amendments.md#am2) the binding line, [AM17](gdd-amendments.md#am17) a video on first meeting each yokai (extra, not MVP). Where they disagree with this section, the amendments win.
 
 The story is delivered through short cards, one or two sentences each, so it never interrupts the run for long. Story progress has its own save flag, independent of unlocks, and there is no post-game mode.
 

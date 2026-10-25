@@ -49,7 +49,7 @@ Win: defeat the Tanuki in a seventh duel. Loss: health carries between duels; at
 
 ### 1.4 Audience and story
 
-> **Amended by** [AM2](gdd-amendments.md#am2) the binding line. Where they disagree with this section, the amendments win.
+> **Amended by** [AM2](gdd-amendments.md#am2) the binding line, [AM17](gdd-amendments.md#am17) a video on first meeting each yokai (extra, not MVP). Where they disagree with this section, the amendments win.
 
 Primary audience: roguelite players curious about fighting games. Secondary: fighting-game fans wanting deep solo content, served by the Kata bonus, cancel depth, a frame-data toggle and a practice mode; if Kata is cut, cancel depth alone, an accepted trade. Inspirations: Hades, Slay the Spire, Street Fighter 6.
 
