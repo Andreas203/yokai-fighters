@@ -18,8 +18,8 @@ namespace YokaiFighters.Ui;
 /// Input: arrows / d-pad / stick (ui_* actions) step through the reachable nodes, Enter / Space / pad A confirm, mouse hover moves the
 /// cursor and click confirms. Only reachable nodes are ever on the cursor or clickable.
 ///
-/// YOK-109 (designer, 2025-10-25): the map is a horizontal paper scroll (<see cref="MapScroll"/>) much wider than the screen, panned inside a
-/// clipping viewport: mouse wheel, click-drag on the paper, pad right stick, Q / E and LB / RB (a page at a time). Pan is eased and clamped to the
+/// YOK-109 (designer, 2026-10-25): the map is a horizontal paper scroll (<see cref="MapScroll"/>) much wider than the screen, panned inside a
+/// clipping viewport: mouse wheel and click-drag (both only while the pointer is over the viewport, so an overlay such as the dev menu keeps its own wheel), pad right stick, Q / E and LB / RB (a page at a time; the keys and the stick only while no control outside the map has focus). Pan is eased and clamped to the
 /// paper; moving the cursor to a node off screen centres it. A node is drawn only once it is time to pick it or it is on Ryo's walked path
 /// (<see cref="MapReveal"/>): later rows, the Tanuki included, are blank paper with no name, icon, twist seal or row header. Not-taken nodes
 /// of rows Ryo has left disappear (fade out, nothing left behind). A newly shown node inks in and its route paints out from Ryo: presentation
@@ -88,8 +88,11 @@ public partial class MapScreen : Control
 	readonly List<Tween> _tweens = new();
 	HashSet<string>? _shownIds;                      // ids drawn at the end of the last Update; null = nothing shown yet for this run
 	Dictionary<(string, string), RouteKind>? _routeKinds;
+	readonly List<MapNode> _fading = new();          // nodes fading out after a pick; freed at once by FinishPresentation
+	int[] _pads = Array.Empty<int>();                // connected pads, kept by Input.JoyConnectionChanged (no per-frame allocation)
+	MapEdgeShade? _shadeLeft, _shadeRight;
 	bool _legendBuilt, _layoutValid, _needsCentre, _snapNext, _dragging;
-	string? _twistKey;
+	string? _twistKey, _headerKey;
 	object? _runKey;
 	Control? _board, _view, _scroll; MapRoutes? _routes;
 	MapLayoutResult _layout = new(new Dictionary<string, Rect2>(), Vector2.Zero);
@@ -107,7 +110,8 @@ public partial class MapScreen : Control
 			new KeyHint("pan_any", "Pan scroll"), new KeyHint("page_any", "Page"));
 		ScrollView.Resized += () => { if (View != null) Relayout(); };
 		ScrollView.GuiInput += OnViewGui;
-		UiFind.Get<MapEdgeShade>(this, "ShadeLeft").Left = true;
+		_shadeLeft = UiFind.Get<MapEdgeShade>(this, "ShadeLeft"); _shadeRight = UiFind.Get<MapEdgeShade>(this, "ShadeRight");
+		_shadeLeft.Left = true;
 		_ready = true;
 		if (View != null) Rebuild();
 	}
@@ -149,8 +153,8 @@ public partial class MapScreen : Control
 	{
 		ScrollOffset = Mathf.Clamp(ScrollOffset, 0f, MaxScroll);
 		Scroll.Position = new Vector2(-Mathf.Round(ScrollOffset), 0);
-		UiFind.Get<MapEdgeShade>(this, "ShadeLeft").More = ScrollOffset > 4f;
-		UiFind.Get<MapEdgeShade>(this, "ShadeRight").More = ScrollOffset < MaxScroll - 4f;
+		if (_shadeLeft != null) _shadeLeft.More = ScrollOffset > 4f;
+		if (_shadeRight != null) _shadeRight.More = ScrollOffset < MaxScroll - 4f;
 	}
 
 	/// <summary>Dragging the paper follows the pointer exactly, no easing.</summary>
@@ -173,22 +177,40 @@ public partial class MapScreen : Control
 		if (x0 - ScrollTarget < margin || x1 - ScrollTarget > vw - margin) PanTo((x0 + x1) / 2f - vw / 2f);
 	}
 
+	public override void _EnterTree() { Input.JoyConnectionChanged += OnJoyChanged; OnJoyChanged(0, true); }
+	public override void _ExitTree() => Input.JoyConnectionChanged -= OnJoyChanged;
+	void OnJoyChanged(long device, bool connected) => _pads = Input.GetConnectedJoypads().Select(d => (int)d).ToArray();
+
+	/// <summary>
+	/// False while a control outside the map has keyboard / pad focus (the dev menu opens over the map and focuses its own buttons): the keys and the
+	/// stick that pan the scroll then leave it alone. The map's own controls take no focus, so on its own this is always true.
+	/// </summary>
+	public bool InputFree { get { var f = GetViewport()?.GuiGetFocusOwner(); return f == null || IsAncestorOf(f); } }
+
 	public override void _Process(double delta)
 	{
 		if (!_ready || !IsVisibleInTree() || View == null) return;
-		float stick = 0f; // pad right stick: the strongest push on any pad
-		foreach (int dev in Input.GetConnectedJoypads()) { float v = Input.GetJoyAxis(dev, JoyAxis.RightX); if (Mathf.Abs(v) > Mathf.Abs(stick)) stick = v; }
+		float stick = 0f; // pad right stick: the strongest push on any pad, and only while nothing outside the map (the dev menu) has focus
+		if (InputFree) foreach (int dev in _pads) { float v = Input.GetJoyAxis(dev, JoyAxis.RightX); if (Mathf.Abs(v) > Mathf.Abs(stick)) stick = v; }
 		if (Mathf.Abs(stick) > StickDeadzone) DragBy(-Mathf.Sign(stick) * (Mathf.Abs(stick) - StickDeadzone) / (1f - StickDeadzone) * StickSpeed * (float)delta);
 		if (Mathf.Abs(ScrollTarget - ScrollOffset) < 0.5f) { if (ScrollOffset != ScrollTarget) { ScrollOffset = ScrollTarget; ApplyScroll(); } return; }
 		ScrollOffset = Mathf.Lerp(ScrollOffset, ScrollTarget, 1f - Mathf.Exp(-10f * (float)delta)); // eased, never snapping
 		ApplyScroll();
 	}
 
+	/// <summary>
+	/// The viewport's own mouse input. A wheel event reaches it only when the pointer is over it (it also bubbles up from a node card, which does
+	/// not use the wheel), so a control stacked above the map, like the dev menu's lists, keeps its wheel.
+	/// </summary>
 	void OnViewGui(InputEvent e)
 	{
-		if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } b) _dragging = b.Pressed;
+		if (e is InputEventMouseButton { Pressed: true } w && WheelDirection(w) != 0f) { PanBy(WheelDirection(w) * WheelStep * Mathf.Max(1f, w.Factor)); ScrollView.AcceptEvent(); }
+		else if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } b) _dragging = b.Pressed;
 		else if (e is InputEventMouseMotion m && _dragging) DragBy(m.Relative.X);
 	}
+
+	static float WheelDirection(InputEventMouseButton w) =>
+		w.ButtonIndex switch { MouseButton.WheelUp or MouseButton.WheelLeft => -1f, MouseButton.WheelDown or MouseButton.WheelRight => 1f, _ => 0f };
 
 	// ---- layout and build ---------------------------------------------------------------------------------------------------------
 
@@ -241,17 +263,27 @@ public partial class MapScreen : Control
 	void BuildHeaders(IReadOnlyList<MapNodeView> shown, HashSet<int> newRows)
 	{
 		var holder = UiFind.Get<Control>(this, "RowHeaders");
-		foreach (var l in _headers) { holder.RemoveChild(l); l.QueueFree(); }
-		_headers.Clear();
 		int? playRows = View!.Status?.PlayRowLimit;
+		var wanted = new List<(int Row, float X, string Text, bool Elder)>();
 		foreach (var (row, x) in _layout.Columns)
 		{
 			var inRow = shown.Where(n => n.Row == row).ToList();
 			if (inRow.Count == 0) continue;
 			bool elder = inRow.Any(n => n.Elder);
+			wanted.Add((row, x, HeaderText(row, elder, playRows), elder));
+		}
+		// a cursor move or hover changes nothing here: the labels are rebuilt only when the drawn rows, their texts or the column size change
+		string key = _layout.ColumnWidth.ToString("F1") + "|" + holder.Size.Y.ToString("F0") + "|" + string.Join("|", wanted.Select(w => $"{w.Row}:{w.Text}"));
+		if (key == _headerKey) return;
+		_headerKey = key;
+		var oldRows = _headers.Select(l => l.Name.ToString()).ToHashSet();
+		foreach (var l in _headers) { holder.RemoveChild(l); l.QueueFree(); }
+		_headers.Clear();
+		foreach (var (row, x, text, elder) in wanted)
+		{
 			var l = new Label
 			{
-				Text = HeaderText(row, elder, playRows), Name = "Header" + row, MouseFilter = MouseFilterEnum.Ignore,
+				Text = text, Name = "Header" + row, MouseFilter = MouseFilterEnum.Ignore,
 				HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
 				Position = new Vector2(x - _layout.ColumnWidth / 2, 0), Size = new Vector2(_layout.ColumnWidth, holder.Size.Y),
 				ThemeTypeVariation = "PaperLabel",
@@ -260,7 +292,7 @@ public partial class MapScreen : Control
 			l.AddThemeColorOverride("font_color", elder ? ElderHeader : MapNodePalette.Ink);
 			holder.AddChild(l);
 			_headers.Add(l);
-			if (newRows.Contains(row)) InkIn(l);
+			if (newRows.Contains(row) && !oldRows.Contains(l.Name.ToString())) InkIn(l);
 		}
 	}
 
@@ -368,9 +400,13 @@ public partial class MapScreen : Control
 		if (!_nodes.Remove(id, out var n)) return;
 		n.Disabled = true; n.MouseFilter = MouseFilterEnum.Ignore;
 		if (!animate) { Board.RemoveChild(n); n.QueueFree(); return; }
+		_tweens.RemoveAll(x => !x.IsValid());
+		_fading.RemoveAll(x => !IsInstanceValid(x));
+		_fading.Add(n);
 		var t = n.CreateTween();
 		t.TweenProperty(n, "modulate:a", 0f, 0.25f);
-		t.TweenCallback(Callable.From(n.QueueFree));
+		t.TweenCallback(Callable.From(() => { _fading.Remove(n); n.QueueFree(); }));
+		_tweens.Add(t);
 	}
 
 	/// <summary>Ends every ink and paint animation at once (a key press does this; tests and captures call it so they never read a half-drawn frame).</summary>
@@ -379,6 +415,8 @@ public partial class MapScreen : Control
 		Routes.FinishPainting();
 		foreach (var t in _tweens) if (t.IsValid()) t.Kill();
 		_tweens.Clear();
+		foreach (var n in _fading) if (IsInstanceValid(n)) n.QueueFree(); // a node still fading out is gone now
+		_fading.Clear();
 		foreach (var n in _nodes.Values) { n.Modulate = Colors.White; n.Scale = Vector2.One; }
 		foreach (var l in _headers) { l.Modulate = Colors.White; l.Scale = Vector2.One; }
 	}
@@ -483,21 +521,16 @@ public partial class MapScreen : Control
 		Confirm();
 	}
 
-	/// <summary>Any key, click or pad button ends the ink and paint animation at once; the wheel pans the scroll wherever the pointer is (the map has nothing else to scroll).</summary>
+	/// <summary>Any key, click or pad button ends the ink and paint animation at once. (The wheel is handled by the viewport itself, <see cref="OnViewGui"/>.)</summary>
 	public override void _Input(InputEvent e)
 	{
 		if (!IsVisibleInTree() || View == null) return;
 		if (e is InputEventKey { Pressed: true } or InputEventMouseButton { Pressed: true } or InputEventJoypadButton { Pressed: true }) FinishPresentation();
-		if (e is InputEventMouseButton { Pressed: true } w)
-		{
-			float dir = w.ButtonIndex switch { MouseButton.WheelUp or MouseButton.WheelLeft => -1f, MouseButton.WheelDown or MouseButton.WheelRight => 1f, _ => 0f };
-			if (dir != 0f) { PanBy(dir * WheelStep * Mathf.Max(1f, w.Factor)); GetViewport().SetInputAsHandled(); }
-		}
 	}
 
 	public override void _UnhandledInput(InputEvent e)
 	{
-		if (!IsVisibleInTree() || View == null) return;
+		if (!IsVisibleInTree() || View == null || !InputFree) return;
 		int page = MenuInput.Tab(e); // Q / E, LB / RB: a page of scroll at a time
 		if (page != 0) { PanBy(page * ScrollView.Size.X * 0.6f); GetViewport().SetInputAsHandled(); return; }
 		if (e.IsActionPressed("ui_up") || e.IsActionPressed("ui_left")) Move(-1);

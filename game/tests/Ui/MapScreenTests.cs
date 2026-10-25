@@ -536,16 +536,18 @@ public static class MapScreenTests
 		s.GetParent().QueueFree();
 	}
 
+	static InputEventMouseButton Wheel(MouseButton b) => new() { ButtonIndex = b, Pressed = true, Factor = 1f };
+
 	[Test]
 	public static void WheelDragAndPageKeysPanTheScroll(Node host)
 	{
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
 		s.PanTo(0f); s.SnapScroll();
-		s._Input(new InputEventMouseButton { ButtonIndex = MouseButton.WheelDown, Pressed = true, Factor = 1f });
+		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, Wheel(MouseButton.WheelDown)); // the wheel arrives through the viewport's own GuiInput
 		Assert.Equal(MapScreen.WheelStep, s.ScrollTarget, "wheel down pans right by a step");
-		s._Input(new InputEventMouseButton { ButtonIndex = MouseButton.WheelUp, Pressed = true, Factor = 1f });
-		s._Input(new InputEventMouseButton { ButtonIndex = MouseButton.WheelUp, Pressed = true, Factor = 1f });
+		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, Wheel(MouseButton.WheelUp));
+		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, Wheel(MouseButton.WheelUp));
 		Assert.Equal(0f, s.ScrollTarget, "wheel up pans left and stops at the paper's end");
 		s._UnhandledInput(new InputEventKey { Keycode = Key.E, Pressed = true });
 		Assert.True(Mathf.IsEqualApprox(0.6f * s.ScrollView.Size.X, s.ScrollTarget), "E pages right");
@@ -561,6 +563,96 @@ public static class MapScreenTests
 		s.PanTo(900f);
 		Assert.Equal(hash, sess.StateHash().ToString(), "panning is a view change only");
 		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void WheelOverAnotherControlDoesNotPanTheMap(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		s.PanTo(0f); s.SnapScroll();
+		var over = new Vector2(900, 500); // inside the viewport (y 148 to 892 at 1080p)
+		var root = s.GetViewport();
+		// end to end through the real GUI path: a wheel over the map's viewport pans, also over a node card (a Stop button that does not use the wheel)
+		var card = s.NodeFor("r1-apprentice")!;
+		var onCard = s.ScrollView.GlobalPosition + s.ViewRectOf("r1-apprentice").GetCenter();
+		root.PushInput(new InputEventMouseButton { Position = over, GlobalPosition = over, ButtonIndex = MouseButton.WheelDown, Pressed = true, Factor = 1f }, true);
+		Assert.Equal(MapScreen.WheelStep, s.ScrollTarget, "a wheel over the paper pans");
+		root.PushInput(new InputEventMouseButton { Position = onCard, GlobalPosition = onCard, ButtonIndex = MouseButton.WheelDown, Pressed = true, Factor = 1f }, true);
+		Assert.True(s.ScrollTarget > MapScreen.WheelStep && card.IsVisibleInTree(), "and over a node card");
+		s.PanTo(0f);
+		// a list stacked above the map (the dev menu's pages are ScrollContainers on a CanvasLayer) keeps its wheel
+		var layer = new CanvasLayer { Layer = 120 };
+		var list = new ScrollContainer { Position = Vector2.Zero, Size = new Vector2(1920, 1080) };
+		list.AddChild(new Control { CustomMinimumSize = new Vector2(1800, 4000) });
+		layer.AddChild(list);
+		host.AddChild(layer);
+		root.PushInput(new InputEventMouseButton { Position = over, GlobalPosition = over, ButtonIndex = MouseButton.WheelDown, Pressed = true, Factor = 1f }, true);
+		Assert.Equal(0f, s.ScrollTarget, "a wheel over a control above the map does not pan it");
+		layer.QueueFree();
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void PageKeysAndStickLeaveTheMapAloneWhileAnotherControlHasFocus(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		s.PanTo(0f); s.SnapScroll();
+		Assert.True(s.InputFree, "the map's own controls take no focus");
+		var other = new Button { Position = new Vector2(10, 10), Size = new Vector2(100, 40) }; // like a dev menu button
+		host.AddChild(other);
+		other.GrabFocus();
+		Assert.True(!s.InputFree, "a focused control outside the map owns the keys and the stick");
+		s._UnhandledInput(new InputEventKey { Keycode = Key.E, Pressed = true });
+		s._UnhandledInput(new InputEventJoypadButton { ButtonIndex = JoyButton.RightShoulder, Pressed = true });
+		Assert.Equal(0f, s.ScrollTarget, "Q / E and LB / RB do not page the map behind it");
+		string cursor = s.CursorId!;
+		s._UnhandledInput(new InputEventAction { Action = "ui_accept", Pressed = true });
+		Assert.True(!s.Locked, "nor does Enter pick a node behind the menu");
+		other.ReleaseFocus();
+		Assert.True(s.InputFree, "free again once the focus is gone");
+		s._UnhandledInput(new InputEventKey { Keycode = Key.E, Pressed = true });
+		Assert.True(s.ScrollTarget > 0f && cursor == s.CursorId, "then the page key works");
+		other.QueueFree();
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void CardSizeDoesNotHintAtAHiddenRowsNodeCount()
+	{
+		MapNodeView N(string id, int row) => new(id, row, "duel", null, false, MapNodeState.Locked);
+		var thin = new List<MapNodeView> { N("a", 1), N("b", 2), N("c", 3) };
+		var wide = new List<MapNodeView> { N("a", 1), N("b", 2), N("c", 3), N("w1", 4), N("w2", 4), N("w3", 4), N("w4", 4), N("w5", 4) };
+		var board = new Vector2(1500, 600);
+		var l1 = MapLayout.Compute(thin, board); var l2 = MapLayout.Compute(wide, board);
+		Assert.Equal(l1.Rects["a"].Size.Y, l2.Rects["a"].Size.Y, "a row's cards are the same height whatever a later row holds");
+		Assert.Equal(l1.Rects["b"].Size.Y, l2.Rects["b"].Size.Y, "row 2 too");
+		Assert.True(l2.Rects["w1"].Size.Y < l2.Rects["a"].Size.Y, "a row with more than the typical three shrinks its own cards only");
+		var rs = new[] { "w1", "w2", "w3", "w4", "w5" }.Select(id => l2.Rects[id]).ToList();
+		Assert.True(rs.All(r => new Rect2(Vector2.Zero, board).Encloses(r)), "and they still fit the board");
+		for (int i = 0; i < rs.Count; i++) for (int j = i + 1; j < rs.Count; j++) Assert.True(!rs[i].Intersects(rs[j]), "without overlapping");
+	}
+
+	[Test]
+	public static void CursorMovesKeepTheHeadersAndFadingNodesAreCoveredBySkip(Node host)
+	{
+		var sess = StartSession();
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
+		var s = Make(host, new SessionMapView(sess));
+		var headers = UiFind.Get<Control>(s, "RowHeaders").GetChildren().OfType<Godot.Label>().ToList();
+		Press(s, "ui_down"); Press(s, "ui_up");
+		var after = UiFind.Get<Control>(s, "RowHeaders").GetChildren().OfType<Godot.Label>().ToList();
+		Assert.True(headers.Count == after.Count && headers.Zip(after).All(p => ReferenceEquals(p.First, p.Second)), "moving the cursor does not rebuild the header labels");
+		var v = Fork();
+		var s2 = Make(host, v);
+		Press(s2, "ui_accept"); v.Complete(); s2.Refresh();
+		Press(s2, "ui_accept"); // pick b: c and d are not taken and start to fade
+		Assert.True(s2.Presenting, "the fade-out is part of the presentation that Presenting reports");
+		s2.FinishPresentation();
+		Assert.True(!s2.Presenting, "skipping ends it");
+		Assert.True(s2.NodeFor("c") == null && s2.NodeFor("d") == null, "and the not-taken nodes are gone");
+		s.GetParent().QueueFree(); s2.GetParent().QueueFree();
 	}
 
 	static void AssertOnScreen(MapScreen s, string id, string what)

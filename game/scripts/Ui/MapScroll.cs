@@ -3,7 +3,7 @@ using Godot;
 namespace YokaiFighters.Ui;
 
 /// <summary>
-/// YOK-109 (designer, 2025-10-25): the map's paper. An unrolled handscroll (emakimono) drawn in code, no texture of its own beyond the
+/// YOK-109 (designer, 2026-10-25): the map's paper. An unrolled handscroll (emakimono) drawn in code, no texture of its own beyond the
 /// shared rice-paper grain: aged paper between two lacquered rollers, a pine-green silk mount along the top and bottom edge, paper-sheet
 /// seams, faint sumi hills and pines along the bottom. It carries no information (no labels, no rows), so blank paper is all a hidden
 /// row shows. Everything is deterministic (no random calls), so the paper looks the same every frame and every run.

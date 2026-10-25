@@ -8,7 +8,7 @@ namespace YokaiFighters.Ui;
 public enum RouteKind { Idle, Open, Walked }
 
 /// <summary>
-/// Draws the map's routes as brush strokes on the scroll (YOK-109, designer 2025-10-25). The walked route is a bold persimmon stroke, an open
+/// Draws the map's routes as brush strokes on the scroll (YOK-109, designer 2026-10-25). The walked route is a bold persimmon stroke, an open
 /// route (the choice ahead) a fainter sumi one, an idle one fainter still; all are tapered at both ends with a ragged edge, bristle streaks
 /// and dry gaps, drawn in code from deterministic noise, no texture. Lines come from <see cref="MapScreen"/>; this knows no map rules.
 /// <see cref="Paint"/> makes chosen strokes paint in from their start over a short time (presentation only, <see cref="FinishPainting"/>
