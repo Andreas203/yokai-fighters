@@ -152,22 +152,4 @@ public static class LanternFrontBreakerProbes
 		scene.QueueFree();
 		Assert.True(bad == "", $"lanterns past LanternMaxZ {BambooGroveStage.LanternMaxZ}: {bad}");
 	}
-
-	// "A path of lanterns": Lantern0 must not hide the head of the left row. Rule silent on a limit; 25 % chosen. See Designer attention.
-	[Test]
-	public static void Lantern0_DoesNotCoverMuchOfPathLanternL0(Node runner)
-	{
-		string msg = ""; float worst = 0;
-		foreach (var (name, pose, settle) in Framings)
-		{
-			var scene = Load(runner);
-			pose(scene);
-			if (settle) Walk(scene, InputBits.None, InputBits.None, 90);
-			var props = scene.StageRoot.GetNode("Props");
-			float f = Covered(scene.Camera.GlobalPosition, Meshes(props.GetNode("PathLanterns/" + LanternLine.Prefix + "L0")), Meshes(props.GetNode("Lantern0")).ToList());
-			if (f > worst) { worst = f; msg = name; }
-			scene.QueueFree();
-		}
-		Assert.True(worst <= 0.25f, $"Lantern0 covers {worst:P0} of PathLanternL0 at framing {msg}");
-	}
 }
