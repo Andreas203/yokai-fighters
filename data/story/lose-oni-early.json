@@ -1,0 +1,20 @@
+{
+  "kind": "story_card",
+  "id": "lose-oni-early",
+  "status": "proposed",
+  "trigger": "Later loss (not the first), rows 1-5, when the Oni or Elder Oni won (S3 variant by winning yokai)",
+  "text": "{yokai} lowers his club, turns his back on Ryo and climbs the snowy steps to stand at his gate again. Ryo wakes at the province's edge, every talisman blank, snow still melting in his sleeves.",
+  "placeholders": [
+    "yokai"
+  ],
+  "speaker": "narrator",
+  "rules": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "M3"
+  ],
+  "notes": "Rows 1-5: no carry-over (M3), so the card says the talismans are blank (Story.md wake-up rule). Oni returns to his post, no gloating or harm (Story.md, S5). Does not mention the merchant. {yokai} = Oni or Elder Oni. Needs a code follow-up to show: the game selects wake-up cards by row band only (lose-early/mid/late); schema and StoryLibrary have no per-yokai variants (see lose-screen notes)."
+}

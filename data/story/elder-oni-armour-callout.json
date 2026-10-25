@@ -9,7 +9,8 @@
   "rules": [
     "S1",
     "S2",
+    "S5",
     "Y3"
   ],
-  "notes": "Plain rule statement. Shown once per save."
+  "notes": "Plain rule statement; no Oni voice, so no conflict with S5. Shown once per save."
 }
