@@ -96,6 +96,23 @@ public partial class LanternLine : Node3D
 		return fromWorld * seam;
 	}
 
+	/// <summary>
+	/// The backdrop's plane in world space: a point on the quad and its unit face normal (the cross of the quad's x and y
+	/// axes, so a flattened z scale does not matter), turned to face the camera side (+Z), so a mirrored quad gives the same
+	/// plane. Without a backdrop: the plane z = (this node's (0, 0, -16)), normal +Z.
+	/// </summary>
+	public (Vector3 Point, Vector3 Normal) BackdropPlane()
+	{
+		var quad = GetNodeOrNull<MeshInstance3D>(Backdrop);
+		if (quad?.Mesh is not QuadMesh) return (WorldOf(this) * new Vector3(0, 0, -16f), Vector3.Back);
+		Transform3D q = WorldOf(quad);
+		Vector3 n = q.Basis.Column0.Cross(q.Basis.Column1).Normalized();
+		return (q.Origin, n.Z < 0f ? -n : n);
+	}
+
+	/// <summary>Unsigned horizontal stretch of <paramref name="b"/>: the longer of its x and z axes (a mirror or a non-uniform scale never makes it negative).</summary>
+	public static float HorizontalStretch(Basis b) => Mathf.Max(b.Column0.Length(), b.Column2.Length());
+
 	/// <summary>The node's world transform: <c>GlobalTransform</c> in the tree, else the chain of local transforms (ancestors above the scene cancel out).</summary>
 	private static Transform3D WorldOf(Node3D n)
 	{
@@ -174,8 +191,7 @@ public partial class LanternLine : Node3D
 		if (scene is null) return;
 		Transform3D world = WorldOf(this);
 		Vector3 vanish = VanishPoint();
-		// The backdrop's world depth: the vanish point lies on the quad, at the floor.
-		float backZ = (world * vanish).Z;
+		var (onBackdrop, facing) = BackdropPlane();
 		foreach (var p in Placements(vanish))
 		{
 			// Guard: a lantern whose world depth is in front of the lantern depth (or not a number) is not built (BambooGroveStage.LanternMaxZ).
@@ -186,13 +202,15 @@ public partial class LanternLine : Node3D
 				continue;
 			}
 			var lantern = scene.Instantiate<Node3D>();
-			// Guard: a lantern whose back (centre z - footprint radius, world) is at or behind the backdrop pokes through it; not built.
-			// Footprint radius as StageTests measures it: half the largest horizontal extent of the unscaled lantern, times its scale.
+			// Guard: a lantern whose footprint reaches the backdrop plane (signed distance along its camera-facing normal, world,
+			// minus the footprint radius; or not a number) pokes through it; not built. Footprint radius as StageTests measures it:
+			// half the largest horizontal extent of the unscaled lantern, times its scale and this node's unsigned horizontal stretch.
 			Aabb own = BambooGroveStage.LocalBounds(lantern);
-			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * p.Scale * world.Basis.Scale.Y;
-			if (!(z - radius > backZ))
+			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * p.Scale * HorizontalStretch(world.Basis);
+			float d = facing.Dot(world * p.Position - onBackdrop);
+			if (!(d - radius > 0f))
 			{
-				GD.PushWarning($"LanternLine: {p.Name} at world z {z} (radius {radius}) is at or behind the backdrop at z {backZ}; skipped");
+				GD.PushWarning($"LanternLine: {p.Name} {d} m in front of the backdrop (radius {radius}) touches or crosses it; skipped");
 				lantern.Free();
 				continue;
 			}

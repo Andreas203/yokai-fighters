@@ -204,6 +204,78 @@ public static class StageTests
 		scene.QueueFree();
 	}
 
+	/// <summary>Footprint radius of a built lantern (unscaled lantern bounds, times the unsigned horizontal stretch of its world basis).</summary>
+	static float WorldRadius(Node3D lantern)
+	{
+		var probe = GD.Load<PackedScene>(LanternLine.LitLanternScene).Instantiate<Node3D>();
+		Aabb own = BambooGroveStage.LocalBounds(probe);
+		probe.Free();
+		Basis b = lantern.GlobalTransform.Basis;
+		return Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * Mathf.Max(b.Column0.Length(), b.Column2.Length());
+	}
+
+	static List<Node3D> Row(LanternLine line, string side) =>
+		line.GetChildren().Cast<Node3D>().Where(n => n.Name.ToString().StartsWith(LanternLine.Prefix + side)).ToList();
+
+	[Test]
+	public static void Stage_LanternLineMirrored_StillSkipsLanternsBehindTheBackdrop(Node runner)
+	{
+		// YOK-208 (Code Critic): a mirrored line (scale x -1) has a negative signed Basis.Scale; the footprint radius must
+		// stay positive, so a row pushed just behind the backdrop is skipped, not built through it.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		float back = stage.GetNode<MeshInstance3D>("Backdrop").GlobalPosition.Z;
+		line.Scale = new Vector3(-1, 1, 1);
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "mirrored, as placed: both rows still built");
+		foreach (var l in line.GetChildren().Cast<Node3D>())
+			Assert.True(l.GlobalPosition.Z - WorldRadius(l) > back, $"mirrored: {l.Name} at z {l.GlobalPosition.Z} reaches the backdrop at z {back}");
+		line.NearLeft = new Vector3(-1.7f, 0, -16.1f);
+		Assert.Equal(0, Row(line, "L").Count, "mirrored, near left at z -16.1 (behind the backdrop): the left row is skipped");
+		Assert.True(Row(line, "R").Count > 0, "mirrored: the right row is still built");
+		// A mirrored backdrop (its x axis flipped) is the same plane: the shipped rows still build in front of it.
+		line.Scale = Vector3.One;
+		line.NearLeft = new Vector3(-1.7f, 0, -13.7f);
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		backdrop.Scale = new Vector3(-1, 1, 1);
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "mirrored backdrop: both rows still built");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternLineYawedBackdrop_SkipsLanternsBehindItsPlane(Node runner)
+	{
+		// YOK-208 (Code Critic): a yawed backdrop is not a plane of constant z; the guard measures along its normal. A near
+		// point well in front of the backdrop's centre z but just behind the turned plane builds no lantern of that row.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		backdrop.Rotation = new Vector3(0, Mathf.DegToRad(30f), 0);
+		Vector3 q = backdrop.GlobalPosition with { Y = 0 }, n = backdrop.GlobalTransform.Basis.Column2.Normalized(), along = Vector3.Up.Cross(n);
+		Assert.True(n.Z > 0.8f, $"the turned backdrop still faces the camera: normal {n}");
+		void Clear(string what)
+		{
+			foreach (var l in line.GetChildren().Cast<Node3D>())
+			{
+				float d = n.Dot(l.GlobalPosition - backdrop.GlobalPosition);
+				Assert.True(d - WorldRadius(l) > 0f, $"{what}: {l.Name} {d} m in front of the turned backdrop, radius {WorldRadius(l)}");
+			}
+		}
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "turned 30 degrees, as placed: both rows built");
+		Clear("as placed");
+		Vector3 behind = q - n * 0.05f - along * 3f; // 3 m left along the plane, 5 cm behind it
+		Assert.True(behind.Z > backdrop.GlobalPosition.Z + 1f && behind.X < 0f, $"the test point {behind} is well in front of the backdrop's centre z");
+		line.NearLeft = line.ToLocal(behind);
+		Assert.Equal(0, Row(line, "L").Count, $"near left at {behind}, behind the turned plane: the left row is skipped");
+		Assert.True(Row(line, "R").Count > 0, "the right row is still built");
+		Clear("left row behind the plane");
+		scene.QueueFree();
+	}
+
 	[Test]
 	public static void Stage_LanternLineRecedesTowardTheVanishPoint()
 	{
