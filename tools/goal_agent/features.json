@@ -8,6 +8,8 @@
     "F6": "process: how assets are generated and sourced",
     "M2": "pacing target, read from harness results by Sparring Partner",
     "S1": "tone, judged by the Rules Lawyer on story text",
+    "S5": "story content: the Oni's role, judged by the Rules Lawyer on story text",
+    "S6": "extra, not MVP (AM17): the first-meeting video, built only once every MVP item is done (YOK-207)",
     "V1": "art direction, checked by Asset Smith's acceptance",
     "V9": "stages and music: generated and sourced assets",
     "G1": "scope: read by the agent to rank work, not a feature",

@@ -2,7 +2,7 @@
 title: Characters
 status: draft
 source: GDD §2.2, §5.1; docs/design/characters/
-updated: 2026-10-10
+updated: 2026-10-25
 ---
 
 # Characters
@@ -39,7 +39,9 @@ Reference images: `docs/design/characters/kitsune/`.
 
 The rushdown yokai of the snowbound mountain shrine gate. Proud and blunt, it dashes in and swings an iron club. Its hit sparks are oni red.
 
-Folklore reference: oni carry the kanabō, an iron club; the saying "an oni with an iron club" means strength made stronger.
+He is the gate's guardian (S5). The Tanuki's illusion has bent his post into a gate no one may pass, so he fights everyone who comes up the mountain. Freed, he goes back to guarding it. He is never a menace: cards show him holding his ground or returning to his post, never as a demon to be cast out.
+
+Folklore reference: oni carry the kanabō, an iron club; the saying "an oni with an iron club" means strength made stronger. The guardian reading has its own folklore: onigawara, oni-faced roof tiles, ward off evil; the ascetic En no Gyōja subdued the oni Zenki and Gōki, who became his loyal servants; at Setsubun, Kinpusen-ji in Yoshino calls "oni wa uchi" (oni, come in) to take in oni driven out elsewhere; in the children's tale *Naita Akaoni* a kind red oni is kept from friendship by his reputation. An exorcist would cast an oni out, so the Oni is where Ryo's apologies are tested hardest.
 
 Reference images: none yet.
 
@@ -61,6 +63,6 @@ The GDD lists stretch goals that must not appear in shipped content: the yokai J
 
 ## Open questions
 
-- The one-line personalities for the Oni (proud and blunt) and the Kappa (formal, stubborn and polite) are proposed here; the GDD gives them an archetype but no voice. The designer confirms or replaces them.
+- The Kappa's one-line personality (formal, stubborn and polite) is proposed here; the GDD gives it an archetype but no voice. The designer confirms or replaces it. The Oni's is settled (S5, 2026-10-25).
 - Kitsune tail count for the elder: nine tails on the model, or told apart by colour and effects only?
 - Do the Oni and Kappa use their yokai bodies or their folklore human guise? That depends on the week-1 retarget gate.

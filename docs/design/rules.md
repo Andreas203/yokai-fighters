@@ -8,6 +8,7 @@ and this file gets a fix ticket. All numbers are first-pass targets that the har
 tuned value changes here first, with the harness evidence linked in the commit.
 
 Items marked **Full game** are stretch goals and must not be built in the 5-week build.
+Items marked **Extra (not MVP)** may be built only once every MVP item is done; they never delay MVP work and are the first thing dropped [AM17].
 
 ---
 
@@ -207,6 +208,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **S2** Cards are one or two sentences.
 - **S3** Card schedule: intro (first run: Master Sōen, "name the debt"); every binding: "Forgive me, {yokai}. I'll set your spirit free."; row 4: "That {move} of yours... I'd love one." (templated to copy target); first loss: Tanuki names the move it would have stolen; later losses: variants by row reached and winning yokai; boss node: merchant drops disguise; Win 1: why the Tanuki collects; Win 2: talismans are cages too; Win 3: Ryo binds the Tanuki and releases every yokai — "I said I'd set you free." [AM2]
 - **S4** Templated cards must use the actual move/yokai names from the player's run.
+- **S5** The Oni is the guardian of the snowbound shrine gate (V9). The illusion has bent his post into a gate no one may pass; once freed, he goes back to guarding it. Proud and blunt, a guardian and never a menace: Oni cards show him holding his ground or returning to his post, never as a demon to be cast out (designer, 2026-10-25).
+- **S6** **Extra (not MVP)** [AM17]: the first time the player meets each yokai, a short video in the story-card style plays before the duel (paper, ink and brush, V1), carrying at most two sentences (S2). It plays once per yokai per save, recorded with story progress (M4). The S3 schedule the build ships with does not depend on it.
 
 ## V — Presentation and feel
 
@@ -239,3 +242,4 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked.
 - What the Tanuki does when it copies a charged special such as Sumo Stance (AM11, T4).
 - In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
+- The first-meeting video (S6, AM17): its length; whether it can be skipped; whether elders, the Tanuki and the row-1 apprentice count; how it is made (generated video, which needs a tool and spend, or an animated card in the engine); whether it may land before the week-3 feature freeze (G5).

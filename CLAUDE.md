@@ -78,6 +78,7 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `docs/screenshots/review/` | Old ticket screenshots waiting for the designer to keep or delete | designer |
 | `vault/` | The design as linked notes, one topic per note; the content agents load the notes listed in their definitions whole | designer |
 | `tools/content_pipeline/` | Drafts card text from the vault: runs the writer agents and the Rules Lawyer as critic on the whole notes each lists under "Vault notes"; output is `proposed` and still goes through the Rules Lawyer | designer |
+| `tools/style_agent/` | Style loop: a Generator makes content, an Evaluator scores it 1–10 with a reason against a style guide (every rule cited to rules.md, the GDD, the vault or the asset specs), a Refiner rewrites from that reason until 10/10. `demo`/`audit`: story cards (`style_guide.py`). `visual`: stage backdrops from Astra, scored by a vision Evaluator with pixel measurements (`visual_guide.py`); a live run spends Astra takes, so it needs the designer's budget approval (`--max-images`) | designer |
 | `tools/goal_agent/` | Goal-oriented coding agent: reads rules.md and the GDD, scans the code, ranks the gaps (`features.json`, `priority.py`) and writes the top one through build, test, Code Critic and Test Breaker gates. `gaps` is the producer's gap report. Works on a branch, never commits | designer |
 
 ## Tickets, branches and PRs

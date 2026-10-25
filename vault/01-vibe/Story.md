@@ -1,8 +1,8 @@
 ---
 title: Story
 status: draft
-source: GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2
-updated: 2026-10-10
+source: GDD §1.2, §2.2, §2.3, §2.4, §5.2, §7; AM2, AM17; S5
+updated: 2026-10-25
 ---
 
 # Story
@@ -28,7 +28,7 @@ A cheerful travelling merchant waits at the row 4 rest stop, and sometimes again
 
 ## Card schedule
 
-The story is delivered through short cards of one or two sentences, so it never interrupts the run for long (S2, S3). No new beats are added to this schedule.
+The story is delivered through short cards of one or two sentences, so it never interrupts the run for long (S2, S3). No new beats are added to this schedule; the first-meeting video below is extra and sits outside it.
 
 | When | Card | Speaker |
 |---|---|---|
@@ -49,7 +49,7 @@ A wake-up card shows after a loss. Ryo wakes at the province's edge.
 - First loss: a cheerful voice names the move the Tanuki would have stolen. This teaches the copy rule before the player has met the boss.
 - Later losses vary by the row reached and by which yokai won. The yokai that won is named through `{yokai}`.
 - A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked.
-- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing.
+- The yokai that won does not gloat and does not harm Ryo. It leaves, or goes back to what it was doing. The Oni goes back to guarding his shrine gate (S5).
 - A later-loss card does not reveal that the merchant is the Tanuki. The reveal belongs to the boss node.
 
 ## Elder intro cards
@@ -61,6 +61,10 @@ Each elder's twist is shown three ways: an icon on its map node, a one-line intr
 | Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |
 | Elder Oni | 5 or 8 | Armour on every special |
 | Elder Kappa | 5 or 8 | Its throws can't be broken |
+
+## First-meeting video (extra, not MVP)
+
+The first time the player meets a yokai, a short video in the story-card style plays before the duel: paper, ink and brush, at most two sentences (S6, AM17). It plays once per yokai per save, recorded with story progress. It is built only once every MVP item is done and is the first thing dropped. Its length, skipping, which opponents count and how it is made are open (rules.md open questions).
 
 ## Sample cards from the GDD
 
