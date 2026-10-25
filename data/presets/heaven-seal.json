@@ -1,0 +1,18 @@
+{
+  "kind": "level_preset",
+  "id": "heaven-seal",
+  "special": "rising-talisman",
+  "level": 3,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#F1E8D4",
+  "spark": {
+    "colour": "#1D1B21",
+    "scale_pct": 130
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Heaven Seal: Rice paper #F1E8D4, the ofuda colour. Spark stays Ink #1D1B21 (V5 Ryo ink black) and is 30% larger. Seal-glyph texture is on the follow-up list, not generated."
+}
