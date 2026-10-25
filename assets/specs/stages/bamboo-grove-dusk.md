@@ -64,9 +64,11 @@ Total 48/48. Outputs in `game/assets/generated/stage/bamboo-grove/`: `backdrop.p
 - S6 ground strip: **RETAKE recommended (3 credits, not approved)**: gritty photographic texture, off-style against the flat cel look; grey letterbox border (art about x 103-1240, y 173-595); tiling seam unverified. Suggested prompt change: add "flat vector cel shapes, no grit, no noise, seamless". Usable as a placeholder after crop.
 - Files under `game/assets/generated/`. Licence: Meshy plan tier and commercial terms of generated output are NOT verifiable from the MCP (balance call only); UNKNOWN, designer to confirm on the plan before shipping.
 
-## Retake R1: lit lantern path to a river glimpse (YOK-209)
+## Retake R1: lit lantern path to a river glimpse (YOK-209) - SUPERSEDED by R1b
 
-Status: **PROPOSED, not approved, nothing run, 0 credits spent.** Designer request 2026-10-25: "in the background of the bamboo scene can we make the lanterns appear lit and possibly lead to a river". Replaces S1 only; props S2-S6 stay. Take cap 3 for the backdrop (take 1 above is used for the original; the cap counts retakes of this request, as for YOK-151).
+**Superseded by R1b (below), 2026-10-25.** Reason: YOK-208 measured the scene. The 3D floor meets the backdrop quad at about 0.80 H of the cropped art, and the camera horizon falls at 0.72-0.74 H. R1 put the vanishing point at 0.52 H and painted lanterns at 0.54-0.62 H, so in game they would float 3.5-5 m above the floor and fight the 3D lantern line YOK-208 now builds. R1's text is kept for the record; its Placement, Prompt and placement acceptance criteria are replaced by R1b. R1's intent, water colour and stage-distinction table still hold.
+
+Original status: **PROPOSED, not approved, nothing run, 0 credits spent.** Designer request 2026-10-25: "in the background of the bamboo scene can we make the lanterns appear lit and possibly lead to a river". Replaces S1 only; props S2-S6 stay. Take cap 3 for the backdrop (take 1 above is used for the original; the cap counts retakes of this request, as for YOK-151).
 
 ### Intent
 Same stage identity (V9, Kitsune's bamboo grove at dusk). Added: a stone path winding back through the bamboo, lined with small stone lanterns lit persimmon, ending at a small far glimpse of a river at dusk.
@@ -123,4 +125,62 @@ R1 (text-to-image). The composition changes substantially (path, lanterns, river
 - Licence: plan tier unknown, flagged.
 
 ### Takes (R1)
+None run (superseded by R1b). Balance not checked.
+
+## Retake R1b: low horizon, no painted lanterns (YOK-209)
+
+Status: **PROPOSED, not approved, nothing run, 0 credits spent.** Supersedes R1. The designer approved R1 at 9 credits per take, cap 27; the prompt change needs approval again. Same job chain and cost. Replaces S1 only; props S2-S6 stay.
+
+### What changed from R1, and why
+| | R1 | R1b | Why |
+|---|---|---|---|
+| Vanishing point | 0.50 W, 0.52 H | **0.53 W, 0.74 H** | YOK-208: floor seam at 0.80 H of the art, camera horizon 0.72-0.74 H, 3D lantern vanishing point about 0.53 W on the seam |
+| River glimpse | 0.46-0.56 W, 0.46-0.52 H | **0.47-0.59 W, 0.70-0.77 H** | Must sit just above the seam to be visible and meet the path end |
+| Painted lanterns | 4-5 per side at 0.54-0.62 H | **none** | The 3D line supplies them; painted ones would float and double up |
+| Painted path | winds up from the bottom edge | **short pale strip at 0.75-0.80 H** | Below 0.80 H is under the floor; the path only shows where it meets the river |
+| Bottom fifth | calm lower third (0.67-1.0 H) | **plain ground below 0.80 H, continuing the floor tone** | Hidden anyway; flat earth avoids a colour jump at the seam |
+| Sky glow | centred 0.50 W | centred 0.53 W, about 0.30-0.66 H | Follows the new axis |
+
+Kept from R1: dusk palette, indigo water and not teal (`#3E7F86` is Kappa's), banned list, full-bleed with no letterbox, grove identity and the stage-distinction table, calm area behind the fighters.
+
+### Placement (fractions of the cropped 16:9 art; re-measure on the take)
+- Vanishing point: **0.53 W, 0.74 H** (tolerance 0.04 W, 0.03 H). Path far end and river meet here.
+- River glimpse: narrow horizontal sliver, **x 0.47-0.59 W, y 0.70-0.77 H**, framed by bamboo trunks on both sides. About 0.8% of the frame (limit 10%). Flat indigo `#2D3A5E` with two or three flat persimmon reflection bands.
+- Path: pale stone strip at **0.75-0.80 H**, widening slightly downward from 0.53 W, ending at 0.80 H.
+- Bamboo and mist: trunk bases at about 0.76-0.80 H; mist fades to indigo behind the river.
+- Afterglow: persimmon centred near 0.53 W, 0.30-0.66 H, above the river.
+- Below 0.80 H: plain flat packed-earth tone matching the floor (low contrast, no path, water, lanterns or leaves).
+- Painted lanterns: none. Optional exception if the designer wants a distant hint: at most two tiny dim ones per side within 0.08 W of the vanishing point at 0.72-0.76 H, under 0.02 W wide. Why to avoid even these: the 3D line ends at the same vanishing point, so any painted lantern there must align within a few pixels or it reads as a double. Recommended: none.
+
+### Prompt (after the style block)
+Backdrop R1b (`meshy_text_to_image`, `nano-banana-pro`, `aspect_ratio: 16:9`):
+> Wide stage backdrop, a bamboo grove at dusk seen from a very low flat viewpoint with a very low horizon, the ground fills only the bottom fifth of the image as plain flat packed earth with no path and no detail, dense pine-green bamboo stalks in layered depth standing on that ground and fading into indigo mist, centred just right of the middle a short pale stone path meets a small narrow glimpse of a calm river in muted indigo with flat persimmon reflection bands, the river sits just above the bottom fifth of the image and takes under one percent of the frame, bamboo trunks frame the river on both sides, a large persimmon-orange dusk afterglow fills the sky above the river between the stalks, the centre of the frame calm and uncluttered, no lanterns, no characters, no text, no stars, no paper lanterns, full-bleed to the image edges with no border, frame or letterbox. Flat cel colours, soft ink-brush edges. Palette: pine #34483B, indigo #2D3A5E, persimmon #D8632C, rice paper #F1E8D4, earth #7A4A3A. Avoid: [negative prompt], teal water, bright blue sky, bridge, boats, lanterns of any kind.
+
+How the wording gets there: "very low horizon" and "ground fills only the bottom fifth" push the horizon to about 0.75-0.80 H; "river sits just above the bottom fifth" fixes the glimpse vertically; "centred just right of the middle" gives about 0.53 W; "no lanterns" plus the avoid list stops painted ones. The earth hex `#7A4A3A` is a placeholder: replace it with the colour sampled from the floor in the YOK-208 capture before the run. Text-to-image seldom hits fractions exactly, so the acceptance check measures, and the quad nudge below absorbs small misses.
+
+Image-to-image from the old backdrop is not recommended: its high horizon and layout would anchor the result.
+
+### Option: re-place the quad in Godot instead of changing the take
+Keep R1 as written and scale/move the quad so the painted horizon (0.52 H) lands on the floor seam. That needs the quad about 1.5x larger (0.80 / 0.52) and crops the sides to the central 65% of the width. Costs: the 1376x768 art is enlarged 1.5x (softer, bamboo detail cropped away), the painted river and lanterns still land behind the 3D line, and bamboo prop depths need retuning. The gameplay-programmer's view: either works.
+
+**Recommendation: R1b (change the take), with a free quad nudge as the rescue.** No resolution loss, no scene rework, the same 9 credits per take, and the art is made for the camera it is seen through. A nudge costs 0 credits, so a take with the right look that misses the fractions by up to about 0.05 H is accepted and the gameplay-programmer shifts the quad instead of the designer spending another take. Fall back to full re-placement only if all three takes miss badly.
+
+### Job chain and cost (unchanged from R1)
+| # | Tool | Settings | Credits |
+|---|---|---|---|
+| R1b | `meshy_text_to_image` | backdrop R1b, `nano-banana-pro`, 16:9 | 9 |
+
+Recommended: take 1, 9 credits. Worst case, three takes: 27 (the designer's cap). Props, rigs, clips: 0. Run only after re-approval; `meshy_check_balance` first; log task ids under Takes (R1b).
+
+### Acceptance criteria (checked after each take, written under `## Acceptance`)
+- Full-bleed: no grey letterbox or border; check edge pixels of all four sides. Otherwise crop, then measure fractions on the cropped art.
+- Vanishing point within 0.04 W and 0.03 H of 0.53 W, 0.74 H; river inside x 0.47-0.59 W, y 0.70-0.77 H (0.03 tolerance), under 10% of the frame.
+- No lanterns of any kind (or, if the exception is kept, only tiny and dim inside the stated box); no paper lanterns, stars, bridge, boats, characters or text.
+- Below 0.80 H plain ground with no path, water or objects; tone within a small step of the floor colour at the seam.
+- Palette within tolerance; water indigo, no teal; flat colours, no bloom, no painterly noise.
+- In-game check against the YOK-208 capture (`docs/screenshots/current/stage/mid-range.png`): the 3D lantern rows converge on the painted vanishing point and river, nothing floats, fighters read at 720p over the calm centre.
+- Reads as the grove, not the riverbank (table above).
+- Licence: plan tier unknown, flagged.
+
+### Takes (R1b)
 None run. Balance not checked.
