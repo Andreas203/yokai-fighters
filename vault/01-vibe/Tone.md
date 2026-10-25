@@ -2,7 +2,7 @@
 title: Tone
 status: draft
 source: GDD §2.1, §2.2, §2.4, §4.5; AM2; data/story, data/modifiers
-updated: 2026-10-10
+updated: 2026-10-25
 ---
 
 # Tone
@@ -62,7 +62,7 @@ The narrator is quiet and observant, in present tense. In the GDD's sample cards
 
 ## Voice: yokai
 
-Yokai rarely speak on cards. They show character through what they do: the Kitsune teases and slips away, the Oni is proud and blunt, the Kappa is formal, stubborn and polite. They are real spirits trapped in the illusion and made to fight again each loop, which is why Ryo's apologies matter.
+Yokai rarely speak on cards. They show character through what they do: the Kitsune teases and slips away, the Oni is proud and blunt and keeps his gate (S5), the Kappa is formal, stubborn and polite. They are real spirits trapped in the illusion and made to fight again each loop, which is why Ryo's apologies matter.
 
 ## Reward card voice
 
@@ -82,5 +82,5 @@ Reward cards are plain language first, with frame data behind a toggle (A12).
 ## Open questions
 
 - Narrator person: the GDD samples use "you" on the wake-up card and "Ryo" on the win card. Is that split intended for every card of each kind?
-- The yokai personalities under "Voice: yokai" are proposed for the Oni and the Kappa (see [[Characters]]).
+- The Kappa's personality under "Voice: yokai" is proposed (see [[Characters]]); the Oni's is settled (S5).
 - Do yokai ever speak a full line on a card, or only act?

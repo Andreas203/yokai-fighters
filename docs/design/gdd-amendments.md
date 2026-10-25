@@ -22,6 +22,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM14](#am14) | 2026-10-21 | The Tanuki's throw habit triggers after one blocked hit | Y2 | YOK-177, PR #214 |
 | [AM15](#am15) | 2026-10-20 | The forecast's expected cost is the copied move's damage per hit | T6 | YOK-173, PR #217 |
 | [AM16](#am16) | 2026-10-19 | Tripo's skeleton becomes the shared skeleton | F6 | YOK-146 |
+| [AM17](#am17) | 2026-10-25 | A story-card style video on first meeting each yokai (extra, not MVP) | S6, header | YOK-207 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -376,3 +377,24 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 |---|---|---|
 | AM5, "Rig source of truth" | "today the Meshy skeleton that Ryo and Kitsune passed the gate on" | "Tripo's skeleton, from the Tripo Ryo; the Meshy skeleton stays as the previous one until each rig is rebuilt" |
 | rules.md F6 | "one shared humanoid skeleton (today Meshy's)" | "one shared humanoid skeleton (Tripo's since 2026-10-19 [AM16]; the Meshy skeleton stays for rigs not yet rebuilt)" |
+
+<a id="am17"></a>
+
+## AM17 — A story-card style video on first meeting each yokai (extra, not MVP) (2026-10-25)
+
+**Status.** Decided by the designer on 2026-10-25: "add as a new requirement that a short story card style video plays when you first encounter a yokai, this should be extra and not part of the mvp".
+
+**Decision.** The first time the player meets a yokai, a short video in the style of the story cards plays before the duel: paper, ink and brush in the talisman look (V1), carrying at most two sentences of text (S2) in the game's tone (S1). It plays once per yokai per save and is recorded with story progress (M4), so it never depends on unlocks.
+
+It is **extra, not part of the MVP**. It is built only once every MVP item is done, it never delays MVP work, and it is the first thing dropped if time runs short. The card schedule the build ships with (S3) does not depend on it.
+
+**Open.** How long it runs; whether it can be skipped; whether the elders and the Tanuki get one (the elders already have intro cards, Y3, and the Tanuki has its reveal) and whether the row-1 apprentice counts as meeting the Kitsune; how it is made (a generated video needs a tool and a spend that AM1 and AM5 don't name, or it can be an animated card in the engine); and whether it can land before the week-3 feature freeze (G5) or only in the polish weeks with the designer's say-so.
+
+**What does not change.** The S3 card schedule and the never-cut story cards (G1). The elder intro cards still show on every elder entry (Y3). Every generation job and its cost still need the designer's approval (AM1, AM5).
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §2.3 Story structure; GDD short §1.4 Audience and story | No beat on first meeting a yokai | A story-card style video on the first meeting with each yokai, extra and not MVP. Rule S6. |
+| rules.md header | Only **Full game** marks work outside the build | **Extra (not MVP)** marks work that may be built only after every MVP item is done [AM17]. |
