@@ -271,7 +271,8 @@ public static class FightHudTests
    Assert.True(hud.TwistStripVisible, "Tanuki fight line");
    Assert.Equal("THE TANUKI COPIES", hud.TwistKicker, "kicker");
    Assert.Equal(3, locked.Level, "the locked special is Lv 3");
-   Assert.Equal($"{locked.Data.Name} at Lv 2, no modifiers", hud.TwistLine, "T4 line: never the evolution");
+   Assert.Equal($"{locked.Data.Name} · Lv 3 · no modifiers, no evolution", hud.TwistLine, "T4 line: Ryo's level (YOK-109), and the words say the copy gets no modifier and no evolution");
+   Assert.Equal(2, locked.MoveLevel, "the copy itself runs the Lv 2 tuning");
    Assert.Equal("Lv 3", t.LevelText, "the talisman shows Ryo's level");
    ulong before = s.StateHash();
    s.Run.LevelUp(SpecialSlot.A); s.Run.LevelUp(SpecialSlot.A); // Ryo keeps levelling: the lock does not move
@@ -286,17 +287,27 @@ public static class FightHudTests
  }
 
  [Test]
- public static void ElderStrip_ShowsOnlyInElderFights_WithPlaceholderText(Node runner)
+ public static void ElderStrip_ShowsOnlyInElderFights_WithTheStoryDataLabel(Node runner)
  {
   var hud = Load(runner);
   try
   {
    var view = new FakeRunView { ElderFight = true };
    hud.RunView = view;
-   hud.Refresh(new Match());
+   var m = new Match();
+   hud.Refresh(m);
+   Assert.True(!hud.TwistStripVisible, "no twist on the opponent: nothing to remind, no invented line");
+   var saved = Ui.TwistCopy.Story;
+   try
+   {
+    Ui.TwistCopy.Story = new Story.StoryLibrary(new[] { new Story.StoryCardData("elder-oni-armour-label", null, "Armour on every special", System.Array.Empty<string>(), "HUD") });
+    m.P2.Twist = new ElderTwist("elder-oni-armour", "elder-oni", TwistEffect.SpecialArmour, 0, 1, "twist.elder-oni-armour", "twist-armour", null, null);
+    hud.Refresh(m);
+   }
+   finally { Ui.TwistCopy.Story = saved; }
    Assert.True(hud.TwistStripVisible, "elder fight shows the reminder");
    Assert.Equal("ELDER TWIST", hud.TwistKicker, "kicker");
-   Assert.Equal(FightHud.TwistPlaceholder, hud.TwistLine, "placeholder until YOK-90");
+   Assert.Equal("Armour on every special", hud.TwistLine, "the twist's label card (story data)");
    view.ElderFight = false;
    hud.Refresh(new Match());
    Assert.True(!hud.TwistStripVisible, "hidden in other fights");
@@ -389,11 +400,12 @@ public static class FightHudTests
   {
    var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)));
    hud.RunView = new FakeRunView { ElderFight = true, Copy = copy };
-   hud.Refresh(new Match());
+   Ui.TwistCopy.Story = StripStory();
+   hud.Refresh(ElderMatch());
    Assert.True(!hud.CopyTarget.Visible, "AM6: an elder fight shows no copy target");
    Assert.True(hud.TwistStripVisible && hud.TwistKicker == "ELDER TWIST", "the elder twist reminder (Y3) still shows");
   }
-  finally { hud.Free(); }
+  finally { Ui.TwistCopy.Story = null; hud.Free(); }
  }
 
  [Test]
@@ -496,27 +508,35 @@ public static class FightHudTests
    Assert.True(s.Enter("e").Ok, "enter the elder");
    Assert.True(view.ElderFight && !view.InTanukiFight, "elder node");
    hud.RunView = view;
-   hud.Refresh(new Match());
+   Ui.TwistCopy.Story = StripStory();
+   hud.Refresh(ElderMatch());
    Assert.True(hud.TwistStripVisible, "strip from the real session");
    s.WinFight(700); s.CompleteNode(); s.Enter("d");
    hud.Refresh(new Match());
    Assert.True(!hud.TwistStripVisible, "a plain duel hides it");
   }
-  finally { hud.Free(); }
+  finally { Ui.TwistCopy.Story = null; hud.Free(); }
  }
 
+
+ // YOK-109: the elder strip reads the fighting elder's twist label from story data; no twist on P2 or no label card = no strip.
+ static readonly ElderTwist StripTwist = new("elder-oni-armour", "elder-oni", TwistEffect.SpecialArmour, 0, 1, "twist.elder-oni-armour", "twist-armour", null, null);
+ static Match ElderMatch() { var m = new Match(); m.P2.Twist = StripTwist; return m; }
+ static Story.StoryLibrary StripStory() => new(new[] { new Story.StoryCardData("elder-oni-armour-label", null, "Armour on every special", System.Array.Empty<string>(), "HUD") });
  // YOK-121: the bottom strip is a 10 s reminder (600 ticks), then it is gone.
  [Test]
  public static void TwistStrip_ShowsFor600Ticks_ThenHides_ForElderAndTanuki(Node runner)
  {
   var hud = Load(runner);
+  var savedStory = Ui.TwistCopy.Story;
+  Ui.TwistCopy.Story = StripStory();
   try
   {
    var copy = CopyRule.Target(RunState.NewRun(AbilityPool.LoadFixtures(Root)));
    foreach (var view in new FakeRunView[] { new() { ElderFight = true }, new() { InTanukiFight = true, Copy = copy } })
    {
     hud.RunView = view;
-    var m = new Match();
+    var m = ElderMatch();
     hud.Refresh(m);
     Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha >= 1f, "visible and opaque at fight start");
     for (int i = 0; i < FightHud.TwistStripTicks - FightHud.TwistFadeTicks; i++) m.Step(FighterInput.None, FighterInput.None);
@@ -540,7 +560,7 @@ public static class FightHudTests
     Assert.True(hud.TwistLine != "", "text is set while shown");
    }
   }
-  finally { hud.Free(); }
+  finally { Ui.TwistCopy.Story = savedStory; hud.Free(); }
  }
 
  // YOK-121: the pause freezes the sim tick, so the 10 s window does not drain while paused; a restart shows it again.
@@ -548,6 +568,8 @@ public static class FightHudTests
  public static void TwistStrip_TimerPausesWithTheGamePause_AndRestartShowsItAgain(Node runner)
  {
   var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+  var savedStory = Ui.TwistCopy.Story;
+  Ui.TwistCopy.Story = StripStory();
   scene.PauseEnabled = true;
   scene.ExternalDrive = true;
   runner.AddChild(scene);
@@ -555,6 +577,7 @@ public static class FightHudTests
   {
    var hud = scene.GetNode<FightHud>("Hud");
    hud.RunView = new FakeRunView { ElderFight = true };
+   scene.Match.P2.Twist = StripTwist; // what a hosted elder node does (ElderTwists.Apply)
    for (int i = 0; i < 100; i++) scene.Step(FighterInput.None, FighterInput.None);
    Assert.True(hud.TwistStripVisible, "visible mid-window");
    Assert.True(scene.TryPause(), "pause opens");
@@ -566,10 +589,11 @@ public static class FightHudTests
    for (int i = 0; i < FightHud.TwistStripTicks; i++) scene.Step(FighterInput.None, FighterInput.None);
    Assert.True(!hud.TwistStripVisible, "after 10 s of unpaused fight it is gone");
    scene.RestartRun();
+   scene.Match.P2.Twist = StripTwist;
    scene.Step(FighterInput.None, FighterInput.None);
    Assert.True(hud.TwistStripVisible, "restart shows it again");
   }
-  finally { scene.Free(); }
+  finally { Ui.TwistCopy.Story = savedStory; scene.Free(); }
  }
 
  [Test]

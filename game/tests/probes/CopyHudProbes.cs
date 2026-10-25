@@ -358,9 +358,9 @@ public static class CopyHudProbes
   finally { hud.Free(); }
  }
 
- // Own: T4 / Y3 strip level equals CopyTarget.MoveLevel for Lv 1, 2, 3 (Lv 3 copies the Lv 2 tuning).
+ // Own: T4 / Y3 (YOK-109): the strip shows Ryo's level for Lv 1, 2, 3 and says "no modifiers, no evolution" (the copy itself runs MoveLevel, Lv 3 = the Lv 2 tuning).
  [Test]
- public static void TanukiStrip_LevelEqualsMoveLevel_ForLv1To3(Node runner)
+ public static void TanukiStrip_ShowsRyosLevel_ForLv1To3(Node runner)
  {
   var hud = Load(runner);
   try
@@ -371,7 +371,7 @@ public static class CopyHudProbes
     var copy = new CopyTarget(SpecialSlot.A, data, lv);
     hud.RunView = new View { CopyLocked = true, InTanukiFight = true, Copy = copy };
     hud.Refresh(new Match());
-    Assert.Equal($"Spirit Wave at Lv {copy.MoveLevel}, no modifiers", hud.TwistLine, $"Lv {lv} strip");
+    Assert.Equal($"Spirit Wave · Lv {lv} · no modifiers, no evolution", hud.TwistLine, $"Lv {lv} strip");
     Assert.Equal($"Lv {lv}", hud.CopyTarget.LevelText, $"Lv {lv} talisman keeps Ryo's level");
     Assert.Equal(System.Math.Min(lv, 2), copy.MoveLevel, "T4 cap");
    }

@@ -21,18 +21,7 @@ public partial class TwistCapture : Node
 			if (a.StartsWith("out=")) dir = a[4..];
 			if (a.StartsWith("suffix=")) suffix = a[7..];
 		}
-		string md = ContentPaths.Data("map");
-		var session = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
-		foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant" })
-		{
-			session.Enter(id);
-			if (session.Node!.Type != "merchant")
-			{
-				var d = session.WinFight(840);
-				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
-			}
-			session.CompleteNode();
-		}
+		var session = ToRowFive();
 		var screen = GD.Load<PackedScene>("res://scenes/ui/map_screen.tscn").Instantiate<MapScreen>();
 		AddChild(screen);
 		screen.SetView(new SessionMapView(session));
@@ -48,7 +37,34 @@ public partial class TwistCapture : Node
 		fight.TwistCard!.Continue();
 		for (int i = 0; i < 20; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await Snap(dir + $"/twist_callout_hud{suffix}.png");
+		fight.QueueFree();
+
+		// The other two elders: no portrait art yet, so the card leaves the portrait space out (E1 placeholders approved).
+		var oni = ToRowFive();
+		oni.Enter("r5-elder-oni");
+		var oniFight = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		oniFight.Session = oni;
+		AddChild(oniFight);
+		await Snap(dir + $"/twist_intro_card_oni{suffix}.png");
+		oniFight.QueueFree();
 		GetTree().Quit();
+	}
+
+	private static RunSession ToRowFive()
+	{
+		string md = ContentPaths.Data("map");
+		var session = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+		foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant" })
+		{
+			session.Enter(id);
+			if (session.Node!.Type != "merchant")
+			{
+				var d = session.WinFight(840);
+				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
+			}
+			session.CompleteNode();
+		}
+		return session;
 	}
 
 	private async System.Threading.Tasks.Task Snap(string path)

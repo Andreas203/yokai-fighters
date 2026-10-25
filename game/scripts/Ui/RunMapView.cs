@@ -58,7 +58,7 @@ public class RunMapView : IMapView
 
 	/// <summary>Y3: the elder's twist line for the detail panel (from story data, placeholder-marked until written); null off an elder node.</summary>
 	static string? TwistLine(MapNodeData n) =>
-		n.Elder && Fight.FightScene.Twists.ForNode(n) is { } t ? "Twist: " + TwistCopy.Label(t, TwistCopy.Story, YokaiName(n)).Text : null;
+		n.Elder && Fight.FightScene.Twists.ForNode(n) is { } t && TwistCopy.Label(t, TwistCopy.Story, YokaiName(n)) is { Placeholder: false } label ? "Twist: " + label.Text : null;
 
 	public bool Select(string nodeId) => _map.Select(nodeId).Ok;
 
