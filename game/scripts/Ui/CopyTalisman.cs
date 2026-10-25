@@ -108,11 +108,7 @@ public partial class CopyTalisman : Control
 	/// also keeps a combining mark with its letter.
 	/// </summary>
 	public static int[] Cuts(string s)
-	{
-		var cuts = new System.Collections.Generic.List<int> { 0 };
-		for (int i = 0; i < s.Length;) cuts.Add(i += System.Globalization.StringInfo.GetNextTextElementLength(s, i));
-		return cuts.ToArray();
-	}
+		=> TextCuts.Cuts(s);
 
 	/// <summary>
 	/// The name at <see cref="NameSize"/>, always. Spaces and hyphens wrap it (two lines). Only when a word is wider than

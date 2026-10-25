@@ -55,7 +55,7 @@ public partial class RewardCard : Control
 
 	public void Bind(CardView c)
 	{
-		_crest.Glyph = string.IsNullOrEmpty(c.Name) ? "?" : c.Name[..1].ToUpperInvariant();
+		_crest.Glyph = TextCuts.Badge(c.Name);
 		_fallback.Glyph = _crest.Glyph;
 		// Modifier cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
 		_illustration.Texture = c.Kind == CardKind.Modifier ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);

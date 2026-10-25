@@ -640,11 +640,11 @@ public partial class ShopScreen : Control
 		return l;
 	}
 
-	static Control Icon(string name, Color fill, int size)
+	internal static Control Icon(string name, Color fill, int size)
 	{
 		var panel = new Panel { CustomMinimumSize = new Vector2(size, size), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore, Name = "Icon" };
 		panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = fill, CornerRadiusBottomLeft = 6, CornerRadiusBottomRight = 6, CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6 });
-		var glyph = Lbl(name.Length > 0 ? name[..1].ToUpperInvariant() : "?", (int)(size * 0.62f), name: "Glyph");
+		var glyph = Lbl(TextCuts.Badge(name), (int)(size * 0.62f), name: "Glyph");
 		glyph.ThemeTypeVariation = "PaperLabel";
 		glyph.SetAnchorsPreset(LayoutPreset.FullRect); glyph.HorizontalAlignment = HorizontalAlignment.Center; glyph.VerticalAlignment = VerticalAlignment.Center;
 		panel.AddChild(glyph);
