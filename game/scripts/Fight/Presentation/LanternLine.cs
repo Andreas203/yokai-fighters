@@ -48,9 +48,11 @@ public partial class LanternLine : Node3D
 	/// <summary>One built lantern: its node name, floor position (this node's space), uniform scale, yaw in degrees and whether it keeps its light.</summary>
 	public readonly record struct Placement(string Name, Vector3 Position, float Scale, float YawDegrees, bool Lit);
 
-	/// <summary>Pure layout of both rows toward <paramref name="vanish"/> (see the class summary).</summary>
+	/// <summary>Pure layout of both rows toward <paramref name="vanish"/> (see the class summary). <paramref name="recede"/> is
+	/// clamped to [0, 1], so every lantern lies between its row's near point and the vanish point, never in front of it.</summary>
 	public static List<Placement> Placements(Vector3 nearLeft, Vector3 nearRight, Vector3 vanish, int perSide, float recede, float nearScale, int litPerSide)
 	{
+		recede = Mathf.Clamp(recede, 0f, 1f);
 		var list = new List<Placement>();
 		foreach (var (side, near) in new[] { ("L", nearLeft), ("R", nearRight) })
 		{
@@ -93,7 +95,21 @@ public partial class LanternLine : Node3D
 	}
 
 	public List<Placement> Placements() =>
-		Placements(NearLeft, NearRight, VanishPoint(), PerSide, Recede, NearScale, LitPerSide);
+		Placements(NearLeft, NearRight, VanishPoint(), PerSide, Recede, NearScale, Mathf.Min(LitPerSide, LightBudgetPerSide()));
+
+	/// <summary>
+	/// Lights each row may keep: what is left of <see cref="BambooGroveStage.MaxLanternLights"/> after the stage's other
+	/// OmniLight3D (the front lanterns), split between the two rows. The cap holds whatever the exports say. The stage is
+	/// this node's <c>Owner</c> (the scene root it was loaded with); a line with no owner counts only itself.
+	/// </summary>
+	public int LightBudgetPerSide()
+	{
+		Node scope = Owner ?? this;
+		int others = 0;
+		foreach (Node n in scope.FindChildren("*", "OmniLight3D", true, false))
+			if (!IsAncestorOf(n)) others++;
+		return Mathf.Max(0, (BambooGroveStage.MaxLanternLights - others) / 2);
+	}
 
 	public override void _Ready() => Rebuild();
 
@@ -128,6 +144,12 @@ public partial class LanternLine : Node3D
 		if (scene is null) return;
 		foreach (var p in Placements())
 		{
+			// Guard: a near point set in front of the lantern depth builds nothing there (BambooGroveStage.LanternMaxZ).
+			if ((Transform * p.Position).Z > BambooGroveStage.LanternMaxZ)
+			{
+				GD.PushWarning($"LanternLine: {p.Name} at z {(Transform * p.Position).Z} is nearer than LanternMaxZ {BambooGroveStage.LanternMaxZ}; skipped");
+				continue;
+			}
 			var lantern = scene.Instantiate<Node3D>();
 			lantern.Name = p.Name;
 			lantern.Transform = new Transform3D(new Basis(Vector3.Up, Mathf.DegToRad(p.YawDegrees)).Scaled(Vector3.One * p.Scale), p.Position);

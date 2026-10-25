@@ -32,6 +32,9 @@ public static class BambooGroveStage
 	/// </summary>
 	public const float ClearBandHalfX = 10.5f, ClearBandBackZ = -8f, LanternMaxZ = -10f;
 
+	/// <summary>YOK-208: the stage's lantern light budget, all OmniLight3D together (shadowless, a handful at most); <see cref="LanternLine"/> lights no more than what is left.</summary>
+	public const int MaxLanternLights = 6;
+
 	/// <summary>The grove's backdrop and ground textures exist under <paramref name="dir"/> (else the fight uses the placeholder).</summary>
 	public static bool AssetsPresent(string dir) =>
 		ResourceLoader.Exists(dir + "backdrop.png") && ResourceLoader.Exists(dir + "ground-strip.png");

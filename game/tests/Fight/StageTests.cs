@@ -115,7 +115,7 @@ public static class StageTests
 			foreach (var f in fills) Assert.True(f.IsVisibleInTree(), $"{n.Name}/{f.Name}: the window fill shows");
 		}
 		var lights = stage.FindChildren("*", "OmniLight3D", true, false).Cast<OmniLight3D>().ToList();
-		Assert.True(lights.Count >= 2 && lights.Count <= 6, $"a handful of lantern lights, got {lights.Count}");
+		Assert.True(lights.Count >= 2 && lights.Count <= BambooGroveStage.MaxLanternLights, $"a handful of lantern lights, got {lights.Count}");
 		foreach (var l in lights)
 		{
 			Assert.True(!l.ShadowEnabled && l.OmniRange <= 4f, $"{l.GetParent().GetParent().Name}: shadowless, local light");
@@ -124,6 +124,10 @@ public static class StageTests
 		foreach (var front in new[] { "Props/Lantern0", "Props/Lantern1" })
 			Assert.True(stage.HasNode(front + "/Pivot/Light"), $"{front} lights the ground and stalks near it");
 		Assert.True(!stage.GetNode<WorldEnvironment>("Environment").Environment.GlowEnabled, "flat fill, never a bloom halo");
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		line.PerSide = 8; line.LitPerSide = 8; // past the budget: the line keeps only what is left of the cap
+		int capped = stage.FindChildren("*", "OmniLight3D", true, false).Count;
+		Assert.True(capped <= BambooGroveStage.MaxLanternLights, $"the light cap holds whatever the exports say, got {capped}");
 		scene.QueueFree();
 	}
 
@@ -182,6 +186,9 @@ public static class StageTests
 			Assert.True(row.All(p => p.Position.Y == 0f), "on the floor");
 		}
 		Assert.Equal(0, LanternLine.Placements(Vector3.Zero, Vector3.Zero, vanish, 0, 0.6f, 0.6f, 2).Count, "no lanterns");
+		var near = new Vector3(-2.4f, 0, -13.8f);
+		foreach (var p in LanternLine.Placements(near, near, vanish, 4, 1.5f, 0.6f, 2))
+			Assert.True(p.Position.Z <= near.Z + 1e-4f && p.Scale <= 0.6f + 1e-4f, $"{p.Name}: a Recede past 1 is clamped, never in front of the near point");
 	}
 
 	[Test]
