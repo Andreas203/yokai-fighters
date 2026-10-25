@@ -88,7 +88,7 @@ public sealed class SpecialData
 				foreach (var e in modifier.FrameEffects.Where(e => e.When == when)) Effects.Apply(o, e.Effect, tag, cfg);
 				return Parse(o, ex);
 			}
-			return Parse(b, ex) with { OnHitVariant = Outcome(ModifierWhen.OnHit), OnBlockVariant = Outcome(ModifierWhen.OnBlock) };
+			return Parse(b, ex) with { OnHitVariant = Outcome(ModifierWhen.OnHit), OnBlockVariant = Outcome(ModifierWhen.OnBlock), Charge = modifier.Charge };
 		}
 
 		var baseMove = Make(StartConditions.None);

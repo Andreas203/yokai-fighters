@@ -30,6 +30,7 @@
         "mistake_pct": { "$ref": "#/$defs/pct" },
         "block_pct": { "$ref": "#/$defs/pct" },
         "idle_guard_pct": { "$ref": "#/$defs/pct", "description": "YOK-155: percent of wait and in-range walk plans held as a standing guard (hold back), rolled once per plan; absent = 0." },
+        "special_hold_ticks": { "type": "integer", "minimum": 0, "maximum": 600, "description": "YOK-171 (AM11): ticks the bot keeps Special held after pressing a special whose slot carries a charge (Sumo Stance); absent = 0, a tap. The fight caps the hold at the charge window's max." },
         "anti_air_pct": { "$ref": "#/$defs/pct" },
         "anti_air_button": { "$ref": "#/$defs/button" },
         "poke_range": { "$ref": "#/$defs/units" },

@@ -67,17 +67,22 @@
       }
     },
     "modifierCondition": {
-      "description": "When a modifier's effect applies (YOK-103: exactly what ModifierLoader.Conditions reads). on_hit / on_block: from the move's connect on. first_use_each_round, ryo_health_below_30pct, holding_up: read once, on the tick the special starts.",
-      "enum": ["always", "on_hit", "on_block", "first_use_each_round", "ryo_health_below_30pct", "holding_up"]
+      "description": "When a modifier's effect applies (YOK-103: exactly what ModifierLoader.Conditions reads). on_hit / on_block: from the move's connect on. first_use_each_round, ryo_health_below_30pct, holding_up: read once, on the tick the special starts. charge_released (YOK-171, AM11): the special started on the release of the modifier's charge hold, the held ticks inside charge.window_ticks; it needs a charge object.",
+      "enum": ["always", "on_hit", "on_block", "first_use_each_round", "ryo_health_below_30pct", "holding_up", "charge_released"]
     },
     "effectTarget": {
       "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
       "type": "string",
-      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln))$"
+      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln)|properties\\.forward_travel)$"
     },
     "effectShape": {
       "description": "YOK-103: the op and value each kind of target takes, as the loader checks them (Effects.Check).",
       "allOf": [
+        {
+          "description": "YOK-171 (AM11): properties.forward_travel is a modifier-only switch for its charge dash: set \"charge_dash\" when charge_released. Level and EX effects (when always) can't take it.",
+          "if": { "required": ["target"], "properties": { "target": { "const": "properties.forward_travel" } } },
+          "then": { "required": ["when"], "properties": { "op": { "const": "set" }, "value": { "const": "charge_dash" }, "when": { "const": "charge_released" } } }
+        },
         {
           "if": { "required": ["target"], "properties": { "target": { "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|ex\\.meter_cost)$" } } },
           "then": { "properties": { "value": { "type": "integer" } } }

@@ -50,6 +50,7 @@ public sealed partial class Match
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
 		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing // YOK-55: landing recovery
+			or FighterState.Bracing // YOK-171: nothing makes the hold throw-invulnerable (open designer question, YOK-142 (d))
 		&& !ThrowInvulnerable(d);
 
 	/// <summary>

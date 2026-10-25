@@ -37,6 +37,10 @@ class ValidateDataTest(unittest.TestCase):
                 doc = {"kind": "modifier", "id": c["name"], "name": c["name"], "source": "oni", "rarity": "common",
                        "locked": False, "rules": ["A10"], "applies_to": {"requires": c["requires"]},
                        "effects": c["effects"], "card": {"plain": "Test case.", "frames": "Test case."}}
+                if "excludes" in c:  # YOK-171
+                    doc["applies_to"]["excludes"] = c["excludes"]
+                if "charge" in c:
+                    doc["charge"] = c["charge"]
                 f = Path(tmp) / f"{c['name']}.json"
                 f.write_text(json.dumps(doc), encoding="utf-8")
                 code, out = run(f)

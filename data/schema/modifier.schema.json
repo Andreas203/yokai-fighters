@@ -16,7 +16,7 @@
     "locked": { "type": "boolean" },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "applies_to": {
-      "description": "Which specials can take it: 'any', or specials whose frame data has every listed property.",
+      "description": "Which specials can take it: 'any', or specials whose frame data has every property in requires and none in excludes (YOK-171).",
       "type": "object",
       "required": ["requires"],
       "additionalProperties": false,
@@ -25,6 +25,51 @@
           "type": "array",
           "uniqueItems": true,
           "items": { "enum": ["projectile", "throw", "armour", "low", "anti_air"] }
+        },
+        "excludes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["projectile", "throw", "armour", "low", "anti_air"] }
+        }
+      }
+    },
+    "charge": {
+      "description": "YOK-171 (AM11, Sumo Stance): hold the special's trigger before it starts; on release the held ticks pick the dash speed through the special's startup frames (ChargeSpec). Needs a properties.forward_travel charge_dash effect when charge_released. Integers only (F3).",
+      "type": "object",
+      "required": ["button", "window_ticks", "step_ticks", "dash"],
+      "additionalProperties": false,
+      "properties": {
+        "button": { "const": "special_trigger", "description": "Whichever button fired the special: Kihon Special, Kata the button that completed the motion (K3)." },
+        "window_ticks": {
+          "description": "Ticks held after the command tick. A release below min starts the special with no dash; reaching max starts it at once.",
+          "type": "object",
+          "required": ["min", "max"],
+          "additionalProperties": false,
+          "properties": {
+            "min": { "type": "integer", "minimum": 0 },
+            "max": { "type": "integer", "minimum": 1 },
+            "status": { "$ref": "common.schema.json#/$defs/status" }
+          }
+        },
+        "step_ticks": { "type": "integer", "minimum": 1, "description": "Held ticks per speed step: step = held / step_ticks." },
+        "grace_ticks": { "const": 0, "description": "Only 0 is read yet." },
+        "release": { "const": "dash_then_move" },
+        "hold_pose_clip": { "$ref": "common.schema.json#/$defs/id", "description": "Clip played while holding (presentation only, A10)." },
+        "dash": {
+          "type": "object",
+          "required": ["duration", "units_per_tick_by_step", "cap_units_per_tick"],
+          "additionalProperties": false,
+          "properties": {
+            "duration": { "const": "startup" },
+            "units_per_tick_by_step": {
+              "description": "Gameplay units per tick for step 0, 1, ...; past the last step the last speed holds.",
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "integer", "minimum": 1 }
+            },
+            "cap_units_per_tick": { "type": "integer", "minimum": 1 },
+            "status": { "$ref": "common.schema.json#/$defs/status" }
+          }
         }
       }
     },

@@ -84,13 +84,88 @@ public sealed partial class Match
 	/// move's projectile is already on screen as often as its max_active allows. EX without the meter
 	/// falls back to the plain version and spends nothing.
 	/// </summary>
+	/// <remarks>
+	/// YOK-171 (AM11): a special carrying a charge (<see cref="MoveData.Charge"/>) whose trigger is still held on the
+	/// command tick does not start: the fighter braces (<see cref="FighterState.Bracing"/>) and <see cref="StepBrace"/>
+	/// starts it on release. A direct slot request has no trigger and starts at once, as an uncharged release.
+	/// </remarks>
 	public bool TryStartSpecial(int i, SpecialSlot slot, bool ex, bool precision, InputBits buttons)
 	{
 		Fighter f = Fighters[i];
 		EquippedSpecial? eq = slot == SpecialSlot.None ? null : f.Specials[(int)slot];
 		if (eq is null) return false;
 		if (eq.Move.Projectile is { } pd && ProjectileCount(i) >= pd.MaxActive) return false;
+		if (eq.Move.Charge != null)
+		{
+			InputBits trigger = ChargeTrigger(buttons);
+			if ((f.Input.Buffer.At(0) & trigger) != 0)
+			{
+				SetState(f, FighterState.Bracing, 0);
+				f.Guarding = f.Crouching = false;
+				f.BraceSlot = slot;
+				f.BraceEx = ex;
+				f.BracePrecision = precision;
+				f.BraceButtons = buttons;
+				f.BraceTrigger = trigger;
+				f.BraceHeld = 0;
+				f.BraceFrame = 1;
+				return true;
+			}
+			return StartSpecial(i, eq, slot, ex, precision, buttons, chargeHeld: 0);
+		}
+		return StartSpecial(i, eq, slot, ex, precision, buttons, chargeHeld: -1);
+	}
+
+	/// <summary>
+	/// YOK-171: the button a charge hold reads ("special_trigger"): Kihon's Special when it fired the special, else the
+	/// attack buttons pressed with the command (Kata, K1); both schemes then hold the same way (K3).
+	/// </summary>
+	public static InputBits ChargeTrigger(InputBits buttons) =>
+		(buttons & InputBits.Special) != 0 ? InputBits.Special : buttons & InputBits.Attacks;
+
+	/// <summary>
+	/// YOK-171: one world frame of a hold. The trigger still held counts one more tick; reaching the window's max starts
+	/// the special at once (the card's "hold up to" N ticks), and letting go starts it now. A release inside the
+	/// window is <see cref="StartConditions.ChargeReleased"/> and dashes at <see cref="ChargeSpec.SpeedFor"/>; a release
+	/// before the window's min starts the plain build with no dash. If the special can no longer start, the hold ends in Idle.
+	/// </summary>
+	private void StepBrace(int i)
+	{
+		Fighter f = Fighters[i];
+		EquippedSpecial? eq = f.Specials[(int)f.BraceSlot];
+		if (eq?.Move.Charge is not { } spec) { ToIdle(f); return; }
+		// E16 / E18: the second EX button may come up to ExPressWindow - 1 ticks after the command, as for any special.
+		if (++f.BraceFrame <= Config.ExPressWindow && !f.BraceEx && eq.ExMove != null)
+		{
+			InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;
+			if ((now & ~f.BraceButtons) != 0 && ExPair(f.BraceButtons | now))
+			{
+				f.BraceEx = true; // the meter is spent on release (no meter: the plain version, E16)
+				f.BraceButtons |= now;
+				if (f.BraceTrigger != InputBits.Special) f.BraceTrigger |= now; // Kata: either button keeps the hold
+				f.Input.TryConsume(out _); // the second press re-parsed as the same special; used up here
+			}
+		}
+		bool held = (f.Input.Buffer.At(0) & f.BraceTrigger) != 0;
+		if (held) f.BraceHeld++;
+		if (held && f.BraceHeld < spec.WindowMax) return;
+		var (slot, ex, precision, buttons, ticks, lead) = (f.BraceSlot, f.BraceEx, f.BracePrecision, f.BraceButtons, f.BraceHeld, f.BraceFrame - 1);
+		if (!StartSpecial(i, eq, slot, ex, precision, buttons, ticks)) ToIdle(f);
+		else f.BraceLead = lead; // TryExUpgrade's window keeps counting from the command, not the release
+	}
+
+	/// <param name="chargeHeld">YOK-171: ticks a charge was held (0 = tapped), or -1 for a special without a charge.</param>
+	private bool StartSpecial(int i, EquippedSpecial eq, SpecialSlot slot, bool ex, bool precision, InputBits buttons, int chargeHeld)
+	{
+		Fighter f = Fighters[i];
+		if (eq.Move.Projectile is { } pd && ProjectileCount(i) >= pd.MaxActive) return false;
 		StartConditions held = StartConditionsNow(f, slot, eq.Move.StartMask);
+		int chargeSpeed = 0;
+		if (chargeHeld >= 0 && eq.Move.Charge is { } spec && spec.InWindow(chargeHeld))
+		{
+			held |= StartConditions.ChargeReleased;
+			chargeSpeed = spec.SpeedFor(chargeHeld);
+		}
 		bool isEx = ex && eq.ExMove != null && TrySpendMeter(i, eq.ExCost);
 		MoveData m = (isEx ? eq.ExMove! : eq.Move).ForStart(held);
 
@@ -108,9 +183,24 @@ public sealed partial class Match
 		f.ActiveEx = isEx;
 		f.ActivePrecision = precision;
 		f.SpecialButtons = buttons & (InputBits.Attacks | InputBits.Special); // Special: Kihon (YOK-23)
+		f.ChargeSpeed = chargeSpeed; // YOK-171: moved on each startup frame (ChargeDashStep)
 		CountSpecialUse(i, eq.Data.Id); // YOK-90: uses in a row, against a reflect twist
 		SpecialStarted?.Invoke(this, new SpecialEvent(i, slot, m.Id, eq.Level, isEx, precision));
 		return true;
+	}
+
+	/// <summary>
+	/// YOK-171 (AM11): a released charge moves the fighter forward (facing) by its speed on each of the special's startup
+	/// frames, whole centi-units; hitboxes, active and recovery frames stay the clip's (F2). Hitstop holds it with the world.
+	/// </summary>
+	private void ChargeDashStep(Fighter f)
+	{
+		if (f.ChargeSpeed > 0 && f.State == FighterState.Attack && f.ActiveMove is { } m && f.MoveFrame <= m.Startup)
+		{
+			// Data puts no ceiling on the speed: never step past the whole stage, so speed x Scale can't wrap int32 (F3).
+			long step = Math.Min((long)f.ChargeSpeed * SimConfig.Scale, 2L * Config.StageHalfWidth);
+			f.X += f.Facing * (int)step;
+		}
 	}
 
 	/// <summary>K1: a Kata motion input deals +PrecisionBonusPct damage (projectile hits included).</summary>
@@ -141,7 +231,7 @@ public sealed partial class Match
 	{
 		Fighter f = Fighters[i];
 		if (f.ActiveSpecial == SpecialSlot.None || f.ActiveEx || f.SpecialButtons == InputBits.None
-			|| f.MoveFrame > Config.ExPressWindow) return false;
+			|| f.MoveFrame + f.BraceLead > Config.ExPressWindow) return false; // YOK-171: from the command, through a hold
 		EquippedSpecial? eq = f.Specials[(int)f.ActiveSpecial];
 		if (eq?.ExMove is null) return false;
 		InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;
