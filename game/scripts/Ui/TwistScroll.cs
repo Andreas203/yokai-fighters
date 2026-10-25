@@ -20,7 +20,9 @@ public partial class TwistScroll : Control
 	public static readonly Rect2 RiceInset = new(84, 140, 1332, 424);
 	/// <summary>Text column: left edge and width with a portrait, and without one (the portrait's space is left out).</summary>
 	public const float ColumnLeftWithPortrait = 400f, ColumnWidthWithPortrait = 830f, ColumnLeftAlone = 150f, ColumnWidthAlone = 1080f;
-	public const int TitleSize = 72, TitleSizeMin = 44, QuoteSize = 34, QuoteSizeMin = 28;
+	public const int TitleSize = 72, TitleSizeMin = 44, QuoteSize = 34, QuoteSizeMin = 28, LineSize = 30, LineSizeMin = 22;
+	/// <summary>The quote's box (scene: Quote offsets 310 to 440): fixed, because a Label grows to its text and would always "fit" itself.</summary>
+	public const float QuoteBoxHeight = 130f;
 
 	Label _kicker = null!, _title = null!, _quote = null!, _rule = null!;
 	Control _textCol = null!, _portrait = null!, _ruleLine = null!;
@@ -43,8 +45,13 @@ public partial class TwistScroll : Control
 
 	/// <summary>True when the title is on one line inside the column and the quote fits its box at its current size (V1: nothing clipped, nothing off the paper).</summary>
 	public bool TextFits =>
-		_title.GetThemeFont("font").GetStringSize(_title.Text, fontSize: TitleFontSize).X <= _title.Size.X &&
-		_quote.GetThemeFont("font").GetMultilineStringSize(_quote.Text, HorizontalAlignment.Left, _quote.Size.X, QuoteFontSize).Y <= _quote.Size.Y;
+		OneLineWidth(_title, TitleFontSize) <= _textCol.Size.X &&
+		OneLineWidth(_kicker, _kicker.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
+		OneLineWidth(_rule, _rule.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
+		QuoteHeight(QuoteFontSize) <= QuoteBoxHeight;
+
+	static float OneLineWidth(Label l, int size) => l.GetThemeFont("font").GetStringSize(l.Text, fontSize: size).X;
+	float QuoteHeight(int size) => _quote.GetThemeFont("font").GetMultilineStringSize(_quote.Text, HorizontalAlignment.Left, _textCol.Size.X, size).Y;
 
 	public override void _Ready()
 	{
@@ -69,6 +76,9 @@ public partial class TwistScroll : Control
 		_rule = UiFind.Get<Label>(this, "Rule");
 		_stamp = UiFind.Get<TwistSeal>(this, "Stamp");
 		_footer = UiFind.Get<KeyChipFooter>(this, "Footer");
+		// A Label grows to its text unless clipped: clip so every line stays inside the column and Fit measures a fixed box.
+		foreach (var l in new[] { _kicker, _title, _quote, _rule }) l.ClipText = true;
+		foreach (var l in new[] { _kicker, _title, _rule }) l.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
 	}
 
 	/// <summary>The kit has one bold serif and no italic: the quote leans by skewing the glyphs.</summary>
@@ -99,17 +109,22 @@ public partial class TwistScroll : Control
 		QueueRedraw();
 	}
 
-	/// <summary>Long names and quotes shrink to a floor instead of clipping or leaving the paper.</summary>
+	/// <summary>Long names, quotes and lines shrink to a floor, then end in an ellipsis or a clip: nothing leaves the paper.</summary>
 	void Fit()
 	{
-		var tf = _title.GetThemeFont("font");
-		int ts = TitleSize;
-		while (ts > TitleSizeMin && tf.GetStringSize(_title.Text, fontSize: ts).X > _title.Size.X) ts--;
-		_title.AddThemeFontSizeOverride("font_size", ts);
-		var qf = _quote.GetThemeFont("font");
+		float width = _textCol.Size.X;
+		Shrink(_title, TitleSize, TitleSizeMin, width);
+		Shrink(_kicker, LineSize, LineSizeMin, width);
+		Shrink(_rule, LineSize, LineSizeMin, width);
 		int qs = QuoteSize;
-		while (qs > QuoteSizeMin && qf.GetMultilineStringSize(_quote.Text, HorizontalAlignment.Left, _quote.Size.X, qs).Y > _quote.Size.Y) qs--;
+		while (qs > QuoteSizeMin && QuoteHeight(qs) > QuoteBoxHeight) qs--;
 		_quote.AddThemeFontSizeOverride("font_size", qs);
+	}
+
+	static void Shrink(Label l, int size, int floor, float width)
+	{
+		while (size > floor && OneLineWidth(l, size) > width) size--;
+		l.AddThemeFontSizeOverride("font_size", size);
 	}
 
 	public override void _Draw()
