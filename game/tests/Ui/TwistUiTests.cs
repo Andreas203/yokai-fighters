@@ -239,4 +239,27 @@ public static class TwistUiTests
 					Assert.True(text.Length > 0 && !text.Contains("PLACEHOLDER"), $"{yokai}: no placeholder wording: {text}");
 			});
 	}
+
+	[Test]
+	public static void ElderFight_WithNoIntroCard_ShowsNoScrollButStillTheFirstMeetingCallout(Node host)
+	{
+		var saved = TwistCopy.Story;
+		try
+		{
+			var tw = FightScene.Twists.All.First(t => t.Id == "elder-oni-armour");
+			TwistCopy.Story = Lib(((tw.CalloutCard ?? ""), "Callout words."), (tw.Id + "-label", "Label words."));
+			var jump = DevJump.BuildFight(new DevFightSetup("oni", Elder: true, Seed: 11), FightScene.LoadAbilityPool());
+			Assert.True(jump.Session.Enter(jump.NodeId).Ok, "node entered");
+			var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+			scene.ExternalDrive = true; scene.Session = jump.Session; scene.FirstMeeting = true;
+			host.AddChild(scene);
+			try
+			{
+				Assert.True(scene.Twist != null && !scene.TwistCard!.Showing && !scene.FlowPaused, "no intro card: nothing shows and the fight is not held");
+				Assert.True(scene.GetNode<FightHud>("Hud").TwistCalloutVisible, "the first-meeting callout still shows");
+			}
+			finally { scene.QueueFree(); }
+		}
+		finally { TwistCopy.Story = saved; }
+	}
 }

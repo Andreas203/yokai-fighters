@@ -241,5 +241,4 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
 - The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked.
 - What the Tanuki does when it copies a charged special such as Sumo Stance (AM11, T4).
-- In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
 - The first-meeting video (S6, AM17): its length; whether it can be skipped; whether elders, the Tanuki and the row-1 apprentice count; how it is made (generated video, which needs a tool and spend, or an animated card in the engine); whether it may land before the week-3 feature freeze (G5).

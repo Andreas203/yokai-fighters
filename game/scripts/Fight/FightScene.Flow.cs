@@ -227,7 +227,7 @@ public partial class FightScene
 		if (TwistCard == null || OwnsSession || !Node.Elder || Twist is not { } twist) return;
 		string name = OpponentName;
 		var line = TwistCopy.Intro(twist, TwistCopy.Story, name);
-		if (line.Placeholder) return; // no story card for this twist: nothing to say, never an invented line
+		if (line.Placeholder) { ShowFirstMeetingCallout(twist); return; } // no intro card in the data: no scroll and no invented line; the callout still tells a first meeting
 		// E1: the elder's name is the card's speaker (data); the red rule line is the twist's label; the stamp is the map's seal.
 		string title = TwistCopy.IntroSpeaker(twist, TwistCopy.Story) ?? name;
 		string? rule = TwistCopy.Label(twist, TwistCopy.Story, name) is { Placeholder: false } label ? label.Text : null;
@@ -237,7 +237,12 @@ public partial class FightScene
 	private void OnTwistCardDone()
 	{
 		_suppress = HeldBits(); // the Enter/Space/A that closed the card must not fire a Special
-		if (!FirstMeeting || Twist is not { } twist) return;
+		if (Twist is { } twist) ShowFirstMeetingCallout(twist);
+	}
+
+	private void ShowFirstMeetingCallout(ElderTwist twist)
+	{
+		if (!FirstMeeting) return;
 		if (TwistCopy.Callout(twist, TwistCopy.Story, OpponentName) is { Placeholder: false } callout) _hud.ShowTwistCallout(callout.Text, twist.Icon);
 	}
 
