@@ -13,7 +13,12 @@ public static class TwistScrollRound3BreakerProbes
 	const float Box = TwistScroll.QuoteBoxHeight;
 	const string Sentence = "The old fox watched the apprentice climb the shrine steps and said nothing. ";
 
-	static string Rep(string unit, int chars) => string.Concat(Enumerable.Repeat(unit, chars / unit.Length + 1))[..chars].TrimEnd();
+	static string Rep(string unit, int chars)
+	{
+		string t = string.Concat(Enumerable.Repeat(unit, chars / unit.Length + 1))[..chars];
+		if (char.IsHighSurrogate(t[^1])) t = t[..^1]; // valid text only: never a lone surrogate in the input
+		return t.TrimEnd();
+	}
 
 	static StoryCard Card(Node host)
 	{
