@@ -109,14 +109,54 @@ public static class StageTests
 		var stage = scene.StageRoot;
 		var lanterns = PropItems(stage.GetNode("Props")).Where(i => IsLantern(i.Node)).ToList();
 		foreach (var (n, _) in lanterns)
-			Assert.True(Meshes(n).Count(m => m.IsInGroup(ToonLook.FlatFillGroup)) >= 1, $"{n.Name}: lit window fill");
+		{
+			var fills = Meshes(n).Where(m => m.IsInGroup(ToonLook.FlatFillGroup)).ToList();
+			Assert.True(fills.Count >= 1, $"{n.Name}: lit window fill");
+			foreach (var f in fills) Assert.True(f.IsVisibleInTree(), $"{n.Name}/{f.Name}: the window fill shows");
+		}
 		var lights = stage.FindChildren("*", "OmniLight3D", true, false).Cast<OmniLight3D>().ToList();
 		Assert.True(lights.Count >= 2 && lights.Count <= 6, $"a handful of lantern lights, got {lights.Count}");
 		foreach (var l in lights)
+		{
 			Assert.True(!l.ShadowEnabled && l.OmniRange <= 4f, $"{l.GetParent().GetParent().Name}: shadowless, local light");
+			Assert.True(l.LightEnergy > 0f && l.IsVisibleInTree(), $"{l.GetParent().GetParent().Name}: the light is on");
+		}
 		foreach (var front in new[] { "Props/Lantern0", "Props/Lantern1" })
 			Assert.True(stage.HasNode(front + "/Pivot/Light"), $"{front} lights the ground and stalks near it");
 		Assert.True(!stage.GetNode<WorldEnvironment>("Environment").Environment.GlowEnabled, "flat fill, never a bloom halo");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternLineFollowsAMovedBackdrop(Node runner)
+	{
+		// YOK-208 (Code Critic advisory): YOK-209 may nudge the backdrop quad; the line's vanish point follows the floor seam
+		// at VanishU from the quad's full transform: moved, scaled, and re-parented under a moved node.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		var size = ((QuadMesh)backdrop.Mesh).Size;
+		void Check(string what, Vector3 expectWorld)
+		{
+			Vector3 got = line.GlobalTransform * line.VanishPoint();
+			Assert.True(got.DistanceTo(expectWorld) < 1e-3f, $"{what}: vanish point {got}, expected {expectWorld}");
+			line.Rebuild();
+			var row = line.GetChildren().Cast<Node3D>().Where(n => n.Name.ToString().StartsWith(LanternLine.Prefix + "L")).ToList();
+			Assert.True(row[^1].GlobalPosition.DistanceTo(expectWorld) < row[0].GlobalPosition.DistanceTo(expectWorld), $"{what}: the rebuilt row recedes toward it");
+		}
+		float u = line.VanishU;
+		Check("as placed", new Vector3(backdrop.Position.X + (u - 0.5f) * size.X, 0, backdrop.Position.Z));
+		// Moved 1.5 m right and 0.5 m nearer, raised 1 m, scaled 1.2: the seam stays on the floor, x scales about the centre.
+		backdrop.Transform = new Transform3D(Basis.Identity.Scaled(Vector3.One * 1.2f), backdrop.Position + new Vector3(1.5f, 1f, 0.5f));
+		Check("moved and scaled", new Vector3(backdrop.Position.X + (u - 0.5f) * size.X * 1.2f, 0, backdrop.Position.Z));
+		// Re-parented under a holder 2 m to the left: the line resolves it by path and world transform.
+		var holder = new Node3D { Name = "BackdropHolder", Position = new Vector3(-2f, 0, 0) };
+		stage.AddChild(holder);
+		backdrop.Reparent(holder, keepGlobalTransform: false);
+		line.Backdrop = line.GetPathTo(backdrop);
+		Vector3 world = backdrop.GlobalPosition;
+		Check("re-parented", new Vector3(world.X + (u - 0.5f) * size.X * 1.2f, 0, world.Z));
 		scene.QueueFree();
 	}
 

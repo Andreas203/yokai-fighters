@@ -65,16 +65,31 @@ public partial class LanternLine : Node3D
 		return list;
 	}
 
-	/// <summary>The vanish point in this node's space: on the floor (y 0) under <see cref="VanishU"/> of the backdrop, at the backdrop's depth.</summary>
+	/// <summary>
+	/// The vanish point in this node's space: where the backdrop quad's vertical line at <see cref="VanishU"/> of its
+	/// width meets the floor (world y 0), from the quad's full transform, so moving, scaling, turning or re-parenting the
+	/// backdrop still gives the right point. Without a backdrop: (0, 0, -16) in this node's space.
+	/// </summary>
 	public Vector3 VanishPoint()
 	{
 		var quad = GetNodeOrNull<MeshInstance3D>(Backdrop);
-		Vector3 v = quad?.Mesh is QuadMesh q
-			? new Vector3(quad.Position.X + (VanishU - 0.5f) * q.Size.X, 0, quad.Position.Z)
-			: new Vector3(0, 0, -16f);
-		// The backdrop is a sibling of this node's parent: bring its point into this node's space.
-		var chain = (GetParent() as Node3D)?.Transform * Transform ?? Transform;
-		return chain.AffineInverse() * v;
+		if (quad?.Mesh is not QuadMesh q) return new Vector3(0, 0, -16f);
+		Transform3D toWorld = WorldOf(quad), fromWorld = WorldOf(this).AffineInverse();
+		float x = (VanishU - 0.5f) * q.Size.X;
+		Vector3 low = toWorld * new Vector3(x, -q.Size.Y / 2f, 0), high = toWorld * new Vector3(x, q.Size.Y / 2f, 0);
+		// The seam: the point of that line at y 0 (an edge-on or level quad: its lower end, dropped to the floor).
+		Vector3 seam = Mathf.Abs(high.Y - low.Y) > 1e-6f ? low.Lerp(high, -low.Y / (high.Y - low.Y)) : new Vector3(low.X, 0, low.Z);
+		return fromWorld * seam;
+	}
+
+	/// <summary>The node's world transform: <c>GlobalTransform</c> in the tree, else the chain of local transforms (ancestors above the scene cancel out).</summary>
+	private static Transform3D WorldOf(Node3D n)
+	{
+		if (n.IsInsideTree()) return n.GlobalTransform;
+		Transform3D xf = n.Transform;
+		for (Node? p = n.GetParent(); p != null; p = p.GetParent())
+			if (p is Node3D p3) xf = p3.Transform * xf;
+		return xf;
 	}
 
 	public List<Placement> Placements() =>
@@ -86,7 +101,19 @@ public partial class LanternLine : Node3D
 	{
 		if (!IsInsideTree()) return;
 		Rebuild();
-		ToonLook.Apply(this, BambooGroveStage.PropOutlineMetres); // the stage's PropToon only styled the first build
+		// The stage's toon look styled only the first build: restyle with its settings (else the prop defaults).
+		var look = StageLook();
+		ToonLook.Apply(this, look?.OutlineMetres ?? BambooGroveStage.PropOutlineMetres, look?.Toon, look?.Outline);
+	}
+
+	/// <summary>The <see cref="ToonLook"/> beside one of this node's ancestors whose target holds this node (the grove's PropToon), if any.</summary>
+	private ToonLook? StageLook()
+	{
+		for (Node? a = GetParent(); a != null; a = a.GetParent())
+			foreach (Node c in a.GetChildren())
+				if (c is ToonLook t && t.GetNodeOrNull(t.Target) is Node target && (target == this || target.IsAncestorOf(this)))
+					return t;
+		return null;
 	}
 
 	/// <summary>Frees the built lanterns and builds the line again from the parameters.</summary>
