@@ -10,11 +10,11 @@ public enum ThrowOutcome
 	Land,
 	/// <summary>The defender pressed the throw buttons inside the window: no damage, both pushed apart.</summary>
 	Break,
-	/// <summary>Both grabs caught on the same frame: treated as an automatic break.</summary>
+	/// <summary>Both grabs caught on the same frame, or a grab caught a Slippery Skin startup (AM12): an automatic break.</summary>
 	Clash,
 }
 
-/// <summary>One throw step. Attacker is the thrower's index (for Clash, P1 = 0).</summary>
+/// <summary>One throw step. Attacker is the thrower's index (for a same-frame Clash, P1 = 0).</summary>
 public readonly record struct ThrowEvent(int Attacker, string MoveId, ThrowOutcome Outcome, int Damage);
 
 /// <summary>
@@ -33,7 +33,7 @@ public readonly record struct ThrowEvent(int Attacker, string MoveId, ThrowOutco
 ///
 /// Priorities (E12, designer decisions): a grab and a strike active on the same frame - the grab
 /// wins (grabs resolve before strikes and the grabbed fighter's move ends). Two grabs on the same frame
-/// clash (automatic break, no damage). A strike landing during the throw's startup beats it as usual.
+/// clash (automatic break, no damage); so does a grab on a move's Slippery Skin startup (AM12). A strike landing during the throw's startup beats it as usual.
 /// Input: the two throw buttons within ThrowPressWindow ticks; a normal the first button started is
 /// cancelled into the throw while still in startup. A landed throw builds meter and hitstop as a heavy
 /// hit (OnConnect). A Thrown defender cannot burst (TryBurst needs Hitstun): it breaks instead.
@@ -49,17 +49,15 @@ public sealed partial class Match
 	/// </summary>
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
-		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing // YOK-55: landing recovery
-		&& !ThrowInvulnerable(d);
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing; // YOK-55: landing recovery
 
 	/// <summary>
-	/// YOK-103 (Slippery Skin): a move with <c>properties.throw_invuln: "startup"</c> can't be grabbed during its
-	/// startup frames. This is what the modifier's data says; E12/E17 as written say throws ignore
-	/// throw-invulnerability data (<c>properties.invuln</c> against throw is still read and not applied), so the
-	/// two disagree: an open designer question. Removing this one check makes the modifier do nothing.
+	/// AM12 (YOK-172, Slippery Skin): the fighter is in the startup of a move with <c>properties.throw_break:
+	/// "startup"</c>, so a grab that connects with it is broken automatically, a clash like throw vs throw. This is
+	/// not throw-invulnerability (E17): the fighter stays throwable and the throw still has to connect.
 	/// </summary>
-	public static bool ThrowInvulnerable(Fighter d) =>
-		d.CurrentMove is { ThrowInvulnStartup: true } m && d.MoveFrame < m.FirstActive;
+	public static bool SlipsThrows(Fighter d) =>
+		d.State == FighterState.Attack && d.CurrentMove is { ThrowBreakStartup: true } m && d.MoveFrame < m.FirstActive;
 
 	/// <summary>
 	/// E12: the throw whose buttons were all pressed within ThrowPressWindow ticks, the last of them
@@ -133,8 +131,19 @@ public sealed partial class Match
 	{
 		bool g0 = Grabs(P1, P2), g1 = Grabs(P2, P1);
 		if (g0 && g1) { BreakApart(0, P1.CurrentMove!, ThrowOutcome.Clash); return; }
-		if (g0) Grab(0);
-		else if (g1) Grab(1);
+		if (g0) GrabOrSlip(0);
+		else if (g1) GrabOrSlip(1);
+	}
+
+	/// <summary>
+	/// AM12: a grab on a fighter in a Slippery Skin startup clashes (automatic break, no damage, both freed and
+	/// pushed apart by the throw's on_break pushback), exactly as two same-frame grabs do. Like that clash, an
+	/// elder's unbreakable throws (YOK-90) still clash: only the break press is refused.
+	/// </summary>
+	private void GrabOrSlip(int attIndex)
+	{
+		if (SlipsThrows(Fighters[1 - attIndex])) BreakApart(attIndex, Fighters[attIndex].CurrentMove!, ThrowOutcome.Clash);
+		else Grab(attIndex);
 	}
 
 	private bool Grabs(Fighter att, Fighter def)

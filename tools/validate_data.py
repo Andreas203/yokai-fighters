@@ -516,8 +516,8 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay must be a whole number >= 1")
         elif not fd.get("hitboxes"):
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
-    if "throw_invuln" in props and props["throw_invuln"] != "startup":
-        out.append('properties.throw_invuln must be "startup"')
+    if "throw_break" in props and props["throw_break"] != "startup":
+        out.append('properties.throw_break must be "startup"')
     return out
 
 

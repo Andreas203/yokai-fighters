@@ -20,14 +20,14 @@
   },
   "effects": [
     {
-      "target": "properties.throw_invuln",
+      "target": "properties.throw_break",
       "op": "set",
       "value": "startup"
     }
   ],
   "card": {
-    "plain": "Slick kappa skin makes you impossible to throw while the move starts up.",
-    "frames": "Throw-invulnerable during startup"
+    "plain": "Slick kappa skin slips any throw that catches you while the move starts up.",
+    "frames": "Breaks throws during startup"
   },
-  "notes": "A move property the engine reads for throws. E17 as written says throws ignore throw-invulnerability data (E12), with no exception, which would make this modifier do nothing; the GDD modifier table ('Throw-invulnerable during startup') is what is implemented and takes precedence pending a designer amendment to rules.md. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+  "notes": "A move property the engine reads for throws (properties.throw_break, AM12 / YOK-172): a throw that would grab the carrier during the move's startup is broken automatically, a clash with no damage like throw vs throw. Not throw-invulnerability, so E17 ('throws ignore throw-invulnerability data') stands. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Wording from the rules.md modifiers table."
 }
