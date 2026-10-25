@@ -38,6 +38,7 @@ public sealed record ChargeSpec(int WindowMin, int WindowMax, int StepTicks, int
 		if (Effects.Text(o, "button", id, "charge.button") != SpecialTrigger)
 			throw new FormatException($"{id}: charge.button must be \"{SpecialTrigger}\"");
 		if (o["window_ticks"] is not JsonObject w) throw new FormatException($"{id}: charge.window_ticks must be an object");
+		OnlyKeys(w, "charge.window_ticks", "min", "max", "status");
 		int min = Int(w, "min", 0), max = Int(w, "max", 1);
 		if (min > max) throw new FormatException($"{id}: charge.window_ticks.min must be <= max");
 		int step = Int(o, "step_ticks", 1);
@@ -47,6 +48,7 @@ public sealed record ChargeSpec(int WindowMin, int WindowMax, int StepTicks, int
 			throw new FormatException($"{id}: charge.release must be \"dash_then_move\"");
 		string pose = Effects.Text(o, "hold_pose_clip", id, "charge.hold_pose_clip") ?? "";
 		if (o["dash"] is not JsonObject d) throw new FormatException($"{id}: charge.dash must be an object");
+		OnlyKeys(d, "charge.dash", "duration", "units_per_tick_by_step", "cap_units_per_tick", "status");
 		if (Effects.Text(d, "duration", id, "charge.dash.duration") != "startup")
 			throw new FormatException($"{id}: charge.dash.duration must be \"startup\"");
 		if (d["units_per_tick_by_step"] is not JsonArray a || a.Count == 0)
@@ -56,6 +58,13 @@ public sealed record ChargeSpec(int WindowMin, int WindowMax, int StepTicks, int
 			if (!Effects.Whole(a[k], out units[k]) || units[k] < 1) throw new FormatException($"{id}: charge.dash.units_per_tick_by_step must be whole numbers >= 1");
 		int cap = Int(d, "cap_units_per_tick", 1);
 		return new ChargeSpec(min, max, step, units, cap, pose);
+
+		void OnlyKeys(JsonObject parent, string where, params string[] keys)
+		{
+			if (parent.FirstOrDefault(kv => !keys.Contains(kv.Key)) is { Key: { } k }) throw new FormatException($"{id}: {where}.{k} is not read");
+			if (parent["status"] is { } st && (st is not JsonValue sv || sv.GetValueKind() != System.Text.Json.JsonValueKind.String))
+				throw new FormatException($"{id}: {where}.status must be a string");
+		}
 
 		int Int(JsonObject parent, string key, int least)
 		{

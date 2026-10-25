@@ -152,6 +152,10 @@ public static class ModifierLoader
 			}
 			else frame.Add(new ModifierEffect(bare, when));
 		}
+		foreach (var key in new[] { "excludes" }) // YOK-171; requires stays as it was (probes use an unmatched one on purpose)
+			if (root["applies_to"]?[key] is JsonArray props && props.Any(p => p is not JsonValue v || v.GetValueKind() != System.Text.Json.JsonValueKind.String
+				|| v.GetValue<string>() is not ("projectile" or "throw" or "armour" or "low" or "anti_air")))
+				throw new FormatException($"{id}: applies_to.{key} lists a property the schema doesn't");
 		if (chargeRead && charge is null) throw new FormatException($"{id}: charge_released needs a charge object");
 		if (charge != null && !chargeDash) throw new FormatException($"{id}: a charge object needs the {ForwardTravel} charge_dash effect");
 		return new ModifierData

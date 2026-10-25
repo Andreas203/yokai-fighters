@@ -193,10 +193,14 @@ public sealed partial class Match
 	/// YOK-171 (AM11): a released charge moves the fighter forward (facing) by its speed on each of the special's startup
 	/// frames, whole centi-units; hitboxes, active and recovery frames stay the clip's (F2). Hitstop holds it with the world.
 	/// </summary>
-	private static void ChargeDashStep(Fighter f)
+	private void ChargeDashStep(Fighter f)
 	{
 		if (f.ChargeSpeed > 0 && f.State == FighterState.Attack && f.ActiveMove is { } m && f.MoveFrame <= m.Startup)
-			f.X += f.Facing * f.ChargeSpeed * SimConfig.Scale;
+		{
+			// Data puts no ceiling on the speed: never step past the whole stage, so speed x Scale can't wrap int32 (F3).
+			long step = Math.Min((long)f.ChargeSpeed * SimConfig.Scale, 2L * Config.StageHalfWidth);
+			f.X += f.Facing * (int)step;
+		}
 	}
 
 	/// <summary>K1: a Kata motion input deals +PrecisionBonusPct damage (projectile hits included).</summary>
