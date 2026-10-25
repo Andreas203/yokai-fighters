@@ -103,9 +103,10 @@ CARD_TEXT_FIELDS = ("title", "text", "speaker")
 
 def forbidden_glyph(text: str) -> tuple[str, str] | None:
     """(what, character) for the first emoji (incl. regional-indicator flags), zero-width joiner, variation selector or combining mark
-    in `text` after NFC normalisation (so o + U+0304 counts as the precomposed ō and passes), else None."""
+    in `text` as written, else None. No normalisation: the game hands the text to the Label unchanged, so a decomposed o + U+0304
+    still reaches the text server as a combining mark; write the precomposed ō instead."""
     import unicodedata
-    for ch in unicodedata.normalize("NFC", text):
+    for ch in text:
         cp = ord(ch)
         if cp == 0x200D:
             return "a zero-width joiner", ch

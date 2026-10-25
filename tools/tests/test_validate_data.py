@@ -417,8 +417,8 @@ class ValidateDataTest(unittest.TestCase):
             path.write_text(json.dumps(card), encoding="utf-8")
             return run(path)
 
-    def test_story_card_text_allows_precomposed_accents_and_nfc_equivalents(self):
-        for text in ("Master S\u014den bows.", "Caf\u00e9, na\u00efve, \u00fcber.", "S" + "o\u0304" + "en bows."):  # the last: o + combining macron is NFC-normalised to the precomposed one
+    def test_story_card_text_allows_precomposed_accents(self):
+        for text in ("Master S\u014den bows.", "Caf\u00e9, na\u00efve, \u00fcber."):
             code, out = self._card_with(text=text)
             self.assertEqual(code, 0, f"{text!r}: {out}")
         code, out = self._card_with(speaker="Master S\u014den")
@@ -431,6 +431,7 @@ class ValidateDataTest(unittest.TestCase):
             "a zero-width joiner": "ab\u200dcd",
             "a variation selector": "ab\ufe0fcd",
             "a combining mark": "a\u0301\u0302\u0303b stacked",
+            "a combining mark (decomposed accent)": "S" + "o\u0304" + "en bows.",  # the game does not normalise, so this reaches the Label as a mark
         }
         for label, text in cases.items():
             code, out = self._card_with(text=text)
