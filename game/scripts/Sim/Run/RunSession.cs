@@ -247,6 +247,25 @@ public sealed class RunSession
 	}
 
 	/// <summary>
+	/// YOK-175: Ryo leaves the rest stop he stands at (merchant or dojo) without taking its one choice. PROVISIONAL
+	/// (the designer confirms at PR review; the open rule in rules.md on leaving a rest stop, R6/R7, stays open until then):
+	/// leaving is allowed; the stop is spent: the node counts as done like <see cref="CompleteNode"/>, its routes
+	/// open and Ryo picks from the next row; he cannot come back to it (R1: the pick stays committed). No heal, no
+	/// coins, no shop: health, coins and slots are as he entered. It is a node boundary: <see cref="NodeCompleted"/>
+	/// is raised, so the flow saves as for a completed node (M5). Refused, changing nothing, when no rest stop is entered
+	/// or its choice is already made (Continue, <see cref="CompleteNode"/>, moves on then).
+	/// </summary>
+	public MapResult LeaveNode()
+	{
+		if (IsOver) return MapResult.Fail("the run is over");
+		if (Node is not { } node) return MapResult.Fail("no node is entered");
+		if (Merchant is null && _dojo is null) return MapResult.Fail($"node '{node.NodeId}' is not a rest stop: only a merchant or a dojo can be left");
+		if (Merchant is { Choice: not MerchantChoice.None } || _dojo is { Choice: not DojoChoice.None })
+			return MapResult.Fail($"node '{node.NodeId}': the stop's choice is made, so Continue moves on");
+		return CompleteNode();
+	}
+
+	/// <summary>
 	/// R6: the yokai bound this run, in walk order, once each: for every completed node that binds (R3), the yokai it
 	/// binds as (<see cref="NodeContext.DraftYokai"/>, YOK-178: the yokai whose abilities its draft offered, A8, never the
 	/// stand-in body), then the yokai the map names there when that is another id (the apprentice: Kitsune, then

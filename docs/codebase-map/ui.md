@@ -39,8 +39,9 @@
 
 | File | What it is and its public surface |
 |---|---|
-| `Ui/RestStopScreen.cs` | `ui/rest_stop.tscn` (merchant and dojo nodes): `INodeScene` (`BindRun`), `TakeFree()` (heal/rest), `OpenSecond()` (shop or trial), `Shop`, `Leave()`, `ShopClosed()`, `TrialClosed()`, events `ShopRequested`, `TrialRequested`, `TitleRequested`, `Left`. Not saved inside the stop (M5). Tests `RestStopTests`, `RestStopDojoPickerTests`. |
-| `Ui/RestStopScreenModel.cs` | Pure: asks the `Merchant`/`Dojo` it was made for; one choice; `ChooseTrial()` (provisional: first offer), `Leave` refused while a trial runs; refusals change nothing. |
+| `Ui/RestStopScreen.cs` | `ui/rest_stop.tscn` (merchant and dojo nodes): `INodeScene` (`BindRun`), `TakeFree()` (heal/rest), `OpenSecond()` (shop or trial), `Shop`, `Leave()` (Continue), `LeaveToMap()` (YOK-175: Esc / pad B before a choice, the stop spent via `RunSession.LeaveNode`; after a choice Esc / B does nothing; footer Back chip "Map"), `ShopClosed()`, `TrialClosed()`, events `ShopRequested`, `TrialRequested`, `Left`. Not saved inside the stop (M5). Tests `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`. |
+| (cont.) | YOK-175 pause: `OpenPause()` / `PauseKey(e)` (P / pad Start) / `PauseMenu` / `Paused`: the shared pause menu over the stop, the way to the title; events `TitleRequested` (Quit to title), `RunRestartRequested`. Keys under it never reach the stop. |
+| `Ui/RestStopScreenModel.cs` | Pure: asks the `Merchant`/`Dojo` it was made for; one choice; `CanLeaveToMap` / `LeaveToMap()` (no choice yet, YOK-175); `ChooseTrial()` (provisional: first offer), `Leave` refused while a trial runs; refusals change nothing. |
 | `Ui/RestStopScreenForecast.cs` | T6 Tanuki forecast: `CopyRule.Target` before the lock, `LockedCopy` after; `For(session)`, `ExpectedCost(target)` = `target.Build().Damage` (Lv ≤ 2, no modifier, T4). Tests `ForecastCostTests`. |
 | `Ui/RestStopScreenDecor.cs` | Drawn scroll rods and hangers. |
 | `Ui/ShopScreen.cs` | `ui/shop.tscn` (R6, A2, T2, T5, A12, S2): `Bind(session)`, `BuySpecial`, `BeginPick`/`PickTarget`, `ReleaseSlot`, `ToggleFrameData`, `Refresh(focusKey)`, `Lines`, `MerchantLine`, `Closed`. 3 shelves × 3 items, scrolls a shelf at a time; the merchant's bubble speaks on focus (`MerchantShopLines.ForItem`) and on events. Tests `ShopScreenTests`, `ShopShelfTests`. |
@@ -84,7 +85,7 @@ Generated text-free plates supply paper, brush, ornaments and scenery (prompts a
 | `Ui/Kit/KitCard.cs` | `kit_card.tscn` selectable card: `Selected`, `CardDisabled`, `Activated`, `SelectionArt`. |
 | `Ui/Kit/KitHeading.cs` | `kit_heading.tscn`: live `Text`, `UnderlineWidth`, `UnderlineArt`. |
 | `Ui/Kit/KeyChipFooter.cs` | `key_chip_footer.tscn`: `SetHints`, `Pinned`, `OnPaper`; switches keyboard/pad glyphs with the last device. |
-| `Ui/Kit/InputGlyphs.cs` | Keyboard/mouse vs pad glyphs and the device drift threshold. |
+| `Ui/Kit/InputGlyphs.cs` | Keyboard/mouse vs pad glyphs and the device drift threshold. `menu` = P / START (the rest stop's pause, where Esc is Back). |
 | `Ui/Kit/CornerOrnament.cs` | `corner_ornament.tscn`: blossom corner, `Corner` mirror, `Art`. |
 | `Ui/Kit/KitBackdrop.cs` | `kit_backdrop.tscn`: night backdrop, cover scaling, `Art`, `Dim`. |
 | `Ui/Kit/KitState.cs` | `KitState` Auto/Normal/Focused/Disabled/Pressed (gallery pins a state). |
