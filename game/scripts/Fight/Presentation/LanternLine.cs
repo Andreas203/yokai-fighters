@@ -22,6 +22,8 @@ public partial class LanternLine : Node3D
 	public const string LitLanternScene = "res://scenes/stage_props/lit_lantern.tscn";
 	/// <summary>Name prefix of the built lanterns: <c>PathLanternL0</c>, <c>PathLanternR2</c>…</summary>
 	public const string Prefix = "PathLantern";
+	/// <summary>The range <see cref="Recede"/> is clamped to: 0 would give scale-0 lanterns (a singular basis), 1 would stack a row on its near point.</summary>
+	public const float MinRecede = 0.2f, MaxRecede = 0.95f;
 
 	private Vector3 _nearLeft = new(-1.7f, 0, -13.7f), _nearRight = new(2.3f, 0, -13.9f);
 	private float _vanishU = 0.53f, _recede = 0.65f, _nearScale = 0.6f;
@@ -36,7 +38,7 @@ public partial class LanternLine : Node3D
 	[Export(PropertyHint.Range, "0,1,0.01")] public float VanishU { get => _vanishU; set { _vanishU = value; Changed(); } }
 	/// <summary>Lanterns per row (0 = none).</summary>
 	[Export(PropertyHint.Range, "0,8,1")] public int PerSide { get => _perSide; set { _perSide = value; Changed(); } }
-	/// <summary>Each lantern keeps this fraction of the previous one's distance to the vanish point, and of its scale.</summary>
+	/// <summary>Each lantern keeps this fraction of the previous one's distance to the vanish point, and of its scale (clamped to [<see cref="MinRecede"/>, <see cref="MaxRecede"/>]).</summary>
 	[Export(PropertyHint.Range, "0.2,0.95,0.01")] public float Recede { get => _recede; set { _recede = value; Changed(); } }
 	/// <summary>Scale of the nearest lantern of each row (the grove's front lanterns are about 0.7-0.8).</summary>
 	[Export] public float NearScale { get => _nearScale; set { _nearScale = value; Changed(); } }
@@ -49,11 +51,15 @@ public partial class LanternLine : Node3D
 	public readonly record struct Placement(string Name, Vector3 Position, float Scale, float YawDegrees, bool Lit);
 
 	/// <summary>Pure layout of both rows toward <paramref name="vanish"/> (see the class summary). <paramref name="recede"/> is
-	/// clamped to [0, 1], so every lantern lies between its row's near point and the vanish point, never in front of it.</summary>
+	/// clamped to [<see cref="MinRecede"/>, <see cref="MaxRecede"/>], so every lantern lies between its row's near point and the
+	/// vanish point (never in front of it), each one deeper and smaller than the last, never scale 0.</summary>
 	public static List<Placement> Placements(Vector3 nearLeft, Vector3 nearRight, Vector3 vanish, int perSide, float recede, float nearScale, int litPerSide)
 	{
-		recede = Mathf.Clamp(recede, 0f, 1f);
 		var list = new List<Placement>();
+		// Non-finite inputs (a NaN typed in the inspector or a hand-edited scene) or a non-positive scale build nothing.
+		if (!float.IsFinite(recede) || !float.IsFinite(nearScale) || !(nearScale > 0f) || !Finite(nearLeft) || !Finite(nearRight) || !Finite(vanish))
+			return list;
+		recede = Mathf.Clamp(recede, MinRecede, MaxRecede);
 		foreach (var (side, near) in new[] { ("L", nearLeft), ("R", nearRight) })
 		{
 			float k = 1f;
@@ -66,6 +72,8 @@ public partial class LanternLine : Node3D
 		}
 		return list;
 	}
+
+	private static bool Finite(Vector3 v) => float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
 
 	/// <summary>
 	/// The vanish point in this node's space: where the backdrop quad's vertical line at <see cref="VanishU"/> of its
@@ -99,16 +107,32 @@ public partial class LanternLine : Node3D
 
 	/// <summary>
 	/// Lights each row may keep: what is left of <see cref="BambooGroveStage.MaxLanternLights"/> after the stage's other
-	/// OmniLight3D (the front lanterns), split between the two rows. The cap holds whatever the exports say. The stage is
-	/// this node's <c>Owner</c> (the scene root it was loaded with); a line with no owner counts only itself.
+	/// OmniLight3D (the front lanterns, any other line), split between the two rows. The cap holds whatever the exports
+	/// say. The stage is <see cref="StageScope"/>.
 	/// </summary>
 	public int LightBudgetPerSide()
 	{
-		Node scope = Owner ?? this;
+		Node scope = StageScope();
 		int others = 0;
 		foreach (Node n in scope.FindChildren("*", "OmniLight3D", true, false))
 			if (!IsAncestorOf(n)) others++;
 		return Mathf.Max(0, (BambooGroveStage.MaxLanternLights - others) / 2);
+	}
+
+	/// <summary>
+	/// Whose lights count against the budget: the nearest <see cref="FightStage"/> ancestor (the stage scene's root, not the
+	/// fight scene with its fighters); outside the tree, the topmost ancestor; otherwise the line's <c>Owner</c>, else the
+	/// line alone (a line on its own counts only itself).
+	/// </summary>
+	public Node StageScope()
+	{
+		Node top = this;
+		for (Node? a = GetParent(); a != null; a = a.GetParent())
+		{
+			if (a is FightStage) return a;
+			top = a;
+		}
+		return !IsInsideTree() ? top : Owner ?? this;
 	}
 
 	public override void _Ready() => Rebuild();
@@ -142,12 +166,14 @@ public partial class LanternLine : Node3D
 		}
 		var scene = GD.Load<PackedScene>(LitLanternScene);
 		if (scene is null) return;
+		Transform3D world = WorldOf(this);
 		foreach (var p in Placements())
 		{
-			// Guard: a near point set in front of the lantern depth builds nothing there (BambooGroveStage.LanternMaxZ).
-			if ((Transform * p.Position).Z > BambooGroveStage.LanternMaxZ)
+			// Guard: a lantern whose world depth is in front of the lantern depth (or not a number) is not built (BambooGroveStage.LanternMaxZ).
+			float z = (world * p.Position).Z;
+			if (!(z <= BambooGroveStage.LanternMaxZ))
 			{
-				GD.PushWarning($"LanternLine: {p.Name} at z {(Transform * p.Position).Z} is nearer than LanternMaxZ {BambooGroveStage.LanternMaxZ}; skipped");
+				GD.PushWarning($"LanternLine: {p.Name} at world z {z} is nearer than LanternMaxZ {BambooGroveStage.LanternMaxZ}; skipped");
 				continue;
 			}
 			var lantern = scene.Instantiate<Node3D>();

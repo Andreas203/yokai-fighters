@@ -128,6 +128,11 @@ public static class StageTests
 		line.PerSide = 8; line.LitPerSide = 8; // past the budget: the line keeps only what is left of the cap
 		int capped = stage.FindChildren("*", "OmniLight3D", true, false).Count;
 		Assert.True(capped <= BambooGroveStage.MaxLanternLights, $"the light cap holds whatever the exports say, got {capped}");
+		var extra = new LanternLine { Name = "CodeLine", PerSide = 4, LitPerSide = 4 };
+		stage.GetNode("Props").AddChild(extra); // a second line added in code (no Owner) still counts the whole stage
+		Assert.True(extra.StageScope() == stage, "the budget counts the stage scene, not the fight scene or the line alone");
+		int withExtra = stage.FindChildren("*", "OmniLight3D", true, false).Count;
+		Assert.True(withExtra <= BambooGroveStage.MaxLanternLights, $"a code-added line holds the cap too, got {withExtra}");
 		scene.QueueFree();
 	}
 
@@ -189,6 +194,18 @@ public static class StageTests
 		var near = new Vector3(-2.4f, 0, -13.8f);
 		foreach (var p in LanternLine.Placements(near, near, vanish, 4, 1.5f, 0.6f, 2))
 			Assert.True(p.Position.Z <= near.Z + 1e-4f && p.Scale <= 0.6f + 1e-4f, $"{p.Name}: a Recede past 1 is clamped, never in front of the near point");
+		foreach (float r in new[] { 0f, 1f, -3f })
+		{
+			var row = LanternLine.Placements(near, near, vanish, 4, r, 0.6f, 2).Take(4).ToList();
+			for (int i = 1; i < row.Count; i++)
+				Assert.True(row[i].Scale > 0f && row[i].Scale < row[i - 1].Scale && row[i].Position.Z < row[i - 1].Position.Z, $"Recede {r} clamped to [{LanternLine.MinRecede}, {LanternLine.MaxRecede}]: {row[i].Name} deeper, smaller, never scale 0");
+		}
+		var nan = new Vector3(float.NaN, 0, -14f);
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, float.NaN, 0.6f, 2).Count, "NaN Recede builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, 0.6f, float.PositiveInfinity, 2).Count, "infinite scale builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, 0.6f, 0f, 2).Count, "zero scale builds nothing");
+		Assert.Equal(0, LanternLine.Placements(nan, near, vanish, 4, 0.6f, 0.6f, 2).Count, "a NaN near point builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, nan, 4, 0.6f, 0.6f, 2).Count, "a NaN vanish point (NaN VanishU) builds nothing");
 	}
 
 	[Test]
