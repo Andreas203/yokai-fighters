@@ -3,7 +3,7 @@ using Godot;
 namespace YokaiFighters.Ui;
 
 /// <summary>
-/// The Astra shop plates (YOK-159, assets/specs/ui-screen-plates.md "YOK-159 shop plates"). One place for the textures and
+/// The Astra shop plates (YOK-159, assets/specs/ui/ui-screen-plates.md "YOK-159 shop plates"). One place for the textures and
 /// the nine-slice draw, which scales the margins with the plate (a plate drawn at 0.3 keeps its string hole and border
 /// proportions) instead of Godot's NinePatch, whose margins are in source pixels.
 /// </summary>

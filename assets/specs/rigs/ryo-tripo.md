@@ -9,7 +9,7 @@ Designer decisions (2026-10-19, on YOK-146): **Option A**, so Tripo's skeleton b
 | Item | Value |
 |---|---|
 | Model and rig | Tripo, Mixamo-preset auto-rig, `game/assets/generated/characters/ryo/Ryo.glb` (dropped by the designer 2026-10-19; untracked in the main checkout and **not committed** here; sha256 `c46dfd32561184d3dab61455f1dcd218b660ee9964c15aafe7dd444ec614dfc7`, 9,840,428 bytes). Task id and credits are not recorded in the file; the designer ran the job |
-| Mesh | 53,785 triangles, 31,156 vertices, one material (Tripo base colour JPEG). **About 2.7x the 20k budget** in `assets/specs/ryo-regen.md`. Not decimated (designer's call, see below) |
+| Mesh | 53,785 triangles, 31,156 vertices, one material (Tripo base colour JPEG). **About 2.7x the 20k budget** in `assets/specs/characters/ryo-regen.md`. Not decimated (designer's call, see below) |
 | Rig as delivered | 65 joints (`mixamorig:` prefix, 40 finger joints), no twist bones, no animation, about 1.0 m tall. **Unusable raw**: no joint node has a transform (the bind pose is only in the inverse bind matrices), and those matrices are in a Z-up frame while the mesh is Y-up. The body flies apart in Blender and in Godot (`stills/ryo-tripo/raw_import_front.png`, `raw_import_side.png`; Godot 4.7.2 reads `mixamorig_Hips` rest as (0, 0, 0)) |
 | Canonical rig | `game/assets/generated/characters/ryo/ryo-tripo-rigged.glb`, sha256 `034b20cfbf19f9bb…` |
 
@@ -103,7 +103,7 @@ Reading the table:
 See `assets/specs/clips/retarget_gate.md`, section YOK-146. **Recommendation: GO for the test branch on the stopgap clips; the formal G4 for the Tripo set stays OPEN** until the Tripo exports and mocap takes exist.
 
 ## Open for the designer
-1. **Triangle budget:** 53,785 triangles against the 20k budget in `ryo-regen.md`. Not decimated. Recommendation: decimate by script to about 20k (Blender collapse on the body, keeping the face, hands and UV seams) in a follow-up ticket, before the Tripo clips are measured on it. Re-run `canon_tripo_rig.py` and the `ryo-tripo` repair first, so the weights carry over through the decimation. Alternatively accept 54k: two fighters on screen is about 108k triangles. Your call.
+1. **Triangle budget:** 53,785 triangles against the 20k budget in `characters/ryo-regen.md`. Not decimated. Recommendation: decimate by script to about 20k (Blender collapse on the body, keeping the face, hands and UV seams) in a follow-up ticket, before the Tripo clips are measured on it. Re-run `canon_tripo_rig.py` and the `ryo-tripo` repair first, so the weights carry over through the decimation. Alternatively accept 54k: two fighters on screen is about 108k triangles. Your call.
 2. **Deep-crouch volume flag** (charm and pouch painted on the left hip): accept it as known, as on the Meshy Ryo, or ask Asset Smith for a Tripo take with the charm and pouch as separate meshes, which can then be bound rigid to `Hips`.
 3. **Groin pleat in the floor clips** (knockdown, get-up, jump, block-low): it stays on the stopgap clips. Recheck it on the real Tripo/mocap clips before G4; if it persists, a knee/groin repair step (`repair_weights.py` steps C and K, already scripted for Oni and Kappa) is the next free fix.
 4. **Raw `Ryo.glb` is not committed** (9.8 MB, untracked in the main checkout, and Godot would import it broken). Keep it outside `game/` or commit it under a `.gdignore`d folder for reproducibility: your call.

@@ -66,7 +66,7 @@ All paths under `assets/specs/texture/ryo-tripo/compare/` unless noted. Blender 
 - `views-old-paint-new.png`: four rows (front, left, right, back); columns old albedo, Astra paint, the new texture on the mesh. The new texture follows the paint closely: indigo coat, persimmon lining, rope, wraps, boots, face, buttons, charm. Painted folds are gone.
 - `deformed-old-new.png`: get-up f030 (front, side), knockdown f089 (front, pelvis), jump f076 (front, pelvis), heavy kick active f063 (front, side); old then new for each. The new cloth has no folds to stretch, so the groin and knee pose no longer looks doubled; the jagged pleat that remains is geometry.
 - `seams-closeup-old-new.png`: rest-pose waist and hip close-ups, front and back (old, new, old, new). No visible seam lines on the cloth.
-- Godot, windowed capture in the grove (`tests/model_capture.tscn only=ryo`): `docs/screenshots/current/fighters/ryo-tripo-texture/before/` and `after/` (idle, jab, heavy punch, heavy kick). Brighter and closer to the concept indigo `#2D3A5E`; the 0.8 darkening is gone.
+- Godot, windowed capture in the grove (`tests/captures/model_capture.tscn only=ryo`): `docs/screenshots/current/fighters/ryo-tripo-texture/before/` and `after/` (idle, jab, heavy punch, heavy kick). Brighter and closer to the concept indigo `#2D3A5E`; the 0.8 darkening is gone.
 
 ## What still looks wrong
 

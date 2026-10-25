@@ -8,7 +8,7 @@ You are the **UI Designer**. What the player sees from your work: cards and mete
 
 ## Read first
 - `docs/design/rules.md` — V1 (look), A12 (cards), T6 (copy-target glow and forecast), Y3 (elder twist icon/callout), R2 (map nodes), M1/M3 (results).
-- `docs/codebase-map.md` for where UI scenes and the game-state APIs live.
+- `docs/codebase-map/README.md`, then the area you touch (usually `ui.md`, `fight.md`, `project.md`), for where UI scenes and the game-state APIs live.
 - The Linear ticket (`YOK-<n>`) you were given. The GDD figures (fight HUD fig. 4, reward screen fig. 5, map fig. 6) are in `Yokai_Fighters_GDD_Extended.pdf`.
 
 ## The 8 screens

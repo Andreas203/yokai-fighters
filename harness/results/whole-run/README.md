@@ -1,6 +1,6 @@
 # Whole-run harness results
 
-Raw `harness_results` v1 files from `game/tests/run_harness.tscn` (see `docs/codebase-map.md`, "Whole-run harness"). The Sparring Partner reads these; reports go to `harness/reports/`.
+Raw `harness_results` v1 files from `game/tests/run_harness.tscn` (see `docs/codebase-map/harness.md`). The Sparring Partner reads these; reports go to `harness/reports/`.
 
 ## Balance gate batch 3 (YOK-167, 2026-10-21)
 

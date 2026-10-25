@@ -35,5 +35,5 @@ The current Meshy image is a flat visual reference, not final concept art. Asset
 
 1. Keep the collar over his mouth, or open it for story-card art and the Win 3 ending?
 2. Light the forearm wraps per filled slot on the model? In the Tanuki fight the copied move's wrap could glow to match the HUD talisman (T6).
-3. Coat tail must be bone-driven or baked into clips so the 60-tick loop stays deterministic; record the choice in Asset Smith's rig plan (`assets/specs/ryo.md`).
+3. Coat tail must be bone-driven or baked into clips so the 60-tick loop stays deterministic; record the choice in Asset Smith's rig plan (`assets/specs/characters/ryo.md`).
 4. Name kanji: 涼 (cool), 了 (to finish, to settle), or keep katakana リョウ.

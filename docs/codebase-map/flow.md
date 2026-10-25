@@ -1,0 +1,13 @@
+# Flow: boot flow and screen routing
+
+`game/scripts/Flow/`, namespace `YokaiFighters.Flow`. Main scene `scenes/boot.tscn` (`GameFlow`, never freed; `Menus` CanvasLayer 30 with `Title` = `ui/title_menu.tscn`, `ControlSelect` = `ui/start_screen.tscn`). Title → control select → map ⇄ fight, Title ↔ Settings, Title → Practice, Map or Fight → Title, Quit. Menus cannot touch the sim: a node's scene is created only when the router reaches `Fight` and freed on the way back. Index: [README.md](README.md).
+
+| File | What it is and its public surface |
+|---|---|
+| `Flow/ScreenRouter.cs` | Pure C# top-level state. `Screen` Title/ControlSelect/Settings/Fight/Map/Practice; `TitleEntry` Start/Continue/Practice/Settings/Quit; `TitleEntryState(Entry, Enabled, Reason)`, `Enable`/`Disable(entry, reason)`. `Select(entry)`, `Back()`, `ChooseScheme` (refused on Map, Fight, Practice), `Confirm()`, `EnterNode()`, `ReturnToMap()`, `ContinueRun()`, `StartPractice()`, `StartFightDirect(scheme)`, `ReturnToTitle()`. Events `Changed(from, to)`, `SchemeChanged`, `EntryChanged`, `Activated`, `QuitRequested`. |
+| (cont.) | Continue/Practice start disabled (`NoSaveReason`, `NoPracticeReason`). |
+| `Flow/GameFlow.cs` | Thin node wiring menus to the router. `BeginFight` instances `fight.tscn` (`PlayerScheme`, `TutorialAllowed`, `TanukiWins`, `FirstMeeting`), `EndFight`, `ChooseNode(id)`, `Session`, `Map`, `MapFile`, `FixedRunSeed`, `RestartRun()`, `NodeScene`, `Fight`, `ReturnToTitle()`. **The only save caller**: `SaveFile`/`Saves`/`Saved`/`Write(SaveData)`; save points = run started, node entered, node completed (M5, AM3); a run that ends is removed (and carry-over, unlocks, Tanuki win written in the same write); a refused write is retried. |
+| (cont.) | `RestoreSavedRun`, `RefreshContinue`, `ContinueRun`, `HasMetElder`, `UnlockOrder(pool)`. Bypass `--fight`, `--fight=kata` or `--fight=kihon`; test hooks `QuitAction`, `ConfigureFight`, `SettingsFile`. |
+| `Flow/GameFlow.Practice.cs` | GDD 8: on `Screen.Practice`, `BeginPractice()` instances `fight.tscn` with `FightScene.PracticeMode`; no session, story flag or tutorial hook, so no save point (M5, AM3). |
+| `Flow/GameFlow.Dev.cs` | `StartDevRun(session, nodeId, scheme, stage?)` (title or map only; adopted as `_unsavedSession`, never written), `ApplyDevStage`, `OpenDevScreen(title, screen, wire)`, `AdoptDevSession(session, out refusal)`, `OpenDevMenu()`, `AttachSaves()` (dev save slot). Tests `DevJumpTests`. |
+| `Flow/SessionMapView.cs` | The map screen's `IMapView` for a session (`RunMapView` nodes/routes, `Select` = `RunSession.Enter`), plus `INodeScene { BindRun(session, scheme) }` for later non-fight node scenes. |

@@ -41,14 +41,14 @@ Order of authority: the PDFs plus the amendments, then `rules.md`. Everything el
 
 | Document | What it is | Owner |
 |---|---|---|
-| [`codebase-map.md`](codebase-map.md) | Map of the Godot project, the tools and the tests, so agents load only what a ticket touches | gameplay-programmer, ui-designer |
+| [`codebase-map/`](codebase-map/README.md) | Map of the Godot project, the data, the tools and the tests: a one-screen index plus one file per area (`docs/codebase-map/*.md`), so agents load only the area a ticket touches; `tools/check_docs.py` checks every script has one row | gameplay-programmer, ui-designer |
 | [`../tools/content_pipeline/`](../tools/content_pipeline/), [`../tools/goal_agent/`](../tools/goal_agent/) | The content pipeline and the goal-oriented coding agent; each run's `trace.md` sits under `runs/` | designer |
 
 ## Assets, sound and balance
 
 | Location | What it is | Owner |
 |---|---|---|
-| [`../assets/specs/`](../assets/specs/) | Generation specs and acceptance results: [`style.md`](../assets/specs/style.md) (shared style and palette), one file per fighter and stage, `ui-*.md` for screen art, `rigs/`, `clips/`, `texture/` | asset-smith, rig-specialist, animator |
+| [`../assets/specs/`](../assets/specs/) | Generation specs and acceptance results: [`style.md`](../assets/specs/style.md) (shared style and palette), `characters/` (one file per fighter), `stages/`, `ui/` (`ui-*.md` screen art), `jobs/` (generation job lists), `rigs/`, `clips/`, `texture/` | asset-smith, rig-specialist, animator |
 | [`../assets/shortlists/`](../assets/shortlists/) | Sound and music pack comparisons | sound-scout |
 | [`../harness/reports/`](../harness/reports/) | Balance gate reports; raw runs are in `harness/results/` | sparring-partner |
 | [`../harness/results/`](../harness/results/) | Raw bot runs; a `README.md` per folder says how each batch was built | gameplay-programmer |
