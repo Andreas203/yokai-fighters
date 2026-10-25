@@ -718,16 +718,25 @@ The goal agent's in-loop critics take their briefs from these two role files ("W
 
 ## Assignment 6: Style guide agent
 
-The style guide agent keeps every story card in Yokai Fighters' voice. A **Generator** drafts a card, an **Evaluator** grades it against the game's style guide and replies `SCORE: X/10` and `REASON: ...`, and a **Refiner** rewrites the card from that reason. The loop repeats until the card scores 10/10. Nobody steps in once it starts. The style guide is taken entirely from my GDD, its amendments and the design vault, and every rule names the line it comes from.
+The style guide agent keeps Yokai Fighters' story text and its generated art on style. A **Generator** makes a piece of content, an **Evaluator** grades it against the game's style guide and replies `SCORE: X/10` and `REASON: ...`, and a **Refiner** rewrites it from that reason. The loop repeats until the content scores 10/10 or its budget runs out. Nobody steps in once it starts. Both style guides are taken entirely from my GDD, its amendments, the design vault and the asset specs, and every rule names the line it comes from.
 
-| Deliverable | Section |
-|---|---|
-| 1. The capstone-anchored style guide (three constraint types) | [The style guide](#the-style-guide) |
-| 2. The Evaluator and Refiner loop | [The loop](#the-loop) |
-| 3. Before and after, one example per violation class | [Example 1: tone](#example-1-tone), [Example 2: vocabulary and lore](#example-2-vocabulary-and-lore), [Example 3: form and length](#example-3-form-and-length) |
-| 4. Pipeline connection | [Where it fits](#where-it-fits) |
+It runs on two kinds of content with the same loop:
 
-Code: [`tools/style_agent/`](tools/style_agent/), about 500 lines of Python with the standard library only, plus 18 unit tests that CI runs. The recorded runs are in [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three examples) and [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game).
+- **Story cards** (part 1): the Generator is a language model, and the Evaluator reads the text.
+- **Stage backdrops** (part 2): the Generator is the image model Astra, and the Evaluator *looks at the picture* next to an accepted stage, with pixel measurements from code.
+
+| Deliverable | Part 1: story cards | Part 2: stage backdrops |
+|---|---|---|
+| 1. The capstone-anchored style guide (three constraint types) | [The style guide](#the-style-guide) | [The visual style guide](#the-visual-style-guide) |
+| 2. The Evaluator and Refiner loop | [The loop](#the-loop) | [What changes for images](#what-changes-for-images) |
+| 3. Before and after, one example per violation class | [Tone](#example-1-tone), [vocabulary and lore](#example-2-vocabulary-and-lore), [form and length](#example-3-form-and-length) | [Look](#visual-example-1-look), [palette and lore](#visual-example-2-palette-and-lore), [spec form](#visual-example-3-spec-form) |
+| 4. Pipeline connection | [Where it fits](#where-it-fits) (one sentence for both) | |
+
+Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 31 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples), [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game) and [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops).
+
+### Part 1: story cards
+
+Everything from here to [Part 2](#part-2-stage-backdrops) is the story-card loop.
 
 ### The style guide
 
@@ -919,6 +928,125 @@ The first live run ([`runs/v1-stalled/trace.md`](tools/style_agent/runs/v1-stall
 
 The same v1 run also shows the loop catching its own Refiner. On example 2, the Refiner fixed the lore and then added Ryo's binding line to the wake-up card. The Evaluator marked it down because the line belongs to a binding and nothing had been bound, and the next round removed it.
 
+### Part 2: stage backdrops
+
+The same Generator → Evaluator → Refiner loop, on the game's generated art. The targets are real gaps: the backdrops for the Oni's, the Kappa's and the Tanuki's stages (S1 in YOK-150, 151 and 152). Their Meshy jobs were approved but never run, because the Meshy MCP isn't available on this machine.
+
+#### The visual style guide
+
+[`visual_guide.py`](tools/style_agent/visual_guide.py) (`run.py visual-guide` prints it): 12 rules in three constraint types, plus the palette and the house prompt blocks copied exactly from [`assets/specs/style.md`](assets/specs/style.md).
+
+| ID | Rule | Source |
+|---|---|---|
+| **Look** | | |
+| L1 | Toon-shaded game art: flat cel colour in 2–3 tone steps, a clean ink-brush outline of even weight, simple shapes that read at 720p. | rules.md V1; style.md Style block |
+| L2 | Matte surfaces, soft even light: no cast shadows, gloss, rim light, baked AO, bloom or glowing particles. A lantern's glow is a flat orange fill, never a bloom. | style.md; [Astra brief](docs/design/characters/astra-brief.md); [lantern-riverbank.md](assets/specs/lantern-riverbank.md) |
+| L3 | No photographic, PBR or painterly texture: no grain, brush noise, depth-of-field blur or volumetric light. The game adds its own toon shader, so baked rendering is a RETAKE. | V1; style.md Shared 3D settings |
+| L4 | Matches the accepted bamboo grove backdrop (shown to the Evaluator as REFERENCE) in outline weight, flatness and detail. | style.md Acceptance checklist 2 |
+| **Palette and lore** | | |
+| P1 | Colours from the style.md palette (indigo `#2D3A5E`, ink `#1D1B21`, persimmon `#D8632C`, rice paper `#F1E8D4`, pine `#34483B`, shrine red `#B5332B`, snow shade `#A9B4C8`, water teal `#3E7F86`...). No neon, saturated primaries, hot pink or turquoise; snow is never pure white. | V1; style.md Palette; [snowbound-shrine-gate.md](assets/specs/snowbound-shrine-gate.md) |
+| P2 | Each stage shows its own place and hour: the Oni's shrine gate at blue dusk, the Kappa's river at deep indigo night with drifting paper lanterns, the Tanuki's lamplit tea house with blank paper screens, the Kitsune's bamboo grove at dusk. | rules.md V9; the three stage specs |
+| P3 | One rural Japanese province at the end of autumn: no modern objects, cities or tropical scenery; spring colour only on the tea house's season screens. | GDD §2.1; [tanuki-tea-house.md](assets/specs/tanuki-tea-house.md) |
+| P4 | Mischievous folklore with a melancholy edge, never horror: no skulls, blood or menacing faces. | rules.md S1 |
+| **Spec form** | | |
+| S1 | A wide 16:9 landscape, full-bleed: no border, frame, vignette or letterbox. | the stage specs' Backdrop prompts and Acceptance criteria |
+| S2 | No characters, people, yokai or animals: the fighters stand in front. | the stage specs |
+| S3 | No text: no title, kanji, logo, signature or watermark. | style.md Negative prompt |
+| S4 | The lower third, where the fighters stand, is calm, empty and low-contrast. | the stage specs ("empty and uncluttered in the lower third") |
+
+#### What changes for images
+
+| | Story cards | Stage backdrops |
+|---|---|---|
+| Generator | sonnet, no style guide | **Astra** (`gpt-6-astra`, through `codex exec`), given the sabotaged brief with no style block |
+| Measured by code | characters, sentences, placeholders, listed words | **pixels** ([`image_tools.py`](tools/style_agent/image_tools.py)): aspect ratio, a flat band of one colour on opposite edges (a letterbox or frame), each dominant colour's distance from the nearest palette hex, flatness, edge strength of the lower third against the rest, neon share |
+| Evaluator | opus reads the text | opus **sees two images**: the accepted grove backdrop as REFERENCE, then the take |
+| Refiner | rewrites the card | rewrites the **prompt**; the pipeline wraps it in style.md's style block and negative block, as every asset prompt must start and end |
+| Stops at | 10/10 with no code flag, or 4 evaluations | 10/10 with no flag, 3 takes per asset, or the **9-take image budget** you approved (enforced in code, counting every take in the run folder) |
+| Output | the last text | the **best take**: a rewrite can overshoot, so each new rewrite starts from the best take so far |
+
+The Evaluator and the Refiner are told only the asset slot, for example "Stage backdrop S1 for the Oni's stage: a snowbound mountain shrine gate". They never see the sabotaged brief.
+
+#### Visual example 1: look
+
+**Brief given to Astra:** right place, right format, wrong look: "a photorealistic cinematic render like a AAA game screenshot: ray-traced glossy ice, volumetric god rays, deep dramatic cast shadows, film grain..."
+
+| Before: take 1, 1/10 | After: take 2, 9/10 |
+|---|---|
+| ![Oni shrine gate, photographic take](tools/style_agent/runs/visual/images/visual-1-look-take1.png) | ![Oni shrine gate, cel-shaded take](tools/style_agent/runs/visual/images/visual-1-look-take2.png) |
+
+```
+SCORE: 1/10
+REASON: [L1][L3] Photographic, PBR-detailed render with painterly texture, volumetric god-rays and atmospheric mist across the whole frame; there are no flat cel tones or ink outline (flatness only 30%) (-3)
+[L2] Bloom on the sun at upper left and glowing lanterns on the gate and stone posts, glossy reflective ice with specular highlights, and cast shadows and reflections on the ground (-3)
+[P2] Wrong hour: a warm golden sunset with the sun visible, not the blue dusk the Oni's stage requires (-3)
+[S4] Busy lower third: cracked reflective ice, snow clumps and bright sun glints, with edge strength 50.9 against 40.6 in the upper two thirds (-3)
+[L4] No match to the bamboo grove reference in outline weight, flatness or detail level; it reads as a different game (-1)
+```
+```
+SCORE: 9/10
+REASON: [L4] Busier than the bamboo-grove REFERENCE. The snow-clumped pine boughs on both edges, the layered forested ridges and the snow-capped rocks at the gate's base add noticeably more small shapes and line work than the reference's simple flat bamboo stalks (-1).
+```
+
+The look is fixed in one rewrite: flat cel colour, ink outlines, blue dusk, a quiet lower third, and the gate, straw rope and snowy pines kept. Take 3 tried to win the last point by stripping detail, overshot to heavy outlines and scored 8, so the loop kept take 2.
+
+#### Visual example 2: palette and lore
+
+**Brief given to Astra:** right look and format, wrong world: "a bright sunny tropical beach at noon in spring: turquoise water, hot-pink cherry blossoms, palm trees, neon lanterns in electric blue and lime green, and a modern city skyline".
+
+| Before: take 1, 1/10 | After: take 2, 8/10 |
+|---|---|
+| ![Kappa riverbank, neon tropical take](tools/style_agent/runs/visual/images/visual-2-palette-lore-take1.png) | ![Kappa riverbank, night river take](tools/style_agent/runs/visual/images/visual-2-palette-lore-take2.png) |
+
+```
+SCORE: 1/10
+REASON: [P1] Saturated blue sky (top centre), turquoise water (centre), hot-pink blossoms and petals (top left and across the sand), and neon-green lanterns (centre and right) sit outside the muted ukiyo-e palette (neon share 19.3%) (-3)
+[P2] Bright daytime beach under a blue sky, instead of the Kappa's river at deep indigo night with paper lanterns on dark water and reeds (-3)
+[P3] Modern city skyline and bridge (top right), tropical palms and hibiscus (corners), and spring cherry blossom throughout, against a rural Japanese province at the end of autumn (-3)
+[L1] [L2] [L3] [L4] [S4] ... (five more lines, in the trace)
+```
+```
+SCORE: 8/10
+REASON: [L4] The outlines are crisp dark ink lines of even weight on the lanterns, reeds, shoreline and water ripples. The reference bamboo grove has much softer, barely visible outlines, so the line weight does not match the accepted stage (-1).
+[L2] Each lantern body has a smooth cream-to-orange gradient glowing from its centre [...]. There is no halo or bloom around them, so it is a soft drift, not a hard break (-1).
+```
+
+Every palette and lore break is gone: the code measures 100% of pixels on the palette and 0% neon, down from 19%. What's left are two soft drifts. One of them, outline weight, is a real tension in my own guide: L1 asks for a "clean ink-brush outline", and L4 asks to match a reference whose outlines are faint. Take 3 also scored 8, so the loop kept take 2.
+
+#### Visual example 3: spec form
+
+**Brief given to Astra:** right look and palette, wrong form: "a square poster with an ornate decorative border: the round Tanuki merchant standing in the centre foreground pouring tea, guests kneeling around him... and the title YOKAI FIGHTERS in big calligraphy across the top with an artist's signature in the corner."
+
+| Before: take 1, 1/10 | After: take 3, 10/10 |
+|---|---|
+| ![Tanuki tea house, square poster take](tools/style_agent/runs/visual/images/visual-3-spec-form-take1.png) | ![Tanuki tea house, empty backdrop take](tools/style_agent/runs/visual/images/visual-3-spec-form-take3.png) |
+
+```
+SCORE: 1/10
+REASON: [S1] Square 1254x1254 image, aspect 1.0, not 16:9 (-3)
+[S1] Ornate decorative border and frame with corner crests and cloud-and-pine panels around the whole image, not full-bleed (-3)
+[S2] Characters fill the scene: the tanuki, kitsune, tengu, kappa, cat, one-eyed woman, oni, skeleton and a straw-hatted figure (-3)
+[S3] Text throughout: the "YOKAI FIGHTERS" title (top), kanji banners and signs (left, right and centre), and a signature seal (bottom right) (-3)
+[S4] The lower third is crowded with figures, teaware, a kettle over fire and border ornament [...] (-3)
+[P4] A grinning skeleton with a skull (right) and a menacing fanged red oni (upper right) bring horror imagery (-3)
+[L3] [L1] [L4] [P3] ... (four more lines, in the trace)
+```
+```
+SCORE: 10/10
+REASON: [...] Spec form [S1-S4]: The image is 1280x720 (1.778, 16:9) and full-bleed with no frame or vignette. The 211 px bottom flat band is the empty floor, not a letterbox. There are no characters or figures, the screens are blank, and there is no text. The lower third is the calm, empty floor (edge strength 9.9 against 20.2 above), and detail sits in the upper two thirds and the edges.
+```
+
+Code flagged take 1 before the Evaluator saw it (`aspect ratio 1.0 (1254x1254), not 16:9`), and the Evaluator found what code can't: the title, the signature and the crowd. Astra had also added a Tengu, an out-of-build yokai, and a skull on its own. Take 2 fixed the form and lost one point for tatami seams crossing the fighters' band (9/10). Take 3 smoothed the floor and scored 10.
+
+#### What the visual run taught
+
+- **Two of three backdrops stopped short of 10.** Both were held back by L4, a soft "match the reference" rule, after every hard break was fixed. With 3 takes per asset, the loop ran out of budget before it could settle that last point. The scores report this as it is: 9/10 and 8/10.
+- **The Refiner overcorrected.** Take 3 of the shrine gate stripped the scene to win one point and lost another. The story Refiner's prompt says "keep anything the REASON did not criticise"; the visual Refiner's prompt doesn't, and that's the next change. Adding it now would change the recorded calls and need new takes beyond the approved 9. The loop now keeps its best take and refines from it, which bounds the damage.
+- **Two measurement faults, both fixed with tests:**
+  - The first letterbox check flagged a flat sky over flat snow as a frame. A letterbox or frame is now a band of the *same* colour on opposite edges.
+  - Codex's sandbox refused to copy the first image into a temp folder. Takes are now collected from Codex's own image store, and the first take was recovered there rather than paid for twice.
+- **These are candidates, not accepted assets.** The tea house's take 3 shows pink only in its screens' lower panels, and the spec wants those panels blank, so the Evaluator's reading is generous there. Acceptance stays with Asset Smith's checklist and the designer, and the specs name Meshy as the generator.
+
 ### Run it
 
 ```
@@ -926,14 +1054,16 @@ python tools/style_agent/run.py demo --replay     # the three examples from the 
 python tools/style_agent/run.py audit --replay    # the audit of data/story/
 python tools/style_agent/run.py demo              # live: needs the claude CLI, logged in
 python tools/style_agent/run.py guide             # print the style guide the agents read
+python tools/style_agent/run.py visual --replay   # the three backdrops from the recorded takes and calls (needs Pillow)
+python tools/style_agent/run.py visual-guide      # print the visual style guide
 python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v
 ```
 
-Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above.
+Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above; the visual Evaluator gets its two images in the same call, with tools still off. A live `visual` run spends Astra takes, so it needs the designer's approval of the budget first; the recorded run used all 9 approved.
 
 ### Where it fits
 
-This Style Guide Agent will run right after Habit Writer drafts each story card and before the Rules Lawyer gate, so every card that reaches `data/story/` already scores 10/10 on the tone, vocabulary and card-form rules my GDD sets out in Tone.md and rules.md S1–S4.
+This Style Guide Agent will run in two places in my capstone pipeline: right after Habit Writer drafts each story card, before the Rules Lawyer gate, and right after each Astra or Meshy take of a stage backdrop, before Asset Smith's acceptance check, so that only text and art that score 10/10 against the tone, lore and form rules of my GDD and `assets/specs/style.md` reach `data/story/` and `game/assets/`.
 
 ## The agent crew
 

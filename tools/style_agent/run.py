@@ -141,6 +141,37 @@ def render_audit(meta: dict, results: list[dict]) -> str:
 
 # ---------- commands ----------
 
+def cmd_visual(args) -> int:
+    # Imported here so the story commands keep to the standard library; the visual loop needs Pillow.
+    from visual_agents import Astra, VisionLLM, reference_image
+    from visual_cases import CASES as VISUAL_CASES
+    from visual_loop import render_visual, run_visual_case
+
+    args.run = args.run or "visual"
+    run_dir = RUNS / args.run
+    run_dir.mkdir(parents=True, exist_ok=True)
+    vllm = VisionLLM(run_dir / "llm-calls.json", replay=args.replay)
+    astra = Astra(run_dir, replay=args.replay, budget=args.max_images, model=args.image_model)
+    reference = reference_image(run_dir)
+    cases = [c for c in VISUAL_CASES if not args.only or c["id"] in args.only]
+    if not cases:
+        raise SystemExit("Nothing matched --only. Use an example id from visual_cases.py.")
+    meta = {"run": args.run, "command": "visual", "image_model": args.image_model, "evaluator_model": args.evaluator_model,
+            "refiner_model": args.refiner_model, "target": args.target, "max_rounds": args.max_rounds,
+            "max_images": args.max_images}
+    results = []
+    for case in cases:
+        print(f"  {case['id']}")
+        results.append(run_visual_case(vllm, astra, reference, args, case))
+    (run_dir / "trace.json").write_text(json.dumps({"meta": meta, "results": results}, indent=2, ensure_ascii=False),
+                                        encoding="utf-8")
+    (run_dir / "trace.md").write_text(render_visual(meta, results), encoding="utf-8")
+    print("\n" + ", ".join(f"{r['id']} {r['before_score']}→{r['after_score']}" for r in results)
+          + f"; {astra.live} live Astra take(s), {vllm.live_calls} live model call(s), {vllm.replayed_calls} replayed.")
+    print(f"Trace: {run_dir / 'trace.md'}")
+    return 0 if all(r["passed"] for r in results) else 1
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
@@ -156,11 +187,28 @@ def main() -> int:
         p.add_argument("--target", type=int, default=10, help="score that ends the loop")
         p.add_argument("--max-rounds", type=int, default=4, help="evaluations per example, including the first")
         p.add_argument("--replay", action="store_true", help="use the run's recorded model calls; call nothing")
+    p = sub.add_parser("visual", help="the stage-backdrop loop: Astra takes scored by a vision Evaluator (needs Pillow)")
+    p.add_argument("--run", help="run folder name under runs/ (default: visual)")
+    p.add_argument("--only", nargs="*", help="example ids from visual_cases.py")
+    p.add_argument("--image-model", default="gpt-6-astra")
+    p.add_argument("--evaluator-model", default="opus")
+    p.add_argument("--refiner-model", default="sonnet")
+    p.add_argument("--target", type=int, default=10)
+    p.add_argument("--max-rounds", type=int, default=3, help="takes per asset, including the first")
+    p.add_argument("--max-images", type=int, default=9, help="live Astra takes allowed for the whole run (the approved budget)")
+    p.add_argument("--replay", action="store_true", help="use the run's recorded takes and model calls; call nothing")
     sub.add_parser("guide")
+    sub.add_parser("visual-guide")
     args = parser.parse_args()
     if args.command == "guide":
         print(render_guide())
         return 0
+    if args.command == "visual-guide":
+        from visual_guide import render_guide as render_visual_guide
+        print(render_visual_guide())
+        return 0
+    if args.command == "visual":
+        return cmd_visual(args)
 
     args.run = args.run or args.command
     run_dir = RUNS / args.run
