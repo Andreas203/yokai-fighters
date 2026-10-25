@@ -157,7 +157,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024065495, 0.949699, 0.0075
 [node name="Model" type="Node3D" parent="Props/Bamboo9/Pivot" unique_id=974594163 instance=ExtResource("5_sn3id")]
 
 [node name="Lantern0" parent="Props" unique_id=1473412547 instance=ExtResource("6_lit")]
-transform = Transform3D(0.111388974, 0, -0.70328194, 0, 0.7120485, 0, 0.70328194, 0, 0.111388974, -3.32, 0, -12.7)
+transform = Transform3D(0.111388974, 0, -0.70328194, 0, 0.7120485, 0, 0.70328194, 0, 0.111388974, -2.5, 0, -10.9)
 
 [node name="Lantern1" parent="Props" unique_id=1332561635 instance=ExtResource("6_lit")]
 transform = Transform3D(0.69638216, 0, 0.35482442, 0, 0.781568, 0, -0.35482442, 0, 0.69638216, 3.0300002, 0, -11.46)

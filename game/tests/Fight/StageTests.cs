@@ -101,6 +101,41 @@ public static class StageTests
 		scene.QueueFree();
 	}
 
+	/// <summary>World bounds of every mesh under <paramref name="n"/>.</summary>
+	static Aabb WorldBounds(Node n) => Meshes(n).Select(mi => mi.GlobalTransform * mi.Mesh.GetAabb()).Aggregate((a, b) => a.Merge(b));
+
+	[Test]
+	public static void Stage_NearLeftLanternStandsInFrontOfTheBamboo(Node runner)
+	{
+		// YOK-208 (designer, 2026-10-25): the near-left lantern heads the left path row, in front of the clump behind it
+		// (Bamboo3), not half hidden by it. The clump's stalks: its mesh vertices up to StalkHeight (well above the lantern's
+		// top, so a stalk leaning forward above it counts too) within the lantern's x extent. The lantern's back face must be
+		// nearer the camera (larger z) than the nearest of them, so no framing can put a stalk over it.
+		const float StalkHeight = 3f;
+		var scene = Load(runner);
+		var props = scene.StageRoot.GetNode("Props");
+		Aabb lantern = WorldBounds(props.GetNode("Lantern0"));
+		Assert.True(lantern.End.Y < StalkHeight, $"the lantern ({lantern.End.Y:0.00} m tall) is below the stalk band checked");
+		float stalkFront = float.NegativeInfinity;
+		int seen = 0;
+		foreach (var mi in Meshes(props.GetNode("Bamboo3")))
+			for (int s = 0; s < mi.Mesh.GetSurfaceCount(); s++)
+				foreach (Vector3 v in (Vector3[])mi.Mesh.SurfaceGetArrays(s)[(int)Mesh.ArrayType.Vertex])
+				{
+					Vector3 g = mi.GlobalTransform * v;
+					if (g.Y > StalkHeight || g.X < lantern.Position.X || g.X > lantern.End.X) continue;
+					seen++;
+					stalkFront = Mathf.Max(stalkFront, g.Z);
+				}
+		Assert.True(seen > 0, "Bamboo3's stalks overlap the lantern's x extent (else this check proves nothing)");
+		Assert.True(lantern.Position.Z > stalkFront + 0.05f, $"Lantern0's back at z {lantern.Position.Z:0.00} is behind Bamboo3's stalks (front z {stalkFront:0.00})");
+		// It heads the left row: nearer than the row's first lantern and further out from the path.
+		var line = props.GetNode<LanternLine>("PathLanterns");
+		Vector3 l0 = line.GetNode<Node3D>(LanternLine.Prefix + "L0").GlobalPosition, at = props.GetNode<Node3D>("Lantern0").GlobalPosition;
+		Assert.True(at.Z > l0.Z && at.X < l0.X, $"Lantern0 at {at} heads the left row (its first lantern at {l0})");
+		scene.QueueFree();
+	}
+
 	[Test]
 	public static void Stage_LanternsLitWithFewShadowlessLights(Node runner)
 	{
