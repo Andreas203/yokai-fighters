@@ -180,7 +180,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20) [AM15]. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20) [AM15]. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6]. In the Tanuki fight the talisman and the copy strip show Ryo's level for the copied move; the strip says the copy runs with no modifiers and no evolution (T4) (designer, 2026-10-25, YOK-109).
 
 ## R — The run
 
