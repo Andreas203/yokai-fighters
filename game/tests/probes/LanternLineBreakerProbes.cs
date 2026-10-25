@@ -386,4 +386,94 @@ public static class LanternLineBreakerProbes
 			Assert.True(float.IsFinite(l.Position.Z) && float.IsFinite(l.Scale.X), $"{l.Name} non-finite with Recede NaN");
 		scene.QueueFree();
 	}
+
+	// Round 3: StageScope fallbacks, two lines, NearScale extremes, Recede clamp.
+	[Test]
+	public static void Scope_TwoLinesInTheStage_AlternatingRebuilds_HoldCap(Node runner)
+	{
+		var scene = Load(runner);
+		var a = Line(scene);
+		var b = new LanternLine { Name = "SecondLine", PerSide = 8, LitPerSide = 8 };
+		scene.StageRoot.GetNode("Props").AddChild(b);
+		for (int i = 0; i < 3; i++)
+		{
+			a.LitPerSide = 8; Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, $"round {i} after A: {Lights(scene.StageRoot)}");
+			b.LitPerSide = 8; Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, $"round {i} after B: {Lights(scene.StageRoot)}");
+		}
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Scope_NestedStageInsideAnotherStage_CapHoldsForTheInnerStage(Node runner)
+	{
+		var outer = new FightStage { Name = "Outer" };
+		runner.AddChild(outer);
+		var inner = GD.Load<PackedScene>("res://scenes/stage/bamboo_grove.tscn").Instantiate<FightStage>();
+		outer.AddChild(inner);
+		var line = inner.GetNode<LanternLine>("Props/PathLanterns");
+		line.PerSide = 8; line.LitPerSide = 8;
+		Assert.True(Lights(inner) <= BambooGroveStage.MaxLanternLights, $"inner stage has {Lights(inner)} lights");
+		Assert.True(ReferenceEquals(line.StageScope(), inner), "nearest FightStage is the scope");
+		outer.QueueFree();
+	}
+
+	[Test]
+	public static void Scope_LineOnItsOwnOutsideAnyStage_BuildsAndHoldsItsOwnBudget(Node runner)
+	{
+		var line = new LanternLine { PerSide = 8, LitPerSide = 8 };
+		runner.AddChild(line);
+		Assert.True(Lights(line) <= BambooGroveStage.MaxLanternLights, $"stand-alone line lights {Lights(line)}");
+		line.QueueFree();
+	}
+
+	[Test]
+	public static void Scope_StageScopeOutOfTree_DoesNotThrow()
+	{
+		var holder = new Node3D();
+		var line = new LanternLine();
+		holder.AddChild(line);
+		Assert.True(ReferenceEquals(line.StageScope(), holder), "out of tree: topmost ancestor");
+		Assert.True(line.LightBudgetPerSide() >= 0, "budget non-negative");
+		holder.Free();
+	}
+
+	[Test]
+	public static void NearScale_TinyAndHuge_BasisInvertibleAndFinite(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		foreach (float s in new[] { 1e-12f, 1e-20f, 1e20f })
+		{
+			line.NearScale = s;
+			foreach (var l in Built(line))
+				Assert.True(float.IsFinite(l.Scale.X) && l.Scale.X > 0f && Mathf.Abs(l.Basis.Determinant()) > 0f, $"NearScale {s}: {l.Name} scale {l.Scale.X} det {l.Basis.Determinant()} (singular basis)");
+		}
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Recede_OutOfRange_EqualsClampedPlacements()
+	{
+		var v = new Vector3(0, 0, -16);
+		var nl = new Vector3(-2, 0, -13); var nr = new Vector3(2, 0, -13);
+		Assert.True(LanternLine.Placements(nl, nr, v, 4, 5f, 0.6f, 2).SequenceEqual(LanternLine.Placements(nl, nr, v, 4, LanternLine.MaxRecede, 0.6f, 2)), "Recede 5 == MaxRecede");
+		Assert.True(LanternLine.Placements(nl, nr, v, 4, -3f, 0.6f, 2).SequenceEqual(LanternLine.Placements(nl, nr, v, 4, LanternLine.MinRecede, 0.6f, 2)), "Recede -3 == MinRecede");
+	}
+
+	[Test]
+	public static void Guard_SkippedLanterns_LitCountStillWithinBudgetAndNamesKeepIndex(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		line.NearLeft = new Vector3(-1.7f, 0, -4f);
+		line.NearRight = new Vector3(2.3f, 0, -4f);
+		foreach (var l in Built(line))
+			Assert.True(l.Name.ToString().StartsWith(LanternLine.Prefix) && !l.Name.ToString().Contains('@'), $"{l.Name} name");
+		Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, "cap");
+		line.NearLeft = new Vector3(-1.7f, 0, -30f); // behind the backdrop: world z beyond it
+		float back = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop").Position.Z;
+		foreach (var l in Built(line).Where(n => n.Name.ToString().StartsWith(LanternLine.Prefix + "L")))
+			Assert.True((line.GlobalTransform * l.Position).Z > back, $"{l.Name} built behind the backdrop plane z {back}");
+		scene.QueueFree();
+	}
 }
