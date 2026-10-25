@@ -6,13 +6,19 @@
   "type": "object",
   "required": ["kind", "id", "status", "trigger", "text", "speaker", "rules"],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "id": { "pattern": "-intro$" } }, "required": ["id"] },
+      "then": { "properties": { "text": { "maxLength": 260 } } }
+    }
+  ],
   "properties": {
     "kind": { "const": "story_card" },
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "status": { "$ref": "common.schema.json#/$defs/status" },
     "trigger": { "type": "string", "minLength": 1, "description": "When the card shows (the S3 schedule entry it implements)." },
     "title": { "type": "string", "minLength": 1, "maxLength": 60, "description": "Optional heading shown above the text." },
-    "text": { "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2)." },
+    "text": { "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2). Elder-twist intro cards (id ending in -intro) are capped at 260 characters: the hanging scroll shows the quote whole (YOK-109)." },
     "placeholders": {
       "type": "array",
       "items": { "enum": ["yokai", "move"] },

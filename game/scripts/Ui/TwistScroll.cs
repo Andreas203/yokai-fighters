@@ -17,15 +17,15 @@ public partial class TwistScroll : Control
 
 	/// <summary>Frame geometry in this node's own coordinates: the peg sits in the head room above the top rod.</summary>
 	public const float RodTop = 90f, RodHeight = 24f, KnobExtra = 8f, KnobWidth = 30f;
-	public static readonly Rect2 RiceInset = new(84, 140, 1332, 474);
+	public static readonly Rect2 RiceInset = new(84, 140, 1332, 504);
 	/// <summary>Text column: left edge and width with a portrait, and without one (the portrait's space is left out).</summary>
 	public const float ColumnLeftWithPortrait = 400f, ColumnWidthWithPortrait = 830f, ColumnLeftAlone = 150f, ColumnWidthAlone = 1080f;
 	public const int TitleSize = 72, TitleSizeMin = 44, QuoteSize = 34, QuoteSizeMin = 28, LineSize = 30, LineSizeMin = 22;
 	/// <summary>
-	/// The quote's box (scene: Quote offsets 310 to 490): fixed, because a Label grows to its text and would always "fit" itself.
-	/// 180 px holds a schema-legal 280-character quote (story-card text maxLength) whole at the 28 px floor, with or without a portrait.
+	/// The quote's box (scene: Quote offsets 310 to 520): fixed, because a Label grows to its text and would always "fit" itself.
+	/// 210 px holds 280 characters of prose (the story-card text maxLength; elder intro cards are capped at 260) whole at the 28 px floor, with or without a portrait.
 	/// </summary>
-	public const float QuoteBoxHeight = 180f, QuoteTop = 310f, RuleGap = 12f;
+	public const float QuoteBoxHeight = 210f, QuoteTop = 310f, RuleGap = 12f;
 
 	Label _kicker = null!, _title = null!, _quote = null!, _rule = null!;
 	Control _textCol = null!, _portrait = null!, _ruleLine = null!;
@@ -56,10 +56,18 @@ public partial class TwistScroll : Control
 		OneLineWidth(_title, TitleFontSize) <= _textCol.Size.X &&
 		OneLineWidth(_kicker, _kicker.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
 		OneLineWidth(_rule, _rule.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
-		QuoteHeight(QuoteFontSize) <= QuoteBoxHeight;
+		!QuoteOverflows(QuoteFontSize);
 
 	static float OneLineWidth(Label l, int size) => l.GetThemeFont("font").GetStringSize(l.Text, fontSize: size).X;
-	float QuoteHeight(int size) => _quote.GetThemeFont("font").GetMultilineStringSize(_quote.Text, HorizontalAlignment.Left, _textCol.Size.X, size).Y;
+	Vector2 QuoteSizeAt(int size) => _quote.GetThemeFont("font").GetMultilineStringSize(_quote.Text, HorizontalAlignment.Left, _textCol.Size.X, size);
+	float QuoteHeight(int size) => QuoteSizeAt(size).Y;
+
+	/// <summary>Taller than the box, or wider than the column (one unbroken word has no break opportunity): either way the Label would hide text silently.</summary>
+	bool QuoteOverflows(int size)
+	{
+		var sz = QuoteSizeAt(size);
+		return sz.Y > QuoteBoxHeight || sz.X > _textCol.Size.X + 0.5f;
+	}
 
 	public override void _Ready()
 	{
@@ -125,10 +133,10 @@ public partial class TwistScroll : Control
 		Shrink(_kicker, LineSize, LineSizeMin, width);
 		Shrink(_rule, LineSize, LineSizeMin, width);
 		int qs = QuoteSize;
-		while (qs > QuoteSizeMin && QuoteHeight(qs) > QuoteBoxHeight) qs--;
+		while (qs > QuoteSizeMin && QuoteOverflows(qs)) qs--;
 		_quote.AddThemeFontSizeOverride("font_size", qs);
 		_quoteTrimmed = false;
-		if (QuoteHeight(qs) > QuoteBoxHeight) TrimQuote(qs); // never cut silently: an ellipsis and a warning
+		if (QuoteOverflows(qs)) TrimQuote(qs); // never cut silently: an ellipsis and a warning
 		PlaceRule(Mathf.Min(QuoteHeight(qs), QuoteBoxHeight));
 	}
 
@@ -142,11 +150,11 @@ public partial class TwistScroll : Control
 		{
 			int mid = (lo + hi + 1) / 2;
 			_quote.Text = full[..cuts[mid]].TrimEnd() + "…";
-			if (QuoteHeight(size) <= QuoteBoxHeight) lo = mid; else hi = mid - 1;
+			if (!QuoteOverflows(size)) lo = mid; else hi = mid - 1;
 		}
 		_quote.Text = full[..cuts[lo]].TrimEnd() + "…";
 		_quoteTrimmed = true;
-		GD.PushWarning($"TwistScroll: quote of {full.Length} characters does not fit the scroll at {size} px; shown shortened with an ellipsis (story-card text is limited to 280).");
+		GD.PushWarning($"TwistScroll: quote of {full.Length} characters does not fit the scroll at {size} px (too long, or a word wider than the column); shown shortened with an ellipsis (story-card text is limited to 280).");
 	}
 
 	/// <summary>The red rule line and its label sit just under the quote text (the footer stays at the bottom of the paper).</summary>

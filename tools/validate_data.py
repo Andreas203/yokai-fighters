@@ -92,6 +92,9 @@ def rel(path: Path) -> str:
         return path.as_posix()
 
 
+INTRO_CARD_MAX = 260  # YOK-109: story-card.schema.json caps *-intro cards here (other story cards keep 280)
+
+
 def load_validators() -> dict[str, Draft202012Validator]:
     schemas = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(SCHEMA_DIR.glob("*.schema.json"))]
     registry = Registry().with_resources((s["$id"], Resource.from_contents(s)) for s in schemas)
@@ -817,6 +820,9 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
         for name in sorted(listed - used):
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
+        # YOK-109 (Y3): mirrors the schema's -intro cap: the elder-twist scroll's quote box holds 260 characters whole
+        if str(doc.get("id", "")).endswith("-intro") and isinstance(doc.get("text"), str) and len(doc["text"]) > INTRO_CARD_MAX:
+            errs.append(("text", f"an elder-twist intro card (id ending -intro) is capped at {INTRO_CARD_MAX} characters, this one has {len(doc['text'])} (Y3)"))
     elif kind == "elder_twist":  # YOK-90 (Y3): the intro card and callout are story cards
         for key in ("intro_card", "callout_card"):
             card = doc.get(key)

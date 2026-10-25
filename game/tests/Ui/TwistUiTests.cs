@@ -253,6 +253,21 @@ public static class TwistUiTests
 		card.QueueFree();
 	}
 
+	// A word wider than the column has no break opportunity: it is shortened and flagged, never clipped silently.
+	[Test]
+	public static void IntroScroll_UnbrokenWordWiderThanTheColumn_IsFlaggedAndShortened(Node host)
+	{
+		var card = Card(host);
+		string text = "He said " + new string('a', 120) + " and left.";
+		card.Display(text, "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "r", FightHud.PortraitPath("kitsune"));
+		var s = card.Scroll!;
+		Assert.True(s.QuoteTrimmed && !s.TextFits && s.Quote.EndsWith("…"), "flagged and ended in an ellipsis");
+		var q = s.GetNode<Label>("TextCol/Quote");
+		var size = q.GetThemeFont("font").GetMultilineStringSize(q.Text, HorizontalAlignment.Left, s.TextColumn.Size.X, s.QuoteFontSize);
+		Assert.True(size.X <= s.TextColumn.Size.X + 0.5f && size.Y <= TwistScroll.QuoteBoxHeight, $"what is shown fits: {size}");
+		card.QueueFree();
+	}
+
 	static void AtElder(Node host, string yokai, Action<FightScene, FightHud> body)
 	{
 		var jump = DevJump.BuildFight(new DevFightSetup(yokai, Elder: true, Seed: 11), FightScene.LoadAbilityPool());

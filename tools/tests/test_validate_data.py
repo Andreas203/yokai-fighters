@@ -374,6 +374,36 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn(prefix + "placeholders: {item} is used but not listed in placeholders (S4)", out)
         self.assertIn(prefix + "placeholders: 'move' is listed but {move} is not used in title or text", out)
 
+    def _intro_card(self, card_id, chars):
+        """A copy of an elder intro card with `chars` characters of text, validated from a temp data/story/."""
+        import json, tempfile
+        card = json.loads((ROOT / "data" / "story" / "nine-tails-reflect-intro.json").read_text(encoding="utf-8"))
+        card["id"] = card_id
+        card["text"] = ("Nine tails stir. " * 40)[:chars].rstrip() + "."
+        card["text"] = card["text"][:chars].ljust(chars, "x")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "data" / "story" / f"{card_id}.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(card), encoding="utf-8")
+            return run(path)
+
+    def test_elder_intro_cards_are_capped_at_260_characters_other_story_cards_keep_280(self):
+        code, out = self._intro_card("test-elder-intro", 260)
+        self.assertEqual(code, 0, out)
+        code, out = self._intro_card("test-elder-intro", 261)
+        self.assertEqual(code, 1)
+        self.assertIn("capped at 260 characters, this one has 261 (Y3)", out)
+        self.assertIn("text:", out)
+        code, out = self._intro_card("test-other-card", 280)
+        self.assertEqual(code, 0, out)
+        code, out = self._intro_card("test-other-card", 281)
+        self.assertEqual(code, 1)
+        self.assertNotIn("capped at 260", out)
+        self.assertEqual(validate_data.INTRO_CARD_MAX, 260)
+        import json
+        schema = json.loads((ROOT / "data" / "schema" / "story-card.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(schema["allOf"][0]["then"]["properties"]["text"]["maxLength"], validate_data.INTRO_CARD_MAX, "schema and validator agree")
+
     def test_story_card_kind_only_in_story_folder(self):
         import json, tempfile
         card = json.loads((ROOT / "data" / "story" / "binding-line.json").read_text(encoding="utf-8"))
