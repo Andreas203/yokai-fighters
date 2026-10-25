@@ -278,4 +278,112 @@ public static class LanternLineBreakerProbes
 		Assert.Equal(a.Match.StateHash(), b.Match.StateHash(), "StateHash with and without the lantern line");
 		a.QueueFree(); b.QueueFree();
 	}
+
+	// Round 2: the light budget and the depth guard.
+	static OmniLight3D ExtraLight(Node parent, string name)
+	{
+		var l = new OmniLight3D { Name = name };
+		parent.AddChild(l);
+		l.Owner = parent.Owner ?? parent;
+		return l;
+	}
+
+	// Cap of 6 (BambooGroveStage.MaxLanternLights): extra lights elsewhere in the stage shrink the line's budget; odd remainders round down.
+	[Test]
+	public static void Budget_ExtraStageLights_CapHoldsAfterRebuild(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		line.PerSide = 8; line.LitPerSide = 8;
+		for (int extra = 1; extra <= 8; extra++)
+		{
+			ExtraLight(scene.StageRoot, "Extra" + extra);
+			line.Rebuild();
+			int total = Lights(scene.StageRoot);
+			Assert.True(total <= Mathf.Max(BambooGroveStage.MaxLanternLights, extra + 2), $"{extra} extra lights: {total} in the stage; the line must add none past the cap");
+			Assert.True(Lights(line) == 2 * line.LightBudgetPerSide() || Lights(line) == 0, $"{extra} extra: line lights {Lights(line)} vs budget {line.LightBudgetPerSide()}");
+		}
+		Assert.Equal(0, Lights(line), "stage already over the cap: the line lights nothing");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Budget_OddRemainder_NeverExceedsCap(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		line.LitPerSide = 8;
+		ExtraLight(scene.StageRoot, "Extra1"); // 3 others -> 3 left -> 1 per row, 2 lit, 5 total
+		line.Rebuild();
+		Assert.True(Lights(scene.StageRoot) <= 6, $"odd remainder: {Lights(scene.StageRoot)} lights");
+		scene.QueueFree();
+	}
+
+	// A line added in code has no Owner: LightBudgetPerSide then counts only itself, ignoring the stage's front-lantern lights.
+	[Test]
+	public static void Budget_LineWithNoOwnerInsideTheStage_StillHoldsStageCap(Node runner)
+	{
+		var scene = Load(runner);
+		var extra = new LanternLine { Name = "CodeLine", PerSide = 4, LitPerSide = 8 };
+		scene.StageRoot.GetNode("Props").AddChild(extra);
+		Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, $"runtime-added line: {Lights(scene.StageRoot)} lights in the stage (cap {BambooGroveStage.MaxLanternLights}); budget must count the stage, not Owner ?? this");
+		scene.QueueFree();
+	}
+
+	// Lights added elsewhere after the build: the next Rebuild (and a parameter change) must re-fit the budget.
+	[Test]
+	public static void Budget_ParameterChangeAfterLightAdded_ReFits(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		ExtraLight(scene.StageRoot, "Extra1");
+		ExtraLight(scene.StageRoot, "Extra2");
+		line.LitPerSide = 2; // same value as shipped: setter still rebuilds
+		Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, $"{Lights(scene.StageRoot)} lights after extra lights and a rebuild");
+		scene.QueueFree();
+	}
+
+	// Depth guard: skipped lanterns keep the other names and lit flags intact, nothing leaks.
+	[Test]
+	public static void Guard_NearPointInFrontOfMaxZ_SkipsOnlyThoseAndLeaksNothing(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		line.NearLeft = new Vector3(-1.7f, 0, -5f); // in front of LanternMaxZ; its row recedes into range
+		var names = Built(line).Select(l => l.Name.ToString()).ToList();
+		Assert.Equal(names.Count, names.Distinct().Count(), "names unique");
+		foreach (var l in Built(line))
+			Assert.True((line.GlobalTransform * l.Position).Z <= BambooGroveStage.LanternMaxZ, $"{l.Name} survived the guard in front of LanternMaxZ");
+		Assert.True(Lights(scene.StageRoot) <= BambooGroveStage.MaxLanternLights, "cap holds");
+		Assert.True(Built(line).Count < 2 * line.PerSide, "at least the nearest left lantern is skipped");
+		scene.QueueFree();
+	}
+
+	// The guard measures the line's parent-relative position only; a moved Props node shifts the real depth.
+	[Test]
+	public static void Guard_ParentMoved_UsesWorldDepth(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		var props = (Node3D)line.GetParent();
+		props.Position = new Vector3(0, 0, 6f); // lanterns at local z -14 now at world z -8
+		line.Rebuild();
+		foreach (var l in Built(line))
+		{
+			float z = (line.GlobalTransform * l.Position).Z;
+			Assert.True(z <= BambooGroveStage.LanternMaxZ, $"{l.Name} at world z {z}: guard must test world depth (LanternMaxZ {BambooGroveStage.LanternMaxZ})");
+		}
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Guard_NaNParameters_BuildNothingNonFinite(Node runner)
+	{
+		var scene = Load(runner);
+		var line = Line(scene);
+		line.Recede = float.NaN;
+		foreach (var l in Built(line))
+			Assert.True(float.IsFinite(l.Position.Z) && float.IsFinite(l.Scale.X), $"{l.Name} non-finite with Recede NaN");
+		scene.QueueFree();
+	}
 }
