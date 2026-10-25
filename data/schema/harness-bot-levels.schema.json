@@ -29,6 +29,7 @@
             "mistake_pct": { "$ref": "#/$defs/pct" },
             "block_pct": { "$ref": "#/$defs/pct" },
             "idle_guard_pct": { "$ref": "#/$defs/pct" },
+            "special_hold_ticks": { "type": "integer", "minimum": 0, "maximum": 600 },
             "anti_air_pct": { "$ref": "#/$defs/pct" },
             "anti_air_button": { "enum": ["light_punch", "medium_punch", "heavy_punch", "light_kick", "medium_kick", "heavy_kick"] },
             "poke_range": { "$ref": "#/$defs/units" },

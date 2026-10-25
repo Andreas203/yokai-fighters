@@ -349,7 +349,9 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
                    "properties.pull_on_hit": 0, "properties.heal_pct_max_health": 0}
-START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_up")
+START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_up", "charge_released")
+# YOK-171 (AM11): the modifier-only charge dash switch (ModifierLoader.ForwardTravel); it changes no frame data.
+FORWARD_TRAVEL = "properties.forward_travel"
 # Folders whose specials the game's ability pool can hold (AbilityPool.LoadRepo / LoadFixtures).
 SPECIAL_DIRS = (DATA / "moves", ROOT / "game" / "tests" / "fixtures" / "specials", ROOT / "game" / "tests" / "fixtures" / "rewards")
 
@@ -565,11 +567,26 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
     """ModifierLoader.Parse rules a schema can't state, then SpecialData.Build on every special it applies to."""
     effects = [e for e in doc.get("effects") or [] if isinstance(e, dict)]
     requires = (doc.get("applies_to") or {}).get("requires") or []
+    excludes = (doc.get("applies_to") or {}).get("excludes") or []
+
+    def applies(special):  # ModifierData.AppliesTo
+        return all(has_property(special, r) for r in requires) and not any(has_property(special, x) for x in excludes)
+
     frame_effects = []
     before = len(errs)
+    # YOK-171 (ModifierLoader.Parse, ChargeSpec.Parse): a charge object <-> its charge_dash switch and charge_released.
+    charge = doc.get("charge")
+    if charge is None and any(e.get("when") == "charge_released" for e in effects):
+        errs.append(("effects", "charge_released needs a charge object"))
+    if charge is not None and not any(e.get("target") == FORWARD_TRAVEL for e in effects):
+        errs.append(("charge", f"a charge object needs the {FORWARD_TRAVEL} charge_dash effect"))
+    window = charge.get("window_ticks") if isinstance(charge, dict) else None
+    if isinstance(window, dict) and whole(window.get("min")) is not None and whole(window.get("max")) is not None \
+            and whole(window["min"]) > whole(window["max"]):
+        errs.append(("charge.window_ticks", "min must be <= max"))
     for i, e in enumerate(effects):
         target = e.get("target")
-        if not isinstance(target, str) or target == "ex.meter_cost":
+        if not isinstance(target, str) or target in ("ex.meter_cost", FORWARD_TRAVEL):
             continue
         path = resolve_target(target)
         if path[:2] == ["properties", "projectile"] and "projectile" not in requires:
@@ -583,7 +600,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
     for sid in sorted(specials):  # ModifierData.ExCostFor on every special with an EX it applies to
         special = specials[sid]
         cost = whole((special.get("ex") or {}).get("meter_cost"))
-        if not ex_effects or not cost or not all(has_property(special, r) for r in requires):
+        if not ex_effects or not cost or not applies(special):
             continue
         try:
             for e in ex_effects:
@@ -597,7 +614,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
     seen: set[str] = set()
     for sid in sorted(specials):
         special = specials[sid]
-        if not all(has_property(special, r) for r in requires):
+        if not applies(special):
             continue
         try:
             builds = list(special_builds(special))

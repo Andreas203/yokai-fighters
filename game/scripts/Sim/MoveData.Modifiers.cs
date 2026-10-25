@@ -55,6 +55,12 @@ public sealed partial record MoveData
 	/// <summary><c>properties.projectile.angle_up</c>: the projectile climbs as it flies.</summary>
 	public bool ProjectileAngleUp { get; init; }
 
+	/// <summary>
+	/// YOK-171 (AM11): the attached modifier's charge hold (Sumo Stance), or null. A special with one is held before it
+	/// starts (<see cref="FighterState.Bracing"/>) and dashes through its startup frames on release (Match.Specials).
+	/// </summary>
+	public ChargeSpec? Charge { get; init; }
+
 	/// <summary>This move from its connect on when it hits (a modifier's <c>on_hit</c> effects), or null = unchanged.</summary>
 	public MoveData? OnHitVariant { get; init; }
 	/// <summary>This move from its connect on when it is blocked (<c>on_block</c>), or null = unchanged.</summary>

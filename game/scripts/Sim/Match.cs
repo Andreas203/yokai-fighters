@@ -128,6 +128,7 @@ public sealed partial class Match
 			f.WalkDir = 0; // YOK-39: set below only by this tick's own walk step
 			f.Input.Update(input, f.Facing); // YOK-17 parser; numpad relative to facing, SOCD-clean
 			TryBurst(i); // C6 (YOK-20): from hitstun; the fighter is then not actionable
+			if (f.State == FighterState.Bracing) StepBrace(i); // YOK-171: hold or release a charge special
 
 			int pad = f.Input.Direction;
 			int rel = pad % 3 == 0 ? 1 : pad % 3 == 1 ? -1 : 0; // 3/6/9 forward, 1/4/7 back
@@ -162,6 +163,7 @@ public sealed partial class Match
 			if (f.State == FighterState.Dash)
 				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);
 			if (f.Airborne) f.X += f.JumpDir * Config.JumpSpeedX;
+			ChargeDashStep(f); // YOK-171: a released charge's dash through the startup frames
 
 			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
