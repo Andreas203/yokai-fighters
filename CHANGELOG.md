@@ -5,6 +5,7 @@ Where each kind of change is recorded: `docs/process/change-tracking.md`.
 
 ## Week 4 (2026-10-25 to 2026-10-31)
 
+- 2026-10-25 Story: the Oni becomes the shrine gate's guardian (S5); AM17 adds a first-meeting yokai video as extra, not MVP work (YOK-207). ([#239](https://github.com/Andreas203/yokai-fighters/pull/239))
 - 2026-10-25 Assignment 6: style guide agent that scores story cards and stage backdrops 1–10 against the GDD's tone, lore, art and form rules and refines them toward 10/10. ([#237](https://github.com/Andreas203/yokai-fighters/pull/237))
 - 2026-10-25 **YOK-206** Fixed the later-loss story card so it no longer claims every talisman is blank and fits any winning yokai. ([#238](https://github.com/Andreas203/yokai-fighters/pull/238))
 - 2026-10-25 **YOK-192** The codebase map is split into a short index and per-area files, and a docs check keeps every script mapped. ([#234](https://github.com/Andreas203/yokai-fighters/pull/234))
