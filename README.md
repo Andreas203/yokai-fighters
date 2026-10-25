@@ -722,217 +722,21 @@ The style guide agent keeps Yokai Fighters' story text and its generated art on 
 
 It runs on two kinds of content with the same loop:
 
-- **Story cards** (part 1): the Generator is a language model, and the Evaluator reads the text.
-- **Stage backdrops** (part 2): the Generator is the image model Astra, and the Evaluator *looks at the picture* next to an accepted stage, with pixel measurements from code.
+- **Stage backdrops** (part 1): the Generator is the image model Astra, and the Evaluator *looks at the picture* next to an accepted stage, with pixel measurements from code.
+- **Story cards** (part 2): the Generator is a language model, and the Evaluator reads the text.
 
-| Deliverable | Part 1: story cards | Part 2: stage backdrops |
+| Deliverable | Part 1: stage backdrops | Part 2: story cards |
 |---|---|---|
-| 1. The capstone-anchored style guide (three constraint types) | [The style guide](#the-style-guide) | [The visual style guide](#the-visual-style-guide) |
-| 2. The Evaluator and Refiner loop | [The loop](#the-loop) | [What changes for images](#what-changes-for-images) |
-| 3. Before and after, one example per violation class | [Tone](#example-1-tone), [vocabulary and lore](#example-2-vocabulary-and-lore), [form and length](#example-3-form-and-length) | [Look](#visual-example-1-look), [palette and lore](#visual-example-2-palette-and-lore), [spec form](#visual-example-3-spec-form) |
+| 1. The capstone-anchored style guide (three constraint types) | [The visual style guide](#the-visual-style-guide) | [The style guide](#the-style-guide) |
+| 2. The Evaluator and Refiner loop | [The backdrop loop](#the-backdrop-loop) | [The loop](#the-loop) |
+| 3. Before and after, one example per violation class | [Look](#visual-example-1-look), [palette and lore](#visual-example-2-palette-and-lore), [spec form](#visual-example-3-spec-form) | [Tone](#example-1-tone), [vocabulary and lore](#example-2-vocabulary-and-lore), [form and length](#example-3-form-and-length) |
 | 4. Pipeline connection | [Where it fits](#where-it-fits) (one sentence for both) | |
 
-Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 34 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples), [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game), [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops) and [`runs/visual-v2/trace.md`](tools/style_agent/runs/visual-v2/trace.md) (backdrop example 1 rerun with the keep rule).
+Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 34 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops), [`runs/visual-v2/trace.md`](tools/style_agent/runs/visual-v2/trace.md) (backdrop example 1 rerun with the keep rule), [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples) and [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game).
 
-### Part 1: story cards
+### Part 1: stage backdrops
 
-Everything from here to [Part 2](#part-2-stage-backdrops) is the story-card loop.
-
-### The style guide
-
-The guide lives in [`style_guide.py`](tools/style_agent/style_guide.py) as data. The Evaluator and the Refiner read it whole, and `python tools/style_agent/run.py guide` prints it. It has 18 rules in three constraint types. Each rule is a statement someone can check, with its source in the design.
-
-**Tone**
-
-| ID | Rule | Source |
-|---|---|---|
-| T1 | Mischievous folklore with a melancholy edge, never horror. Nothing gory, cruel, demonic or frightening: no blood, screams, corpses, souls devoured, darkness swallowing anything. | rules.md S1; GDD §2.1; [Tone](vault/01-vibe/Tone.md)#The tone line |
-| T2 | Yokai are tricksters and lonely spirits, not monsters. A yokai that wins walks away or goes back to what it was doing; it never hurts Ryo for pleasure and never gloats over him. | S1; Tone#The tone line, [Story](vault/01-vibe/Story.md)#Wake-up cards |
-| T3 | Melancholy is small and specific: something owed, borrowed, waiting or left behind. Never doom, despair or the end of the world. | Tone#Do and don't examples |
-| T4 | The merchant and the Tanuki share one voice: cheerful, generous and quietly hungry. It compliments what it wants, teases Ryo as "little exorcist" and never shouts, threatens or sounds evil. The unease comes from how pleasant it is. | Tone#Voice: the merchant and the Tanuki |
-| T5 | Wit is dry and in period. No modern slang, memes, fourth-wall jokes, exclamation-mark shouting or capitals for emphasis. | Tone#Do and don't examples |
-| T6 | Ryo is earnest and stubborn. He apologises to the yokai he binds; he never boasts, threatens, vows revenge or jokes at a yokai's expense. | Tone#Voice: Ryo; GDD §2.2 |
-
-**Vocabulary and lore**
-
-| ID | Rule | Source |
-|---|---|---|
-| V1 | Ryo is an apprentice exorcist who *binds* yokai: an ink stroke seals the yokai into a paper talisman. He never kills, slays, destroys or hunts them, and he does not "collect" them: collecting is the Tanuki's word. Ryo fights with talismans, never a sword or a gun. | GDD §2.2; Story#Talismans; Tone#Do and don't examples |
-| V2 | Never call a yokai a monster, demon, beast or creature of evil. | S1; [Characters](vault/01-vibe/Characters.md)#The yokai as a group |
-| V3 | Only the 5-week build's cast exists: Ryo, Master Sōen, the merchant who is the Tanuki, Kitsune, Oni, Kappa and their three elders. Never the stretch-goal names Jorōgumo, Tengu, Tetsu, Kaede or Yūrei. | rules.md G; Characters#Not in the 5-week build |
-| V4 | One rural Japanese province at the end of autumn, folded into the Tanuki's illusion: dusk, lantern light. Kitsune's bamboo grove at dusk, Oni's snowbound shrine gate, Kappa's lantern riverbank, the Tanuki's tea house with season-flickering screens. No spring blossom, castles, cities or neon. | rules.md V9; GDD §2.1 |
-| V5 | Each yokai keeps its folklore: the Kitsune (she) teases and slips away, white fox mask and tails; the Oni (it) is proud and blunt with an iron club; the Kappa (it) is formal and polite, bows, carries water in its dish. | Characters#Kitsune, #Oni, #Kappa |
-| V6 | Fixed lines are quoted word for word: "Forgive me, {yokai}. I'll set your spirit free.", "That {move} of yours... I'd love one.", "I said I'd set you free." and "name the debt". | rules.md S3; AM2 |
-| V7 | After a loss Ryo wakes at the province's edge with blank talismans, except that a run that reached row 6 leaves one faintly inked. The merchant is revealed as the Tanuki only at the boss node. | rules.md M3, S3; Story#Wake-up cards |
-
-**Form and length**
-
-| ID | Rule | Source |
-|---|---|---|
-| F1 | A story card is one or two sentences, at most 280 characters. An elder intro card is one sentence, at most 140. | rules.md S2, Y3; Tone#Card form |
-| F2 | Present tense, plain words, one concrete image from the game's world: a lantern, a paper screen, a tail, a teacup, an ink stroke. | Tone#Card form |
-| F3 | Run-dependent names come through `{yokai}` and `{move}`; a card never hard-codes a move the player may not own. | rules.md S4 |
-| F4 | No system words (health, HP, damage, frames, level, Lv, meter, roguelite) and no game numbers. | Tone#Card form; rules.md A12 |
-| F5 | Plain card text only, as it sits in a story card's `text` field: no title, bullets, Markdown, emoji or speaker label. | `data/story/*.json` |
-
-**Scoring.** Start at 10 and deduct for every violation. A hard break (horror, "monster", an out-of-build name, a misquoted fixed line, over the limit, a hard-coded move, a system word, Markdown) costs 3 points. A soft drift (an image from outside the world, a voice slightly off, a tense slip) costs 1. The score never goes below 1, and only a card with no violation scores 10.
-
-### The loop
-
-```mermaid
-flowchart LR
-    B[Brief] --> G[Generator<br>sonnet, no style guide]
-    G --> M[Code measures:<br>characters, sentences,<br>placeholders, listed words]
-    M --> E[Evaluator<br>opus + style guide]
-    E -->|"SCORE: 10/10, no code flag"| OK[Accepted]
-    E -->|"SCORE below 10 + REASON"| R[Refiner<br>sonnet + style guide]
-    R --> M
-```
-
-| Agent | Sees | Returns |
-|---|---|---|
-| Generator ([`agents.py`](tools/style_agent/agents.py) `GENERATOR_SYSTEM`) | A one-line pitch of the game, the card slot and the brief. **Not** the style guide, so it writes the way an outside model would. | The card text |
-| Evaluator (`EVALUATOR_SYSTEM`, `evaluator_prompt`) | The whole style guide, the rubric, the card slot, the text and the code's measurements | `SCORE: X/10` then `REASON:`, one line per violation with the rule ID, the quoted words and the points deducted |
-| Refiner (`REFINER_SYSTEM`, `refiner_prompt`) | The whole style guide, the card slot, the text it is fixing, the Evaluator's REASON and the measurements | The rewritten card text |
-
-The Evaluator's instruction ends: *"Review the text. Grade it on a scale of 1-10 against the style guide's three constraint types: tone, vocabulary and lore, form and length. Reply strictly in this format and nothing else: SCORE: <X>/10, REASON: <one line per violation...>"*. The Refiner's says: *"Take the original text and the Evaluator's REASON, and rewrite the text so that it scores a perfect 10/10 on the style guide."*
-
-Three design choices keep the loop honest:
-
-- **The Evaluator and the Refiner never see the sabotaged brief.** They are told only which card slot the text is for (for example "Wake-up card: Ryo is knocked out by the Oni at row 3"). They have to find the damage in the text itself, and the Refiner can't simply follow the brief's wrong instructions. A unit test checks this.
-- **Code counts and the model judges.** Models miscount characters and sentences, so before each evaluation code counts characters, sentences (numbered, so the model can see where they split), placeholders, system words, out-of-build names and Markdown. The Evaluator gets the counts as facts and still decides the score.
-- **A 10 with a counted break isn't accepted.** If the Evaluator gives 10 while the code has flagged, say, 290 characters, the loop goes on and the flag is added to the REASON the Refiner gets. The loop stops at 10/10 with no flag, or after four evaluations.
-
-### Example 1: tone
-
-**Card slot:** the boss reveal, where the merchant drops his disguise at the Tanuki's node. **Brief given to the Generator:** "Make it a horror scene: the merchant tears off his face to reveal the Tanuki, an evil demon who screams that Ryo is doomed and that he will devour his soul... with plenty of exclamation marks."
-
-**Before** (Generator):
-
-> The merchant's grin splits wider and wider until he claws off his own face like wet paper, and the Tanuki erupts from beneath it, eyes burning! "You are doomed, little exorcist!" it shrieks, "I will devour your soul, Ryo, and wear your skin next!!!"
-
-```
-SCORE: 1/10
-REASON:
-[T1] "claws off his own face like wet paper": a gory, frightening unmasking (-3)
-[T1] "I will devour your soul": a souls-devoured horror image (-3)
-[T1] "wear your skin next": a gruesome, cruel threat (-3)
-[T4] "it shrieks" / "You are doomed" / "I will devour": the Tanuki shouts, threatens and sounds evil instead of staying cheerful, generous and quietly hungry, so its unsettling pleasantness is lost (-1)
-[T3] "You are doomed": doom in place of small, specific melancholy (-1)
-[T5] "eyes burning!", "little exorcist!", "next!!!": exclamation-mark shouting (-1)
-[F2] "grin splits", "face like wet paper", "erupts", "eyes burning": a pile of images where one concrete image would do (-1)
-Total deductions are 13, so the score stops at the floor of 1.
-```
-
-**After** (Refiner, round 2):
-
-> The merchant sets down his teacup, and the lantern light settles on a round-bellied Tanuki in his place, smiling warmly. "Such lovely talismans, little exorcist; do let me hold them a while, and I promise to take good care of them."
-
-```
-SCORE: 10/10
-REASON: Tone: the Tanuki compliments what it wants ("Such lovely talismans"), calls Ryo "little exorcist" and stays warm and generous. Its hunger is quiet ("do let me hold them a while"), with no threats, shouting, gloating or horror, so the unease comes from how pleasant it is (T1, T2, T4, T5). [...]
-```
-
-The horror is gone, and so is the shouting. The Refiner didn't just soften the words: the Tanuki now makes a polite, covetous offer, which is the voice the GDD gives it ("cheerful, generous and quietly hungry"). It also echoes the GDD's own line "I'd have taken good care of it" without copying it.
-
-### Example 2: vocabulary and lore
-
-**Card slot:** wake-up card after the Oni knocks Ryo out at row 3. **Brief:** "One or two quiet, sad sentences. The Tengu has beaten Ryo in a cherry-blossom forest in spring and his katana lies snapped in two. His master Kaede will be disappointed, and Ryo swears he will hunt down and slay the monster and add it to his collection." The tone the brief asks for is fine; nearly every noun is wrong.
-
-**Before:**
-
-> Petals drift over the cherry-blossom forest as Ryo wakes beside his katana, snapped in two, and he knows Master Kaede will be disappointed. He swears he will hunt down {yokai}, slay it, and add it to his collection.
-
-```
-SCORE: 1/10
-REASON: [V3] "Master Kaede": Kaede is a stretch-goal name outside the 5-week cast; Ryo's master is Master Sōen (-3).
-[V1] "slay it": Ryo never kills a yokai; he binds it into a talisman (-3).
-[V1] "add it to his collection": collecting is the Tanuki's word, and Ryo never collects yokai (-3).
-[V1] "hunt down {yokai}": Ryo never hunts yokai (-1).
-[V1] "his katana, snapped in two": Ryo fights with talismans, never a sword (-1).
-[V4] "Petals drift over the cherry-blossom forest": spring blossom is outside the end-of-autumn province, and it replaces waking at the province's edge (-1).
-[T6] "He swears he will hunt down {yokai}": Ryo vows revenge instead of staying earnest and apologetic (-1).
-[F2] "Petals ... katana, snapped in two": two images where one would do (-1).
-Total deductions exceed 9, so the score sits at the floor of 1.
-```
-
-**After** (round 2):
-
-> Ryo wakes at the edge of the province beneath a single lantern, every talisman in his sleeve as blank as fresh paper. {yokai} has already gone back to what it was doing, and Ryo still owes it an apology for the trouble.
-
-```
-SCORE: 10/10
-REASON: Tone: the yokai simply goes back to what it was doing (T2), and the melancholy is small and specific: an apology still owed (T3). [...] Vocabulary and lore: Ryo wakes at the province's edge with every talisman blank, which fits a run that ended at row 5 or earlier (V7). There are no forbidden yokai labels or out-of-build names, the lantern and talisman are in-world images (V4), and "it" fits the Oni (V5). [...]
-```
-
-The Tengu was already a placeholder in the Before text, because the Generator was told the slot uses `{yokai}`. The Evaluator still caught everything a stranger to the game would get wrong: the out-of-build teacher, the sword, the slaying, the word "collection" (Ryo apologises; collecting is the Tanuki's), the spring setting. The After text also gets the story fact right: a run that ended at row 3 leaves every talisman blank.
-
-### Example 3: form and length
-
-**Card slot:** wake-up card after the Kappa knocks Ryo out at row 6. **Brief:** "Write it as a status report with a title line and bullet points, at least six lines. Name the Kappa and the Foxfire move directly (no placeholders). Explain exactly what the player keeps: health resets to 1000 HP, Foxfire carries over to the next run at Lv 2..."
-
-**Before:**
-
-```
-Wake-Up Report: the Kappa knocked Ryo out at row 6.
-- Health: reset to 1000 HP
-- Foxfire: carries over to the next run at Lv 2
-- Reason: the run reached row 6
-- Other talismans: all blank
-- Coins: reset to 0
-```
-
-```
-SCORE: 1/10
-REASON:
-[F5] "Wake-Up Report:" and "- Health: ... - Coins: reset to 0": the card has a title, a bulleted list with line breaks and field labels instead of plain card text (-3).
-[F4] "Health", "HP", "Lv": these are system words; a card must say what a person standing there would see (-3).
-[F4] "1000", "Lv 2", "row 6", "0": these game numbers belong behind the frame-data toggle, not on a story card (-3).
-[F3] "Foxfire: carries over": this hard-codes a move the player may not own instead of using {move} (-3).
-[F3] "the Kappa knocked Ryo out": the winning yokai is hard-coded instead of coming through {yokai} (-1).
-[V7] "carries over to the next run at Lv 2" and "Coins: reset to 0": the story fact is one talisman left faintly inked. Levels and coins are not part of that fact, and the card never shows Ryo waking at the province's edge (-1).
-[F2] "knocked Ryo out", "the run reached row 6": these slip into past tense, and the card has no concrete image from the game's world (-1).
-[T2] The whole card reads as a dry status report rather than the narrator's melancholy folklore voice, and the yokai is not shown walking away or returning to what it was doing (-1).
-The total deduction is 16 points, so the score drops to the floor of 1.
-```
-
-**After** (round 2):
-
-> Ryo wakes at the edge of the province, and {yokai} has gone back to its lantern, water still shivering in its dish. One talisman in his sleeve holds a faint line of ink; the rest are blank paper.
-
-```
-SCORE: 10/10
-REASON: [...] Form and length: two present-tense sentences at 195 characters, with {yokai} as the only placeholder and no system words, numbers or Markdown. [...]
-```
-
-The Before text held exactly the facts the game wants to tell the player, but as a list of system numbers. The After text keeps the same fact (one special carries over because the run reached row 6) and says it the way the GDD says it: one talisman "faintly inked". It does that in two sentences, 195 characters, with the Kappa's bow-and-dish folklore.
-
-Full rounds, measurements and replies: [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md).
-
-### Does it mark good cards down?
-
-An evaluator that scores everything low proves nothing. `run.py audit` scores the 16 story cards already in [`data/story/`](data/story/), all written before this loop existed. It rewrites none of them. HUD labels and the elders' first-meeting callouts are skipped: Y3 has them state a fight rule, which this guide is not for.
-
-| Score | Cards |
-|---|---|
-| 10 | the binding line, the merchant's row-4 line, Master Sōen's intro, the ending, the three elder intros, two lose cards (9) |
-| 9 | boss reveal, demo complete, first loss, lose-mid after its fix (4) |
-| 8 | win 1 (1) |
-| 7 | lose-late, win 2 (2) |
-
-The mean is 9.25. The fixed lines from the GDD all score 10. The lower scores are real findings, not noise. `win-2` runs to three sentences; it is the GDD's own sample card, Story.md already lists that as an open question, and it waits on the designer's queue (YOK-189).
-
-The audit's first run found a real bug. `lose-mid` scored 8/10. It covers rows 4–6 but said "Ryo wakes with his talismans blank", while a loss at row 6 leaves one talisman inked (V7), and it had `{yokai}` bow, which only the Kappa does (V5). That became ticket YOK-206. Habit Writer rewrote the card ([PR #238](https://github.com/Andreas203/yokai-fighters/pull/238)), and the audit now scores it 9/10. Both points are gone, and the one deduction left is a new soft drift in Ryo's voice ("his excuses already half-written", T6). The audit only reports: it never changes the game's data itself. Reasons: [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md).
-
-### What went wrong first
-
-The first live run ([`runs/v1-stalled/trace.md`](tools/style_agent/runs/v1-stalled/trace.md)) got examples 2 and 3 to 10/10 but stalled example 1 at 7/10. The Evaluator said "three sentences, over the limit of two" and quoted the whole card. The Refiner, not seeing that the Tanuki's two-sentence speech counted, returned the same text twice. Two changes fixed it. The code now numbers each sentence as it counts them, and the Refiner gets those counts too. A later check found the counter splitting `"...little exorcist?" it asks` into two sentences, so a lowercase speech tag no longer starts a sentence. Both have unit tests. The v1 trace was made with the old prompts, so it can't be replayed.
-
-The same v1 run also shows the loop catching its own Refiner. On example 2, the Refiner fixed the lore and then added Ryo's binding line to the wake-up card. The Evaluator marked it down because the line belongs to a binding and nothing had been bound, and the next round removed it.
-
-### Part 2: stage backdrops
-
-The same Generator → Evaluator → Refiner loop, on the game's generated art. The targets are real gaps: the backdrops for the Oni's, the Kappa's and the Tanuki's stages (S1 in YOK-150, 151 and 152). Their Meshy jobs were approved but never run, because the Meshy MCP isn't available on this machine.
+The Generator → Evaluator → Refiner loop on the game's generated art. The targets are real gaps: the backdrops for the Oni's, the Kappa's and the Tanuki's stages (S1 in YOK-150, 151 and 152). Their Meshy jobs were approved but never run, because the Meshy MCP isn't available on this machine.
 
 #### The visual style guide
 
@@ -956,16 +760,18 @@ The same Generator → Evaluator → Refiner loop, on the game's generated art. 
 | S3 | No text: no title, kanji, logo, signature or watermark. | style.md Negative prompt |
 | S4 | The lower third, where the fighters stand, is calm, empty and low-contrast. | the stage specs ("empty and uncluttered in the lower third") |
 
-#### What changes for images
+#### The backdrop loop
 
-| | Story cards | Stage backdrops |
+How each part of the loop works for images, next to the story-card loop in [Part 2](#part-2-story-cards):
+
+| | Stage backdrops | Story cards |
 |---|---|---|
-| Generator | sonnet, no style guide | **Astra** (`gpt-6-astra`, through `codex exec`), given the sabotaged brief with no style block |
-| Measured by code | characters, sentences, placeholders, listed words | **pixels** ([`image_tools.py`](tools/style_agent/image_tools.py)): aspect ratio, a flat band of one colour on opposite edges (a letterbox or frame), each dominant colour's distance from the nearest palette hex, flatness, edge strength of the lower third against the rest, neon share |
-| Evaluator | opus reads the text | opus **sees two images**: the accepted grove backdrop as REFERENCE, then the take |
-| Refiner | rewrites the card | rewrites the **prompt**; the pipeline wraps it in style.md's style block and negative block, as every asset prompt must start and end |
-| Stops at | 10/10 with no code flag, or 4 evaluations | 10/10 with no flag, 3 takes per asset, or the **image budget** the designer approved (`--max-images`, enforced in code, counting every take the run folder has paid for) |
-| Output | the last text | the **best take**: a rewrite can overshoot, so each new rewrite starts from the best take so far |
+| Generator | **Astra** (`gpt-6-astra`, through `codex exec`), given the sabotaged brief with no style block | sonnet, no style guide |
+| Measured by code | **pixels** ([`image_tools.py`](tools/style_agent/image_tools.py)): aspect ratio, a flat band of one colour on opposite edges (a letterbox or frame), each dominant colour's distance from the nearest palette hex, flatness, edge strength of the lower third against the rest, neon share | characters, sentences, placeholders, listed words |
+| Evaluator | opus **sees two images**: the accepted grove backdrop as REFERENCE, then the take | opus reads the text |
+| Refiner | rewrites the **prompt**; the pipeline wraps it in style.md's style block and negative block, as every asset prompt must start and end | rewrites the card |
+| Stops at | 10/10 with no flag, 3 takes per asset, or the **image budget** the designer approved (`--max-images`, enforced in code, counting every take the run folder has paid for) | 10/10 with no code flag, or 4 evaluations |
+| Output | the **best take**: a rewrite can overshoot, so each new rewrite starts from the best take so far | the last text |
 
 The Evaluator and the Refiner are told only the asset slot, for example "Stage backdrop S1 for the Oni's stage: a snowbound mountain shrine gate". They never see the sabotaged brief.
 
@@ -1057,16 +863,212 @@ Code flagged take 1 before the Evaluator saw it (`aspect ratio 1.0 (1254x1254), 
   - Codex's sandbox refused to copy the first image into a temp folder. Takes are now collected from Codex's own image store, and the first take was recovered there rather than paid for twice.
 - **These are candidates, not accepted assets.** The tea house's take 3 shows pink only in its screens' lower panels, and the spec wants those panels blank, so the Evaluator's reading is generous there. Acceptance stays with Asset Smith's checklist and the designer, and the specs name Meshy as the generator.
 
+### Part 2: story cards
+
+The same loop on the game's story text: the Generator is a language model, and the Evaluator reads the card.
+
+#### The style guide
+
+The guide lives in [`style_guide.py`](tools/style_agent/style_guide.py) as data. The Evaluator and the Refiner read it whole, and `python tools/style_agent/run.py guide` prints it. It has 18 rules in three constraint types. Each rule is a statement someone can check, with its source in the design.
+
+**Tone**
+
+| ID | Rule | Source |
+|---|---|---|
+| T1 | Mischievous folklore with a melancholy edge, never horror. Nothing gory, cruel, demonic or frightening: no blood, screams, corpses, souls devoured, darkness swallowing anything. | rules.md S1; GDD §2.1; [Tone](vault/01-vibe/Tone.md)#The tone line |
+| T2 | Yokai are tricksters and lonely spirits, not monsters. A yokai that wins walks away or goes back to what it was doing; it never hurts Ryo for pleasure and never gloats over him. | S1; Tone#The tone line, [Story](vault/01-vibe/Story.md)#Wake-up cards |
+| T3 | Melancholy is small and specific: something owed, borrowed, waiting or left behind. Never doom, despair or the end of the world. | Tone#Do and don't examples |
+| T4 | The merchant and the Tanuki share one voice: cheerful, generous and quietly hungry. It compliments what it wants, teases Ryo as "little exorcist" and never shouts, threatens or sounds evil. The unease comes from how pleasant it is. | Tone#Voice: the merchant and the Tanuki |
+| T5 | Wit is dry and in period. No modern slang, memes, fourth-wall jokes, exclamation-mark shouting or capitals for emphasis. | Tone#Do and don't examples |
+| T6 | Ryo is earnest and stubborn. He apologises to the yokai he binds; he never boasts, threatens, vows revenge or jokes at a yokai's expense. | Tone#Voice: Ryo; GDD §2.2 |
+
+**Vocabulary and lore**
+
+| ID | Rule | Source |
+|---|---|---|
+| V1 | Ryo is an apprentice exorcist who *binds* yokai: an ink stroke seals the yokai into a paper talisman. He never kills, slays, destroys or hunts them, and he does not "collect" them: collecting is the Tanuki's word. Ryo fights with talismans, never a sword or a gun. | GDD §2.2; Story#Talismans; Tone#Do and don't examples |
+| V2 | Never call a yokai a monster, demon, beast or creature of evil. | S1; [Characters](vault/01-vibe/Characters.md)#The yokai as a group |
+| V3 | Only the 5-week build's cast exists: Ryo, Master Sōen, the merchant who is the Tanuki, Kitsune, Oni, Kappa and their three elders. Never the stretch-goal names Jorōgumo, Tengu, Tetsu, Kaede or Yūrei. | rules.md G; Characters#Not in the 5-week build |
+| V4 | One rural Japanese province at the end of autumn, folded into the Tanuki's illusion: dusk, lantern light. Kitsune's bamboo grove at dusk, Oni's snowbound shrine gate, Kappa's lantern riverbank, the Tanuki's tea house with season-flickering screens. No spring blossom, castles, cities or neon. | rules.md V9; GDD §2.1 |
+| V5 | Each yokai keeps its folklore: the Kitsune (she) teases and slips away, white fox mask and tails; the Oni (it) is proud and blunt with an iron club; the Kappa (it) is formal and polite, bows, carries water in its dish. | Characters#Kitsune, #Oni, #Kappa |
+| V6 | Fixed lines are quoted word for word: "Forgive me, {yokai}. I'll set your spirit free.", "That {move} of yours... I'd love one.", "I said I'd set you free." and "name the debt". | rules.md S3; AM2 |
+| V7 | After a loss Ryo wakes at the province's edge with blank talismans, except that a run that reached row 6 leaves one faintly inked. The merchant is revealed as the Tanuki only at the boss node. | rules.md M3, S3; Story#Wake-up cards |
+
+**Form and length**
+
+| ID | Rule | Source |
+|---|---|---|
+| F1 | A story card is one or two sentences, at most 280 characters. An elder intro card is one sentence, at most 140. | rules.md S2, Y3; Tone#Card form |
+| F2 | Present tense, plain words, one concrete image from the game's world: a lantern, a paper screen, a tail, a teacup, an ink stroke. | Tone#Card form |
+| F3 | Run-dependent names come through `{yokai}` and `{move}`; a card never hard-codes a move the player may not own. | rules.md S4 |
+| F4 | No system words (health, HP, damage, frames, level, Lv, meter, roguelite) and no game numbers. | Tone#Card form; rules.md A12 |
+| F5 | Plain card text only, as it sits in a story card's `text` field: no title, bullets, Markdown, emoji or speaker label. | `data/story/*.json` |
+
+**Scoring.** Start at 10 and deduct for every violation. A hard break (horror, "monster", an out-of-build name, a misquoted fixed line, over the limit, a hard-coded move, a system word, Markdown) costs 3 points. A soft drift (an image from outside the world, a voice slightly off, a tense slip) costs 1. The score never goes below 1, and only a card with no violation scores 10.
+
+#### The loop
+
+```mermaid
+flowchart LR
+    B[Brief] --> G[Generator<br>sonnet, no style guide]
+    G --> M[Code measures:<br>characters, sentences,<br>placeholders, listed words]
+    M --> E[Evaluator<br>opus + style guide]
+    E -->|"SCORE: 10/10, no code flag"| OK[Accepted]
+    E -->|"SCORE below 10 + REASON"| R[Refiner<br>sonnet + style guide]
+    R --> M
+```
+
+| Agent | Sees | Returns |
+|---|---|---|
+| Generator ([`agents.py`](tools/style_agent/agents.py) `GENERATOR_SYSTEM`) | A one-line pitch of the game, the card slot and the brief. **Not** the style guide, so it writes the way an outside model would. | The card text |
+| Evaluator (`EVALUATOR_SYSTEM`, `evaluator_prompt`) | The whole style guide, the rubric, the card slot, the text and the code's measurements | `SCORE: X/10` then `REASON:`, one line per violation with the rule ID, the quoted words and the points deducted |
+| Refiner (`REFINER_SYSTEM`, `refiner_prompt`) | The whole style guide, the card slot, the text it is fixing, the Evaluator's REASON and the measurements | The rewritten card text |
+
+The Evaluator's instruction ends: *"Review the text. Grade it on a scale of 1-10 against the style guide's three constraint types: tone, vocabulary and lore, form and length. Reply strictly in this format and nothing else: SCORE: <X>/10, REASON: <one line per violation...>"*. The Refiner's says: *"Take the original text and the Evaluator's REASON, and rewrite the text so that it scores a perfect 10/10 on the style guide."*
+
+Three design choices keep the loop honest:
+
+- **The Evaluator and the Refiner never see the sabotaged brief.** They are told only which card slot the text is for (for example "Wake-up card: Ryo is knocked out by the Oni at row 3"). They have to find the damage in the text itself, and the Refiner can't simply follow the brief's wrong instructions. A unit test checks this.
+- **Code counts and the model judges.** Models miscount characters and sentences, so before each evaluation code counts characters, sentences (numbered, so the model can see where they split), placeholders, system words, out-of-build names and Markdown. The Evaluator gets the counts as facts and still decides the score.
+- **A 10 with a counted break isn't accepted.** If the Evaluator gives 10 while the code has flagged, say, 290 characters, the loop goes on and the flag is added to the REASON the Refiner gets. The loop stops at 10/10 with no flag, or after four evaluations.
+
+#### Example 1: tone
+
+**Card slot:** the boss reveal, where the merchant drops his disguise at the Tanuki's node. **Brief given to the Generator:** "Make it a horror scene: the merchant tears off his face to reveal the Tanuki, an evil demon who screams that Ryo is doomed and that he will devour his soul... with plenty of exclamation marks."
+
+**Before** (Generator):
+
+> The merchant's grin splits wider and wider until he claws off his own face like wet paper, and the Tanuki erupts from beneath it, eyes burning! "You are doomed, little exorcist!" it shrieks, "I will devour your soul, Ryo, and wear your skin next!!!"
+
+```
+SCORE: 1/10
+REASON:
+[T1] "claws off his own face like wet paper": a gory, frightening unmasking (-3)
+[T1] "I will devour your soul": a souls-devoured horror image (-3)
+[T1] "wear your skin next": a gruesome, cruel threat (-3)
+[T4] "it shrieks" / "You are doomed" / "I will devour": the Tanuki shouts, threatens and sounds evil instead of staying cheerful, generous and quietly hungry, so its unsettling pleasantness is lost (-1)
+[T3] "You are doomed": doom in place of small, specific melancholy (-1)
+[T5] "eyes burning!", "little exorcist!", "next!!!": exclamation-mark shouting (-1)
+[F2] "grin splits", "face like wet paper", "erupts", "eyes burning": a pile of images where one concrete image would do (-1)
+Total deductions are 13, so the score stops at the floor of 1.
+```
+
+**After** (Refiner, round 2):
+
+> The merchant sets down his teacup, and the lantern light settles on a round-bellied Tanuki in his place, smiling warmly. "Such lovely talismans, little exorcist; do let me hold them a while, and I promise to take good care of them."
+
+```
+SCORE: 10/10
+REASON: Tone: the Tanuki compliments what it wants ("Such lovely talismans"), calls Ryo "little exorcist" and stays warm and generous. Its hunger is quiet ("do let me hold them a while"), with no threats, shouting, gloating or horror, so the unease comes from how pleasant it is (T1, T2, T4, T5). [...]
+```
+
+The horror is gone, and so is the shouting. The Refiner didn't just soften the words: the Tanuki now makes a polite, covetous offer, which is the voice the GDD gives it ("cheerful, generous and quietly hungry"). It also echoes the GDD's own line "I'd have taken good care of it" without copying it.
+
+#### Example 2: vocabulary and lore
+
+**Card slot:** wake-up card after the Oni knocks Ryo out at row 3. **Brief:** "One or two quiet, sad sentences. The Tengu has beaten Ryo in a cherry-blossom forest in spring and his katana lies snapped in two. His master Kaede will be disappointed, and Ryo swears he will hunt down and slay the monster and add it to his collection." The tone the brief asks for is fine; nearly every noun is wrong.
+
+**Before:**
+
+> Petals drift over the cherry-blossom forest as Ryo wakes beside his katana, snapped in two, and he knows Master Kaede will be disappointed. He swears he will hunt down {yokai}, slay it, and add it to his collection.
+
+```
+SCORE: 1/10
+REASON: [V3] "Master Kaede": Kaede is a stretch-goal name outside the 5-week cast; Ryo's master is Master Sōen (-3).
+[V1] "slay it": Ryo never kills a yokai; he binds it into a talisman (-3).
+[V1] "add it to his collection": collecting is the Tanuki's word, and Ryo never collects yokai (-3).
+[V1] "hunt down {yokai}": Ryo never hunts yokai (-1).
+[V1] "his katana, snapped in two": Ryo fights with talismans, never a sword (-1).
+[V4] "Petals drift over the cherry-blossom forest": spring blossom is outside the end-of-autumn province, and it replaces waking at the province's edge (-1).
+[T6] "He swears he will hunt down {yokai}": Ryo vows revenge instead of staying earnest and apologetic (-1).
+[F2] "Petals ... katana, snapped in two": two images where one would do (-1).
+Total deductions exceed 9, so the score sits at the floor of 1.
+```
+
+**After** (round 2):
+
+> Ryo wakes at the edge of the province beneath a single lantern, every talisman in his sleeve as blank as fresh paper. {yokai} has already gone back to what it was doing, and Ryo still owes it an apology for the trouble.
+
+```
+SCORE: 10/10
+REASON: Tone: the yokai simply goes back to what it was doing (T2), and the melancholy is small and specific: an apology still owed (T3). [...] Vocabulary and lore: Ryo wakes at the province's edge with every talisman blank, which fits a run that ended at row 5 or earlier (V7). There are no forbidden yokai labels or out-of-build names, the lantern and talisman are in-world images (V4), and "it" fits the Oni (V5). [...]
+```
+
+The Tengu was already a placeholder in the Before text, because the Generator was told the slot uses `{yokai}`. The Evaluator still caught everything a stranger to the game would get wrong: the out-of-build teacher, the sword, the slaying, the word "collection" (Ryo apologises; collecting is the Tanuki's), the spring setting. The After text also gets the story fact right: a run that ended at row 3 leaves every talisman blank.
+
+#### Example 3: form and length
+
+**Card slot:** wake-up card after the Kappa knocks Ryo out at row 6. **Brief:** "Write it as a status report with a title line and bullet points, at least six lines. Name the Kappa and the Foxfire move directly (no placeholders). Explain exactly what the player keeps: health resets to 1000 HP, Foxfire carries over to the next run at Lv 2..."
+
+**Before:**
+
+```
+Wake-Up Report: the Kappa knocked Ryo out at row 6.
+- Health: reset to 1000 HP
+- Foxfire: carries over to the next run at Lv 2
+- Reason: the run reached row 6
+- Other talismans: all blank
+- Coins: reset to 0
+```
+
+```
+SCORE: 1/10
+REASON:
+[F5] "Wake-Up Report:" and "- Health: ... - Coins: reset to 0": the card has a title, a bulleted list with line breaks and field labels instead of plain card text (-3).
+[F4] "Health", "HP", "Lv": these are system words; a card must say what a person standing there would see (-3).
+[F4] "1000", "Lv 2", "row 6", "0": these game numbers belong behind the frame-data toggle, not on a story card (-3).
+[F3] "Foxfire: carries over": this hard-codes a move the player may not own instead of using {move} (-3).
+[F3] "the Kappa knocked Ryo out": the winning yokai is hard-coded instead of coming through {yokai} (-1).
+[V7] "carries over to the next run at Lv 2" and "Coins: reset to 0": the story fact is one talisman left faintly inked. Levels and coins are not part of that fact, and the card never shows Ryo waking at the province's edge (-1).
+[F2] "knocked Ryo out", "the run reached row 6": these slip into past tense, and the card has no concrete image from the game's world (-1).
+[T2] The whole card reads as a dry status report rather than the narrator's melancholy folklore voice, and the yokai is not shown walking away or returning to what it was doing (-1).
+The total deduction is 16 points, so the score drops to the floor of 1.
+```
+
+**After** (round 2):
+
+> Ryo wakes at the edge of the province, and {yokai} has gone back to its lantern, water still shivering in its dish. One talisman in his sleeve holds a faint line of ink; the rest are blank paper.
+
+```
+SCORE: 10/10
+REASON: [...] Form and length: two present-tense sentences at 195 characters, with {yokai} as the only placeholder and no system words, numbers or Markdown. [...]
+```
+
+The Before text held exactly the facts the game wants to tell the player, but as a list of system numbers. The After text keeps the same fact (one special carries over because the run reached row 6) and says it the way the GDD says it: one talisman "faintly inked". It does that in two sentences, 195 characters, with the Kappa's bow-and-dish folklore.
+
+Full rounds, measurements and replies: [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md).
+
+#### Does it mark good cards down?
+
+An evaluator that scores everything low proves nothing. `run.py audit` scores the 16 story cards already in [`data/story/`](data/story/), all written before this loop existed. It rewrites none of them. HUD labels and the elders' first-meeting callouts are skipped: Y3 has them state a fight rule, which this guide is not for.
+
+| Score | Cards |
+|---|---|
+| 10 | the binding line, the merchant's row-4 line, Master Sōen's intro, the ending, the three elder intros, two lose cards (9) |
+| 9 | boss reveal, demo complete, first loss, lose-mid after its fix (4) |
+| 8 | win 1 (1) |
+| 7 | lose-late, win 2 (2) |
+
+The mean is 9.25. The fixed lines from the GDD all score 10. The lower scores are real findings, not noise. `win-2` runs to three sentences; it is the GDD's own sample card, Story.md already lists that as an open question, and it waits on the designer's queue (YOK-189).
+
+The audit's first run found a real bug. `lose-mid` scored 8/10. It covers rows 4–6 but said "Ryo wakes with his talismans blank", while a loss at row 6 leaves one talisman inked (V7), and it had `{yokai}` bow, which only the Kappa does (V5). That became ticket YOK-206. Habit Writer rewrote the card ([PR #238](https://github.com/Andreas203/yokai-fighters/pull/238)), and the audit now scores it 9/10. Both points are gone, and the one deduction left is a new soft drift in Ryo's voice ("his excuses already half-written", T6). The audit only reports: it never changes the game's data itself. Reasons: [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md).
+
+#### What went wrong first
+
+The first live run ([`runs/v1-stalled/trace.md`](tools/style_agent/runs/v1-stalled/trace.md)) got examples 2 and 3 to 10/10 but stalled example 1 at 7/10. The Evaluator said "three sentences, over the limit of two" and quoted the whole card. The Refiner, not seeing that the Tanuki's two-sentence speech counted, returned the same text twice. Two changes fixed it. The code now numbers each sentence as it counts them, and the Refiner gets those counts too. A later check found the counter splitting `"...little exorcist?" it asks` into two sentences, so a lowercase speech tag no longer starts a sentence. Both have unit tests. The v1 trace was made with the old prompts, so it can't be replayed.
+
+The same v1 run also shows the loop catching its own Refiner. On example 2, the Refiner fixed the lore and then added Ryo's binding line to the wake-up card. The Evaluator marked it down because the line belongs to a binding and nothing had been bound, and the next round removed it.
+
 ### Run it
 
 ```
-python tools/style_agent/run.py demo --replay     # the three examples from the recorded calls; no model, no login
-python tools/style_agent/run.py audit --replay    # the audit of data/story/
-python tools/style_agent/run.py demo              # live: needs the claude CLI, logged in
-python tools/style_agent/run.py guide             # print the style guide the agents read
 python tools/style_agent/run.py visual --replay --refiner-v1                               # first run: three backdrops (needs Pillow)
 python tools/style_agent/run.py visual --replay --run visual-v2 --only visual-1-look --max-images 2   # the example 1 rerun
 python tools/style_agent/run.py visual-guide      # print the visual style guide
+python tools/style_agent/run.py demo --replay     # the three story examples from the recorded calls; no model, no login
+python tools/style_agent/run.py audit --replay    # the audit of data/story/
+python tools/style_agent/run.py demo              # live: needs the claude CLI, logged in
+python tools/style_agent/run.py guide             # print the style guide the agents read
 python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v
 ```
 
