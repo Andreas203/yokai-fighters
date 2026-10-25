@@ -42,7 +42,7 @@ Order of authority: the PDFs plus the amendments, then `rules.md`. Everything el
 | Document | What it is | Owner |
 |---|---|---|
 | [`codebase-map.md`](codebase-map.md) | Map of the Godot project, the tools and the tests, so agents load only what a ticket touches | gameplay-programmer, ui-designer |
-| [`../tools/content_pipeline/`](../tools/content_pipeline/), [`../tools/goal_agent/`](../tools/goal_agent/) | The content pipeline and the goal-oriented coding agent; each run's `trace.md` sits under `runs/` | designer |
+| [`../tools/content_pipeline/`](../tools/content_pipeline/), [`../tools/goal_agent/`](../tools/goal_agent/), [`../tools/style_agent/`](../tools/style_agent/) | The content pipeline, the goal-oriented coding agent and the story-card style loop (Generator → scored Evaluator → Refiner; its style guide is `style_guide.py`); each run's `trace.md` sits under `runs/` | designer |
 
 ## Assets, sound and balance
 
