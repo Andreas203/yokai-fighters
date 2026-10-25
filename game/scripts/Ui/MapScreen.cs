@@ -45,6 +45,13 @@ public partial class MapScreen : Control
 	public string DetailRewardText => UiFind.Get<Label>(this, "DetailReward").Text;
 	/// <summary>The twist line's slot (Y3, YOK-90): hidden while the view gives no twist text.</summary>
 	public Label DetailTwist => UiFind.Get<Label>(this, "DetailTwist");
+	/// <summary>YOK-109: the habit line ("Habit to punish: ..."), hidden while the view gives no habit for the focused node.</summary>
+	public Label DetailHabit => UiFind.Get<Label>(this, "DetailHabit");
+	/// <summary>YOK-109: the big twist seal beside the focus panel, shown for a focused elder that has a twist.</summary>
+	public TwistSeal DetailSeal => UiFind.Get<TwistSeal>(this, "DetailSeal");
+	/// <summary>YOK-109: the legend's twist rows: (icon id, label text), in order.</summary>
+	public IReadOnlyList<(string Icon, string Text)> LegendTwists => UiFind.Get<Control>(this, "LegendTwists").GetChildren()
+		.OfType<HBoxContainer>().Select(r => (r.GetNode<TwistSeal>("Seal").Icon, r.GetNode<Label>("Text").Text)).ToList();
 	public string LegendTypesText => UiFind.Get<Label>(this, "LegendTypes").Text;
 	public int LegendStateCount => UiFind.Get<Control>(this, "LegendStates").GetChildCount();
 
@@ -63,7 +70,8 @@ public partial class MapScreen : Control
 		Styles ??= GD.Load<MapNodeStyles>("res://ui/map_node_styles.tres");
 		NodeScene ??= GD.Load<PackedScene>("res://scenes/ui/map_node.tscn");
 		// Routes in a row stack top to bottom, so up/down (and left/right) all step the cursor: the chip says "arrows", not LEFT / RIGHT.
-		UiFind.Get<KeyChipFooter>(this, "Hint").SetHints(new KeyHint("route", "Choose route"), new KeyHint("confirm", "Go"));
+		// YOK-109: both devices on each chip, as in the concept. No Esc / Start chip: the map has no pause binding (only fights pause).
+		UiFind.Get<KeyChipFooter>(this, "Hint").SetHints(new KeyHint("route_any", "Choose route"), new KeyHint("confirm_any", "Go"));
 		Board.Resized += () => { if (View != null) Rebuild(); };
 		_ready = true;
 		if (View != null) Rebuild();
@@ -91,6 +99,11 @@ public partial class MapScreen : Control
 		_nodes.Clear();
 		var nodes = View!.Nodes;
 		_layout = MapLayout.Compute(nodes, Board.Size);
+		// YOK-109: a card that says more than its name (the boss's "waits at the end / copies your best move") is a little larger, about its centre.
+		var rects = _layout.Rects.ToDictionary(k => k.Key, k => k.Value);
+		foreach (var v in nodes)
+			if (Styles!.Look(v.Type).Tagline != "") { var r = rects[v.Id]; var big = r.Size * new Vector2(1.2f, 1.15f); rects[v.Id] = new Rect2(r.GetCenter() - big / 2, big); }
+		_layout = _layout with { Rects = rects };
 		foreach (var v in nodes)
 		{
 			var n = NodeScene!.Instantiate<MapNode>();
@@ -130,8 +143,26 @@ public partial class MapScreen : Control
 		}
 	}
 
+	/// <summary>YOK-109: one row per elder twist on this map: its seal and its label text (from the view; story data, never typed here).</summary>
+	void BuildTwistLegend()
+	{
+		var holder = UiFind.Get<Control>(this, "LegendTwists");
+		foreach (var c in holder.GetChildren()) { holder.RemoveChild(c); c.QueueFree(); }
+		foreach (var e in View!.TwistLegend)
+		{
+			var row = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Name = "Twist_" + e.Icon };
+			row.AddThemeConstantOverride("separation", 10);
+			row.AddChild(new TwistSeal { Name = "Seal", Icon = e.Icon, Fallback = Styles!.TwistLook(e.Icon)?.Icon ?? "E", CustomMinimumSize = new Vector2(30, 30), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
+			var t = new Label { Name = "Text", Text = e.Text, MouseFilter = MouseFilterEnum.Ignore, ThemeTypeVariation = "PaperLabel", ClipText = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+			t.AddThemeFontSizeOverride("font_size", 18);
+			row.AddChild(t);
+			holder.AddChild(row);
+		}
+	}
+
 	void BuildLegend()
 	{
+		BuildTwistLegend();
 		if (_legendBuilt) return;
 		_legendBuilt = true;
 		var states = UiFind.Get<Control>(this, "LegendStates");
@@ -141,13 +172,13 @@ public partial class MapScreen : Control
 		{
 			var item = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Name = "Legend_" + label.Replace(' ', '_') };
 			item.AddThemeConstantOverride("separation", 8);
-			var sw = new Panel { CustomMinimumSize = new Vector2(28, 28), MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+			var sw = new Panel { CustomMinimumSize = new Vector2(24, 24), MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
 			var box = new StyleBoxFlat { BgColor = MapNodePalette.Fill(state), BorderColor = state == MapNodeState.PassedOver ? MapNodePalette.PassedOverLine : state == MapNodeState.Locked ? new Color(0.62f, 0.63f, 0.7f, 0.6f) : MapNodePalette.Border(state, cursor, MapNodePalette.Ink) };
 			box.SetBorderWidthAll(cursor ? 5 : 3); box.SetCornerRadiusAll(4);
 			sw.AddThemeStyleboxOverride("panel", box);
 			item.AddChild(sw);
 			var t = new Label { Text = label, MouseFilter = MouseFilterEnum.Ignore, ThemeTypeVariation = "PaperLabel" };
-			t.AddThemeFontSizeOverride("font_size", 24);
+			t.AddThemeFontSizeOverride("font_size", 20);
 			item.AddChild(t);
 			states.AddChild(item);
 		}
@@ -179,6 +210,12 @@ public partial class MapScreen : Control
 		UiFind.Get<Label>(this, "DetailName").Text = $"{(focus.Yokai ?? look.Label).ToUpperInvariant()} · {look.Label} · {where}";
 		var twist = UiFind.Get<Label>(this, "DetailTwist");
 		twist.Text = detail?.Twist ?? ""; twist.Visible = !string.IsNullOrEmpty(detail?.Twist);
+		var habit = UiFind.Get<Label>(this, "DetailHabit");
+		habit.Text = string.IsNullOrEmpty(detail?.Habit) ? "" : "Habit to punish: " + detail!.Habit; habit.Visible = habit.Text != "";
+		var seal = UiFind.Get<TwistSeal>(this, "DetailSeal");
+		var twistLook = focus.Elder ? Styles.TwistLook(focus.TwistIcon) : null;
+		seal.Visible = twistLook != null && twist.Visible; // a seal only where there is a twist to name (Y3)
+		if (seal.Visible) { seal.Icon = focus.TwistIcon!; seal.Fallback = twistLook!.Value.Icon; }
 		UiFind.Get<Label>(this, "DetailReward").Text = detail?.Reward ?? "";
 	}
 

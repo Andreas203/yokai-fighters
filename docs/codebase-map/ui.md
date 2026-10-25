@@ -26,14 +26,14 @@
 
 | File | What it is and its public surface |
 |---|---|
-| `Ui/IMapView.cs` | `IMapView`: `Nodes` (`MapNodeView(Id, Row, Type, Yokai?, Elder, State)`, `MapNodeState` Visited/Current/Reachable/Locked/PassedOver), `Routes` (`MapRouteView`), `Select(id)`, defaults `Status` (`MapStatusView`), `CopyTarget`/`CopyLocked` (T6), `Detail(id)` (`MapNodeDetail(Reward, Twist)`), `RunKey`. TEST FIXTURE `StubMapView`. |
-| `Ui/RunMapView.cs` | `RunMapView(map, run?, scenes?)`: the real adapter (`Select` = `RunMap.Select`; reward lines from node-scene `Coins`/`Binds`, `Merchant.HealPercent`, `Dojo.RestHealPercent`). `SessionMapView` forwards it with the session's copy target. |
-| `Ui/MapScreen.cs` | `ui/map_screen.tscn`: `SetView(view)`, `Refresh()`, `Move(dir)`, `Confirm()`, signal `NodeChosen(string)` once per accepted pick; reachable nodes only; status panel, row headers (`HeaderText`), detail panel (`FocusId`), legend, copy chip. Tests `MapScreenTests`. |
+| `Ui/IMapView.cs` | `IMapView`: `Nodes` (`MapNodeView(Id, Row, Type, Yokai?, Elder, State)`, `MapNodeState` Visited/Current/Reachable/Locked/PassedOver), `Routes` (`MapRouteView`), `Select(id)`, defaults `Status` (`MapStatusView`), `CopyTarget`/`CopyLocked` (T6), `Detail(id)` (`MapNodeDetail(Reward, Twist, Habit)`), `TwistLegend` (`MapTwistLegendEntry(Icon, Text)`), `RunKey`. TEST FIXTURE `StubMapView`. |
+| `Ui/RunMapView.cs` | `RunMapView(map, run?, scenes?)`: the real adapter (`Select` = `RunMap.Select`; reward lines from node-scene `Coins`/`Binds`, `Merchant.HealPercent`, `Dojo.RestHealPercent`; YOK-109: twist line = the twist story label (no stand-in text), habit line = first sentence of the habit of the profile the fight picks (`NodeProfiles` + `NodeTemperament` with the run seed; none for merchant, dojo, boss), `TwistLegend` from the elders on the map). `SessionMapView` forwards it with the session copy target and seed. |
+| `Ui/MapScreen.cs` | `ui/map_screen.tscn`: `SetView(view)`, `Refresh()`, `Move(dir)`, `Confirm()`, signal `NodeChosen(string)` once per accepted pick; reachable nodes only; status panel, row headers (`HeaderText`), detail panel (`FocusId`; twist seal, red twist line, habit line), legend (states, twist seals with their labels), copy chip, key chips for keyboard and pad (no pause chip: the map has no pause binding); the boss card is enlarged when its style has a `Tagline`. Tests `MapScreenTests`. |
 | `Ui/MapLayout.cs` | Pure `Compute(nodes, boardSize)`: one column per row value, nodes stacked in view order, size shrinks with counts. |
 | `Ui/MapNode.cs` | `ui/map_node.tscn` script: one node button (icon, type label, elder mark, yokai name, state); `TwistIcon`. |
-| `Ui/MapNodeStyle.cs` | Resource `MapNodeStyle(Type, Label, Color, Icon, IconTexture?)`: how one node type looks. |
+| `Ui/MapNodeStyle.cs` | Resource `MapNodeStyle(Type, Label, Color, Icon, IconTexture?, Tagline)`: how one node type looks (`Tagline` = lines under the name, the boss). |
 | `Ui/MapNodeStyles.cs` | `ui/map_node_styles.tres`: the only type → look lookup (unknown type = fallback with its id), `TwistIcons`/`TwistLook`, `MapNodePalette`. A new node type needs an entry, no code. |
-| `Ui/MapRoutes.cs` | Draws routes between node edges; `RouteKind` Idle/Open/Walked. Knows no map rules. |
+| `Ui/MapRoutes.cs` | Draws routes between node edges; `RouteKind` Idle/Open/Walked; a walked route is a brushed persimmon ink stroke (tapered, dry-brush streaks, drawn in code, deterministic). Knows no map rules. |
 
 ## Rest stop and shop
 
@@ -84,7 +84,7 @@ Generated text-free plates supply paper, brush, ornaments and scenery (prompts a
 | `Ui/Kit/KitCard.cs` | `kit_card.tscn` selectable card: `Selected`, `CardDisabled`, `Activated`, `SelectionArt`. |
 | `Ui/Kit/KitHeading.cs` | `kit_heading.tscn`: live `Text`, `UnderlineWidth`, `UnderlineArt`. |
 | `Ui/Kit/KeyChipFooter.cs` | `key_chip_footer.tscn`: `SetHints`, `Pinned`, `OnPaper`; switches keyboard/pad glyphs with the last device. |
-| `Ui/Kit/InputGlyphs.cs` | Keyboard/mouse vs pad glyphs and the device drift threshold. |
+| `Ui/Kit/InputGlyphs.cs` | Keyboard/mouse vs pad glyphs and the device drift threshold; `route_any` / `confirm_any` chips name both devices (map footer). |
 | `Ui/Kit/CornerOrnament.cs` | `corner_ornament.tscn`: blossom corner, `Corner` mirror, `Art`. |
 | `Ui/Kit/KitBackdrop.cs` | `kit_backdrop.tscn`: night backdrop, cover scaling, `Art`, `Dim`. |
 | `Ui/Kit/KitState.cs` | `KitState` Auto/Normal/Focused/Disabled/Pressed (gallery pins a state). |

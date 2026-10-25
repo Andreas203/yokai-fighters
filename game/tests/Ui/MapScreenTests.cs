@@ -231,7 +231,8 @@ public static class MapScreenTests
 		Assert.Equal("AFTER ROW 8", s.HeaderTexts[8], "the boss column");
 		Assert.True(s.DetailNameText.EndsWith("row 5") && s.DetailNameText.Contains("Elder duel"), "detail names the focused node: " + s.DetailNameText);
 		Assert.True(s.DetailRewardText.Contains("Pays 50 coins") && s.DetailRewardText.Contains("rare"), "reward line from the node table: " + s.DetailRewardText);
-		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Twist: "), "YOK-139: the focused elder's twist line (data text, or a marked placeholder) shows: " + s.DetailTwist.Text);
+		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Twist: "), "YOK-139: the focused elder's twist line shows: " + s.DetailTwist.Text);
+		Assert.True(!s.DetailTwist.Text.Contains(TwistCopy.PlaceholderMark.Trim()), "YOK-109: the line is the story label, never a stand-in: " + s.DetailTwist.Text);
 		Assert.Equal(6, s.LegendStateCount, "a swatch per node state");
 		Assert.True(s.LegendTypesText.Contains("merchant") && s.LegendTypesText.Contains("dojo") && s.LegendTypesText.Contains("elder"), "legend types come from the styles resource");
 		string before = sess.StateHash().ToString();
@@ -241,6 +242,86 @@ public static class MapScreenTests
 		Assert.Equal("r5-elder-oni", s.CursorId, "up steps back");
 		Assert.True(s.DetailNameText.StartsWith("ELDER ONI"), "the detail follows the cursor");
 		Assert.Equal(before, sess.StateHash().ToString(), "moving the cursor leaves the run untouched");
+		s.GetParent().QueueFree();
+	}
+
+	/// <summary>The story-data label of a twist, as the map words it.</summary>
+	static string Label(string elder) => TwistCopy.Label(YokaiFighters.Fight.FightScene.Twists.For(elder, true)!, TwistCopy.Story).Text;
+
+	[Test]
+	public static void FocusPanelNamesTheTwistSealAndTheHabitFromData(Node host)
+	{
+		var sess = StartSession();
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
+		var s = Make(host, new SessionMapView(sess));
+		Assert.Equal("r5-elder-oni", s.CursorId, "the cursor starts on the first reachable elder");
+		Assert.True(s.DetailSeal.Visible && s.DetailSeal.Icon == "twist-armour", "YOK-109: the Elder Oni's armour seal beside its panel");
+		Assert.Equal("Twist: " + Label("elder-oni"), s.DetailTwist.Text, "the red twist line is the twist's story label");
+		var oni = RunMapView.Profiles!.First(p => p.Yokai == "oni" && p.Temperament == YokaiFighters.Ai.NodeTemperament.Roll(sess.Seed, "r5-elder-oni"));
+		Assert.Equal("Habit to punish: " + RunMapView.HabitSentence(oni.Habit.Description), s.DetailHabit.Text, "the habit of the profile this node's Oni fights with (the fight's own pick)");
+		Assert.True(s.DetailHabit.Visible, "habit line shown");
+		Press(s, "ui_down");
+		Assert.Equal("r5-nine-tails", s.CursorId, "down steps to the Nine-Tails");
+		Assert.Equal("twist-reflect", s.DetailSeal.Icon, "its reflect seal");
+		Assert.Equal("Twist: " + Label("nine-tailed-kitsune"), s.DetailTwist.Text, "its own label");
+		Assert.True(s.DetailHabit.Text.StartsWith("Habit to punish: ") && s.DetailHabit.Text.Contains("jumps"), "the Kitsune profile's habit: " + s.DetailHabit.Text);
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void NoSealAndNoHabitLineWhereTheDataHasNone(Node host)
+	{
+		var v = Fork();
+		v.Details["a"] = new MapNodeDetail("Pays 25 coins.");
+		var s = Make(host, v);
+		Assert.True(!s.DetailSeal.Visible && !s.DetailHabit.Visible && !s.DetailTwist.Visible, "a node with no twist or habit data shows neither line nor seal (no invented text)");
+		var sess = StartSession();
+		var view = new RunMapView(sess.Map, sess.Run, sess.Scenes, sess.Seed);
+		Assert.True(view.Detail("r4-merchant")!.Habit == null && view.Detail("r7-dojo")!.Habit == null && view.Detail("boss-tanuki")!.Habit == null, "no habit for a merchant, a dojo or the boss");
+		Assert.True(view.Detail("r2-oni")!.Habit != null && view.Detail("r1-apprentice")!.Habit != null, "a duel has one, the apprentice's own too");
+		Assert.True(new RunMapView(sess.Map, sess.Run, sess.Scenes).Detail("r2-oni")!.Habit != null, "no seed given: still the profile of the 0 seed's roll, never a crash");
+		Assert.Equal("Often jumps.", RunMapView.HabitSentence("Often jumps. Hit her."), "the habit is the first sentence of the description");
+		Assert.Equal("Just this", RunMapView.HabitSentence("Just this"), "one sentence without a full stop stays whole");
+		Assert.True(RunMapView.HabitSentence("  ") == null, "an empty description gives no line");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void LegendListsEachElderTwistWithItsLabel(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		var rows = s.LegendTwists;
+		Assert.Equal(3, rows.Count, "one row per twist on the map (armour, reflect, grip)");
+		Assert.Equal("twist-armour twist-grip twist-reflect", string.Join(" ", rows.Select(r => r.Icon).OrderBy(x => x)), "the three seals");
+		Assert.Equal(Label("elder-oni"), rows.First(r => r.Icon == "twist-armour").Text, "armour row words the story label");
+		Assert.Equal(Label("nine-tailed-kitsune"), rows.First(r => r.Icon == "twist-reflect").Text, "reflect row words the story label");
+		Assert.Equal(Label("elder-kappa"), rows.First(r => r.Icon == "twist-grip").Text, "grip row words the story label");
+		Assert.Equal(0, Make(host, Fork()).LegendTwists.Count, "a view with no twist data shows no twist rows");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void BossCardSaysTheTanukiWaitsAndCopies(Node host)
+	{
+		var sess = StartSession();
+		var s = Make(host, new SessionMapView(sess));
+		var boss = s.NodeFor("boss-tanuki")!;
+		Assert.Equal("The Tanuki", boss.YokaiText, "boss name (R2)");
+		Assert.Equal("waits at the end\ncopies your best move", boss.TagText, "designer-approved boss lines, from the styles resource");
+		Assert.Equal("", s.NodeFor("r2-oni")!.TagText, "other cards carry no extra lines");
+		Assert.True(s.RectOf("boss-tanuki").Size.X > s.RectOf("r8-elder-oni").Size.X, "the boss card is a little larger");
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void WalkedRoutesAreTheBrushedOnes(Node host)
+	{
+		var sess = StartSession();
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
+		var s = Make(host, new SessionMapView(sess));
+		Assert.Equal(3, s.Routes.Lines.Count(l => l.Kind == RouteKind.Walked), "the walked path is three routes");
+		Assert.Equal(2, s.Routes.Lines.Count(l => l.Kind == RouteKind.Open), "the two routes out of Ryo are open");
 		s.GetParent().QueueFree();
 	}
 
@@ -274,7 +355,9 @@ public static class MapScreenTests
 	{
 		var s = Make(host, Fork());
 		var chips = UiFind.Get<YokaiFighters.Ui.Kit.KeyChipFooter>(s, "Hint").ChipTexts();
-		Assert.Equal("ARROWS", chips[0], "up/down move the cursor, so the chip no longer says LEFT / RIGHT");
+		Assert.Equal("ARROWS / D-PAD", chips[0], "up/down move the cursor, so the chip no longer says LEFT / RIGHT; YOK-109: both devices on the chip");
+		Assert.Equal("ENTER / A", chips[1], "confirm names keyboard and pad");
+		Assert.Equal(2, chips.Length, "no Esc / Start chip: the map has no pause binding, so none is claimed");
 		Assert.True(!UiFind.Get<Control>(s, "Status").Visible, "no run behind the view: no status panel");
 		Assert.Equal("ROW 3", s.HeaderTexts[2], "no play-row count: every column is a plain row");
 		s.GetParent().QueueFree();

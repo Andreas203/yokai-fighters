@@ -55,6 +55,8 @@ public static class InputGlyphs
 		("choose", InputDevice.Pad) => "D-PAD",
 		("route", InputDevice.Keyboard) => "ARROWS",
 		("route", InputDevice.Pad) => "D-PAD",
+		("route_any", _) => "ARROWS / D-PAD", // YOK-109: a chip that names both devices, for screens that show keyboard and pad together
+		("confirm_any", _) => "ENTER / A",
 		("move", InputDevice.Keyboard) => "UP / DOWN",
 		("move", InputDevice.Pad) => "D-PAD",
 		("tab", InputDevice.Keyboard) => "Q / E",

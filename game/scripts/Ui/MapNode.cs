@@ -55,6 +55,8 @@ public partial class MapNode : Button
 	/// <summary>The node's name as shown: the yokai, or the type's label when no yokai waits there.</summary>
 	public string YokaiText => UiFind.Get<Label>(this, "NameLabel").Text;
 	public string StateText => UiFind.Get<Label>(this, "StateLabel").Text;
+	/// <summary>YOK-109: the lines under the name from the type's style (the boss: "waits at the end" / "copies your best move"); "" = none shown.</summary>
+	public string TagText => UiFind.Get<Label>(this, "TagLabel").Text;
 	public bool ElderShown => UiFind.Get<Control>(this, "ElderMark").Visible;
 	/// <summary>YOK-139: the twist icon id drawn on the elder mark; "" = the plain "E" mark (no twist data).</summary>
 	public string TwistIconId { get; private set; } = "";
@@ -83,8 +85,9 @@ public partial class MapNode : Button
 		tex.Texture = look.IconTexture; tex.Visible = look.IconTexture != null; icon.Visible = look.IconTexture == null;
 		stateLabel.Text = MapNodePalette.Caption(v.State, cursor);
 		stateLabel.Visible = stateLabel.Text != "";
-		foreach (var l in new[] { icon, type, name, stateLabel })
-			l.AddThemeFontSizeOverride("font_size", l == name ? font + 2 : font - 2);
+		var tag = UiFind.Get<Label>(this, "TagLabel");
+		tag.Text = look.Tagline; tag.Visible = look.Tagline != "";		foreach (var l in new[] { icon, type, name, stateLabel, tag })
+			l.AddThemeFontSizeOverride("font_size", l == name ? font + 2 : l == tag ? font - 8 : font - 2);
 		var elder = UiFind.Get<Control>(this, "ElderMark");
 		elder.Visible = v.Elder;
 		TwistIconId = v.Elder && twistLook != null ? v.TwistIcon ?? "" : "";
@@ -111,6 +114,7 @@ public partial class MapNode : Button
 		icon.AddThemeColorOverride("font_color", lit ? look.Color : dimText);
 		type.AddThemeColorOverride("font_color", lit ? look.Color : dimText);
 		name.AddThemeColorOverride("font_color", lit ? MapNodePalette.Ink : dimText);
+		tag.AddThemeColorOverride("font_color", lit ? new Color(MapNodePalette.Ink, 0.8f) : dimText);
 		stateLabel.AddThemeColorOverride("font_color", v.State == MapNodeState.Current ? MapNodePalette.ElderRed : lit ? new Color(MapNodePalette.Ink, 0.8f) : dimText);
 		elder.AddThemeStyleboxOverride("panel", seal.Visible ? new StyleBoxEmpty() : new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 12, CornerRadiusTopRight = 12, CornerRadiusBottomLeft = 12, CornerRadiusBottomRight = 12 });
 		UiFind.Get<Label>(this, "ElderGlyph").AddThemeColorOverride("font_color", MapNodePalette.Paper);

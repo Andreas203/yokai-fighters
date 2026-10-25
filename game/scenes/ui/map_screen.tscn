@@ -2,6 +2,7 @@
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
 [ext_resource type="Script" path="res://scripts/Ui/MapScreen.cs" id="script"]
 [ext_resource type="Script" path="res://scripts/Ui/MapRoutes.cs" id="routes"]
+[ext_resource type="Script" path="res://scripts/Ui/TwistSeal.cs" id="seal"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/map_node.tscn" id="node"]
@@ -159,7 +160,7 @@ anchor_bottom = 1.0
 offset_left = 80.0
 offset_top = 220.0
 offset_right = -80.0
-offset_bottom = -262.0
+offset_bottom = -306.0
 
 [node name="Routes" type="Control" parent="Board"]
 mouse_filter = 2
@@ -171,36 +172,55 @@ script = ExtResource("routes")
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 80.0
-offset_top = -252.0
-offset_right = 1000.0
+offset_top = -296.0
+offset_right = 1040.0
 offset_bottom = -84.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("paper_panel")
 
-[node name="Lines" type="VBoxContainer" parent="Detail"]
+[node name="Body" type="HBoxContainer" parent="Detail"]
 mouse_filter = 2
+theme_override_constants/separation = 18
+
+[node name="DetailSeal" type="Control" parent="Detail/Body"]
+visible = false
+custom_minimum_size = Vector2(96, 96)
+mouse_filter = 2
+size_flags_vertical = 4
+script = ExtResource("seal")
+
+[node name="Lines" type="VBoxContainer" parent="Detail/Body"]
+mouse_filter = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="DetailName" type="Label" parent="Detail/Lines"]
+[node name="DetailName" type="Label" parent="Detail/Body/Lines"]
 mouse_filter = 2
 clip_text = true
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 32
 text = "Name"
 theme_type_variation = &"BodyLabel"
 
-[node name="DetailTwist" type="Label" parent="Detail/Lines"]
+[node name="DetailTwist" type="Label" parent="Detail/Body/Lines"]
 visible = false
 mouse_filter = 2
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = ""
 theme_type_variation = &"SealLabel"
 
-[node name="DetailReward" type="Label" parent="Detail/Lines"]
+[node name="DetailReward" type="Label" parent="Detail/Body/Lines"]
 mouse_filter = 2
-size_flags_vertical = 3
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 22
+text = ""
+theme_type_variation = &"BodyLabel"
+
+[node name="DetailHabit" type="Label" parent="Detail/Body/Lines"]
+visible = false
+mouse_filter = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
 text = ""
 theme_type_variation = &"BodyLabel"
 
@@ -209,8 +229,8 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -900.0
-offset_top = -252.0
+offset_left = -860.0
+offset_top = -296.0
 offset_right = -80.0
 offset_bottom = -84.0
 mouse_filter = 2
@@ -218,18 +238,34 @@ theme_override_styles/panel = SubResource("legend_panel")
 
 [node name="Lines" type="VBoxContainer" parent="Legend"]
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="LegendTitle" type="Label" parent="Legend/Lines"]
 mouse_filter = 2
 theme_override_font_sizes/font_size = 20
-text = "LEGEND"
+text = "LEGEND (state · type · twist)"
 theme_type_variation = &"PaperLabel"
 
-[node name="LegendStates" type="HFlowContainer" parent="Legend/Lines"]
+[node name="LegendBody" type="HBoxContainer" parent="Legend/Lines"]
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="LegendStates" type="GridContainer" parent="Legend/Lines/LegendBody"]
 mouse_filter = 2
 theme_override_constants/h_separation = 22
 theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="LegendDivider" type="ColorRect" parent="Legend/Lines/LegendBody"]
+custom_minimum_size = Vector2(2, 0)
+mouse_filter = 2
+color = Color(0.62, 0.63, 0.7, 0.5)
+
+[node name="LegendTwists" type="VBoxContainer" parent="Legend/Lines/LegendBody"]
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
 
 [node name="LegendTypes" type="Label" parent="Legend/Lines"]
 mouse_filter = 2
