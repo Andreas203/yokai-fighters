@@ -4,10 +4,11 @@ namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-39: the bamboo grove at dusk (V9) is the scene <c>res://scenes/stage/bamboo_grove.tscn</c>, edited in Godot
-/// (spec <c>assets/specs/stages/bamboo-grove-dusk.md</c>). Layers back to front: cropped backdrop quad, ten bamboo clusters,
-/// two stone lanterns, the tiled ground strip; dusk = warm low key light + cool fill + indigo depth fog. The props are
-/// placed by hand (the layout baked from the old seeded builder); this class holds the placement rules StageTests
-/// checks against, and the asset check for the placeholder fallback.
+/// (spec <c>assets/specs/stages/bamboo-grove-dusk.md</c>). Layers back to front: cropped backdrop quad, the lit lantern line
+/// (<see cref="LanternLine"/>, YOK-208), ten bamboo clusters, two lit stone lanterns, the tiled ground strip; dusk = warm
+/// low key light + cool fill + indigo depth fog. The bamboo and the two front lanterns are placed by hand (the layout
+/// baked from the old seeded builder), the line is built from its parameters; this class holds the placement rules
+/// StageTests checks against (every lantern of the line included), and the asset check for the placeholder fallback.
 /// </summary>
 public static class BambooGroveStage
 {
