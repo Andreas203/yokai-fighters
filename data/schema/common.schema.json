@@ -73,7 +73,7 @@
     "effectTarget": {
       "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
       "type": "string",
-      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_invuln))$"
+      "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_break))$"
     },
     "effectShape": {
       "description": "YOK-103: the op and value each kind of target takes, as the loader checks them (Effects.Check).",
@@ -108,7 +108,7 @@
           }
         },
         {
-          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(properties\\.)?throw_invuln$" } } },
+          "if": { "required": ["target"], "properties": { "target": { "pattern": "^(properties\\.)?throw_break$" } } },
           "then": { "properties": { "op": { "const": "set" }, "value": { "const": "startup" } } }
         }
       ]

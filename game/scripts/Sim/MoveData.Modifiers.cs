@@ -46,8 +46,8 @@ public sealed partial record MoveData
 	public bool ProjectileInterruptImmune { get; init; }
 	/// <summary><c>properties.armour</c>, or null.</summary>
 	public ArmourWindow? Armour { get; init; }
-	/// <summary><c>properties.throw_invuln: "startup"</c>: not throwable during the move's startup frames.</summary>
-	public bool ThrowInvulnStartup { get; init; }
+	/// <summary><c>properties.throw_break: "startup"</c>: a throw that would grab the fighter during this move's startup is broken automatically instead (AM12): a clash, no damage.</summary>
+	public bool ThrowBreakStartup { get; init; }
 	/// <summary><c>properties.pull_on_hit</c>: on hit the defender is pulled this many steps toward the attacker instead of pushed.</summary>
 	public int PullOnHit { get; init; }
 	/// <summary><c>properties.heal_pct_max_health</c>: on hit the attacker heals this % of its max health (rounded to nearest).</summary>
@@ -104,12 +104,12 @@ public sealed partial record MoveData
 			if (!ArmourWindow.TryRead(JsonNode.Parse(a.GetRawText()), out armour) || armour!.Last > move.TotalFrames)
 				throw new FormatException($"{move.Id}: properties.armour needs frames [first, last] inside the move (1-{move.TotalFrames})");
 		}
-		bool throwInvuln = false;
-		if (props.TryGetProperty("throw_invuln", out var ti))
+		bool throwBreak = false;
+		if (props.TryGetProperty("throw_break", out var ti))
 		{
-			if (ti.ValueKind != JsonValueKind.String || ti.GetString() != Effects.ThrowInvulnStartup)
-				throw new FormatException($"{move.Id}: properties.throw_invuln must be \"{Effects.ThrowInvulnStartup}\"");
-			throwInvuln = true;
+			if (ti.ValueKind != JsonValueKind.String || ti.GetString() != Effects.ThrowBreakStartup)
+				throw new FormatException($"{move.Id}: properties.throw_break must be \"{Effects.ThrowBreakStartup}\"");
+			throwBreak = true;
 		}
 		bool angleUp = props.TryGetProperty("projectile", out var p) && p.ValueKind == JsonValueKind.Object && Flag(p, "angle_up");
 		return move with
@@ -117,7 +117,7 @@ public sealed partial record MoveData
 			CounterhitImmune = Flag(props, "counterhit_immune"),
 			ProjectileInterruptImmune = Flag(props, "projectile_interrupt_immune"),
 			Armour = armour,
-			ThrowInvulnStartup = throwInvuln,
+			ThrowBreakStartup = throwBreak,
 			PullOnHit = NonNegative("pull_on_hit"),
 			HealPctMaxHealth = NonNegative("heal_pct_max_health"),
 			ProjectileAngleUp = angleUp,

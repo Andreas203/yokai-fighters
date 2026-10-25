@@ -17,7 +17,7 @@
     { "name": "armour-frames-backwards", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [5, 1] } }] },
     { "name": "armour-past-the-end-of-the-move", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "frames": [1, 500] } }] },
     { "name": "armour-without-frames", "accept": false, "requires": [], "effects": [{ "target": "properties.armour", "op": "set", "value": { "hits": 1 } }] },
-    { "name": "throw-invuln-other-phase", "accept": false, "requires": [], "effects": [{ "target": "properties.throw_invuln", "op": "set", "value": "active" }] },
+    { "name": "throw-break-other-phase", "accept": false, "requires": [], "effects": [{ "target": "properties.throw_break", "op": "set", "value": "active" }] },
     { "name": "flag-with-add", "accept": false, "requires": [], "effects": [{ "target": "properties.counterhit_immune", "op": "add", "value": 1 }] },
 
     { "name": "projectile-speed-on-projectile-specials", "accept": true, "requires": ["projectile"], "effects": [{ "target": "projectile.speed", "op": "add", "value": 1 }] },

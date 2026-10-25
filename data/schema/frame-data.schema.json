@@ -143,7 +143,7 @@
         "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move." },
         "counterhit_immune": { "type": "boolean", "description": "YOK-103: a hit during this move is never a counterhit (C7)." },
         "projectile_interrupt_immune": { "type": "boolean", "description": "YOK-103: projectile hits deal damage but don't interrupt the move." },
-        "throw_invuln": { "const": "startup", "description": "YOK-103: can't be thrown during startup. Disagrees with E12 / E17 as written: open designer question." },
+        "throw_break": { "const": "startup", "description": "AM12 (YOK-172): a throw that would grab the fighter during this move's startup breaks automatically: a clash, no damage, like throw vs throw. Not throw-invulnerability (E17)." },
         "pull_on_hit": { "type": "integer", "minimum": 0, "description": "YOK-103: on hit the defender is pulled this many steps toward the attacker instead of pushed (step = SimConfig.PullStepUnits, proposed)." },
         "heal_pct_max_health": { "type": "integer", "minimum": 0, "description": "YOK-103: on hit the attacker heals this % of its max health." }
       }

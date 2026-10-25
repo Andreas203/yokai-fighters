@@ -250,13 +250,13 @@ public static class Effects
 		"meter_gain", "hitboxes", "hurtboxes", "cancel_windows", "properties",
 	};
 
-	/// <summary>A target's value: an integer, a flag, the pushback pair, an armour window, the throw-invuln phase.</summary>
-	public enum ValueKind { Int, Flag, IntPair, Armour, ThrowInvuln }
+	/// <summary>A target's value: an integer, a flag, the pushback pair, an armour window, the throw-break phase.</summary>
+	public enum ValueKind { Int, Flag, IntPair, Armour, ThrowBreak }
 
 	/// <summary>
 	/// YOK-103: every target the loader accepts (resolved path, see <see cref="Resolve"/>) and its value kind.
 	/// Int: add / mul_pct / set with an integer. IntPair (pushback): add / mul_pct on on_hit and on_block alike.
-	/// Flag: set true / false. Armour: set { frames: [first, last], hits? }. ThrowInvuln: set "startup".
+	/// Flag: set true / false. Armour: set { frames: [first, last], hits? }. ThrowBreak: set "startup".
 	/// <c>ex.meter_cost</c> is modifier-only (<see cref="ModifierData.ExCostFor"/>), not frame data.
 	/// </summary>
 	public static readonly IReadOnlyDictionary<string, ValueKind> Vocabulary = new Dictionary<string, ValueKind>
@@ -271,7 +271,7 @@ public static class Effects
 		["properties.projectile.passes_projectiles"] = ValueKind.Flag, ["properties.projectile.angle_up"] = ValueKind.Flag,
 		["properties.knockdown"] = ValueKind.Flag, ["properties.launch"] = ValueKind.Flag,
 		["properties.counterhit_immune"] = ValueKind.Flag, ["properties.projectile_interrupt_immune"] = ValueKind.Flag,
-		["properties.armour"] = ValueKind.Armour, ["properties.throw_invuln"] = ValueKind.ThrowInvuln,
+		["properties.armour"] = ValueKind.Armour, ["properties.throw_break"] = ValueKind.ThrowBreak,
 		["properties.pull_on_hit"] = ValueKind.Int, ["properties.heal_pct_max_health"] = ValueKind.Int,
 		["properties.aftershock_delay"] = ValueKind.Int, // YOK-136: Oni Quake Lv 3 Aftershock (A5)
 	};
@@ -312,8 +312,8 @@ public static class Effects
 			ValueKind.IntPair => isInt && op != "set",
 			ValueKind.Flag => op == "set" && value is JsonValue fv && fv.GetValueKind() is JsonValueKind.True or JsonValueKind.False,
 			ValueKind.Armour => op == "set" && ArmourWindow.TryRead(value, out _),
-			ValueKind.ThrowInvuln => op == "set" && value is JsonValue sv && sv.GetValueKind() == JsonValueKind.String
-				&& sv.GetValue<string>() == ThrowInvulnStartup,
+			ValueKind.ThrowBreak => op == "set" && value is JsonValue sv && sv.GetValueKind() == JsonValueKind.String
+				&& sv.GetValue<string>() == ThrowBreakStartup,
 			_ => false,
 		};
 		if (!ok) throw new FormatException($"{id}: effect '{op}' on {target} needs {Describe(kind)}");
@@ -362,8 +362,8 @@ public static class Effects
 		return p >= 0 ? (p + 50) / 100 : -((-p + 50) / 100);
 	}
 
-	/// <summary>The one throw-invulnerability phase the data can name (Slippery Skin).</summary>
-	public const string ThrowInvulnStartup = "startup";
+	/// <summary>The one throw-break phase the data can name (Slippery Skin, AM12).</summary>
+	public const string ThrowBreakStartup = "startup";
 
 	static string Str(JsonNode effect, string name, string id) =>
 		effect[name] is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>()
@@ -375,7 +375,7 @@ public static class Effects
 		ValueKind.IntPair => "add or mul_pct with an integer",
 		ValueKind.Flag => "set with true or false",
 		ValueKind.Armour => "set with { \"frames\": [first, last], \"hits\": n }",
-		_ => $"set with \"{ThrowInvulnStartup}\"",
+		_ => $"set with \"{ThrowBreakStartup}\"",
 	};
 
 	public static int MulPct(int n, int pct)
