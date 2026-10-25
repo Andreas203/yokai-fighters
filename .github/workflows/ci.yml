@@ -1,7 +1,7 @@
 name: ci
 # YOK-190: every pull request gets a Linux build and test signal, whatever it touches.
 #   build-test  dotnet build -> headless import -> full headless test suite (game/tests/test_runner.tscn)
-#   tool-tests  the Python tool tests (tools/tests/test_*.py, tools/goal_agent/test_*.py)
+#   tool-tests  the Python tool tests (tools/tests/test_*.py, tools/goal_agent/test_*.py, tools/style_agent/test_*.py)
 # The verdict of the suite is its TESTS line: the job fails on any FAIL line, a non-zero failed count or a
 # missing TESTS line. Nothing here merges or pushes: the designer reviews and merges every PR.
 #
@@ -157,3 +157,7 @@ jobs:
       - name: Goal agent tests
         if: success() || failure()   # still report when the tool tests failed
         run: python -I -m unittest discover -s tools/goal_agent -p 'test_*.py' -v
+
+      - name: Style agent tests
+        if: success() || failure()
+        run: python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v

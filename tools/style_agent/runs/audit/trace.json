@@ -1,0 +1,271 @@
+{
+  "meta": {
+    "run": "audit",
+    "command": "audit",
+    "generator_model": "sonnet",
+    "evaluator_model": "opus",
+    "refiner_model": "sonnet",
+    "target": 10,
+    "max_rounds": 4
+  },
+  "results": [
+    {
+      "id": "binding-line",
+      "status": "final",
+      "text": "Forgive me, {yokai}. I'll set your spirit free.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "every binding (after a yokai is beaten and its move taken)",
+        "speaker": "Ryo",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/binding-line.json"
+      },
+      "score": 10,
+      "reason": "Tone: Ryo is earnest and apologises to the yokai he binds, with no horror, gloating, slang or shouting (T1, T5, T6). Vocabulary and lore: it is the fixed binding line quoted word for word for the binding slot (V6), uses \"set your spirit free\" rather than kill or collect (V1), and names no monster, demon or out-of-build character (V2, V3). Form and length: two sentences and 47 characters, within the limit of 280 (F1). It is in present tense, uses only the {yokai} placeholder, contains no system words or numbers, and is plain text with no Markdown or speaker label (F2–F5). The fixed line stands on its own without needing a separate image, as the scored-10 example \"That {move} of yours... I'd love one.\" shows.",
+      "flags": []
+    },
+    {
+      "id": "boss-reveal",
+      "status": "proposed",
+      "text": "The merchant's smile stays on a moment longer than his face does. \"Ah, you found me,\" says the Tanuki, and the tea house unfolds around Ryo like a paper lantern.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Every run that reaches the boss: the Tanuki's node",
+        "speaker": "Tanuki",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/boss-reveal.json"
+      },
+      "score": 9,
+      "reason": "[F2] \"The merchant's smile stays on a moment longer than his face does\" and \"the tea house unfolds around Ryo like a paper lantern\": two separate images where one would do (-1).",
+      "flags": []
+    },
+    {
+      "id": "demo-complete",
+      "status": "proposed",
+      "text": "{yokai} lets the lantern light settle on Ryo's shoulders, and for once says nothing clever. The road runs on past the torii, where other spirits are still waiting to be asked.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Demo end: Ryo wins the rematch and binds the Kitsune a second time (replaces the 'Demo complete' / 'Thanks for playing.' placeholders)",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/demo-complete.json"
+      },
+      "score": 9,
+      "reason": "[F2] \"lantern light\" ... \"past the torii\": two concrete images, where the guide asks for one (-1).",
+      "flags": []
+    },
+    {
+      "id": "elder-kappa-unbreakable-throws-intro",
+      "status": "proposed",
+      "text": "The Elder Kappa bows, not a drop spilled: \"Once I have taken hold, honoured guest, there is no breaking free.\"",
+      "slot": {
+        "card": "Elder intro story card",
+        "trigger": "Intro card (Y3): entering the Elder Kappa elder node",
+        "speaker": "Elder Kappa",
+        "max_sentences": 1,
+        "max_chars": 140,
+        "data_file": "data/story/elder-kappa-unbreakable-throws-intro.json"
+      },
+      "score": 10,
+      "reason": "Tone: the Elder Kappa is formal and polite (\"honoured guest\") and stubborn rather than cruel. \"No breaking free\" is a stubborn wrestler's challenge, with no gore, horror, shouting or gloating over Ryo (T1, T2, T5).\nVocabulary and lore: Elder Kappa is in the 5-week cast. The bow and the full water dish (\"not a drop spilled\") keep its folklore (V3, V5). No yokai is called a monster, nothing is killed or collected, and no fixed line is misquoted (V1, V2, V6).\nForm and length: one sentence of 110 characters, within the elder-intro limit of 1 sentence and 140 characters (F1). It is in present tense with one concrete image from the game's world, the water dish (F2). It has no placeholders, system words, numbers, Markdown or speaker label (F3, F4, F5).",
+      "flags": []
+    },
+    {
+      "id": "elder-oni-armour-intro",
+      "status": "proposed",
+      "text": "The Elder Oni plants its club in the snow: \"Hit me mid-swing and I will finish the swing.\"",
+      "slot": {
+        "card": "Elder intro story card",
+        "trigger": "Intro card (Y3): entering the Elder Oni elder node",
+        "speaker": "Elder Oni",
+        "max_sentences": 1,
+        "max_chars": 140,
+        "data_file": "data/story/elder-oni-armour-intro.json"
+      },
+      "score": 10,
+      "reason": "Tone: the Elder Oni is proud and blunt, with dry wit and no horror, gore, gloating or shouting, so it meets T1, T2 and T5. Vocabulary and lore: it uses the in-build Elder Oni with the correct \"it\" and its iron club, and the snow matches the Oni's snowbound shrine gate, so it meets V3, V4 and V5. Form and length: the card is one sentence of 90 characters in present tense, with one concrete image (the club planted in snow), no placeholders needed, and no system words, numbers, Markdown or speaker label, so it meets F1 to F5.",
+      "flags": []
+    },
+    {
+      "id": "first-loss",
+      "status": "proposed",
+      "text": "You fall in the tea house, and the paper screens fold shut. Somewhere a cheerful voice says: \"Shame about that {move}; I'd have taken good care of it.\"",
+      "slot": {
+        "card": "Story card",
+        "trigger": "First loss of the story save",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/first-loss.json"
+      },
+      "score": 9,
+      "reason": "[V7] \"You fall in the tea house\": the first loss of a story save can happen at any node, but the card always places it in the Tanuki's tea house, the boss node's home. Every loss before the boss is told in the wrong place (-1).",
+      "flags": []
+    },
+    {
+      "id": "intro-soen",
+      "status": "proposed",
+      "text": "\"Every spirit you bind is a debt, Ryo,\" Master Sōen says, pouring tea she does not drink. \"Name the debt, and you may carry it.\"",
+      "slot": {
+        "card": "Story card",
+        "trigger": "First run only, before row 1",
+        "speaker": "Master Sōen",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/intro-soen.json"
+      },
+      "score": 10,
+      "reason": "Tone: the line is quiet, melancholy and small-scale. A debt carried and tea poured but not drunk fit T1 and T3, with no horror, gloating or doom. Vocabulary and lore: Ryo \"binds\" a spirit (V1), Master Sōen is correctly \"she\" (V3), and her fixed rule \"name the debt\" appears word for word (V6). Form and length: the card has 2 sentences and 128 characters, within the 280 limit (F1). It uses present tense (\"says\", \"pouring\") and one concrete in-world image, the tea (F2). It has no placeholders, system words, numbers or Markdown (F3 to F5).",
+      "flags": []
+    },
+    {
+      "id": "lose-early",
+      "status": "proposed",
+      "text": "{yokai} watches Ryo crumple and, for a moment, looks almost sorry. Master Sōen's tea has gone cold by the time he wakes.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Later loss (not the first), Ryo knocked out on rows 1-3",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/lose-early.json"
+      },
+      "score": 10,
+      "reason": "Tone: the {yokai} wins without gloating or cruelty and \"looks almost sorry\", so it reads as a lonely spirit, not a monster. \"Crumple\" is a knockout, not gore. The melancholy is small and specific: Master Sōen's tea, left waiting and gone cold. The wit is dry and in period, with no exclamation marks. Vocabulary and lore: the only names used are in-build (Ryo, Master Sōen, {yokai}). No yokai is called a monster or demon, and nothing kills or collects. Ryo waking after a loss fits the wake-up facts, and nothing contradicts the wake-up place or the blank talismans. Form and length: the card is 2 sentences and 120 characters, within the 2-sentence and 280-character limit. It is in the present tense with plain words and one concrete in-world image, the cold teacup. It uses only the {yokai} placeholder, hard-codes no move, has no system words or numbers, and has no Markdown, title, speaker label or stage directions.",
+      "flags": []
+    },
+    {
+      "id": "lose-late",
+      "status": "proposed",
+      "text": "So close that {yokai} had to be gentle about it. The road back to the province's edge is long, and Ryo walks it counting what he owes.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Later loss (not the first), Ryo knocked out on rows 7-8 or at the boss",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/lose-late.json"
+      },
+      "score": 7,
+      "reason": "[F2] \"had to be gentle about it\": the first sentence is in the past tense on a card that should be in the present tense, a tense slip (-1).\n[F2] \"The road back\": the card has no concrete image from the game's world, such as a lantern, a talisman, an ink stroke or snow on a shrine gate, and a generic road does not replace one (-1).\n[V7] \"The road back to the province's edge is long, and Ryo walks it\": after a loss Ryo wakes at the province's edge, but here he walks back to it, which bends the wake-up story fact (-1).",
+      "flags": []
+    },
+    {
+      "id": "lose-mid",
+      "status": "proposed",
+      "text": "{yokai} turns away, a little too politely, and the lanterns blow out one by one. Ryo wakes with his pride in pieces and his excuses already half-written.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Later loss (not the first), Ryo knocked out on rows 4-6",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/lose-mid.json"
+      },
+      "score": 9,
+      "reason": "[T6] \"his excuses already half-written\": casts Ryo as someone already making excuses for losing, which undercuts his earnest, stubborn voice; voice slightly off (-1).",
+      "flags": []
+    },
+    {
+      "id": "lose-screen",
+      "status": "proposed",
+      "text": "{yokai} slips off between the lanterns and does not look back. Somewhere a bound thing is still waiting for someone to return it.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Ryo is knocked out in a duel (demo default; later variants by row reached and winning yokai, S3)",
+        "speaker": "narrator",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/lose-screen.json"
+      },
+      "score": 10,
+      "reason": "Tone: the {yokai} walks away without gloating, which fits T2, and the melancholy is small and specific, a bound thing waiting to be returned, which fits T3. There is no horror, slang or shouting. Vocabulary and lore: no yokai is called a monster, nothing is killed or collected, no out-of-build names appear, and \"bound\" matches the binding lore. Lanterns belong to the game's dusk world. Form and length: the card is two present-tense sentences and 129 characters, inside the 280 limit. It uses one concrete image (lanterns), only the {yokai} placeholder, no system words or numbers, and plain text with no Markdown.",
+      "flags": []
+    },
+    {
+      "id": "merchant-row4",
+      "status": "proposed",
+      "text": "That {move} of yours... I'd love one.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Row 4, merchant still disguised",
+        "speaker": "Merchant",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/merchant-row4.json"
+      },
+      "score": 10,
+      "reason": "Tone: the line is cheerful, covetous and pleasant, with no threat, shouting or slang, which matches the merchant's quietly hungry voice in T4 and T5. Vocabulary and lore: it quotes the fixed row 4 line from V6 word for word, uses no out-of-build names and keeps the merchant disguised at row 4, as V7 requires. Form and length: it is one sentence of 37 characters (limit 280), in present tense, uses only the {move} placeholder, and has no system words, numbers or Markdown, so it meets F1 to F5.",
+      "flags": []
+    },
+    {
+      "id": "nine-tails-reflect-intro",
+      "status": "proposed",
+      "text": "Nine tails stir behind the mask: \"Show me a trick once, little exorcist, and I will hand it back the second time.\"",
+      "slot": {
+        "card": "Elder intro story card",
+        "trigger": "Intro card (Y3): entering the Nine-Tails elder node",
+        "speaker": "Nine-Tailed Kitsune",
+        "max_sentences": 1,
+        "max_chars": 140,
+        "data_file": "data/story/nine-tails-reflect-intro.json"
+      },
+      "score": 10,
+      "reason": "Tone: the Nine-Tailed Kitsune teases Ryo with a dry, period challenge (\"Show me a trick once... I will hand it back the second time\"), with no horror, cruelty, gloating, slang or shouting. Vocabulary and lore: only in-build cast, the Kitsune keeps her teasing folklore voice and fox signs (tails, mask), and no binding, collecting or monster language appears. Form and length: one present-tense sentence at 114 of 140 characters, one concrete image (nine tails stirring behind the mask), no placeholders, no system words or numbers, and plain text with no title, label or Markdown.",
+      "flags": []
+    },
+    {
+      "id": "win-1",
+      "status": "proposed",
+      "text": "\"Techniques are like teacups,\" the Tanuki sighs, \"lonely on a shelf, so I helped you grow to have more to love.\" Ryo's hands are still sticky with ink.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Win 1: first Tanuki victory in the story save",
+        "speaker": "Tanuki",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/win-1.json"
+      },
+      "score": 8,
+      "reason": "[T4] \"so I helped you grow to have more to love\": the Tanuki's line is muddled; it does not compliment a move it wants or tease \"little exorcist\", so its quiet hunger does not come through (-1). [F2] \"like teacups... lonely on a shelf\" and \"sticky with ink\": two images where one would do (-1).",
+      "flags": []
+    },
+    {
+      "id": "win-2",
+      "status": "proposed",
+      "text": "\"You keep them in paper, I keep them in my sleeves,\" the Tanuki laughs. \"Which of us is the collector, little exorcist?\" Ryo has no answer yet.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Win 2: second Tanuki victory",
+        "speaker": "Tanuki",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/win-2.json"
+      },
+      "score": 7,
+      "reason": "[F1] \"You keep them in paper, I keep them in my sleeves,\" the Tanuki laughs. \"Which of us is the collector, little exorcist?\" Ryo has no answer yet.: three sentences against a two-sentence limit, since sentences inside quoted speech count (-3).",
+      "flags": [
+        "F1: 3 sentences, over the limit of 2"
+      ]
+    },
+    {
+      "id": "win-3",
+      "status": "proposed",
+      "text": "Ryo binds the Tanuki, then tears every talisman open, his own included, and the spirits drift out like lantern smoke. \"I said I'd set you free,\" he says.",
+      "slot": {
+        "card": "Story card",
+        "trigger": "Win 3 (ending): third Tanuki victory",
+        "speaker": "Ryo",
+        "max_sentences": 2,
+        "max_chars": 280,
+        "data_file": "data/story/win-3.json"
+      },
+      "score": 10,
+      "reason": "Tone: the ending is gentle and melancholy, with no horror, and Ryo frees the spirits instead of gloating or boasting. Vocabulary and lore: \"binds the Tanuki\" uses the correct verb, the fixed line \"I said I'd set you free\" is quoted word for word, no yokai is called a monster or demon, and only in-build names appear. Form and length: the card is 2 sentences and 153 characters, within the 2-sentence and 280-character limit. It is in present tense, its one image is torn talismans releasing spirits like lantern smoke, and it has no placeholders, system words, numbers or Markdown.",
+      "flags": []
+    }
+  ]
+}
