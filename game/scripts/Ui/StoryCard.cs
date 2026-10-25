@@ -25,6 +25,7 @@ public partial class StoryCard : Control
 		_text = UiFind.Get<Label>(this, "Text");
 		_textArea = _text.Size;
 		_bodyFontSize = _text.GetThemeFontSize("font_size");
+		SetScrollMode(false);
 		ApplyText();
 		GuiInput += OnGuiInput;
 		Visible = false;
@@ -33,43 +34,32 @@ public partial class StoryCard : Control
 	public void Display(string text)
 	{
 		Text = text; Showing = true; Visible = true;
-		ShowTwistHeader(null, null, "E");
+		SetScrollMode(false);
 		ApplyText();
 	}
 
-	/// <summary>YOK-139 (Y3): the elder-twist intro card: <see cref="Display(string)"/> plus a header (the twist's seal and a kicker such as "ELDER TWIST · ROW 5").</summary>
-	public void Display(string text, string kicker, string? iconId, string fallbackGlyph = "E")
+	/// <summary>
+	/// YOK-109 (Y3): the elder-twist intro card, drawn as a hanging scroll (<see cref="TwistScroll"/>): the quote
+	/// (<paramref name="text"/>), the kicker ("ELDER TWIST · ROW 5"), the elder's name as <paramref name="title"/>, the red twist
+	/// label as <paramref name="rule"/>, the twist's stamp (<paramref name="iconId"/>) and, when art exists, a portrait.
+	/// </summary>
+	public void Display(string text, string kicker, string? iconId, string fallbackGlyph = "E", string? title = null, string? rule = null, string? portraitPath = null)
 	{
 		Text = text; Showing = true; Visible = true;
-		ShowTwistHeader(kicker, iconId ?? "", fallbackGlyph);
-		ApplyText();
+		SetScrollMode(true);
+		Scroll!.Show(text, kicker, iconId, fallbackGlyph, title, rule, portraitPath);
 	}
 
-	public string KickerText => GetNodeOrNull<Label>("Panel/Kicker")?.Visible == true ? GetNode<Label>("Panel/Kicker").Text : "";
-	public string TwistIconId => GetNodeOrNull<TwistSeal>("Panel/TwistSeal") is { Visible: true } s ? s.Icon : "";
+	public TwistScroll? Scroll => GetNodeOrNull<TwistScroll>("TwistScroll");
+	public string KickerText => Scroll is { Visible: true } s ? s.Kicker : "";
+	public string TwistIconId => Scroll is { Visible: true } s ? s.StampIcon : "";
 
-	void ShowTwistHeader(string? kicker, string? icon, string fallback)
+	/// <summary>The plain card (Panel) or the twist scroll shows, never both.</summary>
+	void SetScrollMode(bool scroll)
 	{
-		var panel = GetNode<Control>("Panel");
-		var label = panel.GetNodeOrNull<Label>("Kicker");
-		var seal = panel.GetNodeOrNull<TwistSeal>("TwistSeal");
-		if (kicker == null) { if (label != null) label.Visible = false; if (seal != null) seal.Visible = false; return; }
-		if (seal == null)
-		{
-			seal = new TwistSeal { Name = "TwistSeal", Position = new Vector2(140, 30), Size = new Vector2(66, 66) };
-			panel.AddChild(seal);
-		}
-		if (label == null)
-		{
-			label = new Label { Name = "Kicker", Position = new Vector2(226, 40), Size = new Vector2(880, 46), MouseFilter = MouseFilterEnum.Ignore, VerticalAlignment = VerticalAlignment.Center };
-			label.AddThemeFontSizeOverride("font_size", 34);
-			label.AddThemeColorOverride("font_color", MapNodePalette.ElderRed);
-			panel.AddChild(label);
-		}
-		label.Text = kicker; label.Visible = true;
-		seal.Icon = icon ?? ""; seal.Fallback = fallback; seal.Visible = true;
+		if (GetNodeOrNull<Control>("Panel") is { } panel) panel.Visible = !scroll;
+		if (Scroll is { } s) s.Visible = scroll;
 	}
-
 
 	// Keep the short binding beat large; longer data cards wrap above the footer without truncation.
 	private void ApplyText()

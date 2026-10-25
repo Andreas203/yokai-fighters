@@ -64,9 +64,6 @@ public partial class FightHud : CanvasLayer
 		_ready = true;
 	}
 
-	/// <summary>Placeholder until the twist data lands (YOK-90); the strip shows for every elder fight.</summary>
-	public const string TwistPlaceholder = "This elder fights with a twist.";
-
 	private CopyTalisman _copyTalisman = null!;
 	private Control _twistStrip = null!;
 	private Label _twistKicker = null!, _twistText = null!;
@@ -114,7 +111,8 @@ public partial class FightHud : CanvasLayer
 		else _copyTalisman.Reset();
 		var copy = run?.Copy;
 		bool tanuki = (run?.InTanukiFight ?? false) && copy != null; // nothing locked = nothing to say (the strip stays hidden)
-		bool hasStrip = tanuki || (!(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false));
+		string elderLine = !tanuki && !(run?.InTanukiFight ?? false) && (run?.ElderFight ?? false) ? ElderLine() : "";
+		bool hasStrip = tanuki || elderLine.Length > 0; // an elder whose twist has no label card in the story data shows no strip: never an invented line
 		// YOK-121: the strip is a reminder shown for the first TwistStripTicks of unpaused fight time. Match.Tick only
 		// advances in the sim step, so a pause freezes the timer and a reset/restart/new fight (Tick 0) shows it again.
 		int tick = _match?.Tick ?? 0;
@@ -123,16 +121,22 @@ public partial class FightHud : CanvasLayer
 		if (tanuki)
 		{
 			_twistKicker.Text = "THE TANUKI COPIES";
-			_twistText.Text = $"{copy!.Data.Name} at Lv {copy.MoveLevel}, no modifiers"; // T4
+			_twistText.Text = CopyLine(copy!);
 		}
 		else
 		{
 			_twistKicker.Text = "ELDER TWIST";
-			_twistText.Text = ElderLine();
+			_twistText.Text = elderLine;
 		}
 		FitStripText();
 		ShowCalloutNow(tick);
 	}
+
+	/// <summary>
+	/// H1/H2 F, T4: "Foxfire · Lv 3 · no modifiers, no evolution". The level is Ryo's (<see cref="CopyTarget.Level"/>, as on the
+	/// talisman); the words say the copy never gets the modifier or the Lv 3 evolution (it runs <see cref="CopyTarget.MoveLevel"/>).
+	/// </summary>
+	public static string CopyLine(CopyTarget copy) => $"{copy.Data.Name} · Lv {copy.Level} · no modifiers, no evolution";
 
 	// A longer twist line shrinks (down to 26 px, 17 px at 720p) instead of clipping: it must stay whole and readable (V1).
 	private void FitStripText()
@@ -152,11 +156,11 @@ public partial class FightHud : CanvasLayer
 	private float _fitRoom;
 
 	// YOK-139 (Y3): the strip's line is the fighting elder's twist (Match.P2.Twist = FightScene.Twist) worded by story data
-	// through TwistCopy; with no twist on P2 (a stub fight, no twist data) the generic placeholder stays.
+	// through TwistCopy; with no twist on P2 (a stub fight) or no label card in the data there is no line, so no strip.
 	private string? _lineTwistId, _lineText;
 	private string ElderLine()
 	{
-		if (_match?.P2.Twist is not { } twist) return TwistPlaceholder;
+		if (_match?.P2.Twist is not { } twist) return "";
 		if (_lineTwistId != twist.Id || _lineText == null)
 		{
 			_lineTwistId = twist.Id;

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Godot;
+using YokaiFighters.Dev;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
 using YokaiFighters.Story;
@@ -18,11 +19,26 @@ public static class TwistUiTests
 		new(cards.Select(c => new StoryCardData(c.Id, null, c.Text, Array.Empty<string>(), "")));
 
 	[Test]
-	public static void Copy_NullIds_GiveMarkedPlaceholders()
+	public static void Copy_MissingCards_AreFlaggedAndEmpty_NoInventedWording()
 	{
 		var t = Twist();
 		foreach (var line in new[] { TwistCopy.Intro(t, Lib()), TwistCopy.Callout(t, Lib()), TwistCopy.Label(t, Lib()), TwistCopy.Label(t, null) })
-			Assert.True(line.Placeholder && line.Text.StartsWith(TwistCopy.PlaceholderMark), "placeholder is marked: " + line.Text);
+			Assert.True(line.Placeholder && line.Text.Length == 0, "a missing card is flagged and empty, never a stand-in: " + line.Text);
+	}
+
+	// YOK-109: the three wording cards of every shipped twist exist, so no screen ever has to show a stand-in.
+	[Test]
+	public static void EveryShippedTwist_HasIntroCalloutAndLabelCards()
+	{
+		var story = TwistCopy.Story!;
+		Assert.True(story != null && FightScene.Twists.All.Any(), "story data and twists load");
+		foreach (var tw in FightScene.Twists.All)
+		{
+			Assert.True(!TwistCopy.Intro(tw, story).Placeholder, $"{tw.Id}: intro card");
+			Assert.True(!TwistCopy.Callout(tw, story).Placeholder, $"{tw.Id}: callout card");
+			Assert.True(!TwistCopy.Label(tw, story).Placeholder, $"{tw.Id}: label card");
+			Assert.True(TwistCopy.IntroSpeaker(tw, story) is { Length: > 0 }, $"{tw.Id}: the intro card names the elder (the scroll's title)");
+		}
 	}
 
 	[Test]
@@ -35,7 +51,7 @@ public static class TwistUiTests
 		Assert.True(!TwistCopy.Callout(t, lib).Placeholder, "real text is not a placeholder");
 		Assert.Equal("LABEL", TwistCopy.Label(t, lib).Text, "<twist-id>-label card (YOK-138)");
 		Assert.Equal("KEYED", TwistCopy.Label(t, Lib(("twist-elder-oni-armour", "KEYED"), ("elder-oni-armour-label", "LABEL"))).Text, "label_key (kebab) wins");
-		Assert.True(TwistCopy.Intro(Twist(intro: "missing"), lib).Placeholder, "an id with no card falls back to the placeholder");
+		Assert.True(TwistCopy.Intro(Twist(intro: "missing"), lib).Placeholder, "an id with no card is flagged missing");
 	}
 
 	[Test]
@@ -118,13 +134,109 @@ public static class TwistUiTests
 			Assert.True(!hud.TwistCalloutVisible, "cleared");
 			TwistCopy.Story = Lib();
 			hud.Refresh(m);
-			// strip text is cached per twist id for the fight; a new HUD sees the placeholder
+			// strip text is cached per twist id for the fight; a new HUD with no label card shows no strip and no invented line
 			var hud2 = Hud(host);
 			hud2.RunView = new ElderView();
 			hud2.Refresh(m);
-			Assert.True(hud2.TwistLine.StartsWith(TwistCopy.PlaceholderMark), "no card: marked placeholder");
+			Assert.True(!hud2.TwistStripVisible && hud2.TwistLine.Length == 0, "no card: no strip, no stand-in text");
 			hud2.Free();
 		}
 		finally { TwistCopy.Story = null; hud.Free(); }
+	}
+
+	// ---- YOK-109: the intro card as a hanging scroll (E1), wording from story data ----
+
+	static StoryCard Card(Node host)
+	{
+		var card = GD.Load<PackedScene>("res://scenes/ui/story_card.tscn").Instantiate<StoryCard>();
+		host.AddChild(card);
+		return card;
+	}
+
+	[Test]
+	public static void IntroScroll_ShowsEveryE1Element_AndAPlainCardHidesIt(Node host)
+	{
+		var card = Card(host);
+		card.Display("The quote.", "ELDER TWIST · ROW 5", "twist-reflect", "E", "Nine-Tailed Kitsune", "Reflects a special used twice in a row", FightHud.PortraitPath("kitsune"));
+		var scroll = card.Scroll!;
+		Assert.True(scroll.Visible && !card.GetNode<Control>("Panel").Visible, "the scroll replaces the plain paper");
+		Assert.Equal("ELDER TWIST · ROW 5", scroll.Kicker, "kicker");
+		Assert.Equal("Nine-Tailed Kitsune", scroll.TitleText, "elder name as the title");
+		Assert.Equal("The quote.", scroll.Quote, "intro quote");
+		Assert.Equal("Reflects a special used twice in a row", scroll.RuleText, "red rule line");
+		Assert.Equal("twist-reflect", scroll.StampIcon, "the stamp is the twist's icon id (the map's seal)");
+		Assert.True(scroll.HasPortrait, "the Kitsune has portrait art (the full mask)");
+		Assert.True(scroll.Footer.ChipTexts().Length == 1, "one key chip: confirm / Continue");
+		card.Display("plain");
+		Assert.True(!scroll.Visible && card.GetNode<Control>("Panel").Visible, "a plain story card shows the paper, not the scroll");
+		card.QueueFree();
+	}
+
+	[Test]
+	public static void IntroScroll_NoPortraitArt_LeavesTheSpaceOut(Node host)
+	{
+		var card = Card(host);
+		var scroll = card.Scroll!;
+		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "Armour on every special", FightHud.PortraitPath("oni"));
+		Assert.True(!scroll.HasPortrait && scroll.TextColumn.Position.X == TwistScroll.ColumnLeftAlone && scroll.TextColumn.Size.X == TwistScroll.ColumnWidthAlone, "no Oni art: no box, the text column takes the space");
+		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", null, null);
+		Assert.True(!scroll.HasPortrait, "a null path leaves it out too");
+		Assert.True(!scroll.GetNode<Control>("TextCol/Rule").Visible && !scroll.GetNode<Control>("TextCol/RuleLine").Visible, "no label, no rule line");
+		card.Display("q", "ELDER TWIST · ROW 5", "twist-reflect", "E", "Nine-Tailed Kitsune", "r", FightHud.PortraitPath("kitsune"));
+		Assert.True(scroll.HasPortrait && scroll.TextColumn.Position.X == TwistScroll.ColumnLeftWithPortrait, "back with art: the portrait and the narrow column");
+		card.QueueFree();
+	}
+
+	[Test]
+	public static void IntroScroll_ShippedTwists_FitTheirScroll(Node host)
+	{
+		var card = Card(host);
+		var story = TwistCopy.Story!;
+		foreach (var tw in FightScene.Twists.All)
+		{
+			card.Display(TwistCopy.Intro(tw, story, "x").Text, "ELDER TWIST · ROW 8", tw.Icon, "E", TwistCopy.IntroSpeaker(tw, story), TwistCopy.Label(tw, story, "x").Text, null);
+			Assert.True(card.Scroll!.TextFits, $"{tw.Id}: title on one line, quote inside its box (title {card.Scroll.TitleFontSize}px, quote {card.Scroll.QuoteFontSize}px)");
+			Assert.True(card.Scroll.QuoteFontSize >= TwistScroll.QuoteSizeMin && card.Scroll.TitleFontSize >= TwistScroll.TitleSizeMin, $"{tw.Id}: never below the floor");
+		}
+		card.QueueFree();
+	}
+
+	static void AtElder(Node host, string yokai, Action<FightScene, FightHud> body)
+	{
+		var jump = DevJump.BuildFight(new DevFightSetup(yokai, Elder: true, Seed: 11), FightScene.LoadAbilityPool());
+		Assert.True(jump.Session.Enter(jump.NodeId).Ok, "node entered");
+		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		scene.ExternalDrive = true;
+		scene.Session = jump.Session;
+		scene.FirstMeeting = true;
+		host.AddChild(scene);
+		try { body(scene, scene.GetNode<FightHud>("Hud")); }
+		finally { scene.QueueFree(); }
+	}
+
+	[Test]
+	public static void ElderFight_ShowsTheStoryDataOnCardCalloutAndStrip_NoPlaceholders(Node host)
+	{
+		foreach (string yokai in new[] { "kitsune", "oni", "kappa" })
+			AtElder(host, yokai, (s, hud) =>
+			{
+				var tw = s.Twist!;
+				var story = TwistCopy.Story!;
+				var scroll = s.TwistCard!.Scroll!;
+				Assert.True(s.TwistCard.Showing && scroll.Visible, $"{yokai}: the intro card is up");
+				Assert.Equal(TwistCopy.Intro(tw, story, s.OpponentName).Text, scroll.Quote, $"{yokai}: quote = the -intro card");
+				Assert.Equal(TwistCopy.IntroSpeaker(tw, story), scroll.TitleText, $"{yokai}: title = the intro card's speaker");
+				Assert.Equal(TwistCopy.Label(tw, story, s.OpponentName).Text, scroll.RuleText, $"{yokai}: red rule line = the -label card");
+				Assert.Equal(tw.Icon, scroll.StampIcon, $"{yokai}: one icon per twist, the map's");
+				Assert.True(scroll.Kicker.StartsWith("ELDER TWIST · ROW "), $"{yokai}: kicker");
+				Assert.Equal(yokai == "kitsune", scroll.HasPortrait, $"{yokai}: portrait only where approved art exists (the Kitsune's full mask)");
+				s.TwistCard.Continue();
+				Assert.True(hud.TwistCalloutVisible, $"{yokai}: first meeting shows the callout");
+				Assert.Equal(TwistCopy.Callout(tw, story, s.OpponentName).Text, hud.TwistCalloutText, $"{yokai}: callout = the -callout card");
+				hud.Refresh(s.Match);
+				Assert.Equal(TwistCopy.Label(tw, story, s.OpponentName).Text, hud.TwistLine, $"{yokai}: strip = the -label card");
+				foreach (string text in new[] { scroll.Quote, scroll.RuleText, hud.TwistCalloutText, hud.TwistLine })
+					Assert.True(text.Length > 0 && !text.Contains("PLACEHOLDER"), $"{yokai}: no placeholder wording: {text}");
+			});
 	}
 }

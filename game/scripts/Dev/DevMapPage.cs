@@ -118,8 +118,8 @@ public partial class DevMapPage : VBoxContainer
 			: session.Map.IsVisited(n.Id) ? " · cleared" : "";
 		string name = n.Label ?? n.Yokai ?? n.Id;
 		if (!DevMap.RevealAll) return $"Row {n.Row} · {name}{state}";
-		// Y3: the twist itself is data still to come (YOK-90); the fight shows the same placeholder line.
-		string twist = n.Elder ? $" · ELDER TWIST: {FightHud.TwistPlaceholder}" : "";
+		// Y3: the elder's twist, worded by the same story card the fight's strip shows (nothing when the data has none).
+		string twist = n.Elder && FightScene.Twists.ForNode(n) is { } t && TwistCopy.Label(t, TwistCopy.Story, n.Yokai) is { Placeholder: false } label ? $" · ELDER TWIST: {label.Text}" : "";
 		return $"Row {n.Row} · {name} · {n.Type}{(n.Yokai is { } y ? $" ({y})" : "")}{twist}{state}";
 	}
 

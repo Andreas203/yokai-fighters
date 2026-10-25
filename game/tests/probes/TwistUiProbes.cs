@@ -228,7 +228,7 @@ public static class TwistUiProbes
 		stage.QueueFree();
 	}
 
-	// Null card ids: every line a marked placeholder, none empty or throwing, also for an unnamed elder.
+	// Null card ids: every line flagged missing and empty (no invented wording), none throwing, also for an unnamed elder.
 	[Test]
 	public static void TwistWithNullCardIds_AllLinesMarkedPlaceholder_AndNullIconSafe(Node host)
 	{
@@ -236,7 +236,7 @@ public static class TwistUiProbes
 		{
 			var t = new ElderTwist("id", "no-such-elder", effect, 0, 0, "", null, null, null);
 			foreach (var line in new[] { TwistCopy.Intro(t, TwistCopy.Story), TwistCopy.Callout(t, TwistCopy.Story, null), TwistCopy.Label(t, TwistCopy.Story, "") })
-				Assert.True(line.Placeholder && line.Text.Length > TwistCopy.PlaceholderMark.Length, $"{effect}: '{line.Text}'");
+				Assert.True(line.Placeholder && line.Text.Length == 0, $"{effect}: '{line.Text}'");
 		}
 		var card = GD.Load<PackedScene>("res://scenes/ui/story_card.tscn").Instantiate<StoryCard>();
 		host.AddChild(card);
