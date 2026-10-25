@@ -732,7 +732,7 @@ It runs on two kinds of content with the same loop:
 | 3. Before and after, one example per violation class | [Tone](#example-1-tone), [vocabulary and lore](#example-2-vocabulary-and-lore), [form and length](#example-3-form-and-length) | [Look](#visual-example-1-look), [palette and lore](#visual-example-2-palette-and-lore), [spec form](#visual-example-3-spec-form) |
 | 4. Pipeline connection | [Where it fits](#where-it-fits) (one sentence for both) | |
 
-Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 31 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples), [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game) and [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops).
+Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 34 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples), [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game), [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops) and [`runs/visual-v2/trace.md`](tools/style_agent/runs/visual-v2/trace.md) (backdrop example 1 rerun with the keep rule).
 
 ### Part 1: story cards
 
@@ -964,7 +964,7 @@ The same Generator → Evaluator → Refiner loop, on the game's generated art. 
 | Measured by code | characters, sentences, placeholders, listed words | **pixels** ([`image_tools.py`](tools/style_agent/image_tools.py)): aspect ratio, a flat band of one colour on opposite edges (a letterbox or frame), each dominant colour's distance from the nearest palette hex, flatness, edge strength of the lower third against the rest, neon share |
 | Evaluator | opus reads the text | opus **sees two images**: the accepted grove backdrop as REFERENCE, then the take |
 | Refiner | rewrites the card | rewrites the **prompt**; the pipeline wraps it in style.md's style block and negative block, as every asset prompt must start and end |
-| Stops at | 10/10 with no code flag, or 4 evaluations | 10/10 with no flag, 3 takes per asset, or the **9-take image budget** you approved (enforced in code, counting every take in the run folder) |
+| Stops at | 10/10 with no code flag, or 4 evaluations | 10/10 with no flag, 3 takes per asset, or the **image budget** the designer approved (`--max-images`, enforced in code, counting every take the run folder has paid for) |
 | Output | the last text | the **best take**: a rewrite can overshoot, so each new rewrite starts from the best take so far |
 
 The Evaluator and the Refiner are told only the asset slot, for example "Stage backdrop S1 for the Oni's stage: a snowbound mountain shrine gate". They never see the sabotaged brief.
@@ -973,9 +973,9 @@ The Evaluator and the Refiner are told only the asset slot, for example "Stage b
 
 **Brief given to Astra:** right place, right format, wrong look: "a photorealistic cinematic render like a AAA game screenshot: ray-traced glossy ice, volumetric god rays, deep dramatic cast shadows, film grain..."
 
-| Before: take 1, 1/10 | After: take 2, 9/10 |
+| Before: take 1, 1/10 | After: rerun with the keep rule, take 3, 10/10 |
 |---|---|
-| ![Oni shrine gate, photographic take](tools/style_agent/runs/visual/images/visual-1-look-take1.png) | ![Oni shrine gate, cel-shaded take](tools/style_agent/runs/visual/images/visual-1-look-take2.png) |
+| ![Oni shrine gate, photographic take](tools/style_agent/runs/visual/images/visual-1-look-take1.png) | ![Oni shrine gate, cel-shaded take at 10/10](tools/style_agent/runs/visual-v2/images/visual-1-look-take3.png) |
 
 ```
 SCORE: 1/10
@@ -986,11 +986,18 @@ REASON: [L1][L3] Photographic, PBR-detailed render with painterly texture, volum
 [L4] No match to the bamboo grove reference in outline weight, flatness or detail level; it reads as a different game (-1)
 ```
 ```
-SCORE: 9/10
-REASON: [L4] Busier than the bamboo-grove REFERENCE. The snow-clumped pine boughs on both edges, the layered forested ridges and the snow-capped rocks at the gate's base add noticeably more small shapes and line work than the reference's simple flat bamboo stalks (-1).
+SCORE: 10/10
+REASON: Look: the toon-shaded cel art uses 2-3 tone steps and an even, clean ink outline. The surfaces are matte with no cast shadows, gloss or bloom, and the lantern windows are flat orange fills. [...] Palette and lore: 87% of pixels sit near the palette [...]. The scene is the Oni's stage: a snowbound mountain shrine gate at blue dusk, with a shrine-red torii, a straw rope, snow-laden pines and indigo ridges. [...] Spec form: the image is 1280x720 (16:9) and full-bleed. [...] The lower third is empty, calm snow, measuring 11.4 for edge strength against 20.4 above.
 ```
 
-The look is fixed in one rewrite: flat cel colour, ink outlines, blue dusk, a quiet lower third, and the gate, straw rope and snowy pines kept. Take 3 tried to win the last point by stripping detail, overshot to heavy outlines and scored 8, so the loop kept take 2.
+Example 1 ran twice, each time with the same take 1 and two refinements, and only the Refiner prompt changed between them:
+
+| Run | Take 1 | Take 2 | Take 3 | Kept |
+|---|---|---|---|---|
+| First run ([`runs/visual`](tools/style_agent/runs/visual/trace.md)), no keep rule | 1 | 9 | 8: stripped the scene to win one point, overshot to heavy outlines | take 2, 9/10 |
+| Rerun ([`runs/visual-v2`](tools/style_agent/runs/visual-v2/trace.md)), with the keep rule | 1 (reused) | 8: two L4 points, more detail and heavier outlines than the reference | 10: changed only what the REASON named | take 3, 10/10 |
+
+The look is fixed in the first rewrite both times: flat cel colour, ink outlines, blue dusk and a quiet lower third, with the gate, straw rope and snowy pines kept. The keep rule ("change only what the REASON criticises... by the smallest change that removes it") made the last step settle instead of overshooting. One thing for Asset Smith: the spec puts the gate "in the centre-right distance", and this take centres it large. No rule in the guide covers position, so the Evaluator couldn't see it.
 
 #### Visual example 2: palette and lore
 
@@ -1042,8 +1049,9 @@ Code flagged take 1 before the Evaluator saw it (`aspect ratio 1.0 (1254x1254), 
 
 #### What the visual run taught
 
-- **Two of three backdrops stopped short of 10.** Both were held back by L4, a soft "match the reference" rule, after every hard break was fixed. With 3 takes per asset, the loop ran out of budget before it could settle that last point. The scores report this as it is: 9/10 and 8/10.
-- **The Refiner overcorrected.** Take 3 of the shrine gate stripped the scene to win one point and lost another. The story Refiner's prompt says "keep anything the REASON did not criticise"; the visual Refiner's prompt doesn't, and that's the next change. Adding it now would change the recorded calls and need new takes beyond the approved 9. The loop now keeps its best take and refines from it, which bounds the damage.
+- **In the first run, two of three backdrops stopped short of 10.** Both were held back by L4, a soft "match the reference" rule, after every hard break was fixed. The palette-and-lore example still stands at 8/10.
+- **The Refiner overcorrected, and a keep rule fixed it.** In the first run, take 3 of the shrine gate stripped the scene to win one point and lost another. The story Refiner's prompt always said "keep anything the REASON did not criticise"; the visual Refiner's prompt didn't. I added the rule (`KEEP_RULE` in [`visual_agents.py`](tools/style_agent/visual_agents.py)), and the designer approved 3 more takes to rerun example 1. The rerun reached 10/10. The first run still replays with `--refiner-v1`. The loop also keeps its best take and refines from it, which bounds any overshoot.
+- **One of those 3 takes was lost to a test bug.** A unit test for the take-reuse code used the wrong cache key, missed the recorded take and called real Astra. It made one image and failed nothing, so it went unnoticed until the tests took 30 seconds instead of under one. The rerun used the 2 takes left, the same number of refinements the first run had. Tests can no longer call Astra: the test module turns live calls off (`Astra.allow_live`), and a test checks that.
 - **Two measurement faults, both fixed with tests:**
   - The first letterbox check flagged a flat sky over flat snow as a frame. A letterbox or frame is now a band of the *same* colour on opposite edges.
   - Codex's sandbox refused to copy the first image into a temp folder. Takes are now collected from Codex's own image store, and the first take was recovered there rather than paid for twice.
@@ -1056,12 +1064,13 @@ python tools/style_agent/run.py demo --replay     # the three examples from the 
 python tools/style_agent/run.py audit --replay    # the audit of data/story/
 python tools/style_agent/run.py demo              # live: needs the claude CLI, logged in
 python tools/style_agent/run.py guide             # print the style guide the agents read
-python tools/style_agent/run.py visual --replay   # the three backdrops from the recorded takes and calls (needs Pillow)
+python tools/style_agent/run.py visual --replay --refiner-v1                               # first run: three backdrops (needs Pillow)
+python tools/style_agent/run.py visual --replay --run visual-v2 --only visual-1-look --max-images 2   # the example 1 rerun
 python tools/style_agent/run.py visual-guide      # print the visual style guide
 python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v
 ```
 
-Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above; the visual Evaluator gets its two images in the same call, with tools still off. A live `visual` run spends Astra takes, so it needs the designer's approval of the budget first; the recorded run used all 9 approved.
+Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above; the visual Evaluator gets its two images in the same call, with tools still off. A live `visual` run spends Astra takes, so it needs the designer's approval of the budget first. The first run used all 9 approved takes. The rerun's 3 approved takes went 2 to the run and 1 to the test bug above.
 
 ### Where it fits
 

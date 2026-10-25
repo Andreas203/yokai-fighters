@@ -7,7 +7,9 @@
     "refiner_model": "sonnet",
     "target": 10,
     "max_rounds": 3,
-    "max_images": 9
+    "max_images": 9,
+    "refiner": "v1, no keep rule",
+    "seeded_from": null
   },
   "results": [
     {
