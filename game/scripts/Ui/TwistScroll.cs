@@ -17,12 +17,15 @@ public partial class TwistScroll : Control
 
 	/// <summary>Frame geometry in this node's own coordinates: the peg sits in the head room above the top rod.</summary>
 	public const float RodTop = 90f, RodHeight = 24f, KnobExtra = 8f, KnobWidth = 30f;
-	public static readonly Rect2 RiceInset = new(84, 140, 1332, 424);
+	public static readonly Rect2 RiceInset = new(84, 140, 1332, 474);
 	/// <summary>Text column: left edge and width with a portrait, and without one (the portrait's space is left out).</summary>
 	public const float ColumnLeftWithPortrait = 400f, ColumnWidthWithPortrait = 830f, ColumnLeftAlone = 150f, ColumnWidthAlone = 1080f;
 	public const int TitleSize = 72, TitleSizeMin = 44, QuoteSize = 34, QuoteSizeMin = 28, LineSize = 30, LineSizeMin = 22;
-	/// <summary>The quote's box (scene: Quote offsets 310 to 440): fixed, because a Label grows to its text and would always "fit" itself.</summary>
-	public const float QuoteBoxHeight = 130f;
+	/// <summary>
+	/// The quote's box (scene: Quote offsets 310 to 490): fixed, because a Label grows to its text and would always "fit" itself.
+	/// 180 px holds a schema-legal 280-character quote (story-card text maxLength) whole at the 28 px floor, with or without a portrait.
+	/// </summary>
+	public const float QuoteBoxHeight = 180f, QuoteTop = 310f, RuleGap = 12f;
 
 	Label _kicker = null!, _title = null!, _quote = null!, _rule = null!;
 	Control _textCol = null!, _portrait = null!, _ruleLine = null!;
@@ -31,6 +34,7 @@ public partial class TwistScroll : Control
 	KeyChipFooter _footer = null!;
 	StyleBox? _rice;
 	bool _built;
+	bool _quoteTrimmed;
 
 	public string Kicker => _kicker.Text;
 	public string TitleText => _title.Text;
@@ -44,7 +48,11 @@ public partial class TwistScroll : Control
 	public KeyChipFooter Footer => _footer;
 
 	/// <summary>True when the title is on one line inside the column and the quote fits its box at its current size (V1: nothing clipped, nothing off the paper).</summary>
+	/// <summary>True when the quote still overflowed at its floor and was shortened with an ellipsis (beyond the schema limit; <see cref="GD.PushWarning(string)"/> is raised).</summary>
+	public bool QuoteTrimmed => _quoteTrimmed;
+
 	public bool TextFits =>
+		!_quoteTrimmed &&
 		OneLineWidth(_title, TitleFontSize) <= _textCol.Size.X &&
 		OneLineWidth(_kicker, _kicker.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
 		OneLineWidth(_rule, _rule.GetThemeFontSize("font_size")) <= _textCol.Size.X &&
@@ -119,6 +127,34 @@ public partial class TwistScroll : Control
 		int qs = QuoteSize;
 		while (qs > QuoteSizeMin && QuoteHeight(qs) > QuoteBoxHeight) qs--;
 		_quote.AddThemeFontSizeOverride("font_size", qs);
+		_quoteTrimmed = false;
+		if (QuoteHeight(qs) > QuoteBoxHeight) TrimQuote(qs); // never cut silently: an ellipsis and a warning
+		PlaceRule(Mathf.Min(QuoteHeight(qs), QuoteBoxHeight));
+	}
+
+	/// <summary>Safety net past the schema limit: keep as many whole text elements as fit with a trailing ellipsis.</summary>
+	void TrimQuote(int size)
+	{
+		string full = _quote.Text;
+		int[] cuts = TextCuts.Cuts(full); // cut only between text elements (YOK-162)
+		int lo = 0, hi = cuts.Length - 1; // largest k whose first cuts[k] characters plus "…" fit
+		while (lo < hi)
+		{
+			int mid = (lo + hi + 1) / 2;
+			_quote.Text = full[..cuts[mid]].TrimEnd() + "…";
+			if (QuoteHeight(size) <= QuoteBoxHeight) lo = mid; else hi = mid - 1;
+		}
+		_quote.Text = full[..cuts[lo]].TrimEnd() + "…";
+		_quoteTrimmed = true;
+		GD.PushWarning($"TwistScroll: quote of {full.Length} characters does not fit the scroll at {size} px; shown shortened with an ellipsis (story-card text is limited to 280).");
+	}
+
+	/// <summary>The red rule line and its label sit just under the quote text (the footer stays at the bottom of the paper).</summary>
+	void PlaceRule(float quoteHeight)
+	{
+		float y = QuoteTop + quoteHeight + RuleGap;
+		_ruleLine.Position = new Vector2(_ruleLine.Position.X, y);
+		_rule.Position = new Vector2(_rule.Position.X, y + 4f);
 	}
 
 	static void Shrink(Label l, int size, int floor, float width)

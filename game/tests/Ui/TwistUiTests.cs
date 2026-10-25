@@ -201,6 +201,58 @@ public static class TwistUiTests
 		card.QueueFree();
 	}
 
+	// The card schema allows 280 characters of text (S2): such a quote must show whole, with or without a portrait; past that it is
+	// shortened with an ellipsis and flagged, never cut silently (YOK-109 round 2).
+	static string Words(int chars)
+	{
+		const string seed = "The old fox watched the apprentice climb the shrine steps and said nothing. Every tail he had lost was a promise kept, and Ryo would learn what that cost before the lanterns burned out. ";
+		return string.Concat(Enumerable.Repeat(seed, 4))[..chars].TrimEnd();
+	}
+
+	static float QuoteNeeds(TwistScroll s)
+	{
+		var q = s.GetNode<Label>("TextCol/Quote");
+		return q.GetThemeFont("font").GetMultilineStringSize(q.Text, HorizontalAlignment.Left, s.TextColumn.Size.X, s.QuoteFontSize).Y;
+	}
+
+	[Test]
+	public static void IntroScroll_280CharacterQuote_ShowsWhole_WithAndWithoutPortrait(Node host)
+	{
+		var card = Card(host);
+		foreach (bool portrait in new[] { true, false })
+			foreach (int chars in new[] { 150, 180, 230, 280 })
+			{
+				string quote = Words(chars);
+				card.Display(quote, "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "Armour on every special", portrait ? FightHud.PortraitPath("kitsune") : null);
+				var s = card.Scroll!;
+				string where = $"{chars} chars, {(portrait ? "with" : "without")} portrait";
+				Assert.Equal(quote, s.Quote, $"{where}: every character is there");
+				Assert.True(QuoteNeeds(s) <= TwistScroll.QuoteBoxHeight, $"{where}: needs {QuoteNeeds(s)} px at {s.QuoteFontSize} px, box is {TwistScroll.QuoteBoxHeight}");
+				Assert.True(s.TextFits && !s.QuoteTrimmed, $"{where}: reported as fitting");
+				var line = s.GetNode<Control>("TextCol/RuleLine");
+				var footer = s.GetNode<Control>("TextCol/Footer");
+				Assert.True(line.Position.Y >= TwistScroll.QuoteTop + QuoteNeeds(s) && s.GetNode<Control>("TextCol/Rule").Position.Y + 40f <= footer.Position.Y, $"{where}: rule line under the quote and above the key chip");
+				Assert.True(footer.Position.Y + footer.Size.Y <= TwistScroll.RiceInset.End.Y, $"{where}: key chip inside the paper");
+			}
+		card.QueueFree();
+	}
+
+	[Test]
+	public static void IntroScroll_QuotePastTheSchemaLimit_IsShortenedWithAnEllipsis_NeverCutSilently(Node host)
+	{
+		var card = Card(host);
+		string quote = Words(700);
+		card.Display(quote, "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "r", null);
+		var s = card.Scroll!;
+		Assert.True(s.QuoteTrimmed && !s.TextFits, "flagged as shortened");
+		Assert.True(s.Quote.EndsWith("…") && s.Quote.Length < quote.Length, "ends in an ellipsis");
+		Assert.True(QuoteNeeds(s) <= TwistScroll.QuoteBoxHeight, "what is shown fits the box");
+		Assert.Equal(quote, card.Text, "the card's own text is untouched");
+		card.Display("Short.", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "r", null);
+		Assert.True(!s.QuoteTrimmed && s.TextFits && s.Quote == "Short.", "a later short quote clears the flag and the ellipsis");
+		card.QueueFree();
+	}
+
 	static void AtElder(Node host, string yokai, Action<FightScene, FightHud> body)
 	{
 		var jump = DevJump.BuildFight(new DevFightSetup(yokai, Elder: true, Seed: 11), FightScene.LoadAbilityPool());
