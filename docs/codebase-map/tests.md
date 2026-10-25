@@ -23,7 +23,7 @@ dotnet build
 | `tests/run_harness.tscn` | `RunHarnessMain.cs` | Whole-run bot batch, see [harness.md](harness.md). |
 | `tests/ai_harness.tscn` | `AiHarnessMain.cs` | `-- [--profile id] [--p1 thrower\|jumper\|random\|idle] [--reaction N] [--seed N] [--ticks N] [--sweep] [--trace]` → `harness/results/ai/` (git-ignored). |
 | `tests/replay.tscn` | `ReplayMain.cs` | `-- --replay <file.yfr\|folder\|user://replays>`: OK/FAIL per file, exit 0/1. |
-| `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
+| `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, elder_reward (YOK-186: rare cancel-rule and rare-special cards), rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
 | `tests/bone_probe.tscn` | `BoneProbe.cs` | Prints a rig's bones (`-- out=<f> meshy`). |
 
 ## Fixtures (`tests/fixtures/`)
