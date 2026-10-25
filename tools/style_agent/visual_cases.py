@@ -6,6 +6,8 @@ Refiner get only the slot, so the loop has to find the damage in the picture its
 """
 from __future__ import annotations
 
+# The spec paths below are as the recorded run saw them; #236 later moved the specs to assets/specs/stages/.
+# They are prompt text, so changing them would break --replay of runs/visual and cost new Astra takes.
 SLOTS = {
     "oni-shrine-gate": {
         "asset": "Stage backdrop S1 for the Oni's stage (YOK-150, assets/specs/snowbound-shrine-gate.md)",

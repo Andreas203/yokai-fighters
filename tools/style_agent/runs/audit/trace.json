@@ -156,7 +156,7 @@
     {
       "id": "lose-mid",
       "status": "proposed",
-      "text": "{yokai} bows, a little too politely, and the lanterns blow out one by one. Ryo wakes with his talismans blank and his pride very much not.",
+      "text": "{yokai} turns away, a little too politely, and the lanterns blow out one by one. Ryo wakes with his pride in pieces and his excuses already half-written.",
       "slot": {
         "card": "Story card",
         "trigger": "Later loss (not the first), Ryo knocked out on rows 4-6",
@@ -165,8 +165,8 @@
         "max_chars": 280,
         "data_file": "data/story/lose-mid.json"
       },
-      "score": 8,
-      "reason": "[V5] \"{yokai} bows, a little too politely\": bowing is the Kappa's trait, but {yokai} can also be the Kitsune or the Oni, so the voice is off for two of the three fighters (-1).\n[V7] \"his talismans blank\": this slot covers rows 4-6, and a run that reaches row 6 leaves one talisman faintly inked, so the card states a story fact that is wrong for row-6 losses (-1).",
+      "score": 9,
+      "reason": "[T6] \"his excuses already half-written\": casts Ryo as someone already making excuses for losing, which undercuts his earnest, stubborn voice; voice slightly off (-1).",
       "flags": []
     },
     {

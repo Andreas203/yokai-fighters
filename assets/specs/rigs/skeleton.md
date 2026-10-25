@@ -36,7 +36,7 @@ The same two faults should be expected on every Tripo GLB (YOK-147/148/149 and a
 | Fingers | **None.** E15 mitt hands: the 40 Tripo finger joints were removed and their weights added to `LeftHand` / `RightHand` (see "Fingers") |
 | Twist bones | None |
 | Embedded clip | None (the rig GLB carries no animation) |
-| Mesh | One mesh, 53,785 triangles, 31,156 vertices, one material (Tripo base colour JPEG). Over the 20k budget in `assets/specs/ryo-regen.md`: not decimated here, it's the designer's call |
+| Mesh | One mesh, 53,785 triangles, 31,156 vertices, one material (Tripo base colour JPEG). Over the 20k budget in `assets/specs/characters/ryo-regen.md`: not decimated here, it's the designer's call |
 
 ## Bones and hierarchy
 The skin order is the joint index order, as written by the Blender 4.1.1 glTF exporter. It is Tripo's own order with the fingers removed. Bone names are Mixamo names **without** the `mixamorig:` prefix (see "Prefix").

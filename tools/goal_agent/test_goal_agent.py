@@ -163,10 +163,10 @@ class WriterTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         (self.root / "game/scripts/Sim/Run").mkdir(parents=True)
         (self.root / "game/tests").mkdir(parents=True)
-        (self.root / "docs").mkdir()
+        (self.root / "docs/codebase-map").mkdir(parents=True)
         (self.root / "game/scripts/Sim/Run/Old.cs").write_text("int a = 1;\nint b = 1;\n")
         (self.root / "game/tests/OldTests.cs").write_text("// tests\n")
-        (self.root / "docs/codebase-map.md").write_text("# Codebase map\n")
+        (self.root / "docs/codebase-map/goal-agent.md").write_text("# Codebase map\n")
         self.feature = {"id": "thing", "rules": ["R6"], "build": {"files": [
             "game/scripts/Sim/Run/Thing.cs", "game/scripts/Sim/Run/Old.cs", "game/tests/OldTests.cs"]}}
 
@@ -186,11 +186,22 @@ class WriterTest(unittest.TestCase):
         self.assertEqual(writer.check_paths(self.root, c, self.feature), [])
         snap = writer.apply(self.root, c, self.feature)
         self.assertEqual((self.root / "game/scripts/Sim/Run/Old.cs").read_text(), "int a = 2;\nint b = 3;\n")
-        self.assertIn("**`thing`** (R6): `Thing`: the heal (R6).", (self.root / "docs/codebase-map.md").read_text())
+        notes = (self.root / "docs/codebase-map/goal-agent.md").read_text()
+        self.assertIn("**`thing`** (R6): `Thing`: the heal (R6).", notes)
+        # a map row for the new script only (Old.cs is edited, OldTests.cs is not under game/scripts/)
+        self.assertIn("\n| `Sim/Run/Thing.cs` | Goal agent, `thing` (R6): `Thing`: the heal (R6). |\n", notes)
+        self.assertNotIn("Old", notes)
         writer.revert(self.root, snap)
         self.assertFalse((self.root / "game/scripts/Sim/Run/Thing.cs").exists())
         self.assertEqual((self.root / "game/scripts/Sim/Run/Old.cs").read_text(), "int a = 1;\nint b = 1;\n")
-        self.assertEqual((self.root / "docs/codebase-map.md").read_text(), "# Codebase map\n")
+        self.assertEqual((self.root / "docs/codebase-map/goal-agent.md").read_text(), "# Codebase map\n")
+
+    def test_map_row_stays_within_the_docs_check_limit(self):
+        row = writer.map_row("game/scripts/Sim/Run/Thing.cs", self.feature, "a | b " * 200)
+        self.assertLessEqual(len(row.rstrip("\n")), writer.MAP_ROW_MAX)
+        self.assertTrue(row.startswith("| `Sim/Run/Thing.cs` | Goal agent, `thing` (R6): a \\| b"))
+        self.assertTrue(row.endswith("… |\n"))
+        self.assertEqual(row.count(" | "), 1)  # the summary's pipes are escaped: one cell boundary only
 
     def test_refuses_what_it_must_not_write(self):
         cases = {

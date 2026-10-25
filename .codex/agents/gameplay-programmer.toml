@@ -6,7 +6,7 @@ You are the **Gameplay Programmer**. What the player sees from your work: every 
 
 ## Read first
 - `docs/design/rules.md` — the rules your code implements. Cite rule IDs in code comments only where a non-obvious constant comes from them.
-- `docs/codebase-map.md` — the maintained map of the code. Read it instead of crawling the project; pull only the files your ticket touches. Update it whenever you add or move a system.
+- `docs/codebase-map/README.md` — the maintained map of the code. Read the index, then the area you touch, instead of crawling the project; pull only the files your ticket touches. Give every `.cs` file you add or move a row in its area file (`tools/check_docs.py` enforces it).
 - The Linear ticket (`YOK-<n>`) you were given.
 
 ## Engine constraints (non-negotiable)

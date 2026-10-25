@@ -1,9 +1,9 @@
 # Ryo weight repair (free, scripted)
 
-Ticket: YOK-116. Owner: rig-specialist. Rules: F5, F6, G4, T0, AM5. Diagnosis: `assets/specs/ryo-regen.md` §1–2.
+Ticket: YOK-116. Owner: rig-specialist. Rules: F5, F6, G4, T0, AM5. Diagnosis: `assets/specs/characters/ryo-regen.md` §1–2.
 Designer's choice: try a free Blender weight repair on the current rig before any regeneration spend. **No Meshy, Tripo or AccuRIG job was run. 0 credits spent.**
 
-**Verdict: ACCEPT (repair reaches WARN). Swapped in on 2026-10-15 with the designer's approval, and there will be no regeneration.** `ryo-regen.md` is kept on file as not needed. `game/assets/generated/characters/ryo/ryo-rigged.glb` is now the repaired file (sha256 `38b14f62…`). The raw take-2 rig is in git history at `fe5d423`.
+**Verdict: ACCEPT (repair reaches WARN). Swapped in on 2026-10-15 with the designer's approval, and there will be no regeneration.** `characters/ryo-regen.md` is kept on file as not needed. `game/assets/generated/characters/ryo/ryo-rigged.glb` is now the repaired file (sha256 `38b14f62…`). The raw take-2 rig is in git history at `fe5d423`.
 
 ## What was done
 - Script: `tools/blender/repair_weights.py`. It runs headless and logs every step. Input is the raw take-2 rig, `ryo-rigged.glb` as of `fe5d423` (rig task `01a10e47-857e-73a0-9f7a-cd74795198fb`, sha256 `6cd871a4…`). The script never writes its input.

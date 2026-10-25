@@ -1,6 +1,6 @@
 # Astra brief: Oni, Kappa, Tanuki concept fronts and turnarounds (YOK-102)
 
-Designer decision 2026-10-16 (Option B): Astra makes the concept fronts and the turnarounds. The designer runs Astra. The sheets then feed Meshy image-to-3D (mesh jobs are approved separately, see `assets/specs/yok-102-job-list.md`). Specs with the full character notes: `assets/specs/oni.md`, `kappa.md`, `tanuki.md`.
+Designer decision 2026-10-16 (Option B): Astra makes the concept fronts and the turnarounds. The designer runs Astra. The sheets then feed Meshy image-to-3D (mesh jobs are approved separately, see `assets/specs/jobs/yok-102-job-list.md`). Specs with the full character notes: `assets/specs/characters/oni.md`, `kappa.md`, `tanuki.md`.
 
 ## Shared style block (paste at the start of every prompt)
 

@@ -196,7 +196,7 @@ The outputs are in the project itself, where the game and the next agent read th
 | Stage | Agent | Where it is |
 |---|---|---|
 | References | asset-smith | The chosen stylised references: [Ryo E](docs/design/characters/ryo/references/ryo-ref-e.png), [Kitsune D](docs/design/characters/kitsune/references/kitsune-ref-d.png) |
-| Models and stage | asset-smith | The approved job list [`assets/specs/yok-29-job-list.md`](assets/specs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](game/assets/generated/characters/); the [stage backdrop](game/assets/generated/stage/bamboo-grove/backdrop.png) |
+| Models and stage | asset-smith | The approved job list [`assets/specs/jobs/yok-29-job-list.md`](assets/specs/jobs/yok-29-job-list.md); turnarounds and rigged models in [`game/assets/generated/characters/`](game/assets/generated/characters/); the [stage backdrop](game/assets/generated/stage/bamboo-grove/backdrop.png) |
 | Retarget gate | clip-matcher | The gate report [`assets/specs/clips/retarget_gate.md`](assets/specs/clips/retarget_gate.md) and its measured stills (the [Kitsune's sleeve flare](assets/specs/clips/stills/retarget-gate/kitsune-heavy.png); the [shove substituted for the failed grab](assets/specs/clips/stills/retarget-gate/ryo-grab-2.png)) |
 | Clips | clip-matcher | [`data/clips/`](data/clips/), which movesmith reads, e.g. [`ryo-light-punch.json`](data/clips/ryo-light-punch.json) and [`kitsune-foxfire.json`](data/clips/kitsune-foxfire.json); stills in [`assets/specs/clips/stills/`](assets/specs/clips/stills/) |
 | Reward content | movesmith | Modifier files that passed rules-lawyer: [`will-o-wisp.json`](data/modifiers/will-o-wisp.json), [`fox-patience.json`](data/modifiers/fox-patience.json) |
@@ -490,7 +490,7 @@ Everything in [`tools/goal_agent/`](tools/goal_agent/) was written for this game
 | Deliverable | Where |
 |---|---|
 | Source code | [`tools/goal_agent/`](tools/goal_agent/): about 1,450 lines of Python, standard library only, plus 22 unit tests |
-| Working feature | [`game/scripts/Sim/Run/CopyRule.cs`](game/scripts/Sim/Run/CopyRule.cs), the changes to [`RunState.cs`](game/scripts/Sim/Run/RunState.cs), and [`game/tests/CopyRuleTests.cs`](game/tests/CopyRuleTests.cs) |
+| Working feature | [`game/scripts/Sim/Run/CopyRule.cs`](game/scripts/Sim/Run/CopyRule.cs), the changes to [`RunState.cs`](game/scripts/Sim/Run/RunState.cs), and [`game/tests/Sim/Run/CopyRuleTests.cs`](game/tests/Sim/Run/CopyRuleTests.cs) |
 | Feature documentation | this section |
 
 ### How the agent works
@@ -916,11 +916,13 @@ An evaluator that scores everything low proves nothing. `run.py audit` scores th
 | Score | Cards |
 |---|---|
 | 10 | the binding line, the merchant's row-4 line, Master Sōen's intro, the ending, the three elder intros, two lose cards (9) |
-| 9 | boss reveal, demo complete, first loss (3) |
-| 8 | lose-mid, win 1 (2) |
+| 9 | boss reveal, demo complete, first loss, lose-mid after its fix (4) |
+| 8 | win 1 (1) |
 | 7 | lose-late, win 2 (2) |
 
-The mean is 9.2. The fixed lines from the GDD all score 10. The lower scores are real findings, not noise. `lose-mid` says "talismans blank" on a card that covers row 6, where one stays inked (V7). `win-2` runs to three sentences; it is the GDD's own sample card, and Story.md already lists that as an open question. `lose-mid` is ticketed for Habit Writer as YOK-206, and the `win-2` length is already on the designer's queue (YOK-189). The audit only reports: it never changes the game's data itself. Reasons: [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md).
+The mean is 9.25. The fixed lines from the GDD all score 10. The lower scores are real findings, not noise. `win-2` runs to three sentences; it is the GDD's own sample card, Story.md already lists that as an open question, and it waits on the designer's queue (YOK-189).
+
+The audit's first run found a real bug. `lose-mid` scored 8/10. It covers rows 4–6 but said "Ryo wakes with his talismans blank", while a loss at row 6 leaves one talisman inked (V7), and it had `{yokai}` bow, which only the Kappa does (V5). That became ticket YOK-206. Habit Writer rewrote the card ([PR #238](https://github.com/Andreas203/yokai-fighters/pull/238)), and the audit now scores it 9/10. Both points are gone, and the one deduction left is a new soft drift in Ryo's voice ("his excuses already half-written", T6). The audit only reports: it never changes the game's data itself. Reasons: [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md).
 
 ### What went wrong first
 
@@ -940,13 +942,13 @@ The same Generator → Evaluator → Refiner loop, on the game's generated art. 
 |---|---|---|
 | **Look** | | |
 | L1 | Toon-shaded game art: flat cel colour in 2–3 tone steps, a clean ink-brush outline of even weight, simple shapes that read at 720p. | rules.md V1; style.md Style block |
-| L2 | Matte surfaces, soft even light: no cast shadows, gloss, rim light, baked AO, bloom or glowing particles. A lantern's glow is a flat orange fill, never a bloom. | style.md; [Astra brief](docs/design/characters/astra-brief.md); [lantern-riverbank.md](assets/specs/lantern-riverbank.md) |
+| L2 | Matte surfaces, soft even light: no cast shadows, gloss, rim light, baked AO, bloom or glowing particles. A lantern's glow is a flat orange fill, never a bloom. | style.md; [Astra brief](docs/design/characters/astra-brief.md); [lantern-riverbank.md](assets/specs/stages/lantern-riverbank.md) |
 | L3 | No photographic, PBR or painterly texture: no grain, brush noise, depth-of-field blur or volumetric light. The game adds its own toon shader, so baked rendering is a RETAKE. | V1; style.md Shared 3D settings |
 | L4 | Matches the accepted bamboo grove backdrop (shown to the Evaluator as REFERENCE) in outline weight, flatness and detail. | style.md Acceptance checklist 2 |
 | **Palette and lore** | | |
-| P1 | Colours from the style.md palette (indigo `#2D3A5E`, ink `#1D1B21`, persimmon `#D8632C`, rice paper `#F1E8D4`, pine `#34483B`, shrine red `#B5332B`, snow shade `#A9B4C8`, water teal `#3E7F86`...). No neon, saturated primaries, hot pink or turquoise; snow is never pure white. | V1; style.md Palette; [snowbound-shrine-gate.md](assets/specs/snowbound-shrine-gate.md) |
+| P1 | Colours from the style.md palette (indigo `#2D3A5E`, ink `#1D1B21`, persimmon `#D8632C`, rice paper `#F1E8D4`, pine `#34483B`, shrine red `#B5332B`, snow shade `#A9B4C8`, water teal `#3E7F86`...). No neon, saturated primaries, hot pink or turquoise; snow is never pure white. | V1; style.md Palette; [snowbound-shrine-gate.md](assets/specs/stages/snowbound-shrine-gate.md) |
 | P2 | Each stage shows its own place and hour: the Oni's shrine gate at blue dusk, the Kappa's river at deep indigo night with drifting paper lanterns, the Tanuki's lamplit tea house with blank paper screens, the Kitsune's bamboo grove at dusk. | rules.md V9; the three stage specs |
-| P3 | One rural Japanese province at the end of autumn: no modern objects, cities or tropical scenery; spring colour only on the tea house's season screens. | GDD §2.1; [tanuki-tea-house.md](assets/specs/tanuki-tea-house.md) |
+| P3 | One rural Japanese province at the end of autumn: no modern objects, cities or tropical scenery; spring colour only on the tea house's season screens. | GDD §2.1; [tanuki-tea-house.md](assets/specs/stages/tanuki-tea-house.md) |
 | P4 | Mischievous folklore with a melancholy edge, never horror: no skulls, blood or menacing faces. | rules.md S1 |
 | **Spec form** | | |
 | S1 | A wide 16:9 landscape, full-bleed: no border, frame, vignette or letterbox. | the stage specs' Backdrop prompts and Acceptance criteria |
