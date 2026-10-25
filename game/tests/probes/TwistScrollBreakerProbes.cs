@@ -69,8 +69,8 @@ public static class TwistScrollBreakerProbes
 
 	// ---- Fit probes. A Label with no clip/ellipsis grows its own Size to its text, so a fit check against the label's Size
 	// can never fail (the author's TextFits does exactly that). These measure against the fixed column and the quote box of
-	// the scene (twist_scroll.tscn: Quote offset_top 310 to offset_bottom 440 = 130 px). ----
-	const float QuoteBoxHeight = 130f;
+	// the scene (TwistScroll.QuoteBoxHeight, scene Quote box). ----
+	const float QuoteBoxHeight = TwistScroll.QuoteBoxHeight;
 
 	static float Width(Label l, int fontSize) => l.GetThemeFont("font").GetStringSize(l.Text, fontSize: fontSize).X;
 	static bool Contained(Label l, int fontSize, float room) => Width(l, fontSize) <= room || l.ClipText || l.TextOverrunBehavior != TextServer.OverrunBehavior.NoTrimming;
@@ -99,7 +99,7 @@ public static class TwistScrollBreakerProbes
 		card.QueueFree();
 	}
 
-	// Same claim: a ~600 character quote must fit the 130 px quote box at the 28 px floor, or be clipped inside it.
+	// Same claim: a ~600 character quote must fit the quote box at the 28 px floor, or be clipped inside it.
 	[Test]
 	public static void Scroll_VeryLongQuote_StaysInsideItsBox(Node host)
 	{
@@ -108,7 +108,7 @@ public static class TwistScrollBreakerProbes
 		var s = card.Scroll!;
 		var q = UiFind.Get<Label>(s, "Quote");
 		float h = q.GetThemeFont("font").GetMultilineStringSize(q.Text, HorizontalAlignment.Left, s.TextColumn.Size.X, s.QuoteFontSize).Y;
-		Assert.True(h <= QuoteBoxHeight || q.ClipText || q.TextOverrunBehavior != TextServer.OverrunBehavior.NoTrimming, "quote is " + h + " px tall at " + s.QuoteFontSize + " px in a " + QuoteBoxHeight + " px box (the rule line sits under it)");
+		Assert.True(h <= QuoteBoxHeight, "quote is " + h + " px tall at " + s.QuoteFontSize + " px in a " + QuoteBoxHeight + " px box (the rule line sits under it)");
 		card.QueueFree();
 	}
 
@@ -121,7 +121,7 @@ public static class TwistScrollBreakerProbes
 		var s = card.Scroll!;
 		var q = UiFind.Get<Label>(s, "Quote");
 		float h = q.GetThemeFont("font").GetMultilineStringSize(q.Text, HorizontalAlignment.Left, s.TextColumn.Size.X, s.QuoteFontSize).Y;
-		Assert.True(h <= QuoteBoxHeight || s.QuoteFontSize == TwistScroll.QuoteSizeMin, "quote is " + h + " px tall at " + s.QuoteFontSize + " px in a " + QuoteBoxHeight + " px box");
+		Assert.True(h <= QuoteBoxHeight, "quote is " + h + " px tall at " + s.QuoteFontSize + " px in a " + QuoteBoxHeight + " px box");
 		card.QueueFree();
 	}
 
