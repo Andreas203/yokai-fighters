@@ -1,0 +1,20 @@
+{
+  "kind": "elder_twist",
+  "id": "elder-oni-armour",
+  "status": "proposed",
+  "elder": "elder-oni",
+  "effect": {
+    "type": "special_armour",
+    "hits": 1
+  },
+  "label_key": "twist.elder-oni-armour",
+  "intro_card": "elder-oni-armour-intro",
+  "callout_card": "elder-oni-armour-callout",
+  "icon": "twist-armour",
+  "rules": [
+    "P5",
+    "Y2",
+    "Y3"
+  ],
+  "notes": "Y2: 'armour on every special'. Proposed: armour as the game uses it for Iron-Club Charge ('1-hit armour') and Oni's Hide: the hit's damage lands, the move is not interrupted; from frame 1 to the last active frame (recovery stays punishable); 1 hit per special is a designer question (P5 says mashing jabs to interrupt it should stop working). Intro and callout text: habit-writer."
+}

@@ -12,7 +12,7 @@ The author wants the branch accepted. You want to find the reason it should not 
 ## Read first
 - `docs/design/rules.md` — fully, every time. You reject by rule ID, as the Rules Lawyer does for content.
 - The branch's change: `git diff main...HEAD` (and `git status` for uncommitted files), or the files you were given.
-- `docs/codebase-map.md` — only the sections for the systems the change touches, to see what it must fit into.
+- `docs/codebase-map/README.md`, then only the area files for the systems the change touches, to see what it must fit into.
 - The Linear ticket (`YOK-<n>`) or the goal agent's feature entry in `tools/goal_agent/features.json`, for the rules the change says it implements.
 
 ## What to attack

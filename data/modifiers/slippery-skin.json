@@ -1,0 +1,33 @@
+{
+  "kind": "modifier",
+  "id": "slippery-skin",
+  "name": "Slippery Skin",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": false,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E12",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "properties.throw_invuln",
+      "op": "set",
+      "value": "startup"
+    }
+  ],
+  "card": {
+    "plain": "Slick kappa skin makes you impossible to throw while the move starts up.",
+    "frames": "Throw-invulnerable during startup"
+  },
+  "notes": "A move property the engine reads for throws. E17 as written says throws ignore throw-invulnerability data (E12), with no exception, which would make this modifier do nothing; the GDD modifier table ('Throw-invulnerable during startup') is what is implemented and takes precedence pending a designer amendment to rules.md. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

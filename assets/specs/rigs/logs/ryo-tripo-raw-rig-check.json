@@ -1,0 +1,332 @@
+{
+ "tool": "tools/blender/rig_check.py",
+ "blender": "4.1.1",
+ "rig": "game/assets/generated/characters/ryo/Ryo.glb",
+ "skeleton_file": "assets/specs/rigs/skeleton.md",
+ "bone_map": null,
+ "thresholds": {
+  "max_influences": 4,
+  "influence_epsilon": 0.0001,
+  "weight_sum_tolerance": 0.01,
+  "cross_side_min_x_m": 0.06,
+  "cross_side_blend_weight": 0.2,
+  "rest_arm_max_deg": 20.0,
+  "rest_leg_max_deg": 15.0,
+  "rest_bind_max_offset_m": 0.001,
+  "up_max_deg": 15.0,
+  "height_tolerance": 0.05,
+  "origin_max_ground_m": 0.01,
+  "origin_max_xy_m": 0.08,
+  "edge_stretch_warn": 1.8,
+  "edge_stretch_fail": 3.0,
+  "edge_squash_fail": 0.25,
+  "edge_fail_max_frac": 0.002,
+  "collapse_mean_fail": 0.75,
+  "collapse_p5_fail": 0.4,
+  "collapse_min_verts": 30,
+  "arm_leg_bleed_min_weight": 0.1
+ },
+ "armature": "Armature",
+ "meshes": [
+  "tripo_40b92fdd_882a_4f2b_b86b_eefb4f193941"
+ ],
+ "skeleton": {
+  "skeleton": "skeleton.md",
+  "rig_bones": 65,
+  "shared_bones": 25,
+  "missing": [],
+  "wrong_parent": [],
+  "extra_bones": [
+   "LeftHandIndex1",
+   "LeftHandIndex2",
+   "LeftHandIndex3",
+   "LeftHandIndex4",
+   "LeftHandMiddle1",
+   "LeftHandMiddle2",
+   "LeftHandMiddle3",
+   "LeftHandMiddle4",
+   "LeftHandPinky1",
+   "LeftHandPinky2",
+   "LeftHandPinky3",
+   "LeftHandPinky4",
+   "LeftHandRing1",
+   "LeftHandRing2",
+   "LeftHandRing3",
+   "LeftHandRing4",
+   "LeftHandThumb1",
+   "LeftHandThumb2",
+   "LeftHandThumb3",
+   "LeftHandThumb4",
+   "RightHandIndex1",
+   "RightHandIndex2",
+   "RightHandIndex3",
+   "RightHandIndex4",
+   "RightHandMiddle1",
+   "RightHandMiddle2",
+   "RightHandMiddle3",
+   "RightHandMiddle4",
+   "RightHandPinky1",
+   "RightHandPinky2",
+   "RightHandPinky3",
+   "RightHandPinky4",
+   "RightHandRing1",
+   "RightHandRing2",
+   "RightHandRing3",
+   "RightHandRing4",
+   "RightHandThumb1",
+   "RightHandThumb2",
+   "RightHandThumb3",
+   "RightHandThumb4"
+  ],
+  "skin_order_wrong": [
+   "Head: joint 39, want 19",
+   "HeadTop_End: joint 40, want 20",
+   "Neck: joint 38, want 18",
+   "RightArm: joint 42, want 22",
+   "RightForeArm: joint 43, want 23",
+   "RightHand: joint 44, want 24",
+   "RightShoulder: joint 41, want 21"
+  ],
+  "status": "FAIL"
+ },
+ "rest_pose": {
+  "left_arm_deg": 92.63,
+  "right_arm_deg": 87.2,
+  "left_leg_deg": 9.08,
+  "right_leg_deg": 9.48,
+  "rest_vs_bind_max_offset_m": 0.0,
+  "status": "FAIL"
+ },
+ "scale": {
+  "height_m": 0.307,
+  "want_height_m": 1.0,
+  "armature_object_scale": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "status": "FAIL"
+ },
+ "up_axis": {
+  "hips_to_head_vs_up_deg": 3.84,
+  "facing": "gltf+Z",
+  "status": "PASS"
+ },
+ "origin": {
+  "min_z_m": -0.2257,
+  "feet_centre_xy_m": [
+   -0.0312,
+   -0.002
+  ],
+  "status": "FAIL"
+ },
+ "weights": {
+  "meshes": {
+   "tripo_40b92fdd_882a_4f2b_b86b_eefb4f193941": {
+    "verts": 31156,
+    "max_influences_found": 4,
+    "over_max_influences": 0,
+    "unnormalised": 0,
+    "unweighted": 0,
+    "cross_side": 3291,
+    "cross_side_blend_info": 53,
+    "arm_leg_bleed": 0,
+    "arm_leg_bleed_sample": [],
+    "cross_side_sample": [
+     {
+      "vert": 862,
+      "x_m": -0.094,
+      "left_w": 0.174,
+      "right_w": 0.16
+     },
+     {
+      "vert": 863,
+      "x_m": -0.069,
+      "left_w": 0.217,
+      "right_w": 0.117
+     },
+     {
+      "vert": 1601,
+      "x_m": -0.115,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1602,
+      "x_m": -0.11,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1603,
+      "x_m": -0.11,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1604,
+      "x_m": -0.109,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1605,
+      "x_m": -0.109,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1606,
+      "x_m": -0.109,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1607,
+      "x_m": -0.109,
+      "left_w": 0.0,
+      "right_w": 0.0
+     },
+     {
+      "vert": 1608,
+      "x_m": -0.109,
+      "left_w": 0.0,
+      "right_w": 0.0
+     }
+    ],
+    "over_max_sample": [],
+    "unnormalised_sample": []
+   }
+  },
+  "status": "FAIL"
+ },
+ "poses": {
+  "high_kick": {
+   "status": "FAIL",
+   "edge_ratio_max": 76.178,
+   "edge_ratio_min": 0.074,
+   "edges_over_warn": 5788,
+   "edges_total": 84653,
+   "edges_failing": 2830,
+   "failing_edges_by_bone": {
+    "(mixed)": 3870,
+    "mixamorig:RightUpLeg": 729,
+    "mixamorig:RightArm": 280,
+    "mixamorig:LeftArm": 228,
+    "mixamorig:LeftUpLeg": 211,
+    "mixamorig:Hips": 123,
+    "mixamorig:Spine": 66,
+    "mixamorig:RightShoulder": 59
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": []
+  },
+  "deep_crouch": {
+   "status": "FAIL",
+   "edge_ratio_max": 68.42,
+   "edge_ratio_min": 0.02,
+   "edges_over_warn": 11185,
+   "edges_total": 84653,
+   "edges_failing": 6053,
+   "failing_edges_by_bone": {
+    "(mixed)": 7854,
+    "mixamorig:LeftUpLeg": 2344,
+    "mixamorig:RightUpLeg": 832,
+    "mixamorig:Spine": 230,
+    "mixamorig:RightLeg": 214,
+    "mixamorig:LeftLeg": 145,
+    "mixamorig:Hips": 130,
+    "mixamorig:Spine1": 124
+   },
+   "collapsed_bones": {
+    "mixamorig:Hips": {
+     "mean_ratio": 0.676,
+     "p5_ratio": 0.582
+    },
+    "mixamorig:LeftUpLeg": {
+     "mean_ratio": 0.713,
+     "p5_ratio": 0.472
+    }
+   },
+   "missing_pose_bones": [],
+   "stills": []
+  },
+  "arm_raise": {
+   "status": "FAIL",
+   "edge_ratio_max": 14.052,
+   "edge_ratio_min": 0.334,
+   "edges_over_warn": 1680,
+   "edges_total": 84653,
+   "edges_failing": 672,
+   "failing_edges_by_bone": {
+    "mixamorig:RightArm": 360,
+    "mixamorig:LeftArm": 342,
+    "(mixed)": 322,
+    "mixamorig:RightShoulder": 141,
+    "mixamorig:LeftShoulder": 133,
+    "mixamorig:Spine1": 32,
+    "mixamorig:Neck": 14
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": []
+  },
+  "torso_twist": {
+   "status": "FAIL",
+   "edge_ratio_max": 31.071,
+   "edge_ratio_min": 0.019,
+   "edges_over_warn": 3653,
+   "edges_total": 84653,
+   "edges_failing": 1558,
+   "failing_edges_by_bone": {
+    "(mixed)": 1075,
+    "mixamorig:RightHand": 684,
+    "mixamorig:RightForeArm": 417,
+    "mixamorig:Spine1": 252,
+    "mixamorig:LeftForeArm": 147,
+    "mixamorig:RightArm": 136,
+    "mixamorig:RightHandThumb1": 105,
+    "mixamorig:LeftHand": 98
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": []
+  },
+  "grab": {
+   "status": "FAIL",
+   "edge_ratio_max": 53.0,
+   "edge_ratio_min": 0.051,
+   "edges_over_warn": 4106,
+   "edges_total": 84653,
+   "edges_failing": 2778,
+   "failing_edges_by_bone": {
+    "(mixed)": 1155,
+    "mixamorig:RightArm": 1032,
+    "mixamorig:LeftArm": 899,
+    "mixamorig:RightHand": 797,
+    "mixamorig:RightForeArm": 461,
+    "mixamorig:LeftShoulder": 283,
+    "mixamorig:RightShoulder": 281,
+    "mixamorig:Spine1": 216
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": []
+  }
+ },
+ "summary": {
+  "skeleton": "FAIL",
+  "rest_pose": "FAIL",
+  "scale": "FAIL",
+  "up_axis": "PASS",
+  "origin": "FAIL",
+  "weights": "FAIL",
+  "pose:high_kick": "FAIL",
+  "pose:deep_crouch": "FAIL",
+  "pose:arm_raise": "FAIL",
+  "pose:torso_twist": "FAIL",
+  "pose:grab": "FAIL"
+ },
+ "overall": "FAIL"
+}

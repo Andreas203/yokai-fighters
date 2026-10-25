@@ -1,0 +1,21 @@
+{
+ "tool": "texture_project.py",
+ "input": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb",
+ "input_sha256": "e74d7ed05d144bc9d5576c17630f6e7fc84ca656c940a8a466bb4c9ea192b92f",
+ "out": "game/assets/generated/characters/ryo/ryo-tripo-basecolor.png",
+ "out_sha256": "a1b5ff763b1c29527c2fde1966a14cd09be6a0ef7fa24c1951b9cb4020a5929e",
+ "resolution": 2048,
+ "power": 3.0,
+ "erode_px": 3,
+ "pad_px": 16,
+ "min_cos": 0.25,
+ "island_texels": 3479921,
+ "painted": 1879968,
+ "filled": 1599953,
+ "view_texels": {
+  "front": 771625,
+  "left": 475041,
+  "right": 487119,
+  "back": 761281
+ }
+}

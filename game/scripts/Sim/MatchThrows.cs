@@ -49,7 +49,17 @@ public sealed partial class Match
 	/// </summary>
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
-		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing; // YOK-55: landing recovery
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing // YOK-55: landing recovery
+		&& !ThrowInvulnerable(d);
+
+	/// <summary>
+	/// YOK-103 (Slippery Skin): a move with <c>properties.throw_invuln: "startup"</c> can't be grabbed during its
+	/// startup frames. This is what the modifier's data says; E12/E17 as written say throws ignore
+	/// throw-invulnerability data (<c>properties.invuln</c> against throw is still read and not applied), so the
+	/// two disagree: an open designer question. Removing this one check makes the modifier do nothing.
+	/// </summary>
+	public static bool ThrowInvulnerable(Fighter d) =>
+		d.CurrentMove is { ThrowInvulnStartup: true } m && d.MoveFrame < m.FirstActive;
 
 	/// <summary>
 	/// E12: the throw whose buttons were all pressed within ThrowPressWindow ticks, the last of them
@@ -108,6 +118,11 @@ public sealed partial class Match
 			MoveData? m = att.CurrentMove;
 			if (m is null || !m.IsThrow) continue;
 			if (!ThrowPressed(d.Input.Buffer, m.ThrowButtons)) continue; // same E12 leniency as the throw
+			if (Unbreakable(1 - i)) // YOK-90: the elder's throws can't be broken; the press is not used up either
+			{
+				TwistTriggered?.Invoke(this, new TwistEvent(1 - i, TwistEffect.UnbreakableThrows, m.Id));
+				continue;
+			}
 			d.Input.TryConsume(out _); // the break press must not come out as a normal afterwards
 			BreakApart(1 - i, m, ThrowOutcome.Break);
 		}
@@ -151,12 +166,14 @@ public sealed partial class Match
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		MoveData? m = att.CurrentMove;
 		if (m is null || !m.IsThrow) { ToIdle(def); return; } // defensive: the thrower's clip ended early
-		def.PendingDamage += m.Damage;
+		int damage = Config.ScaleDamage(attIndex, m.Damage); // YOK-156, Y4
+		var at = BodyCentre(def); // YOK-198: the spark's place, before the knockdown and the slide
+		def.PendingDamage += damage;
 		SetState(def, FighterState.Knockdown, Config.KnockdownFrames); // set before AdvanceState: down this tick + 39 more
 		Slide(att, def, m.HitPushback ?? Config.HitPushback, 0);
-		Throw?.Invoke(this, new ThrowEvent(attIndex, m.Id, ThrowOutcome.Land, m.Damage));
-		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, att.MoveFrame, false, false, m.Damage));
-		OnConnect(attIndex, m, blocked: false, counter: false); // C5 meter (+6/+3), V2 hitstop as heavy (E12)
+		Throw?.Invoke(this, new ThrowEvent(attIndex, m.Id, ThrowOutcome.Land, damage));
+		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, att.MoveFrame, false, false, damage));
+		OnConnect(attIndex, m, blocked: false, counter: false, at); // C5 meter (+6/+3), V2 hitstop as heavy (E12)
 	}
 
 	/// <summary>Break or clash: no damage, both fighters free and slid apart by the throw's on_break pushback.</summary>
@@ -175,11 +192,10 @@ public sealed partial class Match
 	{
 		int dir = Math.Sign(def.X - att.X);
 		if (dir == 0) dir = att.Facing;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
 		int want = defPush * SimConfig.Scale;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
+		int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
 		int lost = want - Math.Abs(target - def.X);
 		def.X = target;
-		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), lo, hi);
+		att.X = Math.Clamp(att.X - dir * (attPush * SimConfig.Scale + lost), CornerLo(att), CornerHi(att));
 	}
 }

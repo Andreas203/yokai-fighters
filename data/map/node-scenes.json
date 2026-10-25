@@ -5,12 +5,13 @@
   "status": "proposed",
   "rules": ["R2", "R3", "A7", "Y4", "R8"],
   "default_scene": "res://scenes/fight.tscn",
+  "default_stage": "res://scenes/stage/bamboo_grove.tscn",
   "fallback_fighter": "kitsune",
   "tiers": {
-    "apprentice": { "reaction_frames": 30 },
-    "yokai": { "reaction_frames": 22 },
-    "elder": { "reaction_frames": 18 },
-    "tanuki": { "reaction_frames": 15 }
+    "apprentice": { "reaction_frames": 30, "damage_dealt_pct": 50, "jump_punish_pct": 50 },
+    "yokai": { "reaction_frames": 22, "jump_punish_pct": 50 },
+    "elder": { "reaction_frames": 18, "jump_punish_pct": 100 },
+    "tanuki": { "reaction_frames": 15, "jump_punish_pct": 100 }
   },
   "types": {
     "duel": { "scene": "res://scenes/fight.tscn", "tier": "yokai", "binds": true, "coins": 25 },
@@ -22,11 +23,14 @@
   "opponents": {
     "kitsune": { "fighter": "kitsune" },
     "tanuki": { "fighter": "tanuki", "kit": "copy_of_ryo" },
-    "apprentice": { "tier": "apprentice" }
+    "apprentice": { "tier": "apprentice", "plays_as": "kitsune", "profile": "apprentice" },
+    "nine-tailed-kitsune": { "plays_as": "kitsune" },
+    "elder-oni": { "plays_as": "oni" },
+    "elder-kappa": { "plays_as": "kappa" }
   },
   "rows": {
     "8": { "types": { "elder": { "coins": 0 } } }
   },
   "nodes": {},
-  "notes": "YOK-77 first pass, awaiting the designer. Duels, elders and the boss run in the fight scene; YOK-96: merchant and dojo run in the rest-stop screen (scenes/ui/rest_stop.tscn), which needs no opponent (the 'opponent' and 'tier' there are now unused); a scene of its own for a type ('types') or for one node ('nodes', or the node's payload.scene in the map file) is an edit here. Stand-ins, both open questions: (1) [done by YOK-96] merchant and dojo used to be stand-in fights; (2) only the Kitsune has a kit, so every yokai not listed with a 'fighter' under 'opponents' fights as 'fallback_fighter' (logged). Giving the Oni its kit later = add an 'oni' entry with 'fighter': 'oni'. Tiers are Y4's reaction delays; the apprentice's half damage and the per-tier damage targets are not applied here. YOK-85, R8: 'coins' is what a won fight on the node pays (types: a duel 25, an elder 50); 'rows' replaces a type's amount on one row, so the row-8 elder pays no coins (its reward is the rare in its draft). The boss, merchant and dojo name none and pay 0."
+  "notes": "YOK-77 first pass, awaiting the designer. Duels, elders and the boss run in the fight scene; YOK-96: merchant and dojo run in the rest-stop screen (scenes/ui/rest_stop.tscn), which needs no opponent (the 'opponent' and 'tier' there are now unused); a scene of its own for a type ('types') or for one node ('nodes', or the node's payload.scene in the map file) is an edit here. Stand-ins, both open questions: (1) [done by YOK-96] merchant and dojo used to be stand-in fights; (2) only the Kitsune has a kit, so every yokai not listed with a 'fighter' under 'opponents' fights as 'fallback_fighter' (logged). Giving the Oni its kit later = add an 'oni' entry with 'fighter': 'oni'. YOK-174: a yokai with no fighter still fights with its own move files (per kind; the fallback's where it has none; only its own specials) and its own behaviour profiles: 'plays_as' names that yokai when it is not the opponent's own id (elders name their yokai; the apprentice, which has neither, plays as the fallback Kitsune as before). Tiers are Y4's reaction delays; YOK-156: 'damage_dealt_pct' scales the damage the tier's opponent deals (Y4: the apprentice deals half, 50; left out = 100). YOK-165: 'jump_punish_pct' is how often the tier's opponent answers Ryo's jump with its anti-air (designer 2026-10-20: apprentice and yokai 50, elders and the Tanuki 100; left out = the profile's own anti-air weights). Y4's per-tier damage-per-duel numbers are harness targets, not applied here. YOK-85, R8: 'coins' is what a won fight on the node pays (types: a duel 25, an elder 50); 'rows' replaces a type's amount on one row, so the row-8 elder pays no coins (its reward is the rare in its draft). The boss, merchant and dojo name none and pay 0."
 }

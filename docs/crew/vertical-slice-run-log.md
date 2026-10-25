@@ -17,7 +17,7 @@ This is the crew's real run on the capstone, building the Ryo vs Kitsune vertica
 ## 2 · asset-smith: generation specs → models
 | Step | PR | Output | Credits |
 |---|---|---|---|
-| Spec | #10 | `assets/specs/{style,ryo,kitsune,bamboo-grove-dusk,ui-paper-demo}.md`, job list `assets/specs/yok-29-job-list.md` | 0 |
+| Spec | #10 | `assets/specs/{style,ryo,kitsune,bamboo-grove-dusk,ui-paper-demo}.md`, job list `assets/specs/jobs/yok-29-job-list.md` | 0 |
 | First pass (approved, 163 cap) | #16 | Ryo and Kitsune turnaround → image-to-3D (T-pose) → auto-rig; tail mesh ×9; bamboo, lantern, backdrop, ground strip; three UI textures. Acceptance verdicts per job; flagged a texture defect on the Kitsune | 163 |
 | Restyled references (approved) | #19 | Ten stylised reference pictures from the designer's sketches; designer picked Ryo E and Kitsune D (`docs/design/characters/*/references/`) | 90 |
 | Rebuild from new refs (approved, 88 cap) | #16 | New rigged Ryo and Kitsune (`game/assets/generated/characters/`) | 88 |

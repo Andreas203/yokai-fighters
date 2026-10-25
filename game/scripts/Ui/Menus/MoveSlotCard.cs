@@ -16,6 +16,9 @@ public partial class MoveSlotCard : Control
 		var input = UiFind.Get<Label>(this, "Input");
 		var plain = UiFind.Get<Label>(this, "Plain");
 		var fr = UiFind.Get<Label>(this, "Frames");
+		var icon = UiFind.Get<TextureRect>(this, "Icon");
+		icon.Visible = !row.Empty;
+		icon.Texture = row.Empty ? null : AbilityArt.ForId(row.MoveId); // the move id, never the slot or name (YOK-79)
 		crest.Glyph = row.Slot;
 		crest.Fill = row.Empty ? Grey : FightHud.Seal;
 		name.Text = row.Empty ? $"Slot {row.Slot}: empty" : row.Name;

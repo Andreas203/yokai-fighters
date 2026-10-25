@@ -655,7 +655,14 @@ public static class SaveProbes
 			files++;
 			string t = File.ReadAllText(f);
 			bool inMemorySave = name == "MerchantShopSaveTests.cs" || name == "MerchantShopSaveProbes.cs";
-			if (inMemorySave)
+			// YOK-204: the practice probes (YOK-197) write a SaveStore under a temp dir to prove practice never touches the save,
+			// so they may name SaveStore, but never the player's path nor the current scene.
+			bool tempPathSave = name == "PracticeBreakerProbes.cs";
+			if (tempPathSave)
+			{
+				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json"), name + " reaches the player's save path");
+			}
+			else if (inMemorySave)
 			{
 				Assert.True(!t.Contains("UserSavePath") && !t.Contains("user://") && !t.Contains("save.json") && !t.Contains("new SaveStore(") && !t.Contains("GameFlow") && !t.Contains("SaveStore.FileName"), name + " reaches a save file or the player's path");
 			}
@@ -1027,7 +1034,11 @@ public static class SaveProbes
 			Assert.True(flow.Session!.Node?.NodeId == "boss-tanuki" && flow.Session.CopyLocked && SameCopy(flow.Session.LockedCopy, boss.LockedCopy), "inside the boss, the same copy locked");
 			Assert.True(flow.Session.LoseFight().Ok, "lost");
 			SaveLoad after = new SaveStore(path).Load();
-			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
+			// YOK-86, M1: a loss at the Tanuki now awards 2 unlocks after the saved ones; the saved "u" stays first.
+			var order = Unlocks.FromData(flow.Session.Pool, CancelRuleLoader.LockedIds(ContentPaths.Data("cancels")));
+			var awarded = order.Award(flow.Session.Ended!, new[] { "u" });
+			Assert.Equal(Math.Min(2, order.StillLocked(new[] { "u" }).Count), awarded.Count, "M1: a loss at the Tanuki awards 2 (or what is left)");
+			Assert.True(after.Status == SaveLoadStatus.Loaded && after.Data.Run == null && after.Data.Unlocks.SequenceEqual(new[] { "u" }.Concat(awarded)) && after.Data.Story.Has("intro"), "the next write is version 2 with unlocks and story intact: " + after.Status);
 			Assert.True(Directory.GetFiles(Path.GetDirectoryName(path)!).Length == 1, "no backup");
 		});
 	});

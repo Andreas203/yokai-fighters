@@ -38,7 +38,6 @@ public partial class RestStopScreen : Control, INodeScene
 	public KitCard SecondCard { get; private set; } = null!;
 	public Button ContinueButton { get; private set; } = null!;
 
-	private static readonly Color FightHudSeal = Fight.FightHud.Seal;
 	private RunSession? _session;
 	private bool _ready;
 
@@ -60,10 +59,29 @@ public partial class RestStopScreen : Control, INodeScene
 		FreeCard.Activated += () => TakeFree();
 		SecondCard.Activated += () => OpenSecond(); // the shop (YOK-104); the trial (YOK-98) wires in here too
 		ContinueButton.Pressed += () => Leave();
-		foreach (string state in new[] { "normal", "hover", "pressed", "focus", "disabled" }) // the kit's RedButton has no fill of its own
-			ContinueButton.AddThemeStyleboxOverride(state, new StyleBoxFlat { BgColor = FightHudSeal, ContentMarginLeft = 24, ContentMarginRight = 24, ContentMarginTop = 6, ContentMarginBottom = 6, BorderColor = new Color("1D1B21"), BorderWidthBottom = state == "focus" ? 4 : 2, BorderWidthTop = 2, BorderWidthLeft = 2, BorderWidthRight = 2 });
+		// The scene's slim brush_pad margins carry no border, so keyboard focus needs its own mark: an ink outline drawn
+		// around the brush stroke (this screen only; the shared kit button is untouched).
+		var focusMark = new StyleBoxFlat { DrawCenter = false, BorderColor = new Color("1D1B21"), ExpandMarginLeft = 18, ExpandMarginRight = 18, ExpandMarginTop = 6, ExpandMarginBottom = 6 };
+		focusMark.SetBorderWidthAll(3);
+		focusMark.SetCornerRadiusAll(4);
+		ContinueButton.AddThemeStyleboxOverride("focus", focusMark);
+		foreach (var card in new Control[] { FreeCard, SecondCard, GetNode<Control>("LineBox") }) PadPaper(card);
 		GetNode<KeyChipFooter>("Footer").Alignment = BoxContainer.AlignmentMode.Begin;
 		Refresh();
+	}
+
+	/// <summary>
+	/// The rice-card texture draws its ink frame about 20 px inside its edge, so the kit's 28 px margins let text touch it
+	/// (and the speaker label cross the top border). Cards on this screen get margins that clear the frame; the style is
+	/// a copy, so the kit's own card is untouched.
+	/// </summary>
+	private static void PadPaper(Control card)
+	{
+		if (card.GetThemeStylebox("panel") is not StyleBoxTexture kit) return;
+		var padded = (StyleBoxTexture)kit.Duplicate();
+		padded.ContentMarginLeft = 46; padded.ContentMarginRight = 46;
+		padded.ContentMarginTop = 24; padded.ContentMarginBottom = 30;
+		card.AddThemeStyleboxOverride("panel", padded);
 	}
 
 	/// <summary>The free heal or the rest. A refused take (already chosen) changes nothing and the screen just redraws.</summary>
@@ -82,11 +100,35 @@ public partial class RestStopScreen : Control, INodeScene
 	/// </summary>
 	public bool OpenSecond()
 	{
+		if (Model is { Kind: RestStopKind.Dojo } dm && _session != null) return OpenTrial(dm);
 		if (Model is not { Kind: RestStopKind.Merchant } m || _session == null) return false;
 		if (!m.OpenShop().Ok) { Refresh(); return false; }
 		Refresh(); // the used state first, so nothing under the shop changes while it is open
 		ShopRequested?.Invoke();
 		return true;
+	}
+
+	/// <summary>
+	/// YOK-98, R7: the dojo's second card: takes the offered trial as the stop's one choice (closing the rest) and
+	/// asks the flow to play it (<see cref="TrialRequested"/>). Refused, changing nothing, when the rest was taken,
+	/// no trial is offered or the trial is already over.
+	/// </summary>
+	private bool OpenTrial(RestStopScreenModel m)
+	{
+		if (!m.TrialRunning && !m.ChooseTrial().Ok) { Refresh(); return false; }
+		Refresh();
+		TrialRequested?.Invoke();
+		return true;
+	}
+
+	/// <summary>YOK-98: raised once the trial is chosen: the flow plays it on the fight scene and brings this stop back after.</summary>
+	public event Action? TrialRequested;
+
+	/// <summary>The flow calls this when the trial fight ended and the stop shows again: the result, focus on Continue.</summary>
+	public void TrialClosed()
+	{
+		Refresh();
+		if (ContinueButton.Visible) ContinueButton.GrabFocus();
 	}
 
 	/// <summary>Raised after the shop was chosen: the flow shows the shop over this stop (and hides it).</summary>
@@ -120,8 +162,23 @@ public partial class RestStopScreen : Control, INodeScene
 	{
 		if (!IsVisibleInTree()) return; // hidden while the shop is open: the shop answers its own keys
 		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
+		else if (SelectorStep(e) is int step && step != 0 && Model is { CanSelect: true } sel)
+		{
+			if (sel.SelectTrial(step)) Refresh();
+			GetViewport().SetInputAsHandled();
+		}
 		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
 	}
+
+	/// <summary>YOK-109: the dojo's special selector: Left / Right, A / D, the bumpers or the D-pad. 0 = not a selector key.</summary>
+	public static int SelectorStep(InputEvent e) => e switch
+	{
+		InputEventKey { Pressed: true, Echo: false, Keycode: Key.Left or Key.A } => -1,
+		InputEventKey { Pressed: true, Echo: false, Keycode: Key.Right or Key.D } => 1,
+		InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.LeftShoulder or JoyButton.DpadLeft } => -1,
+		InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.RightShoulder or JoyButton.DpadRight } => 1,
+		_ => 0,
+	};
 
 	private Label L(string path) => GetNode<Label>(path);
 
@@ -145,7 +202,7 @@ public partial class RestStopScreen : Control, INodeScene
 		string speaker = dojo ? "Dojo master" : "Merchant";
 		L("LineBox/Box/Speaker").Text = speaker;
 		L("LineBox/Box/Line").Text = (LineSource ?? DefaultLine)(m);
-		L("Portrait/PortraitLabel").Text = dojo ? "dojo master (art to come)" : "merchant portrait (art to come)";
+		BindPortrait(dojo);
 
 		BindFree(m, dojo);
 		BindSecond(m, dojo);
@@ -157,7 +214,9 @@ public partial class RestStopScreen : Control, INodeScene
 		pick.Visible = !done;
 		ContinueButton.Visible = done;
 		var footer = GetNode<KeyChipFooter>("Footer");
+		// Esc / B goes to the title today (GameFlow: Router.ReturnToTitle), so the label says so; the mockup's "Map" needs a leave-the-node API (reported on YOK-109).
 		if (done) footer.SetHints(new("confirm", "Continue"), new("frames", "Forecast detail"), new("back", "Title"));
+		else if (m.CanSelect) footer.SetHints(new("move", "Choose"), new("choose", "Special"), new("confirm", "Take"), new("frames", "Detail"), new("back", "Title"));
 		else footer.SetHints(new("move", "Choose"), new("confirm", "Take"), new("frames", "Forecast detail"), new("back", "Title"));
 	}
 
@@ -184,6 +243,21 @@ public partial class RestStopScreen : Control, INodeScene
 		}
 		catch (Exception e) when (e is System.IO.IOException or FormatException) { GD.PushWarning($"RestStopScreen: no merchant line: {e.Message}"); }
 		return "Merchant's line (habit-writer).";
+	}
+
+	/// <summary>Head-and-shoulders crop of the shop's merchant plate (432x768): hat top to mid-chest, the 410:360 shape of the portrait box.</summary>
+	internal static readonly Rect2 MerchantBust = new(0, 92, 432, 379);
+
+	/// <summary>The merchant shows his Astra plate (YOK-159); the dojo master keeps the labelled placeholder until art exists.</summary>
+	private void BindPortrait(bool dojo)
+	{
+		var art = GetNode<TextureRect>("Portrait/Art");
+		art.Texture = dojo ? null : new AtlasTexture { Atlas = ShopArt.Portrait, Region = MerchantBust };
+		art.Visible = !dojo;
+		var label = L("Portrait/PortraitLabel");
+		label.Text = "dojo master (art to come)";
+		label.Visible = dojo;
+		if (GetNodeOrNull<RestStopScreenDecor>("Decor") is { } decor) decor.PortraitFilled = !dojo;
 	}
 
 	private void BindFree(RestStopScreenModel m, bool dojo)
@@ -225,23 +299,45 @@ public partial class RestStopScreen : Control, INodeScene
 		L(card + "Top/Titles/Sub").Text = dojo ? "A drill for one special" : "Spend coins instead";
 		Tag(SecondCard.GetNode<Control>("Box/Top/Tag"), dojo ? "TRIAL" : "SHOP");
 		L(card + "Desc").Text = dojo
-			? "Land the drill to level one special."
-			: $"Buy an ability or release a binding.\nYou have {m.Coins} coins.";
+			? (m.ChosenTrial is { } t
+				? $"{t.Prompt}\nHeals {Dojo.TrialHealPercent}% either way; land it within {t.Attempts} tries to level {m.TrialSpecialName}."
+				: "No special of yours has a trial that can level it: each is missing a drill or is at its top level.")
+			: m.Second == RestStopOption.Ready ? $"Buy an ability or release a binding.\nYou have {m.Coins} coins." : "Buy an ability or release a binding."; // the coin chip shows the coins once the card is closed
+		if (dojo) L(card + "Desc").AddThemeFontSizeOverride("font_size", 20); // the dojo card carries the picker row too: one size down keeps it inside its scroll
+		var picker = SecondCard.GetNode<Control>("Box/Picker");
+		picker.Visible = dojo && m.Second != RestStopOption.NoTrial;
+		if (picker.Visible)
+		{
+			string lv = $"{m.TrialSpecialName} Lv {m.TrialSpecialLevel}";
+			L(card + "Picker/Special").Text = m.CanSelect ? $"Special: < {lv} >" : $"Special: {lv}";
+			int used = m.AttemptsUsed;
+			L(card + "Picker/Pips").Text = "Tries " + string.Join(" ", Enumerable.Range(0, RestStopScreenModel.MaxAttempts).Select(i => i < used ? "●" : "○"));
+		}
 		L(card + "Coming").Text = m.Second switch
 		{
-			RestStopOption.ComingSoon => "Coming soon",
+			RestStopOption.NoTrial => "Trial unavailable: no drill for your specials.",
 			RestStopOption.Closed => "Closed: the other option was taken.",
-			RestStopOption.Taken => dojo ? "Chosen" : "Chosen · Enter to browse again",
+			RestStopOption.Taken => dojo ? DojoTaken() : "Chosen · Enter to browse again",
 			_ => "",
 		};
+		L(card + "Coming").Visible = L(card + "Coming").Text.Length > 0; // no empty line eating the card's height
 		// The shop stays open for the stop (R6: buying more is allowed): once chosen the card goes back in, as "Chosen".
 		SecondCard.CardDisabled = !(m.Second == RestStopOption.Ready || (m.Second == RestStopOption.Taken && !dojo));
 	}
+
+	private string DojoTaken() => _session?.Dojo switch
+	{
+		{ TrialResult: DojoTrialResult.Landed } d => $"Landed · +{d.Healed} health · Lv {d.LevelBefore} → {d.LevelAfter}",
+		{ TrialResult: DojoTrialResult.Failed } d => $"Missed · +{d.Healed} health",
+		_ => "Chosen",
+	};
 
 	private void BindForecast(RestStopScreenModel m)
 	{
 		var f = m.Forecast;
 		var f0 = "Forecast/";
+		// Dojo only (T2, A4): training the selected special raises the level the copy runs at.
+		L(f0 + "TrainNote").Text = m.CopyRaisedTo() is { } raised ? $"Training {m.TrialSpecialName} to Lv {raised} raises this copy." : "";
 		GetNode<TextureRect>(f0 + "IconGlow/IconBox/Icon").Texture = f == null ? null : AbilityArt.ForId(f.SpecialId);
 		var nameLabel = L(f0 + "SpecialName");
 		nameLabel.Text = f?.Name ?? "Nothing yet";
@@ -254,7 +350,6 @@ public partial class RestStopScreen : Control, INodeScene
 			L(f0 + "CopyNote").Text = "The Tanuki has nothing of yours to copy.";
 			L(f0 + "CostValue").Text = "";
 			L(f0 + "CostMeaning").Text = "";
-			GetNode<Control>(f0 + "Placeholder").Visible = false;
 			L(f0 + "LockNote").Text = _session is { CopyLocked: true } ? "Locked for this run: no copy." : "";
 			return;
 		}
@@ -262,12 +357,12 @@ public partial class RestStopScreen : Control, INodeScene
 		L(f0 + "CopyNote").Text = f.RyoLevel > f.Level
 			? $"Ryo's Lv {f.RyoLevel} evolution is not copied: Lv {f.Level}."
 			: "Copied at your level, never your modifier or evolution.";
-		L(f0 + "CostValue").Text = f.Cost is { } c ? $"~{c} health" : "Not enough fights yet";
-		GetNode<ProgressBar>(f0 + "CostBar/Fill").Value = f.Cost ?? 0;
-		GetNode<Control>(f0 + "Placeholder").Visible = f.CostIsPlaceholder;
+		// T6 (YOK-173): damage per hit of the copy, from data at the copy's level (T4 cap); always a figure.
+		L(f0 + "CostValue").Text = $"{f.Cost} per hit";
+		GetNode<ProgressBar>(f0 + "CostBar/Fill").Value = f.Cost;
 		L(f0 + "CostMeaning").Text = DetailVisible
 			? $"Detail: slot {f.Slot}; Ryo has it at Lv {f.RyoLevel}, the copy runs Lv {f.Level}."
-			: "Average health you lose per fight to this move, from your own fights so far.";
+			: $"Health each hit of the copy takes from you, from the move's data at Lv {f.Level}.";
 		L(f0 + "LockNote").Text = f.Locked
 			? "Locked for this run: this is the move the Tanuki copies."
 			: "Locks when you enter the Tanuki's node.";

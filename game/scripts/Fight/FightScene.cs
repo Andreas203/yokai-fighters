@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Godot;
+using YokaiFighters.Audio;
 using YokaiFighters.Sim;
+using YokaiFighters.Ui;
 
 namespace YokaiFighters.Fight;
 
@@ -51,7 +53,7 @@ public partial class FightScene : Node3D
 		var s = DynamicCamera.SubjectOf(Match, CameraPushIn);
 		if (!ReferenceEquals(_camMatch, Match) || Match.Tick < _camTick || !Cam.Ready)
 		{
-			if (!ReferenceEquals(Cam.Sim, Match.Config)) Cam = new DynamicCamera(Match.Config);
+			if (!ReferenceEquals(Cam.Sim, Match.Config) || !ReferenceEquals(Cam.Config, CameraFraming)) Cam = new DynamicCamera(Match.Config, CameraFraming);
 			Cam.Snap(s);
 			_camMatch = Match;
 		}
@@ -61,6 +63,24 @@ public partial class FightScene : Node3D
 	private readonly Node3D[] _bodies = new Node3D[2];
 	private FightHud _hud = null!;
 	private bool _resetHeld;
+	private static readonly string[] HitClipPaths =
+	{
+		"res://sound/hits/hit_01.wav",
+		"res://sound/hits/hit_02.wav",
+		"res://sound/hits/hit_03.wav",
+		"res://sound/hits/hit_04.wav",
+		"res://sound/hits/hit_05.wav",
+		"res://sound/hits/hit_06.wav",
+		"res://sound/hits/hit_07.wav",
+		"res://sound/hits/hit_08.wav",
+		"res://sound/hits/hit_09.wav",
+	};
+	private readonly AudioStreamPlayer[] _hitPlayers = new AudioStreamPlayer[3];
+	private AudioStreamWav[] _hitClips = System.Array.Empty<AudioStreamWav>();
+	private Match? _hitMatch;
+	private int _nextHitPlayer;
+	private int _nextHitClip;
+	private const float HitVolumeDb = 6f;
 	/// <summary>V3 (YOK-20): started by Match.Impact, stepped once per sim tick.</summary>
 	public ScreenShake Shake { get; } = new(SimConfig.Default.ShakeFrames);
 
@@ -81,6 +101,23 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-56: whom P2 (the AI) fights as; its kit loads from data like Ryo's.</summary>
 	public static string Opponent { get; set; } = "kitsune";
 
+	/// <summary>YOK-187: the name the screens show for the foe = the yokai fought, never the stand-in body (<see cref="Opponent"/>):
+	/// the node's <see cref="NodeContext.BindingName"/> ("Oni", "Elder Oni"), else the body's own name (no node).</summary>
+	public string OpponentName => Story.StoryLibrary.DisplayName(Node is { } n && n.Fighter == Opponent ? n.BindingName : Opponent);
+	/// <summary>YOK-187: the yokai (not the body) for the foe's portrait: the node's <see cref="NodeContext.DraftYokai"/>, else <see cref="Opponent"/>.</summary>
+	public string OpponentYokai => Node is { } n && n.Fighter == Opponent ? n.DraftYokai : Opponent;
+
+	/// <summary>
+	/// YOK-90: every elder's twist, from data/twists/ (loaded on first use; a test may set its own). An elder node's
+	/// fight puts its twist on P2, whoever stands in (<see cref="ElderTwists.Apply"/>).
+	/// </summary>
+	public static ElderTwists Twists
+	{
+		get => _twists ??= ElderTwists.LoadDir(ContentPaths.Data(ElderTwists.Folder));
+		set => _twists = value;
+	}
+	static ElderTwists? _twists;
+
 	/// <summary>
 	/// YOK-56: where kits and the draft pool load from. Tests that check fallbacks set
 	/// <c>KitSources.FixturesOnly()</c> (and restore it) so they never depend on what is in data/.
@@ -99,7 +136,7 @@ public partial class FightScene : Node3D
 	{
 		try
 		{
-			var (title, text) = LoadStory().LoseScreen(Story.StoryLibrary.DisplayName(Opponent));
+			var (title, text) = LoadStory().LoseScreen(OpponentName);
 			_hud.SetLoseText(title, text);
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
@@ -116,29 +153,11 @@ public partial class FightScene : Node3D
 	public static Match NewMatch() => NewMatch(Run);
 
 	/// <summary>YOK-48: the next fight for <paramref name="run"/> (null = starters at full health).</summary>
-	public static Match NewMatch(RunState? run, RunSession? session = null)
-	{
-		var cfg = run?.MatchConfig();
-		var ryo = LoadKit(Kit.Ryo);
-		Match m;
-		if (session?.Node?.Kit == TanukiKit.KitId) // YOK-94, T0: the node's opponent fights with Ryo's kit + the copy locked on entering the boss node (T1)
-		{
-			var tanuki = TanukiKit.Build(ryo, TanukiKit.CopyAtFightStart(session?.CopyLocked ?? false, session?.LockedCopy, run, ryo.Specials));
-			foreach (var n in tanuki.Notes) GD.Print("FightScene: " + n);
-			m = new Match(cfg, ryo.Moves, tanuki.Moves);
-			tanuki.Equip(m.P2);
-		}
-		else
-		{
-			var foe = LoadKit(Opponent);
-			m = new Match(cfg, ryo.Moves, foe.Moves);
-			foe.Equip(m.P2);
-		}
-		ryo.Equip(m.P1);
-		foreach (var f in m.Fighters) f.Input.Scheme = DefaultScheme;
-		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
-		return m;
-	}
+	/// <remarks>YOK-94, T0: the Tanuki's node fights with Ryo's kit + the copy locked on entering it (T1).
+	/// YOK-26: built by <see cref="NodeFight.NewMatch"/>, the same code the headless whole-run harness uses.</remarks>
+	/// <param name="shape">YOK-98: reshapes the fight config (a dojo trial's start distance); null = as the run gives it.</param>
+	public static Match NewMatch(RunState? run, RunSession? session = null, System.Func<SimConfig, SimConfig>? shape = null) =>
+		NodeFight.NewMatch(Sources, run, session, Opponent, DefaultScheme, n => GD.Print("FightScene: " + n), shape);
 
 	/// <summary>YOK-56: one fighter's kit from <see cref="Sources"/>; fixture fallbacks are logged.</summary>
 	public static Kit LoadKit(string fighter)
@@ -166,7 +185,7 @@ public partial class FightScene : Node3D
 		Recorder?.OnScheme(player, scheme); // YOK-49
 	}
 
-	/// <summary>Debug builds: F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
+	/// <summary>Debug builds, and practice mode in every build (YOK-197): F4 (DebugOverlay) flips P1 between Kihon and Kata.</summary>
 	public void ToggleScheme(int player)
 	{
 		SetScheme(player, SchemeOf(player) == ControlScheme.Kihon ? ControlScheme.Kata : ControlScheme.Kihon);
@@ -192,6 +211,8 @@ public partial class FightScene : Node3D
 
 	public override void _Ready()
 	{
+		if (GetNodeOrNull(FightEditorPreview.NodeName) is { } preview) { RemoveChild(preview); preview.Free(); } // YOK-144: the editor-only preview never exists at runtime
+		MusicPlayer.Instance?.PlayBattleMusic();
 		SetUpRun(); // YOK-48: a fresh run, the first fight built from it
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
@@ -200,18 +221,78 @@ public partial class FightScene : Node3D
 		_cameraRig = GetNode<Node3D>("CameraRig"); // YOK-39: scenes/camera_rig.tscn
 		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
-		_hud.ShowOpponent(Opponent); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.ShowOpponent(OpponentYokai, OpponentName); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.TitleRequested += () => LeaveForTitle();
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst
 		ApplyLoseCard(); // YOK-44: the lose-screen story card, {yokai} = the opponent
 		Match.Impact += (_, e) => Shake.OnImpact(e);
+		SetUpHitSounds();
+		AttachHitSounds(Match);
+		SetUpHitSparks(); // YOK-198: V5/V8 hit sparks and the V6 sound-cue hook
 		SetUpAi(); // YOK-27
+		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
+		SetUpTrialLabel(); // YOK-98: a dojo trial has no recording and shows its prompt
+		SetUpPractice(); // YOK-197: practice has no recording and shows its controls
 		SetUpFlow(); // YOK-48: binding card, reward screen, demo complete, F9 debug menu
 		SetUpPause(); // YOK-pause-flow-wiring: Esc / pad Start pause menu
-		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds only.
-		if (!OS.IsDebugBuild()) GetNode("DebugOverlay").QueueFree();
+		// YOK-22: F1 boxes, F2 pause, F3 step; YOK-23: F4 P1 scheme. debug_overlay.tscn is in fight.tscn, kept in debug builds and in practice (YOK-197).
+		if (!OS.IsDebugBuild() && !InPractice) GetNode("DebugOverlay").QueueFree(); // YOK-197: practice keeps it in every build
 		Render();
+	}
+
+	public override void _ExitTree()
+	{
+		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		DetachHitSparks(); // YOK-198
+		MusicPlayer.Instance?.PlayMenuMusic();
+	}
+
+	private void SetUpHitSounds()
+	{
+		var clips = new List<AudioStreamWav>(HitClipPaths.Length);
+		foreach (string path in HitClipPaths)
+		{
+			AudioStreamWav? clip = ResourceLoader.Load<AudioStreamWav>(path);
+			if (clip == null)
+			{
+				GD.PushWarning($"FightScene: could not load hit sound {path}");
+				continue;
+			}
+			clips.Add(clip);
+		}
+		_hitClips = clips.ToArray();
+
+		for (int i = 0; i < _hitPlayers.Length; i++)
+		{
+			var player = new AudioStreamPlayer
+			{
+				Name = $"HitSound{i + 1}",
+				Bus = MenuSettings.SfxBus,
+				ProcessMode = ProcessModeEnum.Pausable,
+				VolumeDb = HitVolumeDb,
+			};
+			_hitPlayers[i] = player;
+			AddChild(player);
+		}
+	}
+
+	private void AttachHitSounds(Match match)
+	{
+		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
+		_hitMatch = match;
+		_hitMatch.Hit += OnHit;
+	}
+
+	private void OnHit(Match _, HitEvent hit)
+	{
+		if (hit.Blocked || _hitClips.Length == 0) return;
+
+		var player = _hitPlayers[_nextHitPlayer++ % _hitPlayers.Length];
+		player.Stop();
+		player.Stream = _hitClips[_nextHitClip++ % _hitClips.Length];
+		player.Play();
 	}
 
 	public override void _Process(double delta)
@@ -226,6 +307,7 @@ public partial class FightScene : Node3D
 		PollReplayKey(); // YOK-49: F8 saves the replay
 		PollModelKey(); // YOK-53: F10 models/capsules
 		PollFlowKeys(); // YOK-48: F9 debug menu
+		PollTutorialKeys(); // YOK-92: Tab / pad Back skips a lesson
 		if (FlowPaused) { _clock.Restart(); Render(); return; }
 
 		int due = Stepper.Filter(_clock.Advance((long)Time.GetTicksUsec()));
@@ -251,6 +333,7 @@ public partial class FightScene : Node3D
 		Stage = DemoStage.Fighting;
 		Match.Reset();
 		_camMatch = null; // YOK-129: the camera snaps to the reset positions
+		SetUpTutorial(); // YOK-92: lessons start over with the duel
 		RebuildAi(); // YOK-27: fresh delay buffer
 		StartRecording(); // YOK-49
 		Shake.Stop();
@@ -287,6 +370,7 @@ public partial class FightScene : Node3D
 			body.Rotation = new Vector3(0f, 0f, tilt * f.Facing);
 		}
 		RenderModels(); // YOK-53
+		RenderTutorial(); // YOK-92
 
 		// YOK-129: the dynamic camera (eased per sim tick in StepSim); the rig carries position and pitch.
 		if (!ReferenceEquals(_camMatch, Match) || !Cam.Ready) StepCamera(); // a new or reset match renders before its first tick
@@ -298,6 +382,7 @@ public partial class FightScene : Node3D
 		_camera.VOffset = vy;
 
 		RenderProjectiles();
+		RenderHitSparks(); // YOK-198
 		_hud.Refresh(Match);
 	}
 

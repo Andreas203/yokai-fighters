@@ -8,25 +8,27 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_menu.tscn" id="7_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_overlay.tscn" id="8_overlay"]
-[ext_resource type="PackedScene" path="res://scenes/stage/bamboo_grove.tscn" id="9_stage"]
 [ext_resource type="PackedScene" path="res://scenes/camera_rig.tscn" id="10_camera"]
-[ext_resource type="PackedScene" path="res://scenes/fighters/ryo.tscn" id="11_ryo"]
-[ext_resource type="PackedScene" path="res://scenes/fighters/kitsune.tscn" id="12_kitsune"]
+[ext_resource type="Script" path="res://scripts/Fight/FightEditorPreview.cs" id="11_preview"]
 
 [node name="Fight" type="Node3D"]
 script = ExtResource("1_fight")
 
-[node name="Stage" parent="." instance=ExtResource("9_stage")]
+[node name="StageContainer" type="Node3D" parent="."]
 
 [node name="CameraRig" parent="." instance=ExtResource("10_camera")]
 
 [node name="Fighters" type="Node3D" parent="."]
 
-[node name="P1" parent="Fighters" instance=ExtResource("11_ryo")]
+[node name="P1Spawn" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="P2" parent="Fighters" instance=ExtResource("12_kitsune")]
+[node name="P2Spawn" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+
+[node name="EditorPreview" type="Node" parent="."]
+editor_description = "Editor only: shows the bamboo grove and Ryo vs the Kitsune at the spawn markers while fight.tscn is open in the editor. Its nodes are never saved, and the game frees this node before building the real stage and fighters."
+script = ExtResource("11_preview")
 
 [node name="Hud" parent="." instance=ExtResource("2_hud")]
 
@@ -34,6 +36,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 layer = 5
 
 [node name="BindingCard" parent="Flow" instance=ExtResource("3_story")]
+
+[node name="TwistCard" parent="Flow" instance=ExtResource("3_story")]
 
 [node name="Rewards" parent="Flow" instance=ExtResource("4_reward")]
 

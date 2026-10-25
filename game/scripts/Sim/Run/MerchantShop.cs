@@ -10,8 +10,8 @@ namespace YokaiFighters.Sim;
 /// heal; until then, and once the stop is left, every purchase and release is refused.
 /// <list type="bullet">
 /// <item>Buy: a common special (A9) from a yokai not bound this run, 50 coins, into its own empty slot at Lv 1 (A3),
-/// in borrowed ink (never carried over, M3). Never a rare, never a cancel rule, never a locked ability (A11) or a
-/// starter (A1), never one Ryo already holds.</item>
+/// in borrowed ink (never carried over, M3). Never a rare, never a cancel rule, never a locked ability (A11) the save has not
+/// unlocked (M1, <see cref="AbilityPool.IsAvailable(SpecialData)"/>) or a starter (A1), never one Ryo already holds.</item>
 /// <item>Buy a modifier (designer, 2026-10-11: modifiers are common abilities, A9/A11): same price and the same
 /// shelf rule; the player picks the special it goes on and <see cref="RunState.CanAttach"/> decides (A2: one per
 /// special, <c>applies_to</c>), the rule the reward draft uses. Borrowed ink too.</item>
@@ -56,7 +56,7 @@ public sealed class MerchantShop
 	{
 		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
 		return pool.Specials
-			.Where(s => !s.Starter && !s.Locked && s.Rarity == SoldRarity && !bound.Contains(s.Source) && !run.Owns(s.Id))
+			.Where(s => !s.Starter && pool.IsAvailable(s) && s.Rarity == SoldRarity && !bound.Contains(s.Source) && !run.Owns(s.Id))
 			.ToArray();
 	}
 
@@ -72,7 +72,7 @@ public sealed class MerchantShop
 	{
 		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
 		return pool.Modifiers
-			.Where(m => !m.Locked && m.Rarity == SoldRarity && !bound.Contains(m.Source) && !run.HasModifier(m.Id))
+			.Where(m => pool.IsAvailable(m) && m.Rarity == SoldRarity && !bound.Contains(m.Source) && !run.HasModifier(m.Id))
 			.ToArray();
 	}
 

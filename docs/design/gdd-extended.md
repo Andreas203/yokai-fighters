@@ -1,6 +1,6 @@
 # Yokai Fighters
 
-> Markdown transcription of Yokai_Fighters_GDD_Extended.pdf. The PDF plus docs/design/gdd-amendments.md remain the source of truth; if this file disagrees with the PDF, the PDF wins and this file gets fixed.
+> Markdown transcription of Yokai_Fighters_GDD_Extended.pdf. The PDF plus docs/design/gdd-amendments.md remain the source of truth; if this file disagrees with the PDF, the PDF wins and this file gets fixed. Amendment callouts (lines starting **Amended by**) are not in the PDF: each names the amendments that replace part of that section.
 
 <!-- page 1 -->
 
@@ -86,6 +86,8 @@ A rural Japanese province at the end of autumn, folded into an illusion by the T
 
 ### 2.3 Story structure
 
+> **Amended by** [AM2](gdd-amendments.md#am2) the binding line, [AM17](gdd-amendments.md#am17) a video on first meeting each yokai (extra, not MVP). Where they disagree with this section, the amendments win.
+
 The story is delivered through short cards, one or two sentences each, so it never interrupts the run for long. Story progress has its own save flag, independent of unlocks, and there is no post-game mode.
 
 | When | Card |
@@ -112,6 +114,8 @@ Win 2. "'You keep them in paper, I keep them in my sleeves,' the Tanuki laughs. 
 
 ### 3.1 Presentation: 2.5D
 
+> **Amended by** [AM8](gdd-amendments.md#am8) closer camera, [AM9](gdd-amendments.md#am9) dynamic zoom, [AM10](gdd-amendments.md#am10) tall-body framing. Where they disagree with this section, the amendments win.
+
 Built in Godot 4 (.NET) with C#. Fighters and stages are 3D models, but every rule happens on a flat 2D plane, as Street Fighter has done since SF4. A perspective camera with a narrow field of view keeps spacing easy to read while bodies and stages still look solid.
 
 ```text
@@ -129,6 +133,8 @@ Built in Godot 4 (.NET) with C#. Fighters and stages are 3D models, but every ru
 *Figure 2. Top-down sketch: gameplay locked to a plane in front of a 3D stage.*
 
 ### 3.2 Fight basics
+
+> **Amended by** [AM8](gdd-amendments.md#am8) walk speed across the closer screen. Where they disagree with this section, the amendments win.
 
 Fights are one round at 60 frames per second. Ryo has 1,000 health, which carries across the whole run.
 
@@ -165,6 +171,8 @@ Combos and cancels work the same in both schemes. Kata is the first cut at the w
 
 ### 3.4 Frame data
 
+> **Amended by** [AM1](gdd-amendments.md#am1) generated clips, [AM5](gdd-amendments.md#am5) rigging, animation and retiming. Where they disagree with this section, the amendments win.
+
 Every move has startup (before it can hit), active (when it can hit) and recovery (when you are stuck finishing it). Clip Matcher picks each move's animation clip first, and Movesmith then writes frame data from that clip's real timing, so what you see always matches what the game resolves. A debug overlay draws hitboxes for the daily spot-check.
 
 ```text
@@ -191,6 +199,8 @@ A cancel skips a move's recovery by starting another the instant the first hits,
 
 ### 3.6 The fight screen
 
+> **Amended by** [AM6](gdd-amendments.md#am6) copy target only in the Tanuki fight. Where they disagree with this section, the amendments win.
+
 ```text
                                     Foxfire Lv 2
 RYO  ·  720 / 1000                  glowing: copy target              KITSUNE (patient)
@@ -204,6 +214,8 @@ METER
 *Figure 4. Fight HUD mockup: health, meter, burst, the glowing copy target and the elder twist reminder.*
 
 ### 3.7 Game feel
+
+> **Amended by** [AM1](gdd-amendments.md#am1) generated animation. Where they disagree with this section, the amendments win.
 
 Hits must feel heavy even with pre-bought animation, so most of the feel comes from timing, camera and sound layered on top.
 
@@ -244,6 +256,8 @@ Hits must feel heavy even with pre-bought animation, so most of the feel comes f
 Lv 2 gives each special one tuning step chosen per move, such as 4 fewer recovery frames or +10% damage.
 
 ### 4.3 Modifiers
+
+> **Amended by** [AM11](gdd-amendments.md#am11) Sumo Stance, [AM12](gdd-amendments.md#am12) Slippery Skin. Where they disagree with this section, the amendments win.
 
 Modifiers are data-only: they attach to one special and change how it plays without new animation. If the balance gate cuts modifiers to 8, the six unlocked ones stay and locked ones drop to 2.
 
@@ -296,6 +310,8 @@ Launch a slow fox flame.   Lv 1 → Lv 2: recovers 4       Your uppercut can't b
 
 ### 5.1 Profiles
 
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's habit, [AM13](gdd-amendments.md#am13) the apprentice's own profile, [AM14](gdd-amendments.md#am14) the Tanuki habit's trigger. Where they disagree with this section, the amendments win.
+
 In-game yokai are a deterministic C# state machine reading behaviour profiles that Habit Writer drafts. Each yokai has two temperaments, so repeat fights play differently, and one learnable habit that an attentive player can punish.
 
 | Yokai | Aggressive temperament | Patient temperament | Habit to punish | Elder twist |
@@ -319,6 +335,8 @@ Across runs, each Tanuki win, up to three, makes yokai react 1 frame faster and 
 
 ### 5.3 The Tanuki
 
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows. Where they disagree with this section, the amendments win.
+
 The Tanuki fights with Ryo's normals and starters plus one copied special. The copy rule is never cut and is built in week 2.
 
 1. Lock point: when Ryo enters the Tanuki's node.
@@ -332,6 +350,8 @@ The Tanuki fights with Ryo's normals and starters plus one copied special. The c
 When shapeshifted, the Tanuki uses Ryo's model and clips, so copying needs no new animation.
 
 ## 6. The run
+
+> **Amended by** [AM3](gdd-amendments.md#am3) quitting mid-node restarts the node. Where they disagree with this section, the amendments win.
 
 ### 6.1 The map
 
@@ -361,6 +381,8 @@ Row 1                       Apprentice              ★ elder (twist icon)   ■
 
 ### 6.2 Health and routes
 
+> **Amended by** [AM15](gdd-amendments.md#am15) the forecast's expected cost. Where they disagree with this section, the amendments win.
+
 Binding a yokai restores 50 health. The values below are tuned by the harness; the targets are fixed.
 
 | Route to the boss | Health on arrival |
@@ -376,6 +398,8 @@ Targets: across 200 simulated first runs by a newcomer-profile Kihon bot, calibr
 
 ### 6.3 Rest stops
 
+> **Amended by** [AM4](gdd-amendments.md#am4) what the merchant sells. Where they disagree with this section, the amendments win.
+
 | Stop | Choose one | Details |
 |---|---|---|
 | Merchant | A free heal (25%), or shopping | Shopping: common abilities from yokai you haven't bound this run (50 coins); release a binding to free a slot (40). Bought abilities appear in grey borrowed ink and never carry over. Never sells rares or cancel rules. |
@@ -384,6 +408,8 @@ Targets: across 200 simulated first runs by a newcomer-profile Kihon bot, calibr
 Sample trials: Spirit Wave: hit the dummy at mid range, then anti-air its jump with Rising Talisman. Iron-Club Charge: block the dummy's string, then punish with the charge before it recovers. River Grab: grab the dummy as it lands from a jump.
 
 ### 6.4 Coins
+
+> **Amended by** [AM4](gdd-amendments.md#am4) no coin cap. Where they disagree with this section, the amendments win.
 
 25 coins per duel on rows 1–6 and 50 for the row-5 elder; the row-8 elder pays a rare ability instead. That is about 75 coins at row 4 and 75 more by row 7, so every coin can be spent.
 
@@ -399,6 +425,8 @@ Sample trials: Spirit Wave: hit the dummy at mid range, then anti-air its jump w
 - Story progress is saved separately, so the first reveal and the first-loss card never depend on unlocks.
 
 ## 8. Screens
+
+> **Amended by** [AM6](gdd-amendments.md#am6) fight HUD row. Where they disagree with this section, the amendments win.
 
 | Screen | Purpose |
 |---|---|
@@ -416,6 +444,8 @@ Practice mode reuses the dojo scene with a training dummy, so it needs no new sc
 <!-- page 11 -->
 
 ## 9. AI architecture
+
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith replaces Asset Scout, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator replace Clip Matcher. Where they disagree with this section, the amendments win.
 
 The AI agents are development tools: an orchestrator leading three teams. None of them run in the shipped game.
 
@@ -454,6 +484,8 @@ Content runs as a pipeline with a gatekeeper: Rules Lawyer returns broken drafts
 
 ### 10.1 Engine, assets and constraints
 
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators, rigging and clip sources, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton. Where they disagree with this section, the amendments win.
+
 - Engine: Godot 4 (.NET) with C#. All assets are pre-bought and unified by a toon shader.
 - Week 1 go/no-go gate: walk, heavy and throw clips must retarget onto each yokai without clipping tails, shell or club; a yokai that fails uses its folklore human guise.
 <!-- page 12 -->
@@ -474,6 +506,8 @@ Content runs as a pipeline with a gatekeeper: Rules Lawyer returns broken drafts
 
 ### 10.3 Token budget
 
+> **Amended by** [AM1](gdd-amendments.md#am1) agent budget lines. Where they disagree with this section, the amendments win.
+
 | Agent | Calls | Tokens per call (in + out) | Total |
 |---|---|---|---|
 | Producer | 3 runs a day × 35 = 105 | 10,000 + 2,000 | 1,260,000 |
@@ -490,6 +524,8 @@ Content runs as a pipeline with a gatekeeper: Rules Lawyer returns broken drafts
 Spend is front-loaded: about 4.5M in week 1, 10M in week 2, 8M in week 3 and 2.2M in each polish week. The Programmer's context is modelled growing from about 10k to 25k tokens; a maintained codebase map keeps it down by pulling only relevant files. If a week runs over, simple tickets move to a smaller Claude model; Sparring Partner is protected. Designer time: 210 hours (6 a day, 7 days a week): about 60 code review, 60 playtesting, 35 rules, 25 spot-checks, 10 purchases and gate, 20 buffer, with code batched into one daily review queue.
 
 ### 10.4 Schedule and cut gates
+
+> **Amended by** [AM1](gdd-amendments.md#am1) week 1 row, [AM13](gdd-amendments.md#am13) week 2 row. Where they disagree with this section, the amendments win.
 
 | Week | Milestone |
 |---|---|
@@ -525,6 +561,8 @@ None of this is in the 5-week build. Each goal is described by what it adds to t
 At Lv 3, each special offers a choice of two evolutions instead of one, such as Twin Foxfire (two hits) or Piercing Foxfire (passes through projectiles). The moment should feel like choosing a path on the map: a commitment you can see in the very next fight. The Tanuki still never copies either evolution.
 
 ### 11.2 Supers
+
+> **Amended by** [AM1](gdd-amendments.md#am1) generated animation. Where they disagree with this section, the amendments win.
 
 A three-bar finisher per fighter, with the camera pushing in and the stage dimming to ink. Supers would make meter a bigger strategic resource, but each needs bespoke animation, which is why they are out of the 5-week build.
 
@@ -567,6 +605,8 @@ Mastery: landing a move earns it mastery, which adds new evolutions and modifier
 After the final boss, a gauntlet of three yūrei: ghostly copies of other players' winning builds, played back by their recorded habits. Ghosts are picked at random, but each must differ from your build and from each other, sharing at most two specials, where the pool allows. Because the fight loop is deterministic, ghost fights need no netcode, only an online store of builds and a leaderboard.
 
 ## 12. Risks and open questions
+
+> **Amended by** [AM1](gdd-amendments.md#am1) generation risks, [AM5](gdd-amendments.md#am5) rig risks. Where they disagree with this section, the amendments win.
 
 | Risk | Mitigation |
 |---|---|

@@ -8,6 +8,8 @@
     "F6": "process: how assets are generated and sourced",
     "M2": "pacing target, read from harness results by Sparring Partner",
     "S1": "tone, judged by the Rules Lawyer on story text",
+    "S5": "story content: the Oni's role, judged by the Rules Lawyer on story text",
+    "S6": "extra, not MVP (AM17): the first-meeting video, built only once every MVP item is done (YOK-207)",
     "V1": "art direction, checked by Asset Smith's acceptance",
     "V9": "stages and music: generated and sourced assets",
     "G1": "scope: read by the agent to rank work, not a feature",
@@ -111,8 +113,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["reward-draft"],
       "evidence": [{"symbol": "class CopyRule\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^CopyRuleTests\\.", "min": 5}],
       "build": {
-        "files": ["game/scripts/Sim/Run/CopyRule.cs", "game/scripts/Sim/Run/RunState.cs", "game/tests/CopyRuleTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/SpecialData.cs", "game/scripts/Sim/Fighter.Specials.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RewardDraftTests.cs"],
+        "files": ["game/scripts/Sim/Run/CopyRule.cs", "game/scripts/Sim/Run/RunState.cs", "game/tests/Sim/Run/CopyRuleTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/SpecialData.cs", "game/scripts/Sim/Fighter.Specials.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/Sim/Run/RewardDraftTests.cs"],
         "brief": "Answer one question from the run state alone, at any moment of a run: which special would the Tanuki copy right now, and what does its copy consist of. Nothing here locks the target (T1 is the next feature) or builds the Tanuki's fighter (T0). T3's first tie-break needs to know which special gained a level most recently, which the run does not record today."
       }
     },
@@ -122,8 +124,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["copy-target", "run-flow"],
       "evidence": [{"symbol": "LockedCopy", "in": "game/scripts/Sim/Run/RunSession.cs"}, {"test": "^CopyLockTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/RunSession.cs", "game/tests/CopyLockTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/RunSession.cs", "game/tests/Sim/Run/CopyLockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "The run session fixes the Tanuki's copy at the moment Ryo enters the boss node and keeps it for the rest of the run, whatever happens to Ryo's slots afterwards. Before that moment nothing is locked. RunSession already marks the place with its T1 hook."
       }
     },
@@ -145,8 +147,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "\\bCoins\\b", "in": "game/scripts/Sim/Run/RunState.cs"}, {"test": "^CoinTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/tests/CoinTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/RunMap.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/tests/Sim/Run/CoinTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/RunMap.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Ryo's coins are part of the run state and are paid when a duel is won. Spending them is the merchant's shop, a later feature: give it a way to spend that refuses what Ryo cannot afford. The rare ability the row-8 elder pays instead of coins is already the elder's reward draft."
       }
     },
@@ -156,8 +158,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Merchant\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^MerchantTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Merchant.cs", "game/tests/MerchantTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Merchant.cs", "game/tests/Sim/Run/MerchantTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Only the first half of R6: at a merchant stop Ryo may take the free heal, once, as his one choice at that stop. Shopping is a later feature that will share the same stop, so the choice must be recorded in a way the shop can also use. Sim only: merchant nodes are stand-in fights in data/map/node-scenes.json today and the rest-stop screen belongs to ui-designer, so do not change how nodes resolve to scenes."
       }
     },
@@ -173,8 +175,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Dojo\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^DojoTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Dojo.cs", "game/tests/DojoTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Dojo.cs", "game/tests/Sim/Run/DojoTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunState.cs", "game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/NodeScenes.cs", "game/scripts/Sim/Run/NodeTypes.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "Only the rest half of R7: at a dojo stop Ryo may rest, once, as his one choice at that stop. The training trial is a later feature that will share the same stop. Sim only: do not change how nodes resolve to scenes."
       }
     },
@@ -196,8 +198,8 @@
       "kind": "code", "owner": "gameplay-programmer", "size": 1, "needs": ["run-flow"],
       "evidence": [{"symbol": "class Unlocks\\b", "in": "game/scripts/Sim/Run/*"}, {"test": "^UnlockTests\\.", "min": 3}],
       "build": {
-        "files": ["game/scripts/Sim/Run/Unlocks.cs", "game/tests/UnlockTests.cs"],
-        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/RunFlowTests.cs"],
+        "files": ["game/scripts/Sim/Run/Unlocks.cs", "game/tests/Sim/Run/UnlockTests.cs"],
+        "context": ["game/scripts/Sim/Run/RunSession.cs", "game/scripts/Sim/Run/RunMap.cs", "game/scripts/Sim/Run/AbilityPool.cs", "game/tests/Sim/Run/RunFlowTests.cs"],
         "brief": "From how a run ended, how many abilities unlock, and which ones given a fixed order of locked ability ids. Saving the result between runs is a later feature."
       }
     },
@@ -215,7 +217,7 @@
     },
     {
       "id": "elder-twists", "title": "Elder twists, with their map icon, intro card and callout",
-      "rules": ["Y3"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "rules": ["Y3"], "gdd": "5.1", "terms": ["8 profiles"], "milestone": "8 profiles",
       "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["profile-ai", "run-flow"],
       "evidence": [{"symbol": "class ElderTwist\\w*\\b", "in": "game/scripts/*"}, {"test": "Twist"}]
     },
@@ -238,6 +240,12 @@
       "evidence": [{"symbol": "class (RunBot|RunHarness|WholeRunHarness)\\b", "in": "game/scripts/*"}, {"test": "^RunHarnessTests\\."}]
     },
     {
+      "id": "practice-mode", "title": "Practice mode: the dojo scene with a training dummy, from the title screen",
+      "rules": ["V10"], "gdd": "8", "terms": ["placeholder screens"], "milestone": "placeholder screens",
+      "kind": "code", "owner": "gameplay-programmer", "size": 2, "needs": ["dojo-trials"],
+      "evidence": [{"symbol": "class Practice\\w*\\b", "in": "game/scripts/*"}, {"test": "^Practice"}]
+    },
+    {
       "id": "hit-feedback", "title": "Hit sparks, frame-timed impact sound and level presets",
       "rules": ["V5", "V6", "V8"], "gdd": "3.7", "terms": ["colour-only presets"], "milestone": "polish",
       "kind": "code", "owner": "gameplay-programmer", "size": 3, "needs": ["frame-stepped-models"],
@@ -251,10 +259,10 @@
       "evidence": [{"file": "data/modifiers/*.json", "min": 14}, {"file": "data/cancels/*.json", "min": 3}]
     },
     {
-      "id": "profiles-7", "title": "The 7 behaviour profiles",
-      "rules": ["Y2"], "gdd": "5.1", "terms": ["7 profiles"], "milestone": "7 profiles",
+      "id": "profiles-8", "title": "The 8 behaviour profiles (AM13)",
+      "rules": ["Y2"], "gdd": "5.1", "terms": ["8 profiles"], "milestone": "8 profiles",
       "kind": "content", "owner": "habit-writer", "size": 3, "needs": [],
-      "evidence": [{"file": "data/profiles/*.json", "min": 7}]
+      "evidence": [{"file": "data/profiles/*.json", "min": 8}]
     },
     {
       "id": "story-card-schedule", "title": "Every card on the story schedule",

@@ -1,0 +1,33 @@
+{
+  "kind": "modifier",
+  "id": "river-pull",
+  "name": "River Pull",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": false,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "properties.pull_on_hit",
+      "op": "set",
+      "value": 1,
+      "when": "on_hit"
+    }
+  ],
+  "card": {
+    "plain": "The river tugs the opponent one step closer when the move hits.",
+    "frames": "Pulls opponent one step closer on hit"
+  },
+  "notes": "'One step' distance is not defined in the GDD; value 1 = one step, unit distance is an open question for the designer. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

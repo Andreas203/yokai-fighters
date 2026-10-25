@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "win-1",
+  "status": "proposed",
+  "trigger": "Win 1: first Tanuki victory in the story save",
+  "text": "\"Techniques are like teacups,\" the Tanuki sighs, \"lonely on a shelf, so I helped you grow to have more to love.\" Ryo's hands are still sticky with ink, and the cups are warm.",
+  "placeholders": [],
+  "speaker": "Tanuki",
+  "rules": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "notes": "Why the Tanuki collects (GDD 2.2/2.3): collects like teacups; helps Ryo grow so there is more to steal."
+}

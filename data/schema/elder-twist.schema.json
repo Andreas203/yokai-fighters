@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/elder-twist.schema.json",
+  "title": "Elder twist",
+  "description": "One elder's rule twist (P5, Y2, Y3) in data/twists/<id>.json. It belongs to the elder a map node names (the node's 'yokai' with 'elder': true), not to a fighter's kit or behaviour profile, so it holds for whichever fighter stands in for that elder. 'effect' is one of a closed list of sim rules the fight applies to the elder's fighter; the text the player reads (HUD label, intro card, first-meeting callout) is story text, referenced by key or story-card id.",
+  "type": "object",
+  "required": ["kind", "id", "status", "elder", "effect", "label_key", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "elder_twist" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "elder": { "enum": ["nine-tailed-kitsune", "elder-oni", "elder-kappa"], "description": "The yokai id elder map nodes name (Y2). One twist per elder." },
+    "effect": {
+      "description": "The sim rule (closed list). reflect_repeated_special: a special the opponent starts that is the same special as the one it started just before (the repeat-th use in a row or later) is reflected when it would connect. special_armour: the elder's specials take up to 'hits' hits each from frame 1 to their last active frame without being interrupted (the damage lands). unbreakable_throws: the opponent's throw-break press (C4, E12) does nothing against the elder's throws.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "repeat"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "reflect_repeated_special" },
+            "repeat": { "type": "integer", "minimum": 2, "maximum": 9, "description": "From which use in a row the special is reflected (2 = the second)." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "hits"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "special_armour" },
+            "hits": { "type": "integer", "minimum": 1, "maximum": 9, "description": "Hits each special takes without being interrupted." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "unbreakable_throws" }
+          }
+        }
+      ]
+    },
+    "label_key": { "type": "string", "pattern": "^twist\\.[a-z0-9-]+$", "description": "Key of the one-line HUD reminder (text: habit-writer)." },
+    "icon": { "$ref": "common.schema.json#/$defs/id", "description": "Map-node icon id (Y3); the UI picks the glyph." },
+    "intro_card": { "$ref": "common.schema.json#/$defs/id", "description": "data/story/<id>.json: the one-line intro card (Y3). Optional until the text is written." },
+    "callout_card": { "$ref": "common.schema.json#/$defs/id", "description": "data/story/<id>.json: the first-meeting callout (Y3). Optional until the text is written." },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  }
+}

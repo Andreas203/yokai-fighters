@@ -121,7 +121,17 @@ public sealed class FighterPresenter
 				return Math.Clamp(total - f.StunLeft, 1, total);
 		}
 		int n = _frameBase + elapsed;
-		return _loop ? ((n - 1) % total + total) % total + 1 : Math.Clamp(n, 1, total);
+		return _loop ? LoopFrame(n, total, _set.ReversedPoses.Contains(_kind)) : Math.Clamp(n, 1, total);
+	}
+
+	/// <summary>
+	/// YOK-131: frame of a looping clip on segment step <paramref name="n"/> (1-based, wraps at <paramref name="total"/>);
+	/// a reversed loop plays it backwards, frame total + 1 - n (the Oni walks back on his forward walk).
+	/// </summary>
+	public static int LoopFrame(int n, int total, bool reversed)
+	{
+		int frame = ((n - 1) % total + total) % total + 1;
+		return reversed ? total + 1 - frame : frame;
 	}
 
 	private (PoseKind, string?, int, bool, bool) Classify(Match m, Fighter f, Fighter opp, bool fresh)
@@ -135,7 +145,8 @@ public sealed class FighterPresenter
 				var move = f.CurrentMove;
 				string? clip = null;
 				if (move != null && _moveClips.TryGetValue(move.Id, out var c)) clip = _set.MoveClip(c);
-				if (!_cat.Has(clip)) clip = move != null && move.IsThrow ? FallbackThrow() : C(PoseKind.Attack);
+				if (!_set.CanPlay(_cat[clip])) clip = move != null && move.IsThrow ? FallbackThrow() : C(PoseKind.Attack); // YOK-146: not on this body's skeleton either
+
 				bool restart = f.MoveFrame < _prevMoveFrame || move?.Id != _prevMoveId;
 				return (PoseKind.Attack, clip, 1, false, restart);
 			}
@@ -189,7 +200,7 @@ public sealed class FighterPresenter
 		return (PoseKind.Idle, C(PoseKind.Idle), m.WorldFrame % idleTotal + 1, true, false);
 	}
 
-	private string? FallbackThrow() => _set.Fighter == "kitsune" ? "kitsune-throw" : "ryo-generic-throw";
+	private string? FallbackThrow() => _set.FallbackThrowClip;
 
 	private int BlendInto(PoseKind from, PoseKind to, Fighter f)
 	{

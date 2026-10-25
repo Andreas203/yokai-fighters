@@ -55,6 +55,11 @@ public partial class DevMenu
 			grid.AddChild(PageLabel(t.Where, 18));
 		}
 		page.AddChild(grid);
+		// YOK-146: compare the Tripo and the Meshy Ryo (and the Tanuki, T0); the next fight built uses the choice.
+		var tripo = new CheckButton { Name = "TripoRyo", Text = "Tripo Ryo (off: Meshy Ryo; next fight)", ButtonPressed = FighterAnimSet.TripoRyo };
+		tripo.AddThemeFontSizeOverride("font_size", 20);
+		tripo.Toggled += on => FighterAnimSet.TripoRyo = on;
+		page.AddChild(tripo);
 		return page;
 	}
 

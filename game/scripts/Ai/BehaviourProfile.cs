@@ -22,6 +22,8 @@ public readonly record struct AiAction(ActionKind Kind, string? MoveId = null)
 {
 	public bool Offensive => Kind is ActionKind.WalkForward or ActionKind.DashForward or ActionKind.Jump
 		or ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
+	/// <summary>YOK-165: the action starts a move (normal, special or throw), so it has recovery and can answer a jump.</summary>
+	public bool IsMove => Kind is ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
 	public override string ToString() => MoveId is null ? BehaviourProfile.ActionName(Kind) : $"{BehaviourProfile.ActionName(Kind)}:{MoveId}";
 }
 
@@ -41,6 +43,21 @@ public sealed record Behaviour(Observation When, AiAction Do, int Weight);
 /// profiles, so the gate is the fight (the node), not the profile.
 /// </summary>
 public enum AiFightTier { Standard, Elder, Tanuki }
+
+/// <summary>
+/// YOK-57, E22: the fight the AI is in, from the entered node. The boss node (the copy-lock node,
+/// <see cref="YokaiFighters.Sim.RunSession.IsCopyLockNode"/>) or a "tanuki" tier = Tanuki; an elder node or "elder" tier = Elder;
+/// anything else, or no node, = Standard (no EX, no burst whatever the profile says). Pure, so the fight scene and the
+/// whole-run harness (YOK-26) gate meter the same way.
+/// </summary>
+public static class AiFightTiers
+{
+	public static AiFightTier Of(YokaiFighters.Sim.NodeContext? node) =>
+		node is null ? AiFightTier.Standard
+		: YokaiFighters.Sim.RunSession.IsCopyLockNode(node) || node.Tier == "tanuki" ? AiFightTier.Tanuki
+		: node.Elder || node.Tier == "elder" ? AiFightTier.Elder
+		: AiFightTier.Standard;
+}
 
 /// <summary>
 /// YOK-57 (E16, C5): when the AI picks a special and sees on its own meter at least the special's EX cost plus
@@ -74,6 +91,9 @@ public sealed record BehaviourProfile
 	[YokaiFighters.Replay.FingerprintOmitWhenNull] public ExUse? ExUse { get; init; }
 	/// <summary>YOK-57: burst use (C6); null = the AI never bursts. Applied only in elder and Tanuki fights (E22).</summary>
 	[YokaiFighters.Replay.FingerprintOmitWhenNull] public BurstUse? BurstUse { get; init; }
+	/// <summary>YOK-165: 0–100, the pre-emptive guard rate (<see cref="ProfileAi.GuardPct"/>); null = not in the file,
+	/// <see cref="ProfileAi.DefaultGuardPct"/> applies. Left out of the fingerprint when null, so profiles without it keep theirs.</summary>
+	[YokaiFighters.Replay.FingerprintOmitWhenNull] public int? GuardPct { get; init; }
 
 	/// <summary>Observations that happen at a moment (rolled once each time they start), not standing conditions.</summary>
 	public static bool IsEvent(Observation o) => o is not (Observation.Neutral or Observation.AtCloseRange
@@ -162,6 +182,11 @@ public sealed record BehaviourProfile
 				ParseAction((string)h["do"]!), Int(h["chance_pct"], $"{id} habit.chance_pct", 1, 100)),
 			Behaviours = behaviours,
 			TellCoverPct = o["tell_cover_pct"] is null ? 0 : Int(o["tell_cover_pct"], $"{id} tell_cover_pct", 0, 100),
+			// YOK-165: present, even as null, must be a whole number 0-100 (a typo must not fall back to the default unseen).
+			GuardPct = o.TryGetPropertyValue("guard_pct", out var g)
+				? g is JsonValue gv && gv.TryGetValue(out int gp) && gp is >= 0 and <= 100 ? gp
+					: throw new FormatException($"{id}: guard_pct must be a whole number from 0 to 100")
+				: null,
 			ExUse = o["ex_use"] is { } ex
 				? new ExUse(Int(ex["chance_pct"], $"{id} ex_use.chance_pct", 0, 100),
 					ex["keep_meter"] is null ? 0 : Int(ex["keep_meter"], $"{id} ex_use.keep_meter", 0, 300))
@@ -183,7 +208,16 @@ public sealed record BehaviourProfile
 		var files = Directory.GetFiles(dir, "*.json");
 		Array.Sort(files, StringComparer.Ordinal);
 		var list = new List<BehaviourProfile>();
-		foreach (var f in files) list.Add(LoadFile(f));
+		var byId = new Dictionary<string, string>(StringComparer.Ordinal);
+		foreach (var f in files)
+		{
+			var p = LoadFile(f);
+			// YOK-174: a node names a profile by id (NodeProfiles.WithNamed), so two files with one id would be ambiguous
+			if (byId.TryGetValue(p.Id, out var first))
+				throw new FormatException($"profile id '{p.Id}' is used by both {Path.GetFileName(first)} and {Path.GetFileName(f)}");
+			byId[p.Id] = f;
+			list.Add(p);
+		}
 		return list.ToArray();
 	}
 }

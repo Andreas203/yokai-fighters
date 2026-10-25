@@ -5,7 +5,7 @@ using Godot;
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-53: a rigged fighter (Meshy humanoid) posed from a <see cref="PoseSample"/>. The AnimationPlayer never
+/// YOK-53: a rigged fighter (Meshy humanoid, or YOK-146 the Tripo shared skeleton) posed from a <see cref="PoseSample"/>. The AnimationPlayer never
 /// advances on its own (manual callback mode): every render calls <c>Seek(t, true)</c> at the exact frame time.
 /// Blends are computed from the tick (seek the source pose, capture, seek the target, slerp). Mirroring is
 /// Scale.X = Facing on <see cref="Mirror"/>, like the hitbox data (mirrored by facing).
@@ -59,7 +59,8 @@ public partial class FighterModel : Node3D
 		player.CallbackModeProcess = AnimationMixer.AnimationCallbackModeProcess.Manual;
 		player.Deterministic = true;
 		var hipRest = _hips >= 0 ? skel.GetBoneRest(_hips).Origin : Vector3.Zero;
-		string key = FormattableString.Invariant($"{set.Fighter}@{hipRest.X:R},{hipRest.Y:R},{hipRest.Z:R}");
+		// YOK-146: the clip root is in the key too, so the Meshy and Tripo Ryo never share a library.
+		string key = FormattableString.Invariant($"{set.Fighter}@{hipRest.X:R},{hipRest.Y:R},{hipRest.Z:R}@{set.ClipRoot}");
 		if (!LibraryCache.TryGetValue(key, out var lib))
 		{
 			lib = BuildLibrary(set, catalog, skel, _hips);
@@ -77,7 +78,8 @@ public partial class FighterModel : Node3D
 	}
 
 	/// <summary>
-	/// Every catalogued clip onto this skeleton (one shared Meshy skeleton, so track paths match): rotations kept,
+	/// Every catalogued clip this body's skeleton has (<see cref="FighterAnimSet.ClipPath"/>: the Meshy file, or for a
+	/// YOK-146 Tripo body the same-named file in its clip root; a clip it lacks is left out) onto it: rotations kept,
 	/// per-bone translation and scale dropped (bones keep this rig's rest lengths), hips X/Z pinned to rest
 	/// (root motion stripped: movement is move data), hips Y scaled by <see cref="HipScale"/> (YOK-130: a taller or
 	/// shorter rig keeps its feet on the floor) and capped at rest in air clips (the sim draws the arc).
@@ -90,7 +92,8 @@ public partial class FighterModel : Node3D
 			GD.PushWarning($"YOK-130: {set.Fighter} rig rest Hips Y {rest.Y} is not a positive finite height; clip hips are not scaled to it");
 		foreach (var (id, info) in catalog.Clips)
 		{
-			var (src, clipHipY) = Source(info.ResPath);
+			if (set.ClipPath(info) is not { } path) continue;
+			var (src, clipHipY) = Source(path);
 			if (src is null) continue;
 			float hipScale = HipScale(rest.Y, clipHipY);
 			if (hipScale < HipScaleWarnMin || hipScale > HipScaleWarnMax)
@@ -147,9 +150,14 @@ public partial class FighterModel : Node3D
 	/// <summary>The clip GLB's rest <c>Hips</c> Y in its bone space; 0 when the clip has no skeleton or no Hips (tests).</summary>
 	public static float ClipHipRestY(ClipInfo clip) => Source(clip.ResPath).HipRestY;
 
-	/// <summary>The factor this model's library uses for one clip (tests): <see cref="HipScale"/> from the two rests.</summary>
-	public float HipScaleFor(ClipInfo clip) =>
-		HipScale(_hips >= 0 ? Skeleton.GetBoneRest(_hips).Origin.Y : 0f, Source(clip.ResPath).HipRestY);
+	/// <summary>The factor this model's library uses for one clip (tests): <see cref="HipScale"/> from the two rests,
+	/// the clip read from the file this body plays (<see cref="FighterAnimSet.ClipPath"/>; NaN when it has none).</summary>
+	public float HipScaleFor(ClipInfo clip) => AnimSet.ClipPath(clip) is { } path
+		? HipScale(_hips >= 0 ? Skeleton.GetBoneRest(_hips).Origin.Y : 0f, Source(path).HipRestY)
+		: float.NaN;
+
+	/// <summary>YOK-146: the rest <c>Hips</c> Y of the GLB at <paramref name="path"/> (0 when it has none).</summary>
+	public static float ClipHipRestY(string path) => Source(path).HipRestY;
 
 	private static (Animation? Anim, float HipRestY) Source(string path)
 	{

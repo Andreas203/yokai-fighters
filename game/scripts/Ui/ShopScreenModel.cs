@@ -11,8 +11,11 @@ public enum ShopKind { Special, Modifier }
 /// <summary>How a shelf card reads: takeable, refused (with a reason), or already bought on this visit.</summary>
 public enum ShopCardState { Buyable, Refused, Bought }
 
+/// <summary>Why a shelf item is refused, for the merchant's line: not enough coins, the special's slot is taken (the shop says "release it first"), or anything else.</summary>
+public enum ShopRefusal { None, Coins, SlotFull, Other }
+
 /// <summary>One card on a shelf. Text comes from the ability's card block (A12); price, state and reason from <see cref="MerchantShop"/>.</summary>
-public sealed record ShopEntry(ShopKind Kind, string Id, string Name, string Source, string Type, string Plain, string Frames, int Price, ShopCardState State, string? Reason);
+public sealed record ShopEntry(ShopKind Kind, string Id, string Name, string Source, string Type, string Plain, string Frames, int Price, ShopCardState State, string? Reason, ShopRefusal Refusal = ShopRefusal.None);
 
 /// <summary>One of Ryo's four slots. <c>Locked</c> = refused although Ryo can pay (a starter, his last special, a closed shop).</summary>
 public sealed record ShopSlotRow(SpecialSlot Slot, bool Empty, string SpecialId, string Name, int Level, string? ModifierName, bool Borrowed, bool ModifierBorrowed,
@@ -48,6 +51,11 @@ public sealed class ShopScreenModel
 	MerchantShop Shop => _merchant.Shop;
 	RunState Run => _session.Run;
 
+	/// <summary>The merchant stop's map row (4 or 7 on the default map): picks the greeting line.</summary>
+	public int Row => _session.Node?.Row ?? 0;
+	/// <summary>The run's seed, so a screen can pick among a line's variants the same way every time.</summary>
+	public int Seed => unchecked((int)_session.Seed);
+
 	public int Health => Run.Health;
 	public int MaxHealth => RunState.MaxHealth;
 	public int Coins => Run.Coins;
@@ -55,6 +63,18 @@ public sealed class ShopScreenModel
 	public int ReleasePrice => MerchantShop.ReleaseCost;
 	/// <summary>The shop is open: the stop's choice was the shop and Ryo still stands at it.</summary>
 	public bool Open => Shop.Open;
+
+	/// <summary>T5: Ryo holds one special, so the shop will not release it.</summary>
+	public bool HoldsLastSpecial => Run.SpecialCount == 1;
+
+	/// <summary>The shop's refusal worded for the player: rule ids stripped (<see cref="Clean"/>) and any ability id named by its display name from the data.</summary>
+	public string Say(string reason)
+	{
+		string t = Clean(reason);
+		var names = _session.Pool.Specials.Select(s => (s.Id, s.Name)).Concat(_session.Pool.Modifiers.Select(m => (m.Id, m.Name))).Where(x => x.Name.Length > 0).OrderByDescending(x => x.Id.Length);
+		foreach (var (id, name) in names) t = t.Replace(id, name, StringComparison.Ordinal);
+		return t;
+	}
 
 	/// <summary>Strips the rule ids the shop's reasons carry for the developer, "(R6)", "(A2: one modifier per special)".</summary>
 	public static string Clean(string reason) => Regex.Replace(reason, @"\s*\([A-Z]\d+[^)]*\)", "").Trim();
@@ -71,7 +91,8 @@ public sealed class ShopScreenModel
 				if (live.FirstOrDefault(s => s.Id == id) is { } s)
 				{
 					string? why = Shop.WhyNotBuy(id);
-					list.Add(new(ShopKind.Special, id, Name(s.Name, id), Title(s.Source), SlotType(s), s.CardPlain, s.CardFrames, BuyPrice, why is null ? ShopCardState.Buyable : ShopCardState.Refused, why is null ? null : Clean(why)));
+					list.Add(new(ShopKind.Special, id, Name(s.Name, id), Title(s.Source), SlotType(s), s.CardPlain, s.CardFrames, BuyPrice, why is null ? ShopCardState.Buyable : ShopCardState.Refused, why is null ? null : Say(why),
+						why is null ? ShopRefusal.None : !Shop.Open ? ShopRefusal.Other : Run[s.Slot] is not null ? ShopRefusal.SlotFull : !Run.CanAfford(BuyPrice) ? ShopRefusal.Coins : ShopRefusal.Other));
 				}
 				else if (_bought.Contains(id) && Run.Owned.Select(o => o.Special.Data).FirstOrDefault(d => d.Id == id) is { } held)
 					list.Add(new(ShopKind.Special, id, Name(held.Name, id), Title(held.Source), SlotType(held), held.CardPlain, held.CardFrames, BuyPrice, ShopCardState.Bought, null));
@@ -97,7 +118,8 @@ public sealed class ShopScreenModel
 						: !Shop.Open ? Shop.WhyNotBuyModifier(id, SpecialSlot.A)
 						: !Run.CanAfford(BuyPrice) ? $"{BuyPrice} coins needed, Ryo has {Run.Coins}"
 						: Run.Owned.Any() ? "no special can carry it" : "Ryo holds no special";
-					list.Add(new(ShopKind.Modifier, id, Name(m.Name, id), Title(m.Source), "modifier", m.CardPlain, m.CardFrames, BuyPrice, why is null ? ShopCardState.Buyable : ShopCardState.Refused, why is null ? null : Clean(why)));
+					list.Add(new(ShopKind.Modifier, id, Name(m.Name, id), Title(m.Source), "modifier", m.CardPlain, m.CardFrames, BuyPrice, why is null ? ShopCardState.Buyable : ShopCardState.Refused, why is null ? null : Say(why),
+						why is null ? ShopRefusal.None : Shop.Open && !Run.CanAfford(BuyPrice) ? ShopRefusal.Coins : ShopRefusal.Other));
 				}
 				else if (_bought.Contains(id) && Run.Owned.Select(o => o.Special.Modifier).FirstOrDefault(x => x?.Id == id) is { } held)
 					list.Add(new(ShopKind.Modifier, id, Name(held.Name, id), Title(held.Source), "modifier", held.CardPlain, held.CardFrames, BuyPrice, ShopCardState.Bought, null));
@@ -131,7 +153,7 @@ public sealed class ShopScreenModel
 				// the shop checks coins last, so a refusal that survives a full purse is a lock.
 				bool locked = why is not null && (Run.CanAfford(ReleasePrice) || o.Data.Starter || Run.SpecialCount == 1);
 				rows.Add(new(slot, false, o.Data.Id, Name(o.Data.Name, o.Data.Id), o.Level, o.Modifier is { } m ? Name(m.Name, m.Id) : null, o.Borrowed, o.ModifierBorrowed,
-					target == slot, why is null, locked, why is null ? null : Clean(why)));
+					target == slot, why is null, locked, why is null ? null : Say(why)));
 			}
 			return rows;
 		}
@@ -146,7 +168,7 @@ public sealed class ShopScreenModel
 		{
 			bool ok = offered.Contains(slot);
 			string? why = Shop.WhyNotBuyModifier(modifierId, slot);
-			rows.Add(new(slot, Name(o.Data.Name, o.Data.Id), o.Level, ok && why is null, why is null ? null : Clean(why)));
+			rows.Add(new(slot, Name(o.Data.Name, o.Data.Id), o.Level, ok && why is null, why is null ? null : Say(why)));
 		}
 		return rows;
 	}
@@ -167,7 +189,8 @@ public sealed class ShopScreenModel
 
 	public MapResult Release(SpecialSlot slot) => Shop.Release(slot);
 
-	static string Name(string name, string id) => name.Length > 0 ? name : id;
+	/// <summary>The display name from the data; a blank name (the schema forbids one) falls back to the id worded as a title, never the raw id.</summary>
+	static string Name(string name, string id) => name.Length > 0 ? name : Story.StoryLibrary.DisplayName(id);
 
 	static string Title(string s) => s.Length == 0 ? s : char.ToUpperInvariant(s[0]) + s[1..];
 

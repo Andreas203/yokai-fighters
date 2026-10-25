@@ -211,3 +211,30 @@ The designer approved a free scripted leg re-pose (`tools/blender/repose_legs.py
   - shell: no visible clipping.
 - **Kappa: GO** (feet WARN cleared except the heavy's deepest tick, 1.2 cm past ±2).
 - The Kappa stills in this folder were re-rendered on the re-posed rig.
+
+## YOK-146 gate: Ryo on the Tripo shared skeleton (Option A), 2026-10-19
+
+Rig: `game/assets/generated/characters/ryo/ryo-tripo-rigged.glb` (verdict ACCEPT for the test branch, provisional: `assets/specs/rigs/ryo-tripo.md`). No Tripo or mocap clips exist yet, so the gate ran on the **stopgap** clips: the Meshy gate clips retargeted by script (`tools/blender/retarget_bvh.py --clip`, bone map "Meshy" in `skeleton.md`), in `game/assets/generated/clips/ryo-tripo/`. 0 credits, no jobs.
+
+Checks, over each `data/clips` trim, as the game plays them:
+- `skin_clip_check.py --rotations-only 1 --fps 60`, with stills at the hit frames and the worst frame in `assets/specs/clips/stills/ryo-tripo-gate/` (front, side and pelvis views);
+- `measure_clip.py --as-stripped`.
+
+The tear limit is 0.2% of 84,653 edges, or 169; the Meshy Ryo's was 62 of 31,130.
+
+| Gate clip | File | Trim (raw ticks) | Still frames | Skin tears (Meshy -> Tripo) | Max stretch | Slide cm/f (Meshy -> Tripo) | Clipping (tails / shell / club / coat) |
+|---|---|---|---|---|---|---|---|
+| Walk (`ryo-walk-fwd`) | `ryo-walk.glb` | 0-64 | 13 (worst), 16, 48 | 12 -> 21 | 5.5 | 2.28 -> 2.79 (movement clip, not judged) | none: coat panel and sash clear the legs |
+| Heavy (`ryo-heavy-punch`) | `ryo-heavy.glb` | 28-61, hit 38-41 | 28 (worst), 38, 41 | 18 -> 30 | 7.7 | 0.94 -> 0.97 PASS | none; hip crease holds in the pelvis view |
+| Throw (`ryo-generic-throw`) | `ryo-grab-2.glb` | 30-59, hit 35-41 | 35, 41, 49 (worst) | 16 -> 20 | 7.2 | 1.11 -> 1.31 WARN | none |
+
+Ryo has no tails, shell or club; the only extra part is the long coat panel on his right, and it clears the body in all three clips.
+
+**Recommendation (designer decides): GO for the test branch on the stopgap clips. The formal G4 for the Tripo set stays OPEN** and reruns on the real clips (Tripo exports, and mocap for the heavy punch and heavy kick) before any frame data is re-measured on them.
+
+Known outside the three gate clips (full table in `ryo-tripo.md`):
+- Four floor or deep-fold clips reach the tear limit in the `Hips` band: `ryo-block-low` 169, `ryo-jump` 170, `ryo-knockdown` 210, `ryo-get-up` 224. It shows as a jagged hakama pleat at the groin (`assets/specs/rigs/stills/ryo-tripo/clips/`).
+- The jump landing puts the left hand into the thigh, a retarget proportion issue (Tripo's hips are wider).
+- `ryo-lk` and `ryo-spirit-wave` cross the 2 cm/frame slide limit.
+
+Proposed fixes if this persists on the real clips: the knee/groin steps already scripted in `repair_weights.py` (C, K), and a fresh take for the jump landing.

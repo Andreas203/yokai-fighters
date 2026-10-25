@@ -22,7 +22,7 @@ public static class RestStopProbes
 		var saved = FightScene.Sources; var savedRun = FightScene.Run; var savedFoe = FightScene.Opponent;
 		FightScene.Sources = FightScene.FixtureSources; FightScene.Run = null;
 		try { body(); }
-		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; RestStopScreenForecast.CostSource = null; }
+		finally { FightScene.Sources = saved; FightScene.Run = savedRun; FightScene.Opponent = savedFoe; }
 	}
 
 	static RunSession NewSession(uint seed = 5) =>
@@ -371,7 +371,7 @@ public static class RestStopProbes
 					foreach (string b in bad) Assert.True(!text.Contains(b), $"{node}: '{p}' = '{text}' reveals '{b}' (S3)");
 				}
 				foreach (var n in AllNodes(screen))
-					if (n is TextureRect tr && tr.Texture?.ResourcePath is { } rp && !n.GetPath().ToString().Contains("Forecast"))
+					if (n is TextureRect tr && ((tr.Texture as AtlasTexture)?.Atlas?.ResourcePath ?? tr.Texture?.ResourcePath) is { } rp && !n.GetPath().ToString().Contains("Forecast"))
 						Assert.True(!rp.ToLowerInvariant().Contains("tanuki"), $"{node}: texture {rp} shows a Tanuki likeness");
 			}
 			finally { runner.RemoveChild(screen); screen.Free(); }

@@ -6,7 +6,7 @@ namespace YokaiFighters.Sim;
 /// <summary>A special started (or upgraded to EX in its first frames).</summary>
 public readonly record struct SpecialEvent(int Fighter, SpecialSlot Slot, string MoveId, int Level, bool Ex, bool Precision);
 
-public enum ProjectileEventKind { Spawn, Hit, Blocked, Clash, Absorbed, OffScreen, Expired }
+public enum ProjectileEventKind { Spawn, Hit, Blocked, Clash, Absorbed, OffScreen, Expired, Reflected }
 
 public readonly record struct ProjectileEvent(int Owner, string MoveId, ProjectileEventKind Kind, int X);
 
@@ -25,6 +25,12 @@ public sealed class Projectile
 	public int Age;
 	public int HitsLeft;
 	public int AbsorbsLeft;
+	/// <summary>YOK-103: the owner's <see cref="Fighter.MoveSerial"/> when it fired: is the owner still in that use of the move?</summary>
+	public int FiredBy;
+	/// <summary>YOK-90: which use in a row of its special fired it (0 = not counted); see <see cref="Match"/> twists.</summary>
+	public int Repeat;
+	/// <summary>YOK-103: turned back by an elder's reflect (YOK-90): hits as the elder's, never as a use of the firer's move.</summary>
+	public bool Reflected;
 
 	/// <summary>Hitbox in world centi-units, mirrored by the direction it flies.</summary>
 	public (int x0, int y0, int x1, int y1) WorldBox()
@@ -84,13 +90,15 @@ public sealed partial class Match
 		EquippedSpecial? eq = slot == SpecialSlot.None ? null : f.Specials[(int)slot];
 		if (eq is null) return false;
 		if (eq.Move.Projectile is { } pd && ProjectileCount(i) >= pd.MaxActive) return false;
-		MoveData m = eq.Move;
-		bool isEx = ex && eq.ExMove != null && TrySpendMeter(i, eq.Data.ExCost);
-		if (isEx) m = eq.ExMove!;
+		StartConditions held = StartConditionsNow(f, slot, eq.Move.StartMask);
+		bool isEx = ex && eq.ExMove != null && TrySpendMeter(i, eq.ExCost);
+		MoveData m = (isEx ? eq.ExMove! : eq.Move).ForStart(held);
 
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
-		f.ActiveMove = precision ? WithPrecision(m) : m;
+		f.Play(precision ? WithPrecision(m) : m);
+		f.ActiveConditions = held;
+		f.SpecialUses[(int)slot]++;
 		f.MoveSlot = -1;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -100,12 +108,30 @@ public sealed partial class Match
 		f.ActiveEx = isEx;
 		f.ActivePrecision = precision;
 		f.SpecialButtons = buttons & (InputBits.Attacks | InputBits.Special); // Special: Kihon (YOK-23)
+		CountSpecialUse(i, eq.Data.Id); // YOK-90: uses in a row, against a reflect twist
 		SpecialStarted?.Invoke(this, new SpecialEvent(i, slot, m.Id, eq.Level, isEx, precision));
 		return true;
 	}
 
 	/// <summary>K1: a Kata motion input deals +PrecisionBonusPct damage (projectile hits included).</summary>
-	private MoveData WithPrecision(MoveData m) => m with { Damage = m.Damage * (100 + Config.PrecisionBonusPct) / 100 };
+	private MoveData WithPrecision(MoveData m) =>
+		m.WithOutcomes(x => x with { Damage = x.Damage * (100 + Config.PrecisionBonusPct) / 100 });
+
+	/// <summary>
+	/// YOK-103: the start conditions a modifier's <c>when</c> reads, as they stand on the tick the special starts
+	/// (only the bits in <paramref name="wanted"/>; the rest are never computed). First use = no start of this slot yet
+	/// this round; health below 30% = Health x 100 &lt; MaxHealth x 30 (Rage Ember, Ryo's health: only Ryo carries
+	/// modifiers, T4); holding up = the parsed direction is 7, 8 or 9 this tick.
+	/// </summary>
+	private static StartConditions StartConditionsNow(Fighter f, SpecialSlot slot, StartConditions wanted)
+	{
+		var held = StartConditions.None;
+		if (wanted.HasFlag(StartConditions.FirstUseEachRound) && f.SpecialUses[(int)slot] == 0) held |= StartConditions.FirstUseEachRound;
+		if (wanted.HasFlag(StartConditions.OwnerHealthBelow30Pct) && (long)f.Health * 100 < (long)f.MaxHealth * SimConfig.LowHealthPct)
+			held |= StartConditions.OwnerHealthBelow30Pct;
+		if (wanted.HasFlag(StartConditions.HoldingUp) && f.Input.Direction >= 7) held |= StartConditions.HoldingUp;
+		return held;
+	}
 
 	/// <summary>
 	/// EX leniency: a second punch (or kick) pressed while the special is still within its first
@@ -120,8 +146,9 @@ public sealed partial class Match
 		if (eq?.ExMove is null) return false;
 		InputBits now = f.Input.Buffer.PressedAt(0) & InputBits.Attacks;
 		if ((now & ~f.SpecialButtons) == 0 || !ExPair(f.SpecialButtons | now)) return false;
-		if (!TrySpendMeter(i, eq.Data.ExCost)) return false;
-		f.ActiveMove = f.ActivePrecision ? WithPrecision(eq.ExMove) : eq.ExMove;
+		if (!TrySpendMeter(i, eq.ExCost)) return false;
+		MoveData exMove = eq.ExMove.ForStart(f.ActiveConditions); // same start conditions as the plain start (YOK-103)
+		f.Play(f.ActivePrecision ? WithPrecision(exMove) : exMove, newUse: false);
 		f.ActiveEx = true;
 		f.SpecialButtons |= now;
 		f.Input.TryConsume(out _); // the second press re-parsed as the same special; it's used up here
@@ -153,7 +180,8 @@ public sealed partial class Match
 				CancelFrom.Specials => f.ActiveSpecial != SpecialSlot.None,
 				CancelFrom.HeavyNormals => m.IsNormal && m.Button is InputBits.HeavyPunch or InputBits.HeavyKick,
 				CancelFrom.Normals => m.IsNormal,
-				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected,
+				// YOK-103 (Undertow): a throw counts once it has landed, not while the opponent can still break it.
+				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
 				_ => false,
 			};
 			if (!from) continue;
@@ -185,6 +213,7 @@ public sealed partial class Match
 			var p = Projectiles[k];
 			p.Age++;
 			p.X += p.Dir * p.Data.Speed * SimConfig.Scale;
+			if (p.Move.ProjectileAngleUp) p.Y += Effects.MulPct(p.Data.Speed, Config.ProjectileAngleUpRisePct) * SimConfig.Scale; // YOK-103
 			var (x0, _, x1, _) = p.WorldBox();
 			ProjectileEventKind? gone = p.Data.Lifetime > 0 && p.Age >= p.Data.Lifetime ? ProjectileEventKind.Expired
 				: x1 <= cx - half || x0 >= cx + half ? ProjectileEventKind.OffScreen : null;
@@ -201,8 +230,8 @@ public sealed partial class Match
 			if (ProjectileCount(i) >= pd.MaxActive) continue;
 			var p = new Projectile
 			{
-				Owner = i, Serial = ++_projectileSerial, Move = m, Data = pd,
-				X = f.X, Y = f.Y, Dir = f.Facing, HitsLeft = pd.Hits, AbsorbsLeft = pd.AbsorbsProjectiles,
+				Owner = i, Serial = ++_projectileSerial, Move = f.ActiveBase ?? m, Data = pd, FiredBy = f.MoveSerial,
+				X = f.X, Y = f.Y, Dir = f.Facing, HitsLeft = pd.Hits, AbsorbsLeft = pd.AbsorbsProjectiles, Repeat = f.ActiveRepeat,
 			};
 			Projectiles.Add(p);
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(i, m.Id, ProjectileEventKind.Spawn, p.X));
@@ -225,8 +254,9 @@ public sealed partial class Match
 			Fighter def = Fighters[1 - p.Owner];
 			if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) continue;
 			if (def.CurrentMove?.InvulnAt(def.MoveFrame, InvulnAgainst.Projectile) == true) continue;
-			if (!HurtOverlaps(def, p.WorldBox())) continue;
-			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, p);
+			if (!HurtContact(def, p.WorldBox(), out var at)) continue;
+			if (Reflects(1 - p.Owner, p.Repeat)) { ReflectProjectile(p); continue; } // YOK-90: turned around, no hit
+			bool blocked = ApplyHit(p.Owner, p.Move, p.Age, def.CurrentMove != null, at, p, reflected: p.Reflected);
 			p.HitsLeft--;
 			any = true;
 			ProjectileChanged?.Invoke(this, new ProjectileEvent(p.Owner, p.Move.Id,
@@ -272,7 +302,10 @@ public sealed partial class Match
 			h = Fnv.Mix(h, p.Age);
 			h = Fnv.Mix(h, p.HitsLeft);
 			h = Fnv.Mix(h, p.AbsorbsLeft);
+			if (p.Move.OnHitVariant != null || p.Move.OnBlockVariant != null) h = Fnv.Mix(h, p.FiredBy); // YOK-103: only read then
+			if (p.Reflected) h = Fnv.Mix(h, 1);
 			h = Fnv.Mix(h, p.Move.Damage);
+			if (p.Repeat != 0) h = Fnv.Mix(h, p.Repeat); // YOK-90: only in reflect fights
 		}
 		return h;
 	}

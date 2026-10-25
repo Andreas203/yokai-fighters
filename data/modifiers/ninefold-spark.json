@@ -1,0 +1,34 @@
+{
+  "kind": "modifier",
+  "id": "ninefold-spark",
+  "name": "Ninefold Spark",
+  "status": "proposed",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "C5",
+    "E16",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": []
+  },
+  "effects": [
+    {
+      "target": "ex.meter_cost",
+      "op": "set",
+      "value": 50
+    }
+  ],
+  "card": {
+    "plain": "Nine sparks of fox magic make the EX version cheaper.",
+    "frames": "EX version costs 50 meter (half a bar) instead of 100"
+  },
+  "notes": "Half of the 1-bar EX cost (C5). Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

@@ -56,45 +56,64 @@ The glowing icon in the forecast must use the same icon and glow as the HUD copy
 - Forecast with no specials beyond starters: still shows a target (T5, always defined). Forecast with ties follows T3.
 - Forecast before data exists (first rest stop): show target and level, with "Expected cost: not enough fights yet" in place of a number. See open questions.
 
-## 2. Merchant shop (`merchant-shop.png`)
+## 2. Merchant shop (`merchant-shop.png`, `merchant-shop-states.png`) — revision 5 (YOK-159, shelf rev 3)
+
+Source: `gen_merchant_shop.py` (writes both SVGs; render with headless Chrome or Edge, main sheet 1920x1080, states sheet 1920x1480 for 11 panels). Designer direction: the merchant speaks in a bubble, choices stand on a real wooden shelf, the description comes on hover or focus, and frame data sits behind a toggle.
+
+### Decisions recorded
+
+- **The shelf is a wooden cabinet with depth.** Side panels, a crown moulding and plinth, a darker back wall with plank lines and a shadow under each board, and each board drawn as a top surface (back edge narrower than the front, so it reads as depth) plus a front lip. Items stand ON the board surface in a small wooden cradle with a contact shadow, not in boxes.
+- **9 items per visit on the main sheet: 3 shelves x 3.** Because 3 shelves always fit, the overflow state is gone. State 8 is now the 6-item variant (2 shelves x 3) the designer raised for balance. Same cabinet one tier shorter; nothing else changes. Which count ships is the designer's call (R6).
+- **Price tags hang from the shelf lip** on a brass hook and string, centred under each item, so no tag covers a talisman. The talisman is now 64 x 90 (taller, closer to an ofuda's proportions) and the tag is 160 x 44 with name 16 px and price 15 px at 1080p (about 10.7 and 10 px at 720p).
+- **The ledger slip slides over the portrait's body** while frame data is on. The portrait is now 220 x 386 so the head stays visible above the slip, and the bubble tail still points at the head. The slip lays out headings in a left column so it needs only 204 px of height. Off, the full portrait shows (panel 11). The slip stays open while focus moves, as before.
+- **No idle bubble line.** With nothing focused the bubble is hidden (empty). It appears when an item is focused or an event fires. The earlier open question is removed.
+- **A bought item rolls up in place**: tied, sealed, grey borrowed ink, tag reads SOLD. Others do not shift (panel 1).
+- The 9-item stock is an EXAMPLE (3 specials, 6 modifiers); the real Kappa stock today is only 5 items. Names beyond the five Kappa ones (Oni Stomp, Thick Hide, Ember Fist, Long Reach) are placeholders. Specials first, then modifiers.
+- Unchanged from the last revision: merchant lines from `data/story/shop/merchant-shop-lines.json` (branch YOK-159-merchant-shop-lines), the 2-sentence bubble (lead-in plus `card.plain`, card text alone if that would exceed 2 sentences, no numbers (A12)), Tab / Y ledger slip with the same contents and format as the reward screen, the slots panel, borrowed ink noted once under the heading.
+- The type mark is the talisman's top band (red SPECIAL, indigo MODIFIER).
 
 ### Elements
 
 | Element | Shows | Rule | Binds to |
 |---|---|---|---|
-| Title, health, coins | As above | C1, R8 | run state |
-| Merchant face + line | Small portrait and a line | S3 | story data |
-| Section heading | "ABILITIES · 50 coins · common · from yokai you have not bound (Kappa)" | R6 | unbound-yokai list for this run |
-| Ability cards (3 shown) | Icon, name, source and type ("Kappa special · throw", "Kappa modifier"), tag (NEW · Lv 1 or MODIFIER), art box, plain-language line, red price seal 50, "grey borrowed ink, run only" note | R6, A7, A8, A12 | shop offer list; each card's `card` block text |
-| Modifier line | "Pick the special to carry it" | E20, A2 | modifier-target step |
-| Slots panel | "YOUR SLOTS", four slots with icon, name, level and a "Release 40" button; one empty slot; Tanuki-target slot framed in foxfire orange | A1, A2, A6, R6, T2 | Ryo's slot list, levels, copy-target query |
-| Release note | "Releasing frees a slot; the move loses its levels" | A6 | none |
-| Target note | "Foxfire is the Tanuki's target (T2); release moves it" | T2, T6 | copy-target query |
-| Locked state | "LOCKED · last special", button replaced | T5 | count of specials in slots |
-| States strip | Mini examples of cannot afford, bought (grey borrowed ink), shelf empty; remove in the final | n/a | n/a |
-| Footer | Move, Buy / Release, Back to rest stop | n/a | input map |
+| Title, health, coins | "SHOP", "RYO · 640 / 1000", coin chip | C1, R8 | run state |
+| Merchant portrait | Placeholder for the human guise; never the Tanuki | S3 | art only |
+| Speech bubble | Brush-ink bubble, tail to the portrait; focus line or event line | S3, A12 | merchant lines plus the focused offer's `card.plain` |
+| Ledger slip | Paper slip, red pin, slides over the portrait's body under the bubble; frame data for the focused item (see decisions) | A12 | focused offer's frame data / `card.frames` |
+| Shelf unit | Wooden cabinet, 3 shelves of 3 items (9 per visit, example stock); 6-item variant is 2 shelves. Specials first, then modifiers | R6 (size open) | shop offer list, specials then modifiers |
+| Shelf item | Standing ofuda on a stand: type band, icon (letter-square until YOK-80/81), name and price (50 + coin) on a tag hung from the shelf lip. No description on the shelf | R6, A8, A12 | offer: icon, name, type, price |
+| Focus state | Focused item lifts 12 px with a foxfire frame and glow | T6 style, Kihon | focus index |
+| Borrowed ink note | "Bought abilities are borrowed ink: grey, this run only." under the heading | R6 | static |
+| Heading | "ABILITIES · 50 coins · common · from yokai you have not bound (Kappa)" | R6 | unbound-yokai list |
+| Slots panel | Hanging scroll: slots 1 to 4, Release 40 chip on the focused slot only, Tanuki-target frame, tied cord and seal for the T5 lock | A1, A2, A6, R6, T2, T5 | slot list, levels, copy-target query |
+| Footer | Chips: Move, Buy / Release, Frame data (Tab / Y), Back to rest stop (one back action) | n/a | input map |
 
-Bought abilities render grey (R6 "borrowed ink") and are never offered as carry-over (M3 does not apply). The shop never lists rares or cancel rules (R6, A9, X1).
+Bubble events: greeting (greeting_row4 / greeting_row7), item_focused, bought_special, bought_modifier, cannot_afford, slot_full, release_binding, release_last_special, shelf_empty, leaving. An event line replaces the focus line; the next focus change brings the focused item's description back. The target step and release confirm have no line of their own yet (flagged on panels 4 and 5).
 
 ### Input and navigation
 
-- Keyboard: Left / Right moves across ability cards; from the last card Right (or Tab) enters the slots panel, Up / Down moves between slots, Left returns to the cards. Enter buys the focused card or releases the focused slot. Esc returns to the rest stop.
-- Pad: D-pad / stick to move, A buy or release, B back.
-- Buying a special with no empty slot: prompt to pick a slot to replace, or tell the player to release one first. Buying a modifier opens the same target step as the reward screen's modifier card.
-- Buy and release both confirm with a short "Buy River Grab for 50?" step. See open questions.
-- Default focus: first affordable card.
+- Grid: the shelf is a 3-wide grid, row by row (specials first, then modifiers). Left / Right move within a shelf; Up / Down move between shelves, keeping the column where the target shelf has an item there, else the nearest item. Focus starts on the first affordable item and the bubble stays hidden until something is focused.
+- Right from the right column (or from the last item on a short shelf) enters the slots panel on the nearest slot; Up / Down moves between slots; Left returns to the shelf at the last focused item.
+- Enter / A buys the focused item (confirm "Buy River Grab for 50?") or, in the slots panel, starts Release. Tab / Y toggles the slip. Esc / B backs out of a prompt, else leaves to the rest stop. Mouse: hover focuses (the bubble speaks), click does what Enter does.
+- Default focus: the first affordable item (River Grab); if none are affordable, the first item. The slip toggle starts off.
+- Mouse and keyboard share one focus, so the bubble only ever speaks for one item.
+- Buying a special with no empty slot opens the replace prompt (state 3). Buying a modifier opens the target step (state 4), the same as the reward screen's modifier card.
 
-### States
+### States (merchant-shop-states.png)
 
-- Affordable: normal card, price seal red.
-- Cannot afford: card dims, seal grey, text "Need 50 · you have 25". Enter does nothing and shakes the coin chip; nothing changes.
-- Bought: card turns grey borrowed ink, tag "BOUGHT", not selectable again.
-- No free slot (special bought): card remains buyable only after a release, or opens replace prompt.
-- Shelf empty: all yokai bound or all items bought; text "Nothing left to sell".
-- Release affordable / not: Release 40 disabled when coins under 40.
-- Last special (T5): the button becomes "LOCKED · last special"; Enter does nothing.
-- Empty slot: dashed slot, not releasable.
-- Tanuki-target slot: orange frame plus warning line.
+1. Bought: the standing ofuda becomes a rolled scroll, tied with a cord and sealed, grey borrowed ink; tag reads "SOLD · borrowed ink"; not selectable again.
+2. Cannot afford: item dims, tag price becomes "Need 50"; Enter does nothing, coin chip shakes, nothing changes.
+3. Slot full when buying a special: pick a slot to replace (no refund); the Foxfire row warns it is the Tanuki target; Esc cancels.
+4. Modifier target step: "Slippery Skin: pick the special that carries it", a row per special, attach rule A2.
+5. Release confirmation: "Release Rising Talisman for 40? It loses its levels; the slot frees up." Default focus on Keep.
+6. T5 lock: tied cord and seal across the last special's entry, "LOCKED · last special"; no Release chip; Enter does nothing.
+7. Shelf empty: bare cabinet, bubble line, footer keeps only Back.
+8. Variant: 6 items on 2 shelves x 3, the same cabinet one tier shorter (replaces the overflow state, which 9 items make unnecessary).
+9. Frame data slip open on a special (River Grab, placeholder numbers; data/moves has no Kappa specials yet).
+10. Slip format reference: the reward screen's sample frames text and the modifier change text.
+11. Slip over the portrait, off and on: head and bubble tail stay visible.
+
+Release unaffordable (coins under 40): the Release chip is greyed on the focused slot. Empty slot: dashed, not releasable. Bought abilities are grey and never offered as carry-over (M3). The shop never lists rares or cancel rules (R6, A9, X1).
 
 ## Open questions for the designer
 
@@ -137,3 +156,11 @@ Left plain on purpose: the portrait and line boxes, health bar, coin chip, key c
 New questions:
 1. In the real shelf, should a bought card be rolled up in place (hiding its text) or stay open, grey, with a seal? Drawn as rolled, tied and sealed in the states strip only.
 2. Should the main rest-stop sheet animate unrolling on entry? Not drawn.
+
+## Open questions: merchant shop shelf (YOK-159)
+
+1. **Shelf size (open R6 rule).** Drawn as 3 shelves of 3 (9 items); state 8 shows the 6-item variant. Which count suits balance, and how are items picked from the unbound yokai's pool? The real Kappa stock is only 5 items, so 9 needs content from more yokai.
+2. **What object stands on the shelf?** Drawn as a standing ofuda on a small stand with the ability icon. Alternatives: a small scroll, a bottle, a tablet. The layout works for any upright object about 64 x 90.
+3. **Modifier flow order.** Buy then pick the special, or pick first. Drawn as buy then pick (state 4). The target step and the release confirm have no merchant line yet (habit-writer).
+4. **Modifier slip numbers.** A modifier slip shows only the change. None of the three Kappa modifiers carries a startup cost in data, so no "Startup +N" is drawn; if a modifier gains one, the slip adds that line.
+5. **Kappa special frame data.** Not in data/moves yet; the River Grab slip numbers are placeholders.

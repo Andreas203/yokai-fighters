@@ -12,7 +12,7 @@ Run (Blender 4.x, headless):
       --out <dir>/ryo-rigged-repaired.glb \
       [--log <dir>/repair_log.json] [--set key=value ...]   # override a PARAMS entry below
 
-Why (assets/specs/ryo-regen.md): the take-2 T-pose has the legs ~4 deg apart, so the auto-skin
+Why (assets/specs/characters/ryo-regen.md): the take-2 T-pose has the legs ~4 deg apart, so the auto-skin
 splits crotch, seat and lower-belly verts between Hips and both UpLeg bones. In a deep crouch
 the belly/sash verts above the hip joint still carry 0.2-0.3 UpLeg weight and get dragged into
 the body (Hips volume ratio 0.686).
@@ -116,6 +116,15 @@ PARAMS = {
 # byte-identical). Others start from PARAMS and add or override keys.
 FIGHTERS = {
     "ryo": {},
+    # YOK-146: Ryo on the Tripo shared skeleton (ryo-tripo-rigged.glb, after canon_tripo_rig.py). Tripo puts the
+    # UpLeg heads level with Hips (~13 cm above the Meshy hip socket), so the "ryo" falloff (0 to +8 cm above the
+    # UpLeg head) left a hard Hips/UpLeg seam at the top of the pelvis that tore in every clip (idle guard 157
+    # edges). Centring the band on the anatomical socket and widening it (front -10..+6 cm, back -8..+10 cm) gave
+    # the fewest tears over the stopgap clips (8-clip set 933 failing edges vs 1,425 with "ryo") and the best
+    # deep crouch (55 edges). Variants tried: no smoothing, no side step, falloff only (1,419-1,552), raised band
+    # -4..+16 (1,131), lower-wider -14..+10 (930, but the high kick FAILs on RightUpLeg volume).
+    "ryo-tripo": {"falloff_front_lo_m": -0.10, "falloff_front_hi_m": 0.06,
+                  "falloff_back_lo_m": -0.08, "falloff_back_hi_m": 0.10},
     # YOK-117. Kitsune's Meshy auto-skin hangs the long back hair (a sheet from the head to the
     # waist, 0.15-0.21 m behind the spine) on LeftArm AND RightArm, and the hair tips and coat
     # back also on Hips + both UpLegs: 886 arm-and-leg bleed verts, and the waist tears in every
@@ -198,6 +207,7 @@ FIGHTERS = {
     },
 }
 TRUNK = ("Hips", "Spine02", "Spine01", "Spine", "neck")
+TRUNK_TRIPO = ("Hips", "Spine", "Spine1", "Spine2", "Neck")  # YOK-146 shared skeleton (Option A), bottom-up
 ARM_BONES = tuple(s + n for s in ("Left", "Right") for n in ("Shoulder", "Arm", "ForeArm", "Hand"))
 LEG_BONES = tuple(s + n for s in ("Left", "Right") for n in ("UpLeg", "Leg", "Foot", "ToeBase"))
 
@@ -414,6 +424,7 @@ def main():
 
     # verts the repair may change; Ryo: the pelvis band only
     edit = region.copy()
+    TRUNK = globals()["TRUNK"] if "Spine02" in B else TRUNK_TRIPO  # same chain by height on either skeleton
     TI = [B[n] for n in TRUNK]
     AI = [B[n] for n in ARM_BONES]
     LI = [B[n] for n in LEG_BONES]

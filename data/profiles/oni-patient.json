@@ -30,19 +30,39 @@
       "weight": 35
     },
     {
+      "when": "at_mid_range",
+      "do": "normal:oni-medium-kick",
+      "weight": 20
+    },
+    {
+      "when": "opponent_whiffed",
+      "do": "normal:oni-heavy-kick",
+      "weight": 60
+    },
+    {
       "when": "opponent_whiffed",
       "do": "dash_forward",
-      "weight": 70
+      "weight": 20
     },
     {
       "when": "opponent_in_recovery",
-      "do": "dash_forward",
-      "weight": 30
+      "do": "normal:oni-heavy-punch",
+      "weight": 40
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-light-punch",
+      "weight": 25
+    },
+    {
+      "when": "at_close_range",
+      "do": "normal:oni-medium-punch",
+      "weight": 15
     },
     {
       "when": "at_close_range",
       "do": "throw",
-      "weight": 20
+      "weight": 12
     },
     {
       "when": "opponent_attacking",
@@ -51,8 +71,13 @@
     },
     {
       "when": "opponent_jumping",
+      "do": "normal:oni-medium-punch",
+      "weight": 40
+    },
+    {
+      "when": "opponent_jumping",
       "do": "block",
-      "weight": 30
+      "weight": 20
     }
   ],
   "rules": [
@@ -63,5 +88,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Oni patient (Y2): walks in, punishes whiffs. The whiff punish is a dash_forward stand-in for the Iron-Club Charge. PROVISIONAL: data/moves/ has no Oni normals or Iron-Club Charge yet (clips blocked on concept art), so this uses only generic actions (walk, dash, jump, block, throw) and cannot strike at close range. When oni-* normals and special:iron-club-charge land, add close-range pokes and swap the whiff punish to the charge. No ids invented."
+  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. Anti-air (YOK-165) kept: opponent_jumping answers oni-medium-punch 40 plus block 20; the medium punch is the single attacking answer to a jump. Iron-Club Charge not wired (no special in data/moves)."
 }

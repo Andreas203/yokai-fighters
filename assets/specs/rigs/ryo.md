@@ -1,7 +1,9 @@
 # Ryo rig
 
+> **YOK-146 (2026-10-19):** this is the **Meshy** Ryo rig (previous shared skeleton). The Tripo Ryo on the Option A shared skeleton is in `assets/specs/rigs/ryo-tripo.md`. This rig and its clips stay until the Tripo set passes G4.
+
 Ticket: YOK-111 (carries over YOK-30 rig and YOK-31 retarget gate). Owner: rig-specialist. Rules: F6, G4, T0, E15, AM5.
-Model spec and acceptance: `assets/specs/ryo.md` (asset-smith). Shared skeleton: `assets/specs/rigs/skeleton.md`.
+Model spec and acceptance: `assets/specs/characters/ryo.md` (asset-smith). Shared skeleton: `assets/specs/rigs/skeleton.md`.
 
 **Verdict: ACCEPT** (carried over from the closed G4 gate; designer decision 2026-10-06, Ryo GO). Scripted rig check pending (YOK-110).
 

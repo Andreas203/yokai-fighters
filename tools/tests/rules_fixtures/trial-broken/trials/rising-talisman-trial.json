@@ -1,0 +1,34 @@
+{
+  "kind": "trial",
+  "id": "rising-talisman-trial",
+  "status": "proposed",
+  "special": "fox-mirage",
+  "prompt": "Anti-air the dummy's jump with Rising Talisman.",
+  "attempts": 3,
+  "setup": {
+    "distance": 160,
+    "attempt_frames": 600,
+    "dummy": {
+      "action": "jump",
+      "every": 120
+    }
+  },
+  "goal": {
+    "steps": [
+      {
+        "event": "hit",
+        "move": "rising-talisman",
+        "dummy_state": "airborne"
+      }
+    ]
+  },
+  "rules": [
+    "R7",
+    "K1",
+    "K2",
+    "K3",
+    "F3",
+    "E16"
+  ],
+  "notes": "Teaches the anti-air role (startup 5, air-invulnerable frames 1-5). The dummy jumps straight up every 120 ticks from tick 1, about 5 timed chances per attempt. Kihon: forward + slot B. Start distance 160 keeps the dummy's air column inside the strike box; harness to confirm."
+}

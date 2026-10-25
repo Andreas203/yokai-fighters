@@ -27,6 +27,17 @@ public partial class RestStopScreenDecor : Control
 		c.DrawStyleBox(box, r);
 	}
 
+	/// <summary>The labelled dashed box for a portrait with no art yet; the shop has its plate and turns it off.</summary>
+	protected virtual bool PortraitPlaceholder => true;
+
+	/// <summary>Set by the rest stop when the portrait box holds art (the merchant's plate); the dojo master has none yet.</summary>
+	public bool PortraitFilled
+	{
+		get => _portraitFilled;
+		set { if (_portraitFilled == value) return; _portraitFilled = value; QueueRedraw(); }
+	}
+	private bool _portraitFilled;
+
 	public override void _Draw()
 	{
 		// The unrolled handscroll: pine cloth above and below, rods at both sides sticking out past the paper.
@@ -44,7 +55,7 @@ public partial class RestStopScreenDecor : Control
 		foreach (string name in HangerNames)
 			if (GetParent()?.GetNodeOrNull<Control>(name) is { } h) Hanging(h.GetRect());
 
-		if (GetParent()?.GetNodeOrNull<Control>("Portrait") is { } p) Placeholder(p.GetRect());
+		if (PortraitPlaceholder && !PortraitFilled && GetParent()?.GetNodeOrNull<Control>("Portrait") is { } p) Placeholder(p.GetRect());
 	}
 
 	/// <summary>One hanging scroll: cord to a peg, a rod and an indigo band at top and bottom, paper between.</summary>

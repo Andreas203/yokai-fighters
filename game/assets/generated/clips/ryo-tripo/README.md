@@ -1,0 +1,11 @@
+# STOPGAP clips: Ryo on the Tripo shared skeleton (YOK-146)
+
+**These are temporary.** They exist only so the test branch can play the new Tripo Ryo (`characters/ryo/ryo-tripo-rigged.glb`) before his real clips exist. Replace them as soon as the Tripo exports and the mocap takes (heavy punch, heavy kick) land, and do not tune frame data against them.
+
+- **What they are:** each file is the Meshy clip of the same name (`clips/ryo/*.glb`, plus `clips/ryo-heavy.glb`, `clips/ryo-grab-2.glb` and `characters/ryo/ryo-walk.glb`), retargeted by script onto the Option A shared skeleton (`assets/specs/rigs/skeleton.md`) through its "Bone map: Meshy". Spine bones are mapped by chain position. No pose was placed by hand (F5) and no credits were spent.
+- **Tool:** `tools/blender/retarget_bvh.py --clip <meshy clip> --rig game/assets/generated/characters/ryo/ryo-tripo-rigged.glb --out <this folder>/<same name>`, with the defaults for `--clip`: rest-direction alignment on, hips in place (vertical only), proxy mesh. Per-clip logs are in `assets/specs/rigs/logs/ryo-tripo-retarget/`.
+- **Timing:** the same frame numbers as the source (60 fps, frame N = raw tick N), so every `data/clips/ryo-*.json` trim and hit frame still applies unchanged.
+- **Root:** `Hips` keeps only its height change, scaled by the hip-height ratio (Tripo 0.998 m / Meshy 0.949 m); ground travel is stripped. The clip's `Hips` rest equals the rig's, so `FighterModel.HipScale` is 1.
+- **Mesh:** none. Each file carries a 25-triangle proxy skinned one triangle per bone, so Godot builds the `Armature/Skeleton3D` the game reads. A clip is 64 to 376 KB (4.1 MB for all 26) instead of the rig's 9 MB. Never display a clip file as a character.
+- **Not on Meshy rigs:** the bone names differ (`Spine` is the lowest spine bone here and the chest on Meshy). Kitsune, Oni and Kappa must keep reading `clips/ryo/` until their own Tripo redo tickets.
+- **Quality:** the per-clip measurements (foot slide, joint acceleration, skin tears against the Meshy original) and the G4 status are in `assets/specs/rigs/ryo-tripo.md` and `assets/specs/clips/retarget_gate.md`. `ryo-jump-punch.glb` is retargeted only for completeness; `data/clips/ryo-jump-punch.json` plays `ryo-jump-kick.glb`.

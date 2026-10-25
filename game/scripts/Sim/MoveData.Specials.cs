@@ -63,12 +63,12 @@ public sealed partial record MoveData
 		{
 			if (props.TryGetProperty("projectile", out var p) && p.ValueKind == JsonValueKind.Object)
 			{
-				int Req(string n) => p.TryGetProperty(n, out var v) ? v.GetInt32()
+				int Req(string n) => p.TryGetProperty(n, out var v) ? v.WholeInt()
 					: throw new FormatException($"{move.Id}: properties.projectile.{n} is required");
-				int Opt(string n, int d) => p.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : d;
+				int Opt(string n, int d) => p.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.Number ? v.WholeInt() : d;
 				var r = p.TryGetProperty("hitbox", out var hb) ? hb : throw new FormatException($"{move.Id}: properties.projectile.hitbox is required");
 				proj = new ProjectileData(Req("spawn_frame"), Req("speed"),
-					new Box(r.GetProperty("x").GetInt32(), r.GetProperty("y").GetInt32(), r.GetProperty("w").GetInt32(), r.GetProperty("h").GetInt32()),
+					new Box(r.GetProperty("x").WholeInt(), r.GetProperty("y").WholeInt(), r.GetProperty("w").WholeInt(), r.GetProperty("h").WholeInt()),
 					Req("hits"), Opt("lifetime", 0),
 					p.TryGetProperty("passes_projectiles", out var pp) && pp.GetBoolean(),
 					Opt("absorbs_projectiles", 0), Opt("max_active", 1));
@@ -90,7 +90,7 @@ public sealed partial record MoveData
 						"throw" => InvulnAgainst.Throw,
 						var o => throw new FormatException($"{move.Id}: invuln against '{o}' is unknown"),
 					};
-					invuln.Add(new InvulnWindow(fr[0].GetInt32(), fr[1].GetInt32(), a));
+					invuln.Add(new InvulnWindow(fr[0].WholeInt(), fr[1].WholeInt(), a));
 				}
 		}
 		var cancels = new List<CancelWindow>();
@@ -106,7 +106,7 @@ public sealed partial record MoveData
 						case "block": block = true; break;
 						case "whiff": whiff = true; break;
 					}
-				cancels.Add(new CancelWindow(fr[0].GetInt32(), fr[1].GetInt32(), hit, block, whiff));
+				cancels.Add(new CancelWindow(fr[0].WholeInt(), fr[1].WholeInt(), hit, block, whiff));
 			}
 		return move with { Projectile = proj, Invuln = invuln.ToArray(), CancelWindows = cancels.ToArray() };
 	}

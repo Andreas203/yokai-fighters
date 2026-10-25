@@ -1,0 +1,163 @@
+name: ci
+# YOK-190: every pull request gets a Linux build and test signal, whatever it touches.
+#   build-test  dotnet build -> headless import -> full headless test suite (game/tests/test_runner.tscn)
+#   tool-tests  the Python tool tests (tools/tests/test_*.py, tools/goal_agent/test_*.py, tools/style_agent/test_*.py)
+# The verdict of the suite is its TESTS line: the job fails on any FAIL line, a non-zero failed count or a
+# missing TESTS line. Nothing here merges or pushes: the designer reviews and merges every PR.
+#
+# The Godot setup is copied from data-merge-check.yml, not shared through a local composite action:
+# data-merge-check keeps PR code away from the runner's env files before its verdict, and a local action
+# would be read from the PR's own checkout. Keep GODOT_VERSION, the cache key and the paths in step with it.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.7.2
+  # SHA-256 of Godot_v4.7.2-stable_mono_linux_x86_64.zip: the digest GitHub lists for the asset on the
+  # godotengine/godot-builds 4.7.2-stable release, checked on a fresh download whose SHA-512 matches the
+  # release's official SHA512-SUMS.txt. Change it together with GODOT_VERSION.
+  GODOT_ZIP_SHA256: 129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247
+
+jobs:
+  build-test:
+    name: build and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Paths outside the checkout
+        run: |
+          echo "GODOT_DIR=$RUNNER_TEMP/godot-bin" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/ci"
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "10.0.x"
+
+      # Same path and key as data-merge-check. Neither workflow runs on a push to main, so a cache is saved
+      # per PR ref (and per manually dispatched ref): each PR downloads Godot once, then reuses it on re-runs.
+      # Restore and save are split so the download is saved right away: actions/cache's post step saves only
+      # when the whole job passes, and a red suite would otherwise download Godot on every run.
+      - name: Restore Godot
+        id: godot-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.GODOT_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
+
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          base=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+          mkdir -p "$GODOT_DIR" && cd "$GODOT_DIR"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          echo "${GODOT_ZIP_SHA256}  godot.zip" | sha256sum -c -
+          unzip -q godot.zip && rm godot.zip
+
+      # Keep Save Godot before any step that runs PR code (Build, Import, Test suite): the cache then holds
+      # only the verified download, never anything the PR's code could have written into GODOT_DIR.
+      - name: Save Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.GODOT_DIR }}
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-editor
+
+      - name: Locate Godot
+        run: echo "GODOT=$GODOT_DIR/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: game
+        run: dotnet build
+
+      - name: Import
+        run: |
+          set -o pipefail
+          "$GODOT" --headless --path game --import 2>&1 | tail -n 40
+
+      # The whole suite runs in one process. A crash at exit after the TESTS line (YOK-161, YOK-162) does not
+      # change the verdict, which is the TESTS line; it is reported as a warning. A crash or hang before the
+      # TESTS line fails the job; a hang after it, killed by the timeout (exit 124), is a warning of its own.
+      - name: Test suite
+        run: |
+          log="$RUNNER_TEMP/ci/suite.log"
+          set +e
+          timeout 30m "$GODOT" --headless --path game res://tests/test_runner.tscn > "$log" 2>&1
+          code=$?
+          set -e
+          totals=$(grep '^TESTS ' "$log" | tail -n 1 || true)
+          fails=$(grep '^FAIL ' "$log" || true)
+          nfail=$(printf '%s' "$fails" | grep -c '^FAIL ' || true)
+          # Informational only, no floor: [Test] attributes found in game/ (passed + failed should match it).
+          expected=$(grep -rhE '^\s*\[Test\]' --include=*.cs game | wc -l)
+          {
+            echo "### Headless test suite"
+            echo
+            echo "\`${totals:-no TESTS line: the runner did not finish (exit $code)}\` ($expected [Test] methods found in game/)"
+            if [ -n "$fails" ]; then
+              echo; echo "Failing tests ($nfail):"; echo '```'; printf '%s\n' "$fails"; echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$totals" ]; then
+            echo "::error::The test runner did not print a TESTS line (exit $code); last lines of the log:"
+            tail -n 60 "$log"
+            exit 1
+          fi
+          echo "$totals"
+          if [ -n "$fails" ]; then printf '%s\n' "$fails"; fi
+          passed=$(echo "$totals" | sed -nE 's/^TESTS ([0-9]+) passed, ([0-9]+) failed.*/\1/p')
+          failed=$(echo "$totals" | sed -nE 's/^TESTS ([0-9]+) passed, ([0-9]+) failed.*/\2/p')
+          if [ -z "$passed" ] || [ -z "$failed" ]; then
+            echo "::error::Unreadable TESTS line: $totals"; exit 1
+          fi
+          if [ "$failed" != 0 ] || [ "$nfail" != 0 ] || [ "$passed" = 0 ]; then
+            echo "::error::$totals ($nfail FAIL line(s))"; exit 1
+          fi
+          if [ "$code" = 124 ]; then
+            echo "::warning::$totals, but Godot hung after TESTS, killed by timeout (exit 124)"
+          elif [ "$code" != 0 ]; then
+            echo "::warning::$totals, but Godot exited with code $code after the TESTS line (exit crash, see YOK-161/YOK-162)"
+          else
+            echo "::notice::$totals"
+          fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: suite-log
+          path: ${{ runner.temp }}/ci/suite.log
+          if-no-files-found: ignore
+
+  tool-tests:
+    name: python tool tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0   # the data merge check tests diff against origin/main
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Install the schema validator
+        run: pip install -r tools/requirements.txt
+
+      # Godot is not installed in this job, so the data merge check's one end-to-end case skips itself;
+      # build-test runs the real suite.
+      - name: Tool tests
+        run: python -I -m unittest discover -s tools -p 'test_*.py' -v
+
+      - name: Goal agent tests
+        if: success() || failure()   # still report when the tool tests failed
+        run: python -I -m unittest discover -s tools/goal_agent -p 'test_*.py' -v
+
+      - name: Style agent tests
+        if: success() || failure()
+        run: python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v

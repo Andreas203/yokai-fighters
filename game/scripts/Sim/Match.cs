@@ -37,6 +37,11 @@ public sealed partial class Match
 	public int KoFrame { get; private set; }
 	/// <summary>0 or 1 when someone won, -1 for a double KO or while fighting.</summary>
 	public int Winner { get; private set; } = -1;
+	/// <summary>
+	/// YOK-198: times <see cref="Reset"/> ran (1 after construction). Presentation uses it to tell a reset match from
+	/// the one it was following (hit sparks). Bookkeeping only: no sim rule reads it and it is not in StateHash.
+	/// </summary>
+	public int Resets { get; private set; }
 
 	private int _koTicks;
 
@@ -70,6 +75,9 @@ public sealed partial class Match
 		ResetMeterState(); // YOK-20
 		Projectiles.Clear(); // YOK-21
 		_projectileSerial = 0;
+		ResetTwistState(); // YOK-90
+		ResetAftershocks(); // YOK-136
+		Resets++; // YOK-198: presentation bookkeeping, outside StateHash
 	}
 
 	/// <summary>Queue damage on a fighter; applied at the end of the current world frame.</summary>
@@ -160,7 +168,7 @@ public sealed partial class Match
 				// Placeholder for a side-switching move (jump-over, Fox Mirage): land just behind the opponent.
 				int side = Math.Sign(o.X - before);
 				if (side == 0) side = f.Facing;
-				f.X = o.X + side * Config.BodyWidth;
+				f.X = o.X + side * PushGap(f, o);
 			}
 			if (f.Actionable && f.Pressed(input, InputBits.DebugStrike))
 				Fighters[1 - i].PendingDamage += Config.DebugStrikeDamage;
@@ -173,9 +181,11 @@ public sealed partial class Match
 		ResolvePositions(moved);
 		UpdateFacing();
 		StepProjectiles();    // YOK-21: travel, despawn, spawn on the move's spawn frame
+		StepAftershocks();    // YOK-136: age, expire, spawn on the move's first active frame
 		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
 		ResolveHits();
 		ResolveProjectiles(); // YOK-21: clashes, then projectile hits
+		ResolveAftershocks(); // YOK-136: second quakes
 		ApplyDamage();
 	}
 
@@ -231,7 +241,7 @@ public sealed partial class Match
 	{
 		f.State = FighterState.Attack;
 		f.ResetSpecialMoveState();
-		f.ActiveMove = f.Moves[slot];
+		f.Play(f.Moves[slot]);
 		f.MoveSlot = slot;
 		f.MoveFrame = 1;
 		f.MoveConnected = false;
@@ -301,36 +311,62 @@ public sealed partial class Match
 	/// </summary>
 	private void ResolveHits()
 	{
-		bool hit0 = Connects(P1, P2), hit1 = Connects(P2, P1);
+		bool hit0 = Connects(P1, P2, out var at0), hit1 = Connects(P2, P1, out var at1);
 		if (!hit0 && !hit1) return;
 		// Snapshot both moves before either hit applies: a trade interrupts both (C7: both counterhit).
 		MoveData? m0 = P1.CurrentMove, m1 = P2.CurrentMove;
 		int f0 = P1.MoveFrame, f1 = P2.MoveFrame;
-		if (hit0) ApplyHit(0, m0!, f0, m1 != null);
-		if (hit1) ApplyHit(1, m1!, f1, m0 != null);
+		// YOK-90: a repeated special the elder reflects lands on its user instead.
+		if (hit0) { if (Reflects(1, P1.ActiveRepeat)) ReflectStrike(0, m0!, f0, at0); else ApplyHit(0, m0!, f0, m1 != null, at0); }
+		if (hit1) { if (Reflects(0, P2.ActiveRepeat)) ReflectStrike(1, m1!, f1, at1); else ApplyHit(1, m1!, f1, m0 != null, at1); }
 		ResolvePositions(stackalloc int[2]);
 	}
 
-	private bool Connects(Fighter att, Fighter def)
+	/// <param name="at">YOK-198: where it connected (<see cref="HurtContact"/>), for the hit spark only.</param>
+	private bool Connects(Fighter att, Fighter def, out (int X, int Y) at)
 	{
+		at = default;
 		MoveData? m = att.CurrentMove;
 		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
 		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
 		InvulnAgainst kind = att.Airborne ? InvulnAgainst.Strike | InvulnAgainst.Air : InvulnAgainst.Strike;
 		if (def.CurrentMove?.InvulnAt(def.MoveFrame, kind) == true) return false; // YOK-21: properties.invuln
 		foreach (var hb in m.Hitboxes)
-			if (hb.Covers(att.MoveFrame) && HurtOverlaps(def, WorldBox(att, hb.Box))) return true;
+			if (hb.Covers(att.MoveFrame) && HurtContact(def, WorldBox(att, hb.Box), out at)) return true;
 		return false;
 	}
 
 	/// <summary>A world box against the defender's hurtboxes: its move's boxes on this frame, else its stance box.</summary>
-	private bool HurtOverlaps(Fighter def, (int x0, int y0, int x1, int y1) a)
+	private bool HurtOverlaps(Fighter def, (int x0, int y0, int x1, int y1) a) => HurtContact(def, a, out _);
+
+	/// <summary>
+	/// <see cref="HurtOverlaps"/>, plus where: the centre of the first overlap found (world centi-units, integer
+	/// halves round toward zero). YOK-198: it only rides on <see cref="ImpactEvent.At"/> for the hit spark; no
+	/// sim state reads it.
+	/// </summary>
+	private bool HurtContact(Fighter def, (int x0, int y0, int x1, int y1) a, out (int X, int Y) at)
 	{
 		MoveData? dm = def.CurrentMove;
-		if (dm is null) return Overlaps(a, WorldBox(def, BodyHurtbox(def)));
+		if (dm is null) return Contact(a, WorldBox(def, BodyHurtbox(def)), out at);
 		foreach (var hu in dm.Hurtboxes) // frames a move gives no hurtbox are invulnerable, by data
-			if (hu.Covers(def.MoveFrame) && Overlaps(a, WorldBox(def, hu.Box))) return true;
+			if (hu.Covers(def.MoveFrame) && Contact(a, WorldBox(def, hu.Box), out at)) return true;
+		at = default;
 		return false;
+	}
+
+	private static bool Contact((int x0, int y0, int x1, int y1) a, (int x0, int y0, int x1, int y1) b, out (int X, int Y) at)
+	{
+		at = default;
+		if (!Overlaps(a, b)) return false;
+		at = ((Math.Max(a.x0, b.x0) + Math.Min(a.x1, b.x1)) / 2, (Math.Max(a.y0, b.y0) + Math.Min(a.y1, b.y1)) / 2);
+		return true;
+	}
+
+	/// <summary>YOK-198: the middle of a fighter's stance body box, where a landed throw's spark goes.</summary>
+	private (int X, int Y) BodyCentre(Fighter f)
+	{
+		var (x0, y0, x1, y1) = WorldBox(f, BodyHurtbox(f));
+		return ((x0 + x1) / 2, (y0 + y1) / 2);
 	}
 
 	/// <summary>Hurtbox of a fighter not in a move, by stance (SimConfig: proposed sizes).</summary>
@@ -351,17 +387,34 @@ public sealed partial class Match
 
 	/// <param name="projectile">YOK-21: the hit came from this projectile, not the attacker's body: the attacker's
 	/// move doesn't count as connected, the push follows the projectile and a cornered defender hands none back.</param>
-	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, Projectile? projectile = null)
+	/// <param name="reflected">YOK-90: an elder's reflect: <paramref name="attIndex"/> is the elder and <paramref name="m"/>
+	/// the defender's own move turned back on it; like a projectile, the elder's own move is untouched and the push
+	/// is away from the elder.</param>
+	/// <param name="remoteDir">YOK-136: non-zero = the hit came from an aftershock facing this way; handled like a projectile's.</param>
+	/// <param name="contact">YOK-198: where the boxes met, before any push; passed on in <see cref="ImpactEvent.At"/> only. Required, so a new hit path cannot leave it at the world origin.</param>
+	private bool ApplyHit(int attIndex, MoveData m, int frame, bool defenderWasAttacking, (int X, int Y) contact, Projectile? projectile = null, bool reflected = false, int remoteDir = 0)
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		bool blocked = def.Guarding && (!m.Low || def.Crouching); // C3: lows only crouching
-		if (projectile is null)
+		bool body = projectile is null && !reflected && remoteDir == 0;
+		// YOK-103: a modifier's on_hit / on_block effects hold from the connect on. A body hit's outcome is always
+		// picked from the move as it started (ActiveBase; a projectile carries it), so a later connect of the same use
+		// that goes the other way (blocked, then hit) still gets its own variant. A reflect (YOK-90) or an aftershock
+		// (YOK-136) is not the attacker's own move connecting, so it hits as it is.
+		if (!reflected && remoteDir == 0) m = (body ? att.ActiveBase ?? m : m).Outcome(blocked);
+		if (body)
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
+			if (att.ActiveBase != null) att.ActiveMove = m; // e.g. recovery on block
 		}
+		else if (projectile != null && att.State == FighterState.Attack && att.ActiveBase != null && att.MoveSerial == projectile.FiredBy)
+			att.ActiveMove = m; // the owner is still in the move that fired it: its own frame data changes too (Brute Recovery on a projectile special)
 
-		bool counter = !blocked && defenderWasAttacking;           // C7
+		MoveData? defMove = def.CurrentMove;
+		bool counter = !blocked && defenderWasAttacking && defMove?.CounterhitImmune != true; // C7
+		bool absorbed = !blocked && Absorbs(def, defMove, projectile != null);                // YOK-103: armour
+		bool armoured = absorbed || (!blocked && TwistArmourTakes(1 - attIndex));          // YOK-90: the elder's special plays on
 		int push, damage = 0;
 		if (blocked)
 		{
@@ -370,27 +423,55 @@ public sealed partial class Match
 		}
 		else
 		{
-			damage = counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage;
+			damage = Config.ScaleDamage(attIndex, counter ? m.Damage * (100 + Config.CounterHitDamagePct) / 100 : m.Damage); // YOK-156, Y4
 			def.PendingDamage += damage;
-			if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
+			if (armoured) { } // the damage lands, the move plays on (YOK-103 armour or YOK-90 twist armour)
+			else if (m.Knockdown) SetState(def, FighterState.Knockdown, Config.KnockdownFrames);
 			else SetState(def, FighterState.Hitstun, m.Hitstun + (counter ? Config.CounterHitHitstun : 0));
 			push = m.HitPushback ?? Config.HitPushback;
+			// YOK-103 (Cucumber Gift): % of the attacker's max health, capped at max. A reflected move (YOK-90) is the
+			// victim's own: its modifier gifts never act for the elder who turned it back.
+			if (m.HealPctMaxHealth > 0 && !reflected)
+				att.Health = (int)Math.Min(att.MaxHealth, (long)att.Health + Effects.MulPct(att.MaxHealth, m.HealPctMaxHealth));
 		}
 		def.Guarding = false;
 		def.Crouching = false;
-		def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
+		if (!armoured) def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
-		int dir = projectile?.Dir ?? att.Facing, want = push * SimConfig.Scale;
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2, hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		int target = Math.Clamp(def.X + dir * want, lo, hi);
-		int got = Math.Abs(target - def.X);
-		def.X = target;
-		if (projectile is null) att.X = Math.Clamp(att.X - dir * (want - got), lo, hi);
+		int away = Math.Sign(def.X - att.X);
+		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : reflected && away != 0 ? away : att.Facing), want = push * SimConfig.Scale;
+		if (!blocked && m.PullOnHit > 0 && !reflected)
+		{
+			// YOK-103 (River Pull): instead of the push, the defender comes PullOnHit steps toward the attacker;
+			// push boxes (ResolvePositions) stop it at the attacker's body. No corner hand-off.
+			def.X = Math.Clamp(def.X - dir * m.PullOnHit * Config.PullStepUnits * SimConfig.Scale, CornerLo(def), CornerHi(def));
+		}
+		else
+		{
+			int target = Math.Clamp(def.X + dir * want, CornerLo(def), CornerHi(def));
+			int got = Math.Abs(target - def.X);
+			def.X = target;
+			if (body) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
+		}
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));
-		OnConnect(attIndex, m, blocked, counter); // C5 meter, V2 hitstop (YOK-20)
+		OnConnect(attIndex, m, blocked, counter, contact); // C5 meter, V2 hitstop (YOK-20)
 		return blocked;
+	}
+
+	/// <summary>
+	/// YOK-103: does the defender's move take this hit without being interrupted? <c>projectile_interrupt_immune</c>
+	/// (Iron Will) against any projectile hit; <c>armour</c> (Oni's Hide) inside its frames while it has hits left.
+	/// The damage (and a counterhit's bonus, C7) still lands; hitstun, knockdown and the cancel of the move don't.
+	/// </summary>
+	private static bool Absorbs(Fighter def, MoveData? defMove, bool projectile)
+	{
+		if (defMove is null) return false;
+		if (projectile && defMove.ProjectileInterruptImmune) return true;
+		if (defMove.Armour is not { } a || !a.Covers(def.MoveFrame) || def.ArmourHitsTaken >= a.Hits) return false;
+		def.ArmourHitsTaken++;
+		return true;
 	}
 
 	/// <summary>Screen walls, push boxes and stage corners, in that order of priority (corners win).</summary>
@@ -417,31 +498,41 @@ public sealed partial class Match
 		}
 
 		// Push boxes: grounded fighters never overlap; each gives half. A jumper passes over (C2).
+		// YOK-136: the push is still 1-D; the gap between centres is the mean of the two push widths.
 		bool grounded = a.Y == 0 && b.Y == 0;
+		int gap = PushGap(a, b);
 		int dx = b.X - a.X;
-		if (grounded && Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < gap)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
-			int overlap = Config.BodyWidth - Math.Abs(dx);
+			int overlap = gap - Math.Abs(dx);
 			a.X -= side * ((overlap + 1) / 2);
 			b.X += side * (overlap / 2);
 		}
 
 		// Stage corners: clamp, then push the other fighter out so the cornered one stays put.
-		int lo = -Config.StageHalfWidth + Config.BodyWidth / 2;
-		int hi = Config.StageHalfWidth - Config.BodyWidth / 2;
-		a.X = Math.Clamp(a.X, lo, hi);
-		b.X = Math.Clamp(b.X, lo, hi);
+		a.X = Math.Clamp(a.X, CornerLo(a), CornerHi(a));
+		b.X = Math.Clamp(b.X, CornerLo(b), CornerHi(b));
 		dx = b.X - a.X;
-		if (grounded && Math.Abs(dx) < Config.BodyWidth)
+		if (grounded && Math.Abs(dx) < gap)
 		{
 			int side = dx != 0 ? Math.Sign(dx) : a.Facing; // side of b relative to a
 			Fighter left = side > 0 ? a : b, right = side > 0 ? b : a;
 			// Only possible against a corner: the fighter nearest the wall keeps it.
-			if (left.X - lo < hi - right.X) right.X = left.X + Config.BodyWidth;
-			else left.X = right.X - Config.BodyWidth;
+			if (left.X - CornerLo(left) < CornerHi(right) - right.X) right.X = left.X + gap;
+			else left.X = right.X - gap;
 		}
 	}
+
+	/// <summary>YOK-136: a fighter's push-box width (centi-units): its own from data, else <see cref="SimConfig.BodyWidth"/>.</summary>
+	public int PushWidth(Fighter f) => f.PushWidth > 0 ? f.PushWidth : Config.BodyWidth;
+
+	/// <summary>Closest two grounded fighters' centres get: half of each push box (both default = BodyWidth, as before).</summary>
+	public int PushGap(Fighter a, Fighter b) => (PushWidth(a) + PushWidth(b)) / 2;
+
+	/// <summary>Stage corners for this fighter's centre: its push box stays on the stage.</summary>
+	public int CornerLo(Fighter f) => -Config.StageHalfWidth + PushWidth(f) / 2;
+	public int CornerHi(Fighter f) => Config.StageHalfWidth - PushWidth(f) / 2;
 
 	/// <summary>
 	/// Free fighters turn to face the opponent; on equal X they keep their last facing. Facing is held
@@ -485,6 +576,6 @@ public sealed partial class Match
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
 		h = P2.Hash(h);
-		return HashProjectiles(HashMeterState(h));
+		return HashAftershocks(HashTwistState(HashProjectiles(HashMeterState(h))));
 	}
 }

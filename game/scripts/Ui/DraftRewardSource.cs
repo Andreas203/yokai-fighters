@@ -54,7 +54,8 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 			c.Plain, c.Frames, "NEW - Lv 1"),
 		SimKind.Upgrade => new CardView(CardKind.Upgrade, c.AbilityId, c.Name, "Your special", c.Plain, c.Frames,
 			c.Targets.Count == 1 ? $"UPGRADE - Lv {c.Targets[0].Level} to {c.Targets[0].Level + 1}" : "UPGRADE",
-			c.NeedsTarget ? "Pick the special to raise" : null),
+			c.NeedsTarget ? "Pick the special to raise" : null,
+			c.Targets.Count == 1 ? c.Targets[0].Level + 1 : 0),
 		_ => new CardView(CardKind.Modifier, c.AbilityId, c.Name, $"{Title(c.Source)} - modifier", c.Plain, c.Frames,
 			"MODIFIER", "Pick the special to carry it"),
 	};

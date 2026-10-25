@@ -50,7 +50,7 @@ public partial class DevJumpPage : VBoxContainer
 		_pool = FightScene.LoadAbilityPool();
 		_opponents = DevJump.Opponents();
 		Targets = DevJump.Targets();
-		Fight = Fight with { Temperament = DevJump.Temperaments(DevJump.FighterOf(Fight)).FirstOrDefault() };
+		Fight = Fight with { Temperament = DevJump.Temperaments(DevJump.PlaysAsOf(Fight)).FirstOrDefault() };
 		Draft = Draft with { Yokai = DevJump.DraftYokai(_pool).FirstOrDefault() ?? "kitsune" };
 		Build();
 		Ready += () => MenuInput.WrapVertical(_focus.Where(c => c.FocusMode != FocusModeEnum.None).ToArray());
@@ -67,7 +67,7 @@ public partial class DevJumpPage : VBoxContainer
 		var grid = new GridContainer { Name = "FightSetup", Columns = 2 };
 		grid.AddThemeConstantOverride("h_separation", 16);
 		grid.AddThemeConstantOverride("v_separation", 4);
-		_opponent = Options(grid, "Opponent", _opponents.Select(o => (o.Name + (o.Built ? "" : " (" + o.NotBuilt + ")"), o.Built)));
+		_opponent = Options(grid, "Opponent", _opponents.Select(o => (o.Label, o.Built)));
 		_opponent.Selected = _opponents.ToList().FindIndex(o => o.Yokai == Fight.Opponent);
 		_opponent.ItemSelected += i => { Fight = Fight with { Opponent = _opponents[(int)i].Yokai, Elder = false }; RefreshFight(); };
 		_temperament = Options(grid, "Temperament", Array.Empty<(string, bool)>());
@@ -163,7 +163,7 @@ public partial class DevJumpPage : VBoxContainer
 		_elder.SetPressedNoSignal(Fight.Elder);
 		_twistLine.Text = elder is null || tanuki ? "no elder" : $"{elder.Name}: {elder.Twist} ({DevJump.TwistNotBuilt})";
 
-		string fighter = DevJump.FighterOf(Fight);
+		string fighter = DevJump.PlaysAsOf(Fight); // YOK-174: whose profiles
 		var temps = DevJump.Temperaments(fighter);
 		Fill(_temperament, temps.Select(t => (t, true)));
 		int ti = Fight.Temperament is { } want ? temps.ToList().IndexOf(want) : -1;
@@ -275,7 +275,7 @@ public partial class DevJumpPage : VBoxContainer
 	{
 		error = null;
 		var run = DevRunStates.Source.Build(pool);
-		string yokai = StoryLibrary.DisplayName(fight.Opponent == DevJump.TanukiId ? "kitsune" : fight.Opponent);
+		string yokai = DevJump.NameOf(fight);
 		string? move = CopyRule.Target(run)?.Data.Name;
 		Control screen;
 		Action<DevScreenHost> wire;

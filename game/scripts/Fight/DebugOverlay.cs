@@ -4,7 +4,8 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-22 debug overlay + frame-step, debug builds only (FightScene adds it when OS.IsDebugBuild()).
+/// YOK-22 debug overlay + frame-step, in debug builds and, in every build, in practice mode (YOK-197): FightScene
+/// frees it in _Ready unless OS.IsDebugBuild() or the scene is practising.
 /// F1 toggles the box overlay, F2 pauses/resumes, F3 advances exactly one tick (pausing first if running),
 /// F4 switches P1 between Kihon and Kata (YOK-23; the box labels name each player's scheme).
 /// Keys avoid the E9 game layouts. Boxes come from <see cref="DebugBoxes"/> (the sim's own data for the

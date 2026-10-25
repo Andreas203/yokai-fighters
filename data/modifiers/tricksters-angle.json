@@ -1,0 +1,35 @@
+{
+  "kind": "modifier",
+  "id": "tricksters-angle",
+  "name": "Trickster's Angle",
+  "status": "proposed",
+  "source": "kitsune",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "E20"
+  ],
+  "applies_to": {
+    "requires": [
+      "projectile"
+    ]
+  },
+  "effects": [
+    {
+      "target": "projectile.angle_up",
+      "op": "set",
+      "value": true,
+      "when": "holding_up"
+    }
+  ],
+  "card": {
+    "plain": "Hold up as you cast and the projectile angles upward.",
+    "frames": "Projectile angles upward while up is held"
+  },
+  "notes": "The angle is not in the GDD; the programmer or designer picks it, left unset here. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+}

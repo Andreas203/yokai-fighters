@@ -114,12 +114,12 @@ public static class HipScaleProbes
 			int air = 0;
 			foreach (var id in FighterAnimSet.Ryo.AirClips)
 			{
-				if (!Cat.Clips.ContainsKey(id)) continue;
+				if (!m.Has(id)) continue; // YOK-146: in this body's library (the Tripo Ryo has no kitsune-jump)
 				air++;
 				Assert.True(HipY(Clip(m, id)).Max <= rest + 1e-4f, $"x{k} {id}: hips max {HipY(Clip(m, id)).Max:0.000} <= rest {rest:0.000}");
 			}
 			Assert.True(air > 0, "at least one air clip checked");
-			var ground = Cat.Clips.Keys.Where(c => !FighterAnimSet.Ryo.AirClips.Contains(c)).Select(c => HipY(Clip(m, c)).Max).Max();
+			var ground = Cat.Clips.Keys.Where(c => m.Has(c) && !FighterAnimSet.Ryo.AirClips.Contains(c)).Select(c => HipY(Clip(m, c)).Max).Max();
 			Assert.True(ground > 0f, "ground clips still carry hips keys");
 			m.Free();
 		}
@@ -131,7 +131,7 @@ public static class HipScaleProbes
 	{
 		var ryo = FighterModel.Create(FighterAnimSet.Ryo, Cat)!;
 		var tall = Synthetic(1.19f);
-		foreach (var id in FighterAnimSet.Ryo.AirClips.Where(Cat.Clips.ContainsKey))
+		foreach (var id in FighterAnimSet.Ryo.AirClips.Where(ryo.Has))
 		{
 			float rMin = HipY(Clip(ryo, id)).Min, tMin = HipY(Clip(tall, id)).Min;
 			float ratio = tall.HipScaleFor(Cat[id]!) / ryo.HipScaleFor(Cat[id]!);

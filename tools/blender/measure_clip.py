@@ -55,6 +55,8 @@ DEFAULTS = {"plant_height_m": 0.03, "plant_min_frames": 4, "slide_warn_cm_per_fr
             "slide_reject_cm_per_frame": 2.0, "jitter_warn_deg_per_frame2": 20.0,
             "jitter_reject_deg_per_frame2": 40.0, "reversal_min_rate_deg_per_frame": 1.0,
             "strike_fraction": 0.85}
+# Shared names; resolved per rig by cc.resolve_bone (YOK-146: `mixamorig:` prefixes, Tripo names). `headfront`
+# exists only on the Meshy skeleton and is skipped on Tripo rigs.
 TRACK = ["Hips", "Head", "headfront", "LeftHand", "RightHand", "LeftFoot", "RightFoot", "LeftToeBase", "RightToeBase"]
 
 
@@ -90,7 +92,7 @@ def sample_positions(arm, ticks):
     meshes = [o for o in bpy.data.objects if o.type == "MESH"]
     for o in meshes:
         o.hide_viewport = True
-    names = [b for b in TRACK if b in arm.pose.bones]
+    names = [b for b in TRACK if cc.resolve_bone(arm, b)]
     out = np.zeros((len(ticks), len(names), 3))
     for i, t in enumerate(ticks):
         f = int(math.floor(t))
@@ -307,7 +309,7 @@ def render_frame(arm, objs, cam, cd, sc, tick, height, path):
     f = int(math.floor(tick))
     sc.frame_set(f, subframe=tick - f)
     pose_figure(arm, objs)
-    hips = arm.matrix_world @ arm.pose.bones["Hips"].head
+    hips = arm.matrix_world @ arm.pose.bones[cc.resolve_bone(arm, "Hips")].head
     cd.ortho_scale = height * 1.35
     shots = []
     for view, (off, rot) in {"front": ((0, -10, 0), (math.radians(90), 0, 0)),

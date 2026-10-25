@@ -41,8 +41,13 @@
     },
     {
       "when": "opponent_jumping",
+      "do": "throw",
+      "weight": 35
+    },
+    {
+      "when": "opponent_jumping",
       "do": "block",
-      "weight": 40
+      "weight": 25
     },
     {
       "when": "opponent_in_recovery",
@@ -63,5 +68,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Kappa patient (Y2): blocks, then throws after two blocked hits (that throw is the habit above). Kappa uses only generic actions (its throw is the generic throw, C4); data/moves/ has no kappa-* normals or clips yet, so it has no strikes of its own. When they land, add pokes. No ids invented."
+  "notes": "Anti-air (YOK-165): answers opponent_jumping with the generic throw (C4), the single attacking answer so jump_punish_pct sets the rate; it catches the jumper in landing frames (E19). Swap to a Kappa rising normal when one lands. Kappa patient (Y2): blocks, then throws after two blocked hits (that throw is the habit above). Its throw is the generic throw (C4); data/moves has no kappa-* normals or clips yet, so it has no strikes of its own. Add pokes when they land."
 }

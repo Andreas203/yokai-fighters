@@ -2,7 +2,39 @@
 
 Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the designer has approved since the PDF was written. **Where an amendment and the PDF disagree, the amendment wins.** `docs/design/rules.md` reflects both. Each amendment names the PDF sections it replaces; everything it does not name stands as written.
 
+## Index
+
+| AM | Approved | Change | Rules | Ticket / PR |
+|---|---|---|---|---|
+| [AM1](#am1) | 2026-10-05 | Visual assets are generated, sound is sourced | F2, F5, V1 | — |
+| [AM2](#am2) | 2026-10-06 | The binding line promises freedom | S3 | — |
+| [AM3](#am3) | 2026-10-11 | Quitting mid-node restarts the node | M5 | — |
+| [AM4](#am4) | 2026-10-11/12 | Rulings on the Tanuki, the shop and coins | T0, Y2, R6, R8 | PR #105 |
+| [AM5](#am5) | 2026-10-15 | Rigging and animation get their own specialists and tools | F2, F5, F6, G4 | YOK-110–115 |
+| [AM6](#am6) | 2026-10-15 | The copy-target talisman shows only in the Tanuki fight | T6 | — |
+| [AM7](#am7) | 2026-10-16 | Fighter concept art and turnarounds may come from Astra | F6 | YOK-102 |
+| [AM8](#am8) | 2026-10-16 | Closer fight camera, screen walls brought in (superseded in part by AM9) | E1, C2 | YOK-120, PR #133 |
+| [AM9](#am9) | 2026-10-16 | Dynamic fight camera in the style of Guilty Gear Strive | E1, V7 | YOK-129, PR #145 |
+| [AM10](#am10) | 2026-10-17 | The camera frames the tallest fighter in the fight | E1, V7 | YOK-133 |
+| [AM11](#am11) | 2026-10-20 | Sumo Stance: holding gives a faster dash, not more damage | modifier table | YOK-142, YOK-171 |
+| [AM12](#am12) | 2026-10-20 | Slippery Skin breaks throws during startup | modifier table, E12 | YOK-172 |
+| [AM13](#am13) | 2026-10-21 | The apprentice has its own behaviour profile | Y1, G5 | YOK-174 |
+| [AM14](#am14) | 2026-10-21 | The Tanuki's throw habit triggers after one blocked hit | Y2 | YOK-177, PR #214 |
+| [AM15](#am15) | 2026-10-20 | The forecast's expected cost is the copied move's damage per hit | T6 | YOK-173, PR #217 |
+| [AM16](#am16) | 2026-10-19 | Tripo's skeleton becomes the shared skeleton | F6 | YOK-146 |
+| [AM17](#am17) | 2026-10-25 | A story-card style video on first meeting each yokai (extra, not MVP) | S6, header | YOK-207 |
+
+### Adding an amendment
+An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
+1. Add `<a id="amN"></a>` and a `## AMN — <change> (<date>)` section at the end, with its **Sections replaced** table (Where / Was / Now).
+2. Add its row to the index above (`tools/check_docs.py` fails if a heading and the index disagree).
+3. Update the rules it changes in `docs/design/rules.md`, tagged `[AMN]`.
+4. Add or extend the `> **Amended by**` callout under each GDD section it replaces in `gdd-extended.md` and `gdd-short.md`.
+5. Add one line under "Design amendments" in `docs/decision-log.md`.
+
 ---
+
+<a id="am1"></a>
 
 ## AM1 — Visual assets are generated, sound is sourced (2026-10-05)
 
@@ -43,6 +75,8 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 
 ---
 
+<a id="am2"></a>
+
 ## AM2 — The binding line promises freedom (2026-10-06)
 
 **Decision.** Ryo's line at every binding changes from a promise to *give back* to a promise to *set the yokai's spirit free*. He still apologises first. The ending pays off the new promise.
@@ -58,6 +92,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am3"></a>
+
 ## AM3 — Quitting mid-node restarts the node (2026-10-11)
 
 **Decision.** The game saves only at node boundaries (run start, node entered, node completed). Quitting to the title inside a node and choosing Continue puts Ryo back at the start of that node with the health, coins and slots he entered with. A fight in progress restarts; a heal, rest or reward pick taken but not completed with the node is not kept. This is allowed: it is not an exploit to close. The route pick is still committed (R1): Continue always re-enters the same node.
@@ -70,12 +106,14 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am4"></a>
+
 ## AM4 — Rulings on the Tanuki, the shop and coins (2026-10-11 and 2026-10-12)
 
 **Decisions.** Answers the designer gave where the PDF was silent or could be read two ways.
 
 - **The Tanuki's copy mirrors Ryo's slot.** The copied special sits in the slot it has on Ryo's side. If a starter sits in that slot on the Tanuki's side, the copy replaces it; the other starter stays in its own slot. So when Ryo has drafted a special over a starter and that special is the copy, the Tanuki does not keep the starter Ryo replaced. A copied starter replaces its own Lv 1 version.
-- **The Tanuki's habit.** It throws when the player keeps blocking, 60% of the time. The counter is to break the throw.
+- **The Tanuki's habit.** It throws when the player keeps blocking, 60% of the time. The counter is to break the throw. *(Trigger reworded by AM14: one blocked hit.)*
 - **The shop sells modifiers as well as specials.** "Common abilities" in the shop means common specials and common modifiers. A bought modifier attaches to one of Ryo's specials, chosen by the player, under the same rule as a drafted modifier, and is borrowed ink like a bought special.
 - **Releasing a binding costs Ryo 40 coins.** It is a paid service to free a slot, not a sale.
 - **Coins are not capped,** for now.
@@ -85,11 +123,13 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | Topic | Was | Now |
 |---|---|---|
 | The Tanuki's kit | "Ryo's normals, his starters and the one copied special" | The same, with the copy in Ryo's slot for it and replacing a starter there. Rule T0. |
-| Yokai habits | No habit named for the Tanuki | Throws at a blocking player, 60%. Rule Y2. |
+| Yokai habits | No habit named for the Tanuki | Throws at a blocking player, 60%. Rule Y2. Trigger superseded by AM14 (after one blocked hit). |
 | The merchant | "sells common abilities … (50 coins); release a binding (40)" | Common specials and common modifiers, 50 each; releasing costs Ryo 40. Rule R6. |
 | Coins | No cap stated | No cap, for now. Rule R8. |
 
 ---
+
+<a id="am5"></a>
 
 ## AM5 — Rigging and animation get their own specialists and tools (2026-10-15)
 
@@ -108,7 +148,7 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 - **Clip measurement**: a scripted check that reports foot slide and joint jitter per 60-tick frame and renders the hit-frame stills, so a take's verdict rests on numbers.
 - **Clip sources** beyond the generators: **video motion capture** (Rokoko Vision, Move.ai Move One, DeepMotion or Plask) of a performance the designer records, and **ActorCore** motion-capture packs bought by the designer. **Cascadeur** may be used only for its automatic physics pass on an existing clip, never to pose keys.
 
-**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
+**Rig source of truth.** Every clip plays on one shared humanoid skeleton, today the Meshy skeleton that Ryo and Kitsune passed the gate on *(replaced by AM16: Tripo's skeleton since 2026-10-19)*. A rig from another tool joins only through the Rig Specialist's bone map, and must play the existing walk, heavy and throw clips before any clip is made for it.
 
 **Retiming curves (F2).** A measured clip may carry a **retiming curve**: a short list of segments mapping game frames onto clip time, so startup can be snappy, the pose holds through the active frames and recovery eases out. Each segment plays between 0.5× and 2× the clip's speed (first pass, designer may change), and a held pose lasts at most 4 frames. Frame data is written from the clip *as retimed*. Retiming stays data, played through `AnimationPlayer.Seek()` (F3).
 
@@ -126,6 +166,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | §12 Risks | — | **New:** "Rigs from different tools disagree" → one shared skeleton and a bone map; a new rig must play the existing gate clips first. |
 
 ---
+
+<a id="am6"></a>
 
 ## AM6 — The copy-target talisman shows only in the Tanuki fight (2026-10-15)
 
@@ -145,6 +187,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am7"></a>
+
 ## AM7 — Fighter concept art and turnarounds may come from Astra (2026-10-16)
 
 **Decision.** A fighter's concept front and its front/side/back turnaround may be made in **Astra** (`gpt-6-astra`, run by the designer in Codex) instead of a generator's 2D image model. The designer chooses the source per character. For Oni, Kappa and the Tanuki the designer chose Astra (YOK-102). Asset Smith writes the settled brief (`docs/design/characters/astra-brief.md`), the designer runs it and drops the sheets in `docs/design/characters/<name>/`, and Asset Smith checks them before any mesh job is listed for approval. Meshes, rigs and clips still come from the tools AM1 and AM5 name.
@@ -160,6 +204,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 | AM1 pipeline, 3D models | Concept turnaround from Meshy's 2D image models | From a generator's 2D image model or from Astra, the designer's choice per character. Rule F6. |
 
 ---
+
+<a id="am8"></a>
 
 ## AM8 — Closer fight camera, screen walls brought in (2026-10-15, approved 2026-10-16)
 
@@ -181,6 +227,8 @@ Rule S3 in `docs/design/rules.md` carries the new wording.
 
 ---
 
+<a id="am9"></a>
+
 ## AM9 — Dynamic fight camera in the style of Guilty Gear Strive (2026-10-16, approved 2026-10-16)
 
 **Status.** Approved by the designer on 2026-10-16 (PR #145, after reviewing the captures). Drafted for YOK-129 after the designer said on 2026-10-16: "I still don't love the camera, I want a view closer to Marvel Tokon or Guilty Gear Strive." It amends V7 and E1 and supersedes AM8's fixed camera; AM8's screen-wall derivation stays.
@@ -201,3 +249,152 @@ The first draft looked down 1° and rose to 1.4 m when zoomed out, which left th
 | rules.md E1 (scale) | AM8: "one screen is 1,440 units … fighters are at most 960 units apart … 960 + 2 × 240 = 1,440. The camera stays at a fixed distance" | "The camera's view is 1,060 units close in and 1,540 at the widest; fighters are at most 1,060 units apart … 1,060 + 2 × 240 = 1,540, either facing." |
 | AM8 Decision | "The fight camera sits closer to the fighters and stays fixed in distance. One screen … is 1,440 units" | Superseded by the dynamic zoom above. AM8's derivation of the walls from the widest screen and the model reach stays. |
 | §3.1 Presentation, Figure 2 | Camera3D at ~25° FOV | Unchanged FOV; the camera dollies between two distances at 1.2 m and tilts from 0.5° down to 3° up as it pulls back. |
+
+---
+
+<a id="am10"></a>
+
+## AM10 — The camera frames the tallest fighter in the fight (2026-10-17)
+
+**Status.** Decided by the designer on 2026-10-17 for YOK-133, after Code Critic's review: "frame for the tallest fighter in the fight", allow the wider view, amend E1 and V7, accept a 0.25 m rise per tick. It amends AM9 for fights with a tall body. Ryo vs the Kitsune (and every body no taller than 1.9 m) keeps AM9's camera exactly.
+
+**Decision.** The camera frames each fight for the highest point of its tallest body, over every clip that body plays, body mesh and props included. The Oni's is his club: 3.124 m in his heavy kick, 3.032 m in the HP overhead slam, so he is framed for 3.15 m (`CameraConfig.TallBodyTopMeters`). In such a tall-body fight:
+- The club stays below the HUD band. Where keeping it there would push the lower fighter's feet off the bottom of the frame, the camera dollies out instead. The feet then sit no lower than **1,040 px** of 1,080 (about 96% down the frame, against AM9's ~90%).
+- The view may widen past the sim's 1,540-unit screen, up to about **1,900 units** at a jump apex. Only the presentation widens: the sim's screen, the screen walls (1,060 units) and where projectiles leave the screen stay at 1,540.
+- The camera may sit above 1.2 m while the HUD floor binds, and may rise up to **0.25 m per sim tick** (the first tick of a jump lifts the club at once). The dolly-out is limited to 80 units per tick, except when a fight starts.
+
+**What does not change.** Everything else in AM9, F4 and E1. The camera is still presentation only, eased by a fixed step per sim tick. Nothing in the sim, the AI or the replay reads it, and `StateHash` does not change.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| rules.md E1 (scale) | "… 1,540 units (7.7 m) at the widest zoom, which is the sim's screen" | Same, except that in a tall-body fight the presentation view may widen to about 1,900 units; the sim's screen stays 1,540. |
+| rules.md V7 | "chest height (1.2 m) … feet ~90% down the frame" | Same, except that in a tall-body fight the camera frames the tallest body's highest point under the HUD, may sit above 1.2 m while that floor binds, rises up to 0.25 m per tick, and keeps the feet no lower than 1,040 px. |
+
+---
+
+<a id="am11"></a>
+
+## AM11 — Sumo Stance: holding gives a faster dash, not more damage (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20 for YOK-142. It answers the open question "what does holding charge mean for Sumo Stance without a new animation".
+
+**Decision.** The Kappa modifier Sumo Stance (A10, E7): the player holds the special's button before the special starts. The longer the hold, the faster the special's dash, up to a maximum speed. Nothing is added to damage. The hold uses no new animation. The sim steps the dash in integer units per tick, and the held ticks are part of the state hash. What the Tanuki does when it copies a charged special stays open. Engine work: YOK-171.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD modifier table (§ modifiers), Sumo Stance | "Hold the button to charge for +20% damage." | "Hold the button before the special: the longer the hold, the faster its dash, up to a maximum speed." |
+| rules.md modifier table | "Hold to charge for +20% damage" | The new line above. |
+
+---
+
+<a id="am12"></a>
+
+## AM12 — Slippery Skin breaks throws during startup (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20. It answers the open question on Slippery Skin against E12/E17, where "throw-invulnerable" would have done nothing.
+
+**Decision.** Slippery Skin automatically BREAKS a throw attempted against the carrier during the carrying move's startup. The result is a clash with no damage, the same as throw vs throw (C4). E17's "throws ignore throw-invulnerability data" stays as written, because Slippery Skin is a break and not invulnerability. Engine, schema and data work: YOK-172.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD modifier table (§ modifiers), Slippery Skin | "Throw-invulnerable during startup." | "Automatically breaks a throw attempted during this move's startup: a clash, no damage, like throw vs throw." |
+| rules.md modifier table | "Throw-invulnerable during startup" | The new line above. |
+
+<a id="am13"></a>
+
+## AM13 — The apprentice has its own behaviour profile (2026-10-21)
+
+**Status.** Decided by the designer on 2026-10-21 ("the apprentice gets its own profile").
+
+**Decision.** The row-1 apprentice fights with its own behaviour profile (`data/profiles/apprentice.json`, `yokai: "apprentice"`) instead of rolling one of the Kitsune's two temperaments. Its body and kit stay the Kitsune's (`plays_as: "kitsune"` in the node-scene table); the node names the profile, so it is never rolled and never joins the Kitsune's list. That makes 8 profiles: 3 yokai × 2 temperaments + the apprentice + the Tanuki. The apprentice is not a yokai, so Y2's "each yokai: two temperaments" does not apply to it.
+
+**Why.** With the seeded per-node temperament roll, an apprentice that rolled the patient Kitsune held full screen and the fight timed out, which a newcomer's first duel must not do. Work: YOK-174.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §10.4 Schedule and cut gates (p. 12), week 2 row; GDD short §4.6 Schedule and scope, week 2 row | "33 abilities, 7 profiles, …" | "33 abilities, 8 profiles, …" |
+| rules.md G5, W2 | "33 abilities, 7 profiles" | "33 abilities, 8 profiles [AM13]" |
+| rules.md Y1 | "7 profiles: 3 yokai × 2 temperaments + Tanuki." | The new line above, with [AM13]. |
+
+<a id="am14"></a>
+
+## AM14 — The Tanuki's throw habit triggers after one blocked hit (2026-10-21)
+
+**Status.** Decided by the designer on 2026-10-21.
+
+**Decision.** The Tanuki's habit (AM4) throws after ONE blocked hit, the first blockstun it sees, 60% of the time. It no longer waits for the player to "keep blocking". The counter is unchanged: break the throw. Work: YOK-177.
+
+**Why.** Designer decision 2026-10-21: the trigger in AM4 was ambiguous; the designer chose one blocked hit.
+
+### Text replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM4, "The Tanuki's habit" (and its table row) | "throws when the player keeps blocking, 60% of the time" | "throws after one blocked hit, the first blockstun it sees, 60%" |
+| rules.md Y2 | "throws when the player keeps blocking (60%) [AM4]" | "throws after one blocked hit, the first blockstun it sees (60%) [AM4, AM14]" |
+
+<a id="am15"></a>
+
+## AM15 — The forecast's expected cost is the copied move's damage per hit (2026-10-20)
+
+**Status.** Decided by the designer on 2026-10-20, written as an amendment on 2026-10-24 (YOK-196). Built in YOK-173 (PR #217).
+
+**Decision.** The rest-stop forecast's "expected cost" is the copied move's damage per hit at Ryo's level, read from move data. It is always available, so there is no "not enough fights" state. It is no longer estimated from the player's own fights.
+
+**Why.** An estimate from the player's own fights has nothing to show at the row-4 rest stop of a first run and swings with a few fights; a number from data is defined from the first stop and tells the player what the copied move does.
+
+### PDF sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §6.2 Health and routes (p. 10) | "its expected cost from the player's own fights" | "its expected cost: the copied move's damage per hit at Ryo's level, from data" |
+| GDD short §2.6 Health and tuning | "the Tanuki's expected cost from the player's own fights" | As above. |
+| rules.md T6 | "expected cost … (decided 2026-10-20)" | Same text, tagged [AM15]. |
+
+<a id="am16"></a>
+
+## AM16 — Tripo's skeleton becomes the shared skeleton (2026-10-19)
+
+**Status.** Decided by the designer on 2026-10-19 on YOK-146 (Option A), written as an amendment on 2026-10-24 (YOK-196).
+
+**Decision.** The shared humanoid skeleton that every clip plays on is Tripo's, rebuilt from the Tripo Ryo (`assets/specs/rigs/skeleton.md`). Bones carry bare names (`Hips`, not `mixamorig:Hips`), and fingers are merged into the hand (25 joints). The Meshy skeleton stays on file as "Previous shared skeleton (Meshy)" (`skeleton-meshy.json`) for Kitsune, Oni and Kappa until their Tripo rebuilds (YOK-147/148/149). Ryo's heavy punch and heavy kick come from video motion capture.
+
+**Why.** The Tripo Ryo was chosen over the Meshy one; making its skeleton the shared one avoids a bone map for the player character, whose clips matter most.
+
+**What does not change.** One shared skeleton, the Rig Specialist's bone map for every other rig, and the G4 gate (AM5). Every job still needs the designer's approval and its cost.
+
+### Text replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM5, "Rig source of truth" | "today the Meshy skeleton that Ryo and Kitsune passed the gate on" | "Tripo's skeleton, from the Tripo Ryo; the Meshy skeleton stays as the previous one until each rig is rebuilt" |
+| rules.md F6 | "one shared humanoid skeleton (today Meshy's)" | "one shared humanoid skeleton (Tripo's since 2026-10-19 [AM16]; the Meshy skeleton stays for rigs not yet rebuilt)" |
+
+<a id="am17"></a>
+
+## AM17 — A story-card style video on first meeting each yokai (extra, not MVP) (2026-10-25)
+
+**Status.** Decided by the designer on 2026-10-25: "add as a new requirement that a short story card style video plays when you first encounter a yokai, this should be extra and not part of the mvp".
+
+**Decision.** The first time the player meets a yokai, a short video in the style of the story cards plays before the duel: paper, ink and brush in the talisman look (V1), carrying at most two sentences of text (S2) in the game's tone (S1). It plays once per yokai per save and is recorded with story progress (M4), so it never depends on unlocks.
+
+It is **extra, not part of the MVP**. It is built only once every MVP item is done, it never delays MVP work, and it is the first thing dropped if time runs short. The card schedule the build ships with (S3) does not depend on it.
+
+**Open.** How long it runs; whether it can be skipped; whether the elders and the Tanuki get one (the elders already have intro cards, Y3, and the Tanuki has its reveal) and whether the row-1 apprentice counts as meeting the Kitsune; how it is made (a generated video needs a tool and a spend that AM1 and AM5 don't name, or it can be an animated card in the engine); and whether it can land before the week-3 feature freeze (G5) or only in the polish weeks with the designer's say-so.
+
+**What does not change.** The S3 card schedule and the never-cut story cards (G1). The elder intro cards still show on every elder entry (Y3). Every generation job and its cost still need the designer's approval (AM1, AM5).
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §2.3 Story structure; GDD short §1.4 Audience and story | No beat on first meeting a yokai | A story-card style video on the first meeting with each yokai, extra and not MVP. Rule S6. |
+| rules.md header | Only **Full game** marks work outside the build | **Extra (not MVP)** marks work that may be built only after every MVP item is done [AM17]. |

@@ -13,9 +13,10 @@
     "status": { "$ref": "common.schema.json#/$defs/status" },
     "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
     "default_scene": { "description": "Scene for a node whose type and id name none.", "$ref": "#/$defs/scene" },
+    "default_stage": { "description": "YOK-144, presentation only: the stage scene for a fight node whose id and type name none. Left out = the fight scene's default, the bamboo grove.", "$ref": "#/$defs/stage" },
     "fallback_fighter": { "description": "Kit that fights for a yokai with no 'fighter' under 'opponents' (logged when used).", "$ref": "common.schema.json#/$defs/id" },
     "tiers": {
-      "description": "Y4 rows: reaction delay in frames per tier.",
+      "description": "Y4 rows: reaction delay in frames per tier, the damage the tier's opponent deals (damage_dealt_pct) and how often it anti-airs a jump (jump_punish_pct).",
       "type": "object",
       "minProperties": 1,
       "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
@@ -23,7 +24,11 @@
         "type": "object",
         "required": ["reaction_frames"],
         "additionalProperties": false,
-        "properties": { "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 } }
+        "properties": {
+          "reaction_frames": { "type": "integer", "minimum": 1, "maximum": 120 },
+          "damage_dealt_pct": { "description": "YOK-156, Y4: percent of its move damage the tier's opponent deals to Ryo, rounded down per hit (the apprentice deals half: 50). Left out = 100.", "type": "integer", "minimum": 1, "maximum": 100 },
+          "jump_punish_pct": { "description": "YOK-165, Y4: percent of Ryo's jumps the tier's opponent answers with its anti-air (designer 2026-10-20: apprentice and yokai 50, elder and Tanuki 100). The absolute chance a jump the AI sees is answered with an attack: one roll at this rate, then a weighted pick among the profile's attacking 'opponent_jumping' answers; on a miss its other answers (block...) roll by their own weights. Left out = the profile's own weights.", "type": "integer", "minimum": 0, "maximum": 100 }
+        }
       }
     },
     "types": {
@@ -67,7 +72,9 @@
         "type": "object",
         "additionalProperties": false,
         "dependentRequired": { "kit": ["fighter"] },
+        "not": { "required": ["fighter", "plays_as"] },
         "properties": {
+          "plays_as": { "description": "YOK-174: for a yokai with no 'fighter' (it fights on the fallback fighter's kit): the yokai whose own move files in data/moves/ (per kind, the fallback's where it has none; specials only its own) and behaviour profiles in data/profiles/ it fights with. Left out = the opponent's own id. Elders name their yokai (elder-oni = oni); the apprentice names the fallback fighter.", "$ref": "common.schema.json#/$defs/id" },
           "fighter": { "description": "Fighter (kit) id in data/moves/. Leave out while the yokai has no kit: the fallback fights.", "$ref": "common.schema.json#/$defs/id" },
           "kit": { "description": "How the opponent's kit is built. Left out = the fighter's own files in data/moves/. copy_of_ryo = Ryo's normals, throw and starters plus the special copied at the T1 lock (T0), on Ryo's model and clips; 'fighter' is then only the name profiles and the HUD use.", "enum": ["copy_of_ryo"] },
           "tier": { "$ref": "common.schema.json#/$defs/id" },
@@ -80,11 +87,13 @@
   "$defs": {
     "coins": { "description": "R8: coins a won fight on the node pays. Default 0.", "type": "integer", "minimum": 0, "maximum": 9999 },
     "scene": { "description": "A Godot scene path.", "type": "string", "pattern": "^res://.+\\.tscn$" },
+    "stage": { "description": "YOK-144: a stage scene (root script FightStage) under game/scenes/stage/ (path segments of letters, digits, '_' and '-': no '..', '//' or '\\'); the validator checks the file exists. JSON Schema patterns cannot anchor at the very end ('$' also accepts a final newline), so tools/validate_data.py and the game's loader (NodeSceneTable.StagePattern) are the strict checks.", "type": "string", "pattern": "^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.tscn$" },
     "entry": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "scene": { "$ref": "#/$defs/scene" },
+        "stage": { "description": "YOK-144, presentation only: the stage the fight shows; nodes win over types, then default_stage.", "$ref": "#/$defs/stage" },
         "opponent": { "description": "Stand-in yokai for a node that names none (merchant, dojo until their behaviour is built).", "$ref": "common.schema.json#/$defs/id" },
         "tier": { "description": "Y4 row; a key of 'tiers'.", "$ref": "common.schema.json#/$defs/id" },
         "profile": { "description": "Behaviour profile id for the opponent; without it the fighter's first profile plays.", "$ref": "common.schema.json#/$defs/id" },

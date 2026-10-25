@@ -10,7 +10,7 @@ The crew exists in three places, from the same role definitions in `.claude/agen
 - **Codex agents** — generated copies in `.codex/agents/<slug>.toml` and `.agents/skills/`. Never edit them: change the `.claude/` source and run `python tools/sync_codex.py`. CI (`codex-sync`) fails a PR whose copies are stale.
 - **Paperclip agents** — hired into the Paperclip company "yokai-fighters", each carrying a managed `AGENTS.md` bundle derived from the same file plus the shared operating contract below.
 
-`.claude/agents/<slug>.md` (and `.claude/skills/`) is the single source for every role. Nothing here duplicates it by hand. A sample Paperclip bundle is kept in `docs/reference/paperclip-agents-bundle.md` for reference.
+`.claude/agents/<slug>.md` (and `.claude/skills/`) is the single source for every role. Nothing here duplicates it by hand. A sample Paperclip bundle is kept in `docs/crew/paperclip-agents-bundle.md` for reference.
 
 ## Roster
 

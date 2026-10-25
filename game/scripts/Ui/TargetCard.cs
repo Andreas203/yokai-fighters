@@ -40,10 +40,10 @@ public partial class TargetCard : Control
 	public void Bind(TargetView t)
 	{
 		_eligible = t.Eligible;
-		_illustration.Texture = RewardArt.ForId(t.Id);
+		_illustration.Texture = string.IsNullOrEmpty(t.Id) ? null : AbilityArt.ForId(t.Id); // empty slot keeps the "+" diamond
 		_illustration.Visible = _illustration.Texture != null;
 		_fallback.Visible = _illustration.Texture == null;
-		_fallback.Glyph = string.IsNullOrEmpty(t.Id) ? "+" : t.Name[..1].ToUpperInvariant();
+		_fallback.Glyph = string.IsNullOrEmpty(t.Id) ? "+" : TextCuts.Badge(t.Name);
 		_fallback.Fill = t.Eligible ? Color.FromHtml("2D3A5E") : Grey;
 		_crest.Glyph = t.Slot;
 		_crest.Fill = t.Eligible ? FightHud.Seal : Grey;
