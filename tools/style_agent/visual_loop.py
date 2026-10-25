@@ -45,7 +45,8 @@ def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
         # A rewrite can overshoot and score lower; the next one starts again from the best take, not the last.
         _, _, base_scene, base_score, base_reason, base_m = best
         scene = clean_card(vllm.complete("refiner", args.refiner_model, REFINER_SYSTEM,
-                                         refiner_prompt(slot, base_scene, base_score, base_reason, base_m)))
+                                         refiner_prompt(slot, base_scene, base_score, base_reason, base_m,
+                                                        keep=not getattr(args, "refiner_v1", False))))
         prompt = wrap_prompt(scene)
         try:
             take = astra.render(prompt, f"{case['id']}-take{n + 1}")
@@ -65,7 +66,10 @@ def render_visual(meta: dict, results: list[dict]) -> str:
     lines = [f"# Trace: {meta['run']}", "",
              f"Command: `{meta['command']}`. Generator: {meta['image_model']} (via `codex exec`). Evaluator: "
              f"{meta['evaluator_model']} (vision). Refiner: {meta['refiner_model']}. Target {meta['target']}/10, at most "
-             f"{meta['max_rounds']} takes per asset and {meta['max_images']} live takes in all.", "",
+             f"{meta['max_rounds']} takes per asset and {meta['max_images']} live takes in all. Refiner prompt: "
+             f"{meta.get('refiner', 'v1, no keep rule')}."
+             + (f" Take 1 of each example is reused from `runs/{meta['seeded_from']}` (same brief, same picture; not paid "
+                "for again)." if meta.get("seeded_from") else ""), "",
              "The Evaluator sees two images: the accepted bamboo grove backdrop as REFERENCE "
              "([`images/reference-bamboo-grove.png`](images/reference-bamboo-grove.png)), then the take.", "",
              "| Example | Violation class | Asset slot | Before | After (best take) | Takes |", "|---|---|---|---|---|---|"]
