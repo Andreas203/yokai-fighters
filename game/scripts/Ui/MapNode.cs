@@ -109,6 +109,8 @@ public partial class MapNode : Button
 			CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6, CornerRadiusBottomLeft = 6, CornerRadiusBottomRight = 6,
 		};
 		box.SetBorderWidthAll(v.State == MapNodeState.PassedOver ? 0 : cursor ? 7 : lit ? 4 : 2);
+		box.ShadowColor = new Color(0.1f, 0.06f, 0.02f, v.State == MapNodeState.PassedOver ? 0f : 0.38f); // a card lying on the paper (YOK-109)
+		box.ShadowSize = 7; box.ShadowOffset = new Vector2(3, 5);
 		foreach (var s in new[] { "normal", "hover", "pressed", "disabled", "focus" }) AddThemeStyleboxOverride(s, box);
 		var dimText = v.State == MapNodeState.Visited ? new Color(0.78f, 0.76f, 0.72f) : v.State == MapNodeState.PassedOver ? new Color(0.5f, 0.52f, 0.6f) : new Color(0.62f, 0.63f, 0.70f);
 		icon.AddThemeColorOverride("font_color", lit ? look.Color : dimText);

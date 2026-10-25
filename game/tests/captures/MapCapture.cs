@@ -1,3 +1,4 @@
+using System.Linq;
 using Godot;
 using YokaiFighters.Fight;
 using YokaiFighters.Flow;
@@ -9,6 +10,8 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// Windowed screenshot tool (not a test) for YOK-78 / YOK-108: the map screen on a real run session (the real pool and the default map)
 /// at the start, and part-way through the walk (rows 1-4 done, health 840, the first card of each draft taken, row 5 reachable).
+/// YOK-109: the map is a paper scroll panned inside the screen; every capture ends the ink / paint animation and snaps the pan first, so no
+/// frame is half-drawn, and one more capture (map_midrun_walked) is panned to the left end to show the walked brush path from its start.
 /// Also the standalone way to run the screen for review: it needs no boot flow.
 /// Run: godot --path game res://tests/captures/map_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p] [stub=12]
 /// </summary>
@@ -25,6 +28,7 @@ public partial class MapCapture : Node
 		}
 		var screen = GD.Load<PackedScene>("res://scenes/ui/map_screen.tscn").Instantiate<MapScreen>();
 		AddChild(screen);
+		_screen = screen;
 		if (stubRows > 0)
 		{
 			screen.SetView(StubMapView.Grid(stubRows, 3));
@@ -49,6 +53,8 @@ public partial class MapCapture : Node
 		session.Run.SetHealth(840);
 		screen.SetView(new SessionMapView(session));
 		await Snap(dir + $"/map_midrun{suffix}.png");
+		screen.PanTo(0); // YOK-109: the same screen at the paper's left end, so the walked brush path shows from its first stroke
+		await Snap(dir + $"/map_midrun_walked{suffix}.png");
 
 		// YOK-119: the chip's other states. Changed: another special overtakes the target, so the toast shows on the way back to the map.
 		var fresh = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
@@ -79,12 +85,30 @@ public partial class MapCapture : Node
 		bare.StartMap(graph);
 		screen.SetView(new SessionMapView(new RunSession(bare, FightScene.LoadAbilityPool(), NodeSceneTable.Default(md), 5)));
 		await Snap(dir + $"/map_copy_none{suffix}.png");
+
+		// YOK-109: mid-animation frame (not kept in docs/screenshots/current): Ryo has just come back to the map, the choice is inking in and its strokes are painting.
+		if (OS.GetCmdlineUserArgs().Contains("anim=1"))
+		{
+			var back = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+			foreach (string id in new[] { "r1-apprentice", "r2-oni", "r3-kappa" }) { back.Enter(id); var d = back.WinFight(840); if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); } back.CompleteNode(); }
+			screen.SetView(new SessionMapView(back));
+			screen.FinishPresentation(); screen.SnapScroll();
+			back.Enter("r4-merchant"); back.CompleteNode();
+			screen.SetView(new SessionMapView(back));
+			await ToSignal(GetTree().CreateTimer(0.28), SceneTreeTimer.SignalName.Timeout);
+			_screen = null; // no finishing: the frame as the player sees it a moment after returning
+			await Snap(dir + $"/map_anim_midway{suffix}.png");
+		}
 		GetTree().Quit();
 	}
+
+	private MapScreen? _screen;
 
 	private async System.Threading.Tasks.Task Snap(string path)
 	{
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		if (_screen != null) { _screen.FinishPresentation(); _screen.SnapScroll(); }
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 		GetViewport().GetTexture().GetImage().SavePng(path);
