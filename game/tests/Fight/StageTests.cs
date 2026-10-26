@@ -19,6 +19,20 @@ public static class StageTests
 
 	static IEnumerable<MeshInstance3D> Meshes(Node n) => n.FindChildren("*", "MeshInstance3D", true, false).Cast<MeshInstance3D>();
 
+	/// <summary>YOK-208: every placed prop with its transform in Props space; the lantern line's built lanterns count one by one.</summary>
+	static IEnumerable<(Node3D Node, Transform3D Xf)> PropItems(Node props)
+	{
+		foreach (var n in props.GetChildren().Cast<Node3D>())
+		{
+			if (n is LanternLine line)
+				foreach (var l in line.GetChildren().Cast<Node3D>()) yield return (l, line.Transform * l.Transform);
+			else yield return (n, n.Transform);
+		}
+	}
+
+	static bool IsLantern(Node3D n) => n.Name.ToString().StartsWith("Lantern") || n.Name.ToString().StartsWith(LanternLine.Prefix);
+	static readonly Color Persimmon = Color.FromHtml("#D8632C");
+
 	[Test]
 	public static void Stage_SceneLoadsBambooGrove(Node runner)
 	{
@@ -29,9 +43,17 @@ public static class StageTests
 		Assert.True(stage.GetNode<WorldEnvironment>("Environment").Environment.FogEnabled, "dusk fog");
 		var props = stage.GetNode<Node3D>("Props").GetChildren();
 		Assert.Equal(10, props.Count(p => p.Name.ToString().StartsWith("Bamboo")), "bamboo clusters (YOK-39: 12 -> 10)");
-		Assert.Equal(2, props.Count(p => p.Name.ToString().StartsWith("Lantern")), "lanterns (YOK-39: 3 -> 2, deep)");
+		Assert.Equal(2, props.Count(p => p.Name.ToString().StartsWith("Lantern")), "front lanterns (YOK-39: 3 -> 2, deep)");
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		Assert.Equal(2 * line.PerSide, line.GetChildCount(), "YOK-208: the lit lantern line, one row each side of the path");
+		Assert.True(line.PerSide >= 2, "the line recedes (at least two lanterns a row)");
 		foreach (var mi in Meshes(stage.GetNode("Props")))
-			Assert.True(mi.GetActiveMaterial(0) is BaseMaterial3D { DiffuseMode: BaseMaterial3D.DiffuseModeEnum.Toon, NextPass: not null }, $"{mi.Name}: toon + outline");
+		{
+			if (mi.IsInGroup(ToonLook.FlatFillGroup))
+				Assert.True(mi.GetActiveMaterial(0) is BaseMaterial3D { ShadingMode: BaseMaterial3D.ShadingModeEnum.Unshaded, NextPass: null, DisableFog: true } m && m.AlbedoColor.IsEqualApprox(Persimmon), $"{mi.Name}: flat persimmon fill, no outline");
+			else
+				Assert.True(mi.GetActiveMaterial(0) is BaseMaterial3D { DiffuseMode: BaseMaterial3D.DiffuseModeEnum.Toon, NextPass: not null }, $"{mi.Name}: toon + outline");
+		}
 		scene.Step(FighterInput.None, FighterInput.None);
 		scene.QueueFree();
 	}
@@ -54,21 +76,243 @@ public static class StageTests
 	{
 		// YOK-39: the props are placed by hand in bamboo_grove.tscn, so the rule is checked here, not enforced in code.
 		// Each prop's front = its centre z + its footprint radius (largest horizontal mesh extent / 2, any yaw).
+		// YOK-208: the lit lantern line's lanterns are checked one by one, and every lantern stays in front of the backdrop.
 		var scene = Load(runner);
-		foreach (var n in scene.StageRoot.GetNode("Props").GetChildren().Cast<Node3D>())
+		var backdrop = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop");
+		int lanterns = 0;
+		foreach (var (n, xf) in PropItems(scene.StageRoot.GetNode("Props")))
 		{
-			var p = n.Position;
-			bool lantern = n.Name.ToString().StartsWith("Lantern");
+			var p = xf.Origin;
+			bool lantern = IsLantern(n);
 			Aabb own = n.GetChildren().Select(BambooGroveStage.LocalBounds).Aggregate((a, b) => a.Merge(b)); // in the prop's own (unyawed, unscaled) space
-			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * n.Basis.Scale.Y;
+			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * xf.Basis.Scale.Y;
 			float front = p.Z + radius, limit = BambooGroveStage.FrontLimit(p.X, lantern);
 			if (lantern)
+			{
+				lanterns++;
 				Assert.True(p.Z <= BambooGroveStage.LanternMaxZ, $"{n.Name} at z {p.Z}: lanterns stay deep in the grove");
+				Assert.True(p.Z - radius > backdrop.Position.Z, $"{n.Name} at z {p.Z} (radius {radius}) pokes through the backdrop at z {backdrop.Position.Z}");
+			}
 			if (Mathf.Abs(p.X) < BambooGroveStage.ClearBandHalfX)
 				Assert.True(front <= BambooGroveStage.ClearBandBackZ + 1e-3f, $"{n.Name} at ({p.X}, {p.Z}) reaches z {front}, inside the clear band behind the fight (|x| < {BambooGroveStage.ClearBandHalfX}, z > {BambooGroveStage.ClearBandBackZ})");
 			Assert.True(front <= limit + 1e-3f, $"{n.Name}: front z {front} past its limit {limit}");
 		}
+		Assert.True(lanterns > 2, $"the line's lanterns were checked too ({lanterns})");
 		scene.QueueFree();
+	}
+
+	/// <summary>World bounds of every mesh under <paramref name="n"/>.</summary>
+	static Aabb WorldBounds(Node n) => Meshes(n).Select(mi => mi.GlobalTransform * mi.Mesh.GetAabb()).Aggregate((a, b) => a.Merge(b));
+
+	[Test]
+	public static void Stage_NearLeftLanternStandsInFrontOfTheBamboo(Node runner)
+	{
+		// YOK-208 (designer, 2026-10-25): the near-left lantern heads the left path row, in front of the clump behind it
+		// (Bamboo3), not half hidden by it. The clump's stalks: its mesh vertices up to StalkHeight (well above the lantern's
+		// top, so a stalk leaning forward above it counts too) within the lantern's x extent. The lantern's back face must be
+		// nearer the camera (larger z) than the nearest of them, so no framing can put a stalk over it.
+		const float StalkHeight = 3f;
+		var scene = Load(runner);
+		var props = scene.StageRoot.GetNode("Props");
+		Aabb lantern = WorldBounds(props.GetNode("Lantern0"));
+		Assert.True(lantern.End.Y < StalkHeight, $"the lantern ({lantern.End.Y:0.00} m tall) is below the stalk band checked");
+		float stalkFront = float.NegativeInfinity;
+		int seen = 0;
+		foreach (var mi in Meshes(props.GetNode("Bamboo3")))
+			for (int s = 0; s < mi.Mesh.GetSurfaceCount(); s++)
+				foreach (Vector3 v in (Vector3[])mi.Mesh.SurfaceGetArrays(s)[(int)Mesh.ArrayType.Vertex])
+				{
+					Vector3 g = mi.GlobalTransform * v;
+					if (g.Y > StalkHeight || g.X < lantern.Position.X || g.X > lantern.End.X) continue;
+					seen++;
+					stalkFront = Mathf.Max(stalkFront, g.Z);
+				}
+		Assert.True(seen > 0, "Bamboo3's stalks overlap the lantern's x extent (else this check proves nothing)");
+		Assert.True(lantern.Position.Z > stalkFront + 0.05f, $"Lantern0's back at z {lantern.Position.Z:0.00} is behind Bamboo3's stalks (front z {stalkFront:0.00})");
+		// It heads the left row: nearer than the row's first lantern and further out from the path.
+		var line = props.GetNode<LanternLine>("PathLanterns");
+		Vector3 l0 = line.GetNode<Node3D>(LanternLine.Prefix + "L0").GlobalPosition, at = props.GetNode<Node3D>("Lantern0").GlobalPosition;
+		Assert.True(at.Z > l0.Z && at.X < l0.X, $"Lantern0 at {at} heads the left row (its first lantern at {l0})");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternsLitWithFewShadowlessLights(Node runner)
+	{
+		// YOK-208: every lantern shows the flat persimmon window fill; a handful of shadowless warm lights, no bloom.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var lanterns = PropItems(stage.GetNode("Props")).Where(i => IsLantern(i.Node)).ToList();
+		foreach (var (n, _) in lanterns)
+		{
+			var fills = Meshes(n).Where(m => m.IsInGroup(ToonLook.FlatFillGroup)).ToList();
+			Assert.True(fills.Count >= 1, $"{n.Name}: lit window fill");
+			foreach (var f in fills) Assert.True(f.IsVisibleInTree(), $"{n.Name}/{f.Name}: the window fill shows");
+		}
+		var lights = stage.FindChildren("*", "OmniLight3D", true, false).Cast<OmniLight3D>().ToList();
+		Assert.True(lights.Count >= 2 && lights.Count <= BambooGroveStage.MaxLanternLights, $"a handful of lantern lights, got {lights.Count}");
+		foreach (var l in lights)
+		{
+			Assert.True(!l.ShadowEnabled && l.OmniRange <= 4f, $"{l.GetParent().GetParent().Name}: shadowless, local light");
+			Assert.True(l.LightEnergy > 0f && l.IsVisibleInTree(), $"{l.GetParent().GetParent().Name}: the light is on");
+		}
+		foreach (var front in new[] { "Props/Lantern0", "Props/Lantern1" })
+			Assert.True(stage.HasNode(front + "/Pivot/Light"), $"{front} lights the ground and stalks near it");
+		Assert.True(!stage.GetNode<WorldEnvironment>("Environment").Environment.GlowEnabled, "flat fill, never a bloom halo");
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		line.PerSide = 8; line.LitPerSide = 8; // past the budget: the line keeps only what is left of the cap
+		int capped = stage.FindChildren("*", "OmniLight3D", true, false).Count;
+		Assert.True(capped <= BambooGroveStage.MaxLanternLights, $"the light cap holds whatever the exports say, got {capped}");
+		var extra = new LanternLine { Name = "CodeLine", PerSide = 4, LitPerSide = 4 };
+		stage.GetNode("Props").AddChild(extra); // a second line added in code (no Owner) still counts the whole stage
+		Assert.True(extra.StageScope() == stage, "the budget counts the stage scene, not the fight scene or the line alone");
+		int withExtra = stage.FindChildren("*", "OmniLight3D", true, false).Count;
+		Assert.True(withExtra <= BambooGroveStage.MaxLanternLights, $"a code-added line holds the cap too, got {withExtra}");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternLineFollowsAMovedBackdrop(Node runner)
+	{
+		// YOK-208 (Code Critic advisory): YOK-209 may nudge the backdrop quad; the line's vanish point follows the floor seam
+		// at VanishU from the quad's full transform: moved, scaled, and re-parented under a moved node.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		var size = ((QuadMesh)backdrop.Mesh).Size;
+		void Check(string what, Vector3 expectWorld)
+		{
+			Vector3 got = line.GlobalTransform * line.VanishPoint();
+			Assert.True(got.DistanceTo(expectWorld) < 1e-3f, $"{what}: vanish point {got}, expected {expectWorld}");
+			line.Rebuild();
+			var row = line.GetChildren().Cast<Node3D>().Where(n => n.Name.ToString().StartsWith(LanternLine.Prefix + "L")).ToList();
+			Assert.True(row[^1].GlobalPosition.DistanceTo(expectWorld) < row[0].GlobalPosition.DistanceTo(expectWorld), $"{what}: the rebuilt row recedes toward it");
+		}
+		float u = line.VanishU;
+		Check("as placed", new Vector3(backdrop.Position.X + (u - 0.5f) * size.X, 0, backdrop.Position.Z));
+		// Moved 1.5 m right and 0.5 m nearer, raised 1 m, scaled 1.2: the seam stays on the floor, x scales about the centre.
+		backdrop.Transform = new Transform3D(Basis.Identity.Scaled(Vector3.One * 1.2f), backdrop.Position + new Vector3(1.5f, 1f, 0.5f));
+		Check("moved and scaled", new Vector3(backdrop.Position.X + (u - 0.5f) * size.X * 1.2f, 0, backdrop.Position.Z));
+		// Re-parented under a holder 2 m to the left: the line resolves it by path and world transform.
+		var holder = new Node3D { Name = "BackdropHolder", Position = new Vector3(-2f, 0, 0) };
+		stage.AddChild(holder);
+		backdrop.Reparent(holder, keepGlobalTransform: false);
+		line.Backdrop = line.GetPathTo(backdrop);
+		Vector3 world = backdrop.GlobalPosition;
+		Check("re-parented", new Vector3(world.X + (u - 0.5f) * size.X * 1.2f, 0, world.Z));
+		scene.QueueFree();
+	}
+
+	/// <summary>Footprint radius of a built lantern (unscaled lantern bounds, times the unsigned horizontal stretch of its world basis).</summary>
+	static float WorldRadius(Node3D lantern)
+	{
+		var probe = GD.Load<PackedScene>(LanternLine.LitLanternScene).Instantiate<Node3D>();
+		Aabb own = BambooGroveStage.LocalBounds(probe);
+		probe.Free();
+		Basis b = lantern.GlobalTransform.Basis;
+		return Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * Mathf.Max(b.Column0.Length(), b.Column2.Length());
+	}
+
+	static List<Node3D> Row(LanternLine line, string side) =>
+		line.GetChildren().Cast<Node3D>().Where(n => n.Name.ToString().StartsWith(LanternLine.Prefix + side)).ToList();
+
+	[Test]
+	public static void Stage_LanternLineMirrored_StillSkipsLanternsBehindTheBackdrop(Node runner)
+	{
+		// YOK-208 (Code Critic): a mirrored line (scale x -1) has a negative signed Basis.Scale; the footprint radius must
+		// stay positive, so a row pushed just behind the backdrop is skipped, not built through it.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		float back = stage.GetNode<MeshInstance3D>("Backdrop").GlobalPosition.Z;
+		line.Scale = new Vector3(-1, 1, 1);
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "mirrored, as placed: both rows still built");
+		foreach (var l in line.GetChildren().Cast<Node3D>())
+			Assert.True(l.GlobalPosition.Z - WorldRadius(l) > back, $"mirrored: {l.Name} at z {l.GlobalPosition.Z} reaches the backdrop at z {back}");
+		line.NearLeft = new Vector3(-1.7f, 0, -16.1f);
+		Assert.Equal(0, Row(line, "L").Count, "mirrored, near left at z -16.1 (behind the backdrop): the left row is skipped");
+		Assert.True(Row(line, "R").Count > 0, "mirrored: the right row is still built");
+		// A mirrored backdrop (its x axis flipped) is the same plane: the shipped rows still build in front of it.
+		line.Scale = Vector3.One;
+		line.NearLeft = new Vector3(-1.7f, 0, -13.7f);
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		backdrop.Scale = new Vector3(-1, 1, 1);
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "mirrored backdrop: both rows still built");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternLineYawedBackdrop_SkipsLanternsBehindItsPlane(Node runner)
+	{
+		// YOK-208 (Code Critic): a yawed backdrop is not a plane of constant z; the guard measures along its normal. A near
+		// point well in front of the backdrop's centre z but just behind the turned plane builds no lantern of that row.
+		var scene = Load(runner);
+		var stage = scene.StageRoot;
+		var line = stage.GetNode<LanternLine>("Props/PathLanterns");
+		var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+		backdrop.Rotation = new Vector3(0, Mathf.DegToRad(30f), 0);
+		Vector3 q = backdrop.GlobalPosition with { Y = 0 }, n = backdrop.GlobalTransform.Basis.Column2.Normalized(), along = Vector3.Up.Cross(n);
+		Assert.True(n.Z > 0.8f, $"the turned backdrop still faces the camera: normal {n}");
+		void Clear(string what)
+		{
+			foreach (var l in line.GetChildren().Cast<Node3D>())
+			{
+				float d = n.Dot(l.GlobalPosition - backdrop.GlobalPosition);
+				Assert.True(d - WorldRadius(l) > 0f, $"{what}: {l.Name} {d} m in front of the turned backdrop, radius {WorldRadius(l)}");
+			}
+		}
+		line.Rebuild();
+		Assert.True(Row(line, "L").Count > 0 && Row(line, "R").Count > 0, "turned 30 degrees, as placed: both rows built");
+		Clear("as placed");
+		Vector3 behind = q - n * 0.05f - along * 3f; // 3 m left along the plane, 5 cm behind it
+		Assert.True(behind.Z > backdrop.GlobalPosition.Z + 1f && behind.X < 0f, $"the test point {behind} is well in front of the backdrop's centre z");
+		line.NearLeft = line.ToLocal(behind);
+		Assert.Equal(0, Row(line, "L").Count, $"near left at {behind}, behind the turned plane: the left row is skipped");
+		Assert.True(Row(line, "R").Count > 0, "the right row is still built");
+		Clear("left row behind the plane");
+		scene.QueueFree();
+	}
+
+	[Test]
+	public static void Stage_LanternLineRecedesTowardTheVanishPoint()
+	{
+		// YOK-208: the pure layout: each row converges on the vanish point and shrinks with the same factor; only the nearest are lit.
+		var vanish = new Vector3(2f, 0, -16f);
+		var list = LanternLine.Placements(new Vector3(-2.4f, 0, -13.8f), new Vector3(3f, 0, -13.4f), vanish, 4, 0.6f, 0.6f, 2);
+		Assert.Equal(8, list.Count, "two rows of four");
+		Assert.Equal(list.Count, list.Select(p => p.Name).Distinct().Count(), "unique names");
+		foreach (string side in new[] { "L", "R" })
+		{
+			var row = list.Where(p => p.Name.StartsWith(LanternLine.Prefix + side)).ToList();
+			for (int i = 1; i < row.Count; i++)
+			{
+				Assert.True(row[i].Position.DistanceTo(vanish) < row[i - 1].Position.DistanceTo(vanish), $"{row[i].Name} nearer the vanish point");
+				Assert.True(row[i].Position.Z < row[i - 1].Position.Z && row[i].Scale < row[i - 1].Scale, $"{row[i].Name} deeper and smaller");
+				Assert.True(Mathf.IsEqualApprox(row[i].Position.DistanceTo(vanish) / row[i - 1].Position.DistanceTo(vanish), row[i].Scale / row[i - 1].Scale), "forced perspective: distance and scale shrink together");
+			}
+			Assert.Equal(2, row.Count(p => p.Lit), "the two nearest of each row keep their light");
+			Assert.True(row[0].Lit && row[1].Lit, "lit = the nearest");
+			Assert.True(row.All(p => p.Position.Y == 0f), "on the floor");
+		}
+		Assert.Equal(0, LanternLine.Placements(Vector3.Zero, Vector3.Zero, vanish, 0, 0.6f, 0.6f, 2).Count, "no lanterns");
+		var near = new Vector3(-2.4f, 0, -13.8f);
+		foreach (var p in LanternLine.Placements(near, near, vanish, 4, 1.5f, 0.6f, 2))
+			Assert.True(p.Position.Z <= near.Z + 1e-4f && p.Scale <= 0.6f + 1e-4f, $"{p.Name}: a Recede past 1 is clamped, never in front of the near point");
+		foreach (float r in new[] { 0f, 1f, -3f })
+		{
+			var row = LanternLine.Placements(near, near, vanish, 4, r, 0.6f, 2).Take(4).ToList();
+			for (int i = 1; i < row.Count; i++)
+				Assert.True(row[i].Scale > 0f && row[i].Scale < row[i - 1].Scale && row[i].Position.Z < row[i - 1].Position.Z, $"Recede {r} clamped to [{LanternLine.MinRecede}, {LanternLine.MaxRecede}]: {row[i].Name} deeper, smaller, never scale 0");
+		}
+		var nan = new Vector3(float.NaN, 0, -14f);
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, float.NaN, 0.6f, 2).Count, "NaN Recede builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, 0.6f, float.PositiveInfinity, 2).Count, "infinite scale builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, vanish, 4, 0.6f, 0f, 2).Count, "zero scale builds nothing");
+		Assert.Equal(0, LanternLine.Placements(nan, near, vanish, 4, 0.6f, 0.6f, 2).Count, "a NaN near point builds nothing");
+		Assert.Equal(0, LanternLine.Placements(near, near, nan, 4, 0.6f, 0.6f, 2).Count, "a NaN vanish point (NaN VanishU) builds nothing");
 	}
 
 	[Test]
@@ -148,7 +392,7 @@ public static class StageTests
 		string Layout()
 		{
 			var scene = Load(runner);
-			string s = string.Join(";", scene.StageRoot.GetNode("Props").GetChildren().Cast<Node3D>().Select(n => $"{n.Name}:{n.Transform}"));
+			string s = string.Join(";", PropItems(scene.StageRoot.GetNode("Props")).Select(i => $"{i.Node.Name}:{i.Xf}"));
 			scene.QueueFree();
 			return s;
 		}

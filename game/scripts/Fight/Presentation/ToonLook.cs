@@ -17,6 +17,8 @@ public partial class ToonLook : Node
 {
 	public const string ToonPath = "res://materials/toon.tres", OutlinePath = "res://materials/ink_outline.tres";
 	public const float DefaultOutlineMetres = 0.008f;
+	/// <summary>YOK-208: meshes in this group keep their own flat material (no toon, no outline): the lit lanterns' persimmon window fill.</summary>
+	public const string FlatFillGroup = "flat_fill";
 
 	/// <summary>Template: its diffuse mode, specular mode and roughness are copied onto each surface's own material.</summary>
 	[Export] public StandardMaterial3D? Toon { get; set; }
@@ -48,7 +50,7 @@ public partial class ToonLook : Node
 		foreach (var node in root.FindChildren("*", "MeshInstance3D", true, false))
 		{
 			var mi = (MeshInstance3D)node;
-			if (mi.Mesh is null) continue;
+			if (mi.Mesh is null || mi.IsInGroup(FlatFillGroup)) continue;
 			float scale = WorldScale(mi);
 			for (int sfc = 0; sfc < mi.Mesh.GetSurfaceCount(); sfc++)
 			{

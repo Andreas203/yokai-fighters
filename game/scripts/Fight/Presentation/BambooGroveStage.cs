@@ -4,10 +4,11 @@ namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-39: the bamboo grove at dusk (V9) is the scene <c>res://scenes/stage/bamboo_grove.tscn</c>, edited in Godot
-/// (spec <c>assets/specs/stages/bamboo-grove-dusk.md</c>). Layers back to front: cropped backdrop quad, ten bamboo clusters,
-/// two stone lanterns, the tiled ground strip; dusk = warm low key light + cool fill + indigo depth fog. The props are
-/// placed by hand (the layout baked from the old seeded builder); this class holds the placement rules StageTests
-/// checks against, and the asset check for the placeholder fallback.
+/// (spec <c>assets/specs/stages/bamboo-grove-dusk.md</c>). Layers back to front: cropped backdrop quad, the lit lantern line
+/// (<see cref="LanternLine"/>, YOK-208), ten bamboo clusters, two lit stone lanterns, the tiled ground strip; dusk = warm
+/// low key light + cool fill + indigo depth fog. The bamboo and the two front lanterns are placed by hand (the layout
+/// baked from the old seeded builder), the line is built from its parameters; this class holds the placement rules
+/// StageTests checks against (every lantern of the line included), and the asset check for the placeholder fallback.
 /// </summary>
 public static class BambooGroveStage
 {
@@ -26,10 +27,14 @@ public static class BambooGroveStage
 	/// YOK-39 clear band: behind the fighting area (|x| &lt; <see cref="ClearBandHalfX"/>, the stage plus a margin) no
 	/// prop's footprint comes nearer than <see cref="ClearBandBackZ"/>, so nothing sits right behind a fighter and reads
 	/// as attached to them. Lanterns (small, fighter-sized) stay at or behind <see cref="LanternMaxZ"/> everywhere.
-	/// Lanterns sit by parallax so that in the standard framings each shows in a gap between the fighters: at z -12 a
-	/// lantern appears at about (x - camera x) x 0.5.
+	/// Lanterns sit by parallax so that in the standard framings each shows in a gap between the fighters: a lantern at
+	/// depth z appears at about (x - camera x) x d / (d - z), d the camera's distance from the Z = 0 plane (about 6.7 m
+	/// close, 9.8 m wide), so at the front lanterns' z -10.9 to -11.5 about x 0.38 close to x 0.47 wide.
 	/// </summary>
 	public const float ClearBandHalfX = 10.5f, ClearBandBackZ = -8f, LanternMaxZ = -10f;
+
+	/// <summary>YOK-208: the stage's lantern light budget, all OmniLight3D together (shadowless, a handful at most); <see cref="LanternLine"/> lights no more than what is left.</summary>
+	public const int MaxLanternLights = 6;
 
 	/// <summary>The grove's backdrop and ground textures exist under <paramref name="dir"/> (else the fight uses the placeholder).</summary>
 	public static bool AssetsPresent(string dir) =>

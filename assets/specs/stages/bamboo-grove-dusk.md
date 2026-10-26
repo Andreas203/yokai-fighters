@@ -32,7 +32,7 @@ First pass: 48. Take cap 3 per asset.
 
 ## Assembly (Godot, not generation)
 
-Backdrop on a quad well behind the fight plane; bamboo cluster instanced 5-8 times at midground depths with varied scale and rotation; lantern 1-2 times at the edges, outside the fighter band; ground strip tiled on the floor plane. Dusk lighting is a Godot light/colour setting, not baked.
+Backdrop on a quad well behind the fight plane; bamboo cluster instanced 5-8 times at midground depths with varied scale and rotation; lantern twice deep in the grove, outside the fighter band, each in front of its bamboo clump at the head of a path row (designer, 2026-10-25), plus (YOK-208, designer request 2026-10-25) both lit: a flat persimmon `#D8632C` window fill, no bloom, and a small shadowless warm light each, and a receding line of 2 x 4 lit lanterns flanking the path back toward the backdrop (`LanternLine`, the nearest two of each row lit, 6 lights in all); ground strip tiled on the floor plane. Dusk lighting is a Godot light/colour setting, not baked.
 
 ## Acceptance criteria
 
