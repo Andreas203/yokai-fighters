@@ -55,6 +55,10 @@ public static class InputGlyphs
 		("choose", InputDevice.Pad) => "D-PAD",
 		("route", InputDevice.Keyboard) => "ARROWS",
 		("route", InputDevice.Pad) => "D-PAD",
+		("route_any", _) => "ARROWS / D-PAD", // YOK-109: a chip that names both devices, for screens that show keyboard and pad together
+		("confirm_any", _) => "ENTER / A",
+		("pan_any", _) => "WHEEL / R-STICK", // YOK-109: the map scroll: mouse wheel (or drag) and the pad's right stick
+		("page_any", _) => "Q E / LB RB",     // a page of scroll at a time (the menus' tab keys)
 		("move", InputDevice.Keyboard) => "UP / DOWN",
 		("move", InputDevice.Pad) => "D-PAD",
 		("tab", InputDevice.Keyboard) => "Q / E",

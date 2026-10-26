@@ -12,4 +12,6 @@ public partial class MapNodeStyle : Resource
 	[Export] public string Icon { get; set; } = "?";
 	/// <summary>Optional texture; replaces the glyph when set.</summary>
 	[Export] public Texture2D? IconTexture { get; set; }
+	/// <summary>YOK-109: optional lines under the node's name (one per line), for a type that says more on its card (the boss). Empty = none.</summary>
+	[Export(PropertyHint.MultilineText)] public string Tagline { get; set; } = "";
 }

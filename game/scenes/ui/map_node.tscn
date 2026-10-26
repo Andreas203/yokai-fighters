@@ -66,6 +66,14 @@ clip_text = true
 text = "Yokai"
 theme_type_variation = &"BodyLabel"
 
+[node name="TagLabel" type="Label" parent="Content"]
+visible = false
+mouse_filter = 2
+horizontal_alignment = 1
+clip_text = true
+text = ""
+theme_type_variation = &"CaptionLabel"
+
 [node name="StateLabel" type="Label" parent="Content"]
 mouse_filter = 2
 horizontal_alignment = 1

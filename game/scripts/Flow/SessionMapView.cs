@@ -18,7 +18,7 @@ public sealed class SessionMapView : IMapView
 	public SessionMapView(RunSession session)
 	{
 		_session = session;
-		_map = new RunMapView(session.Map, session.Run, session.Scenes);
+		_map = new RunMapView(session.Map, session.Run, session.Scenes, session.Seed);
 	}
 
 	public IReadOnlyList<MapNodeView> Nodes => _map.Nodes;
@@ -29,6 +29,7 @@ public sealed class SessionMapView : IMapView
 	public bool CopyLocked => _session.CopyLocked;
 	public object? RunKey => _session;
 	public MapNodeDetail? Detail(string nodeId) => _map.Detail(nodeId);
+	public IReadOnlyList<MapTwistLegendEntry> TwistLegend => _map.TwistLegend;
 	public bool Select(string nodeId) => _session.Enter(nodeId).Ok;
 }
 

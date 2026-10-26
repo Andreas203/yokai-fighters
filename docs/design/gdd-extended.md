@@ -355,6 +355,8 @@ When shapeshifted, the Tanuki uses Ryo's model and clips, so copying needs no ne
 
 ### 6.1 The map
 
+> **Amended by** [AM18](gdd-amendments.md#am18) the map is a handscroll that shows only the next choice. Where they disagree with this section, the amendments win.
+
 Eight rows, one node per row. Rows 1–3, 5, 6 and 8 are duels; rows 5 and 8 always hold elders; row 4 is always the merchant; row 7 offers the merchant again or a dojo. Each node shows which yokai waits there, so choosing a path is choosing which powers you can earn.
 
 ```text
