@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
 using YokaiFighters.Story;
@@ -68,9 +70,38 @@ public static class LoseCardTests
 		var lib = WithOniCards();
 		foreach (var (row, band) in new[] { (1, "lose-early"), (3, "lose-early"), (5, "lose-mid"), (6, "lose-mid"), (8, "lose-late") })
 			Assert.Equal(Card(lib, band, "Kitsune"), Shown(lib, At("kitsune", row)), $"Kitsune on row {row}: {band}");
-		Assert.Equal(Card(lib, "lose-early", "Kitsune"), Shown(lib, At("apprentice", 1)), "the apprentice plays as the Kitsune: row band");
 		Assert.Equal("lose-late", lib.LaterLossCard("tanuki", 9).Id, "the Tanuki at the boss row: row band 7-9");
 		Assert.Equal("lose-late", lib.LaterLossCard("oni", 9).Id, "an Oni past its own cards' rows: row band");
+	}
+
+	[Test]
+	public static void ApprenticeAndNineTails_CountAsTheKitsune()
+	{
+		var lib = new StoryLibrary(WithOniCards().Cards.Append(Fixture("fixture-lose-kitsune", "kitsune", 1, 9)));
+		var apprentice = At("apprentice", 1);
+		Assert.Equal("kitsune", apprentice.DraftYokai, "the apprentice plays as the Kitsune");
+		Assert.Equal(Card(lib, "fixture-lose-kitsune", "Kitsune"), Shown(lib, apprentice), "row 1 apprentice: the Kitsune's card, not the band");
+		var nineTails = At("nine-tailed-kitsune", 8, "elder", elder: true);
+		Assert.Equal(Card(lib, "fixture-lose-kitsune", FightScene.NameOf(nineTails, nineTails.Fighter)), Shown(lib, nineTails), "row 8 Nine-Tails: the Kitsune's card, named as the elder");
+		Assert.Equal(Card(lib, "lose-early", "Oni"), Shown(new StoryLibrary(lib.Cards.Where(c => c.Id != OniEarly)), At("oni", 3)), "the Kitsune's card is never the Oni's");
+	}
+
+	/// <summary>The yokai a later_loss card may name = every winner the shipped maps' fight nodes resolve to = the schema's enum.</summary>
+	[Test]
+	public static void Winners_AreWhatTheShippedMapsResolveTo_AndTheSchemaEnum()
+	{
+		string mapDir = ContentPaths.Data("map");
+		var table = NodeSceneTable.Default(mapDir);
+		var resolved = Directory.GetFiles(mapDir, "*.json").Where(f => Path.GetFileName(f) != NodeSceneTable.DefaultFile)
+			.SelectMany(f => new FileMapSource(f).Load().Nodes)
+			.Where(n => n.Type is NodeTypeRegistry.Duel or NodeTypeRegistry.ElderDuel or NodeTypeRegistry.Boss)
+			.Select(n => table.Resolve(n).Context.DraftYokai).Distinct().OrderBy(x => x, StringComparer.Ordinal).ToArray();
+		var winners = LaterLoss.Winners.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+		Assert.Equal(string.Join(",", winners), string.Join(",", resolved), "LaterLoss.Winners = the DraftYokai of every shipped fight node");
+		using var schema = JsonDocument.Parse(File.ReadAllText(ContentPaths.Data(Path.Combine("schema", "story-card.schema.json"))));
+		var enumIds = schema.RootElement.GetProperty("properties").GetProperty("later_loss").GetProperty("properties").GetProperty("yokai")
+			.GetProperty("enum").EnumerateArray().Select(e => e.GetString()!).OrderBy(x => x, StringComparer.Ordinal);
+		Assert.Equal(string.Join(",", winners), string.Join(",", enumIds), "the schema's later_loss.yokai enum is the same list");
 	}
 
 	[Test]
@@ -112,16 +143,26 @@ public static class LoseCardTests
 			Assert.Equal(new LaterLoss(null, min, max), lib[id].LaterLoss, $"{id}: the rows its trigger names, any yokai");
 		Assert.True(lib[StoryLibrary.LoseScreenId].LaterLoss is null, "lose-screen is the default, never a later-loss card");
 		Assert.Equal(new LaterLoss("oni", 1, 5), Fixture("x", "oni", 1, 5).LaterLoss, "a yokai's card");
-		string good = """{ "kind": "story_card", "id": "x", "status": "proposed", "trigger": "t", "text": "t", "speaker": "s", "rules": ["S3"], "later_loss": LL }""";
-		foreach (string bad in new[]
+		string good = """{ "kind": "story_card", "id": "x", "status": "proposed", "trigger": "t", "text": "TEXT", "placeholders": PH, "speaker": "s", "rules": ["S3"], "later_loss": LL }""";
+		string CardWith(string later, string text = "t", string ph = "[]") => good.Replace("LL", later).Replace("TEXT", text).Replace("PH", ph);
+		Assert.Equal(new LaterLoss("tanuki", 9, 9), StoryLibrary.Parse(CardWith("""{ "yokai": "tanuki", "row_min": 9, "row_max": 9 }""", "{yokai} wins.", """["yokai"]""")).LaterLoss, "control: a plain card loads");
+		foreach (var (what, bad) in new[]
 		{
-			"""{ "row_min": 4, "row_max": 3 }""", """{ "row_min": 0, "row_max": 3 }""", """{ "row_min": 1 }""",
-			"""{ "row_min": 1.5, "row_max": 3 }""", """{ "yokai": "", "row_min": 1, "row_max": 3 }""", """[1, 3]""",
+			("min above max", CardWith("""{ "row_min": 4, "row_max": 3 }""")), ("row 0", CardWith("""{ "row_min": 0, "row_max": 3 }""")),
+			("no row_max", CardWith("""{ "row_min": 1 }""")), ("1.5", CardWith("""{ "row_min": 1.5, "row_max": 3 }""")),
+			("4.0", CardWith("""{ "row_min": 4.0, "row_max": 6 }""")), ("1e1", CardWith("""{ "row_min": 1, "row_max": 1e1 }""")),
+			("over Int32", CardWith("""{ "row_min": 1, "row_max": 3000000000 }""")), ("empty yokai", CardWith("""{ "yokai": "", "row_min": 1, "row_max": 3 }""")),
+			("elder id", CardWith("""{ "yokai": "elder-oni", "row_min": 1, "row_max": 3 }""")), ("apprentice id", CardWith("""{ "yokai": "apprentice", "row_min": 1, "row_max": 3 }""")),
+			("not an object", CardWith("""[1, 3]""")),
+			("{move} listed and used", CardWith("""{ "row_min": 1, "row_max": 3 }""", "{yokai} keeps the {move}.", """["yokai", "move"]""")),
+			("{move} used, not listed", CardWith("""{ "row_min": 1, "row_max": 3 }""", "Gone: {move}.")),
 		})
 		{
-			bool threw = false;
-			try { StoryLibrary.Parse(good.Replace("LL", bad)); } catch (FormatException) { threw = true; }
-			Assert.True(threw, "rejects later_loss " + bad);
+			string? message = null;
+			try { StoryLibrary.Parse(bad); } catch (FormatException e) { message = e.Message; }
+			Assert.True(message is not null, "rejects later_loss: " + what);
+			if (what is "elder id" or "apprentice id")
+				Assert.True(message!.Contains("a later_loss yokai is the plain yokai id; an elder counts as its yokai"), what + ": says why: " + message);
 		}
 	}
 }

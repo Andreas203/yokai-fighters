@@ -10,7 +10,8 @@ namespace YokaiFighters.Story;
 /// <summary>One kind <c>story_card</c> file (data/story/, schema story-card.schema.json). Text is habit-writer's, untouched.</summary>
 public sealed record StoryCardData(string Id, string? Title, string Text, IReadOnlyList<string> Placeholders, string Speaker)
 {
-	static readonly Regex Slot = new(@"\{([^{}]*)\}");
+	/// <summary>A {name} slot in title or text.</summary>
+	internal static readonly Regex Slot = new(@"\{([^{}]*)\}");
 
 	/// <summary>YOK-212, S3: the card's <c>later_loss</c> (a later-loss wake-up card), or null for every other card.</summary>
 	public LaterLoss? LaterLoss { get; init; }
@@ -35,6 +36,13 @@ public sealed record StoryCardData(string Id, string? Title, string Text, IReadO
 /// </summary>
 public sealed record LaterLoss(string? Yokai, int RowMin, int RowMax)
 {
+	/// <summary>
+	/// The yokai a loss can be to: every <c>NodeContext.DraftYokai</c> the shipped maps' fight nodes resolve to (an elder,
+	/// the apprentice and the Nine-Tails as their yokai). Same list as the schema's <c>later_loss.yokai</c> enum; both are
+	/// checked against the maps by <c>LoseCardTests</c>.
+	/// </summary>
+	public static readonly IReadOnlyList<string> Winners = new[] { "kitsune", "oni", "kappa", "tanuki" };
+
 	public bool Covers(int row) => row >= RowMin && row <= RowMax;
 }
 
@@ -116,19 +124,29 @@ public sealed class StoryLibrary : Ui.IStorySource
 			? p.EnumerateArray().Select(e => e.GetString() ?? "").ToArray() : Array.Empty<string>();
 		foreach (var name in ph)
 			if (name is not ("yokai" or "move")) throw new FormatException($"story card '{id}': unknown placeholder '{name}'");
-		return new StoryCardData(id, title, Str("text"), ph, Str("speaker")) { LaterLoss = ParseLaterLoss(r, id) };
+		string text = Str("text");
+		var later = ParseLaterLoss(r, id);
+		// YOK-212: the lose screen fills only {yokai}; any other name would load here and then throw at the loss.
+		if (later is not null)
+		{
+			var used = new[] { title ?? "", text }.SelectMany(x => StoryCardData.Slot.Matches(x).Select(m => m.Groups[1].Value));
+			if (ph.Concat(used).FirstOrDefault(n => n != "yokai") is { } other)
+				throw new FormatException($"story card '{id}': a later-loss card fills only {{yokai}}, never {{{other}}}");
+		}
+		return new StoryCardData(id, title, text, ph, Str("speaker")) { LaterLoss = later };
 	}
 
-	/// <summary>YOK-212: <c>later_loss</c> = { yokai? (id), row_min, row_max } (rows from 1, min no higher than max); absent = null.</summary>
+	/// <summary>YOK-212: <c>later_loss</c> = { yokai? (one of <see cref="LaterLoss.Winners"/>), row_min, row_max } (whole Int32 rows from 1, written
+	/// without a decimal point or exponent; min no higher than max); absent = null. tools/validate_data.py refuses the same files.</summary>
 	static LaterLoss? ParseLaterLoss(JsonElement card, string id)
 	{
 		if (!card.TryGetProperty("later_loss", out var t)) return null;
 		if (t.ValueKind != JsonValueKind.Object) throw new FormatException($"story card '{id}': later_loss must be an object");
 		int Row(string name) => t.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n) && n >= 1
-			? n : throw new FormatException($"story card '{id}': later_loss.{name} must be a whole row number from 1");
+			? n : throw new FormatException($"story card '{id}': later_loss.{name} must be a whole row number from 1 to 2147483647, with no decimal point or exponent");
 		string? yokai = !t.TryGetProperty("yokai", out var y) ? null
-			: y.ValueKind == JsonValueKind.String && y.GetString() is { Length: > 0 } s ? s
-			: throw new FormatException($"story card '{id}': later_loss.yokai must be a yokai id");
+			: y.ValueKind == JsonValueKind.String && y.GetString() is { } s && LaterLoss.Winners.Contains(s) ? s
+			: throw new FormatException($"story card '{id}': later_loss.yokai {y.GetRawText()}: a later_loss yokai is the plain yokai id; an elder counts as its yokai (one of {string.Join(", ", LaterLoss.Winners)})");
 		int min = Row("row_min"), max = Row("row_max");
 		if (min > max) throw new FormatException($"story card '{id}': later_loss.row_min {min} is above row_max {max}");
 		return new LaterLoss(yokai, min, max);

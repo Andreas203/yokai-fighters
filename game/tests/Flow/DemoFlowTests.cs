@@ -156,9 +156,9 @@ public static class DemoFlowTests
 		LoseDuel(s);
 		Assert.Equal(DemoStage.Lost, s.Stage, "lost");
 		Assert.True(hud.GetNode<Control>("LoseScreen").Visible, "lose screen shown");
-		var (title, text) = FightScene.LoseCardFor(FightScene.LoadStory(), s.Node, FightScene.Opponent); // YOK-212: by row and yokai
-		Assert.Equal(text, hud.LoseText, "lose text from data/story/ (the row band's card)");
-		Assert.Equal(title ?? LoseScreen.PlaceholderTitle, hud.LoseTitle, "lose title from data/story/ (none: the screen's own heading)");
+		var lib = FightScene.LoadStory();
+		Assert.Equal(lib["lose-early"].FillText(yokai: "Kitsune"), hud.LoseText, "YOK-212: the demo's row 1 Kitsune duel shows the rows 1-3 band (data/story/lose-early.json)");
+		Assert.Equal(LoseScreen.PlaceholderTitle, hud.LoseTitle, "lose-early has no title: the screen's own heading");
 
 		hud.GetNode<Button>("LoseScreen/Restart").EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.Equal(DemoStage.Fighting, s.Stage, "back to fighting");

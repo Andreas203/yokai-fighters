@@ -500,7 +500,8 @@ class ValidateDataTest(unittest.TestCase):
         self.assertEqual(self._node_scenes(lambda d: d["types"].pop("dojo"), with_map=False)[0], 0)
 
     def test_later_loss_rows_read_low_to_high(self):
-        """YOK-212 (S3): later_loss is optional, takes a yokai id and a row range, and row_min may not pass row_max."""
+        """YOK-212 (S3): later_loss is optional, takes a plain yokai id and a row range of plain integers, row_min no higher
+        than row_max, and the card fills only {yokai}: whatever StoryLibrary.Parse refuses fails here first."""
         import json, tempfile
         card = json.loads((ROOT / "data" / "story" / "lose-mid.json").read_text(encoding="utf-8"))
         self.assertEqual(card["later_loss"], {"row_min": 4, "row_max": 6})
@@ -512,8 +513,20 @@ class ValidateDataTest(unittest.TestCase):
             ({"row_min": 1}, "later_loss: 'row_max' is a required property"),
             ({"yokai": "Oni!", "row_min": 1, "row_max": 5}, "later_loss.yokai"),
             ({"rows": [1, 5], "row_min": 1, "row_max": 5}, "('rows' was unexpected)"),
+            ({"row_min": 4.0, "row_max": 6}, "later_loss.row_min: 4.0: write the row as a plain integer"),
+            ({"row_min": 1, "row_max": 1e1}, "later_loss.row_max: 10.0: write the row as a plain integer"),
+            ({"row_min": 1, "row_max": 3000000000}, "later_loss.row_max: 3000000000 is greater than the maximum of 2147483647"),
+            ({"row_min": 9.0, "row_max": 3}, "later_loss: row_min 9.0 is above row_max 3 (S3)"),
+            ({"yokai": "elder-oni", "row_min": 1, "row_max": 5}, "later_loss.yokai: 'elder-oni': a later_loss yokai is the plain yokai id; an elder counts as its yokai"),
+            ({"yokai": "apprentice", "row_min": 1, "row_max": 5}, "a later_loss yokai is the plain yokai id"),
+            ({"yokai": "tanuki", "row_min": 9, "row_max": 9}, None),
+            (({"row_min": 1, "row_max": 5}, "{yokai} keeps the {move}.", ["yokai", "move"]), "placeholders: a later-loss card fills only {yokai}; the lose screen never has a {move} (S4)"),
         ]
+        text, placeholders = card["text"], card["placeholders"]
         for later, expect in cases:
+            card["text"], card["placeholders"] = text, placeholders
+            if isinstance(later, tuple):
+                later, card["text"], card["placeholders"] = later
             card["later_loss"] = later
             with tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / "data" / "story" / "lose-mid.json"
