@@ -5,6 +5,7 @@ image budget (--max-images live Astra takes for the whole run) is spent. Nobody 
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from agents import clean_card, parse_evaluation
@@ -12,13 +13,19 @@ from image_tools import measure_image
 from visual_agents import (EVALUATOR_SYSTEM, GENERATOR_NOTE, REFINER_SYSTEM, BudgetSpent, evaluator_prompt,
                            refiner_prompt, wrap_prompt)
 from visual_cases import SLOTS
+from visual_guide import CLASSES
 
 
 def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
     slot = SLOTS[case["slot"]]
-    prompt = f"{GENERATOR_NOTE} {slot['subject']} {case['brief']}"
-    scene = prompt   # what the Refiner rewrites: the whole first prompt, then its own scene descriptions
-    take = astra.render(prompt, f"{case['id']}-take1")
+    settings = case.get("settings")
+    if "scene" in case:   # a real spec prompt: wrapped in the house blocks as the spec says, and the Refiner starts from it
+        scene = case["scene"]
+        prompt = wrap_prompt(scene)
+    else:
+        prompt = f"{GENERATOR_NOTE} {slot['subject']} {case['brief']}"
+        scene = prompt   # what the Refiner rewrites: the whole first prompt, then its own scene descriptions
+    take = astra.render(prompt, f"{case['id']}-take1", settings)
     rounds, stopped = [], ""
     best = None   # (score, round) of the best take so far; the Refiner always works from it
     for n in range(1, args.max_rounds + 1):
@@ -37,25 +44,35 @@ def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
         rank = ev["score"] - (10 if m["flags"] else 0)   # a flagged take never beats a clean one
         if best is None or rank > best[0]:
             best = (rank, n, scene, ev["score"], reason, m)
+            failed = []   # rewrites that lost to the current best; a new best starts a new list
+        else:
+            failed.append({"scene": scene, "score": ev["score"], "reason": reason})
         if ev["score"] >= args.target and not m["flags"]:
             break
         if n == args.max_rounds:
             stopped = "take cap"
             break
-        # A rewrite can overshoot and score lower; the next one starts again from the best take, not the last.
+        # A rewrite can overshoot and score lower; the next one starts again from the best take, not the last. It is told
+        # what already failed from there: with the same inputs, the recorded-call cache would hand back the same rewrite.
         _, _, base_scene, base_score, base_reason, base_m = best
         scene = clean_card(vllm.complete("refiner", args.refiner_model, REFINER_SYSTEM,
                                          refiner_prompt(slot, base_scene, base_score, base_reason, base_m,
-                                                        keep=not getattr(args, "refiner_v1", False))))
+                                                        keep=not getattr(args, "refiner_v1", False), failed=failed)))
         prompt = wrap_prompt(scene)
         try:
-            take = astra.render(prompt, f"{case['id']}-take{n + 1}")
+            take = astra.render(prompt, f"{case['id']}-take{n + 1}", settings)
         except BudgetSpent as e:
             stopped = str(e)
             break
     kept = rounds[best[1] - 1]   # the loop's output is its best take, not its last
     return {**case, "slot_info": slot, "rounds": rounds, "before_score": rounds[0]["score"], "after_score": kept["score"],
             "best_take": kept["round"], "passed": kept["score"] >= args.target and not kept["flags"], "stopped": stopped}
+
+
+def classes_found(reason: str) -> str:
+    """The constraint types a REASON deducts for, from its rule IDs: a real prompt has no class set in advance."""
+    found = [name for prefix, name in CLASSES.items() if re.search(rf"\[{prefix}\d", reason)]
+    return ", ".join(found) or "none"
 
 
 def _cell(text) -> str:
@@ -76,13 +93,19 @@ def render_visual(meta: dict, results: list[dict]) -> str:
     for r in results:
         after = (f"{r['after_score']}/10, take {r['best_take']}"
                  + ("" if r["passed"] else f" (target not reached: {r['stopped'] or 'below target'})"))
-        lines.append(f"| {r['id']} | {r['violation_class']} | {r['slot_info']['asset']} | {r['before_score']}/10 | {after} | {len(r['rounds'])} |")
+        found = r.get("violation_class") or f"found: {classes_found(r['rounds'][0]['reason'])}"
+        lines.append(f"| {r['id']} | {found} | {r['slot_info']['asset']} | {r['before_score']}/10 | {after} | {len(r['rounds'])} |")
     for r in results:
-        lines += ["", f"## {r['id']}: {r['violation_class']}", "",
+        real = "scene" in r
+        found = r.get("violation_class") or f"found: {classes_found(r['rounds'][0]['reason'])}"
+        lines += ["", f"## {r['id']}: {found}", "",
                   f"**Asset slot** (all the Evaluator and Refiner are told): {r['slot_info']['asset']}. {r['slot_info']['subject']}", "",
-                  f"**Brief given to Astra** (built to break this class): {r['brief']}", ""]
+                  (f"**Prompt given to Astra:** the S1 backdrop prompt from [`{r['spec']}`](../../../../{r['spec']}) word for "
+                   f"word, in style.md's style and negative blocks, with the spec's setting `{r['settings']}`. No sabotage."
+                   if real else f"**Brief given to Astra** (built to break this class): {r['brief']}"), ""]
         for x in r["rounds"]:
-            who = "Astra from the sabotaged brief" if x["round"] == 1 else "Astra from the Refiner's prompt"
+            first = "Astra from the stage spec's prompt" if real else "Astra from the sabotaged brief"
+            who = first if x["round"] == 1 else "Astra from the Refiner's prompt"
             m = x["measurements"]
             lines += [f"### Take {x['round']}: {who}, {x['score']}/10", "",
                       f"![{r['id']} take {x['round']}](images/{x['image']})", "",

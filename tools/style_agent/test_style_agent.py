@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -16,7 +18,7 @@ sys.path.insert(1, str(HERE.parent / "content_pipeline"))
 import run  # noqa: E402
 from agents import (clean_card, count_sentences, evaluator_prompt, measure, parse_evaluation,  # noqa: E402
                     refiner_prompt, split_sentences)
-from cases import CASES, SLOTS  # noqa: E402
+from cases import CASES, REAL_CASES, SLOTS  # noqa: E402
 from style_guide import CLASSES, RULES, render_guide  # noqa: E402
 
 SLOT = SLOTS["wake-up-kappa-row-6"]
@@ -147,6 +149,42 @@ class Loop(unittest.TestCase):
         r = run.run_case(llm, ARGS, CASE)
         self.assertEqual(len(r["rounds"]), 4)
         self.assertFalse(r["passed"])
+
+    def test_a_real_draft_skips_the_generator(self):
+        case = REAL_CASES[1]
+        llm = FakeLLM({"evaluator": ["SCORE: 8/10\nREASON: [V7] blank (-1)", "SCORE: 10/10\nREASON: clean"],
+                       "refiner": [GOOD]})
+        r = run.run_case(llm, ARGS, case)
+        self.assertNotIn("generator", [role for role, _ in llm.prompts])
+        self.assertEqual((r["before"], r["after"], r["passed"]), (case["text"], GOOD, True))
+
+
+class RealCases(unittest.TestCase):
+    def test_each_draft_is_the_text_at_its_commit(self):
+        for case in REAL_CASES:
+            src = case["source"]
+            proc = subprocess.run(["git", "show", f"{src['commit']}:{src['path']}"], cwd=run.ROOT, capture_output=True,
+                                  text=True, encoding="utf-8")
+            if proc.returncode:
+                self.skipTest(f"git history not available here: {proc.stderr.strip()[:200]}")
+            card = json.loads(proc.stdout)
+            self.assertEqual(card["text"], case["text"], case["id"])
+            self.assertEqual((card["trigger"], card["speaker"]), (case["slot"]["trigger"], case["slot"]["speaker"]), case["id"])
+
+    def test_slots_are_built_the_way_the_audit_builds_them(self):
+        audit = {c["id"]: c["slot"] for c in run.audit_cards()}
+        win_1 = REAL_CASES[0]
+        self.assertEqual(win_1["slot"], audit[win_1["card"]])   # still in main unchanged, so the slots must agree
+        self.assertEqual(REAL_CASES[2]["slot"]["max_sentences"], 1)
+
+    def test_the_hand_fix_never_reaches_the_loop(self):
+        for case in REAL_CASES:
+            if not case["fixed_by"]:
+                continue
+            m = measure(case["text"], case["slot"])
+            for prompt in (evaluator_prompt(case["slot"], case["text"], m),
+                           refiner_prompt(case["slot"], case["text"], 3, "[V7] x", m)):
+                self.assertNotIn(case["fixed_by"]["text"], prompt)
 
 
 if __name__ == "__main__":

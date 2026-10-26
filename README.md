@@ -725,14 +725,25 @@ It runs on two kinds of content with the same loop:
 - **Stage backdrops** (part 1): the Generator is the image model Astra, and the Evaluator *looks at the picture* next to an accepted stage, with pixel measurements from code.
 - **Story cards** (part 2): the Generator is a language model, and the Evaluator reads the text.
 
+**The examples start from real content.** The story examples are cards Habit Writer actually wrote, taken from git history: one is still in the game, and two were fixed by hand later. The loop runs on them now, after the fact, and each example sets its result beside the hand fix. The backdrop examples are the stage specs' own S1 prompts, word for word. The first version of this assignment fed the Generator briefs sabotaged to break one class each, such as "a tropical beach with neon lanterns". Those are kept as **stress tests**. They show the loop can recover from a gross break, but not that it helps on the content it will actually see.
+
 | Deliverable | Part 1: stage backdrops | Part 2: story cards |
 |---|---|---|
 | 1. The capstone-anchored style guide (three constraint types) | [The visual style guide](#the-visual-style-guide) | [The style guide](#the-style-guide) |
 | 2. The Evaluator and Refiner loop | [The backdrop loop](#the-backdrop-loop) | [The loop](#the-loop) |
-| 3. Before and after, one example per violation class | [Look](#visual-example-1-look), [palette and lore](#visual-example-2-palette-and-lore), [spec form](#visual-example-3-spec-form) | [Tone](#example-1-tone), [vocabulary and lore](#example-2-vocabulary-and-lore), [form and length](#example-3-form-and-length) |
+| 3. Before and after on real content | [The specs' own prompts](#real-backdrops-the-stage-specs-own-prompts): Oni (look, spec form), Kappa (look, then a regression and retry), Tanuki (clean on take 1) | [Habit Writer's drafts](#real-cards-habit-writers-drafts): [tone](#real-card-1-tone-win-1), [vocabulary and lore](#real-card-2-vocabulary-and-lore-lose-mid), [form and length](#real-card-3-form-and-length-elder-oni-intro) |
+| 3b. Stress tests, one sabotaged brief per class | [Look](#stress-test-1-look), [palette and lore](#stress-test-2-palette-and-lore), [spec form](#stress-test-3-spec-form) | [Tone](#stress-test-1-tone), [vocabulary and lore](#stress-test-2-vocabulary-and-lore), [form and length](#stress-test-3-form-and-length) |
 | 4. Pipeline connection | [Where it fits](#where-it-fits) (one sentence for both) | |
 
-Code: [`tools/style_agent/`](tools/style_agent/), about 1,240 lines of Python plus 34 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs are in [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md) (the three backdrops), [`runs/visual-v2/trace.md`](tools/style_agent/runs/visual-v2/trace.md) (backdrop example 1 rerun with the keep rule), [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) (the three story examples) and [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) (the cards already in the game).
+Code: [`tools/style_agent/`](tools/style_agent/), about 1,280 lines of Python plus 42 unit tests that CI runs. The story loop uses the standard library only; the visual loop also needs Pillow. The recorded runs:
+
+| Run | What it is |
+|---|---|
+| [`runs/visual-real/trace.md`](tools/style_agent/runs/visual-real/trace.md) | The three stage specs' own backdrop prompts |
+| [`runs/real/trace.md`](tools/style_agent/runs/real/trace.md) | Three of Habit Writer's real story-card drafts |
+| [`runs/audit/trace.md`](tools/style_agent/runs/audit/trace.md) | Every card already in the game, scored and not rewritten |
+| [`runs/visual/trace.md`](tools/style_agent/runs/visual/trace.md), [`runs/visual-v2/trace.md`](tools/style_agent/runs/visual-v2/trace.md) | Backdrop stress tests, and stress test 1 rerun with the keep rule |
+| [`runs/demo/trace.md`](tools/style_agent/runs/demo/trace.md) | Story stress tests |
 
 ### Part 1: stage backdrops
 
@@ -773,9 +784,71 @@ How each part of the loop works for images, next to the story-card loop in [Part
 | Stops at | 10/10 with no flag, 3 takes per asset, or the **image budget** the designer approved (`--max-images`, enforced in code, counting every take the run folder has paid for) | 10/10 with no code flag, or 4 evaluations |
 | Output | the **best take**: a rewrite can overshoot, so each new rewrite starts from the best take so far | the last text |
 
-The Evaluator and the Refiner are told only the asset slot, for example "Stage backdrop S1 for the Oni's stage: a snowbound mountain shrine gate". They never see the sabotaged brief.
+The Evaluator and the Refiner are told only the asset slot, for example "Stage backdrop S1 for the Oni's stage: a snowbound mountain shrine gate". In a stress test they never see the sabotaged brief. In a real run the Refiner rewrites the spec's own scene description.
 
-#### Visual example 1: look
+#### Real backdrops: the stage specs' own prompts
+
+Each take 1 is the S1 backdrop prompt from the stage spec, word for word ([`visual_cases.py`](tools/style_agent/visual_cases.py) `REAL_CASES`; a test checks it against the spec). The pipeline wraps it in style.md's style and negative blocks, as the spec says, and passes the spec's job setting `aspect_ratio: 16:9` beside it. Nothing is sabotaged, and no violation class is chosen in advance: the Evaluator finds whatever breaks. The designer approved 9 Astra takes for this run, and it used 6: 5 in the first pass and 1 in the rerun after the retry fix below. Trace: [`runs/visual-real/trace.md`](tools/style_agent/runs/visual-real/trace.md).
+
+| Stage | Take 1 | Best | Takes | Classes found in take 1 |
+|---|---|---|---|---|
+| Oni's shrine gate ([spec](assets/specs/stages/snowbound-shrine-gate.md)) | 2/10 | 10/10, take 2 | 2 | Look, spec form |
+| Kappa's riverbank ([spec](assets/specs/stages/lantern-riverbank.md)) | 9/10 | 10/10, take 3 (after the retry fix) | 3 | Look |
+| Tanuki's tea house ([spec](assets/specs/stages/tanuki-tea-house.md)) | 10/10 | 10/10, take 1 | 1 | none |
+
+**Oni's shrine gate: 2 → 10.** The spec's prompt came back as a painterly anime background, nowhere near the flat cel look the style block asks for.
+
+| Before: take 1 from the spec's prompt, 2/10 | After: take 2 from the Refiner's prompt, 10/10 |
+|---|---|
+| ![Oni shrine gate from the spec prompt](tools/style_agent/runs/visual-real/images/real-1-oni-shrine-gate-take1.png) | ![Oni shrine gate after one refinement](tools/style_agent/runs/visual-real/images/real-1-oni-shrine-gate-take2.png) |
+
+```
+SCORE: 2/10
+REASON: [L3] painterly anime-background render: soft gradient mist and cloud banks in the valley, fine-textured rocks and layered pine foliage across the frame (flatness only 35%) (-3)
+[L4] far more detail than the bamboo grove reference: dense pine stands, many mountain ridges, cloud layers and twig clusters, where the reference uses simple flat shapes (-1)
+[L4] outline weight unlike the reference: thin, broken and uneven linework on the rocks, trees and torii instead of an even ink-brush outline (-1)
+[S4] busy lower third: dark stepping stones on pale snow make a high-contrast path down the centre of the fighter band, and rocks and shrubs crowd it (edge strength 23.6 against 25.6 above, barely calmer) (-3)
+```
+
+The Refiner kept every element the REASON didn't touch: the gate centre-right, the straw rope, the snowy pines, the indigo ridges and the snowfall. It rewrote the pines as "a few bold flat tiers", the mist as "a flat pale band", and the lower third as "smooth snow ... with no path". Take 2 scored 10: flatness rose from 35% to 47%, and the lower third's edge strength fell from 23.6 to 11.4. That last change exposes **a conflict between the spec and the guide.** The spec asks for "a faint stone path buried in snow" in the same prompt that keeps the lower third empty. Astra drew the path as dark stepping stones down the fighters' band, S4 failed it, and the Refiner dropped the path. Asset Smith should decide whether the path stays, perhaps off to one side.
+
+**Kappa's riverbank: 9 → 7 → 10.** A rewrite overshot, the loop went back to the best take, and the retry got there.
+
+| Take 1 from the spec's prompt, 9/10 | Take 2, 7/10 | Take 3, retried from take 1, 10/10 |
+|---|---|---|
+| ![Kappa riverbank from the spec prompt](tools/style_agent/runs/visual-real/images/real-2-kappa-riverbank-take1.png) | ![Kappa riverbank, take 2](tools/style_agent/runs/visual-real/images/real-2-kappa-riverbank-take2.png) | ![Kappa riverbank, take 3](tools/style_agent/runs/visual-real/images/real-2-kappa-riverbank-take3.png) |
+
+```
+SCORE: 9/10
+REASON: [L4] The upper band has more fine detail than the bamboo grove REFERENCE: dense individually drawn reed stalks along both banks, many small pine clumps, a distant arched bridge and dozens of tiny far lanterns. The flat cel look, palette, Kappa night-river lore (indigo night, lanterns on dark water, reeds), full-bleed 16:9 frame, absence of figures and text, and calm lower third all pass (-1).
+```
+```
+SCORE: 7/10
+REASON: [S4] The lower third is not calm. The largest lanterns, with their bright orange reflections (bottom left and bottom right), sit in the fighters' standing band along with high-contrast ripple bands across the water. The measured edge strength there is 11.2 against 7.9 above, so the lower third is busier than the upper two thirds instead of calmer (-3).
+```
+
+Take 1 lost one point to L4, the soft "match the reference's detail" rule that also held back the stress tests. To win it, the Refiner cut detail from the upper band, including the spec's footbridge ("no bridge"), even though the keep rule says to fix by the smallest change. Astra then moved the big lanterns down into the fighters' band, and take 2 fell to 7. The best-take rule sent the next rewrite back to take 1.
+
+That retry exposed **a bug** in the first pass. Take 3's rewrite started from take 1 with exactly take 2's inputs. The recorded-call cache handed back take 2's rewrite, and Astra's index handed back take 2's image. No take was paid for twice, but the round was wasted, and the Kappa ended at 9/10. The fix: a retry from the best take now also gets every rewrite from there that scored lower, with its REASON, and is told not to repeat it (`failed` in [`visual_loop.py`](tools/style_agent/visual_loop.py); the prompt is unchanged when nothing has failed, so every earlier run still replays). The rerun cost one new take. The Oni and the tea house came back from the record unchanged.
+
+```
+SCORE: 10/10
+REASON: Look: flat cel colour in 2-3 tone steps (flatness 62%). Outlines are clean, thin and even, matching the reference's weight and level of detail. [...] The scene is the Kappa's river at deep indigo night: paper lanterns drift on dark water among reeds, with a rural wooden bridge, pines and indigo ridges. [...] The lower third is empty, low-contrast water (edge strength 2.5 vs 8.0 above), with detail kept in the upper band and the edges (S4).
+```
+
+Take 3 keeps the footbridge and simplifies it ("one simple flat arch") instead of dropping it. It keeps the lanterns out of the fighters' band ("no lanterns, no bright reflections and no ripples"), which fixes what failed take 2. One cost for Asset Smith to weigh: the lanterns now sit in one far row rather than drifting "in layered depth" as the spec asks.
+
+**Tanuki's tea house: 10/10 on take 1.** The real prompt passed on the first take, so nothing was refined.
+
+![Tanuki tea house from the spec prompt, 10/10](tools/style_agent/runs/visual-real/images/real-3-tanuki-tea-house-take1.png)
+
+This is the backdrop counterpart to the [story audit](#does-it-mark-good-cards-down): an Evaluator that marks every take down proves nothing. Two caveats. The tatami seams run through the fighters' band, and in stress test 3 the same seams cost a point, so the Evaluator is not perfectly consistent. The spec's prompt also calls `#B08A48` "straw", but in `style.md` that hex is brass, and straw is `#C9B58C`. That one goes to Asset Smith.
+
+#### Stress tests: sabotaged briefs
+
+Each brief below was written to break one constraint type on purpose. Astra gets the brief with no style block.
+
+#### Stress test 1: look
 
 **Brief given to Astra:** right place, right format, wrong look: "a photorealistic cinematic render like a AAA game screenshot: ray-traced glossy ice, volumetric god rays, deep dramatic cast shadows, film grain..."
 
@@ -796,7 +869,7 @@ SCORE: 10/10
 REASON: Look: the toon-shaded cel art uses 2-3 tone steps and an even, clean ink outline. The surfaces are matte with no cast shadows, gloss or bloom, and the lantern windows are flat orange fills. [...] Palette and lore: 87% of pixels sit near the palette [...]. The scene is the Oni's stage: a snowbound mountain shrine gate at blue dusk, with a shrine-red torii, a straw rope, snow-laden pines and indigo ridges. [...] Spec form: the image is 1280x720 (16:9) and full-bleed. [...] The lower third is empty, calm snow, measuring 11.4 for edge strength against 20.4 above.
 ```
 
-Example 1 ran twice, each time with the same take 1 and two refinements, and only the Refiner prompt changed between them:
+Stress test 1 ran twice, each time with the same take 1 and two refinements, and only the Refiner prompt changed between them:
 
 | Run | Take 1 | Take 2 | Take 3 | Kept |
 |---|---|---|---|---|
@@ -805,7 +878,7 @@ Example 1 ran twice, each time with the same take 1 and two refinements, and onl
 
 The look is fixed in the first rewrite both times: flat cel colour, ink outlines, blue dusk and a quiet lower third, with the gate, straw rope and snowy pines kept. The keep rule ("change only what the REASON criticises... by the smallest change that removes it") made the last step settle instead of overshooting. One thing for Asset Smith: the spec puts the gate "in the centre-right distance", and this take centres it large. No rule in the guide covers position, so the Evaluator couldn't see it.
 
-#### Visual example 2: palette and lore
+#### Stress test 2: palette and lore
 
 **Brief given to Astra:** right look and format, wrong world: "a bright sunny tropical beach at noon in spring: turquoise water, hot-pink cherry blossoms, palm trees, neon lanterns in electric blue and lime green, and a modern city skyline".
 
@@ -828,7 +901,7 @@ REASON: [L4] The outlines are crisp dark ink lines of even weight on the lantern
 
 Every palette and lore break is gone: the code measures 100% of pixels on the palette and 0% neon, down from 19%. What's left are two soft drifts. One of them, outline weight, is a real tension in my own guide: L1 asks for a "clean ink-brush outline", and L4 asks to match a reference whose outlines are faint. Take 3 also scored 8, so the loop kept take 2.
 
-#### Visual example 3: spec form
+#### Stress test 3: spec form
 
 **Brief given to Astra:** right look and palette, wrong form: "a square poster with an ornate decorative border: the round Tanuki merchant standing in the centre foreground pouring tea, guests kneeling around him... and the title YOKAI FIGHTERS in big calligraphy across the top with an artist's signature in the corner."
 
@@ -853,10 +926,14 @@ REASON: [...] Spec form [S1-S4]: The image is 1280x720 (1.778, 16:9) and full-bl
 
 Code flagged take 1 before the Evaluator saw it (`aspect ratio 1.0 (1254x1254), not 16:9`), and the Evaluator found what code can't: the title, the signature and the crowd. Astra had also added a Tengu, an out-of-build yokai, and a skull on its own. Take 2 fixed the form and lost one point for tatami seams crossing the fighters' band (9/10). Take 3 smoothed the floor and scored 10.
 
-#### What the visual run taught
+The stress tests show the loop recovers from a gross break in one rewrite. The real prompts are a better test, and the problems they hit were subtler: a painterly finish, a path the spec asks for, and detail above the reference's level.
 
-- **In the first run, two of three backdrops stopped short of 10.** Both were held back by L4, a soft "match the reference" rule, after every hard break was fixed. The palette-and-lore example still stands at 8/10.
-- **The Refiner overcorrected, and a keep rule fixed it.** In the first run, take 3 of the shrine gate stripped the scene to win one point and lost another. The story Refiner's prompt always said "keep anything the REASON did not criticise"; the visual Refiner's prompt didn't. I added the rule (`KEEP_RULE` in [`visual_agents.py`](tools/style_agent/visual_agents.py)), and the designer approved 3 more takes to rerun example 1. The rerun reached 10/10. The first run still replays with `--refiner-v1`. The loop also keeps its best take and refines from it, which bounds any overshoot.
+#### What the visual runs taught
+
+- **On the real prompts, all three stages reached 10/10.** The Oni went from 2 to 10 in one rewrite. The tea house passed on take 1 and was left alone. The riverbank's first rewrite overshot (9 → 7); the retry from the best take reached 10 once it was told what had failed.
+- **The real run found what the stress tests couldn't:** a spec at odds with the guide (the Oni's path), a palette name at odds with style.md (the tea house's "straw"), and a retry that repeated itself through the cache (the riverbank's take 3, now fixed).
+- **In the stress tests' first run, two of three backdrops stopped short of 10.** Both were held back by L4, a soft "match the reference" rule, after every hard break was fixed. The palette-and-lore example still stands at 8/10.
+- **The Refiner overcorrected, and a keep rule fixed it.** In the first run, take 3 of the shrine gate stripped the scene to win one point and lost another. The story Refiner's prompt always said "keep anything the REASON did not criticise"; the visual Refiner's prompt didn't. I added the rule (`KEEP_RULE` in [`visual_agents.py`](tools/style_agent/visual_agents.py)), and the designer approved 3 more takes to rerun stress test 1. The rerun reached 10/10. The first run still replays with `--refiner-v1`. The loop also keeps its best take and refines from it, which bounds any overshoot.
 - **One of those 3 takes was lost to a test bug.** A unit test for the take-reuse code used the wrong cache key, missed the recorded take and called real Astra. It made one image and failed nothing, so it went unnoticed until the tests took 30 seconds instead of under one. The rerun used the 2 takes left, the same number of refinements the first run had. Tests can no longer call Astra: the test module turns live calls off (`Astra.allow_live`), and a test checks that.
 - **Two measurement faults, both fixed with tests:**
   - The first letterbox check flagged a flat sky over flat snow as a frame. A letterbox or frame is now a band of the *same* colour on opposite edges.
@@ -932,7 +1009,80 @@ Three design choices keep the loop honest:
 - **Code counts and the model judges.** Models miscount characters and sentences, so before each evaluation code counts characters, sentences (numbered, so the model can see where they split), placeholders, system words, out-of-build names and Markdown. The Evaluator gets the counts as facts and still decides the score.
 - **A 10 with a counted break isn't accepted.** If the Evaluator gives 10 while the code has flagged, say, 290 characters, the loop goes on and the flag is added to the REASON the Refiner gets. The loop stops at 10/10 with no flag, or after four evaluations.
 
-#### Example 1: tone
+#### Real cards: Habit Writer's drafts
+
+Three story cards exactly as Habit Writer wrote them, one per constraint type ([`cases.py`](tools/style_agent/cases.py) `REAL_CASES`; a test checks each text against `git show` at its commit). The slot is built from the card's own trigger and speaker, the way the audit builds it. There's no brief and no Generator: the loop starts from the draft. Where the card was later fixed by hand, the hand fix is shown beside the loop's result. The loop never sees it. Trace: [`runs/real/trace.md`](tools/style_agent/runs/real/trace.md).
+
+| Card | Where the draft came from | Before | After |
+|---|---|---|---|
+| `win-1` | Merged in PR #94 (YOK-88) and still in the game | 7/10 | 10/10, 1 rewrite |
+| `lose-mid` | Merged in PR #94; the audit caught it, and it was fixed by hand in YOK-206 (PR #238) | 8/10 | 10/10, 1 rewrite |
+| `elder-oni-armour-intro` | First draft in PR #152 (YOK-138), fixed by hand before the merge | 7/10 | 10/10, 1 rewrite |
+
+#### Real card 1: tone (win-1)
+
+The card the player sees after the Tanuki's first win. It's still in the game.
+
+> "Techniques are like teacups," the Tanuki sighs, "lonely on a shelf, so I helped you grow to have more to love." Ryo's hands are still sticky with ink.
+
+```
+SCORE: 7/10
+REASON:
+[T4] "the Tanuki sighs": the Tanuki's voice should be cheerful and generous, and a sigh reads as wistful. The line also lacks the clear compliment on what it wants that drives its quiet hunger (-1).
+[F2] "so I helped you grow to have more to love": the wording is muddled rather than plain, and it does not follow from the teacup comparison (-1).
+[F2] "like teacups... lonely on a shelf" / "Ryo's hands are still sticky with ink": two images where one would do (-1).
+```
+
+**After** (round 2, 10/10):
+
+> "What a lovely hand with a brush you have, little exorcist," the Tanuki says, pouring tea that was not there a moment ago. "I would so love to keep it company."
+
+The Tanuki now compliments what it wants and teases "little exorcist", the voice T4 asks for. The rewrite also lost something no rule covers. The card's `notes` say it should tell *why* the Tanuki collects ("collects like teacups; helps Ryo grow so there is more to steal"), and the teacup simile was carrying that. The slot doesn't carry a card's notes, so neither model knew. This card stays as it is, and the rewrite is only a proposal for Habit Writer. The audit scored the same text 8/10, and this run scored it 7: the Evaluator varies by a point between runs.
+
+#### Real card 2: vocabulary and lore (lose-mid)
+
+The wake-up card after a loss on rows 4–6, as it was merged.
+
+> {yokai} bows, a little too politely, and the lanterns blow out one by one. Ryo wakes with his talismans blank and his pride very much not.
+
+```
+SCORE: 8/10
+REASON: [V7] "his talismans blank": this slot covers losses on rows 4-6, and a run that reached row 6 leaves one talisman faintly inked, so the card states the wrong fact for part of its slot (-1).
+[V5] "{yokai} bows, a little too politely": bowing with excess politeness is the Kappa's folklore and voice, but {yokai} can also be the proud, blunt Oni or the teasing Kitsune, so the line is off-voice for them (-1).
+```
+
+| The loop's rewrite (10/10) | The hand fix in YOK-206 (audit: 9/10) |
+|---|---|
+| {yokai} goes back to the lantern light without a word, and Ryo wakes at the province's edge with his talismans blank, or nearly so, and his pride very much not. | {yokai} turns away, a little too politely, and the lanterns blow out one by one. Ryo wakes with his pride in pieces and his excuses already half-written. |
+
+These are the same two faults the audit found and ticketed as YOK-206. The loop fixed them in one rewrite. The hand fix took two commits and introduced a new drift in Ryo's voice ("excuses already half-written", T6), so it scores 9 in the audit. The loop's fix covers V7 with a hedge ("or nearly so") where the hand fix dropped the talisman claim altogether. Both are honest about the row-6 case, and the Evaluator accepted the hedge.
+
+#### Real card 3: form and length (elder-oni-intro)
+
+Habit Writer's first draft of the Elder Oni's intro card. The designer later ruled that Y3's "one-line" means one sentence.
+
+> The Elder Oni plants its club in the snow and does not bother to look up. "Hit me while I swing," it says. "I will finish the swing."
+
+```
+SCORE: 7/10
+REASON: [F1] "The Elder Oni plants its club in the snow and does not bother to look up. "Hit me while I swing," it says. "I will finish the swing."": an elder intro card must be exactly one sentence, but this one has three, counting the sentences in quoted speech (-3).
+```
+
+Code counted the three sentences before the Evaluator read the card (`F1: 3 sentences, over the limit of 1`).
+
+| The loop's rewrite (10/10) | The hand fix in YOK-138 (in the game) |
+|---|---|
+| The Elder Oni plants its club in the snow, not bothering to look up, and says, "Hit me while I swing, and I will finish the swing." | The Elder Oni plants its club in the snow: "Hit me mid-swing and I will finish the swing." |
+
+Both reach one sentence. The loop kept more of the draft, including the Oni's "not bothering to look up". The hand fix is shorter (90 characters against 131, under a 140 limit).
+
+**What the real cards show.** The drafts were already close: 7 or 8, not 1. The faults were soft ones a reader misses, such as a voice slightly off, a wrong story fact on one row or a sentence count. The loop fixed each in one rewrite, and on two cards its fix matches or beats the hand fix. Its blind spot is anything the slot doesn't carry, such as a card's purpose in `notes`. So its output stays a proposal that goes on to the Rules Lawyer.
+
+#### Stress tests: sabotaged briefs
+
+Each brief below was written to break one constraint type on purpose, so the Generator's text starts at 1/10.
+
+#### Stress test 1: tone
 
 **Card slot:** the boss reveal, where the merchant drops his disguise at the Tanuki's node. **Brief given to the Generator:** "Make it a horror scene: the merchant tears off his face to reveal the Tanuki, an evil demon who screams that Ryo is doomed and that he will devour his soul... with plenty of exclamation marks."
 
@@ -964,7 +1114,7 @@ REASON: Tone: the Tanuki compliments what it wants ("Such lovely talismans"), ca
 
 The horror is gone, and so is the shouting. The Refiner didn't just soften the words: the Tanuki now makes a polite, covetous offer, which is the voice the GDD gives it ("cheerful, generous and quietly hungry"). It also echoes the GDD's own line "I'd have taken good care of it" without copying it.
 
-#### Example 2: vocabulary and lore
+#### Stress test 2: vocabulary and lore
 
 **Card slot:** wake-up card after the Oni knocks Ryo out at row 3. **Brief:** "One or two quiet, sad sentences. The Tengu has beaten Ryo in a cherry-blossom forest in spring and his katana lies snapped in two. His master Kaede will be disappointed, and Ryo swears he will hunt down and slay the monster and add it to his collection." The tone the brief asks for is fine; nearly every noun is wrong.
 
@@ -996,7 +1146,7 @@ REASON: Tone: the yokai simply goes back to what it was doing (T2), and the mela
 
 The Tengu was already a placeholder in the Before text, because the Generator was told the slot uses `{yokai}`. The Evaluator still caught everything a stranger to the game would get wrong: the out-of-build teacher, the sword, the slaying, the word "collection" (Ryo apologises; collecting is the Tanuki's), the spring setting. The After text also gets the story fact right: a run that ended at row 3 leaves every talisman blank.
 
-#### Example 3: form and length
+#### Stress test 3: form and length
 
 **Card slot:** wake-up card after the Kappa knocks Ryo out at row 6. **Brief:** "Write it as a status report with a title line and bullet points, at least six lines. Name the Kappa and the Foxfire move directly (no placeholders). Explain exactly what the player keeps: health resets to 1000 HP, Foxfire carries over to the next run at Lv 2..."
 
@@ -1055,24 +1205,26 @@ The audit's first run found a real bug. `lose-mid` scored 8/10. It covers rows 4
 
 #### What went wrong first
 
-The first live run ([`runs/v1-stalled/trace.md`](tools/style_agent/runs/v1-stalled/trace.md)) got examples 2 and 3 to 10/10 but stalled example 1 at 7/10. The Evaluator said "three sentences, over the limit of two" and quoted the whole card. The Refiner, not seeing that the Tanuki's two-sentence speech counted, returned the same text twice. Two changes fixed it. The code now numbers each sentence as it counts them, and the Refiner gets those counts too. A later check found the counter splitting `"...little exorcist?" it asks` into two sentences, so a lowercase speech tag no longer starts a sentence. Both have unit tests. The v1 trace was made with the old prompts, so it can't be replayed.
+The first live run ([`runs/v1-stalled/trace.md`](tools/style_agent/runs/v1-stalled/trace.md)) got stress tests 2 and 3 to 10/10 but stalled stress test 1 at 7/10. The Evaluator said "three sentences, over the limit of two" and quoted the whole card. The Refiner, not seeing that the Tanuki's two-sentence speech counted, returned the same text twice. Two changes fixed it. The code now numbers each sentence as it counts them, and the Refiner gets those counts too. A later check found the counter splitting `"...little exorcist?" it asks` into two sentences, so a lowercase speech tag no longer starts a sentence. Both have unit tests. The v1 trace was made with the old prompts, so it can't be replayed.
 
-The same v1 run also shows the loop catching its own Refiner. On example 2, the Refiner fixed the lore and then added Ryo's binding line to the wake-up card. The Evaluator marked it down because the line belongs to a binding and nothing had been bound, and the next round removed it.
+The same v1 run also shows the loop catching its own Refiner. On stress test 2, the Refiner fixed the lore and then added Ryo's binding line to the wake-up card. The Evaluator marked it down because the line belongs to a binding and nothing had been bound, and the next round removed it.
 
 ### Run it
 
 ```
-python tools/style_agent/run.py visual --replay --refiner-v1                               # first run: three backdrops (needs Pillow)
-python tools/style_agent/run.py visual --replay --run visual-v2 --only visual-1-look --max-images 2   # the example 1 rerun
+python tools/style_agent/run.py visual --real --replay                                    # the stage specs' own prompts (needs Pillow)
+python tools/style_agent/run.py demo --real --replay                                      # Habit Writer's real drafts
+python tools/style_agent/run.py visual --replay --refiner-v1                               # backdrop stress tests, first run
+python tools/style_agent/run.py visual --replay --run visual-v2 --only visual-1-look --max-images 2   # stress test 1 rerun
 python tools/style_agent/run.py visual-guide      # print the visual style guide
-python tools/style_agent/run.py demo --replay     # the three story examples from the recorded calls; no model, no login
+python tools/style_agent/run.py demo --replay     # the three story stress tests from the recorded calls; no model, no login
 python tools/style_agent/run.py audit --replay    # the audit of data/story/
 python tools/style_agent/run.py demo              # live: needs the claude CLI, logged in
 python tools/style_agent/run.py guide             # print the style guide the agents read
 python -I -m unittest discover -s tools/style_agent -p 'test_*.py' -v
 ```
 
-Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above; the visual Evaluator gets its two images in the same call, with tools still off. A live `visual` run spends Astra takes, so it needs the designer's approval of the budget first. The first run used all 9 approved takes. The rerun's 3 approved takes went 2 to the run and 1 to the test bug above.
+Live calls go through `claude -p` with every tool off and an empty working directory, the same recorder as assignment 4 ([`content_pipeline/llm.py`](tools/content_pipeline/llm.py)). The models see only the prompts above; the visual Evaluator gets its two images in the same call, with tools still off. A live `visual` run spends Astra takes, so it needs the designer's approval of the budget first. The first run used all 9 approved takes. The rerun's 3 approved takes went 2 to the run and 1 to the test bug above. The real-prompt run had 9 approved and used 6, including the one-take rerun after the retry fix.
 
 ### Where it fits
 

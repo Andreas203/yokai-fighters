@@ -15,6 +15,7 @@ Usage (from anywhere):
     python tools/style_agent/run.py audit                # score the story cards already in data/story/
     python tools/style_agent/run.py guide                # print the style guide the agents read
     python tools/style_agent/run.py demo --replay        # rebuild a recorded run without calling a model
+    python tools/style_agent/run.py demo --real          # real Habit Writer drafts from the repo's history (cases.py REAL_CASES)
 
 Every run writes runs/<name>/trace.json and trace.md plus llm-calls.json for --replay.
 Standard library only; live runs need the `claude` CLI, logged in.
@@ -32,7 +33,7 @@ sys.path.insert(1, str(HERE.parent / "content_pipeline"))
 
 from agents import (EVALUATOR_SYSTEM, GENERATOR_SYSTEM, REFINER_SYSTEM, clean_card, evaluator_prompt,  # noqa: E402
                     generator_prompt, measure, parse_evaluation, refiner_prompt)
-from cases import CASES, SLOTS  # noqa: E402
+from cases import CASES, REAL_CASES, SLOTS  # noqa: E402
 from llm import LLM  # noqa: E402  (content_pipeline/llm.py: recorded claude -p calls)
 from style_guide import render_guide  # noqa: E402
 
@@ -50,8 +51,12 @@ def evaluate(llm, args, slot: dict, text: str) -> dict:
 
 
 def run_case(llm, args, case: dict) -> dict:
-    slot = SLOTS[case["slot"]]
-    text = clean_card(llm.complete("generator", args.generator_model, GENERATOR_SYSTEM, generator_prompt(slot, case["brief"])))
+    slot = case["slot"] if isinstance(case["slot"], dict) else SLOTS[case["slot"]]
+    if "text" in case:   # a real draft: the loop starts from it, and no Generator runs
+        text = case["text"]
+    else:
+        text = clean_card(llm.complete("generator", args.generator_model, GENERATOR_SYSTEM,
+                                       generator_prompt(slot, case["brief"])))
     rounds = []
     for n in range(1, args.max_rounds + 1):
         ev = evaluate(llm, args, slot, text)
@@ -106,8 +111,10 @@ def _quote(text: str) -> str:
 
 
 def render_demo(meta: dict, results: list[dict]) -> str:
+    generator = "none (real drafts)" if meta.get("real") else meta["generator_model"]
     lines = [f"# Trace: {meta['run']}", "",
-             f"Command: `{meta['command']}`. Generator: {meta['generator_model']}. Evaluator: {meta['evaluator_model']}. "
+             f"Command: `{meta['command']}{' --real' if meta.get('real') else ''}`. Generator: {generator}. "
+             f"Evaluator: {meta['evaluator_model']}. "
              f"Refiner: {meta['refiner_model']}. Target: {meta['target']}/10, at most {meta['max_rounds']} evaluations.", "",
              "| Example | Violation class | Card slot | Before | After | Evaluations |", "|---|---|---|---|---|---|"]
     for r in results:
@@ -115,16 +122,25 @@ def render_demo(meta: dict, results: list[dict]) -> str:
                      f"{r['after_score']}/10{'' if r['passed'] else ' (not passed)'} | {len(r['rounds'])} |")
     for r in results:
         lines += ["", f"## {r['id']}: {r['violation_class']}", "",
-                  f"**Card slot** (all the Evaluator and Refiner are told): {r['slot_info']['card']}. {r['slot_info']['trigger']}.", "",
-                  f"**Brief given to the Generator** (built to break this class): {r['brief']}", ""]
+                  f"**Card slot** (all the Evaluator and Refiner are told): {r['slot_info']['card']}. {r['slot_info']['trigger']}.", ""]
+        if "source" in r:
+            src = r["source"]
+            lines += [f"**Source:** `{src['path']}` at `{src['commit']}` ({src['ticket']}), as Habit Writer wrote it: "
+                      f"{src['history']}. No brief and no Generator: the loop starts from this text.", ""]
+        else:
+            lines += [f"**Brief given to the Generator** (built to break this class): {r['brief']}", ""]
         for x in r["rounds"]:
-            who = "Generator" if x["round"] == 1 else "Refiner"
-            lines += [f"### Round {x['round']}: {who}'s text, {x['score']}/10", "", _quote(x["text"]), "",
+            who = ("Habit Writer's draft" if "source" in r else "Generator's text") if x["round"] == 1 else "Refiner's text"
+            lines += [f"### Round {x['round']}: {who}, {x['score']}/10", "", _quote(x["text"]), "",
                       f"Measured by code: {x['measurements']['characters']} characters, {x['measurements']['sentences']} "
                       f"sentence(s), flags: {'; '.join(x['flags']) or 'none'}.", "",
                       "Evaluator's reply:", "", "```", x["evaluator_reply"], "```", ""]
         lines += [f"**Result:** {r['before_score']}/10 → {r['after_score']}/10"
                   + (" after " + str(len(r["rounds"]) - 1) + " refinement(s)." if len(r["rounds"]) > 1 else ".")]
+        if r.get("fixed_by"):
+            fix = r["fixed_by"]
+            lines += ["", f"**The hand fix it got later** (`{fix['commit']}`, {fix['ticket']}; the loop never saw it):", "",
+                      _quote(fix["text"])]
     return "\n".join(lines) + "\n"
 
 
@@ -144,13 +160,13 @@ def render_audit(meta: dict, results: list[dict]) -> str:
 def cmd_visual(args) -> int:
     # Imported here so the story commands keep to the standard library; the visual loop needs Pillow.
     from visual_agents import Astra, VisionLLM, reference_image, seed_first_takes
-    from visual_cases import CASES as VISUAL_CASES
+    from visual_cases import CASES as VISUAL_CASES, REAL_CASES as REAL_VISUAL_CASES
     from visual_loop import render_visual, run_visual_case
 
-    args.run = args.run or "visual"
+    args.run = args.run or ("visual-real" if args.real else "visual")
     run_dir = RUNS / args.run
     run_dir.mkdir(parents=True, exist_ok=True)
-    cases = [c for c in VISUAL_CASES if not args.only or c["id"] in args.only]
+    cases = [c for c in (REAL_VISUAL_CASES if args.real else VISUAL_CASES) if not args.only or c["id"] in args.only]
     if not cases:
         raise SystemExit("Nothing matched --only. Use an example id from visual_cases.py.")
     if args.seed_from and not args.replay:
@@ -162,7 +178,7 @@ def cmd_visual(args) -> int:
     meta = {"run": args.run, "command": "visual", "image_model": args.image_model, "evaluator_model": args.evaluator_model,
             "refiner_model": args.refiner_model, "target": args.target, "max_rounds": args.max_rounds,
             "max_images": args.max_images, "refiner": "v1, no keep rule" if args.refiner_v1 else "v2, with the keep rule",
-            "seeded_from": args.seed_from}
+            "seeded_from": args.seed_from, "real": args.real}
     results = []
     for case in cases:
         print(f"  {case['id']}")
@@ -191,6 +207,9 @@ def main() -> int:
         p.add_argument("--target", type=int, default=10, help="score that ends the loop")
         p.add_argument("--max-rounds", type=int, default=4, help="evaluations per example, including the first")
         p.add_argument("--replay", action="store_true", help="use the run's recorded model calls; call nothing")
+        if name == "demo":
+            p.add_argument("--real", action="store_true",
+                           help="start from real Habit Writer drafts (cases.py REAL_CASES) instead of sabotaged briefs; run folder: real")
     p = sub.add_parser("visual", help="the stage-backdrop loop: Astra takes scored by a vision Evaluator (needs Pillow)")
     p.add_argument("--run", help="run folder name under runs/ (default: visual)")
     p.add_argument("--only", nargs="*", help="example ids from visual_cases.py")
@@ -202,6 +221,8 @@ def main() -> int:
     p.add_argument("--max-images", type=int, default=9, help="live Astra takes allowed for the whole run (the approved budget)")
     p.add_argument("--refiner-v1", action="store_true",
                    help="the Refiner prompt without the keep rule, as runs/visual was recorded (to replay it)")
+    p.add_argument("--real", action="store_true",
+                   help="start from each stage spec's own backdrop prompt (visual_cases.py REAL_CASES); run folder: visual-real")
     p.add_argument("--seed-from", help="reuse each example's take 1 and its evaluation from this run folder (no new take)")
     p.add_argument("--replay", action="store_true", help="use the run's recorded takes and model calls; call nothing")
     sub.add_parser("guide")
@@ -217,16 +238,16 @@ def main() -> int:
     if args.command == "visual":
         return cmd_visual(args)
 
-    args.run = args.run or args.command
+    args.run = args.run or ("real" if getattr(args, "real", False) else args.command)
     run_dir = RUNS / args.run
     run_dir.mkdir(parents=True, exist_ok=True)
     llm = LLM(run_dir / "llm-calls.json", replay=args.replay)
     meta = {"run": args.run, "command": args.command, "generator_model": args.generator_model,
             "evaluator_model": args.evaluator_model, "refiner_model": args.refiner_model,
-            "target": args.target, "max_rounds": args.max_rounds}
+            "target": args.target, "max_rounds": args.max_rounds, "real": getattr(args, "real", False)}
 
     if args.command == "demo":
-        cases = [c for c in CASES if not args.only or c["id"] in args.only]
+        cases = [c for c in (REAL_CASES if args.real else CASES) if not args.only or c["id"] in args.only]
         if not cases:
             raise SystemExit("Nothing matched --only. Use an example id from cases.py.")
         results = []

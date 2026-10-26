@@ -84,16 +84,22 @@ KEEP_RULE = ("Change only what the REASON criticises: keep every element, colour
              "did not criticise exactly as the prompt has it, and fix each violation by the smallest change that removes it. ")
 
 
-def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict, keep: bool = True) -> str:
+def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict, keep: bool = True,
+                   failed: list[dict] | None = None) -> str:
+    # Only a retry after a regression gets `failed`; every other prompt stays byte-identical, so recorded runs replay.
+    tried = "".join(f"<<<\n{f['scene']}\n>>>\nscored {f['score']}/10: {f['reason']}\n\n" for f in failed or [])
     return (
         f"STYLE GUIDE\n{render_guide()}\n"
         f"ASSET SLOT\n{describe_slot(slot)}\n\n"
         f"PROMPT THAT MADE THE TAKE (scored {score}/10)\n<<<\n{scene}\n>>>\n\n"
         f"MEASUREMENTS OF THE TAKE (by code)\n{format_image_measurements(m)}\n\n"
         f"EVALUATOR'S REASON\n{reason}\n\n"
+        + (f"REWRITES OF THIS PROMPT THAT ALREADY SCORED LOWER\n{tried}" if tried else "") +
         "Take the prompt and the Evaluator's REASON, and rewrite the prompt so that the next take scores a perfect 10/10 on "
         "the style guide. Fix every violation named in the REASON; keep what the asset is for (the ASSET SLOT). "
-        + (KEEP_RULE if keep else "") +
+        + (KEEP_RULE if keep else "")
+        + ("Do not repeat a rewrite that already scored lower: find a different fix that also avoids what its REASON "
+           "names. " if tried else "") +
         "Write the "
         "scene description only: the pipeline adds the style block before it and the negative block after it, so do not "
         "repeat them. Say the aspect ratio, what fills the frame, what stays empty, and the palette colours by name and "
@@ -151,8 +157,10 @@ class Astra:
     allow_live = True
 
     @staticmethod
-    def key(model: str, prompt: str) -> str:
-        return hashlib.sha256(f"{model}\n{prompt}".encode("utf-8")).hexdigest()[:16]
+    def key(model: str, prompt: str, settings: str | None = None) -> str:
+        # Settings join the key only when given, so takes recorded before they existed keep their keys.
+        text = f"{model}\n{prompt}" + (f"\nSETTINGS {settings}" if settings else "")
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
     def __init__(self, run_dir: Path, replay: bool, budget: int, model: str = "gpt-6-astra", timeout: int = 900):
         self.images = run_dir / "images"
@@ -161,8 +169,9 @@ class Astra:
         self.replay, self.budget, self.model, self.timeout = replay, budget, model, timeout
         self.live = 0
 
-    def render(self, prompt: str, name: str) -> Path:
-        key = self.key(self.model, prompt)
+    def render(self, prompt: str, name: str, settings: str | None = None) -> Path:
+        """One take of `prompt`. `settings` are the spec's job settings (e.g. `aspect_ratio: 16:9`), passed beside it."""
+        key = self.key(self.model, prompt, settings)
         if key in self.index:
             return self.images / self.index[key]["file"]
         if self.replay:
@@ -181,19 +190,19 @@ class Astra:
         cmd = [exe, "exec", "-m", self.model, "-s", "read-only", "-C", str(work), "--skip-git-repo-check",
                "--ephemeral", "-"]
         self.live += 1   # calls made this session, for the summary line; the budget counts indexed takes
-        proc = subprocess.run(cmd, input=ASTRA_WRAPPER.format(prompt=prompt), capture_output=True,
-                              text=True, encoding="utf-8", timeout=self.timeout)
+        wrapper = ASTRA_WRAPPER.format(prompt=prompt) + (f"\nSETTINGS\n{settings}\n" if settings else "")
+        proc = subprocess.run(cmd, input=wrapper, capture_output=True, text=True, encoding="utf-8", timeout=self.timeout)
         made = new_codex_images(started)
         if not made:
             raise SystemExit(f"Astra returned no image (exit {proc.returncode}): {(proc.stderr or proc.stdout)[-800:]}")
-        return self.adopt(prompt, made[-1], name, extra=len(made) - 1)
+        return self.adopt(prompt, made[-1], name, extra=len(made) - 1, settings=settings)
 
-    def adopt(self, prompt: str, source: Path, name: str, extra: int = 0) -> Path:
+    def adopt(self, prompt: str, source: Path, name: str, extra: int = 0, settings: str | None = None) -> Path:
         """File a generated image as the take for this prompt: kept in the run folder and indexed for --replay."""
-        key = self.key(self.model, prompt)
+        key = self.key(self.model, prompt, settings)
         kept = store_take(source, self.images / f"{name}.png")
         self.index[key] = {"file": kept.name, "model": self.model, "prompt": prompt, "source": source.name,
-                           "extra_images_ignored": extra}
+                           "extra_images_ignored": extra, **({"settings": settings} if settings else {})}
         self.index_path.write_text(json.dumps(self.index, indent=2, ensure_ascii=False), encoding="utf-8")
         return kept
 

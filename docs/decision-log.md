@@ -226,3 +226,6 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 ## Designer decisions 2026-10-25
 - **The Oni is the shrine gate's guardian (S5):** the illusion has bent his post into a gate no one may pass; freed, he goes back to guarding it. Proud and blunt, never a menace. Chosen over dropping the Oni for being "evil" in folklore and over a darker "Ryo frees something dangerous" reading; the binding line (S3, AM2) stays one template for every yokai. No AM needed: the GDD gives the yokai no backstory, so this fills a gap.
 - **AM17 first-meeting video:** a short story-card style video on first meeting each yokai, extra and not MVP. Ticket YOK-207 holds the open details (also in rules.md's open questions).
+
+## Designer decisions 2026-10-26
+- **Assignment 6 on real content (designer):** the style-loop examples start from real content: Habit Writer's drafts from git history (win-1, lose-mid before YOK-206, the Elder Oni intro before 5e31b05) and the three stage specs' own S1 backdrop prompts. The sabotaged briefs stay as stress tests. Astra budget approved: 9 takes for the three spec prompts. 6 were used (`tools/style_agent/runs/visual-real/`): 5 in the first pass, 1 in the rerun after the retry fix (designer: "fix the retry and rerun"). Codex reports no cost.

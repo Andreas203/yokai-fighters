@@ -1,0 +1,623 @@
+{
+  "meta": {
+    "run": "visual-real",
+    "command": "visual",
+    "image_model": "gpt-6-astra",
+    "evaluator_model": "opus",
+    "refiner_model": "sonnet",
+    "target": 10,
+    "max_rounds": 3,
+    "max_images": 9,
+    "refiner": "v2, with the keep rule",
+    "seeded_from": null,
+    "real": true
+  },
+  "results": [
+    {
+      "id": "real-1-oni-shrine-gate",
+      "slot": "oni-stage",
+      "spec": "assets/specs/stages/snowbound-shrine-gate.md",
+      "scene": "Wide stage backdrop, a snowbound mountain shrine gate at blue dusk seen from a low flat viewpoint, a large shrine-red gate standing in the centre-right distance with a thick straw rope across it, snow-laden dark pine trees on both sides, layered indigo mountain ridges fading into pale mist, soft large snowflakes in the air, a faint stone path buried in snow, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges. Palette: indigo #2D3A5E, rice paper #F1E8D4, snow shade #A9B4C8, shrine red #B5332B, pine #34483B.",
+      "settings": "aspect_ratio: 16:9",
+      "slot_info": {
+        "asset": "Stage backdrop S1 for the Oni's stage (YOK-150, assets/specs/stages/snowbound-shrine-gate.md)",
+        "subject": "The Oni's stage: a snowbound mountain shrine gate."
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide stage backdrop, a snowbound mountain shrine gate at blue dusk seen from a low flat viewpoint, a large shrine-red gate standing in the centre-right distance with a thick straw rope across it, snow-laden dark pine trees on both sides, layered indigo mountain ridges fading into pale mist, soft large snowflakes in the air, a faint stone path buried in snow, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges. Palette: indigo #2D3A5E, rice paper #F1E8D4, snow shade #A9B4C8, shrine red #B5332B, pine #34483B. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-1-oni-shrine-gate-take1.png",
+          "score": 2,
+          "reason": "[L3] painterly anime-background render: soft gradient mist and cloud banks in the valley, fine-textured rocks and layered pine foliage across the frame (flatness only 35%) (-3)\n[L4] far more detail than the bamboo grove reference: dense pine stands, many mountain ridges, cloud layers and twig clusters, where the reference uses simple flat shapes (-1)\n[L4] outline weight unlike the reference: thin, broken and uneven linework on the rocks, trees and torii instead of an even ink-brush outline (-1)\n[S4] busy lower third: dark stepping stones on pale snow make a high-contrast path down the centre of the fighter band, and rocks and shrubs crowd it (edge strength 23.6 against 25.6 above, barely calmer) (-3)",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 0,
+              "bottom": 13,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#44567B",
+                "share": 0.132,
+                "nearest": "indigo",
+                "distance": 11.9
+              },
+              {
+                "hex": "#29333F",
+                "share": 0.114,
+                "nearest": "ink",
+                "distance": 12.2
+              },
+              {
+                "hex": "#B2B3BF",
+                "share": 0.101,
+                "nearest": "snow shade",
+                "distance": 5.5
+              },
+              {
+                "hex": "#6F7A96",
+                "share": 0.097,
+                "nearest": "water teal",
+                "distance": 22.1
+              },
+              {
+                "hex": "#B4B4BF",
+                "share": 0.095,
+                "nearest": "snow shade",
+                "distance": 6.1
+              },
+              {
+                "hex": "#A0A6BA",
+                "share": 0.078,
+                "nearest": "snow shade",
+                "distance": 5.1
+              },
+              {
+                "hex": "#384357",
+                "share": 0.075,
+                "nearest": "indigo",
+                "distance": 11.4
+              },
+              {
+                "hex": "#596684",
+                "share": 0.074,
+                "nearest": "indigo",
+                "distance": 19.2
+              },
+              {
+                "hex": "#4C5E82",
+                "share": 0.072,
+                "nearest": "indigo",
+                "distance": 15.2
+              },
+              {
+                "hex": "#8F96AD",
+                "share": 0.063,
+                "nearest": "snow shade",
+                "distance": 11.1
+              },
+              {
+                "hex": "#ADAFBE",
+                "share": 0.054,
+                "nearest": "snow shade",
+                "distance": 4.3
+              },
+              {
+                "hex": "#654048",
+                "share": 0.045,
+                "nearest": "wood dark",
+                "distance": 16.9
+              }
+            ],
+            "on_palette_share": 0.903,
+            "flatness": 0.349,
+            "lower_third_edge": 23.6,
+            "upper_edge": 25.6,
+            "neon_share": 0.0,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 2/10\nREASON: [L3] painterly anime-background render: soft gradient mist and cloud banks in the valley, fine-textured rocks and layered pine foliage across the frame (flatness only 35%) (-3)\n[L4] far more detail than the bamboo grove reference: dense pine stands, many mountain ridges, cloud layers and twig clusters, where the reference uses simple flat shapes (-1)\n[L4] outline weight unlike the reference: thin, broken and uneven linework on the rocks, trees and torii instead of an even ink-brush outline (-1)\n[S4] busy lower third: dark stepping stones on pale snow make a high-contrast path down the centre of the fighter band, and rocks and shrubs crowd it (edge strength 23.6 against 25.6 above, barely calmer) (-3)"
+        },
+        {
+          "round": 2,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide 16:9 stage backdrop, full-bleed to all four image edges with no border, frame, letterbox or vignette, of a snowbound mountain shrine gate at blue dusk seen from a low flat viewpoint. A large shrine-red gate stands in the centre-right distance with a thick straw rope across it, drawn as simple flat shapes. Snow-laden dark pine trees stand on both sides, each pine a few bold flat tiers of pine green with snow shade caps, with no individual needles, twigs or foliage clusters. Behind them sit three simple layered indigo mountain ridges, each one a single flat shape with a clean edge, fading into a flat pale band of snow shade sky rather than soft gradient mist, with no cloud banks or valley haze. A few large flat snowflakes drift in the upper two thirds. Every surface uses flat cel colour in 2-3 tone steps with no gradients, and the whole image has a clean, even-weight, confident ink-brush outline in ink #1D1B21, drawn as continuous unbroken lines of the same thickness on the gate, pines, ridges and snow banks, matching the simple flat shapes of the bamboo grove reference. All detail sits in the upper two thirds and at the left and right edges. The lower third is a calm, empty, low-contrast band of smooth snow in snow shade #A9B4C8 and rice paper #F1E8D4, with no path, stepping stones, rocks, shrubs or other objects, only a soft flat tonal shift and a single plain gentle snow bank edge. No characters, no animals, no text. Palette: indigo #2D3A5E, rice paper #F1E8D4, snow shade #A9B4C8, shrine red #B5332B, pine #34483B, ink #1D1B21. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-1-oni-shrine-gate-take2.png",
+          "score": 10,
+          "reason": "Look: the image uses flat cel colour in 2-3 tone steps on the pines, gate and ridges, with a clean even ink outline. Surfaces are matte, with no cast shadows, bloom or glow; the falling snow is flat discs, not glowing particles. There is no grain or painterly texture (flatness 47%), and the outline weight and level of detail match or are simpler than the bamboo grove REFERENCE (L1-L4). Palette and lore: every pixel is within distance 20 of a palette colour, with indigo sky and ridges, ink pines, snow-shade snow (0% pure white), a shrine-red gate and brass bells, and 0% neon. It shows the Oni's snowbound mountain shrine gate at blue dusk, with a straw rope, snow-laden pines and indigo ridges, and nothing modern or horror (P1-P4). Spec form: the image is 1280x720 (16:9) and full-bleed. The top 24 px are plain sky and the bottom 189 px are the empty snowfield, not a border or letterbox. There are no figures or text, and the lower third is calm open snow (edge strength 11.4 against 21.2 above) (S1-S4).",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 24,
+              "bottom": 189,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#9FABC2",
+                "share": 0.14,
+                "nearest": "snow shade",
+                "distance": 3.8
+              },
+              {
+                "hex": "#415881",
+                "share": 0.13,
+                "nearest": "indigo",
+                "distance": 12.9
+              },
+              {
+                "hex": "#3F567F",
+                "share": 0.126,
+                "nearest": "indigo",
+                "distance": 12.1
+              },
+              {
+                "hex": "#2A3843",
+                "share": 0.106,
+                "nearest": "ink",
+                "distance": 14.4
+              },
+              {
+                "hex": "#9DAAC1",
+                "share": 0.102,
+                "nearest": "snow shade",
+                "distance": 4.2
+              },
+              {
+                "hex": "#9EAAC1",
+                "share": 0.091,
+                "nearest": "snow shade",
+                "distance": 4.1
+              },
+              {
+                "hex": "#30456A",
+                "share": 0.068,
+                "nearest": "indigo",
+                "distance": 5.0
+              },
+              {
+                "hex": "#394F77",
+                "share": 0.06,
+                "nearest": "indigo",
+                "distance": 9.2
+              },
+              {
+                "hex": "#4E6285",
+                "share": 0.058,
+                "nearest": "indigo",
+                "distance": 16.9
+              },
+              {
+                "hex": "#B8BBC1",
+                "share": 0.052,
+                "nearest": "snow shade",
+                "distance": 8.5
+              },
+              {
+                "hex": "#554E66",
+                "share": 0.045,
+                "nearest": "indigo",
+                "distance": 14.3
+              }
+            ],
+            "on_palette_share": 1.0,
+            "flatness": 0.47,
+            "lower_third_edge": 11.4,
+            "upper_edge": 21.2,
+            "neon_share": 0.0,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 10/10\nREASON: Look: the image uses flat cel colour in 2-3 tone steps on the pines, gate and ridges, with a clean even ink outline. Surfaces are matte, with no cast shadows, bloom or glow; the falling snow is flat discs, not glowing particles. There is no grain or painterly texture (flatness 47%), and the outline weight and level of detail match or are simpler than the bamboo grove REFERENCE (L1-L4). Palette and lore: every pixel is within distance 20 of a palette colour, with indigo sky and ridges, ink pines, snow-shade snow (0% pure white), a shrine-red gate and brass bells, and 0% neon. It shows the Oni's snowbound mountain shrine gate at blue dusk, with a straw rope, snow-laden pines and indigo ridges, and nothing modern or horror (P1-P4). Spec form: the image is 1280x720 (16:9) and full-bleed. The top 24 px are plain sky and the bottom 189 px are the empty snowfield, not a border or letterbox. There are no figures or text, and the lower third is calm open snow (edge strength 11.4 against 21.2 above) (S1-S4)."
+        }
+      ],
+      "before_score": 2,
+      "after_score": 10,
+      "best_take": 2,
+      "passed": true,
+      "stopped": ""
+    },
+    {
+      "id": "real-2-kappa-riverbank",
+      "slot": "kappa-stage",
+      "spec": "assets/specs/stages/lantern-riverbank.md",
+      "scene": "Wide stage backdrop, a calm river at night seen from a low flat viewpoint, dozens of small round paper lanterns glowing persimmon orange drifting on dark indigo water in layered depth, a far bank of pine-green reeds and low hills fading into indigo mist, a small arched wooden footbridge far in the distance, a few rice-paper-lit stars, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges, water as flat bands. Palette: indigo #2D3A5E, persimmon #D8632C, water teal #3E7F86, pine #34483B, rice paper #F1E8D4.",
+      "settings": "aspect_ratio: 16:9",
+      "slot_info": {
+        "asset": "Stage backdrop S1 for the Kappa's stage (YOK-151, assets/specs/stages/lantern-riverbank.md)",
+        "subject": "The Kappa's stage: a riverbank of floating lanterns."
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide stage backdrop, a calm river at night seen from a low flat viewpoint, dozens of small round paper lanterns glowing persimmon orange drifting on dark indigo water in layered depth, a far bank of pine-green reeds and low hills fading into indigo mist, a small arched wooden footbridge far in the distance, a few rice-paper-lit stars, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges, water as flat bands. Palette: indigo #2D3A5E, persimmon #D8632C, water teal #3E7F86, pine #34483B, rice paper #F1E8D4. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-2-kappa-riverbank-take1.png",
+          "score": 9,
+          "reason": "[L4] The upper band has more fine detail than the bamboo grove REFERENCE: dense individually drawn reed stalks along both banks, many small pine clumps, a distant arched bridge and dozens of tiny far lanterns. The flat cel look, palette, Kappa night-river lore (indigo night, lanterns on dark water, reeds), full-bleed 16:9 frame, absence of figures and text, and calm lower third all pass (-1).",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 36,
+              "bottom": 87,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#283B60",
+                "share": 0.186,
+                "nearest": "indigo",
+                "distance": 1.7
+              },
+              {
+                "hex": "#1E5267",
+                "share": 0.119,
+                "nearest": "indigo",
+                "distance": 18.5
+              },
+              {
+                "hex": "#1A4B60",
+                "share": 0.103,
+                "nearest": "indigo",
+                "distance": 16.6
+              },
+              {
+                "hex": "#1A3A4D",
+                "share": 0.092,
+                "nearest": "indigo",
+                "distance": 13.8
+              },
+              {
+                "hex": "#1C4F64",
+                "share": 0.088,
+                "nearest": "indigo",
+                "distance": 17.7
+              },
+              {
+                "hex": "#182C41",
+                "share": 0.085,
+                "nearest": "indigo",
+                "distance": 12.5
+              },
+              {
+                "hex": "#2A5D6C",
+                "share": 0.074,
+                "nearest": "water teal",
+                "distance": 14.6
+              },
+              {
+                "hex": "#194458",
+                "share": 0.068,
+                "nearest": "indigo",
+                "distance": 15.3
+              },
+              {
+                "hex": "#1E5065",
+                "share": 0.067,
+                "nearest": "indigo",
+                "distance": 17.8
+              },
+              {
+                "hex": "#243A53",
+                "share": 0.051,
+                "nearest": "indigo",
+                "distance": 8.4
+              },
+              {
+                "hex": "#7D6051",
+                "share": 0.042,
+                "nearest": "brown",
+                "distance": 5.5
+              }
+            ],
+            "on_palette_share": 1.0,
+            "flatness": 0.431,
+            "lower_third_edge": 5.5,
+            "upper_edge": 13.9,
+            "neon_share": 0.006,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 9/10\nREASON: [L4] The upper band has more fine detail than the bamboo grove REFERENCE: dense individually drawn reed stalks along both banks, many small pine clumps, a distant arched bridge and dozens of tiny far lanterns. The flat cel look, palette, Kappa night-river lore (indigo night, lanterns on dark water, reeds), full-bleed 16:9 frame, absence of figures and text, and calm lower third all pass (-1)."
+        },
+        {
+          "round": 2,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide 16:9 stage backdrop, a calm river at night seen from a low flat viewpoint, about a dozen small round paper lanterns glowing flat persimmon orange drifting on dark indigo water in layered depth, each a simple flat orange shape with a clean ink outline, a far bank with a few large simple reed clumps drawn as bold flat shapes in pine green and a low line of hills fading into flat indigo bands, a few rice-paper-lit stars, with the upper two thirds kept sparse and simple in the same low level of detail as a bamboo grove backdrop: no individually drawn reed stalks, no dense foliage, no tiny far lanterns, no bridge. The lower third is empty, calm and uncluttered water in flat low-contrast indigo bands. No characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, even-weight ink-brush outlines, water as flat bands. Palette: indigo #2D3A5E, persimmon #D8632C, water teal #3E7F86, pine #34483B, rice paper #F1E8D4. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-2-kappa-riverbank-take2.png",
+          "score": 7,
+          "reason": "[S4] The lower third is not calm. The largest lanterns, with their bright orange reflections (bottom left and bottom right), sit in the fighters' standing band along with high-contrast ripple bands across the water. The measured edge strength there is 11.2 against 7.9 above, so the lower third is busier than the upper two thirds instead of calmer (-3).",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 47,
+              "bottom": 19,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#263860",
+                "share": 0.14,
+                "nearest": "indigo",
+                "distance": 3.1
+              },
+              {
+                "hex": "#244A5B",
+                "share": 0.14,
+                "nearest": "indigo",
+                "distance": 17.2
+              },
+              {
+                "hex": "#1A3A54",
+                "share": 0.13,
+                "nearest": "indigo",
+                "distance": 9.4
+              },
+              {
+                "hex": "#273860",
+                "share": 0.117,
+                "nearest": "indigo",
+                "distance": 3.0
+              },
+              {
+                "hex": "#273961",
+                "share": 0.1,
+                "nearest": "indigo",
+                "distance": 2.9
+              },
+              {
+                "hex": "#1D3351",
+                "share": 0.076,
+                "nearest": "indigo",
+                "distance": 6.1
+              },
+              {
+                "hex": "#1B3953",
+                "share": 0.069,
+                "nearest": "indigo",
+                "distance": 9.1
+              },
+              {
+                "hex": "#193953",
+                "share": 0.068,
+                "nearest": "indigo",
+                "distance": 9.4
+              },
+              {
+                "hex": "#192A42",
+                "share": 0.067,
+                "nearest": "indigo",
+                "distance": 11.0
+              },
+              {
+                "hex": "#505F5F",
+                "share": 0.031,
+                "nearest": "pine",
+                "distance": 13.8
+              },
+              {
+                "hex": "#1F3C53",
+                "share": 0.031,
+                "nearest": "indigo",
+                "distance": 10.8
+              },
+              {
+                "hex": "#193B54",
+                "share": 0.03,
+                "nearest": "indigo",
+                "distance": 10.3
+              }
+            ],
+            "on_palette_share": 1.0,
+            "flatness": 0.56,
+            "lower_third_edge": 11.2,
+            "upper_edge": 7.9,
+            "neon_share": 0.0,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 7/10\nREASON: [S4] The lower third is not calm. The largest lanterns, with their bright orange reflections (bottom left and bottom right), sit in the fighters' standing band along with high-contrast ripple bands across the water. The measured edge strength there is 11.2 against 7.9 above, so the lower third is busier than the upper two thirds instead of calmer (-3)."
+        },
+        {
+          "round": 3,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide 16:9 stage backdrop, a calm river at night seen from a low flat viewpoint, dozens of small round paper lanterns glowing persimmon orange drifting on dark indigo water in layered depth, a far bank of pine-green reeds and low hills fading into indigo mist, a small arched wooden footbridge far in the distance, a few rice-paper-lit stars. Keep the upper two thirds at the same low level of detail as a bamboo grove backdrop: the reeds are drawn as a few bold flat clumps rather than individual stalks, the pines are a few large simple flat shapes rather than many small clumps, the bridge is one simple flat arch, and the distant lanterns are fewer and larger, each a plain flat orange shape with a clean even-weight ink outline, placed in the upper two thirds of the water and along the edges. The lower third is empty, calm water in flat low-contrast indigo bands, with no lanterns, no bright reflections and no ripples. No characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, even-weight ink-brush outlines, water as flat bands. Palette: indigo #2D3A5E, persimmon #D8632C, water teal #3E7F86, pine #34483B, rice paper #F1E8D4. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-2-kappa-riverbank-take3.png",
+          "score": 10,
+          "reason": "Look: flat cel colour in 2-3 tone steps (flatness 62%). Outlines are clean, thin and even, matching the reference's weight and level of detail. The lanterns are flat orange fills with no bloom, the stars are small flat dots rather than glowing particles, and there are no cast shadows, gloss, grain or painterly texture (L1-L4). Palette and lore: 100% of pixels sit within distance 20 of the palette, mainly indigo/ink night tones, persimmon lanterns, pine reeds and trees, with 0% neon and 0% pure white (P1). The scene is the Kappa's river at deep indigo night: paper lanterns drift on dark water among reeds, with a rural wooden bridge, pines and indigo ridges. There are no modern objects and no horror, and the mood is quiet, lantern-lit and a little lonely (P2-P4). Spec form: the image is 1280x720 (16:9) and full-bleed. The 289px bottom flat band is the calm water surface, not a letterbox, and the 34px top band is open sky (S1). There are no characters or figures (S2) and no text (S3). The lower third is empty, low-contrast water (edge strength 2.5 vs 8.0 above), with detail kept in the upper band and the edges (S4).",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 34,
+              "bottom": 289,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#253C5D",
+                "share": 0.218,
+                "nearest": "indigo",
+                "distance": 3.9
+              },
+              {
+                "hex": "#1B4157",
+                "share": 0.137,
+                "nearest": "indigo",
+                "distance": 13.1
+              },
+              {
+                "hex": "#1A4156",
+                "share": 0.122,
+                "nearest": "indigo",
+                "distance": 13.9
+              },
+              {
+                "hex": "#1F495E",
+                "share": 0.115,
+                "nearest": "indigo",
+                "distance": 15.3
+              },
+              {
+                "hex": "#1F3442",
+                "share": 0.104,
+                "nearest": "ink",
+                "distance": 14.3
+              },
+              {
+                "hex": "#235063",
+                "share": 0.099,
+                "nearest": "indigo",
+                "distance": 18.1
+              },
+              {
+                "hex": "#1F4A5E",
+                "share": 0.063,
+                "nearest": "indigo",
+                "distance": 16.2
+              },
+              {
+                "hex": "#1F485D",
+                "share": 0.051,
+                "nearest": "indigo",
+                "distance": 15.0
+              }
+            ],
+            "on_palette_share": 1.0,
+            "flatness": 0.622,
+            "lower_third_edge": 2.5,
+            "upper_edge": 8.0,
+            "neon_share": 0.0,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 10/10\nREASON: Look: flat cel colour in 2-3 tone steps (flatness 62%). Outlines are clean, thin and even, matching the reference's weight and level of detail. The lanterns are flat orange fills with no bloom, the stars are small flat dots rather than glowing particles, and there are no cast shadows, gloss, grain or painterly texture (L1-L4). Palette and lore: 100% of pixels sit within distance 20 of the palette, mainly indigo/ink night tones, persimmon lanterns, pine reeds and trees, with 0% neon and 0% pure white (P1). The scene is the Kappa's river at deep indigo night: paper lanterns drift on dark water among reeds, with a rural wooden bridge, pines and indigo ridges. There are no modern objects and no horror, and the mood is quiet, lantern-lit and a little lonely (P2-P4). Spec form: the image is 1280x720 (16:9) and full-bleed. The 289px bottom flat band is the calm water surface, not a letterbox, and the 34px top band is open sky (S1). There are no characters or figures (S2) and no text (S3). The lower third is empty, low-contrast water (edge strength 2.5 vs 8.0 above), with detail kept in the upper band and the edges (S4)."
+        }
+      ],
+      "before_score": 9,
+      "after_score": 10,
+      "best_take": 3,
+      "passed": true,
+      "stopped": ""
+    },
+    {
+      "id": "real-3-tanuki-tea-house",
+      "slot": "tanuki-stage",
+      "spec": "assets/specs/stages/tanuki-tea-house.md",
+      "scene": "Wide stage backdrop, the interior of a warm Japanese tea house seen from a low flat viewpoint, dark wooden beams and posts, a long back wall made of five tall shoji screens with blank rice-paper panels evenly spaced (panels completely empty and plain pale paper, no drawing on them), a low wooden ceiling with two hanging paper lanterns glowing persimmon, tatami floor visible in the lower third, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges. Palette: rice paper #F1E8D4, straw #B08A48, brown #6E5A48, persimmon #D8632C, shrine red #B5332B.",
+      "settings": "aspect_ratio: 16:9",
+      "slot_info": {
+        "asset": "Stage backdrop S1 for the Tanuki's stage (YOK-152, assets/specs/stages/tanuki-tea-house.md)",
+        "subject": "The Tanuki's stage: the inside of its tea house."
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "prompt": "Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Wide stage backdrop, the interior of a warm Japanese tea house seen from a low flat viewpoint, dark wooden beams and posts, a long back wall made of five tall shoji screens with blank rice-paper panels evenly spaced (panels completely empty and plain pale paper, no drawing on them), a low wooden ceiling with two hanging paper lanterns glowing persimmon, tatami floor visible in the lower third, empty and uncluttered in the lower third, no characters, no text, full-bleed to the image edges with no border or frame. Flat cel colours, soft ink-brush edges. Palette: rice paper #F1E8D4, straw #B08A48, brown #6E5A48, persimmon #D8632C, shrine red #B5332B. Avoid: photorealism, PBR detail, metallic sheen, painterly brush noise, film grain, text, watermark, logo, signature, extra limbs, extra fingers, held props or effects not in the reference, glowing particles, cast shadows, busy background, any resemblance to an existing franchise, artist or character.",
+          "image": "real-3-tanuki-tea-house-take1.png",
+          "score": 10,
+          "reason": "Look: flat cel colour in a few tone steps with clean, even dark-brown outlines and simple, readable shapes (beams, screen grids, tatami seams). It is matte and evenly lit, with no cast shadows, gloss or bloom. The lanterns are flat orange fills, and the outline weight and level of detail match the bamboo grove reference (L1-L4). Palette and lore: every pixel is within distance 20 of a palette colour (wood, brass, rice paper, straw), with no neon or pure white. The scene is the Tanuki's lamplit tea house: wooden beams, tatami, a row of tall blank paper screens and paper lanterns. It has no modern objects, horror or spring colour out of place, and the mood is quiet and a little lonely (P1-P4). Spec form: the image is 1280x720 (16:9) and full-bleed, with zero flat bands at the edges. It has no characters or figures, no text or signature, and the screens are blank. The lower third is an empty tatami floor, calmer than the upper two thirds (edge strength 23.2 vs 38.3) (S1-S4).",
+          "flags": [],
+          "measurements": {
+            "width": 1280,
+            "height": 720,
+            "aspect": 1.778,
+            "border_px": {
+              "top": 0,
+              "bottom": 0,
+              "left": 0,
+              "right": 0
+            },
+            "dominant_colours": [
+              {
+                "hex": "#60452F",
+                "share": 0.166,
+                "nearest": "wood dark",
+                "distance": 9.1
+              },
+              {
+                "hex": "#B58540",
+                "share": 0.163,
+                "nearest": "brass",
+                "distance": 5.5
+              },
+              {
+                "hex": "#EEDBBE",
+                "share": 0.145,
+                "nearest": "rice paper",
+                "distance": 7.4
+              },
+              {
+                "hex": "#4E3422",
+                "share": 0.111,
+                "nearest": "wood dark",
+                "distance": 3.1
+              },
+              {
+                "hex": "#B77C3A",
+                "share": 0.072,
+                "nearest": "brass",
+                "distance": 11.0
+              },
+              {
+                "hex": "#F1DEC0",
+                "share": 0.068,
+                "nearest": "rice paper",
+                "distance": 7.2
+              },
+              {
+                "hex": "#843F27",
+                "share": 0.061,
+                "nearest": "wood mid",
+                "distance": 17.1
+              },
+              {
+                "hex": "#CAB69A",
+                "share": 0.059,
+                "nearest": "straw",
+                "distance": 6.9
+              },
+              {
+                "hex": "#ECD9BC",
+                "share": 0.054,
+                "nearest": "rice paper",
+                "distance": 7.8
+              },
+              {
+                "hex": "#794C32",
+                "share": 0.05,
+                "nearest": "wood mid",
+                "distance": 5.5
+              }
+            ],
+            "on_palette_share": 1.0,
+            "flatness": 0.407,
+            "lower_third_edge": 23.2,
+            "upper_edge": 38.3,
+            "neon_share": 0.001,
+            "pure_white_share": 0.0
+          },
+          "evaluator_reply": "SCORE: 10/10\nREASON: Look: flat cel colour in a few tone steps with clean, even dark-brown outlines and simple, readable shapes (beams, screen grids, tatami seams). It is matte and evenly lit, with no cast shadows, gloss or bloom. The lanterns are flat orange fills, and the outline weight and level of detail match the bamboo grove reference (L1-L4). Palette and lore: every pixel is within distance 20 of a palette colour (wood, brass, rice paper, straw), with no neon or pure white. The scene is the Tanuki's lamplit tea house: wooden beams, tatami, a row of tall blank paper screens and paper lanterns. It has no modern objects, horror or spring colour out of place, and the mood is quiet and a little lonely (P1-P4). Spec form: the image is 1280x720 (16:9) and full-bleed, with zero flat bands at the edges. It has no characters or figures, no text or signature, and the screens are blank. The lower third is an empty tatami floor, calmer than the upper two thirds (edge strength 23.2 vs 38.3) (S1-S4)."
+        }
+      ],
+      "before_score": 10,
+      "after_score": 10,
+      "best_take": 1,
+      "passed": true,
+      "stopped": ""
+    }
+  ]
+}

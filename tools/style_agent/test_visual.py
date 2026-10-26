@@ -162,8 +162,9 @@ class FakeAstra:
     def __init__(self, files):
         self.files, self.prompts = list(files), []
 
-    def render(self, prompt, name):
+    def render(self, prompt, name, settings=None):
         self.prompts.append(prompt)
+        self.settings = settings
         return self.files.pop(0)
 
 
@@ -220,6 +221,17 @@ class Loop(unittest.TestCase):
         # Take 3 regressed, so take 4's rewrite starts again from take 2's prompt and reason.
         self.assertIn("scene two", vision.refiner_prompts[2])
         self.assertIn("[L4] busy (-1)", vision.refiner_prompts[2])
+        # ...and is told what failed from there, so it can't come back as the same rewrite (runs/visual-real, Kappa take 3).
+        self.assertIn("ALREADY SCORED LOWER\n<<<\nscene three\n>>>\nscored 6/10: [P2] wrong hour (-3)", vision.refiner_prompts[2])
+        self.assertNotIn("ALREADY SCORED LOWER", vision.refiner_prompts[1])
+
+    def test_a_refiner_prompt_with_no_failures_is_unchanged(self):
+        from visual_agents import refiner_prompt
+        from visual_cases import SLOTS
+        m = {"width": 1, "height": 1, "aspect": 1, "border_px": {}, "dominant_colours": [], "on_palette_share": 0,
+             "flatness": 0, "lower_third_edge": 0, "upper_edge": 0, "neon_share": 0, "pure_white_share": 0}
+        slot = SLOTS["oni-shrine-gate"]
+        self.assertEqual(refiner_prompt(slot, "s", 9, "r", m), refiner_prompt(slot, "s", 9, "r", m, failed=[]))
 
     def test_budget_spent_stops_the_case(self):
         from visual_agents import BudgetSpent
@@ -227,12 +239,43 @@ class Loop(unittest.TestCase):
         from visual_loop import run_visual_case
 
         class Broke(FakeAstra):
-            def render(self, prompt, name):
+            def render(self, prompt, name, settings=None):
                 if self.prompts:
                     raise BudgetSpent("spent")
-                return super().render(prompt, name)
+                return super().render(prompt, name, settings)
         r = run_visual_case(FakeVision(["SCORE: 3/10\nREASON: x"], ["s"]), Broke([self.good]), self.good, self.args, CASES[1])
         self.assertEqual((len(r["rounds"]), r["passed"], r["stopped"]), (1, False, "spent"))
+
+    def test_a_real_spec_prompt_is_wrapped_from_take_one_and_keeps_its_settings(self):
+        from visual_agents import wrap_prompt
+        from visual_cases import REAL_CASES
+        from visual_loop import classes_found, run_visual_case
+        case = REAL_CASES[0]
+        astra = FakeAstra([self.good, self.good])
+        vision = FakeVision(["SCORE: 7/10\nREASON: [L4] heavy outline (-1)\n[S4] busy floor (-1)", "SCORE: 10/10\nREASON: ok"],
+                            ["A gate at dusk."])
+        r = run_visual_case(vision, astra, self.good, self.args, case)
+        self.assertEqual(astra.prompts[0], wrap_prompt(case["scene"]))
+        self.assertEqual(astra.settings, "aspect_ratio: 16:9")
+        self.assertIn(case["scene"], vision.refiner_prompts[0])   # the Refiner rewrites the spec's scene, not the wrapped prompt
+        self.assertEqual(classes_found(r["rounds"][0]["reason"]), "Look, Spec form")
+
+
+class RealCases(unittest.TestCase):
+    def test_each_scene_is_its_specs_backdrop_prompt_word_for_word(self):
+        from visual_cases import REAL_CASES
+        root = HERE.parent.parent
+        for case in REAL_CASES:
+            spec = (root / case["spec"]).read_text(encoding="utf-8")
+            self.assertIn(f"> {case['scene']} Avoid: [negative prompt].", spec, case["id"])
+            self.assertIn(f"`{case['settings']}`", spec, case["id"])
+
+    def test_settings_leave_old_keys_alone(self):
+        if Image is None:
+            self.skipTest("Pillow is not installed")
+        from visual_agents import Astra
+        self.assertEqual(Astra.key("m", "p"), Astra.key("m", "p", None))
+        self.assertNotEqual(Astra.key("m", "p"), Astra.key("m", "p", "aspect_ratio: 16:9"))
 
 
 if __name__ == "__main__":
