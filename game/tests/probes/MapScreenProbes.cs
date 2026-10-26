@@ -137,22 +137,34 @@ public static class MapScreenProbes
 	[Test]
 	public static void RewardLinesAgreeWithR8AndWithWhatIsActuallyPaid()
 	{
-		// R8: 25 per duel on rows 1-6, 50 for the row-5 elder, the row-8 elder pays no coins
+		// R8: 25 per duel on rows 1-6, 50 for the row-5 elder; the row-8 elder pays a rare ability instead. PROVISIONAL (YOK-186): when
+		// its offer holds no rare it pays what the row-5 elder pays, 50, and its map line says so.
+		const string R8Line = "Pays a rare ability, or 50 coins if its offer has none.";
 		var sess = NewSession();
 		var view = new RunMapView(sess.Map, sess.Run, sess.Scenes);
 		foreach (var n in sess.Map.Graph.Nodes.Where(n => n.Type is "duel" or "elder"))
 		{
-			int expect = n.Row == 5 ? 50 : n.Row == 8 ? 0 : 25;
 			string line = view.Detail(n.Id)!.Reward!;
-			Assert.True(line.StartsWith(expect == 0 ? "Pays no coins." : $"Pays {expect} coins."), $"{n.Id} reads: {line}");
+			if (n.Row == 8) Assert.True(line.StartsWith(R8Line), $"{n.Id} reads: {line}");
+			else Assert.True(line.StartsWith($"Pays {(n.Row == 5 ? 50 : 25)} coins."), $"{n.Id} reads: {line}");
 		}
-		// and the line is what the win pays
-		foreach (var (id, want) in new[] { ("r1-apprentice", 25), ("r2-oni", 25), ("r3-kappa", 25), ("r4-merchant", 0), ("r5-elder-oni", 50), ("r6-kappa", 25), ("r7-dojo", 0), ("r8-elder-oni", 0) })
+		// and the line is what the win pays. The walk takes each node's card 0, which for an elder is its cancel rule (X1): Oni Chain
+		// at row 5, so the row-8 Elder Oni then has no rare left (pays 50, as its line says) while the row-8 Elder Kappa's Undertow is locked (50).
+		foreach (var (id, want) in new[] { ("r1-apprentice", 25), ("r2-oni", 25), ("r3-kappa", 25), ("r4-merchant", 0), ("r5-elder-oni", 50), ("r6-kappa", 25), ("r7-dojo", 0), ("r8-elder-oni", 50) })
 		{
 			int before = sess.Run.Coins;
 			sess.Enter(id); Finish(sess);
 			Assert.Equal(want, sess.Run.Coins - before, $"{id} paid");
 		}
+		// The same line over a walk that leaves Oni Chain on offer at row 8: the line names the rare, and the win pays no coins.
+		var other = NewSession();
+		Walk(other, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-nine-tails", "r6-kappa", "r7-dojo"); // Fox Step taken, Oni Chain not
+		Assert.True(!other.Run.HoldsCancelRule("oni-chain") && other.Run.HoldsCancelRule("fox-step"), "setup: Fox Step, not Oni Chain");
+		Assert.True(new RunMapView(other.Map, other.Run, other.Scenes).Detail("r8-elder-oni")!.Reward!.StartsWith(R8Line), "line at the row-8 Elder Oni");
+		int b4 = other.Run.Coins;
+		other.Enter("r8-elder-oni");
+		var offer = other.WinFight(840)!;
+		Assert.True(offer.Offer.Cards.Any(c => c.AbilityId == "oni-chain" && c.Rare) && other.Run.Coins == b4, "Oni Chain on offer, no coins");
 	}
 
 	[Test]
@@ -231,7 +243,8 @@ public static class MapScreenProbes
 		Walk(done, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-dojo");
 		s.SetView(new SessionMapView(done));
 		Assert.Equal("AFTER ROW 8", s.HeaderTexts[^1], "boss column");
-		Assert.True(s.DetailRewardText.StartsWith("Pays no coins."), "row-8 elder pays 0 coins (R8): " + s.DetailRewardText);
+		// R8, PROVISIONAL (YOK-186): the row-8 elder's line names the rare and the coins it falls back on, not "Pays no coins."
+		Assert.True(s.DetailRewardText.StartsWith("Pays a rare ability, or 50 coins if its offer has none."), "row-8 elder line (R8): " + s.DetailRewardText);
 		Assert.True(s.DetailNameText.EndsWith("row 8"), "row 8 not 'after row 8': " + s.DetailNameText);
 		Walk(done, "r8-elder-kappa");
 		s.SetView(new SessionMapView(done));
