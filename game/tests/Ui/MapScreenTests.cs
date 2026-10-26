@@ -554,7 +554,7 @@ public static class MapScreenTests
 		s._UnhandledInput(new InputEventJoypadButton { ButtonIndex = JoyButton.LeftShoulder, Pressed = true });
 		Assert.Equal(0f, s.ScrollTarget, "LB pages left");
 		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true });
-		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseMotion { Relative = new Vector2(-300, 0) });
+		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseMotion { Relative = new Vector2(-300, 0), ButtonMask = MouseButtonMask.Left });
 		Assert.Equal(300f, s.ScrollOffset, "dragging the paper left moves it with the pointer, no easing");
 		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false });
 		s.ScrollView.EmitSignal(Control.SignalName.GuiInput, new InputEventMouseMotion { Relative = new Vector2(-300, 0) });

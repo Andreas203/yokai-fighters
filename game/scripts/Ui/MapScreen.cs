@@ -206,7 +206,11 @@ public partial class MapScreen : Control
 	{
 		if (e is InputEventMouseButton { Pressed: true } w && WheelDirection(w) != 0f) { PanBy(WheelDirection(w) * WheelStep * Mathf.Max(1f, w.Factor)); ScrollView.AcceptEvent(); }
 		else if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } b) _dragging = b.Pressed;
-		else if (e is InputEventMouseMotion m && _dragging) DragBy(m.Relative.X);
+		else if (e is InputEventMouseMotion m)
+		{
+			if ((m.ButtonMask & MouseButtonMask.Left) == 0) _dragging = false; // the release was lost (focus, a swapped screen): a plain move pans nothing
+			else if (_dragging) DragBy(m.Relative.X);
+		}
 	}
 
 	static float WheelDirection(InputEventMouseButton w) =>
@@ -218,6 +222,12 @@ public partial class MapScreen : Control
 	{
 		foreach (var n in _nodes.Values) { Board.RemoveChild(n); n.QueueFree(); }
 		_nodes.Clear();
+		// a new view must keep nothing of the last one: nodes still fading out (and their tweens) go now, and a drag whose release was lost ends
+		foreach (var t in _tweens) if (t.IsValid()) t.Kill();
+		_tweens.Clear();
+		foreach (var n in _fading) if (IsInstanceValid(n)) { if (n.GetParent() != null) n.GetParent().RemoveChild(n); n.QueueFree(); }
+		_fading.Clear();
+		_dragging = false;
 		_twistKey = null;
 		Relayout();
 	}
@@ -508,15 +518,18 @@ public partial class MapScreen : Control
 		return true;
 	}
 
+	/// <summary>True for the control the screen holds for its node; a node fading out (or a stale one) is not on the map any more.</summary>
+	bool IsDrawn(MapNode n) => _nodes.TryGetValue(n.NodeId, out var cur) && ReferenceEquals(cur, n);
+
 	void OnNodeHovered(MapNode n)
 	{
-		if (Locked || n.State != MapNodeState.Reachable || CursorId == n.NodeId) return;
+		if (!IsDrawn(n) || Locked || n.State != MapNodeState.Reachable || CursorId == n.NodeId) return; // a node fading out is no longer on the map
 		CursorId = n.NodeId; Update();
 	}
 
 	void OnNodeChosen(MapNode n)
 	{
-		if (Locked || n.State != MapNodeState.Reachable) return;
+		if (!IsDrawn(n) || Locked || n.State != MapNodeState.Reachable) return;
 		CursorId = n.NodeId;
 		Confirm();
 	}
