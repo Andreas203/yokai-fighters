@@ -1,0 +1,18 @@
+{
+  "kind": "level_preset",
+  "id": "foxfire-piercing",
+  "special": "foxfire",
+  "level": 3,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#FBF6EC",
+  "spark": {
+    "colour": "#F2A23A",
+    "scale_pct": 130
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Piercing Foxfire: Fur white #FBF6EC (style.md palette), a white-hot core. Spark stays Foxfire #F2A23A (V5) and is 30% larger. Texture and trail VFX are on the follow-up list, not generated."
+}
