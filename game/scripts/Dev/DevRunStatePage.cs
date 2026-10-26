@@ -165,8 +165,11 @@ public partial class DevRunStatePage : VBoxContainer
 			slots.Add(new DevSlotEdit(slot, r.Special.GetItemText(r.Special.Selected), (int)r.Level.Value, mod, (int)r.Order.Value,
 				r.Borrowed.ButtonPressed, r.ModBorrowed.ButtonPressed));
 		}
-		return new DevRunBuild(slots, (int)Coins.Value, (int)Health.Value, (int)Depth.Value, (uint)Seed.Value);
+		return new DevRunBuild(slots, (int)Coins.Value, (int)Health.Value, (int)Depth.Value, (uint)Seed.Value) { CancelRules = _cancelRules };
 	}
+
+	/// <summary>YOK-186: the held cancel rules of the build last shown (no control edits them), so an edit keeps them.</summary>
+	IReadOnlyList<string> _cancelRules = System.Array.Empty<string>();
 
 	/// <summary>Puts <paramref name="build"/> in the controls (unknown ids show as empty and the check says so) and re-checks.</summary>
 	public void Show(DevRunBuild build)
@@ -187,6 +190,7 @@ public partial class DevRunStatePage : VBoxContainer
 		Health.Value = build.Health;
 		Depth.Value = build.Depth;
 		Seed.Value = build.Seed;
+		_cancelRules = build.CancelRules;
 		_loading = false;
 		Changed();
 	}

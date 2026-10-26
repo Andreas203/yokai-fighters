@@ -6,10 +6,10 @@
 
 | File | What it is and its public surface |
 |---|---|
-| `Ui/IRewardSource.cs` | Screen contract: `CardView`, `TargetView`, `RewardOffer`, `IRewardSource` (`Offer`, `Pick(cardIndex, targetId?)`), `IStorySource` (implemented by `StoryLibrary` and `DraftRewardSource`), TEST FIXTURE `StubRewardSource`. |
-| `Ui/DraftRewardSource.cs` | Wraps an `IRewardDraft` + `RunState` as `IRewardSource`: offer `Targets` = slots A–D with `Eligible`/`WhyNot`; `Pick(cardIndex, targetId)` maps the id to its slot and throws when the draft refuses; `LastResult`. Story defaults to `FightScene.LoadStory()`. |
+| `Ui/IRewardSource.cs` | Screen contract: `CardKind` (NewMove, Upgrade, Modifier, CancelRule), `CardView` (`Rare`, YOK-186), `TargetView`, `RewardOffer`, `IRewardSource` (`Offer`, `Pick(cardIndex, targetId?)`), `IStorySource` (implemented by `StoryLibrary` and `DraftRewardSource`), TEST FIXTURE `StubRewardSource`. |
+| `Ui/DraftRewardSource.cs` | Wraps an `IRewardDraft` + `RunState` as `IRewardSource`: offer `Targets` = slots A–D with `Eligible`/`WhyNot`; `Pick(cardIndex, targetId)` maps the id to its slot and throws when the draft refuses; `LastResult`. A cancel-rule card becomes `CancelRule` tagged "RARE - CANCEL RULE"; a rare NEW is tagged "RARE - NEW - Lv 1" (YOK-186). Story defaults to `FightScene.LoadStory()`. |
 | `Ui/RewardScreen.cs` | `scenes/ui/reward_screen.tscn`: card step + modifier target step, frame-data toggle (A12); Left/Right, Enter, Esc, Tab, pad; event `Picked(card, target)`, `Dismiss()`. Tests `RewardScreenTests`. |
-| `Ui/RewardCard.cs` | `reward_card.tscn`: crest, name, source, tag, art via `AbilityArt.ForId` (modifiers use `Fallback`), plain text, frame-data panel, `LevelPips` for Lv 3. |
+| `Ui/RewardCard.cs` | `reward_card.tscn`: crest, name, source, tag, art via `AbilityArt.ForId` (modifiers and cancel rules use `Fallback`), `RareGold` (`7A5C12`) crest and tag on a `Rare` card (YOK-186; provisional, not a V1 palette colour, designer to confirm), plain text, frame-data panel, `LevelPips` for Lv 3. |
 | `Ui/TargetCard.cs` | `target_card.tscn`: one slot A–D for a modifier: art, name, level, reason; selected and ineligible states. |
 | `Ui/StoryCard.cs` | `story_card.tscn`: `Display(text)`, event `Finished`, `Dismiss()` (hides without `Finished`). Tests `StoryScreenTests`. |
 | `Ui/AbilityArt.cs` | `ui/ability_art.tres` lookup: `ForId(moveId)` → icon, `Fallback` for null/empty/unknown. Used by reward, target, move-list, pause, rest stop, shop and the HUD talisman. Tests `AbilityArtTests`, `AbilityIconScreensTests`. |
@@ -27,7 +27,7 @@
 | File | What it is and its public surface |
 |---|---|
 | `Ui/IMapView.cs` | `IMapView`: `Nodes` (`MapNodeView(Id, Row, Type, Yokai?, Elder, State)`, `MapNodeState` Visited/Current/Reachable/Locked/PassedOver), `Routes` (`MapRouteView`), `Select(id)`, defaults `Status` (`MapStatusView`), `CopyTarget`/`CopyLocked` (T6), `Detail(id)` (`MapNodeDetail(Reward, Twist)`), `RunKey`. TEST FIXTURE `StubMapView`. |
-| `Ui/RunMapView.cs` | `RunMapView(map, run?, scenes?)`: the real adapter (`Select` = `RunMap.Select`; reward lines from node-scene `Coins`/`Binds`, `Merchant.HealPercent`, `Dojo.RestHealPercent`). `SessionMapView` forwards it with the session's copy target. |
+| `Ui/RunMapView.cs` | `RunMapView(map, run?, scenes?)`: the real adapter (`Select` = `RunMap.Select`; reward lines from node-scene `Coins`/`Binds`, `Merchant.HealPercent`, `Dojo.RestHealPercent`; an elder paying no coins reads "Pays a rare ability, or N coins if its offer has none." with N = `RunSession.R8FallbackCoins`, provisional, YOK-186). `SessionMapView` forwards it with the session's copy target. |
 | `Ui/MapScreen.cs` | `ui/map_screen.tscn`: `SetView(view)`, `Refresh()`, `Move(dir)`, `Confirm()`, signal `NodeChosen(string)` once per accepted pick; reachable nodes only; status panel, row headers (`HeaderText`), detail panel (`FocusId`), legend, copy chip. Tests `MapScreenTests`. |
 | `Ui/MapLayout.cs` | Pure `Compute(nodes, boardSize)`: one column per row value, nodes stacked in view order, size shrinks with counts. |
 | `Ui/MapNode.cs` | `ui/map_node.tscn` script: one node button (icon, type label, elder mark, yokai name, state); `TwistIcon`. |

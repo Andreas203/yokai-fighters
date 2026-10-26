@@ -7,8 +7,13 @@ namespace YokaiFighters.Sim;
 
 /// <summary>
 /// YOK-47: the reward draft after a duel (A7): up to three cards from the beaten yokai, built from data with
-/// a seeded <see cref="SimRng"/> (same run + pool + seed = same offer). Card order: NEW, UPGRADE, MODIFIER.
+/// a seeded <see cref="SimRng"/> (same run + pool + seed = same offer). Card order: CANCEL, NEW, UPGRADE, MODIFIER.
 /// <list type="bullet">
+/// <item>CANCEL (YOK-186; X1, A9, GDD 4: an elder's offer always includes a cancel rule): the cancel rule whose
+/// <c>offered_by</c> is the elder beaten (<c>elderId</c>), when it is available: unlocked (data not locked, or unlocked by
+/// the save: <see cref="AbilityPool.IsAvailable(CancelRuleData)"/>), not held, and Ryo holds fewer than
+/// <see cref="Fighter.MaxCancelRules"/> (X2). A7's UPGRADE stays; the third card is NEW or MODIFIER (seeded when both
+/// exist). Rare.</item>
 /// <item>NEW: an unlocked special (data not locked, or unlocked by the save: <see cref="AbilityPool.IsAvailable(SpecialData)"/>) sourced from the yokai (A8; rare only from elders, A9) Ryo doesn't own;
 /// it goes to its own slot at Lv 1 (A3).</item>
 /// <item>UPGRADE (always offered while an owned special can level, A7): one owned special +1 level, the step
@@ -17,27 +22,33 @@ namespace YokaiFighters.Sim;
 /// no modifier yet: A2); the player picks the special.</item>
 /// </list>
 /// A missing card is replaced by another NEW or MODIFIER card from the pool when one exists, else the offer
-/// has fewer cards. <see cref="Pick"/> applies the card to the <see cref="RunState"/>; the next match built
+/// has fewer cards. With no cancel rule available the draw is exactly the one before YOK-186 (same seed, same cards). <see cref="Pick"/> applies the card to the <see cref="RunState"/>; the next match built
 /// with <see cref="RunState.ApplyTo"/> uses it.
 /// </summary>
 public sealed class RewardDraft : IRewardDraft
 {
 	readonly RunState _run;
-	readonly List<(CardView View, SpecialData? Special, ModifierData? Modifier)> _cards = new();
+	readonly List<Entry> _cards;
+
+	sealed record Entry(CardView View, SpecialData? Special = null, ModifierData? Modifier = null, CancelRuleData? Cancel = null);
 
 	public RewardOffer Offer { get; }
 	public bool Picked { get; private set; }
 
-	RewardDraft(RunState run, string yokai, List<(CardView, SpecialData?, ModifierData?)> cards)
+	RewardDraft(RunState run, string yokai, List<Entry> cards)
 	{
 		_run = run;
 		_cards = cards;
-		Offer = new RewardOffer(yokai, cards.Select(c => c.Item1).ToArray());
+		Offer = new RewardOffer(yokai, cards.Select(c => c.View).ToArray());
 	}
 
-	public static RewardDraft Build(RunState run, AbilityPool pool, string yokai, uint seed, bool elder = false, bool upgradeChoice = false)
+	/// <param name="elderId">YOK-186: the beaten elder's own id from the map (<see cref="NodeContext.BindingName"/>, e.g.
+	/// <c>elder-oni</c>), which a cancel rule's <c>offered_by</c> names; null for any other node. Implies <paramref name="elder"/>.</param>
+	public static RewardDraft Build(RunState run, AbilityPool pool, string yokai, uint seed, bool elder = false, bool upgradeChoice = false,
+		string? elderId = null)
 	{
 		var rng = new SimRng(seed);
+		elder |= elderId is not null;
 		// A8 source, A9 rarity, A11/M1 locked unless the save unlocked it (YOK-153: pool.Unlocked, a set, so the pool's
 		// file-name order and therefore the seeded draw stay the same for the same seed, save and pool).
 		bool Offered(string source, string rarity, bool available) => source == yokai && available && (rarity == "common" || elder);
@@ -46,25 +57,38 @@ public sealed class RewardDraft : IRewardDraft
 		var modPool = pool.Modifiers.Where(m => Offered(m.Source, m.Rarity, pool.IsAvailable(m)) && run.Owned.Any(o => run.CanAttach(o.Slot, m))).ToList();
 		var upgradable = run.Owned.Where(o => run.CanLevelUp(o.Slot)).ToList();
 
-		var cards = new List<(CardView, SpecialData?, ModifierData?)>();
+		// X1/A9: only the elder named in the rule's offered_by; X2: Ryo holds fewer than two and not this one; A11/M1: unlocked.
+		var cancelPool = elderId is null ? new List<CancelRuleData>()
+			: pool.CancelRules.Where(c => c.OfferedBy == elderId && pool.IsAvailable(c) && run.CanHoldCancelRule(c)).ToList();
+
+		var cards = new List<Entry>();
 		void AddNew()
 		{
 			var s = Take(newPool, rng);
-			cards.Add((NewCard(cards.Count, run, s), s, null));
+			cards.Add(new Entry(NewCard(cards.Count, run, s), Special: s));
 		}
 		void AddModifier()
 		{
 			var m = Take(modPool, rng);
-			cards.Add((ModifierCard(cards.Count, run, m), null, m));
+			cards.Add(new Entry(ModifierCard(cards.Count, run, m), Modifier: m));
 		}
 
-		if (newPool.Count > 0) AddNew();
+		// No draw when the elder has one rule (X4: one each), so the cards after it come from the same seeded draws.
+		if (cancelPool.Count > 0)
+		{
+			var c = cancelPool.Count == 1 ? cancelPool[0] : Take(cancelPool, rng);
+			cards.Add(new Entry(CancelCard(cards.Count, c), Cancel: c));
+		}
+		// Beside the rule and A7's upgrade one common card fits: NEW or MODIFIER, a seeded choice when both exist, so
+		// neither kind is shut out of an elder's offer. No draw without a rule (the pre-YOK-186 draw).
+		bool skipNew = cards.Count > 0 && upgradable.Count > 0 && newPool.Count > 0 && modPool.Count > 0 && rng.Next(2) == 1;
+		if (newPool.Count > 0 && !skipNew) AddNew();
 		if (upgradable.Count > 0)
 		{
 			var targets = upgradeChoice ? upgradable : new() { upgradable[rng.Next(upgradable.Count)] };
-			cards.Add((UpgradeCard(cards.Count, run, targets.Select(t => t.Slot).ToList()), null, null));
+			cards.Add(new Entry(UpgradeCard(cards.Count, run, targets.Select(t => t.Slot).ToList())));
 		}
-		if (modPool.Count > 0) AddModifier();
+		if (cards.Count < 3 && modPool.Count > 0) AddModifier(); // always true without a cancel card (NEW + UPGRADE = 2)
 		while (cards.Count < 3 && (modPool.Count > 0 || newPool.Count > 0))
 		{
 			if (modPool.Count > 0) AddModifier(); else AddNew();
@@ -84,7 +108,17 @@ public sealed class RewardDraft : IRewardDraft
 	{
 		if (Picked) return PickResult.Fail("a card was already picked");
 		if (cardIndex < 0 || cardIndex >= _cards.Count) return PickResult.Fail($"no card {cardIndex}");
-		var (view, special, modifier) = _cards[cardIndex];
+		var (view, special, modifier, cancel) = _cards[cardIndex];
+		if (view.Kind == CardKind.CancelRule)
+		{
+			// X1, X2: held for the rest of the run; it goes on Ryo in every later fight through RunState.ApplyTo.
+			if (target is not null) return PickResult.Fail($"{view.Name} is not put on a special");
+			if (!_run.CanHoldCancelRule(cancel!)) return PickResult.Fail(_run.HoldsCancelRule(cancel!.Id)
+				? $"{view.Name} is already held" : $"Ryo already holds {Fighter.MaxCancelRules} cancel rules (X2)");
+			_run.HoldCancelRule(cancel!);
+			Picked = true;
+			return new PickResult(true, "", view, SpecialSlot.None, 0);
+		}
 		SpecialSlot slot;
 		if (target is SpecialSlot t)
 		{
@@ -120,8 +154,13 @@ public sealed class RewardDraft : IRewardDraft
 		var replaced = run[s.Slot];
 		string where = replaced is null ? $"Goes in slot {s.Slot}." : $"Replaces {replaced.Data.Name} in slot {s.Slot} (its levels are lost).";
 		var target = new CardTarget(s.Slot, s.Id, s.Name, 1, where, FrameSummary(s.Build(1, false)));
-		return new CardView(index, CardKind.NewSpecial, "NEW", s.Id, s.Name, s.CardPlain, s.CardFrames, s.Source, new[] { target });
+		return new CardView(index, CardKind.NewSpecial, "NEW", s.Id, s.Name, s.CardPlain, s.CardFrames, s.Source, new[] { target })
+			{ Rare = s.Rarity == "rare" };
 	}
+
+	/// <summary>YOK-186: A12 text straight from the cancel file's card block (plain first, frames behind the toggle). Rare (A9).</summary>
+	static CardView CancelCard(int index, CancelRuleData c) =>
+		new(index, CardKind.CancelRule, "CANCEL", c.Id, c.Name, c.CardPlain, c.CardFrames, c.Source, Array.Empty<CardTarget>()) { Rare = true };
 
 	static CardView UpgradeCard(int index, RunState run, List<SpecialSlot> slots)
 	{

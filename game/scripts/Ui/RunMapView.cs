@@ -74,7 +74,7 @@ public class RunMapView : IMapView
 		NodeContext ctx;
 		try { ctx = _scenes.Resolve(n).Context; }
 		catch (FormatException) { return null; }
-		string pay = ctx.Coins > 0 ? $"Pays {ctx.Coins} coins." : "Pays no coins.";
+		string pay = ctx.Coins > 0 ? $"Pays {ctx.Coins} coins." : ctx.Elder && RunSession.R8FallbackCoins(_map.Graph, _scenes) is > 0 and var r8 ? $"Pays a rare ability, or {r8} coins if its offer has none." : "Pays no coins."; // R8; the coins are PROVISIONAL (YOK-186)
 		if (!ctx.Binds) return pay;
 		return $"{pay} Bind it and draft an ability{(n.Elder ? " (a rare can appear)" : "")}.";
 	}

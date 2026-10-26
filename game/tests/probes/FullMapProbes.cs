@@ -63,11 +63,17 @@ public static class FullMapProbes
 				{
 					int before = s.Run.Coins; int cost = s.Node.Coins;
 					var id = s.Node.NodeId;
+					// R8 (PROVISIONAL, YOK-186): the row-8 elder pays no coins when its offer holds a rare, else the row-5 elder's 50.
+					// Pinned per node, not by the code's own check: Elder Kappa's only rare is Undertow, locked in this pool (A11, X4), so
+					// it always pays 50; Elder Oni's is Oni Chain, so 0 until Ryo holds it (X1, X2), then 50. Everything else pays its table amount.
+					bool oniChainHeld = s.Run.CancelRules.Any(c => c.Id == "oni-chain");
+					int fallback = id == "r8-elder-kappa" ? 50 : id == "r8-elder-oni" && oniChainHeld ? 50 : 0;
 					if (s.Merchant is not null || s.Dojo is not null) { Assert.True(s.CompleteNode().Ok, log + "leave"); }
 					else
 					{
-						s.WinFight(800);
-						Assert.True(s.Run.Coins == before + cost, log + $"R8 coins once ({before}+{cost} got {s.Run.Coins})");
+						var won = s.WinFight(800);
+						Assert.True(s.Run.Coins == before + cost + fallback, log + $"R8 coins once ({before}+{cost}+{fallback} got {s.Run.Coins})");
+						if (id == "r8-elder-oni" && !oniChainHeld) Assert.True(won?.Offer.Cards.Any(c => c.Kind == CardKind.CancelRule && c.AbilityId == "oni-chain") == true, log + "the row-8 rare is Oni Chain");
 						if (s.Draft is { } d) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
 						Assert.True(s.CompleteNode().Ok, log + "complete");
 					}
