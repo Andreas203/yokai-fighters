@@ -288,6 +288,61 @@ public static class ElderCancelRuleTests
 		Assert.True(Cancels(r5.WinFight(600)!).Any() && r5.Run.Coins == coins + 50, "row 5: rule offered and 50 paid");
 	}
 
+	[Test]
+	public static void MapRewardLine_AgreesWithWhatTheRow8ElderPays()
+	{
+		var pool = Pool();
+		// The map's line for each node, as the player reads it before choosing (Ui.RunMapView, the session's map and table).
+		string Line(RunSession s, string id) => new Ui.RunMapView(s.Map, s.Run, s.Scenes).Detail(id)!.Reward!;
+		const string R8Line = "Pays a rare ability, or 50 coins if its offer has none.";
+
+		// Case 1: Oni Chain taken at the row-5 Elder Oni, then the row-8 Elder Oni: no rare left, 50 paid.
+		var a = NewSession(pool, 8);
+		Walk(a, ToRow4.Concat(new[] { "r5-elder-oni", "r6-kitsune", "r7-merchant" }), CardKind.CancelRule);
+		Assert.True(Line(a, "r8-elder-oni").StartsWith(R8Line), "map: " + Line(a, "r8-elder-oni"));
+		Assert.True(a.Enter("r8-elder-oni").Ok, "enter");
+		int before = a.Run.Coins;
+		Assert.True(!a.WinFight(600)!.Offer.Cards.Any(c => c.Rare) && a.Run.Coins - before == 50, "no rare in the offer, so the 50 the line names");
+
+		// Case 2: the row-8 Elder Kappa on a save that has not unlocked Undertow: no rare, 50 paid.
+		var b = NewSession(pool, 8);
+		Walk(b, ToRow4.Concat(new[] { "r5-elder-oni", "r6-kappa", "r7-dojo" }), CardKind.Upgrade);
+		Assert.True(Line(b, "r8-elder-kappa").StartsWith(R8Line), "map: " + Line(b, "r8-elder-kappa"));
+		Assert.True(b.Enter("r8-elder-kappa").Ok, "enter");
+		before = b.Run.Coins;
+		Assert.True(!b.WinFight(600)!.Offer.Cards.Any(c => c.Rare) && b.Run.Coins - before == 50, "no rare in the offer, so the 50 the line names");
+
+		// With the rare there (Oni Chain not taken), the same line and no coins: the rare is the reward.
+		var rare = NewSession(pool, 8);
+		Walk(rare, ToRow4.Concat(new[] { "r5-elder-oni", "r6-kitsune", "r7-merchant" }), CardKind.Upgrade);
+		Assert.True(rare.Enter("r8-elder-oni").Ok, "enter");
+		before = rare.Run.Coins;
+		Assert.True(rare.WinFight(600)!.Offer.Cards.Any(x => x.Rare) && rare.Run.Coins == before, "a rare in the offer, no coins");
+
+		// Elders that pay coins and duels keep their lines.
+		Assert.True(Line(rare, "r5-nine-tails").StartsWith("Pays 50 coins.") && Line(rare, "r2-oni").StartsWith("Pays 25 coins."), "other lines unchanged");
+	}
+
+	[Test]
+	public static void DevTools_KeepAndShowCancelRules()
+	{
+		var pool = Pool();
+		var s = NewSession(pool, 4);
+		Walk(s, ToRow4.Append("r5-elder-oni"), CardKind.CancelRule);
+		// The dev run editor keeps the held rules through Capture and Check (they were dropped before).
+		var build = Dev.DevRunEditor.Capture(s);
+		Assert.True(build.CancelRules.SequenceEqual(new[] { "oni-chain" }), "captured");
+		var check = Dev.DevRunEditor.For(s).Check(build);
+		Assert.True(check.Refusal is null && check.Session!.Run.CancelRules.Single().Id == "oni-chain", "rebuilt holding it: " + check.Refusal);
+		Assert.True(Dev.DevRunEditor.For(s).Check(build with { CancelRules = new[] { "no-such-rule" } }).Refusal is { } why && why.Contains("no-such-rule"), "an unknown id is refused");
+		Assert.True(Dev.DevRunEditor.For(s).Check(build with { CancelRules = new[] { "fox-step", "oni-chain", "undertow" } }).Refusal is not null, "a third rule is refused (X2)");
+		// The dev reward preview of an elder's spread shows its cancel card; a duel's never does.
+		var (elder, _) = Dev.DevJump.BuildDraft(pool, "oni", 3, rares: true, new Dev.DefaultDevRunState());
+		Assert.Equal("oni-chain", Cancels(elder).Single().AbilityId, "the elder preview offers Oni Chain");
+		var (duel, _) = Dev.DevJump.BuildDraft(pool, "oni", 3, rares: false, new Dev.DefaultDevRunState());
+		Assert.True(!Cancels(duel).Any(), "a duel preview offers none");
+	}
+
 	// ---- the reward screen's adapter ----
 
 	[Test]

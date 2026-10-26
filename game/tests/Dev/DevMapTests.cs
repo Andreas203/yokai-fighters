@@ -153,8 +153,10 @@ public static class DevMapTests
 		Assert.True(new SessionHudRunView(s).ElderFight, "the fight's HUD shows the elder twist strip");
 		Assert.True(node.Tier == direct.Tier && node.ReactionFrames == direct.ReactionFrames && node.Tier == "elder", $"Y4: the elder tier ({node.Tier}, {node.ReactionFrames})");
 		Assert.True(s.WinFight(600) is { } draft && draft.Offer.Cards.Count > 0, "the elder binds and offers its draft");
-		// R8: a rare in the offer instead of coins; with none (Undertow locked, no rare special) the PROVISIONAL 50 (YOK-186), as in a walked run.
-		Assert.Equal(s.Draft!.Offer.Cards.Any(c => c.Rare) ? 0 : s.R8FallbackCoins(), s.CoinsWon, "R8: the row-8 elder pays its rare, else the provisional coins");
+		// R8: a rare in the offer instead of coins; Undertow starts locked (X4) and the Kappa has no rare special in data, so
+		// the offer holds none and the elder pays the PROVISIONAL 50 (YOK-186), as in a walked run.
+		Assert.True(!s.Draft!.Offer.Cards.Any(c => c.Kind == Sim.CardKind.CancelRule), "Undertow locked: no cancel card");
+		Assert.Equal(50, s.CoinsWon, "R8: the row-8 elder with no rare pays the provisional 50");
 		Assert.True(!s.CopyLocked, "T1: no lock before the boss");
 	});
 

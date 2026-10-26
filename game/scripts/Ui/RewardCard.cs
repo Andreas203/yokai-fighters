@@ -11,8 +11,11 @@ namespace YokaiFighters.Ui;
 public partial class RewardCard : Control
 {
 	public static readonly Color Indigo = new(0.2f, 0.25f, 0.5f);
-	/// <summary>YOK-186: the crest and tag of a rare card (A9). Provisional colour for the designer's review.</summary>
-	public static readonly Color RareGold = Color.FromHtml("A8801F");
+	/// <summary>
+	/// YOK-186: the crest and tag of a rare card (A9). PROVISIONAL: not one of V1's four named palette colours, so the
+	/// designer must confirm it. Dark enough for the cream tag text (about 5:1).
+	/// </summary>
+	public static readonly Color RareGold = Color.FromHtml("7A5C12");
 
 	/// <summary>Body size when the frame-data box is hidden / shown (the card grows to fit it).</summary>
 	[Export] public float BodyHeight { get; set; } = 640f;

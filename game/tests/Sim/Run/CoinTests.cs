@@ -239,49 +239,52 @@ public static class CoinTests
 	public static void Session_WholeRun_EveryRoutePays150_RowByRow() => OnFixtures(() =>
 	{
 		var graph = DefaultMap();
-		// Every walk of the default map, by always taking the i-th route out where there is one.
-		var totals = new HashSet<int>();
+		// Three walks of the default map, by always taking the i-th route out where there is one; card 0 is picked, which at
+		// a row-5 elder is its cancel rule (YOK-186). R8, pinned per route: the row-8 elder pays no coins when its offer
+		// holds a rare (its cancel rule), else the PROVISIONAL 50 (YOK-186). Walk 0 meets Elder Kappa, whose Undertow starts
+		// locked (X4): 50 then, nothing once the save unlocks it. Walks 1 and 2 took the Nine-Tails' Fox Step, so the row-8
+		// Elder Oni still offers Oni Chain: nothing.
+		var r8Node = new[] { "r8-elder-kappa", "r8-elder-oni", "r8-elder-oni" };
+		var locked = FightScene.LoadAbilityPool();
+		var unlocked = locked.WithUnlocks(new[] { "undertow" });
 		var seenNodes = new HashSet<string>();
-		for (int variant = 0; variant < 3; variant++)
-		{
-			var s = NewSession(graph, 77);
-			int expected = 0;
-			var perRow = new List<string>();
-			int r8Paid = 0;
-			while (!s.IsOver)
+		foreach (var (pool, r8Pay) in new[] { (locked, new[] { 50, 0, 0 }), (unlocked, new[] { 0, 0, 0 }) })
+			for (int variant = 0; variant < 3; variant++)
 			{
-				var reachable = s.Reachable();
-				string id = reachable[Math.Min(variant, reachable.Count - 1)];
-				Assert.True(s.Enter(id).Ok, $"enter {id}");
-				var node = s.Node!;
-				seenNodes.Add(id);
-				int before = s.Run.Coins;
-				int pay = node.Row switch { 5 => 50, 4 or 7 or 8 or 9 => 0, _ => 25 }; // R8 written out by row (R1: one node per row)
-				s.WinFight(600);
-				// R8: the row-8 elder pays a rare instead; with no rare in its offer, the PROVISIONAL 50 (YOK-186).
-				if (node.Row == 8 && s.Draft?.Offer.Cards.Any(c => c.Rare) != true) pay = 50;
-				int row8 = node.Row == 8 ? pay : 0;
-				r8Paid += row8;
-				Assert.Equal(before + pay, s.Run.Coins, $"{id}: row {node.Row} pays {pay}");
-				Assert.Equal(pay, s.CoinsWon, $"{id}: the node's payout");
-				expected += pay;
-				perRow.Add($"{node.Row}:{s.Run.Coins}");
-				if (node.Row == 8)
-					Assert.True(s.Draft is { } d && d.Offer.Yokai == node.DraftYokai, $"{id}: the row-8 elder pays with its draft of its own yokai instead (R8; YOK-178: not the stand-in body)");
-				var draft = s.Draft;
-				if (draft is not null)
+				string what = $"walk {variant}, Undertow {(pool == locked ? "locked" : "unlocked")}";
+				var s = RunSession.Start(pool, graph, Table(), 77);
+				var perRow = new List<string>();
+				while (!s.IsOver)
 				{
-					var card = draft.Offer.Cards[0];
-					draft.Pick(0, card.Targets.Count > 0 ? card.Targets[0].Slot : null);
+					var reachable = s.Reachable();
+					string id = reachable[Math.Min(variant, reachable.Count - 1)];
+					Assert.True(s.Enter(id).Ok, $"enter {id}");
+					var node = s.Node!;
+					seenNodes.Add(id);
+					int before = s.Run.Coins;
+					int pay = node.Row switch { 5 => 50, 8 => r8Pay[variant], 4 or 7 or 9 => 0, _ => 25 }; // R8 written out by row (R1: one node per row)
+					s.WinFight(600);
+					Assert.Equal(before + pay, s.Run.Coins, $"{what}: {id}: row {node.Row} pays {pay}");
+					Assert.Equal(pay, s.CoinsWon, $"{what}: {id}: the node's payout");
+					perRow.Add($"{node.Row}:{s.Run.Coins}");
+					if (node.Row == 8)
+					{
+						Assert.Equal(r8Node[variant], id, $"{what}: the route's row-8 elder");
+						Assert.True(s.Draft is { } d && d.Offer.Yokai == node.DraftYokai, $"{id}: the row-8 elder pays with its draft of its own yokai instead (R8; YOK-178: not the stand-in body)");
+					}
+					var draft = s.Draft;
+					if (draft is not null)
+					{
+						var card = draft.Offer.Cards[0];
+						draft.Pick(0, card.Targets.Count > 0 ? card.Targets[0].Slot : null);
+					}
+					Assert.True(s.CompleteNode().Ok, $"{id}: completed");
 				}
-				Assert.True(s.CompleteNode().Ok, $"{id}: completed");
+				int total = 150 + r8Pay[variant];
+				Assert.True(s.Ended is { Won: true, RowReached: 9 }, "the walk reached the Tanuki's node");
+				Assert.Equal($"1:25, 2:50, 3:75, 4:75, 5:125, 6:150, 7:150, 8:{total}, 9:{total}", string.Join(", ", perRow), $"{what}: coins after each row");
+				Assert.Equal(total, s.Run.Coins, $"{what}: 25 x 4 duels + 50 for the row-5 elder (+ the provisional 50 at a row-8 elder with no rare)");
 			}
-			Assert.True(s.Ended is { Won: true, RowReached: 9 }, "the walk reached the Tanuki's node");
-			Assert.Equal($"1:25, 2:50, 3:75, 4:75, 5:125, 6:150, 7:150, 8:{150 + r8Paid}, 9:{150 + r8Paid}", string.Join(", ", perRow), $"walk {variant}: coins after each row");
-			Assert.Equal(150 + r8Paid, expected, "25 x 4 duels + 50 for the row-5 elder (+ the provisional row-8 50 when it had no rare)");
-			totals.Add(s.Run.Coins);
-		}
-		Assert.True(totals.IsSubsetOf(new[] { 150, 200 }), "every route arrives at the Tanuki with 150 coins, or 200 when its row-8 elder had no rare (PROVISIONAL, YOK-186)");
 		Assert.True(seenNodes.Count >= 12, $"the three walks cover most of the map ({seenNodes.Count} nodes)");
 	});
 
