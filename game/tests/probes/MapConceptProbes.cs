@@ -156,31 +156,47 @@ public static class MapConceptProbes
 	[Test]
 	public static void RepeatedRefreshAndSetViewDoNotDuplicateLegendRows(Node host)
 	{
+		// YOK-109 / AM18 (R2, Y3): the legend lists a twist only while an elder carrying it is drawn, so a new run lists none and the
+		// two row-5 elders list theirs once they are the choice. Intent kept: repeated Refresh / SetView never duplicate rows or leave orphans.
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
-		Assert.Equal(3, s.LegendTwists.Count, "three twists");
+		Assert.Equal(0, s.LegendTwists.Count, "run start: no elder is drawn, so no twist is listed (AM18)");
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
+		s.SetView(new SessionMapView(sess));
+		var drawn = new SessionMapView(sess).Nodes.Where(n => n.Elder && n.TwistIcon != null && s.ShownIds.Contains(n.Id)).Select(n => n.TwistIcon!).Distinct().ToList();
+		Assert.True(drawn.Count >= 1, "the row-5 elders are drawn and carry twists (data)");
+		Assert.Equal(drawn.Count, s.LegendTwists.Count, "one row per twist of a drawn elder");
 		for (int i = 0; i < 5; i++) { s.Refresh(); s.SetView(new SessionMapView(sess)); }
-		Assert.Equal(3, s.LegendTwists.Count, "after repeated Refresh and SetView");
+		Assert.Equal(drawn.Count, s.LegendTwists.Count, "after repeated Refresh and SetView");
 		var holder = UiFind.Get<Control>(s, "LegendTwists");
-		Assert.Equal(3, holder.GetChildCount(), "no orphan children in the holder");
+		Assert.Equal(drawn.Count, holder.GetChildCount(), "no orphan children in the holder");
 		s.SetView(StubMapView.Grid(3, 2));
 		Assert.Equal(0, s.LegendTwists.Count, "a view without twists clears the rows");
 		s.SetView(new SessionMapView(sess));
-		Assert.Equal(3, s.LegendTwists.Count, "back");
+		Assert.Equal(drawn.Count, s.LegendTwists.Count, "back");
 		s.GetParent().QueueFree();
 	}
 
 	[Test]
 	public static void UnknownTwistIconRendersWithFallback(Node host)
 	{
-		var v = StubMapView.Grid(3, 2);
+		// AM18 (Y3, R2): entries whose icon is on no drawn elder are filtered out; entries for a drawn elder's icon (known or not) render with the
+		// fallback seal and keep their text. Both elders below are the choice once a is cleared, so both are drawn; "twist-hidden" is on an undrawn row.
+		var v = new StubMapView().Add("a", 1, "duel", "Kitsune")
+			.Add("e1", 2, "elder", "Elder A", true, "twist-nonexistent").Add("e2", 2, "elder", "Elder B", true, "")
+			.Add("e3", 3, "elder", "Elder C", true, "twist-hidden")
+			.Route("a", "e1").Route("a", "e2").Route("e1", "e3").Route("e2", "e3").Open("a");
 		v.Legend.Add(new MapTwistLegendEntry("twist-nonexistent", "Does something odd."));
 		v.Legend.Add(new MapTwistLegendEntry("twist-nonexistent", "Same icon twice."));
 		v.Legend.Add(new MapTwistLegendEntry("", "Empty icon id."));
+		v.Legend.Add(new MapTwistLegendEntry("twist-hidden", "Secret of a later row."));
 		var s = Make(host, v);
+		Assert.Equal(0, s.LegendTwists.Count, "run start: no elder drawn, no row");
+		s.Confirm(); v.Complete(); s.Refresh(); s.FinishPresentation();
 		var rows = s.LegendTwists;
-		Assert.Equal(3, rows.Count, "one row per entry given");
+		Assert.Equal(3, rows.Count, "one row per entry whose icon a drawn elder carries");
 		Assert.Equal("Does something odd.", rows[0].Text, "unknown icon id row keeps its text");
+		Assert.True(!rows.Any(r => r.Text.Contains("Secret")), "the later row's twist is not listed (AM18)");
 		s.GetParent().QueueFree();
 	}
 
@@ -259,9 +275,14 @@ public static class MapConceptProbes
 	[Test]
 	public static void RoutesStillMeetTheEnlargedBossCard(Node host)
 	{
+		// AM18: the boss and its routes are not drawn until row 8 is cleared; then the stroke from the cleared elder must meet the enlarged card.
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
 		var r = s.RectOf("boss-tanuki");
+		Assert.True(!s.Routes.Lines.Any(l => Mathf.IsEqualApprox(l.B.X, r.Position.X)), "start: no stroke ends on the (undrawn) boss card");
+		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-dojo", "r8-elder-kappa");
+		s.SetView(new SessionMapView(sess)); s.FinishPresentation();
+		Assert.True(s.NodeFor("boss-tanuki") != null, "the boss is the choice now, so it is drawn");
 		var into = s.Routes.Lines.Where(l => Mathf.IsEqualApprox(l.B.X, r.Position.X)).ToList();
 		Assert.True(into.Count >= 1, "a route ends on the boss card's left edge");
 		foreach (var l in into) Assert.True(Mathf.IsEqualApprox(l.B.Y, r.GetCenter().Y), "and on its centre line");
@@ -283,14 +304,17 @@ public static class MapConceptProbes
 	[Test]
 	public static void RefusedConfirmChangesNothing(Node host)
 	{
+		// AM18: a hidden node has no control at all, so the refusal left to test is a press on a drawn node that is not a choice (the one Ryo
+		// stands on), plus "no control exists" for later rows. Intent kept: refused presses change no field, no signal, no hash.
 		var sess = StartSession();
+		Walk(sess, "r1-apprentice");
 		var s = Make(host, new SessionMapView(sess));
 		string hash = sess.StateHash().ToString();
 		var fired = new List<string>();
 		s.NodeChosen += id => fired.Add(id);
-		s.NodeFor("boss-tanuki")!.EmitSignal(Godot.BaseButton.SignalName.Pressed);
-		s.NodeFor("r5-elder-oni")!.EmitSignal(Godot.BaseButton.SignalName.Pressed);
-		Assert.Equal(0, fired.Count, "locked nodes refuse");
+		Assert.True(s.NodeFor("boss-tanuki") == null && s.NodeFor("r5-elder-oni") == null, "hidden nodes have no button to press");
+		s.NodeFor("r1-apprentice")!.EmitSignal(Godot.BaseButton.SignalName.Pressed);
+		Assert.Equal(0, fired.Count, "a node that is not a choice refuses");
 		Assert.Equal(hash, sess.StateHash().ToString(), "run hash unchanged by refused presses");
 		string habit = s.DetailHabit.Text; string name = s.DetailNameText;
 		s.Refresh();

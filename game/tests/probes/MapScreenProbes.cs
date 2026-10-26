@@ -162,9 +162,17 @@ public static class MapScreenProbes
 		var v = new StubMapView().Add("a", 2, "duel", "A").Add("b", 5, "elder", "B", true).Add("c", 9, "duel", "C").Add("d", 20, "boss", "D")
 			.Route("a", "b").Route("b", "c").Route("c", "d").Open("a");
 		v.Status = new MapStatusView(1000, 1000, 0, 0, 3) { LastPlayRow = 9 };
+		// AM18: a row's header appears with its first drawn node, so the same headers arrive one choice at a time.
 		var s = Make(host, v);
-		var h = s.HeaderTexts;
-		Assert.Equal("ROW 2|ROW 5 · ELDER|ROW 9|AFTER ROW 9", string.Join("|", h), "headers use row values, boss column after the last play row");
+		Assert.Equal("ROW 2", string.Join("|", s.HeaderTexts), "start: only the drawn row has a header");
+		Press(s, "ui_accept"); v.Complete(); s.Refresh();
+		Assert.Equal("ROW 2|ROW 5 · ELDER", string.Join("|", s.HeaderTexts), "headers use row values (5, not 2)");
+		Assert.True(s.DetailNameText.EndsWith("row 5"), "detail names the row value: " + s.DetailNameText);
+		Press(s, "ui_accept"); v.Complete(); s.Refresh();
+		Assert.Equal("ROW 2|ROW 5 · ELDER|ROW 9", string.Join("|", s.HeaderTexts), "row 9 once it is the choice; the boss column is still blank");
+		Press(s, "ui_accept"); v.Complete(); s.Refresh();
+		Assert.Equal("ROW 2|ROW 5 · ELDER|ROW 9|AFTER ROW 9", string.Join("|", s.HeaderTexts), "headers use row values, boss column after the last play row");
+		Assert.True(s.DetailNameText.EndsWith("after row 9"), "boss detail says after row 9, not row 20: " + s.DetailNameText);
 		s.GetParent().QueueFree();
 	}
 
@@ -219,8 +227,10 @@ public static class MapScreenProbes
 		sess.Enter("r5-nine-tails");
 		var restored = RunMap.Restore(sess.Map.Graph, sess.Map.Snapshot());
 		var s = Make(host, new RunMapView(restored, sess.Run, sess.Scenes));
-		Assert.Equal(MapNodeState.PassedOver, s.NodeFor("r5-elder-oni")!.State, "the other elder is passed over after Continue");
-		Assert.True(s.NodeFor("r5-elder-oni")!.Disabled, "and can't be picked");
+		// AM18: the passed-over elder is not drawn (no control to press); the walked path and Ryo's node are.
+		Assert.True(s.NodeFor("r5-elder-oni") == null, "the other elder is passed over after Continue, so it is not on the paper");
+		Assert.Equal(MapNodeState.Current, s.NodeFor("r5-nine-tails")!.State, "Ryo's node is drawn as here");
+		Assert.Equal("r1-apprentice,r2-oni,r3-kappa,r4-merchant,r5-nine-tails", string.Join(",", s.ShownIds.OrderBy(i => i)), "after Continue: exactly the walked path and here");
 		Assert.Equal("row 4 of 8 done", s.StatusRowsText, "entered row 5 is not done");
 		Assert.True(s.DetailNameText.StartsWith("NINE") && s.DetailNameText.EndsWith("row 5"), "detail shows the node Ryo is in: " + s.DetailNameText);
 		Assert.True(s.DetailRewardText.StartsWith("Pays 50 coins"), "row 5 elder pays 50: " + s.DetailRewardText);
@@ -230,13 +240,16 @@ public static class MapScreenProbes
 		var done = NewSession();
 		Walk(done, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-dojo");
 		s.SetView(new SessionMapView(done));
-		Assert.Equal("AFTER ROW 8", s.HeaderTexts[^1], "boss column");
+		Assert.Equal("ROW 8 · ELDER", s.HeaderTexts[^1], "AM18: the boss column stays blank while row 8 is the choice");
+		Assert.True(s.NodeFor("boss-tanuki") == null, "no boss card yet");
 		Assert.True(s.DetailRewardText.StartsWith("Pays no coins."), "row-8 elder pays 0 coins (R8): " + s.DetailRewardText);
 		Assert.True(s.DetailNameText.EndsWith("row 8"), "row 8 not 'after row 8': " + s.DetailNameText);
 		Walk(done, "r8-elder-kappa");
 		s.SetView(new SessionMapView(done));
 		Assert.Equal("row 8 of 8 done", s.StatusRowsText, "all play rows done");
-		Assert.True(s.DetailNameText.Contains("TANUKI") || s.DetailNameText.StartsWith("ELDER KAPPA"), "detail follows cursor or here: " + s.DetailNameText);
+		Assert.Equal("AFTER ROW 8", s.HeaderTexts[^1], "boss column once the boss is the choice");
+		Assert.Equal("boss-tanuki", s.CursorId, "the boss is the only choice");
+		Assert.True(s.DetailNameText.Contains("TANUKI") && s.DetailNameText.EndsWith("after row 8"), "detail follows the cursor onto the boss: " + s.DetailNameText);
 		s.GetParent().QueueFree();
 	}
 }
