@@ -47,6 +47,8 @@ public static class InputGlyphs
 		("back", InputDevice.Pad) => "B",
 		("pause", InputDevice.Keyboard) => "ESC",
 		("pause", InputDevice.Pad) => "START",
+		("menu", InputDevice.Keyboard) => "P", // YOK-175: the rest stop's pause, where Esc is Back
+		("menu", InputDevice.Pad) => "START",
 		("frames", InputDevice.Keyboard) => "TAB",
 		("frames", InputDevice.Pad) => "Y",
 		("scheme", InputDevice.Keyboard) => "Q",

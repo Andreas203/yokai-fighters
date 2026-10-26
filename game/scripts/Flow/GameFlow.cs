@@ -613,7 +613,15 @@ public partial class GameFlow : Node
 		else if (scene is INodeScene other)
 		{
 			other.BindRun(Session!, Router.Scheme);
-			if (scene is RestStopScreen stop) { stop.TitleRequested += () => Router.ReturnToTitle(); stop.ShopRequested += () => OpenShop(stop); stop.TrialRequested += () => OpenTrial(stop); } // YOK-96: Esc on a rest stop; Continue brings the stop back as entered (M5)
+			if (scene is RestStopScreen stop)
+			{
+				// YOK-175: the stop's pause menu reaches the title (Continue brings the stop back as entered, M5) or restarts
+				// the run. Esc / B before a choice leaves through RunSession.LeaveNode: NodeCompleted saves and shows the map.
+				stop.TitleRequested += () => Router.ReturnToTitle();
+				stop.RunRestartRequested += () => RestartRun();
+				stop.ShopRequested += () => OpenShop(stop);
+				stop.TrialRequested += () => OpenTrial(stop);
+			}
 		}
 		else GD.PushWarning($"GameFlow: {path} is neither a FightScene nor an INodeScene; it must complete the node through GameFlow.Session itself");
 		NodeScene = scene;

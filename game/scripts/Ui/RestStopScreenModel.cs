@@ -175,7 +175,20 @@ public sealed class RestStopScreenModel
 		return r;
 	}
 
-	/// <summary>Leaves the stop for the map. Only once the choice is made: leaving without one is an open designer question, so it is not offered.</summary>
+	/// <summary>YOK-175: Esc / pad B can still take Ryo back to the map: the stop is open and nothing is chosen yet.</summary>
+	public bool CanLeaveToMap => Open && !ChoiceMade;
+
+	/// <summary>
+	/// YOK-175 (provisional defaults, designer confirms at review): back to the map with no choice taken. The stop is
+	/// spent and the next row is picked (<see cref="RunSession.LeaveNode"/>); no heal, no coins. Refused, changing
+	/// nothing, once a choice is made (then only Continue moves on) or the stop is left.
+	/// </summary>
+	public MapResult LeaveToMap() =>
+		!Open ? MapResult.Fail("Ryo is no longer at this stop")
+		: ChoiceMade ? MapResult.Fail("the choice is made: Continue moves on")
+		: _session.LeaveNode();
+
+	/// <summary>Continue: completes the stop once its choice is made (<see cref="LeaveToMap"/> is the way out without one).</summary>
 	public MapResult Leave() =>
 		!Open ? MapResult.Fail("Ryo is no longer at this stop")
 		: !ChoiceMade ? MapResult.Fail("pick one first: the free option or the second one")
