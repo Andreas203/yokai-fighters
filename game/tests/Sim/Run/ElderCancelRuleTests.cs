@@ -323,6 +323,39 @@ public static class ElderCancelRuleTests
 		Assert.True(Line(rare, "r5-nine-tails").StartsWith("Pays 50 coins.") && Line(rare, "r2-oni").StartsWith("Pays 25 coins."), "other lines unchanged");
 	}
 
+	/// <summary>The real node table, except that the nodes in <see cref="FailFor"/> can't be placed (as a missing tier).</summary>
+	sealed class FlakyScenes : INodeSceneResolver
+	{
+		readonly NodeSceneTable _table = Table();
+		public HashSet<string> FailFor { get; } = new();
+		public NodeScene Resolve(MapNodeData node) =>
+			FailFor.Contains(node.Id) ? throw new FormatException($"{node.Id}: no tier (test)") : _table.Resolve(node);
+	}
+
+	[Test]
+	public static void R8Fallback_SkipsAnElderTheTableCannotPlace_MapAndWinFightStillWork()
+	{
+		var pool = Pool();
+		var scenes = new FlakyScenes();
+		var s = RunSession.Start(pool, DefaultMap(), scenes, 8); // the session places every node at start, so fail only after
+		Walk(s, ToRow4.Concat(new[] { "r5-elder-oni", "r6-kappa", "r7-dojo" }), CardKind.Upgrade);
+		Assert.True(s.Enter("r8-elder-kappa").Ok, "enter the row-8 Elder Kappa");
+
+		// Another elder (one that pays coins) can't be placed: the map still shows every other line, and that elder none.
+		scenes.FailFor.Add("r5-elder-oni");
+		var map = new Ui.RunMapView(s.Map, s.Run, scenes);
+		Assert.True(map.Detail("r8-elder-oni")!.Reward!.StartsWith("Pays a rare ability, or 50 coins"), "the other row-5 elder still pays 50: " + map.Detail("r8-elder-oni")!.Reward);
+		Assert.True(map.Detail("r5-elder-oni")!.Reward is null, "the elder that can't be placed shows no reward line, as before");
+		Assert.Equal(50, RunSession.R8FallbackCoins(s.Map.Graph, scenes), "skipped, not thrown");
+
+		// Every elder that pays coins can't be placed: the fallback is 0, and WinFight still pays once and offers its draft.
+		scenes.FailFor.Add("r5-nine-tails");
+		Assert.True(new Ui.RunMapView(s.Map, s.Run, scenes).Detail("r8-elder-kappa")!.Reward!.StartsWith("Pays no coins."), "no amount to name");
+		int coins = s.Run.Coins;
+		var d = s.WinFight(600);
+		Assert.True(d is not null && s.NodePaid && s.Run.Coins == coins && s.CoinsWon == 0 && s.Run.Health == 650, "won and paid as a 0-coin node, nothing half-applied");
+	}
+
 	[Test]
 	public static void DevTools_KeepAndShowCancelRules()
 	{

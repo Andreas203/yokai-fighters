@@ -218,6 +218,8 @@ public sealed class RunSession
 		if (IsOver) throw new InvalidOperationException("the run is over");
 		if (Draft is not null) throw new InvalidOperationException($"node '{node.NodeId}' is already won");
 		if (_paid) return null; // R3, R8: already counted (a draft-less node: a node with a draft threw above)
+		// PROVISIONAL R8 amount (below), looked up before anything changes, so nothing here can leave a half-paid win.
+		int r8Fallback = node.Elder && node.Coins == 0 ? R8FallbackCoins(Map.Graph, Scenes) : 0;
 		Run.AfterDuel(healthLeft, node.Binds);
 		_paid = true;
 		CoinsWon = node.Coins;
@@ -228,10 +230,10 @@ public sealed class RunSession
 		// R8: an elder whose node pays no coins pays a rare ability instead. PROVISIONAL (YOK-186, designer's open
 		// question, not in rules.md): when its offer holds no rare card at all, it pays what the other elders pay
 		// (the row-5 elder's 50 in the data), so the reward is never empty.
-		if (node.Elder && node.Coins == 0 && Draft?.Offer.Cards.Any(c => c.Rare) != true && R8FallbackCoins(Map.Graph, Scenes) is > 0 and var fallback)
+		if (r8Fallback > 0 && Draft?.Offer.Cards.Any(c => c.Rare) != true)
 		{
-			CoinsWon = fallback;
-			Run.AddCoins(fallback);
+			CoinsWon = r8Fallback;
+			Run.AddCoins(r8Fallback);
 		}
 		return Draft;
 	}
@@ -240,12 +242,17 @@ public sealed class RunSession
 	/// PROVISIONAL (YOK-186, see <see cref="WinFight"/>): what an elder that pays no coins (R8: the row-8 elder) pays when
 	/// its offer holds no rare: the most coins any elder node of <paramref name="graph"/> pays (the row-5 elder's 50), read
 	/// from the node-scene table; 0 when no elder pays coins. The one source for the payout and the map's reward line.
+	/// An elder node the table can't place (<see cref="FormatException"/>) is skipped: it never throws for another node.
 	/// </summary>
 	public static int R8FallbackCoins(MapGraph graph, INodeSceneResolver scenes)
 	{
 		int most = 0;
 		foreach (var n in graph.Nodes)
-			if (n.Elder) most = Math.Max(most, scenes.Resolve(n).Context.Coins);
+		{
+			if (!n.Elder) continue;
+			try { most = Math.Max(most, scenes.Resolve(n).Context.Coins); }
+			catch (FormatException) { } // that node's own lookup refuses it where it is used
+		}
 		return most;
 	}
 
