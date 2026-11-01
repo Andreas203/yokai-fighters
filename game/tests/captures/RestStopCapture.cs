@@ -7,7 +7,7 @@ using YokaiFighters.Ui;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// Windowed screenshot tool (not a test) for YOK-96: merchant, dojo and a used-choice rest stop.
+/// Windowed screenshot tool (not a test) for YOK-96: merchant, dojo and a used-choice rest stop; YOK-175: its pause menu.
 /// Run: godot --path game res://tests/captures/rest_stop_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt;
 /// </summary>
 public partial class RestStopCapture : Node
@@ -23,10 +23,11 @@ public partial class RestStopCapture : Node
 		await Shot(dir, "rest_stop_dojo_trial" + suffix, "dojo", false, withTrial: true);
 		await Shot(dir, "rest_stop_dojo_trial_focus" + suffix, "dojo", false, withTrial: true, focusSecond: true);
 		await Shot(dir, "rest_stop_dojo_selector" + suffix, "dojo", false, withTrial: true, focusSecond: true, selectSteps: 1);
+		await Shot(dir, "rest_stop_pause" + suffix, "merchant", false, pause: true); // YOK-175: the way to the title from a stop
 		GetTree().Quit();
 	}
 
-	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take, bool withTrial = false, bool focusSecond = false, int selectSteps = 0)
+	private async System.Threading.Tasks.Task Shot(string dir, string name, string type, bool take, bool withTrial = false, bool focusSecond = false, int selectSteps = 0, bool pause = false)
 	{
 		string md = ContentPaths.Data("map");
 		var s = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
@@ -59,6 +60,7 @@ public partial class RestStopCapture : Node
 		for (int i = 0; i < selectSteps; i++) screen.Model!.SelectTrial(1);
 		if (selectSteps > 0) screen.Refresh();
 		if (take) screen.TakeFree();
+		if (pause) { await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); screen.OpenPause(); }
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);

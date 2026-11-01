@@ -519,12 +519,12 @@ public static class RestStopProbes
 	static bool Inside(Control? f, Control root) => f != null && (f == root || root.IsAncestorOf(f));
 
 	[Test]
-	public static void Input_KeysAndPad_FocusNeverLost_EnterTakes_TabToggles_EscAsksForTitle_EvenWhenUsed(Node runner) => OnFixtures(() =>
+	public static void Input_KeysAndPad_FocusNeverLost_EnterTakes_TabToggles_EscAndBDoNothingOnceUsed(Node runner) => OnFixtures(() =>
 	{
 		var s = AtNode("r4-merchant", 500);
 		var screen = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
 		screen.LineSource = _ => "A line."; screen.BindRun(s, ControlScheme.Kihon); runner.AddChild(screen);
-		int titles = 0; screen.TitleRequested += () => titles++;
+		int titles = 0, lefts = 0; screen.TitleRequested += () => titles++; screen.Left += () => lefts++;
 		try
 		{
 			Assert.True(Inside(Focus(runner), screen), "focus on open: " + Focus(runner)?.Name);
@@ -542,8 +542,11 @@ public static class RestStopProbes
 			Assert.True(Inside(Focus(runner), screen) && Focus(runner) == screen.ContinueButton, "focus moves to Continue, not lost: " + Focus(runner)?.Name);
 			foreach (var k in new[] { Key.Down, Key.Up, Key.Tab, Key.Left })
 			{ Tap(runner, k); Assert.True(Inside(Focus(runner), screen), $"used state: focus lost after {k}"); }
+			// YOK-175 (was: Esc asks for the title): once a choice is made Esc / pad B do nothing (the title is the pause menu's Quit now).
+			ulong used = s.StateHash();
 			Tap(runner, Key.Escape); Pad(runner, JoyButton.B);
-			Assert.True(titles >= 2 && s.Node != null && s.Run.Health == 750, "Esc from the used state asks for the title and completes nothing");
+			Assert.True(titles == 0 && lefts == 0 && s.Node != null && s.Run.Health == 750 && s.StateHash() == used, "Esc / B from the used state ask for nothing and complete nothing");
+			Assert.True(Focus(runner) == screen.ContinueButton, "focus stays on Continue after Esc / B: " + Focus(runner)?.Name);
 			screen.ContinueButton.GrabFocus();
 			Tap(runner, Key.Enter);
 			Assert.True(s.Node == null, "Enter on Continue completes the node");

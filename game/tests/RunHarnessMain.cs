@@ -36,18 +36,23 @@ public partial class RunHarnessMain : Node
 			var content = HarnessContent.Load(dataDir, ContentPaths.FixturesDir) with { RawHitLog = args.ContainsKey("hit-log") }; // YOK-157: every hit line too
 			var clock = Stopwatch.StartNew(); // reporting only, never written to the file
 			var batches = new List<BatchResult>();
+			// YOK-171 (AM11): --hold N keeps Special held N ticks on a charge special (Sumo Stance); overrides the bot file.
+			int? hold = args.TryGetValue("hold", out var h) ? int.Parse(h) : null;
+			if (hold is < 0 or > 600) throw new ArgumentException("--hold takes 0-600 ticks");
+			BotConfig Held(BotConfig c) => hold is int n ? c with { Id = $"{c.Id}-hold{n}", Fight = c.Fight with { SpecialHoldTicks = n } } : c;
 			if (args.TryGetValue("bot", out var b))
 			{
 				if (args.ContainsKey("level") || args.ContainsKey("levels")) throw new ArgumentException("--bot plays one bot file; it takes no --level/--levels");
-				batches.Add(RunHarness.PlayBatch(content, BotConfig.LoadFile(Path.GetFullPath(b, root)), seed, runs));
+				batches.Add(RunHarness.PlayBatch(content, Held(BotConfig.LoadFile(Path.GetFullPath(b, root))), seed, runs));
 			}
 			else
 			{
 				var levels = args.TryGetValue("levels", out var lf) ? BotLevels.LoadFile(Path.GetFullPath(lf, root)) : BotLevels.LoadDefault(dataDir);
 				string level = args.GetValueOrDefault("level", BotLevels.DefaultLevel);
+				if (level == "mixed" && hold != null) throw new ArgumentException("--hold plays one level or all; not mixed");
 				if (level == "mixed") batches.Add(RunHarness.PlayMixed(content, levels, seed, runs));
-				else if (level == "all") foreach (var lv in levels.Levels) batches.Add(RunHarness.PlayBatch(content, lv, seed, runs));
-				else batches.Add(RunHarness.PlayBatch(content, levels[level], seed, runs));
+				else if (level == "all") foreach (var lv in levels.Levels) batches.Add(RunHarness.PlayBatch(content, Held(lv), seed, runs));
+				else batches.Add(RunHarness.PlayBatch(content, Held(levels[level]), seed, runs));
 			}
 			foreach (var batch in batches)
 			{

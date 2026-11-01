@@ -50,6 +50,7 @@ public static class HarnessReport
 			w.WriteNumber("schema_version", SchemaVersion);
 			w.WriteString("bot", b.Name);
 			w.WriteNumber("base_seed", b.BaseSeed);
+			if (b.Bot.Fight.SpecialHoldTicks != 0) w.WriteNumber("special_hold_ticks", b.Bot.Fight.SpecialHoldTicks); // YOK-171: only when set
 			w.WriteNumber("runs_played", b.Runs.Count);
 			w.WriteString("caveats", Caveats);
 			w.WritePropertyName("summary");

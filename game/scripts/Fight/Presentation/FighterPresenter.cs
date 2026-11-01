@@ -184,6 +184,13 @@ public sealed class FighterPresenter
 				return (PoseKind.Landing, C(PoseKind.Landing), _set.LandingFrame, false, false);
 			case FighterState.Burst:
 				return (PoseKind.Burst, C(PoseKind.Burst), _set.BurstFrame, false, false);
+			case FighterState.Bracing:
+			{
+				// YOK-171 (AM11): the hold plays the charge's hold_pose_clip (no new animation, A10); this body's crouch if it can't.
+				string? hold = f.Specials[(int)f.BraceSlot]?.Move.Charge?.HoldPoseClip;
+				string? clip = !string.IsNullOrEmpty(hold) && _set.CanPlay(_cat[hold]) ? hold : C(PoseKind.Crouch);
+				return (PoseKind.Crouch, clip, 1, true, false);
+			}
 		}
 		// Idle: crouch, walk or stand. Walk only when the fighter took its own walk step this frame and
 		// moved that way (YOK-39): being pushed by the opponent's push box slides the guard stance instead

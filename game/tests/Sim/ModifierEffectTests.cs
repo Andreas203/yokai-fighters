@@ -159,6 +159,8 @@ public static class ModifierEffectTests
 				["applies_to"] = new System.Text.Json.Nodes.JsonObject { ["requires"] = c["requires"]!.DeepClone() },
 				["effects"] = c["effects"]!.DeepClone(),
 			};
+			if (c["excludes"] is { } ex) file["applies_to"]!["excludes"] = ex.DeepClone(); // YOK-171
+			if (c["charge"] is { } ch) file["charge"] = ch.DeepClone();
 			string? refused = null;
 			try
 			{
