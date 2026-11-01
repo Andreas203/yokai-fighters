@@ -185,7 +185,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 ## R — The run
 
 - **R1** 8 rows, one node per row. Rows 1–3, 5, 6, 8 duels; 5 and 8 always elders; row 4 always merchant; row 7 merchant or dojo; row 1 apprentice. Tanuki after row 8.
-- **R2** Each node shows which yokai waits there.
+- **R2** Each node shows which yokai waits there. The map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the nodes he can choose next, so later rows, the Tanuki included, stay hidden until their turn [AM18].
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).

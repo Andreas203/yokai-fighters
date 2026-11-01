@@ -28,6 +28,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM15** 2026-10-20, written 2026-10-24 (YOK-173, YOK-196): the forecast's expected cost is the copied move's damage per hit at Ryo's level, from data, not from the player's own fights (T6).
 - **AM16** 2026-10-19, written 2026-10-24 (YOK-146, YOK-196): Tripo's skeleton becomes the shared skeleton; the Meshy one stays for rigs not yet rebuilt (F6, amends AM5).
 - **AM17** 2026-10-25 (designer, YOK-207): a short story-card style video plays the first time the player meets each yokai; extra, not MVP, built only once every MVP item is done (S6).
+- **AM18** 2026-10-25 (designer, YOK-109, PR #245): the map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the next choice, so later rows and the Tanuki stay hidden until their turn (R2). Presentation only.
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
