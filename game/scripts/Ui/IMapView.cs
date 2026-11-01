@@ -18,8 +18,14 @@ public sealed record MapStatusView(int Health, int MaxHealth, int Coins, int Row
 	public int PlayRowLimit => LastPlayRow > 0 ? LastPlayRow : RowsTotal;
 }
 
-/// <summary>What the detail panel adds to a node's own data: the reward line, and the elder twist line when the twist data exists (Y3, YOK-90).</summary>
-public sealed record MapNodeDetail(string? Reward, string? Twist = null);
+/// <summary>
+/// What the detail panel adds to a node's own data: the reward line, the elder twist line when the twist data exists (Y3, YOK-90),
+/// and the habit line (YOK-109: the habit of the profile this node's yokai fights with, from the profile data; null = none).
+/// </summary>
+public sealed record MapNodeDetail(string? Reward, string? Twist = null, string? Habit = null);
+
+/// <summary>YOK-109: one legend row for an elder twist: its icon id (data/twists <c>icon</c>) and its label text (story data <c>-label</c>).</summary>
+public sealed record MapTwistLegendEntry(string Icon, string Text);
 
 /// <summary>
 /// One node as the map screen shows it. <see cref="Type"/> is an open string (a lookup key into the map node styles resource,
@@ -58,6 +64,8 @@ public interface IMapView
 	object? RunKey => null;
 	/// <summary>YOK-108: the reward line (and twist line) for one node; null = nothing to add.</summary>
 	MapNodeDetail? Detail(string nodeId) => null;
+	/// <summary>YOK-109: the elder twists on this map, one per icon, with their label text; empty = no legend rows.</summary>
+	IReadOnlyList<MapTwistLegendEntry> TwistLegend => System.Array.Empty<MapTwistLegendEntry>();
 	/// <summary>Try to enter the node. False = refused (not reachable, or the view says no); nothing changes then.</summary>
 	bool Select(string nodeId);
 }
@@ -78,6 +86,8 @@ public sealed class StubMapView : IMapView
 	public CopyTarget? CopyTarget { get; set; }
 	public bool CopyLocked { get; set; }
 	public Dictionary<string, MapNodeDetail> Details { get; } = new();
+	public List<MapTwistLegendEntry> Legend { get; } = new();
+	public IReadOnlyList<MapTwistLegendEntry> TwistLegend => Legend;
 	public MapNodeDetail? Detail(string nodeId) => Details.GetValueOrDefault(nodeId);
 	public string? Current { get; private set; }
 

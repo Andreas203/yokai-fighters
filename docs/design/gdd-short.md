@@ -16,6 +16,8 @@ Tone: mischievous folklore with a melancholy edge, never horror. Platform: PC. R
 
 ### 1.2 Core loop
 
+> **Amended by** [AM18](gdd-amendments.md#am18) the map reveals each row only when it is time to choose. Where they disagree with this section, the amendments win.
+
 The map has 8 rows, and you pick one node per row: 6 duels (including two elders) and 2 rest stops. Win a one-round duel, bind one of three abilities from that yokai, and move on. After row 8, the Tanuki waits.
 
 ```text

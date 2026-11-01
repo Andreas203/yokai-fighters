@@ -143,22 +143,26 @@ def render_audit(meta: dict, results: list[dict]) -> str:
 
 def cmd_visual(args) -> int:
     # Imported here so the story commands keep to the standard library; the visual loop needs Pillow.
-    from visual_agents import Astra, VisionLLM, reference_image
+    from visual_agents import Astra, VisionLLM, reference_image, seed_first_takes
     from visual_cases import CASES as VISUAL_CASES
     from visual_loop import render_visual, run_visual_case
 
     args.run = args.run or "visual"
     run_dir = RUNS / args.run
     run_dir.mkdir(parents=True, exist_ok=True)
-    vllm = VisionLLM(run_dir / "llm-calls.json", replay=args.replay)
-    astra = Astra(run_dir, replay=args.replay, budget=args.max_images, model=args.image_model)
-    reference = reference_image(run_dir)
     cases = [c for c in VISUAL_CASES if not args.only or c["id"] in args.only]
     if not cases:
         raise SystemExit("Nothing matched --only. Use an example id from visual_cases.py.")
+    if args.seed_from and not args.replay:
+        n = seed_first_takes(RUNS / args.seed_from, run_dir, [c["id"] for c in cases])
+        print(f"  seeded {n} take 1 image(s) from runs/{args.seed_from}")
+    vllm = VisionLLM(run_dir / "llm-calls.json", replay=args.replay)
+    astra = Astra(run_dir, replay=args.replay, budget=args.max_images, model=args.image_model)
+    reference = reference_image(run_dir)
     meta = {"run": args.run, "command": "visual", "image_model": args.image_model, "evaluator_model": args.evaluator_model,
             "refiner_model": args.refiner_model, "target": args.target, "max_rounds": args.max_rounds,
-            "max_images": args.max_images}
+            "max_images": args.max_images, "refiner": "v1, no keep rule" if args.refiner_v1 else "v2, with the keep rule",
+            "seeded_from": args.seed_from}
     results = []
     for case in cases:
         print(f"  {case['id']}")
@@ -196,6 +200,9 @@ def main() -> int:
     p.add_argument("--target", type=int, default=10)
     p.add_argument("--max-rounds", type=int, default=3, help="takes per asset, including the first")
     p.add_argument("--max-images", type=int, default=9, help="live Astra takes allowed for the whole run (the approved budget)")
+    p.add_argument("--refiner-v1", action="store_true",
+                   help="the Refiner prompt without the keep rule, as runs/visual was recorded (to replay it)")
+    p.add_argument("--seed-from", help="reuse each example's take 1 and its evaluation from this run folder (no new take)")
     p.add_argument("--replay", action="store_true", help="use the run's recorded takes and model calls; call nothing")
     sub.add_parser("guide")
     sub.add_parser("visual-guide")

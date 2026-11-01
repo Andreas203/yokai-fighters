@@ -78,7 +78,13 @@ def evaluator_prompt(slot: dict, m: dict) -> str:
     )
 
 
-def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict) -> str:
+# The keep rule the story Refiner always had. runs/visual was recorded without it (a rewrite there stripped the scene to win
+# one point and lost another); `run.py visual --refiner-v1` leaves it out, so that run still replays.
+KEEP_RULE = ("Change only what the REASON criticises: keep every element, colour, composition choice and level of detail it "
+             "did not criticise exactly as the prompt has it, and fix each violation by the smallest change that removes it. ")
+
+
+def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict, keep: bool = True) -> str:
     return (
         f"STYLE GUIDE\n{render_guide()}\n"
         f"ASSET SLOT\n{describe_slot(slot)}\n\n"
@@ -86,7 +92,9 @@ def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict) -> 
         f"MEASUREMENTS OF THE TAKE (by code)\n{format_image_measurements(m)}\n\n"
         f"EVALUATOR'S REASON\n{reason}\n\n"
         "Take the prompt and the Evaluator's REASON, and rewrite the prompt so that the next take scores a perfect 10/10 on "
-        "the style guide. Fix every violation named in the REASON; keep what the asset is for (the ASSET SLOT). Write the "
+        "the style guide. Fix every violation named in the REASON; keep what the asset is for (the ASSET SLOT). "
+        + (KEEP_RULE if keep else "") +
+        "Write the "
         "scene description only: the pipeline adds the style block before it and the negative block after it, so do not "
         "repeat them. Say the aspect ratio, what fills the frame, what stays empty, and the palette colours by name and "
         "hex. Reply with the scene description only: no quotation marks, no notes.\n"
@@ -139,6 +147,13 @@ class VisionLLM(LLM):
 class Astra:
     """Image takes from gpt-6-astra through `codex exec`, each kept in the run folder, with a hard budget."""
 
+    # Tests set this False: a unit test must never be able to spend a take (one did, 2026-10-25, through a wrong cache key).
+    allow_live = True
+
+    @staticmethod
+    def key(model: str, prompt: str) -> str:
+        return hashlib.sha256(f"{model}\n{prompt}".encode("utf-8")).hexdigest()[:16]
+
     def __init__(self, run_dir: Path, replay: bool, budget: int, model: str = "gpt-6-astra", timeout: int = 900):
         self.images = run_dir / "images"
         self.index_path = run_dir / "images.json"
@@ -147,14 +162,17 @@ class Astra:
         self.live = 0
 
     def render(self, prompt: str, name: str) -> Path:
-        key = hashlib.sha256(f"{self.model}\n{prompt}".encode("utf-8")).hexdigest()[:16]
+        key = self.key(self.model, prompt)
         if key in self.index:
             return self.images / self.index[key]["file"]
         if self.replay:
             raise SystemExit(f"--replay: no recorded Astra take for this prompt (key {key}); run live instead.")
         # The budget covers every take this run folder has ever made, so splitting a run across calls can't exceed it.
-        if len(self.index) >= self.budget:
+        # A take seeded from another run was paid for there, so it doesn't count here.
+        if sum(1 for e in self.index.values() if not e.get("reused_from")) >= self.budget:
             raise BudgetSpent(f"Image budget of {self.budget} Astra takes is spent.")
+        if not self.allow_live:
+            raise RuntimeError(f"Live Astra calls are switched off here (no recorded take for key {key}).")
         exe = shutil.which("codex")
         if not exe:
             raise SystemExit("The 'codex' CLI is not on PATH; Astra runs through codex exec.")
@@ -162,7 +180,7 @@ class Astra:
         started = time.time()
         cmd = [exe, "exec", "-m", self.model, "-s", "read-only", "-C", str(work), "--skip-git-repo-check",
                "--ephemeral", "-"]
-        self.live += 1   # a call counts against the budget whether or not it returns an image
+        self.live += 1   # calls made this session, for the summary line; the budget counts indexed takes
         proc = subprocess.run(cmd, input=ASTRA_WRAPPER.format(prompt=prompt), capture_output=True,
                               text=True, encoding="utf-8", timeout=self.timeout)
         made = new_codex_images(started)
@@ -172,7 +190,7 @@ class Astra:
 
     def adopt(self, prompt: str, source: Path, name: str, extra: int = 0) -> Path:
         """File a generated image as the take for this prompt: kept in the run folder and indexed for --replay."""
-        key = hashlib.sha256(f"{self.model}\n{prompt}".encode("utf-8")).hexdigest()[:16]
+        key = self.key(self.model, prompt)
         kept = store_take(source, self.images / f"{name}.png")
         self.index[key] = {"file": kept.name, "model": self.model, "prompt": prompt, "source": source.name,
                            "extra_images_ignored": extra}
@@ -182,6 +200,31 @@ class Astra:
 
 class BudgetSpent(Exception):
     pass
+
+
+def seed_first_takes(src_dir: Path, dest_dir: Path, case_ids: list[str]) -> int:
+    """Copy each case's take 1 and its recorded evaluation from an earlier run.
+
+    Take 1 comes from the sabotaged brief alone, so a rerun that only changes the Refiner would pay for the same picture
+    again. The copy is marked `reused_from` and doesn't count against the new run's budget.
+    """
+    src_index = json.loads((src_dir / "images.json").read_text(encoding="utf-8"))
+    src_calls = json.loads((src_dir / "llm-calls.json").read_text(encoding="utf-8"))
+    index_path, calls_path = dest_dir / "images.json", dest_dir / "llm-calls.json"
+    index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {}
+    calls = json.loads(calls_path.read_text(encoding="utf-8")) if calls_path.exists() else {}
+    seeded = 0
+    for key, entry in src_index.items():
+        if not any(entry["file"] == f"{cid}-take1.png" for cid in case_ids) or key in index:
+            continue
+        (dest_dir / "images").mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src_dir / "images" / entry["file"], dest_dir / "images" / entry["file"])
+        index[key] = {**entry, "reused_from": src_dir.name}
+        calls.update({k: v for k, v in src_calls.items() if v["role"] == "evaluator" and entry["file"] in v.get("images", [])})
+        seeded += 1
+    index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
+    calls_path.write_text(json.dumps(calls, indent=2, ensure_ascii=False), encoding="utf-8")
+    return seeded
 
 
 def new_codex_images(since: float) -> list[Path]:

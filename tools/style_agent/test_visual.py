@@ -20,6 +20,11 @@ try:
 except ImportError:  # the story loop needs no Pillow; these tests do
     Image = None
 
+if Image is not None:
+    import visual_agents
+    # No test may spend an Astra take: a miss on the recorded index raises instead of calling codex.
+    visual_agents.Astra.allow_live = False
+
 
 def _scene(path: Path, size=(1280, 720), colour=(0x2D, 0x3A, 0x5E)) -> Path:
     im = Image.new("RGB", size, colour)
@@ -89,6 +94,20 @@ class Prompts(unittest.TestCase):
              "flatness": 0, "lower_third_edge": 0, "upper_edge": 0, "neon_share": 0, "pure_white_share": 0}
         self.assertNotIn(case["brief"], refiner_prompt(SLOTS[case["slot"]], "scene", 3, "[L3] x", m))
 
+    def test_keep_rule_is_on_by_default_and_v1_is_unchanged(self):
+        if Image is None:
+            self.skipTest("Pillow is not installed")
+        from visual_agents import KEEP_RULE, refiner_prompt
+        from visual_cases import SLOTS
+        m = {"width": 1, "height": 1, "aspect": 1, "border_px": {}, "dominant_colours": [], "on_palette_share": 0,
+             "flatness": 0, "lower_third_edge": 0, "upper_edge": 0, "neon_share": 0, "pure_white_share": 0}
+        slot = SLOTS["oni-shrine-gate"]
+        self.assertIn(KEEP_RULE, refiner_prompt(slot, "s", 9, "r", m))
+        v1 = refiner_prompt(slot, "s", 9, "r", m, keep=False)
+        self.assertNotIn(KEEP_RULE, v1)
+        # Byte-identical to the prompt runs/visual was recorded with, so that run still replays.
+        self.assertIn("keep what the asset is for (the ASSET SLOT). Write the scene description only", v1)
+
     def test_guide_has_three_types_each_sourced(self):
         from visual_guide import CLASSES, PALETTE, RULES
         self.assertEqual(len(CLASSES), 3)
@@ -107,10 +126,36 @@ class Budget(unittest.TestCase):
         with self.assertRaises(BudgetSpent):
             Astra(run, replay=False, budget=2).render("a new prompt", "x")
 
+    def test_tests_cannot_call_astra(self):
+        from visual_agents import Astra
+        with self.assertRaises(RuntimeError):
+            Astra(Path(tempfile.mkdtemp()), replay=False, budget=9).render("not recorded", "x")
+
     def test_replay_never_renders(self):
         from visual_agents import Astra
         with self.assertRaises(SystemExit):
             Astra(Path(tempfile.mkdtemp()), replay=True, budget=9).render("p", "x")
+
+    def test_seeded_take_is_free_and_brings_its_evaluation(self):
+        from visual_agents import Astra, BudgetSpent, seed_first_takes
+        src, dest = Path(tempfile.mkdtemp()), Path(tempfile.mkdtemp())
+        _scene((src / "images").mkdir() or src / "images" / "visual-1-look-take1.png")
+        k1 = Astra.key("gpt-6-astra", "brief")
+        (src / "images.json").write_text(json.dumps({
+            k1: {"file": "visual-1-look-take1.png", "prompt": "brief"},
+            "k2": {"file": "visual-1-look-take2.png", "prompt": "refined"}}), encoding="utf-8")
+        (src / "llm-calls.json").write_text(json.dumps({
+            "e1": {"role": "evaluator", "images": ["ref.png", "visual-1-look-take1.png"], "response": "SCORE: 1/10"},
+            "e2": {"role": "evaluator", "images": ["ref.png", "visual-1-look-take2.png"], "response": "SCORE: 9/10"},
+            "r1": {"role": "refiner", "response": "scene"}}), encoding="utf-8")
+        self.assertEqual(seed_first_takes(src, dest, ["visual-1-look"]), 1)
+        self.assertEqual(set(json.loads((dest / "images.json").read_text(encoding="utf-8"))), {k1})
+        self.assertEqual(set(json.loads((dest / "llm-calls.json").read_text(encoding="utf-8"))), {"e1"})
+        astra = Astra(dest, replay=False, budget=1)
+        self.assertTrue(astra.render("brief", "visual-1-look-take1").exists())   # seeded: no new take
+        (dest / "images.json").write_text(json.dumps({**astra.index, "k3": {"file": "t2.png"}}), encoding="utf-8")
+        with self.assertRaises(BudgetSpent):   # one new take used the whole budget of 1; the seeded one didn't count
+            Astra(dest, replay=False, budget=1).render("another", "x")
 
 
 class FakeAstra:

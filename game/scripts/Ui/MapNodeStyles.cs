@@ -4,7 +4,7 @@ using Godot.Collections;
 namespace YokaiFighters.Ui;
 
 /// <summary>What the screen reads for one node: always something, even for an unknown type.</summary>
-public readonly record struct MapNodeLook(string Label, Color Color, string Icon, Texture2D? IconTexture);
+public readonly record struct MapNodeLook(string Label, Color Color, string Icon, Texture2D? IconTexture, string Tagline = "");
 
 /// <summary>
 /// YOK-78: the one lookup node type -> look (<c>ui/map_node_styles.tres</c>). A new node type is a new entry in that resource, no code.
@@ -30,7 +30,7 @@ public partial class MapNodeStyles : Resource
 	public MapNodeLook Look(string type)
 	{
 		foreach (var s in Styles)
-			if (s != null && s.Type == type) return new(s.Label == "" ? type : s.Label, s.Color, s.Icon, s.IconTexture);
+			if (s != null && s.Type == type) return new(s.Label == "" ? type : s.Label, s.Color, s.Icon, s.IconTexture, s.Tagline);
 		var f = Fallback;
 		string label = type.Length == 0 ? "?" : char.ToUpperInvariant(type[0]) + type[1..].Replace('-', ' ');
 		return new(label, f?.Color ?? new Color(0.45f, 0.42f, 0.38f), f?.Icon ?? "?", f?.IconTexture);

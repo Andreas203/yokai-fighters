@@ -151,13 +151,14 @@ public static class DemoFlowTests
 	public static void Loss_LoseScreen_RestartGivesAFreshRun(Node runner) => WithScene(runner, s =>
 	{
 		var firstRun = s.DemoRun;
+		var hud = s.GetNode<FightHud>("Hud");
+		hud.SetLoseText(null, "stale"); // YOK-212: the loss sets the card again (a self-walked run reaches later rows in this scene)
 		LoseDuel(s);
 		Assert.Equal(DemoStage.Lost, s.Stage, "lost");
-		var hud = s.GetNode<FightHud>("Hud");
 		Assert.True(hud.GetNode<Control>("LoseScreen").Visible, "lose screen shown");
-		var (title, text) = FightScene.LoadStory().LoseScreen(StoryLibrary.DisplayName(FightScene.Opponent));
-		Assert.Equal(text, hud.LoseText, "lose text from data/story/lose-screen.json");
-		Assert.Equal(title, hud.LoseTitle, "lose title from data/story/lose-screen.json");
+		var lib = FightScene.LoadStory();
+		Assert.Equal(lib["lose-early"].FillText(yokai: "Kitsune"), hud.LoseText, "YOK-212: the demo's row 1 Kitsune duel shows the rows 1-3 band (data/story/lose-early.json)");
+		Assert.Equal(LoseScreen.PlaceholderTitle, hud.LoseTitle, "lose-early has no title: the screen's own heading");
 
 		hud.GetNode<Button>("LoseScreen/Restart").EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.Equal(DemoStage.Fighting, s.Stage, "back to fighting");
