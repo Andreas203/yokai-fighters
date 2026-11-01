@@ -397,7 +397,11 @@ public sealed class ProfileAi
 		{
 			if (roll >= w[i]) { roll -= w[i]; continue; }
 			var b = Profile.Behaviours[i];
-			var p = Build(b.Do, view, tick, false, 0);
+			// YOK-228: a throw picked while its own screen shows it busy (stun, its own move, landing, wake-up) waits for the
+			// predicted first actionable tick. Pressed early, the raw LP+LK would be dropped as a throw (E12 reads the
+			// press on the tick it lands) while the buffer turned its LP into a light punch. Same draws; still raw buttons.
+			int hold = b.Do.Kind == ActionKind.Throw ? Math.Max(0, FirstActionableTick(view) - tick) : 0;
+			var p = Build(b.Do, view, tick, false, hold);
 			Record(tick, view, p is null ? "unavailable" : "neutral", b.When, b.Do.ToString(), roll, w[i]);
 			if (p is not null) return p;
 			break;
