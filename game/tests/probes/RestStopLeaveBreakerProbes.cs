@@ -165,7 +165,8 @@ public static class RestStopLeaveBreakerProbes
 					if (n.Type == "boss")
 					{
 						Assert.True(s.CopyLocked, $"{seed}/{row7}: T1 the lock is taken on entering the Tanuki");
-						Assert.Equal(150, s.Run.Coins, $"{seed}/{row7}: R8 coins by the boss are the duels' alone (25x3 + 50 + 25)");
+						// + the row-8 elder's R8 fallback: its fixture offer holds no rare, so it pays the provisional coins (YOK-186)
+						Assert.Equal(150 + s.R8FallbackCoins(), s.Run.Coins, $"{seed}/{row7}: R8 coins by the boss are the duels' and the row-8 elder's fallback alone (25x3 + 50 + 25 + fallback)");
 						Assert.Equal(8, s.Map.Visited.Count, $"{seed}/{row7}: eight rows walked, none skipped by leaving");
 						Assert.True(spent.Count == 2, $"{seed}/{row7}: both stops were left");
 						break;

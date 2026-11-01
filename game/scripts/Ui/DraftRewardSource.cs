@@ -51,7 +51,10 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 	static CardView ToView(SimCard c) => c.Kind switch
 	{
 		SimKind.NewSpecial => new CardView(CardKind.NewMove, c.AbilityId, c.Name, $"{Title(c.Source)} - special",
-			c.Plain, c.Frames, "NEW - Lv 1"),
+			c.Plain, c.Frames, c.Rare ? "RARE - NEW - Lv 1" : "NEW - Lv 1", Rare: c.Rare),
+		// YOK-186: plain text first, the cancel path behind the frame-data toggle (A12); marked rare (A9).
+		SimKind.CancelRule => new CardView(CardKind.CancelRule, c.AbilityId, c.Name, $"{Title(c.Source)} - cancel rule",
+			c.Plain, c.Frames, "RARE - CANCEL RULE", Rare: true),
 		SimKind.Upgrade => new CardView(CardKind.Upgrade, c.AbilityId, c.Name, "Your special", c.Plain, c.Frames,
 			c.Targets.Count == 1 ? $"UPGRADE - Lv {c.Targets[0].Level} to {c.Targets[0].Level + 1}" : "UPGRADE",
 			c.NeedsTarget ? "Pick the special to raise" : null,

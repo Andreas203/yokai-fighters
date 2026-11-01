@@ -58,6 +58,11 @@ public sealed record RunSave(
 	/// its coins and heal are already in <see cref="Coins"/> and <see cref="Health"/> (version 4; false when missing).
 	/// </summary>
 	public bool NodePaid { get; init; }
+	/// <summary>
+	/// YOK-186, X1/X2: the cancel rule ids Ryo holds, in the order taken (version 8; empty when the file has none, and
+	/// written only when there is one). Each must be in the pool's cancel rules; at most two, none twice.
+	/// </summary>
+	public IReadOnlyList<string> CancelRules { get; init; } = Array.Empty<string>();
 	/// YOK-124: the walk stepped off the routes (dev mode's full map). Written only when true (<c>off_route</c>), so
 	/// the version is unchanged; honoured on restore only with <c>allowOffRoute</c> (the dev slot), otherwise such
 	/// a walk is refused like any walk the map does not allow.
@@ -97,6 +102,7 @@ public sealed record RunSave(
 			LockedCopy = session.LockedCopy is { } c ? new LockedCopySave(c.Slot.ToString(), c.Data.Id, c.Level) : null,
 			NodePaid = session.NodePaid && session.Draft is null, // A7: a draft node is never saved paid
 			OffRoute = snap.OffRoute,
+			CancelRules = session.Run.CancelRules.Count == 0 ? Array.Empty<string>() : session.Run.CancelRules.Select(c => c.Id).ToArray(),
 		};
 	}
 
@@ -157,6 +163,12 @@ public sealed record RunSave(
 		try { run = RunState.Restore(Health, owned); }
 		catch (ArgumentException e) { throw new FormatException(e.Message); }
 		run.RestoreCoins(Coins);
+		// YOK-186, X1/X2: the cancel rules held; an id this build's data lacks, a repeat or a third is refused.
+		var cancels = new List<CancelRuleData>();
+		foreach (string id in CancelRules)
+			cancels.Add(pool.CancelRule(id) ?? throw new FormatException($"cancel rule '{id}' is not in this build's abilities"));
+		try { run.RestoreCancelRules(cancels); }
+		catch (ArgumentException e) { throw new FormatException(e.Message); }
 		bool orderRepaired = false;
 		try { run.RestoreLevelledOrder(order[1], order[2], order[3], order[4]); }
 		catch (ArgumentException e)

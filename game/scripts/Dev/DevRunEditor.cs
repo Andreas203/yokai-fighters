@@ -20,6 +20,9 @@ public sealed record DevSlotEdit(SpecialSlot Slot, string Special, int Level = 1
 /// </summary>
 public sealed record DevRunBuild(IReadOnlyList<DevSlotEdit> Slots, int Coins, int Health, int Depth, uint Seed)
 {
+	/// <summary>YOK-186: the cancel rule ids Ryo holds (X1, X2), kept through an edit; empty = none.</summary>
+	public IReadOnlyList<string> CancelRules { get; init; } = Array.Empty<string>();
+
 	public DevSlotEdit? this[SpecialSlot slot] => Slots.FirstOrDefault(s => s.Slot == slot);
 
 	/// <summary>This build with <paramref name="slot"/> replaced by <paramref name="edit"/> (null empties it).</summary>
@@ -78,7 +81,8 @@ public sealed class DevRunEditor
 		var run = session.Run;
 		var slots = run.Owned.Select(o => new DevSlotEdit(o.Slot, o.Special.Data.Id, o.Special.Level, o.Special.Modifier?.Id,
 			run.LevelledOrder(o.Slot), o.Special.Borrowed, o.Special.ModifierBorrowed)).ToArray();
-		return new DevRunBuild(slots, run.Coins, run.Health, session.Map.Visited.Count, session.Seed);
+		return new DevRunBuild(slots, run.Coins, run.Health, session.Map.Visited.Count, session.Seed)
+			{ CancelRules = run.CancelRules.Select(c => c.Id).ToArray() }; // YOK-186
 	}
 
 	/// <summary>Specials that exist as data for <paramref name="slot"/> (A3: a special goes in its own slot), pool order.</summary>
@@ -114,6 +118,10 @@ public sealed class DevRunEditor
 			run.RestoreLevelledOrder(Orders(build, run, SpecialSlot.A), Orders(build, run, SpecialSlot.B),
 				Orders(build, run, SpecialSlot.C), Orders(build, run, SpecialSlot.D)); // T3
 			run.RestoreCoins(build.Coins); // R8
+			var cancels = new List<CancelRuleData>(); // YOK-186, X1/X2: as the saved-run path
+			foreach (string id in build.CancelRules)
+				if (Pool.CancelRule(id) is { } c) cancels.Add(c); else return Refuse($"No cancel rule '{id}' in the data.");
+			run.RestoreCancelRules(cancels);
 		}
 		catch (ArgumentException e) { return Refuse(Sentence(e.Message)); }
 		if (run.SpecialCount == 0) return Refuse(NoSpecialReason);

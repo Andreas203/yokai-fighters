@@ -41,7 +41,7 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 		string mapDir = Path.Combine(dataDir, "map");
 		var all = BehaviourProfile.LoadDirectory(Path.Combine(dataDir, "profiles"));
 		var fixtures = BehaviourProfile.LoadDirectory(Path.Combine(fixturesDir, "profiles"));
-		var content = new HarnessContent(sources, AbilityPool.Load(sources, Path.Combine(dataDir, "modifiers")),
+		var content = new HarnessContent(sources, AbilityPool.Load(sources, Path.Combine(dataDir, "modifiers"), Path.Combine(dataDir, "cancels")),
 			MapLoader.LoadFile(Path.Combine(mapDir, mapFile)), NodeSceneTable.Default(mapDir),
 			fighter => ProfilesFor(fighter, all, fixtures))
 		{ AllProfiles = all, Twists = ElderTwists.LoadDir(Path.Combine(dataDir, ElderTwists.Folder)) };

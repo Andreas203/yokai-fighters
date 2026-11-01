@@ -37,10 +37,11 @@ public sealed record SaveLoad(SaveData Data, SaveLoadStatus Status, IReadOnlyLis
 /// <para>
 /// Format (version <see cref="CurrentVersion"/>), one JSON object with three independent sections:
 /// <code>
-/// { "version": 7,
+/// { "version": 8,
 ///   "run": null | { "seed": 77, "map": "default-map", "map_file": "default-map.json", "map_fingerprint": "hex",
 ///                   "visited": ["r1"], "current": null, "health": 950, "coins": 25,
 ///                   "first_meeting": false, "copy_locked": false, "node_paid": true (only when set), "locked_copy": null | { "slot": "A", "special": "spirit-wave", "level": 2 },
+///                   "cancel_rules": ["oni-chain"] (only when one is held),
 ///                   "slots": [ { "slot": "A", "special": "spirit-wave", "level": 2, "modifier": null, "levelled": 1, "borrowed": false, "modifier_borrowed": false } ] },
 ///   "unlocks": ["ability-id"],
 ///   "story": { "seen": ["intro"], "elders_met": ["elder-oni"] },
@@ -70,7 +71,8 @@ public sealed class SaveStore
 	/// <remarks>5 (YOK-106, Y3/M4/M5): <c>story.elders_met</c> (elder ids Ryo has met, story progress) and <c>run.first_meeting</c> (the node saved at its entry is an elder met first on that entry); both missing = none, so version 4 and older files load with no elder met.</remarks>
 	/// <remarks>6 (YOK-97, M3): top-level <c>carry_over</c> (the special id the next run carries at Lv 2, or null; missing = none), so older files load with nothing carried.</remarks>
 	/// <remarks>7 (YOK-99): top-level <c>tanuki_wins</c> (Y5, whole number 0 or above; missing = 0), so older files load with no Tanuki win.</remarks>
-	public const int CurrentVersion = 7;
+	/// <remarks>8 (YOK-186, X1/X2): <c>run.cancel_rules</c> (the cancel rule ids Ryo holds, written only when he holds one; missing = none), so older files load holding none.</remarks>
+	public const int CurrentVersion = 8;
 	public const string FileName = "save.json";
 	/// <summary>Suffix of the copy kept before a file this build could not fully read is first overwritten (then <c>.bak.1</c>, <c>.bak.2</c>, ...: a backup is never replaced).</summary>
 	public const string BackupSuffix = ".bak";
@@ -184,6 +186,8 @@ public sealed class SaveStore
 			// Version 4 (YOK-128, R8): the entered node already paid; missing (version 3 and older) = not paid.
 			else if (OptionalBool(run, "node_paid", out bool? nodePaid) is { } paidProblem) why = paidProblem;
 			else if (OptionalBool(run, "off_route", out bool? offRoute) is { } routeProblem) why = routeProblem; // YOK-124, dev slot only
+			// Version 8 (YOK-186): missing (version 7 and older) = no cancel rule held.
+			else if (run.TryGetProperty("cancel_rules", out _) && StringArray(run, "cancel_rules") is null) why = "cancel_rules not a list of cancel rule ids";
 			else
 				return new RunSave(seed, map, visited, Text(run, "current"), health, slots)
 				{
@@ -195,6 +199,7 @@ public sealed class SaveStore
 					FirstMeeting = firstMeeting ?? false,
 					NodePaid = nodePaid ?? false,
 					OffRoute = offRoute ?? false,
+					CancelRules = StringArray(run, "cancel_rules") ?? Array.Empty<string>(),
 				};
 		}
 		problems.Add($"run: {why}; the saved run is dropped, unlocks and story are kept");
@@ -369,6 +374,12 @@ public sealed class SaveStore
 				if (run.CopyLocked is { } locked) w.WriteBoolean("copy_locked", locked);
 				if (run.NodePaid) w.WriteBoolean("node_paid", true); // only after a won node, before it is completed
 				if (run.OffRoute) w.WriteBoolean("off_route", true); // YOK-124: only a dev walk off the routes has it
+				if (run.CancelRules.Count > 0) // YOK-186: only a run that holds one
+				{
+					w.WriteStartArray("cancel_rules");
+					foreach (string id in run.CancelRules) w.WriteStringValue(id);
+					w.WriteEndArray();
+				}
 				if (run.LockedCopy is not { } copy) w.WriteNull("locked_copy");
 				else
 				{
