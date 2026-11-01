@@ -25,6 +25,7 @@ Requires the `jsonschema` package (see tools/requirements.txt).
 from __future__ import annotations
 
 import copy
+import decimal
 import functools
 import json
 import os
@@ -248,7 +249,7 @@ STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_
 
 def _load_json(f: Path):
     try:
-        return json.loads(f.read_text(encoding="utf-8"))
+        return loads(f.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
 
@@ -319,7 +320,7 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             errs.append((where, f"stage scene '{stage}' does not exist under game/"))
     for other in sorted(path.parent.glob("*.json")):
         try:
-            m = json.loads(other.read_text(encoding="utf-8"))
+            m = loads(other.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
         if not isinstance(m, dict) or m.get("kind") != "run_map":
@@ -367,12 +368,40 @@ class Unbuildable(Exception):
 INT32 = (-2**31, 2**31 - 1)
 
 
+class JsonFloat(float):
+    """YOK-221: a JSON number written with a fraction or an exponent, as a float that keeps its text, so whole() can
+    read it exactly as the loader's decimal does (300.0000000000000000001 is not 300). Behaves as a float everywhere."""
+    __slots__ = ("text",)
+
+    def __new__(cls, text):
+        f = super().__new__(cls, text)
+        f.text = str(text)
+        return f
+
+    def __reduce__(self):  # copy.deepcopy keeps the text
+        return (JsonFloat, (self.text,))
+
+
+def loads(text: str):
+    """json.loads for content files: fractions and exponents become JsonFloat (see whole())."""
+    return json.loads(text, parse_float=JsonFloat)
+
+
 def whole(v):
     """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
-    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule."""
+    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule. A number read from a
+    file is judged on its exact text (decimal), as the loader does; one computed here, on its float value."""
     if isinstance(v, bool):
         return None
-    if isinstance(v, float):
+    if isinstance(v, JsonFloat):
+        try:
+            d = decimal.Decimal(v.text)
+        except decimal.InvalidOperation:
+            return None
+        if not d.is_finite() or d != d.to_integral_value():
+            return None
+        v = int(d)
+    elif isinstance(v, float):
         if not v.is_integer():
             return None
         v = int(v)
@@ -449,6 +478,21 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     node[leaf] = combine(op, cur, v, target)
 
 
+def travel_errors(fd) -> list[str]:
+    """YOK-221: what MoveData.ReadTravel refuses, for every move kind MoveLoader reads (special builds, normals,
+    throws): forward_travel is a whole number of units >= 0, and a move that travels needs active frames."""
+    props = fd.get("properties") if isinstance(fd, dict) and isinstance(fd.get("properties"), dict) else {}
+    if props.get("forward_travel") is None:
+        return []
+    travel = whole(props["forward_travel"])
+    if travel is None or travel < 0:
+        return ["properties.forward_travel must be a whole number >= 0"]
+    active = whole(fd["active"]) if fd.get("active") is not None else 0
+    if travel > 0 and active is not None and active <= 0:
+        return ["properties.forward_travel needs active frames to travel over"]
+    return []
+
+
 def built_move_errors(fd: dict) -> list[str]:
     """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects)."""
     out: list[str] = []
@@ -465,7 +509,7 @@ def built_move_errors(fd: dict) -> list[str]:
             for i, x in enumerate(o):
                 yield from bad_numbers(x, f"{where}.{i}")
         elif isinstance(o, (int, float)) and not isinstance(o, bool) and whole(o) is None:
-            yield f"{where} = {o} is not a whole number inside int32"
+            yield f"{where} = {getattr(o, 'text', o)} is not a whole number inside int32"
 
     out.extend(bad_numbers(fd, ""))
     if out:
@@ -519,11 +563,7 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay must be a whole number >= 1")
         elif not fd.get("hitboxes"):
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
-    if props.get("forward_travel") is not None:  # YOK-221: MoveData.ReadTravel
-        if whole(props["forward_travel"]) is None or whole(props["forward_travel"]) < 0:
-            out.append("properties.forward_travel must be a whole number >= 0")
-        elif whole(props["forward_travel"]) > 0 and a <= 0:
-            out.append("properties.forward_travel needs active frames to travel over")
+    out.extend(travel_errors(fd))  # YOK-221: MoveData.ReadTravel
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
     return out
@@ -656,7 +696,7 @@ def load_specials(docs: dict) -> dict[str, dict]:
     for d in SPECIAL_DIRS:
         for f in sorted(d.glob("*.json")) if d.is_dir() else []:
             try:
-                doc = json.loads(f.read_text(encoding="utf-8"))
+                doc = loads(f.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
             if isinstance(doc, dict) and doc.get("kind") == "special":
@@ -821,6 +861,9 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
     if kind in ("normal", "throw") and schema_ok and isinstance(doc.get("frame_data"), dict):
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
+    if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
+        if not any(p == "frame_data" and "forward_travel" in m for p, m in errs):
+            errs.extend(("frame_data", m) for m in travel_errors(doc.get("frame_data")))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
         if "landing_recovery" in doc and doc.get("air") is not True:  # E11: only jump-ins land mid-move
@@ -976,14 +1019,14 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     failures: dict[Path, list[tuple[str, str]]] = {}
     for f in files:
         try:
-            docs[f] = json.loads(f.read_text(encoding="utf-8"))
+            docs[f] = loads(f.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as e:
             failures[f] = [("(file)", f"cannot read JSON: {e}")]
     # Clips referenced by specials and normals: everything in data/clips/ plus clips in this run.
     clips: dict[str, dict] = {}
     for c in sorted((DATA / "clips").glob("*.json")) if (DATA / "clips").is_dir() else []:
         try:
-            d = json.loads(c.read_text(encoding="utf-8"))
+            d = loads(c.read_text(encoding="utf-8"))
             clips[d.get("id", c.stem)] = d
         except (OSError, json.JSONDecodeError, AttributeError):
             pass
@@ -998,7 +1041,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     move_docs = []
     for mf in sorted((DATA / "moves").glob("*.json")) if (DATA / "moves").is_dir() else []:
         try:
-            move_docs.append(json.loads(mf.read_text(encoding="utf-8")))
+            move_docs.append(loads(mf.read_text(encoding="utf-8")))
         except (OSError, json.JSONDecodeError):
             pass
     for d in move_docs + list(docs.values()):

@@ -84,6 +84,15 @@ class ValidateDataTest(unittest.TestCase):
         self.assertTrue(errs(6, 2.5), "a fraction is refused (the whole-number rule)")
         self.assertEqual(errs(6, "charge_dash"), ["properties.forward_travel must be a whole number >= 0"], "the modifier switch is not a distance")
 
+    def test_whole_reads_a_written_number_exactly(self):
+        """YOK-221: the loader's decimal rule (Effects.Whole), not a float round-trip; copies keep the written text."""
+        import copy
+        w = lambda text: validate_data.whole(validate_data.loads(text))
+        self.assertEqual([w("300"), w("300.0"), w("3e2"), w("-0.0"), w("2147483647")], [300, 300, 300, 0, 2147483647])
+        self.assertEqual([w("300.0000000000000000001"), w("2.5"), w("1e400"), w("2147483648")], [None] * 4)
+        self.assertIsNone(validate_data.whole(copy.deepcopy(validate_data.loads("300.0000000000000000001"))))
+        self.assertEqual(validate_data.whole(300.0), 300, "a computed float is judged on its value")
+
     def test_real_modifiers_build_on_every_special(self):
         code, out = run(ROOT / "data" / "modifiers")
         self.assertEqual(code, 0, out)
