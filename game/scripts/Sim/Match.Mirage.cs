@@ -21,9 +21,9 @@ public readonly record struct DecoyEvent(int Owner, DecoyEventKind Kind, int X);
 
 /// <summary>
 /// YOK-224: Fox Mirage's teleport (<see cref="MoveData.Teleport"/>) and Mirage Feint's decoy (<see cref="MoveData.Decoy"/>),
-/// both from move data (A5, A10). Hooks in <c>Match.WorldStep</c>: <see cref="StepTeleport"/> after the fighter's own
-/// movement, <see cref="ResolveDecoys"/> after throws and before strikes; <see cref="ResetDecoys"/> in Reset and
-/// <see cref="HashDecoys"/> in StateHash. A teleport is not an invulnerability or a throw escape (E12): the move's own
+/// both from move data (A5, A10). Hooks in <c>Match.WorldStep</c>: <see cref="ResolveTeleports"/> after both fighters'
+/// input, <see cref="ResolveDecoys"/> after throws and before strikes, <see cref="DecoysTakeProjectiles"/> in
+/// <c>ResolveProjectiles</c> after the clashes (E17); <see cref="ResetDecoys"/> in Reset and <see cref="HashDecoys"/> in StateHash. A teleport is not an invulnerability or a throw escape (E12): the move's own
 /// hurtboxes stay, a grab or strike before the teleport frame stops it, and the recovery is open.
 /// </summary>
 public sealed partial class Match
@@ -36,22 +36,33 @@ public sealed partial class Match
 	public event Action<Match, DecoyEvent>? DecoyChanged;
 
 	/// <summary>
-	/// On the move's teleport frame the fighter lands just behind the opponent (push gap away, on the far side) and
-	/// turns to face them. Behind a cornered opponent there is no room: the fighter takes the stage limit and a
-	/// grounded opponent is pushed out the push gap, so neither ends in the wall or in the other's push box.
+	/// After both fighters' input (beside <c>ResolveThrowBreaks</c>), each fighter on its move's teleport frame lands
+	/// just behind the opponent (push gap away, on the far side) and turns to face them. Both read the positions from
+	/// before either teleport, so the slot order never matters: when both teleport on the same tick each lands behind
+	/// where the other stood. Behind a cornered opponent there is no room: the fighter takes the stage limit and a
+	/// grounded opponent that is not teleporting itself is pushed out the push gap, so neither ends in the wall or in
+	/// the other's push box.
 	/// </summary>
-	private void StepTeleport(int i)
+	private void ResolveTeleports()
 	{
-		Fighter f = Fighters[i], o = Fighters[1 - i];
-		if (f.CurrentMove is not { Teleport: { } t } m || f.MoveFrame != t.Frame) return;
-		int originX = f.X, originFacing = f.Facing;
-		int side = Math.Sign(o.X - f.X);
-		if (side == 0) side = f.Facing;
-		int gap = PushGap(f, o);
-		f.X = Math.Clamp(o.X + side * gap, CornerLo(f), CornerHi(f));
-		f.Facing = -side;
-		if (!f.Airborne && !o.Airborne && Math.Abs(o.X - f.X) < gap) o.X = f.X - side * gap;
-		if (m.Decoy > 0) SpawnDecoy(i, originX, originFacing, m.Decoy);
+		Span<bool> due = stackalloc bool[2];
+		for (int i = 0; i < 2; i++)
+			due[i] = Fighters[i].CurrentMove is { Teleport: { } t } && Fighters[i].MoveFrame == t.Frame;
+		if (!due[0] && !due[1]) return;
+		Span<int> start = stackalloc int[] { P1.X, P2.X };
+		for (int i = 0; i < 2; i++)
+		{
+			if (!due[i]) continue;
+			Fighter f = Fighters[i], o = Fighters[1 - i];
+			int originFacing = f.Facing;
+			int side = Math.Sign(start[1 - i] - start[i]);
+			if (side == 0) side = f.Facing;
+			int gap = PushGap(f, o);
+			f.X = Math.Clamp(start[1 - i] + side * gap, CornerLo(f), CornerHi(f));
+			f.Facing = -side;
+			if (!due[1 - i] && !f.Airborne && !o.Airborne && Math.Abs(o.X - f.X) < gap) o.X = f.X - side * gap;
+			if (f.CurrentMove!.Decoy > 0) SpawnDecoy(i, start[i], originFacing, f.CurrentMove.Decoy);
+		}
 	}
 
 	private void SpawnDecoy(int owner, int x, int facing, int hits)
@@ -72,8 +83,8 @@ public sealed partial class Match
 
 	/// <summary>
 	/// Before strikes resolve, each decoy takes the opponent's hits that reach it: the body strike (the move is spent,
-	/// counted as blocked: no damage, stun, meter or hitstop), then projectiles (each loses one hit) and aftershocks
-	/// (spent). Each absorbed hit costs the decoy one; at none left it vanishes. Throws pass it by (throwboxes only
+	/// counted as blocked: no damage, stun, meter or hitstop), then aftershocks (spent). Projectiles come later, in
+	/// <see cref="DecoysTakeProjectiles"/>. Each absorbed hit costs the decoy one; at none left it vanishes. Throws pass it by (throwboxes only
 	/// grab a fighter).
 	/// </summary>
 	private void ResolveDecoys()
@@ -95,14 +106,6 @@ public sealed partial class Match
 						break;
 					}
 
-			for (int k = 0; k < Projectiles.Count && _decoys[owner] != null; k++)
-			{
-				var p = Projectiles[k];
-				if (p.Owner != a || p.HitsLeft <= 0 || !Overlaps(p.WorldBox(), box)) continue;
-				p.HitsLeft--; // ResolveProjectiles drops it at none left
-				Absorb(d);
-			}
-
 			for (int k = 0; k < Aftershocks.Count && _decoys[owner] != null; k++)
 			{
 				var s = Aftershocks[k];
@@ -115,6 +118,27 @@ public sealed partial class Match
 						Absorb(d);
 						break;
 					}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Called by <c>ResolveProjectiles</c> once projectile clashes are settled (E17: equal projectiles still cancel out)
+	/// and before projectiles hit fighters: an opposing projectile touching a decoy spends one hit on it.
+	/// </summary>
+	private void DecoysTakeProjectiles()
+	{
+		for (int owner = 0; owner < 2; owner++)
+		{
+			if (_decoys[owner] is not { } d) continue;
+			int a = 1 - owner;
+			var box = DecoyBox(d);
+			for (int k = 0; k < Projectiles.Count && _decoys[owner] != null; k++)
+			{
+				var p = Projectiles[k];
+				if (p.Owner != a || p.HitsLeft <= 0 || !Overlaps(p.WorldBox(), box)) continue;
+				p.HitsLeft--; // the caller drops it at none left
+				Absorb(d);
 			}
 		}
 	}

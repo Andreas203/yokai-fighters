@@ -105,6 +105,30 @@ public static class FoxMirageTests
 		Assert.True(m.DecoyOf(0) is null, "Lv 1 leaves no decoy");
 	}
 
+	/// <summary>
+	/// Code Critic (YOK-224): both teleport on the same tick (Ryo vs the Tanuki's copy). Each lands behind where the
+	/// other stood, facing them, whichever slot is on the left: the result never depends on who is P1.
+	/// </summary>
+	[Test]
+	public static void Teleport_BothOnTheSameTick_EachLandsBehindTheOthersStart_InBothSlotOrders()
+	{
+		foreach (int left in new[] { 0, 1 })
+		{
+			var m = new Match(NoHitstop, new[] { Poke }, new[] { Poke });
+			m.P1.Equip(SpecialSlot.C, Mirage, 1);
+			m.P2.Equip(SpecialSlot.C, Mirage, 1);
+			m.Fighters[left].X = -100 * S;
+			m.Fighters[1 - left].X = 100 * S;
+			m.Step(FighterInput.None, FighterInput.None); // face each other
+			int gap = m.PushGap(m.P1, m.P2);
+			for (int t = 1; t <= 18; t++) m.Step(Mirage1(t), Mirage1(t));
+			Fighter l = m.Fighters[left], r = m.Fighters[1 - left];
+			Assert.Equal(100 * S + gap, l.X, $"left = P{left + 1}: lands behind the right one's start");
+			Assert.Equal(-100 * S - gap, r.X, $"left = P{left + 1}: the right one lands behind the left one's start");
+			Assert.True(l.Facing == -1 && r.Facing == 1, $"left = P{left + 1}: both face each other on the new sides");
+		}
+	}
+
 	[Test]
 	public static void Teleport_BehindACorneredOpponent_TakesTheStageLimit()
 	{

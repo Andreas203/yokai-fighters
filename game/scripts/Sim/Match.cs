@@ -165,7 +165,6 @@ public sealed partial class Match
 				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);
 			if (f.Airborne) f.X += f.JumpDir * Config.JumpSpeedX;
 			ChargeDashStep(f); // YOK-171: a released charge's dash through the startup frames
-			StepTeleport(i);   // YOK-224: properties.teleport on its frame (Match.Mirage.cs)
 
 			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
@@ -181,6 +180,7 @@ public sealed partial class Match
 			f.PrevBits = input.Bits;
 		}
 
+		ResolveTeleports();   // YOK-224: after both fighters' input, from the positions before either teleport
 		ResolveThrowBreaks(); // YOK-19: after both fighters' input, so neither side acts first
 		ResolvePositions(moved);
 		UpdateFacing();

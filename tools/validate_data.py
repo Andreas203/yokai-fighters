@@ -157,14 +157,17 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     total = s + (a or 0) + r
     props = fd.get("properties") or {}
     if a is None:
-        if "projectile" not in props:
-            errs.append((f"{where}.active", "active is null ('—') but properties.projectile is missing"))
+        if "projectile" not in props and "teleport" not in props:  # YOK-224: Fox Mirage is 18/—/10 with a teleport
+            errs.append((f"{where}.active", "active is null ('—') but properties.projectile (or properties.teleport) is missing"))
         if fd.get("hitboxes"):
             errs.append((f"{where}.hitboxes", "active is null ('—'), so the body has no hitboxes; put the hit on the projectile"))
     else:
         check_ranges(fd.get("hitboxes"), s + 1, s + a, f"{where}.hitboxes", "hitbox", errs)
     check_ranges(fd.get("hurtboxes"), 1, total, f"{where}.hurtboxes", "hurtbox", errs)
     check_ranges(fd.get("cancel_windows"), 1, total, f"{where}.cancel_windows", "cancel window", errs)
+    tp = props.get("teleport")  # YOK-224: MoveData.ReadMirage
+    if isinstance(tp, dict) and whole(tp.get("frame")) is not None and not 1 <= whole(tp["frame"]) <= total:
+        errs.append((f"{where}.properties.teleport.frame", f"teleport frame {tp['frame']} is outside the move (1-{total})"))
     proj = props.get("projectile")
     if isinstance(proj, dict) and whole(proj.get("spawn_frame")) is not None and not 1 <= whole(proj["spawn_frame"]) <= total:
         errs.append((f"{where}.properties.projectile.spawn_frame", f"spawn frame {proj['spawn_frame']} is outside the move (1-{total})"))
@@ -347,7 +350,7 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
                "properties.aftershock_delay",
-               # YOK-220: evolution targets no fight code reads yet (MoveData.CheckPendingProperties)
+               # YOK-220: evolution targets (MoveData.CheckPendingProperties; decoy is read by MoveData.ReadMirage, YOK-224)
                "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
@@ -561,10 +564,18 @@ def built_move_errors(fd: dict) -> list[str]:
         out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
     if "forward_travel" in props and (whole(props["forward_travel"]) is None or whole(props["forward_travel"]) < 0):
         out.append("properties.forward_travel must be a whole number of units >= 0")
-    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
-        out.append("properties.decoy must be a whole number of hits >= 1")
     if "throw" in props and not throw_shape_ok(props["throw"]):
         out.append("properties.throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)")
+    # YOK-224: MoveData.ReadMirage (Fox Mirage's teleport, Mirage Feint's decoy).
+    if "teleport" in props:
+        tp = props["teleport"]
+        fr = whole(tp.get("frame")) if isinstance(tp, dict) else None
+        if not isinstance(tp, dict) or set(tp) != {"to", "frame"} or tp.get("to") != "behind_opponent" or fr is None or fr < 1:
+            out.append('properties.teleport must be { "to": "behind_opponent", "frame": n >= 1 }')
+        elif fr > total:
+            out.append(f"properties.teleport.frame {fr} is past the move's last frame ({total})")
+    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
+        out.append("properties.decoy must be a whole number of hits >= 1")
     return out
 
 
