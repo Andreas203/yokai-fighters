@@ -4,12 +4,13 @@
   "name": "TEST FIXTURE: River Grab (A-section numbers; boxes, range, Lv 2 step and EX made up; not game content)",
   "status": "proposed",
   "source": "kappa",
+  "starter": false,
   "rarity": "common",
   "locked": false,
-  "clip": "ryo-generic-throw",
+  "clip": "test-river-grab",
   "rules": ["C4", "E12", "R7", "X4"],
   "input": {
-    "kata": { "slot": "C", "motion": "41236" },
+    "kata": { "slot": "C", "motion": "214" },
     "kihon": { "slot": "C", "direction": "back" }
   },
   "card": {

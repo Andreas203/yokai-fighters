@@ -102,6 +102,14 @@
     {"name": "evo-decoy-zero", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": [], "changes": [{"target": "decoy", "op": "set", "value": 0}]},
     {"name": "special-multi-hit-written-2-point-0", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"multi_hit": {"hits": 2.0, "interval": 3}}}, "remove": []},
     {"name": "special-throw-without-breakable", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80}}}, "remove": []},
-    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []}
+    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []},
+    {"name": "cg-command-grab-needs-no-stun", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": true}}}, "remove": ["hitstun", "blockstun"]},
+    {"name": "cg-command-grab-without-hitboxes", "accept": false, "base": "test-rising-talisman", "set": {"hitboxes": [], "properties": {"throw": {"range": 120, "breakable": true}}}, "remove": []},
+    {"name": "cg-command-grab-range-not-past-the-box", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 20, "breakable": true}}}, "remove": []},
+    {"name": "cg-command-grab-window-not-under-recovery", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": true, "break_window": 28}}}, "remove": []},
+    {"name": "cg-command-grab-window-under-recovery", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": false, "break_window": 27}}}, "remove": []},
+    {"name": "cg-command-grab-with-aftershock", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": true}, "aftershock_delay": 4}}, "remove": []},
+    {"name": "cg-evo-recovery-under-the-window", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": true}}}, "remove": [], "changes": [{"target": "recovery", "op": "add", "value": -22}]},
+    {"name": "cg-evo-range-shrinks-under-the-box", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 120, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "mul_pct", "value": 10}]}
   ]
 }

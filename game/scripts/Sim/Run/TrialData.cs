@@ -127,6 +127,14 @@ public sealed class TrialData
 	/// is not a throw. <paramref name="isThrow"/> returns null for a move it does not know (reported too).
 	/// Same check as tools/validate_data.py makes against data/moves/.
 	/// </summary>
+	public IReadOnlyList<string> MoveProblems(IEnumerable<MoveData> kit)
+	{
+		var grab = new Dictionary<string, bool>(StringComparer.Ordinal);
+		foreach (var m in kit) grab[m.Id] = m.IsGrab; // YOK-225: a command grab is a throw here too (R7)
+		return MoveProblems(id => grab.TryGetValue(id, out bool g) ? g : null);
+	}
+
+	/// <summary>As <see cref="MoveProblems(IEnumerable{MoveData})"/>, with the kit given as a lookup.</summary>
 	public IReadOnlyList<string> MoveProblems(Func<string, bool?> isThrow)
 	{
 		var problems = new List<string>();

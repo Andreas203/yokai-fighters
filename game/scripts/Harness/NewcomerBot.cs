@@ -229,7 +229,7 @@ public sealed class NewcomerBot
 		else if ((r -= special) < 0)
 		{
 			var (slot, frames) = _kit.Specials[_rng.Next(_kit.Specials.Count)];
-			if (_kit.GrabReach.TryGetValue(slot, out int reach) && dist > reach) { Approach(s, o); return; } // YOK-225: a command grab, like the throw, only in its reach
+			if (_kit.GrabReach.TryGetValue(slot, out int reach) && dist > reach - SimConfig.Default.IdleHurtbox.X) { Approach(s, o); return; } // YOK-225: a command grab only where its reach meets the body box (E5: 45 behind the centre)
 			int hold = _kit.ChargeSlots.Contains(slot) ? _cfg.SpecialHoldTicks : 0;
 			if (hold > 0)
 			{

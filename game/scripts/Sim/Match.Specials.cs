@@ -256,6 +256,7 @@ public sealed partial class Match
 		Fighter f = Fighters[i];
 		MoveData? m = f.CurrentMove;
 		if (m is null || f.CancelRules.Count == 0) return false;
+		if (m.IsGrab && Fighters[1 - i].State == FighterState.Thrown) return false; // YOK-225: no cancel out of a held grab (C4, E12)
 		bool whiff = !f.MoveConnected, block = f.MoveConnected && f.MoveBlocked, hit = f.MoveConnected && !f.MoveBlocked;
 		bool inWindow = false;
 		foreach (var w in m.CancelWindows)

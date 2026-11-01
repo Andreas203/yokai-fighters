@@ -111,6 +111,10 @@ public static class CommandGrabTests
 		var doc = JsonNode.Parse(thr)!.AsObject();
 		doc["frame_data"]!["properties"] = new JsonObject { ["throw"] = new JsonObject { ["range"] = 130, ["breakable"] = true } };
 		Assert.True(Refused(() => MoveLoader.Parse(doc.ToJsonString())), "the LP+LK throw can't also carry properties.throw");
+		var jab = JsonNode.Parse(File.ReadAllText(ProjectSettings.GlobalizePath(FightScene.FixtureNormalsDir) + "/" +
+			Path.GetFileName(Directory.GetFiles(ProjectSettings.GlobalizePath(FightScene.FixtureNormalsDir), "*.json").OrderBy(f => f).First())))!.AsObject();
+		jab["frame_data"]!["properties"] = new JsonObject { ["throw"] = new JsonObject { ["range"] = 130, ["breakable"] = true } };
+		Assert.True(Refused(() => MoveLoader.Parse(jab.ToJsonString())), "nor can a normal");
 		Assert.True(!Refused(() => RiverGrab(d => Fd(d)["properties"]!["throw"]!["break_window"] = 9).Build(1, false)), "a longer break window loads");
 		Assert.Equal(9, RiverGrab(d => Fd(d)["properties"]!["throw"]!["break_window"] = 9).Build(1, false).BreakWindow, "break_window from data");
 	}
@@ -301,6 +305,50 @@ public static class CommandGrabTests
 		}
 		Assert.Equal(1, Cancels(landed: true), "a landed command grab cancels into a special (Undertow)");
 		Assert.Equal(0, Cancels(landed: false), "a whiffed one does not: successful throws only");
+	}
+
+	/// <summary>Code Critic (YOK-225): a held grab reads as a hit, but no cancel rule (Fox Step here) may end it while the
+	/// defender is Thrown; once it has landed the window is open again.</summary>
+	[Test]
+	public static void FoxStep_CannotCancelAHeldGrab_TheGrabStillLands()
+	{
+		var log = new Log();
+		var grab = RiverGrab(d => Fd(d)["cancel_windows"] = JsonNode.Parse("[{ \"frames\": [8, 38], \"on\": [\"hit\"] }]"));
+		var m = Setup(log, grab: grab);
+		m.P1.HoldCancelRule(CancelRuleLoader.LoadFile($"{Repo}/data/cancels/fox-step.json"));
+		var dash = InputParserTests.Record("6 5 6");
+		bool dashedWhileHeld = false, dashedAfter = false;
+		for (int t = 1; t <= 60; t++)
+		{
+			var p1 = t == 1 ? Grab : t >= 8 ? dash[(t - 8) % dash.Count] : Idle;
+			bool held = m.P2.State == FighterState.Thrown;
+			m.Step(p1, Idle);
+			if (m.P1.State == FighterState.Dash) { if (held) dashedWhileHeld = true; else dashedAfter = true; }
+		}
+		Assert.True(!dashedWhileHeld, "no dash cancel while the defender is Thrown");
+		Assert.True(log.Outcomes.SequenceEqual(new[] { ThrowOutcome.Grab, ThrowOutcome.Land }), "the grab lands: " + string.Join(",", log.Outcomes));
+		Assert.Equal(1000 - 130, m.P2.Health, "130 damage");
+		Assert.True(dashedAfter, "after the land, Fox Step may dash out of the window as usual");
+	}
+
+	/// <summary>The shared trial cases (fixtures/command-grabs/trial-cases.json, also run by tools/tests/test_validate_data.py):
+	/// TrialData.MoveProblems on the kit accepts exactly the cases the validator accepts.</summary>
+	[Test]
+	public static void TrialCases_LoaderAndValidatorAgree()
+	{
+		var root = JsonNode.Parse(File.ReadAllText(ProjectSettings.GlobalizePath("res://tests/fixtures/command-grabs/trial-cases.json")))!;
+		var kit = Moves().Concat(Starters().Select(sp => sp.Build(1, false))).Append(RiverGrab().Build(1, false)).ToArray();
+		var wrong = new List<string>();
+		foreach (var c in root["cases"]!.AsArray())
+		{
+			var doc = JsonNode.Parse(File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "trials", "test-spirit-wave-trial.json")))!.AsObject();
+			doc["special"] = "test-river-grab";
+			doc["goal"]!["steps"] = c!["steps"]!.DeepClone();
+			var problems = TrialLoader.Parse(doc.ToJsonString()).MoveProblems(kit);
+			if ((problems.Count == 0) != c["accept"]!.GetValue<bool>())
+				wrong.Add($"{c["name"]}: {(problems.Count == 0 ? "accepted" : string.Join("; ", problems))}");
+		}
+		Assert.Equal("", string.Join(" | ", wrong), "C# vs the shared trial cases");
 	}
 
 	[Test]

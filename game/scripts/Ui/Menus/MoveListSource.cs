@@ -139,7 +139,7 @@ public static class MoveListSource
 	{
 		string active = m.Active > 0 ? m.Active.ToString() : "—";
 		string head = $"{m.Startup} / {active} / {m.Recovery} frames, {m.Damage} damage";
-		if (m.IsThrow) return head + $", breaks in {m.BreakWindow}";
+		if (m.IsGrab) return head + $", breaks in {m.BreakWindow}"; // YOK-225: command grabs too
 		if (m.Hitstun == 0 && m.Blockstun == 0) return head;
 		return head + $", {Signed(m.AdvantageOnHit)} hit, {Signed(m.AdvantageOnBlock)} block";
 	}
