@@ -16,6 +16,10 @@ The target look for every screen: one 16:9 concept per screen (1672 x 941). The 
 | `story-card.png` | Story card (binding line) | `story_card.tscn` |
 | `defeat.png` | Lose screen | `lose_screen.tscn` |
 | `demo-complete.png` | Demo complete | `demo_complete.tscn` |
+| `map.png` | Run map (YOK-109; brief `astra-brief-map-hud-twist.md`) | `map_screen.tscn`, built to the rough |
+| `hud-copy-target.png` | Fight HUD in the Tanuki fight, locked copy talisman (AM6) | `hud.tscn` |
+| `hud-copy-target-states.png` | Copy-target talisman, states A–F | `CopyTalisman` |
+| `elder-twist-card.png` | Elder-twist intro card and first-meeting callout | `story_card.tscn` via `FightScene.Flow.cs` |
 
 No concept image exists for the move list or the settings controls tab; their prompts are in `prompts/prompts-movelist-controls.json`.
 
