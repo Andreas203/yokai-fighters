@@ -23,7 +23,7 @@ dotnet build
 | `tests/run_harness.tscn` | `RunHarnessMain.cs` | Whole-run bot batch, see [harness.md](harness.md). |
 | `tests/ai_harness.tscn` | `AiHarnessMain.cs` | `-- [--profile id] [--p1 thrower\|jumper\|random\|idle] [--reaction N] [--seed N] [--ticks N] [--sweep] [--trace]` → `harness/results/ai/` (git-ignored). |
 | `tests/replay.tscn` | `ReplayMain.cs` | `-- --replay <file.yfr\|folder\|user://replays>`: OK/FAIL per file, exit 0/1. |
-| `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, elder_reward (YOK-186: rare cancel-rule and rare-special cards), rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
+| `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, elder_reward (YOK-186: rare cancel-rule and rare-special cards), held_cancel (YOK-218: pause and move list holding 0, 1, 2 rules; reward cap notice), rest_stop, shop, practice, dev, title_continue, hitbox) → `docs/screenshots/current/`. |
 | `tests/bone_probe.tscn` | `BoneProbe.cs` | Prints a rig's bones (`-- out=<f> meshy`). |
 
 ## Fixtures (`tests/fixtures/`)
@@ -46,6 +46,6 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/SaveGame/`, `tests/Settings/` | `SaveTests`; `SettingsTests` |
 | `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
 | `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
-| `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
+| `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `HeldCancelRuleUiTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
 | `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures) |
 | `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |

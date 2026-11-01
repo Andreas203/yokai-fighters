@@ -26,11 +26,17 @@ public partial class MoveListPanel : Control
 	private readonly List<(Label Input, Label Frames, MoveRow Row)> _rows = new();
 	private readonly List<MoveSlotCard> _slotCards = new();
 	private PackedScene? _cardScene;
+	private readonly List<CancelRuleSlot> _cancelSlots = new();
+	private Label _cancelCount = null!;
 
 	public int BaseRowCount => _rows.Count;
 	public IReadOnlyList<MoveSlotCard> SlotCards => _slotCards;
 	public string InputOf(int row) => _rows[row].Input.Text;
 	public bool FramesShownOn(int row) => _rows[row].Frames.Visible;
+	/// <summary>YOK-218 (X2): the two cancel-rule places under the lists, in the order the rules were taken.</summary>
+	public IReadOnlyList<CancelRuleSlot> CancelSlots => _cancelSlots;
+	/// <summary>"1 / 2 held": how many cancel rules Ryo holds out of the cap.</summary>
+	public string CancelCountText => _cancelCount.Text;
 
 	public override void _Ready()
 	{
@@ -42,6 +48,10 @@ public partial class MoveListPanel : Control
 		_schemeToggle = UiFind.Get<Button>(this, "SchemeToggle");
 		_subtitle = UiFind.Get<Label>(this, "Subtitle");
 		_legend = UiFind.Get<Label>(this, "Legend");
+		_cancelCount = UiFind.Get<Label>(this, "CancelCount");
+		_cancelSlots.Add(UiFind.Get<CancelRuleSlot>(this, "CancelSlot1"));
+		_cancelSlots.Add(UiFind.Get<CancelRuleSlot>(this, "CancelSlot2"));
+		for (int i = 0; i < _cancelSlots.Count; i++) _cancelSlots[i].BindEmpty(i + 1);
 		_frameToggle.Pressed += ToggleFrameData;
 		_schemeToggle.Pressed += ToggleScheme;
 		void Link(Button from, Button right, Button left) { from.FocusNeighborRight = from.GetPathTo(right); from.FocusNeighborLeft = from.GetPathTo(left); from.FocusNeighborTop = from.GetPathTo(from); from.FocusNeighborBottom = from.GetPathTo(from); }
@@ -117,6 +127,14 @@ public partial class MoveListPanel : Control
 		_subtitle.Text = kata ? "Ryo's kit. Kata: motion specials deal +10% (precision)." : "Ryo's kit. Kihon: Special + direction, 100% damage.";
 		foreach (var (input, frames, row) in _rows) { frames.Visible = FrameDataVisible; frames.GetParent<Control>().GetChild<Label>(0).Visible = !FrameDataVisible; input.Text = row.InputFor(kata); } // frame line replaces the plain line, so rows keep their height
 		for (int i = 0; i < _slotCards.Count; i++) _slotCards[i].Bind(View.Slots[i], kata, FrameDataVisible);
+		// YOK-218 (X1, X2, A12): held cancel rules in the order taken, then open places up to the cap; plain first, path behind the toggle.
+		var held = View.Cancels;
+		for (int i = 0; i < _cancelSlots.Count; i++)
+		{
+			if (i < held.Count) _cancelSlots[i].Bind(held[i].Id, held[i].Name, held[i].Plain, held[i].Frames, FrameDataVisible);
+			else _cancelSlots[i].BindEmpty(i + 1);
+		}
+		_cancelCount.Text = $"{held.Count} / {MoveListView.CancelCap} held";
 		_legend.Text = "Keys and pad: Settings, Controls."; // the full bindings live there (no duplicate table here)
 	}
 

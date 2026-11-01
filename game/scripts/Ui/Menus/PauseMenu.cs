@@ -15,9 +15,16 @@ namespace YokaiFighters.Ui;
 /// </summary>
 public sealed record PauseFighterSummary(string Name, int Health, int MaxHealth);
 public sealed record PauseSlotSummary(string Slot, string Move, int Level, string Modifier, string? MoveId = null);
-/// <summary>Presentation only: the caller supplies position text, both health values and slots A-D.</summary>
+/// <summary>YOK-218 (X1, X2): a cancel rule Ryo holds, as the run panel lists it: name and the plain line from its data (A12).</summary>
+public sealed record PauseCancelSummary(string Id, string Name, string Plain)
+{
+	/// <summary>The rules the run holds, in the order taken.</summary>
+	public static PauseCancelSummary[] Of(RunState run) =>
+		run.CancelRules.Select(c => new PauseCancelSummary(c.Id, c.Name, c.CardPlain)).ToArray();
+}
+/// <summary>Presentation only: the caller supplies position text, both health values, slots A-D and (YOK-218) the held cancel rules (none = X1's start of a run).</summary>
 public sealed record PauseRunSummary(PauseFighterSummary Player, PauseFighterSummary Opponent,
- string Position, IReadOnlyList<PauseSlotSummary> Slots);
+ string Position, IReadOnlyList<PauseSlotSummary> Slots, IReadOnlyList<PauseCancelSummary>? Cancels = null);
 
 public partial class PauseMenu : Control
 {
@@ -94,7 +101,8 @@ public partial class PauseMenu : Control
 		_movesDir = movesDir;
 		var view = MoveListSource.Build(run, movesDir);
 		SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(opponent, 0, 0),
-			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray()));
+			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray(),
+			PauseCancelSummary.Of(run)));
 		MoveList.Bind(MoveListSource.Build(run, movesDir));
 	}
 
@@ -112,35 +120,60 @@ public partial class PauseMenu : Control
 		foreach (var slot in summary.Slots)
 		{
 			bool empty = slot.Level <= 0;
-			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 124),
+			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 100),
 				MouseFilter = MouseFilterEnum.Ignore };
 			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_card_style.tres").Duplicate();
 			paper.ContentMarginLeft = paper.ContentMarginRight = 20;
-			paper.ContentMarginTop = paper.ContentMarginBottom = 16;
+			paper.ContentMarginTop = paper.ContentMarginBottom = 14;
 			card.AddThemeStyleboxOverride("panel", paper);
-			var content = new Control { CustomMinimumSize = new(640, 92), MouseFilter = MouseFilterEnum.Ignore };
+			var content = new Control { CustomMinimumSize = new(640, 72), MouseFilter = MouseFilterEnum.Ignore };
 			card.AddChild(content);
 			var texture = AbilityArt.ForId(slot.MoveId);
 			// ExpandMode first: with the default mode the texture's own size is the minimum and Size would be clamped up to it.
 			var flourish = new TextureRect { Name = "Flourish", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
-				Position = new(536, 0), Size = new(104, 92),
+				Position = new(568, 0), Size = new(72, 72),
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Modulate = new Color(1, 1, 1, .12f),
 				Visible = !empty, MouseFilter = MouseFilterEnum.Ignore };
 			content.AddChild(flourish);
 			content.AddChild(new TextureRect { Name = "MoveIcon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
-				Position = new(0, 0), Size = new(92, 92),
+				Position = new(0, 0), Size = new(72, 72),
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Visible = !empty,
 				MouseFilter = MouseFilterEnum.Ignore });
 			var name = new Label { Name = "MoveName", Text = empty ? $"{slot.Slot}   Empty" : $"{slot.Move} · Lv {slot.Level}",
-				Position = new(112, string.IsNullOrEmpty(slot.Modifier) ? 26 : 4), Size = new(516, 40),
+				Position = new(92, string.IsNullOrEmpty(slot.Modifier) ? 16 : -3), Size = new(536, string.IsNullOrEmpty(slot.Modifier) ? 40 : 39),
 				AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
 			name.AddThemeFontSizeOverride("font_size", 28);
 			content.AddChild(name);
 			var modifier = new Label { Name = "Modifier", Text = slot.Modifier, Visible = !empty && !string.IsNullOrEmpty(slot.Modifier),
-				Position = new(112, 46), Size = new(516, 40), MouseFilter = MouseFilterEnum.Ignore };
+				Position = new(92, 36), Size = new(536, 36), MouseFilter = MouseFilterEnum.Ignore };
 			modifier.AddThemeFontSizeOverride("font_size", 26);
 			content.AddChild(modifier);
 			slots.AddChild(card);
+		}
+		SetCancelRules(summary.Cancels ?? Array.Empty<PauseCancelSummary>());
+	}
+
+	/// <summary>The cancel rules held (X1, X2): a heading with "n / 2", then the two places, held rules first, then open ones.</summary>
+	private void SetCancelRules(IReadOnlyList<PauseCancelSummary> held)
+	{
+		var box = UiFind.Get<VBoxContainer>(this, "CancelRules");
+		foreach (Node child in box.GetChildren()) { box.RemoveChild(child); child.QueueFree(); }
+		var head = new HBoxContainer { Name = "CancelHead", MouseFilter = MouseFilterEnum.Ignore };
+		var title = new Label { Name = "CancelHeading", Text = "CANCEL RULES", ThemeTypeVariation = "SealLabel", SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
+		title.AddThemeFontSizeOverride("font_size", 28);
+		var count = new Label { Name = "CancelCount", Text = $"{held.Count} / {MoveListView.CancelCap}", ThemeTypeVariation = "SealLabel", HorizontalAlignment = HorizontalAlignment.Right, MouseFilter = MouseFilterEnum.Ignore };
+		count.AddThemeFontSizeOverride("font_size", 28);
+		head.AddChild(title); head.AddChild(count);
+		box.AddChild(head);
+		var scene = GD.Load<PackedScene>("res://scenes/ui/cancel_rule_slot.tscn");
+		for (int i = 0; i < MoveListView.CancelCap; i++)
+		{
+			var slot = scene.Instantiate<CancelRuleSlot>();
+			slot.Name = $"Cancel{i + 1}";
+			box.AddChild(slot);
+			slot.Dense(icon: 52, vMargin: 18, minHeight: 104);
+			if (i < held.Count) slot.Bind(held[i].Id, held[i].Name, held[i].Plain);
+			else slot.BindEmpty(i + 1);
 		}
 	}
 
