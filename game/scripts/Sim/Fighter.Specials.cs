@@ -75,6 +75,23 @@ public sealed partial class Fighter
 	/// <summary>X3: targets already cancelled into this combo (bits 1-4 slots A-D, bit 5 dash); cleared when Idle.</summary>
 	public int CancelUsed;
 
+	/// <summary>YOK-171: the charge special being held (State == Bracing): its slot, as requested (EX, Kata precision).</summary>
+	public SpecialSlot BraceSlot;
+	public bool BraceEx;
+	public bool BracePrecision;
+	/// <summary>YOK-171: the buttons pressed with the special's command (as <see cref="SpecialButtons"/>).</summary>
+	public InputBits BraceButtons;
+	/// <summary>YOK-171: the trigger the hold reads: Kihon Special, else the command's attack buttons (K3); any one held keeps the hold.</summary>
+	public InputBits BraceTrigger;
+	/// <summary>YOK-171: ticks the trigger has stayed held after the command tick.</summary>
+	public int BraceHeld;
+	/// <summary>YOK-171: world frames since the command (1 = the command tick), for the late EX button (E16, E18).</summary>
+	public int BraceFrame;
+	/// <summary>YOK-171: frames the hold took before the special's frame 1 (BraceFrame at release - 1): the EX window counts from the command.</summary>
+	public int BraceLead;
+	/// <summary>YOK-171: the released charge's dash, gameplay units per tick, moved on each startup frame of the special (0 = none).</summary>
+	public int ChargeSpeed;
+
 	/// <summary>YOK-103: start conditions held when the current special started (which build plays, kept for the EX upgrade).</summary>
 	public StartConditions ActiveConditions;
 	/// <summary>YOK-103: hits the current move's armour has taken (properties.armour hits).</summary>
@@ -151,6 +168,11 @@ public sealed partial class Fighter
 		ArmourHitsTaken = 0;
 		ActiveRepeat = 0;
 		TwistArmourTaken = 0;
+		BraceSlot = SpecialSlot.None;
+		BraceEx = BracePrecision = false;
+		BraceButtons = BraceTrigger = InputBits.None;
+		BraceHeld = BraceFrame = BraceLead = 0;
+		ChargeSpeed = 0;
 	}
 
 	/// <summary>YOK-103: any slot carries a modifier (fight setup; the use counters only matter then).</summary>
@@ -175,6 +197,16 @@ public sealed partial class Fighter
 		{
 			h = Fnv.Mix(h, MoveSerial);
 			foreach (int u in SpecialUses) h = Fnv.Mix(h, u);
+		}
+		// YOK-171: the hold and the released dash, mixed only once one exists, so fights without a charge hash as before.
+		if (BraceSlot != SpecialSlot.None || ChargeSpeed != 0 || BraceLead != 0)
+		{
+			h = Fnv.Mix(h, (int)BraceSlot | (BraceEx ? 16 : 0) | (BracePrecision ? 32 : 0));
+			h = Fnv.Mix(h, (int)BraceButtons);
+			h = Fnv.Mix(h, (int)BraceTrigger);
+			h = Fnv.Mix(h, BraceHeld);
+			h = Fnv.Mix(h, BraceFrame | BraceLead << 16);
+			h = Fnv.Mix(h, ChargeSpeed);
 		}
 		if (Twist is { } tw) // YOK-90: mixed only in twist fights, so every other recording keeps its hashes
 		{

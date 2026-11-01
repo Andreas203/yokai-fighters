@@ -15,6 +15,8 @@ public sealed record BotFightConfig
 	public required int BlockPct { get; init; }
 	/// <summary>YOK-155: percent of wait and in-range walk plans held as a standing guard (back); 0 = none (the YOK-26 bot).</summary>
 	public int IdleGuardPct { get; init; }
+	/// <summary>YOK-171 (AM11): ticks Special stays held after a charge special's press (Sumo Stance); 0 = a tap. Bots only.</summary>
+	public int SpecialHoldTicks { get; init; }
 	public required int AntiAirPct { get; init; }
 	public required InputBits AntiAirButton { get; init; }
 	public required int PokeRange { get; init; }
@@ -115,6 +117,7 @@ public sealed record BotConfig
 			MistakePct = I(f, "mistake_pct", 0, 100),
 			BlockPct = I(f, "block_pct", 0, 100),
 			IdleGuardPct = f["idle_guard_pct"] is null ? 0 : I(f, "idle_guard_pct", 0, 100),
+			SpecialHoldTicks = f["special_hold_ticks"] is null ? 0 : I(f, "special_hold_ticks", 0, 600),
 			AntiAirPct = I(f, "anti_air_pct", 0, 100),
 			AntiAirButton = Buttons.TryGetValue(S(f, "anti_air_button"), out var aa) ? aa : throw new FormatException($"{id}: anti_air_button"),
 			PokeRange = I(f, "poke_range", 0, 4000),
