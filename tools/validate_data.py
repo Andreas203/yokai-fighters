@@ -25,6 +25,7 @@ Requires the `jsonschema` package (see tools/requirements.txt).
 from __future__ import annotations
 
 import copy
+import functools
 import json
 import os
 import re
@@ -742,6 +743,36 @@ def check_trial(doc: dict, move_kinds: dict[str, str] | None = None) -> list[tup
     return errs
 
 
+def later_loss_errors(doc: dict) -> list[tuple[str, str]]:
+    """YOK-212 (S3): a later-loss card the game's StoryLibrary.Parse refuses fails here too. Rows are plain integers (the
+    game reads them with TryGetInt32, so 4.0 and 1e1 are refused though JSON Schema calls them integers), low to high; the
+    yokai is the plain id a loss carries (the schema's enum); the lose screen fills only {yokai}."""
+    errs: list[tuple[str, str]] = []
+    later = doc["later_loss"]
+    rows = [later.get(k) for k in ("row_min", "row_max")]
+    for key, v in zip(("row_min", "row_max"), rows):
+        if isinstance(v, float):
+            errs.append((f"later_loss.{key}", f"{v!r}: write the row as a plain integer, with no decimal point or exponent (the game cannot read it)"))
+    if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in rows) and rows[0] > rows[1]:
+        errs.append(("later_loss", f"row_min {rows[0]} is above row_max {rows[1]} (S3)"))
+    yokai = later.get("yokai")
+    winners = load_schema("story-card.schema.json")["properties"]["later_loss"]["properties"]["yokai"]["enum"]
+    if isinstance(yokai, str) and yokai not in winners:
+        errs.append(("later_loss.yokai", f"'{yokai}': a later_loss yokai is the plain yokai id; an elder counts as its yokai (one of {', '.join(winners)})"))
+    names = {x for x in doc.get("placeholders") or [] if isinstance(x, str)}
+    for key in ("title", "text"):
+        if isinstance(doc.get(key), str):
+            names |= set(re.findall(r"\{([^{}]*)\}", doc[key]))
+    for name in sorted(names - {"yokai"}):
+        errs.append(("placeholders", f"a later-loss card fills only {{yokai}}; the lose screen never has a {{{name}}} (S4)"))
+    return errs
+
+
+@functools.lru_cache(maxsize=None)
+def load_schema(name: str) -> dict:
+    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+
+
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
              specials: dict[str, dict] | None = None, schema_ok: bool = True,
              move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
@@ -808,6 +839,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         if tier and tanuki != (tier == "tanuki"):
             errs.append(("reaction.tier", "the 'tanuki' reaction tier is for the Tanuki only, and the Tanuki must use it (Y4)"))
     elif kind == "story_card":  # S4: the game fills exactly the listed run names
+        if isinstance(doc.get("later_loss"), dict):  # YOK-212 (S3): what StoryLibrary refuses that the schema can't say
+            errs.extend(later_loss_errors(doc))
         listed = {x for x in doc.get("placeholders") or [] if isinstance(x, str)}
         used: set[str] = set()
         for key in ("title", "text"):

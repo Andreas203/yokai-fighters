@@ -300,7 +300,7 @@ public partial class DevJumpPage : VBoxContainer
 			}
 			case DevJumpKind.LoseScreen:
 			{
-				var (title, text) = FightScene.LoadStory().LoseScreen(yokai);
+				var (title, text) = DevJump.LoseCardOf(fight, FightScene.LoadStory()); // YOK-212: by the setup's yokai and its node's row
 				var s = Load<LoseScreen>("res://scenes/ui/lose_screen.tscn");
 				screen = s;
 				wire = h => { s.SetText(title, text); s.Open(); s.RestartRequested += h.Finish; };

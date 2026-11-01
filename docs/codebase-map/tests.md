@@ -47,5 +47,5 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
 | `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
 | `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
-| `tests/Story/` | `StoryTests` |
+| `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures) |
 | `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |
