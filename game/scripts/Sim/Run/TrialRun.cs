@@ -157,6 +157,7 @@ public sealed class TrialRun
 			return;
 		}
 		if (e.Attacker != 0 || e.Blocked || _p1Throws.Contains(e.MoveId)) return; // throws are Throw steps only
+		if (Match.P1.CurrentMove is { IsCommandGrab: true } g && g.Id == e.MoveId) return; // YOK-225: so is a command grab (R7)
 		switch (step.Event)
 		{
 			case TrialEvent.Hit:

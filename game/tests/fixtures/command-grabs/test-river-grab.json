@@ -1,0 +1,65 @@
+{
+  "kind": "special",
+  "id": "test-river-grab",
+  "name": "TEST FIXTURE: River Grab (A-section numbers; boxes, range, Lv 2 step and EX made up; not game content)",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": false,
+  "clip": "ryo-generic-throw",
+  "rules": ["C4", "E12", "R7", "X4"],
+  "input": {
+    "kata": { "slot": "C", "motion": "41236" },
+    "kihon": { "slot": "C", "direction": "back" }
+  },
+  "card": {
+    "plain": "A command grab that counts as a throw.",
+    "frames": "6 / 2 / 30 frames, 130 damage, a throw"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      { "target": "damage", "op": "add", "value": 30 }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 6,
+        "active": 2,
+        "recovery": 30,
+        "damage": 130,
+        "pushback": { "on_hit": 80 },
+        "hitboxes": [
+          { "frames": [7, 8], "rect": { "x": 20, "y": 150, "w": 110, "h": 120 } }
+        ],
+        "hurtboxes": [
+          { "frames": [1, 38], "rect": { "x": -45, "y": 0, "w": 90, "h": 320 } }
+        ],
+        "properties": {
+          "throw": { "range": 130, "breakable": true }
+        }
+      }
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": { "target": "damage", "op": "mul_pct", "value": 110 },
+      "notes": "Placeholder: the A4 example step (+10% damage)."
+    },
+    "3": {
+      "evolution": {
+        "id": "test-whirlpool-grab",
+        "name": "Whirlpool Grab",
+        "preset": "whirlpool-grab",
+        "changes": [
+          { "target": "properties.throw.range", "op": "mul_pct", "value": 150 }
+        ],
+        "card": {
+          "plain": "The grab reaches half again as far.",
+          "frames": "6 / 2 / 30 frames, 143 damage, +50% range"
+        }
+      }
+    }
+  },
+  "notes": "TEST FIXTURE (YOK-225). Startup/active/recovery/damage are the rules.md specials table (River Grab 6/2/30, 130); the grab box copies the fixture throw's, range 130 = its far edge. Never copy to data/moves/."
+}

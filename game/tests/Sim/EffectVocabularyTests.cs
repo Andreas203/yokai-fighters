@@ -51,9 +51,10 @@ public static class EffectVocabularyTests
 	}
 
 	/// <summary>
-	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with wall_bounce, multi_hit, decoy and a
-	/// properties.throw added hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed.
-	/// forward_travel is left out: YOK-221 gives it behaviour. Each behaviour ticket drops its target from this list.
+	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with wall_bounce, multi_hit and decoy added
+	/// hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed. forward_travel is left out:
+	/// YOK-221 gives it behaviour; so is properties.throw: YOK-225 makes it a command grab (CommandGrabTests). Each
+	/// behaviour ticket drops its target from this list.
 	/// </summary>
 	[Test]
 	public static void TargetsWithNoBehaviourYetLoadAndPlayUnchanged()
@@ -61,12 +62,10 @@ public static class EffectVocabularyTests
 		string path = ProjectSettings.GlobalizePath(FightScene.FixtureSpecialsDir) + "/test-rising-talisman.json";
 		var plain = SpecialLoader.Parse(File.ReadAllText(path));
 		var doc = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
-		doc["levels"]!["1"]!["frame_data"]!["properties"]!["throw"] = new JsonObject { ["range"] = 80, ["breakable"] = true };
 		var changes = doc["levels"]!["3"]!["evolution"]!["changes"]!.AsArray();
 		changes.Add(new JsonObject { ["target"] = "properties.wall_bounce", ["op"] = "set", ["value"] = true });
 		changes.Add(new JsonObject { ["target"] = "multi_hit", ["op"] = "set", ["value"] = new JsonObject { ["hits"] = 3, ["interval"] = 6.0 } });
 		changes.Add(new JsonObject { ["target"] = "decoy", ["op"] = "set", ["value"] = 1 });
-		changes.Add(new JsonObject { ["target"] = "throw.range", ["op"] = "mul_pct", ["value"] = 150 });
 		var pending = SpecialLoader.Parse(doc.ToJsonString());
 
 		var built = pending.Build(3, false);

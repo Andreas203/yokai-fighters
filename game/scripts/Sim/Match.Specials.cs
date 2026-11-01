@@ -271,7 +271,7 @@ public sealed partial class Match
 				CancelFrom.HeavyNormals => m.IsNormal && m.Button is InputBits.HeavyPunch or InputBits.HeavyKick,
 				CancelFrom.Normals => m.IsNormal,
 				// YOK-103 (Undertow): a throw counts once it has landed, not while the opponent can still break it.
-				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
+				CancelFrom.SuccessfulThrows => m.IsGrab && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
 				_ => false,
 			};
 			if (!from) continue;
