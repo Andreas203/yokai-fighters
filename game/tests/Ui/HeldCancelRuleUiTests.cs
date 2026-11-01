@@ -45,27 +45,42 @@ public static class HeldCancelRuleUiTests
 			var run = RunHolding(pool, n);
 			var p = Pause(host, run);
 			var box = UiFind.Get<VBoxContainer>(p, "CancelRules");
+			var panel = UiFind.Get<PanelContainer>(p, "CancelPanel");
 			Assert.Equal($"{n} / 2", UiFind.Get<Label>(p, "CancelCount").Text, "count against the cap (X2)");
-			var slots = box.GetChildren().OfType<CancelRuleSlot>().ToList();
-			Assert.Equal(2, slots.Count, "always two places");
+			Assert.True(panel.GetThemeStylebox("panel") is StyleBoxFlat { BgColor.A: 1 }, "the rules sit on opaque flat paper, not on the stage and not under a brush frame");
 			for (int i = 0; i < 2; i++)
 			{
-				Assert.Equal(i >= n, slots[i].IsEmpty, $"place {i + 1} empty or held");
+				var row = UiFind.Get<Control>(p, $"Cancel{i + 1}");
+				var name = UiFind.Get<Label>(row, "CancelName");
+				var icon = UiFind.Get<TextureRect>(row, "CancelIcon");
 				if (i < n)
 				{
-					Assert.Equal(pool.CancelRules[i].Name, slots[i].NameLabel.Text, "rule name");
-					Assert.Equal(pool.CancelRules[i].CardPlain, slots[i].BodyLabel.Text, "plain line from data (A12)");
-					Assert.True(slots[i].IconRect.Visible && slots[i].IconRect.Texture == AbilityArt.ForId(pool.CancelRules[i].Id), "icon by id, fallback if none");
+					Assert.Equal(pool.CancelRules[i].Name, name.Text, "rule name, in the order taken");
+					Assert.True(icon.Texture == AbilityArt.ForId(pool.CancelRules[i].Id), "icon by id, fallback if none");
 				}
-				else Assert.True(slots[i].IconRect.Texture == null, "an open place has no icon");
-				Assert.True(new Rect2(0, 0, 1920, 1080).Encloses(slots[i].GetGlobalRect()), $"place stays on screen: {slots[i].GetGlobalRect()} (n={n})");
-				Assert.True(slots[i].GetGlobalRect().End.Y <= UiFind.Get<Control>(p, "Footer").GetGlobalRect().Position.Y + 1, "clear of the footer");
-				foreach (var l in new[] { slots[i].NameLabel, slots[i].BodyLabel })
-					Assert.True(l.GetMinimumSize().Y <= l.Size.Y + 1, "copy fits its label");
+				else
+				{
+					Assert.Equal($"Cancel rule {i + 1}: open", name.Text, "an open place");
+					Assert.True(icon.Texture == null, "an open place has no icon");
+				}
+				Assert.True(panel.GetGlobalRect().Encloses(row.GetGlobalRect()), "row stays on its paper");
+				Assert.True(name.GetMinimumSize().X <= name.Size.X && name.GetMinimumSize().Y <= name.Size.Y + 1, "name fits its label");
 			}
+			Assert.True(new Rect2(0, 0, 1920, 1080).Encloses(panel.GetGlobalRect()), "panel stays on screen");
+			Assert.True(panel.GetGlobalRect().End.Y <= UiFind.Get<Control>(p, "Footer").GetGlobalRect().Position.Y + 1, "clear of the footer");
+			// The ink border must not run through any name: every plate's name starts at or below its content top.
+			foreach (var plate in UiFind.Get<VBoxContainer>(p, "Slots").GetChildren().OfType<PanelContainer>())
+			{
+				float top = plate.GetGlobalRect().Position.Y + plate.GetThemeStylebox("panel").GetContentMargin(Side.Top);
+				var nm = UiFind.Get<Label>(plate, "MoveName");
+				Assert.True(nm.GetGlobalRect().Position.Y >= top - 0.01f, $"{plate.Name}: name top {nm.GetGlobalRect().Position.Y} above content top {top}");
+				Assert.True(nm.GetGlobalRect().End.Y <= plate.GetGlobalRect().End.Y - plate.GetThemeStylebox("panel").GetContentMargin(Side.Bottom) + 0.01f, $"{plate.Name}: name below content bottom");
+			}
+			var strip = UiFind.Get<Control>(p, "RunStrip").GetGlobalRect();
+			Assert.True(strip.Position.Y >= 70 && strip.Position.Y <= 82, "run strip stays at main's top (76), below the HUD's opponent bar");
 			// the slots A-D above are not pushed over the rules
 			var slotBox = UiFind.Get<VBoxContainer>(p, "Slots");
-			Assert.True(slotBox.GetGlobalRect().End.Y <= box.GetGlobalRect().Position.Y + 1, "specials end before the rules begin");
+			Assert.True(strip.End.Y <= slotBox.GetGlobalRect().Position.Y && slotBox.GetGlobalRect().End.Y <= box.GetGlobalRect().Position.Y + 1, "strip, specials and rules do not overlap");
 			p.Close(); p.QueueFree();
 		}
 	}

@@ -92,7 +92,7 @@ public static class LayoutFixProbes
 
 	// ---- pause ----
 
-	// Claim: four 100 px plates with a 6 px gap (YOK-218; were 124 and 8) fit above the footer at 996, modifier line inside each plate.
+	// Claim: four 124 px plates with an 8 px gap fit above the footer at 996, modifier line inside each plate.
 	[Test]
 	public static void Pause_FourPlatesWithRealModifierLines_ClearFooter(Node host)
 	{
@@ -107,12 +107,12 @@ public static class LayoutFixProbes
 		p.Open(); Lay(p);
 		var slots = UiFind.Get<VBoxContainer>(p, "Slots");
 		float footerTop = UiFind.Get<Control>(p, "Footer").GetGlobalRect().Position.Y;
-		Assert.Equal(6, slots.GetThemeConstant("separation"), "gap"); // YOK-218: 100 px plates, 6 px gap, to make room for the cancel rules below
+		Assert.Equal(8, slots.GetThemeConstant("separation"), "gap");
 		for (int i = 0; i < 4; i++)
 		{
 			var card = slots.GetChild<Control>(i);
-			Assert.Equal(100f, card.Size.Y, $"plate {i} height");
-			if (i > 0) Assert.Equal(6f, card.GetGlobalRect().Position.Y - slots.GetChild<Control>(i - 1).GetGlobalRect().End.Y, "gap between plates");
+			Assert.Equal(124f, card.Size.Y, $"plate {i} height");
+			if (i > 0) Assert.Equal(8f, card.GetGlobalRect().Position.Y - slots.GetChild<Control>(i - 1).GetGlobalRect().End.Y, "gap between plates");
 			var name = UiFind.Get<Label>(card, "MoveName"); var mod = UiFind.Get<Label>(card, "Modifier");
 			Assert.True(mod.Visible, "modifier line visible");
 			Assert.True(card.GetGlobalRect().Encloses(mod.GetGlobalRect()), $"plate {i} modifier line outside plate");

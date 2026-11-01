@@ -44,15 +44,4 @@ public partial class CancelRuleSlot : PanelContainer
 		BodyLabel.ThemeTypeVariation = "";
 		foreach (var l in new[] { NameLabel, BodyLabel }) l.AddThemeColorOverride("font_color", Grey);
 	}
-
-	/// <summary>Squeezes the card for the pause run panel (smaller margins and icon). Call before the first bind.</summary>
-	public void Dense(float icon = 52f, float vMargin = 8f, float minHeight = 0f)
-	{
-		var sb = (StyleBoxTexture)GetThemeStylebox("panel").Duplicate();
-		sb.ContentMarginTop = sb.ContentMarginBottom = vMargin;
-		sb.ContentMarginLeft = sb.ContentMarginRight = 20f;
-		AddThemeStyleboxOverride("panel", sb);
-		IconRect.CustomMinimumSize = new Vector2(icon, icon);
-		CustomMinimumSize = new Vector2(0, minHeight);
-	}
 }

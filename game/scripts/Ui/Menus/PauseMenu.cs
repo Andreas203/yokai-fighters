@@ -120,32 +120,32 @@ public partial class PauseMenu : Control
 		foreach (var slot in summary.Slots)
 		{
 			bool empty = slot.Level <= 0;
-			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 100),
+			var card = new PanelContainer { Name = $"Slot{slot.Slot}", CustomMinimumSize = new(680, 124),
 				MouseFilter = MouseFilterEnum.Ignore };
 			var paper = (StyleBoxTexture)GD.Load<StyleBoxTexture>("res://ui/kit/paper_card_style.tres").Duplicate();
 			paper.ContentMarginLeft = paper.ContentMarginRight = 20;
-			paper.ContentMarginTop = paper.ContentMarginBottom = 14;
+			paper.ContentMarginTop = paper.ContentMarginBottom = 16;
 			card.AddThemeStyleboxOverride("panel", paper);
-			var content = new Control { CustomMinimumSize = new(640, 72), MouseFilter = MouseFilterEnum.Ignore };
+			var content = new Control { CustomMinimumSize = new(640, 92), MouseFilter = MouseFilterEnum.Ignore };
 			card.AddChild(content);
 			var texture = AbilityArt.ForId(slot.MoveId);
 			// ExpandMode first: with the default mode the texture's own size is the minimum and Size would be clamped up to it.
 			var flourish = new TextureRect { Name = "Flourish", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
-				Position = new(568, 0), Size = new(72, 72),
+				Position = new(536, 0), Size = new(104, 92),
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Modulate = new Color(1, 1, 1, .12f),
 				Visible = !empty, MouseFilter = MouseFilterEnum.Ignore };
 			content.AddChild(flourish);
 			content.AddChild(new TextureRect { Name = "MoveIcon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, Texture = texture,
-				Position = new(0, 0), Size = new(72, 72),
+				Position = new(0, 0), Size = new(92, 92),
 				StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, Visible = !empty,
 				MouseFilter = MouseFilterEnum.Ignore });
 			var name = new Label { Name = "MoveName", Text = empty ? $"{slot.Slot}   Empty" : $"{slot.Move} · Lv {slot.Level}",
-				Position = new(92, string.IsNullOrEmpty(slot.Modifier) ? 16 : -3), Size = new(536, string.IsNullOrEmpty(slot.Modifier) ? 40 : 39),
+				Position = new(112, string.IsNullOrEmpty(slot.Modifier) ? 26 : 4), Size = new(516, 40),
 				AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
 			name.AddThemeFontSizeOverride("font_size", 28);
 			content.AddChild(name);
 			var modifier = new Label { Name = "Modifier", Text = slot.Modifier, Visible = !empty && !string.IsNullOrEmpty(slot.Modifier),
-				Position = new(92, 36), Size = new(536, 36), MouseFilter = MouseFilterEnum.Ignore };
+				Position = new(112, 46), Size = new(516, 40), MouseFilter = MouseFilterEnum.Ignore };
 			modifier.AddThemeFontSizeOverride("font_size", 26);
 			content.AddChild(modifier);
 			slots.AddChild(card);
@@ -153,27 +153,43 @@ public partial class PauseMenu : Control
 		SetCancelRules(summary.Cancels ?? Array.Empty<PauseCancelSummary>());
 	}
 
-	/// <summary>The cancel rules held (X1, X2): a heading with "n / 2", then the two places, held rules first, then open ones.</summary>
+	/// <summary>
+	/// The cancel rules held (X1, X2): one flat paper panel (no brush frame, so no stroke runs through the text) with
+	/// "CANCEL RULES n / 2" and one line per place: held rules in the order taken (icon and name), then open places.
+	/// The plain line and the path line are on the move list.
+	/// </summary>
 	private void SetCancelRules(IReadOnlyList<PauseCancelSummary> held)
 	{
 		var box = UiFind.Get<VBoxContainer>(this, "CancelRules");
 		foreach (Node child in box.GetChildren()) { box.RemoveChild(child); child.QueueFree(); }
+		var paper = new StyleBoxFlat { BgColor = Fight.FightHud.Paper, BorderColor = new Color(Fight.FightHud.Ink, 0.55f), ContentMarginLeft = 20, ContentMarginRight = 20, ContentMarginTop = 8, ContentMarginBottom = 8 };
+		paper.SetBorderWidthAll(3); paper.SetCornerRadiusAll(4);
+		var panel = new PanelContainer { Name = "CancelPanel", MouseFilter = MouseFilterEnum.Ignore };
+		panel.AddThemeStyleboxOverride("panel", paper);
+		var rows = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+		rows.AddThemeConstantOverride("separation", 2);
+		panel.AddChild(rows); box.AddChild(panel);
 		var head = new HBoxContainer { Name = "CancelHead", MouseFilter = MouseFilterEnum.Ignore };
 		var title = new Label { Name = "CancelHeading", Text = "CANCEL RULES", ThemeTypeVariation = "SealLabel", SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
 		title.AddThemeFontSizeOverride("font_size", 28);
 		var count = new Label { Name = "CancelCount", Text = $"{held.Count} / {MoveListView.CancelCap}", ThemeTypeVariation = "SealLabel", HorizontalAlignment = HorizontalAlignment.Right, MouseFilter = MouseFilterEnum.Ignore };
 		count.AddThemeFontSizeOverride("font_size", 28);
 		head.AddChild(title); head.AddChild(count);
-		box.AddChild(head);
-		var scene = GD.Load<PackedScene>("res://scenes/ui/cancel_rule_slot.tscn");
+		rows.AddChild(head);
 		for (int i = 0; i < MoveListView.CancelCap; i++)
 		{
-			var slot = scene.Instantiate<CancelRuleSlot>();
-			slot.Name = $"Cancel{i + 1}";
-			box.AddChild(slot);
-			slot.Dense(icon: 52, vMargin: 18, minHeight: 104);
-			if (i < held.Count) slot.Bind(held[i].Id, held[i].Name, held[i].Plain);
-			else slot.BindEmpty(i + 1);
+			bool has = i < held.Count;
+			var row = new HBoxContainer { Name = $"Cancel{i + 1}", CustomMinimumSize = new(0, 40), MouseFilter = MouseFilterEnum.Ignore };
+			row.AddThemeConstantOverride("separation", 12);
+			row.AddChild(new TextureRect { Name = "CancelIcon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, CustomMinimumSize = new(40, 40),
+				Texture = has ? AbilityArt.ForId(held[i].Id) : null, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+				SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore });
+			var name = new Label { Name = "CancelName", Text = has ? held[i].Name : $"Cancel rule {i + 1}: open", SizeFlagsHorizontal = SizeFlags.ExpandFill,
+				VerticalAlignment = VerticalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore };
+			name.AddThemeFontSizeOverride("font_size", 28);
+			if (!has) name.AddThemeColorOverride("font_color", CancelRuleSlot.Grey);
+			row.AddChild(name);
+			rows.AddChild(row);
 		}
 	}
 
