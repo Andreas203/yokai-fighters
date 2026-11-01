@@ -1,0 +1,18 @@
+{
+  "kind": "level_preset",
+  "id": "great-wave",
+  "special": "spirit-wave",
+  "level": 3,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#2D3A5E",
+  "spark": {
+    "colour": "#1D1B21",
+    "scale_pct": 130
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Great Wave: Indigo #2D3A5E (style.md palette). Spark stays Ink #1D1B21 (V5 Ryo ink black), 30% larger. Water teal is not used: it is Kappa's spark colour (V5). Wave texture is on the follow-up list, not generated."
+}
