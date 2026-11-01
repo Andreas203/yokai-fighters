@@ -346,13 +346,22 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "meter_gain.on_hit", "meter_gain.on_block", "properties.projectile.speed", "properties.projectile.hits",
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
-               "properties.aftershock_delay"}
+               "properties.aftershock_delay",
+               # YOK-220: evolution targets no fight code reads yet (MoveData.CheckPendingProperties)
+               "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
                    "properties.pull_on_hit": 0, "properties.heal_pct_max_health": 0}
 START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_up", "charge_released")
 # YOK-171 (AM11): the modifier-only charge dash switch (ModifierLoader.ForwardTravel); it changes no frame data.
+# YOK-220: only its string value is the switch; an integer on the same target is the frame-data distance.
 FORWARD_TRAVEL = "properties.forward_travel"
+CHARGE_DASH = "charge_dash"
+
+
+def is_charge_dash(e: dict) -> bool:
+    """ModifierData.Parse's switch branch: the full-form target with a string value."""
+    return e.get("target") == FORWARD_TRAVEL and isinstance(e.get("value"), str)
 # Folders whose specials the game's ability pool can hold (AbilityPool.LoadRepo / LoadFixtures).
 SPECIAL_DIRS = (DATA / "moves", ROOT / "game" / "tests" / "fixtures" / "specials", ROOT / "game" / "tests" / "fixtures" / "rewards")
 
@@ -411,6 +420,26 @@ def read_armour(v):
     return {"frames": [first, last], "hits": hits}
 
 
+def read_multi_hit(v):
+    """MultiHit.TryRead: exactly hits >= 2 and interval >= 1, whole numbers."""
+    if not isinstance(v, dict) or set(v) != {"hits", "interval"}:
+        return None
+    hits, interval = whole(v["hits"]), whole(v["interval"])
+    if hits is None or interval is None or hits < 2 or interval < 1:
+        return None
+    return {"hits": hits, "interval": interval}
+
+
+def throw_shape_ok(v) -> bool:
+    """MoveData.ThrowShape: frame-data.schema.json properties.throw."""
+    if not isinstance(v, dict) or set(v) - {"range", "breakable", "break_window"}:
+        return False
+    rng = whole(v.get("range"))
+    if rng is None or rng < 1 or not isinstance(v.get("breakable"), bool):
+        return False
+    return "break_window" not in v or (whole(v["break_window"]) is not None and whole(v["break_window"]) >= 1)
+
+
 def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     """Effects.Apply: one unconditional effect on a frame_data dict (already schema-valid)."""
     target, op, value = effect["target"], effect["op"], effect["value"]
@@ -439,6 +468,10 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
             value = read_armour(value)
             if value is None:
                 raise Unbuildable("armour needs frames [first, last] with first <= last and hits >= 1")
+        elif key == "properties.multi_hit":
+            value = read_multi_hit(value)
+            if value is None:
+                raise Unbuildable('multi_hit needs { "hits": n >= 2, "interval": frames >= 1 }')
         node[leaf] = copy.deepcopy(value)
         return
     cur, v = whole(node.get(leaf)), whole(value)
@@ -521,6 +554,17 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
+    # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only).
+    if "wall_bounce" in props and not isinstance(props["wall_bounce"], bool):
+        out.append("properties.wall_bounce must be true or false")
+    if "multi_hit" in props and read_multi_hit(props["multi_hit"]) is None:
+        out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
+    if "forward_travel" in props and (whole(props["forward_travel"]) is None or whole(props["forward_travel"]) < 0):
+        out.append("properties.forward_travel must be a whole number of units >= 0")
+    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
+        out.append("properties.decoy must be a whole number of hits >= 1")
+    if "throw" in props and not throw_shape_ok(props["throw"]):
+        out.append("properties.throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)")
     return out
 
 
@@ -579,7 +623,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
     charge = doc.get("charge")
     if charge is None and any(e.get("when") == "charge_released" for e in effects):
         errs.append(("effects", "charge_released needs a charge object"))
-    if charge is not None and not any(e.get("target") == FORWARD_TRAVEL for e in effects):
+    if charge is not None and not any(is_charge_dash(e) for e in effects):
         errs.append(("charge", f"a charge object needs the {FORWARD_TRAVEL} charge_dash effect"))
     window = charge.get("window_ticks") if isinstance(charge, dict) else None
     if isinstance(window, dict) and whole(window.get("min")) is not None and whole(window.get("max")) is not None \
@@ -587,7 +631,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
         errs.append(("charge.window_ticks", "min must be <= max"))
     for i, e in enumerate(effects):
         target = e.get("target")
-        if not isinstance(target, str) or target in ("ex.meter_cost", FORWARD_TRAVEL):
+        if not isinstance(target, str) or target == "ex.meter_cost" or is_charge_dash(e):
             continue
         path = resolve_target(target)
         if path[:2] == ["properties", "projectile"] and "projectile" not in requires:

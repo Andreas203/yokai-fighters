@@ -5,9 +5,9 @@
 | `kind` | Schema | Folder | Covers, and who reads it |
 |---|---|---|---|
 | `normal` | `normal.schema.json` | `data/moves/` | Source, `clip`, `rules`, `input.button` (or `input.buttons` for an air normal, E19), optional `input.directions`, top-level `frame_data` (C8); optional `air` (E11) and `landing_recovery` (needs `air`). `MoveLoader`. |
-| `throw` | `throw.schema.json` | `data/moves/` | C4: grab `clip`, `input.buttons` (two different), `frame_data`, `break_window`, `pushback.on_hit`/`on_break`, `throwboxes` inside the active window. `MoveLoader`. |
+| `throw` | `throw.schema.json` | `data/moves/` | C4: grab `clip`, `input.buttons` (two different), `frame_data`, `break_window`, `pushback.on_hit`/`on_break`, `throwboxes` inside the active window, optional `cancel_windows` (YOK-220, X4). `MoveLoader`. |
 | `special` | `special.schema.json` | `data/moves/` | Source, starter, rarity, locked, `clip`, Kata + Kihon input, card, optional EX, levels 1–3 (`levels.1.frame_data` full; `levels.2` one `tuning` effect + `status`; `levels.3.evolution` needs a `preset`). `SpecialLoader`. |
-| (block) | `frame-data.schema.json` | inside moves | Startup/active/recovery, damage, hitstun/blockstun, pushback, `strength` (V2), `meter_gain`, hitboxes, hurtboxes, cancel windows, `properties` (`projectile.max_active`, `aftershock_delay`, modifier properties). |
+| (block) | `frame-data.schema.json` | inside moves | Startup/active/recovery, damage, hitstun/blockstun, pushback, `strength` (V2), `meter_gain`, hitboxes, hurtboxes, cancel windows, `properties` (`projectile.max_active`, `aftershock_delay`, modifier properties; YOK-220: `wall_bounce`, `multi_hit` {hits ≥ 2, interval ≥ 1}, `decoy` ≥ 1, `forward_travel` ≥ 0, `throw`, loaded and not yet read). |
 | `modifier` | `modifier.schema.json` | `data/modifiers/` | Source, always common, locked, `applies_to` (`requires`, YOK-171 `excludes`), optional `charge` (YOK-171, AM11: `ChargeSpec`), effects (`modifierEffect`: targets and `when` limited to what the loader reads), card. `ModifierLoader`. |
 | `cancel_rule` | `cancel-rule.schema.json` | `data/cancels/` | Source, offering elder, always rare, path from/into/on, `once_per_combo: true` (X3). `CancelRuleLoader`. |
 | `profile` | `profile.schema.json` | `data/profiles/` | Yokai, temperament, reaction tier + frames, aggression, preferred range, the habit, weighted behaviours, `tell_cover_pct`, `ex_use`, `burst_use`, `guard_pct`. `when` values are on-screen observations only (P6). `BehaviourProfile`. |
@@ -22,7 +22,7 @@
 | `level_preset` | `level-preset.schema.json` | `data/presets/` | V8, A5: `special`, `level`, `colour`, optional `spark` (colour, scale, frames, textures, sheet columns, tint). One per special + level. `LevelPresetLibrary`. |
 | `harness_bot` | `harness-bot.schema.json` | `data/harness/` | The newcomer Kihon bot (all values proposed). `BotConfig`. |
 | `harness_bot_levels` | `harness-bot-levels.schema.json` | `data/harness/` | Bot skill levels merged onto the base bot. `BotLevels`. |
-| — | `common.schema.json` | — | Shared `$defs`: id, yokai, rarity, status, ruleIds, card, frameRange, rect, timedRect, condition, effect, `effectTarget`/`effectShape` (= `Effects.Vocabulary`), `modifierCondition`, `stage`. |
+| — | `common.schema.json` | — | Shared `$defs`: id, yokai, rarity, status, ruleIds, card, frameRange, rect, timedRect, condition, effect, `effectTarget`/`effectShape` (= `Effects.Vocabulary`), `multiHit`, `modifierCondition`, `stage`. |
 
 ## Conventions
 
@@ -30,6 +30,6 @@
 - **Integers only** for gameplay numbers (F3): frames, units, percent. `mul_pct: 130` = ×1.3. Whole floats (2.0, 1e1) read as integers on both sides.
 - **Frames** are 1-based; active frames are `startup+1 .. startup+active`. `"active": null` = rules.md "—" (projectile carries the hit).
 - **Rects** are gameplay units (200 per metre) from the character's feet, x toward the opponent, y up.
-- **Effects** `{target, op, value, when?}` are the one change vocabulary for Lv 2, Lv 3, EX and modifiers (A5, A10). `op` = `add | mul_pct | set`; `when` is a game-state condition, never a button.
+- **Effects** `{target, op, value, when?}` are the one change vocabulary for Lv 2, Lv 3, EX and modifiers (A5, A10). `op` = `add | mul_pct | set`; `when` is a game-state condition, never a button. A new target lands in `Effects.Vocabulary`, `effectTarget`/`effectShape` and validate_data.py together, with valid and invalid rows in `game/tests/fixtures/modifier-gate/cases.json` (special cases may carry `changes`, the Lv 3 evolution's effects).
 - **`status: "proposed"`** marks values awaiting the designer. **`rules`** lists rules.md IDs (validator rejects unknown ones).
 - `data/samples/` holds one valid file per kind; `data/samples/invalid/` holds malformed files the validator tests expect to fail. The game never loads samples.

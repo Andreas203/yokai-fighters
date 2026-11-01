@@ -63,6 +63,8 @@ class ValidateDataTest(unittest.TestCase):
                 fd.update(c["set"])
                 for k in c["remove"]:
                     fd.pop(k, None)
+                if "changes" in c:  # YOK-220: the evolution's own effects
+                    doc["levels"]["3"]["evolution"]["changes"] = c["changes"]
                 f = Path(tmp) / f"{c['name']}.json"
                 f.write_text(json.dumps(doc), encoding="utf-8")
                 code, out = run(f)
@@ -244,6 +246,33 @@ class ValidateDataTest(unittest.TestCase):
         self.assertIn(("frame_data.throwboxes.0.frames", "throwbox frames 4-9 fall outside 6-7"), errs)
         v = validate_data.load_validators()["throw"]
         self.assertTrue(any("non-unique" in e.message for e in v.iter_errors(doc)))
+
+    def test_throw_cancel_windows(self):
+        """YOK-220: a throw takes cancel_windows like normals and specials (X4, Undertow), inside 1..total frames."""
+        import copy
+        import json
+        doc = json.loads((FIXTURE_THROWS / "test-ryo-throw.json").read_text(encoding="utf-8"))
+        fd = doc["frame_data"]
+        total = fd["startup"] + fd["active"] + fd["recovery"]
+        v = validate_data.load_validators()["throw"]
+        rules = validate_data.load_rule_ids()
+
+        def errors(windows):
+            d = copy.deepcopy(doc)
+            d["frame_data"]["cancel_windows"] = windows
+            schema = [e.message for e in v.iter_errors(d) if e.message != "'clip' is a required property"]  # fixture
+            return schema, validate_data.semantic(d, FIXTURE_THROWS / "test-ryo-throw.json", rules, {})
+
+        schema, sem = errors([{"frames": [fd["startup"] + 1, total], "on": ["hit"]}])
+        self.assertEqual(schema, [])
+        self.assertFalse(any("cancel_windows" in w for w, _ in sem), sem)
+        schema, sem = errors([{"frames": [1, total + 1], "on": ["hit"]}])
+        self.assertEqual(schema, [])
+        self.assertIn(("frame_data.cancel_windows.0.frames", f"cancel window frames 1-{total + 1} fall outside 1-{total}"), sem)
+        schema, _ = errors([{"frames": [2, 4], "on": ["throw"]}])
+        self.assertTrue(schema, "an outcome the fight doesn't read is refused")
+        schema, _ = errors([{"frames": [2, 4]}])
+        self.assertTrue(schema, "a window without 'on' is refused")
 
     def test_rule_id_pattern_accepts_engine_defaults(self):
         import json, re as _re
