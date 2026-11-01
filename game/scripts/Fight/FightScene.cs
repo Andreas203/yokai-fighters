@@ -103,9 +103,16 @@ public partial class FightScene : Node3D
 
 	/// <summary>YOK-187: the name the screens show for the foe = the yokai fought, never the stand-in body (<see cref="Opponent"/>):
 	/// the node's <see cref="NodeContext.BindingName"/> ("Oni", "Elder Oni"), else the body's own name (no node).</summary>
-	public string OpponentName => Story.StoryLibrary.DisplayName(Node is { } n && n.Fighter == Opponent ? n.BindingName : Opponent);
+	public string OpponentName => NameOf(Node, Opponent);
 	/// <summary>YOK-187: the yokai (not the body) for the foe's portrait: the node's <see cref="NodeContext.DraftYokai"/>, else <see cref="Opponent"/>.</summary>
-	public string OpponentYokai => Node is { } n && n.Fighter == Opponent ? n.DraftYokai : Opponent;
+	public string OpponentYokai => YokaiOf(Node, Opponent);
+
+	/// <summary>The node, when <paramref name="opponent"/> is the body it puts up (else the fight is not that node's).</summary>
+	static NodeContext? FoughtOn(NodeContext? node, string opponent) => node is { } n && n.Fighter == opponent ? n : null;
+	/// <summary><see cref="OpponentName"/> for a node and body.</summary>
+	public static string NameOf(NodeContext? node, string opponent) => Story.StoryLibrary.DisplayName(FoughtOn(node, opponent)?.BindingName ?? opponent);
+	/// <summary><see cref="OpponentYokai"/> for a node and body.</summary>
+	public static string YokaiOf(NodeContext? node, string opponent) => FoughtOn(node, opponent)?.DraftYokai ?? opponent;
 
 	/// <summary>
 	/// YOK-90: every elder's twist, from data/twists/ (loaded on first use; a test may set its own). An elder node's
@@ -131,12 +138,21 @@ public partial class FightScene : Node3D
 
 	public static Story.StoryLibrary LoadStory() => Story.StoryLibrary.LoadDirectory(StoryDir);
 
-	/// <summary>Fills the HUD lose screen from data/story/lose-screen.json; keeps the placeholder (and warns) if it is missing or bad.</summary>
+	/// <summary>
+	/// YOK-212, S3: the lose screen's card for a loss to <paramref name="opponent"/> on <paramref name="node"/>: chosen by
+	/// the yokai that won (<see cref="YokaiOf"/>: an elder as its yokai, <see cref="NodeContext.DraftYokai"/>) and the
+	/// node's row (<see cref="Story.StoryLibrary.LaterLossCard"/>), {yokai} = <see cref="NameOf"/> ("Elder Oni").
+	/// No node (a fight off the map) = <c>lose-screen</c>.
+	/// </summary>
+	public static (string? Title, string Text) LoseCardFor(Story.StoryLibrary story, NodeContext? node, string opponent) =>
+		story.LoseScreen(NameOf(node, opponent), YokaiOf(node, opponent), FoughtOn(node, opponent)?.Row);
+
+	/// <summary>Fills the HUD lose screen with <see cref="LoseCardFor"/> this node; keeps the placeholder (and warns) if the card is missing or bad.</summary>
 	private void ApplyLoseCard()
 	{
 		try
 		{
-			var (title, text) = LoadStory().LoseScreen(OpponentName);
+			var (title, text) = LoseCardFor(LoadStory(), Node, Opponent);
 			_hud.SetLoseText(title, text);
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException

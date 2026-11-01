@@ -36,7 +36,7 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 
 | Folder | Classes |
 |---|---|
-| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
+| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `SlipperySkinTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
 | `tests/Sim/Input/` | `InputParserTests` |
 | `tests/Sim/Run/` | `RewardDraftTests`, `ElderCancelRuleTests` (YOK-186: elder cancel-rule offer, hold, continue, R8 provisional), `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests` |
 | `tests/Ai/` | `AiTests` (P6: identical P1 streams → identical AI output until t + reaction), `AiMeterTests`, `AiGuardTests`, `AiGuardHitstopTests`, `StandingHabitTests`, `PerYokaiProfileTests`, `TanukiPressureTests`, `ApprenticeDamageTests` |
@@ -47,5 +47,5 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
 | `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
 | `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
-| `tests/Story/` | `StoryTests` |
+| `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures) |
 | `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |

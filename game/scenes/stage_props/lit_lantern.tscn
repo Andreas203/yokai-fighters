@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/generated/stage/bamboo-grove/lantern.glb" id="1_lant"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_glow"]
+shading_mode = 0
+disable_fog = true
+albedo_color = Color(0.84705883, 0.3882353, 0.17254902, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_x"]
+material = SubResource("StandardMaterial3D_glow")
+size = Vector3(0.75, 0.19, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_z"]
+material = SubResource("StandardMaterial3D_glow")
+size = Vector3(0.3, 0.19, 0.75)
+
+[node name="LitLantern" type="Node3D"]
+
+[node name="Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0019714832, 0.951201, 0.0018630624)
+
+[node name="Model" parent="Pivot" instance=ExtResource("1_lant")]
+
+[node name="GlowX" type="MeshInstance3D" parent="Pivot" groups=["flat_fill"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.095, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_x")
+
+[node name="GlowZ" type="MeshInstance3D" parent="Pivot" groups=["flat_fill"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.095, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_z")
+
+[node name="Light" type="OmniLight3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.095, 0)
+light_color = Color(1, 0.58, 0.32, 1)
+light_energy = 2.0
+light_specular = 0.0
+omni_range = 3.0

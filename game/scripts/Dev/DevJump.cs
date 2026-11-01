@@ -147,6 +147,13 @@ public static class DevJump
 	/// <summary>YOK-187: the name the lose and demo-complete cards use for the setup's foe: the yokai (an elder as "Elder Oni"), never the stand-in body.</summary>
 	public static string NameOf(DevFightSetup setup) => StoryLibrary.DisplayName(Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context.BindingName);
 
+	/// <summary>YOK-212: the lose card a loss to the setup's foe on its node's row would show (<see cref="FightScene.LoseCardFor"/>; a duel is row 2, an elder row 5, the Tanuki row 9).</summary>
+	public static (string? Title, string Text) LoseCardOf(DevFightSetup setup, StoryLibrary story)
+	{
+		var ctx = Table().Resolve(FightNode(setup.Opponent, setup.Elder)).Context;
+		return FightScene.LoseCardFor(story, ctx, ctx.Fighter);
+	}
+
 	/// <summary>Temperaments of the fighter's profiles (data/profiles/; Y1), aggressive first.</summary>
 	public static IReadOnlyList<string> Temperaments(string fighter) =>
 		FightScene.LoadProfiles(fighter).Select(p => p.Temperament).Distinct().ToArray();

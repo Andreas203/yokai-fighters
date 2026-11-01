@@ -1,0 +1,14 @@
+{
+  "kind": "level_preset",
+  "id": "foxfire-lv1",
+  "special": "foxfire",
+  "level": 1,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#F2A23A",
+  "notes": "Colour-only (YOK-213, G3 fallback; no texture). Lv 1 base: Foxfire #F2A23A (style.md palette; V5 foxfire orange). Default spark image."
+}

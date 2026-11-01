@@ -47,6 +47,7 @@ public static class TwistUiTests
 		stage.AddChild(s);
 		var v = new StubMapView().Add("a", 1, "duel", "Kitsune").Add("e", 2, "elder", "Elder Oni", true, "twist-armour").Add("f", 2, "elder", "Elder X", true)
 			.Route("a", "e").Route("a", "f").Open("a");
+		v.Select("a"); v.Complete(); // YOK-109: the elders are drawn once they are the choice
 		s.SetView(v);
 		Assert.Equal("twist-armour", s.NodeFor("e")!.TwistIconId, "the twist's icon id reaches the node");
 		Assert.Equal("", s.NodeFor("f")!.TwistIconId, "an elder with no twist data keeps the plain E mark");

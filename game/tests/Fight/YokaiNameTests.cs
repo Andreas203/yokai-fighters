@@ -49,7 +49,7 @@ public static class YokaiNameTests
 			var pause = s.BuildPauseSummary();
 			Assert.True(pause.Position.EndsWith("vs " + name), "pause line: " + pause.Position);
 			Assert.Equal(name.ToUpperInvariant(), pause.Opponent.Name.ToUpperInvariant(), "pause health name");
-			var (_, card) = FightScene.LoadStory().LoseScreen(name); // what ApplyLoseCard (FightScene._Ready) fills in
+			var (_, card) = FightScene.LoseCardFor(FightScene.LoadStory(), s.Node, FightScene.Opponent); // what ApplyLoseCard (FightScene._Ready) fills in
 			Assert.True(card.Length > 0 && hud.LoseText == card, "lose screen holds the card filled with the yokai: " + hud.LoseText);
 			Assert.True(hud.LoseText.Contains(name), "lose screen names " + name + ": " + hud.LoseText);
 		});

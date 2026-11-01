@@ -3,7 +3,7 @@
   "id": "win-2",
   "status": "proposed",
   "trigger": "Win 2: second Tanuki victory",
-  "text": "\"You keep them in paper, I keep them in my sleeves,\" the Tanuki laughs. \"Which of us is the collector, little exorcist?\" Ryo has no answer yet.",
+  "text": "\"You keep them in paper, I keep them in my sleeves,\" the Tanuki laughs. \"Which of us is the collector, little exorcist?\"",
   "placeholders": [],
   "speaker": "Tanuki",
   "rules": [
@@ -11,5 +11,5 @@
     "S2",
     "S3"
   ],
-  "notes": "Verbatim from GDD 2.4 sample card."
+  "notes": "From the GDD 2.4 sample card, without its closing sentence \"Ryo has no answer yet.\", cut to meet S2 (YOK-215, YOK-46 sweep)."
 }

@@ -298,7 +298,7 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 			if (Stage == DemoStage.Complete) CompleteScreen.Show();
 			return;
 		}
-		if (Match.Winner != 0) { Stage = DemoStage.Lost; session.LoseFight(); return; } // the run ends; the HUD shows the lose screen (double KO counts as a loss)
+		if (Match.Winner != 0) { Stage = DemoStage.Lost; session.LoseFight(); ApplyLoseCard(); return; } // the run ends; the HUD shows the lose screen (double KO counts as a loss); YOK-212: the card for this node's row and yokai
 		// R3 (health left + 50, capped at 1,000) and the A7 offer when the node binds; null = nothing to pick (last node, stand-in stop).
 		var offer = session.Draft ?? session.WinFight(Match.P1.Health);
 		if (offer is null) { FinishNode(); return; }

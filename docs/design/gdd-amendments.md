@@ -23,6 +23,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM15](#am15) | 2026-10-20 | The forecast's expected cost is the copied move's damage per hit | T6 | YOK-173, PR #217 |
 | [AM16](#am16) | 2026-10-19 | Tripo's skeleton becomes the shared skeleton | F6 | YOK-146 |
 | [AM17](#am17) | 2026-10-25 | A story-card style video on first meeting each yokai (extra, not MVP) | S6, header | YOK-207 |
+| [AM18](#am18) | 2026-10-25 | The map is a handscroll that shows only the next choice | R2 | YOK-109, PR #245 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -398,3 +399,23 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 |---|---|---|
 | GDD extended §2.3 Story structure; GDD short §1.4 Audience and story | No beat on first meeting a yokai | A story-card style video on the first meeting with each yokai, extra and not MVP. Rule S6. |
 | rules.md header | Only **Full game** marks work outside the build | **Extra (not MVP)** marks work that may be built only after every MVP item is done [AM17]. |
+
+<a id="am18"></a>
+
+## AM18 — The map is a handscroll that shows only the next choice (2026-10-25)
+
+**Status.** Decided by the designer on 2026-10-25 on YOK-109 (PR #245): "I want the map to look like a scroll with a path looking like it was painted with a brush, currently the map is too cramped, it should be scrollable left to right and nodes should not appear until it is time for selection."
+
+**Decision.** The map is an unrolled paper handscroll, row 1 at the left and the Tanuki at the right, wider than the screen and panned left to right. The route Ryo has walked is painted as a brush stroke. The map draws only the nodes Ryo has cleared, the node he stands on and the nodes he can choose next. Later rows, the Tanuki included, stay blank paper until it is their turn to be chosen.
+
+**Why.** The designer found the map too cramped with all nine columns on one screen.
+
+**What does not change.** The route graph, its rows and node types (R1): rows 5 and 8 are still always elders, row 4 always the merchant. Every node that is shown still names its yokai (R2) and carries its elder-twist icon (Y3). The copy-target talisman still shows on the map (T6). The reveal is presentation only: the run, the saves (M5), the harness and the test bot do not change.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §6.1 The map | The whole map in view (Figure 6), "so choosing a path is choosing which powers you can earn" | A horizontal handscroll that shows only the walked path and the next choice; each choice still shows which yokai waits at each node. |
+| GDD short §1.2 Core loop | "The map has 8 rows, and you pick one node per row" | Unchanged, but the map reveals each row only when it is time to pick from it. |
+| rules.md R2 | "Each node shows which yokai waits there." | Each node shows which yokai waits there. The map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the nodes he can choose next, so later rows, the Tanuki included, stay hidden until their turn [AM18]. |
