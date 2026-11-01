@@ -25,6 +25,8 @@ public partial class TwistCapture : Node
 		var screen = GD.Load<PackedScene>("res://scenes/ui/map_screen.tscn").Instantiate<MapScreen>();
 		AddChild(screen);
 		screen.SetView(new SessionMapView(session));
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		screen.FinishPresentation(); screen.SnapScroll(); // YOK-109: no half-inked frame, the scroll already on the choice
 		await Snap(dir + $"/map_twist_icons{suffix}.png");
 		screen.QueueFree();
 

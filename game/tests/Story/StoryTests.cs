@@ -57,9 +57,11 @@ public static class StoryTests
 			scene.ExternalDrive = true;
 			runner.AddChild(scene);
 			var hud = scene.GetNode<FightHud>("Hud");
-			var (title, text) = FightScene.LoadStory().LoseScreen(StoryLibrary.DisplayName(FightScene.Opponent));
-			Assert.Equal(title, hud.LoseTitle, "HUD lose title = story card");
+			var lib = FightScene.LoadStory();
+			var (title, text) = FightScene.LoseCardFor(lib, scene.Node, FightScene.Opponent);
+			Assert.Equal(title ?? LoseScreen.PlaceholderTitle, hud.LoseTitle, "HUD lose title = story card (none: the screen's own heading)");
 			Assert.Equal(text, hud.LoseText, "HUD lose text = story card with {yokai} = the opponent");
+			Assert.Equal(lib["lose-early"].FillText(yokai: "Kitsune"), hud.LoseText, "YOK-212: the demo's row 1 Kitsune duel shows the rows 1-3 band");
 			Assert.True(!hud.LoseText.Contains("The yokai slips free"), "placeholder replaced");
 			scene.QueueFree();
 		}

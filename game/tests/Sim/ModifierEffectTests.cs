@@ -113,7 +113,7 @@ public static class ModifierEffectTests
 		Bad("{\"target\":\"properties.counterhit_immune\",\"op\":\"add\",\"value\":1}", "flag with add");
 		Bad("{\"target\":\"properties.armour\",\"op\":\"set\",\"value\":{\"frames\":[5,1]}}", "armour window backwards");
 		Bad("{\"target\":\"properties.armour\",\"op\":\"set\",\"value\":true}", "armour without frames");
-		Bad("{\"target\":\"properties.throw_invuln\",\"op\":\"set\",\"value\":\"active\"}", "throw_invuln other than startup");
+		Bad("{\"target\":\"properties.throw_break\",\"op\":\"set\",\"value\":\"active\"}", "throw_break other than startup");
 		Bad("{\"target\":\"pushback\",\"op\":\"set\",\"value\":10}", "set on the pushback pair");
 		Bad("{\"target\":\"ex.meter_cost\",\"op\":\"set\",\"value\":50,\"when\":\"on_hit\"}", "conditional EX cost");
 		ModifierLoader.Parse(File("{\"target\":\"ex.meter_cost\",\"op\":\"set\",\"value\":50}")); // the modifier-only target
@@ -442,11 +442,12 @@ public static class ModifierEffectTests
 	}
 
 	[Test]
-	public static void SlipperySkinCannotBeThrownDuringStartup()
+	public static void SlipperySkinBreaksAThrowDuringStartup()
 	{
-		bool Thrown(string? modifier, int p1Starts)
+		(bool thrown, ThrowOutcome? first) Throw_(string? modifier, int p1Starts)
 		{
-			var m = Setup(modifier, SpecialSlot.B, -60, 60);
+			var log = new Log();
+			var m = Setup(modifier, SpecialSlot.B, -60, 60, log);
 			bool thrown = false;
 			// P2's throw (startup 5) is active on ticks 6-7.
 			for (int t = 1; t <= 8; t++)
@@ -454,11 +455,12 @@ public static class ModifierEffectTests
 				m.Step(t == p1Starts ? FighterInput.Special(SpecialSlot.B) : Idle, t == 1 ? FighterInput.Attack(Throw(m)) : Idle);
 				thrown |= m.P1.State == FighterState.Thrown;
 			}
-			return thrown;
+			return (thrown, log.Throws.Count > 0 ? log.Throws[0].e.Outcome : null);
 		}
-		Assert.True(Thrown(null, 3), "no modifier: grabbed out of the talisman's startup");
-		Assert.True(!Thrown("slippery-skin", 3), "Slippery Skin: frames 4-5 on ticks 6-7 are startup, the throw whiffs");
-		Assert.True(Thrown("slippery-skin", 1), "frame 6 on tick 6 is no longer startup: grabbed");
+		Assert.True(Throw_(null, 3).thrown, "no modifier: grabbed out of the talisman's startup");
+		var slip = Throw_("slippery-skin", 3);
+		Assert.True(!slip.thrown && slip.first == ThrowOutcome.Clash, "AM12: talisman frame 4 on tick 6 is startup, the grab clashes");
+		Assert.True(Throw_("slippery-skin", 1).thrown, "frame 6 on tick 6 is no longer startup: grabbed");
 	}
 
 	// --- Cancel rules (X1-X4), from data/cancels/ ------------------------------------------------------

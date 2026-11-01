@@ -28,6 +28,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM15** 2026-10-20, written 2026-10-24 (YOK-173, YOK-196): the forecast's expected cost is the copied move's damage per hit at Ryo's level, from data, not from the player's own fights (T6).
 - **AM16** 2026-10-19, written 2026-10-24 (YOK-146, YOK-196): Tripo's skeleton becomes the shared skeleton; the Meshy one stays for rigs not yet rebuilt (F6, amends AM5).
 - **AM17** 2026-10-25 (designer, YOK-207): a short story-card style video plays the first time the player meets each yokai; extra, not MVP, built only once every MVP item is done (S6).
+- **AM18** 2026-10-25 (designer, YOK-109, PR #245): the map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the next choice, so later rows and the Tanuki stay hidden until their turn (R2). Presentation only.
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
@@ -55,6 +56,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - 2026-10-20 YOK-159 Astra shop plates (designer): shop half of `astra-brief-shop-dojo.md` settled for Astra. The merchant portrait is fully human with no tell, and takes only the costume from the Tanuki merchant sheet. Wood colours #4A3425, #7A5535 and straw #C9B58C go into `style.md`. The shop backdrop (B1) runs on Astra. One plate per run, 6 runs. Dojo half (D1, B2) stays draft. The Astra output licence is still unknown and must be confirmed before shipping.
 - 2026-10-20 YOK-170 (designer): the bot's idle-guard default depends on its level; the harness runs several test-bot skill levels across batches. Levels live in `data/harness/bot-levels.json` (newcomer = today's bot, pinned; intermediate and skilled values proposed). The YOK-157 first-jump rule stays at every level.
 - 2026-10-20 YOK-109 scope (designer): the shop items moved out of YOK-109 to YOK-159.
+- 2026-10-25 YOK-172 / AM12 (proposed, for designer review): the move property is renamed `throw_invuln` -> `throw_break` (still `"startup"`); a grab that connects during that startup resolves as a `Clash` (no damage, both freed, the throw's on_break pushback). The carrier stays throwable (E17), so a whiffing throw is not broken. Against the Elder Kappa's unbreakable throws the slip still clashes, as a same-frame clash does (YOK-90).
 
 ## Assets and spend (designer)
 - 2026-10-05 YOK-30: first pass approved at 163 credits.
@@ -229,3 +231,4 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 - **Tanuki fight shows Ryo's level (T4, T6; YOK-109):** the copy-target talisman and the "THE TANUKI COPIES" strip show Ryo's level for the copied move; the strip reads "<Move> · Lv N · no modifiers, no evolution", so the player is told the copy runs without the modifier or the Lv 3 evolution. Closes the rules.md open question on which level the player sees.
 - **The Oni is the shrine gate's guardian (S5):** the illusion has bent his post into a gate no one may pass; freed, he goes back to guarding it. Proud and blunt, never a menace. Chosen over dropping the Oni for being "evil" in folklore and over a darker "Ryo frees something dangerous" reading; the binding line (S3, AM2) stays one template for every yokai. No AM needed: the GDD gives the yokai no backstory, so this fills a gap.
 - **AM17 first-meeting video:** a short story-card style video on first meeting each yokai, extra and not MVP. Ticket YOK-207 holds the open details (also in rules.md's open questions).
+- 2026-10-25 YOK-208 bamboo grove lit lanterns (designer: "1. overlap , add fixes"): Lantern0 moved in front of Bamboo3 to head the left path row; its near-total overlap of PathLanternL0 at the left-corner framing is accepted; LanternLine clamps NearScale and skips lanterns at or behind the backdrop, so the two open Test Breaker probes are fixed rather than left advisory.

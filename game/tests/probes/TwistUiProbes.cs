@@ -224,7 +224,9 @@ public static class TwistUiProbes
 		stage.AddChild(s);
 		var v = new StubMapView().Add("a", 1, "duel", "Kitsune").Add("e", 2, "elder", "Elder X", true, "twist-nonexistent").Route("a", "e").Open("a");
 		s.SetView(v);
-		Assert.True(s.NodeFor("e")!.ElderShown, "still marked an elder");
+		Assert.True(s.NodeFor("e") == null, "AM18: the elder is not drawn while it is a later row");
+		s.Confirm(); v.Complete(); s.Refresh();
+		Assert.True(s.NodeFor("e")!.ElderShown, "still marked an elder once it is the choice");
 		stage.QueueFree();
 	}
 
