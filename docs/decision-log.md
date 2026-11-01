@@ -55,6 +55,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - 2026-10-20 YOK-159 Astra shop plates (designer): shop half of `astra-brief-shop-dojo.md` settled for Astra. The merchant portrait is fully human with no tell, and takes only the costume from the Tanuki merchant sheet. Wood colours #4A3425, #7A5535 and straw #C9B58C go into `style.md`. The shop backdrop (B1) runs on Astra. One plate per run, 6 runs. Dojo half (D1, B2) stays draft. The Astra output licence is still unknown and must be confirmed before shipping.
 - 2026-10-20 YOK-170 (designer): the bot's idle-guard default depends on its level; the harness runs several test-bot skill levels across batches. Levels live in `data/harness/bot-levels.json` (newcomer = today's bot, pinned; intermediate and skilled values proposed). The YOK-157 first-jump rule stays at every level.
 - 2026-10-20 YOK-109 scope (designer): the shop items moved out of YOK-109 to YOK-159.
+- 2026-10-25 YOK-172 / AM12 (proposed, for designer review): the move property is renamed `throw_invuln` -> `throw_break` (still `"startup"`); a grab that connects during that startup resolves as a `Clash` (no damage, both freed, the throw's on_break pushback). The carrier stays throwable (E17), so a whiffing throw is not broken. Against the Elder Kappa's unbreakable throws the slip still clashes, as a same-frame clash does (YOK-90).
 
 ## Assets and spend (designer)
 - 2026-10-05 YOK-30: first pass approved at 163 credits.
