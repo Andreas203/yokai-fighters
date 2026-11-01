@@ -62,6 +62,7 @@ public static class AiGuardTests
 	{
 		Scenes = new LegacyScenes(c.Scenes),
 		StandingHabits = false, // YOK-177: standing-trigger habits never rolled before it
+		NeutralThrowHeld = false, // YOK-228: a neutral throw was raw LP+LK at once before it
 	};
 
 	sealed class LegacyScenes(INodeSceneResolver inner) : INodeSceneResolver
@@ -87,8 +88,7 @@ public static class AiGuardTests
 		// YOK-177: the same opponent with standing-trigger habits on (the apprentice's at_close_range habit rolls) is a new run.
 		var on = RunHarness.PlayBatch(content with { StandingHabits = true }, bot with { Fight = bot.Fight with { IdleGuardPct = 0 } }, 1, 1);
 		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
-		// YOK-228: re-pinned (was 154d762679e8fa9e): a neutral throw picked while the AI was busy now waits for its first actionable tick (ProfileAi.Neutral).
-		Assert.Equal("5e3232b2111e015a", docOn.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "the legacy opponent with YOK-177 standing habits");
+		Assert.Equal("154d762679e8fa9e", docOn.RootElement.GetProperty("runs")[0].GetProperty("session_hash").GetString(), "the legacy opponent with YOK-177 standing habits");
 	}
 
 	// --- The profile field --------------------------------------------------------------------------

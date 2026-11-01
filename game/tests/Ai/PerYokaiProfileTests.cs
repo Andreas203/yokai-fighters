@@ -82,6 +82,12 @@ public static class PerYokaiProfileTests
 		Assert.True(kappaGround.All(id => id.StartsWith("kappa-")), "only Kappa ground normals: " + string.Join(",", kappaGround));
 		Assert.Equal(0, kappa.Specials.Length, "the Kappa has no special in data, and never the Kitsune's Foxfire");
 		Assert.True(kappa.Moves.Count(m => m.IsThrow) == 1 && kappa.Moves.First(m => m.IsThrow).Id == "kappa-throw", "throw: the Kappa's own (C4, YOK-228)");
+		// No Kappa air normal in data yet: the body's stand in (the Kitsune's, today Ryo's TEST FIXTURE air punch and kick).
+		var kappaAir = kappa.Moves.Where(m => m.IsNormal && m.Air).Select(m => m.Id).ToArray();
+		var kitsuneAir = kitsune.Moves.Where(m => m.IsNormal && m.Air).Select(m => m.Id).ToArray();
+		Assert.True(kappaAir.Length > 0 && kappaAir.SequenceEqual(kitsuneAir), "air normals: the Kitsune body's: " + string.Join(",", kappaAir));
+		Assert.True(kappaAir.OrderBy(id => id).SequenceEqual(new[] { "test-ryo-air-kick", "test-ryo-air-punch" }), "today the TEST FIXTURE air kick and punch: " + string.Join(",", kappaAir));
+		Assert.True(kappa.Notes.Any(n => n.Contains("kappa: no air normals in data, kitsune's air normals stand in")), "the stand-in is logged: " + string.Join(" | ", kappa.Notes));
 		Assert.Equal(130, FighterData.Load(Sources.FightersDir, "kappa").PushWidth ?? 0, "data/fighters/kappa.json push width");
 	}
 

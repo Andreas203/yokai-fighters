@@ -56,6 +56,7 @@ public static class OniKappaBodyTests
 			Assert.Equal(move, clip, $"{move} names its own clip");
 			Assert.Equal(clip, FighterAnimSet.Kappa.MoveClip(clip), $"{clip}: no override");
 			Assert.True(Cat.Has(clip), $"{clip} is catalogued");
+			Assert.True(FighterAnimSet.Kappa.CanPlay(Cat[clip]), $"{clip} plays on the Kappa body");
 		}
 	}
 

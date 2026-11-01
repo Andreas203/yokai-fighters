@@ -75,6 +75,13 @@ public sealed class ProfileAi
 	/// YOK-177, when such a habit never rolled; only replays of recordings made before it pass false (<c>AiSetup.StandingHabits</c>).
 	/// </summary>
 	public bool StandingHabits { get; }
+	/// <summary>
+	/// YOK-228: a neutral throw pick waits for the first actionable tick its own screen predicts and is pressed as the
+	/// throw's slot request (<see cref="AiLoadout.ThrowRequest"/>), so a press that lands while busy is ignored and buffers
+	/// no light punch. False = the rule before YOK-228 (raw LP+LK at once); only replays of recordings made before it, and
+	/// tests pinning older whole-run hashes, pass false (<c>AiSetup.NeutralThrowHeld</c>).
+	/// </summary>
+	public bool NeutralThrowHeld { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -95,9 +102,11 @@ public sealed class ProfileAi
 	private readonly bool[] _rose = new bool[Enum.GetValues<Observation>().Length];
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
-		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null, bool standingHabits = true)
+		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null, bool standingHabits = true,
+		bool neutralThrowHeld = true)
 	{
 		StandingHabits = standingHabits;
+		NeutralThrowHeld = neutralThrowHeld;
 		GuardPct = Math.Clamp(guardPct ?? profile.GuardPct ?? DefaultGuardPct, 0, 100);
 		Tier = tier;
 		AggressionBonus = aggressionBonus;
@@ -397,11 +406,14 @@ public sealed class ProfileAi
 		{
 			if (roll >= w[i]) { roll -= w[i]; continue; }
 			var b = Profile.Behaviours[i];
-			// YOK-228: a throw picked while its own screen shows it busy (stun, its own move, landing, wake-up) waits for the
-			// predicted first actionable tick. Pressed early, the raw LP+LK would be dropped as a throw (E12 reads the
-			// press on the tick it lands) while the buffer turned its LP into a light punch. Same draws; still raw buttons.
-			int hold = b.Do.Kind == ActionKind.Throw ? Math.Max(0, FirstActionableTick(view) - tick) : 0;
-			var p = Build(b.Do, view, tick, false, hold);
+			// YOK-228 (NeutralThrowHeld): a throw picked while its own screen shows it busy (stun, its own move, landing,
+			// wake-up) waits for the predicted first actionable tick, then presses the throw's slot request. The raw LP+LK
+			// pressed early was dropped as a throw (E12 reads the press on the tick it lands) while the buffer turned its LP
+			// into a light punch; a slot request that still lands while busy (a hit the delayed screen has not shown) is
+			// ignored and buffers nothing. Same draws.
+			bool heldThrow = NeutralThrowHeld && b.Do.Kind == ActionKind.Throw;
+			int hold = heldThrow ? Math.Max(0, FirstActionableTick(view) - tick) : 0;
+			var p = Build(b.Do, view, tick, false, hold, heldThrow);
 			Record(tick, view, p is null ? "unavailable" : "neutral", b.When, b.Do.ToString(), roll, w[i]);
 			if (p is not null) return p;
 			break;
