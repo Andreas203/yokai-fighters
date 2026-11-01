@@ -77,6 +77,7 @@ public sealed partial class Match
 		_projectileSerial = 0;
 		ResetTwistState(); // YOK-90
 		ResetAftershocks(); // YOK-136
+		ResetDecoys();      // YOK-224
 		Resets++; // YOK-198: presentation bookkeeping, outside StateHash
 	}
 
@@ -164,10 +165,11 @@ public sealed partial class Match
 				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);
 			if (f.Airborne) f.X += f.JumpDir * Config.JumpSpeedX;
 			ChargeDashStep(f); // YOK-171: a released charge's dash through the startup frames
+			StepTeleport(i);   // YOK-224: properties.teleport on its frame (Match.Mirage.cs)
 
 			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
-				// Placeholder for a side-switching move (jump-over, Fox Mirage): land just behind the opponent.
+				// Test-only input (no scene maps it): an instant side switch. The real move is properties.teleport (YOK-224).
 				int side = Math.Sign(o.X - before);
 				if (side == 0) side = f.Facing;
 				f.X = o.X + side * PushGap(f, o);
@@ -185,6 +187,7 @@ public sealed partial class Match
 		StepProjectiles();    // YOK-21: travel, despawn, spawn on the move's spawn frame
 		StepAftershocks();    // YOK-136: age, expire, spawn on the move's first active frame
 		ResolveThrows();      // YOK-19: grabs before strikes, so a grabbed fighter's strike never lands
+		ResolveDecoys();      // YOK-224: a decoy takes the hits that reach it first
 		ResolveHits();
 		ResolveProjectiles(); // YOK-21: clashes, then projectile hits
 		ResolveAftershocks(); // YOK-136: second quakes
@@ -578,6 +581,6 @@ public sealed partial class Match
 		h = Fnv.Mix(h, Winner);
 		h = P1.Hash(h);
 		h = P2.Hash(h);
-		return HashAftershocks(HashTwistState(HashProjectiles(HashMeterState(h))));
+		return HashDecoys(HashAftershocks(HashTwistState(HashProjectiles(HashMeterState(h))))); // YOK-224: decoys
 	}
 }
