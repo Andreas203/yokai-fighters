@@ -268,6 +268,47 @@ public static class ForwardTravelTests
 	}
 
 	[Test]
+	public static void ChargeDash_StillShovesTheOpponent_AsYok210Approved()
+	{
+		// Only forward_travel stops at the push box. The dash part is uncapped: ResolvePositions shares each tick's
+		// 26-unit overlap (13 each), as on main before YOK-221.
+		var m = Setup(Special(travel: 0), -60, 60, modifier: SumoCharge);
+		m.P1.Input.Scheme = ControlScheme.Kihon;
+		int gap = m.PushGap(m.P1, m.P2);
+		Assert.Equal(gap, m.P2.X - m.P1.X, "they start touching");
+		int started = 0;
+		m.SpecialStarted += (mm, e) => { if (e.Fighter == 0 && started == 0) started = mm.Tick; };
+		for (int t = 1; started == 0 || m.Tick < started + Startup - 1; t++)
+		{
+			m.Step(t == 1 ? new FighterInput(InputBits.Special | InputBits.Right) : t <= 31 ? new FighterInput(InputBits.Special) : Idle, Idle);
+			Assert.True(t < 100, "the special starts");
+		}
+		Assert.Equal(31, started, "held to the window's max: the top speed, 26 units per tick");
+		Assert.Equal(60 * S + Startup * 13 * S, m.P2.X, "P2 is shoved back half of each 26-unit dash step");
+		Assert.Equal(m.P2.X - gap, m.P1.X, "and P1 keeps touching it");
+	}
+
+	[Test]
+	public static void OpponentSteppingAway_LeavesThatMuchMoreRoom()
+	{
+		// P1 travels 600 (100 a frame) at P2, who faces away and travels 300 (50 a frame) the same ticks.
+		var m = new Match(null, Moves(), Moves());
+		foreach (var f in m.Fighters) FightScene.EquipStarters(f, Fixtures());
+		m.P1.Equip(SpecialSlot.B, SpecialLoader.Parse(Special(600)));
+		m.P2.Equip(SpecialSlot.B, SpecialLoader.Parse(Special(300, id: "test-forward-charge-slow")));
+		m.P1.X = -150 * S;
+		m.P2.X = 50 * S;
+		m.P2.Facing = 1;
+		int gap = m.PushGap(m.P1, m.P2);
+		var xs = Run(m, Total, OnTick1, OnTick1);
+		foreach (var (x1, x2) in xs) Assert.True(x2 - x1 >= gap, $"no overlap ({x1} vs {x2})");
+		Assert.Equal(350 * S, m.P2.X, "P2 travelled all its 300 units away");
+		Assert.Equal(m.P2.X - gap, m.P1.X, "P1 used the room P2 left and ends touching it, not a step short");
+		for (int t = Startup + 2; t <= Startup + Active; t++)
+			Assert.Equal(gap, xs[t - 1].x2 - xs[t - 1].x1, $"tick {t}: P1 keeps up with P2 each travel frame");
+	}
+
+	[Test]
 	public static void TanukiCopy_TravelsLikeRyo()
 	{
 		var special = SpecialLoader.Parse(Special());

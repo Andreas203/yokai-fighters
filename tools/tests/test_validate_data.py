@@ -71,6 +71,19 @@ class ValidateDataTest(unittest.TestCase):
                     wrong.append(f"{c['name']}: validator {'accepted' if not lines else 'refused'}\n{out}")
         self.assertEqual(wrong, [], "\n".join(wrong))
 
+    def test_forward_travel_needs_whole_units_and_active_frames(self):
+        """YOK-221: per build, as MoveData.ReadTravel: a level or EX that takes the active frames away can't keep its travel."""
+        def errs(active, travel):
+            fd = {"startup": 5, "active": active, "recovery": 20, "damage": 0, "properties": {"forward_travel": travel}}
+            return [e for e in validate_data.built_move_errors(fd) if "forward_travel" in e]
+        self.assertEqual(errs(6, 300), [])
+        self.assertEqual(errs(6, 300.0), [], "a whole number in any notation")
+        self.assertEqual(errs(0, 0), [], "no travel needs no active frames")
+        self.assertEqual(errs(0, 300), ["properties.forward_travel needs active frames to travel over"])
+        self.assertEqual(errs(6, -1), ["properties.forward_travel must be a whole number >= 0"])
+        self.assertTrue(errs(6, 2.5), "a fraction is refused (the whole-number rule)")
+        self.assertEqual(errs(6, "charge_dash"), ["properties.forward_travel must be a whole number >= 0"], "the modifier switch is not a distance")
+
     def test_real_modifiers_build_on_every_special(self):
         code, out = run(ROOT / "data" / "modifiers")
         self.assertEqual(code, 0, out)

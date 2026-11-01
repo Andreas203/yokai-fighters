@@ -519,6 +519,11 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay must be a whole number >= 1")
         elif not fd.get("hitboxes"):
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
+    if props.get("forward_travel") is not None:  # YOK-221: MoveData.ReadTravel
+        if whole(props["forward_travel"]) is None or whole(props["forward_travel"]) < 0:
+            out.append("properties.forward_travel must be a whole number >= 0")
+        elif whole(props["forward_travel"]) > 0 and a <= 0:
+            out.append("properties.forward_travel needs active frames to travel over")
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
     return out
