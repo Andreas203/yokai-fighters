@@ -155,7 +155,7 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     if s is None or r is None or (fd.get("active") is not None and a is None):
         return
     total = s + (a or 0) + r
-    props = fd.get("properties") or {}
+    props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}  # the schema reports a non-object
     if a is None:
         if "projectile" not in props:
             errs.append((f"{where}.active", "active is null ('—') but properties.projectile is missing"))
