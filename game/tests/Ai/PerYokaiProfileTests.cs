@@ -11,9 +11,8 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-174 (Y1, Y2, F7 of the YOK-154 report): every yokai node fights with its OWN behaviour profiles and its own
-/// move files, even while its body is the fallback Kitsune kit. The Oni fights with his five data normals, the
-/// Kappa (no move files yet) with his profiles' generic actions on the Kitsune's normals and throw; neither carries
-/// Foxfire. A profile naming a move its kit lacks fails at load. The harness report lists the fight mix.
+/// move files, even while its node's fighter is the fallback Kitsune. The Oni fights with his five data normals and the
+/// Kitsune's throw, the Kappa with his own six normals and throw (YOK-228); neither carries Foxfire. A profile naming a move its kit lacks fails at load. The harness report lists the fight mix.
 /// </summary>
 public static class PerYokaiProfileTests
 {
@@ -64,7 +63,7 @@ public static class PerYokaiProfileTests
 	}
 
 	[Test]
-	public static void KitLoadAs_OniHasHisOwnNormals_NoFoxfire_TheKappaStandsInOnTheKitsunesMoves()
+	public static void KitLoadAs_OniAndKappaHaveTheirOwnNormals_KappaHisOwnThrow_NoFoxfire()
 	{
 		var kitsune = Kit.Load("kitsune", Sources);
 		Assert.True(Kit.LoadAs("kitsune", "kitsune", Sources).Moves.Select(m => m.Id).SequenceEqual(kitsune.Moves.Select(m => m.Id)), "same fighter = Kit.Load");
@@ -78,8 +77,12 @@ public static class PerYokaiProfileTests
 		Assert.Equal(150, FighterData.Load(Sources.FightersDir, "oni").PushWidth ?? 0, "data/fighters/oni.json push width");
 
 		var kappa = Kit.LoadAs("kappa", "kitsune", Sources);
-		Assert.True(kappa.Moves.Select(m => m.Id).SequenceEqual(kitsune.Moves.Select(m => m.Id)), "the Kappa has no move files: the Kitsune's normals, throw and air normals");
-		Assert.Equal(0, kappa.Specials.Length, "the Kappa never carries Foxfire");
+		var kappaGround = kappa.Moves.Where(m => m.IsNormal && !m.Air).Select(m => m.Id).ToArray();
+		Assert.Equal(6, kappaGround.Length, "the Kappa's six data normals: " + string.Join(",", kappaGround));
+		Assert.True(kappaGround.All(id => id.StartsWith("kappa-")), "only Kappa ground normals: " + string.Join(",", kappaGround));
+		Assert.Equal(0, kappa.Specials.Length, "the Kappa has no special in data, and never the Kitsune's Foxfire");
+		Assert.True(kappa.Moves.Count(m => m.IsThrow) == 1 && kappa.Moves.First(m => m.IsThrow).Id == "kappa-throw", "throw: the Kappa's own (C4, YOK-228)");
+		Assert.Equal(130, FighterData.Load(Sources.FightersDir, "kappa").PushWidth ?? 0, "data/fighters/kappa.json push width");
 	}
 
 	[Test]

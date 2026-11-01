@@ -7,8 +7,8 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-131: Oni and Kappa nodes show their own bodies on the Kitsune stand-in kit.
-/// Presentation only: the node's fighter (the sim's kit) stays the stand-in.
+/// YOK-131: Oni and Kappa nodes show their own bodies while the node's fighter is the Kitsune fallback.
+/// Presentation only: the node's fighter stays the stand-in; the moves are the yokai's own where data/moves has them.
 /// </summary>
 public static class OniKappaBodyTests
 {
@@ -43,6 +43,20 @@ public static class OniKappaBodyTests
 			model!.Free();
 		}
 		Assert.True(ReferenceEquals(FighterAnimSet.Kappa.Clips, FighterAnimSet.Kitsune.Clips), "kappa: the Kitsune's shared clips");
+	}
+
+	/// <summary>YOK-228: the Kappa's own moves play their own clip files, catalogued, with no Kitsune override on them.</summary>
+	[Test]
+	public static void Kappa_OwnMovesPlayTheirOwnClips()
+	{
+		var kappaMoves = FightScene.MoveClips.Where(kv => kv.Key.StartsWith("kappa-")).ToArray();
+		Assert.Equal(7, kappaMoves.Length, "six normals and the throw: " + string.Join(",", kappaMoves.Select(kv => kv.Key)));
+		foreach (var (move, clip) in kappaMoves)
+		{
+			Assert.Equal(move, clip, $"{move} names its own clip");
+			Assert.Equal(clip, FighterAnimSet.Kappa.MoveClip(clip), $"{clip}: no override");
+			Assert.True(Cat.Has(clip), $"{clip} is catalogued");
+		}
 	}
 
 	/// <summary>The Oni plays his own club kit (oni-club-clips.md final summary) on the Kitsune stand-in moves.</summary>

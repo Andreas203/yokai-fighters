@@ -424,8 +424,9 @@ public static class StandingHabitTests
 	}
 
 	/// <summary>
-	/// Code-critic r3: the YOK-165 anti-air with a throw answer (the Kappa's, on the Kitsune kit) under random pressure.
-	/// The Kappa profile names no normal, so any Kitsune normal it starts is a throw press turned into a buffered normal.
+	/// Code-critic r3: the YOK-165 anti-air with a throw answer (the Kappa's profile, played here on the Kitsune kit: the rule
+	/// is kit-independent) under random pressure. The Kappa profile names no normal, so any normal it starts is a throw
+	/// press turned into a buffered normal.
 	/// Under the YOK-177 rule the throw answer is a slot request, so no normal starts within 60 ticks of a throw answer
 	/// (windows where it also threw on the raw buttons, from neutral or a reaction, are skipped).
 	/// </summary>

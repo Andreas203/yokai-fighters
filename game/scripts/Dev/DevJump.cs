@@ -120,7 +120,7 @@ public static class DevJump
 	/// <summary>
 	/// The opponents. One is built when the node-scene table gives it a fighter of its own, or when it stands in on
 	/// another fighter's kit but has a body of its own (<see cref="FighterAnimSet.HasBody"/>: the Oni and Kappa fight as
-	/// themselves on the Kitsune's moves). A stand-in with no body of its own stays greyed.
+	/// themselves, on their own move files where data/moves has them and the Kitsune's for the rest, <see cref="Kit.LoadAs"/>). A stand-in with no body of its own stays greyed.
 	/// </summary>
 	public static IReadOnlyList<DevOpponent> Opponents(NodeSceneTable? table = null)
 	{
