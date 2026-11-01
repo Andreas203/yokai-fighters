@@ -77,6 +77,17 @@ public static class HeldCancelRuleUiTests
 				Assert.True(nm.GetGlobalRect().End.Y <= plate.GetGlobalRect().End.Y - plate.GetThemeStylebox("panel").GetContentMargin(Side.Bottom) + 0.01f, $"{plate.Name}: name below content bottom");
 			}
 			var strip = UiFind.Get<Control>(p, "RunStrip").GetGlobalRect();
+			// Every RunStrip label sits inside the strip's content area, below its ink border (Eyebrow at least 24 px under the top, as on main).
+			var stripBox = UiFind.Get<Control>(p, "RunStrip");
+			float inTop = strip.Position.Y + 24, inBottom = strip.End.Y - 16;
+			foreach (string label in new[] { "Eyebrow", "RunName", "RunHealth", "RunPercent", "RunSub" })
+			{
+				var l = UiFind.Get<Label>(stripBox, label).GetGlobalRect();
+				Assert.True(l.Position.Y >= inTop - 0.01f, $"{label} top {l.Position.Y} above the strip's content top {inTop}");
+				Assert.True(l.End.Y <= inBottom + 0.01f, $"{label} bottom {l.End.Y} below the strip's content bottom {inBottom}");
+			}
+			var bar = UiFind.Get<Control>(stripBox, "RunBar").GetGlobalRect();
+			Assert.True(bar.Position.Y >= inTop && bar.End.Y <= inBottom, "RunBar inside the content area");
 			Assert.True(strip.Position.Y >= 70 && strip.Position.Y <= 82, "run strip stays at main's top (76), below the HUD's opponent bar");
 			// the slots A-D above are not pushed over the rules
 			var slotBox = UiFind.Get<VBoxContainer>(p, "Slots");
