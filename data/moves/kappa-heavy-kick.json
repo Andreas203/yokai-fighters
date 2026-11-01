@@ -1,0 +1,98 @@
+{
+  "kind": "normal",
+  "id": "kappa-heavy-kick",
+  "name": "Kappa heavy kick",
+  "status": "proposed",
+  "source": "kappa",
+  "clip": "kappa-heavy-kick",
+  "rules": [
+    "A8",
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2"
+  ],
+  "input": {
+    "button": "HK"
+  },
+  "frame_data": {
+    "startup": 11,
+    "active": 4,
+    "recovery": 23,
+    "damage": 90,
+    "hitstun": 26,
+    "blockstun": 19,
+    "strength": "heavy",
+    "hitboxes": [
+      {
+        "frames": [
+          12,
+          13
+        ],
+        "rect": {
+          "x": 80,
+          "y": 145,
+          "w": 75,
+          "h": 70
+        }
+      },
+      {
+        "frames": [
+          14,
+          15
+        ],
+        "rect": {
+          "x": 90,
+          "y": 195,
+          "w": 70,
+          "h": 70
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          38
+        ],
+        "rect": {
+          "x": -65,
+          "y": 0,
+          "w": 130,
+          "h": 310
+        }
+      },
+      {
+        "frames": [
+          12,
+          14
+        ],
+        "rect": {
+          "x": 80,
+          "y": 145,
+          "w": 80,
+          "h": 95
+        }
+      },
+      {
+        "frames": [
+          15,
+          19
+        ],
+        "rect": {
+          "x": 70,
+          "y": 210,
+          "w": 85,
+          "h": 75
+        }
+      }
+    ],
+    "properties": {
+      "knockdown": true
+    }
+  },
+  "notes": "Clip kappa-heavy-kick (GREYBOX reuse of kitsune-heavy-kick, 38 frames, hit 12-15): 11/4/23. Frame data follows the clip exactly (F2); C8 gives 12/4/22: -1 startup, +1 recovery, the clip kept (F2), flagged for the designer; Ryo and Kitsune carry the same delta. Damage is the C8 number; hitstun, blockstun and strength are copied from kitsune-heavy-kick (placeholders, not in rules.md). Boxes are kitsune-heavy-kick's boxes (placed on the same clip frames, YOK-33) scaled for the Kappa and rounded to 5: height x0.886 (1.551 m / Ryo's 1.75 m), reach x0.886 (short legs). Body hurtbox is the Kappa standing box 130 x 310 (shell on the back, 0.68 m deep); estimated, NOT re-placed from the posed Kappa rig: proposed, needs a YOK-33 style pass. "
+}
