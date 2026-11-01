@@ -1,0 +1,17 @@
+{
+  "kind": "level_preset",
+  "id": "foxfire-lv2",
+  "special": "foxfire",
+  "level": 2,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#D8632C",
+  "spark": {
+    "colour": "#F2A23A"
+  },
+  "notes": "Colour-only (YOK-213). Lv 2 colour shift: Persimmon #D8632C (style.md palette), the dusk-glow orange, for the flame. Spark stays Foxfire #F2A23A so the hit still reads as a kitsune source (V5). Default spark image."
+}

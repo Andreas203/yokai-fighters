@@ -227,6 +227,7 @@ public static class DevJumpTests
 		card.Continue();
 		Assert.True(flow.DevScreen == null && flow.Title.Visible, "Continue closes the viewer");
 		Assert.True(Open("results-lose") && flow.DevScreen!.Screen is LoseScreen, "lose screen");
+		Assert.Equal(FightScene.LoadStory()["lose-early"].FillText(yokai: "Kitsune"), ((LoseScreen)flow.DevScreen!.Screen).Text, "YOK-212: the Kitsune duel (row 2) previews the rows 1-3 band");
 		((LoseScreen)flow.DevScreen!.Screen).Restart.EmitSignal(BaseButton.SignalName.Pressed);
 		Assert.True(flow.DevScreen == null, "Restart closes it");
 		Assert.True(Open("reward-draft") && flow.DevScreen!.Screen is RewardScreen rewards && rewards.Showing, "reward draft");

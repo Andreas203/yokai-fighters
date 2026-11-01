@@ -15,7 +15,8 @@ Non-code: `export_presets.cfg` ("Windows Desktop", x86_64, embedded PCK, `tests/
 | Scene | Holds | Script |
 |---|---|---|
 | `fight.tscn` | `StageContainer` (runtime `Stage`), `CameraRig`, `Fighters` (runtime `P1`, `P2`) + `P1Spawn`/`P2Spawn` markers, `EditorPreview`, UI children (HUD, flow screens, `PauseLayer/Pause`) | `Fight/FightScene.cs` |
-| `stage/bamboo_grove.tscn` (default) | `Environment`, `Sun`/`Fill`, `Backdrop` (z −16), `Floor` (`shaders/toon_floor.gdshader`), `Props` (`Bamboo0-9`, `Lantern0-1`: holder → `Pivot` → `Model`), `PropToon` | `Fight/Presentation/FightStage.cs` |
+| `stage/bamboo_grove.tscn` (default) | `Environment`, `Sun`/`Fill`, `Backdrop` (z −16), `Floor` (`shaders/toon_floor.gdshader`), `Props` (`Bamboo0-9`: holder → `Pivot` → `Model`; `Lantern0-1`: `stage_props/lit_lantern.tscn` instances, each standing in front of its clump at the head of a path row (`Lantern0` at (−2.5, −10.9) ahead of `Bamboo3`, checked by `StageTests`); `PathLanterns`: `LanternLine.cs`), `PropToon` | `Fight/Presentation/FightStage.cs` |
+| `stage_props/lit_lantern.tscn` | A lit stone lantern: `Pivot` → `Model` (lantern.glb), `GlowX`/`GlowZ` (flat unshaded #D8632C window insert, group `flat_fill`, fog off), `Light` (warm OmniLight3D, range 3 m, no shadows). Outside `stage/` so no table can name it as a stage | none (YOK-208) |
 | `stage/placeholder.tscn` | Flat floor fallback (missing grove art or `--stage=placeholder`) | `FightStage.cs` |
 | `camera_rig.tscn` | `Camera` (Camera3D, FOV 25); the rig is placed every frame from `DynamicCamera.Transform` | none |
 | `fighters/BaseFighter.tscn` | Root `FighterModel`, `Mirror` (Scale.X = facing) → `Yaw` (+90°: rig +Z → world +X) → `Model` in variants; `Animator` (AnimationPlayer, **Manual**); `Toon`. Variants must not override these (`EditableSceneTests`) | `Fight/Presentation/FighterModel.cs` |

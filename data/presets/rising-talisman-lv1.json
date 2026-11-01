@@ -1,0 +1,14 @@
+{
+  "kind": "level_preset",
+  "id": "rising-talisman-lv1",
+  "special": "rising-talisman",
+  "level": 1,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#1D1B21",
+  "notes": "Colour-only (YOK-213). Lv 1 base: Ink #1D1B21 (style.md palette; V5 Ryo ink black). Default spark image. No Lv 2 preset: the special names none at Lv 2."
+}
