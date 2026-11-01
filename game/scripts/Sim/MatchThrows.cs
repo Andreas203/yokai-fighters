@@ -49,7 +49,8 @@ public sealed partial class Match
 	/// </summary>
 	public static bool Throwable(Fighter d) =>
 		!d.KnockedOut && !d.Invulnerable && !d.Airborne
-		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing; // YOK-55: landing recovery
+		&& d.State is FighterState.Idle or FighterState.Dash or FighterState.Attack or FighterState.Landing // YOK-55: landing recovery
+			or FighterState.Bracing; // YOK-171: nothing makes the hold throw-invulnerable (open designer question, YOK-142 (d))
 
 	/// <summary>
 	/// AM12 (YOK-172, Slippery Skin): the fighter is in the startup of a move with <c>properties.throw_break:

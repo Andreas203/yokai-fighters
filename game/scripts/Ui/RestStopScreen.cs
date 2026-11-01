@@ -19,14 +19,23 @@ namespace YokaiFighters.Ui;
 /// on the title builds this screen again from the entry state with no choice taken (M5).
 /// </para>
 /// Input: Up / Down move between the two cards, Enter / pad A takes the focused one, Tab / pad Y toggles the
-/// forecast detail, Esc / pad B asks for the title (the run waits in the save file).
+/// forecast detail. YOK-175: Esc / pad B before a choice goes back to the map with the stop spent
+/// (<see cref="RunSession.LeaveNode"/>, provisional defaults the designer confirms at review); after a choice it does
+/// nothing. P / pad Start opens the pause menu, whose Quit to title is the way to the title from here (the run waits
+/// in the save file as of entering the stop).
 /// </summary>
 public partial class RestStopScreen : Control, INodeScene
 {
-	/// <summary>Esc / pad B: leave for the title. The stop is not completed; Continue brings it back untouched.</summary>
+	/// <summary>The pause menu's Quit to title (confirmed). The stop is not completed; Continue brings it back untouched (M5).</summary>
 	public event Action? TitleRequested;
-	/// <summary>The stop was completed and the map is next (the flow reacts to the session's own event; tests listen here).</summary>
+	/// <summary>The pause menu's Restart run (confirmed).</summary>
+	public event Action? RunRestartRequested;
+	/// <summary>The stop was completed or left and the map is next (the flow reacts to the session's own event; tests listen here).</summary>
 	public event Action? Left;
+
+	/// <summary>The pause menu over the stop (YOK-175), made the first time it opens; null until then.</summary>
+	public PauseMenu? PauseMenu { get; private set; }
+	public bool Paused => PauseMenu?.IsOpen == true;
 
 	/// <summary>Where the story line comes from; null = <c>data/story/</c> for the merchant, a labelled placeholder for the dojo.</summary>
 	public Func<RestStopScreenModel, string>? LineSource { get; set; }
@@ -152,6 +161,65 @@ public partial class RestStopScreen : Control, INodeScene
 		return true;
 	}
 
+	/// <summary>
+	/// YOK-175, Esc / pad B: back to the map before any choice, the stop spent (<see cref="RunSession.LeaveNode"/>:
+	/// no heal, no coins; the flow shows the map from the session's own event). Refused, changing nothing, after a choice.
+	/// </summary>
+	public bool LeaveToMap()
+	{
+		if (Model == null || !Model.LeaveToMap().Ok) return false;
+		Left?.Invoke();
+		return true;
+	}
+
+	/// <summary>YOK-175: P / pad Start on the stop. Not Esc: Esc / pad B is Back here (the map before a choice).</summary>
+	public static bool PauseKey(InputEvent e) =>
+		e is InputEventKey { Pressed: true, Echo: false, Keycode: Key.P } or InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.Start };
+
+	/// <summary>
+	/// YOK-175: the shared pause menu over the stop, so the title stays reachable once Esc goes to the map. Nothing runs
+	/// under a stop, so the tree is not frozen; the stop ignores its keys while the menu is open. False when hidden or open.
+	/// </summary>
+	public bool OpenPause()
+	{
+		if (!_ready || Paused || !IsVisibleInTree() || Model == null || _session == null) return false;
+		if (PauseMenu == null)
+		{
+			PauseMenu = GD.Load<PackedScene>("res://scenes/ui/pause_menu.tscn").Instantiate<PauseMenu>();
+			PauseMenu.FreezeTree = false;
+			AddChild(PauseMenu);
+			PauseMenu.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+			PauseMenu.ResumeRequested += RestoreFocus;
+			PauseMenu.QuitToTitleRequested += () => TitleRequested?.Invoke();
+			PauseMenu.RestartRequested += () => RunRestartRequested?.Invoke();
+		}
+		var run = _session.Run;
+		var slots = Array.Empty<PauseSlotSummary>();
+		try
+		{
+			var view = MoveListSource.Build(run, ContentPaths.Data("moves"));
+			slots = view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray();
+			PauseMenu.MoveList.Bind(view);
+		}
+		catch (Exception e) when (e is System.IO.IOException or FormatException or System.Text.Json.JsonException or System.Collections.Generic.KeyNotFoundException)
+		{
+			GD.PushWarning($"RestStopScreen: pause move list not refreshed: {e.Message}");
+		}
+		string place = Model.Kind == RestStopKind.Dojo ? "Dojo" : "Merchant";
+		PauseMenu.SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(place, 0, 0), $"Row {Model.Row} of {_session.Steps} · {place}", slots));
+		PauseMenu.Open();
+		return true;
+	}
+
+	/// <summary>After the pause menu closes: focus back on the stop (Continue once chosen, else the first open card).</summary>
+	private void RestoreFocus()
+	{
+		if (!IsInsideTree()) return;
+		if (ContinueButton.Visible) ContinueButton.GrabFocus();
+		else if (!FreeCard.CardDisabled) FreeCard.GrabFocus();
+		else SecondCard.GrabFocus();
+	}
+
 	public void ToggleDetail()
 	{
 		DetailVisible = !DetailVisible;
@@ -161,13 +229,21 @@ public partial class RestStopScreen : Control, INodeScene
 	public override void _Input(InputEvent e)
 	{
 		if (!IsVisibleInTree()) return; // hidden while the shop is open: the shop answers its own keys
-		if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
+		if (Paused) return; // the pause menu answers its own keys (Esc / Start resume)
+		if (PauseKey(e)) { GetViewport().SetInputAsHandled(); OpenPause(); }
+		else if (MenuInput.FrameData(e)) { ToggleDetail(); GetViewport().SetInputAsHandled(); }
 		else if (SelectorStep(e) is int step && step != 0 && Model is { CanSelect: true } sel)
 		{
 			if (sel.SelectTrial(step)) Refresh();
 			GetViewport().SetInputAsHandled();
 		}
-		else if (MenuInput.Back(e)) { TitleRequested?.Invoke(); GetViewport().SetInputAsHandled(); }
+		else if (MenuInput.Back(e))
+		{
+			// YOK-175: before a choice, back to the map (the stop spent); after one, Esc / B does nothing. Handled first:
+			// leaving frees this screen, so it has no viewport afterwards.
+			GetViewport().SetInputAsHandled();
+			LeaveToMap();
+		}
 	}
 
 	/// <summary>YOK-109: the dojo's special selector: Left / Right, A / D, the bumpers or the D-pad. 0 = not a selector key.</summary>
@@ -214,10 +290,10 @@ public partial class RestStopScreen : Control, INodeScene
 		pick.Visible = !done;
 		ContinueButton.Visible = done;
 		var footer = GetNode<KeyChipFooter>("Footer");
-		// Esc / B goes to the title today (GameFlow: Router.ReturnToTitle), so the label says so; the mockup's "Map" needs a leave-the-node API (reported on YOK-109).
-		if (done) footer.SetHints(new("confirm", "Continue"), new("frames", "Forecast detail"), new("back", "Title"));
-		else if (m.CanSelect) footer.SetHints(new("move", "Choose"), new("choose", "Special"), new("confirm", "Take"), new("frames", "Detail"), new("back", "Title"));
-		else footer.SetHints(new("move", "Choose"), new("confirm", "Take"), new("frames", "Forecast detail"), new("back", "Title"));
+		// YOK-175: Esc / B is "Map" until a choice is made, then it does nothing, so no Back chip; P / Start pauses (the title is there).
+		if (done) footer.SetHints(new("confirm", "Continue"), new("frames", "Forecast detail"), new("menu", "Pause"));
+		else if (m.CanSelect) footer.SetHints(new("move", "Choose"), new("choose", "Special"), new("confirm", "Take"), new("frames", "Detail"), new("back", "Map"), new("menu", "Pause"));
+		else footer.SetHints(new("move", "Choose"), new("confirm", "Take"), new("frames", "Forecast detail"), new("back", "Map"), new("menu", "Pause"));
 	}
 
 	/// <summary>The largest font size (46 down to 20) at which <paramref name="text"/> wraps to fit a column of this size.</summary>

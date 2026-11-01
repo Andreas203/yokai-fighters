@@ -142,6 +142,12 @@ public enum FighterState
 	/// for SimConfig.WakeUpFrames frames while the get-up clip plays; then Idle and actionable.
 	/// </summary>
 	WakeUp,
+	/// <summary>
+	/// YOK-171 (AM11, Sumo Stance): holding a charge special's trigger before the special starts. No control or guard;
+	/// stance hurtbox, throwable, not a counterhit (no move yet); a hit or throw ends the hold. Releasing (or reaching the
+	/// window's max) starts the special (<see cref="Fighter.BraceHeld"/>, Match.Specials).
+	/// </summary>
+	Bracing,
 }
 
 public static class FighterStates

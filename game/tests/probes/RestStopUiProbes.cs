@@ -230,7 +230,7 @@ public static class RestStopUiProbes
 	});
 
 	[Test]
-	public static void Keys_TabToggles_EscAsksForTitle_NeitherChangesTheSim(Node runner) => OnFixtures(() =>
+	public static void Keys_TabToggles_EscLeavesForTheMapOnlyBeforeAChoice_TabNeverChangesTheSim(Node runner) => OnFixtures(() =>
 	{
 		foreach (var st in new[] { St.FreshMerchant, St.MerchantHeal, St.FreshDojoTrial })
 		{
@@ -245,10 +245,17 @@ public static class RestStopUiProbes
 				Assert.True(screen.GetNode<Label>("Forecast/CostMeaning").Text.StartsWith("Detail:"), $"{st}: detail text");
 				Press(screen.GetViewport(), Key.Tab);
 				Assert.True(!screen.DetailVisible, $"{st}: Tab again hides it");
-				int title = 0; screen.TitleRequested += () => title++;
+				Assert.True(s.StateHash() == h, $"{st}: Tab changes nothing in the sim");
+				// YOK-175 (was: Esc asks for the title): before a choice Esc goes back to the map with the stop spent and
+				// nothing gained; after a choice it does nothing. Never the title (that is the pause menu's Quit).
+				bool fresh = st is St.FreshMerchant or St.FreshDojoTrial;
+				int hp = s.Run.Health, coins = s.Run.Coins, title = 0, left = 0; screen.TitleRequested += () => title++; screen.Left += () => left++;
 				Press(screen.GetViewport(), Key.Escape);
-				Assert.Equal(1, title, $"{st}: Esc asks for the title once");
-				Assert.True(s.StateHash() == h && s.Node != null, $"{st}: no sim change from Tab / Esc");
+				Assert.Equal(0, title, $"{st}: Esc never asks for the title");
+				Assert.Equal(fresh ? 1 : 0, left, $"{st}: Esc leaves exactly when no choice is made");
+				Assert.True((s.Node == null) == fresh, $"{st}: the node is {(fresh ? "spent" : "still entered")}");
+				Assert.True(s.Run.Health == hp && s.Run.Coins == coins, $"{st}: Esc heals nothing and pays nothing");
+				if (!fresh) Assert.True(s.StateHash() == h, $"{st}: no sim change from Esc once chosen");
 			}
 			finally { Close(runner, host); }
 		}

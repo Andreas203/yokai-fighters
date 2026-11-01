@@ -18,6 +18,8 @@ public sealed class BotKit
 	/// <summary>Filled slots A-D with each special's total frames.</summary>
 	public IReadOnlyList<(SpecialSlot Slot, int Frames)> Specials { get; }
 	public Press Throw { get; }
+	/// <summary>YOK-171: slots whose special carries a charge hold (Sumo Stance, <see cref="MoveData.Charge"/>).</summary>
+	public IReadOnlySet<SpecialSlot> ChargeSlots { get; init; } = new HashSet<SpecialSlot>();
 	/// <summary>YOK-157: total frames of each of Ryo's own moves, by id (his move list, never the opponent's).</summary>
 	public IReadOnlyDictionary<string, int> MoveFrames { get; }
 
@@ -46,7 +48,10 @@ public sealed class BotKit
 			if (f.Specials[s] is { } eq) specials.Add(((SpecialSlot)s, eq.Move.TotalFrames));
 		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
 			if (f.Specials[s] is { } eq) frames[eq.Move.Id] = eq.Move.TotalFrames;
-		return new BotKit(normals, specials, thrw, frames);
+		var charge = new HashSet<SpecialSlot>();
+		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+			if (f.Specials[s]?.Move.Charge != null) charge.Add((SpecialSlot)s);
+		return new BotKit(normals, specials, thrw, frames) { ChargeSlots = charge };
 	}
 
 	/// <summary>
@@ -93,6 +98,8 @@ public sealed class NewcomerBot
 	AiView? _prev;
 	readonly List<(InputBits Bits, int Ticks)> _steps = new();
 	int _step, _stepTick, _sincePress;
+	/// <summary>YOK-171: the plan step whose buttons stay held through all its ticks (a charge hold), else -1.</summary>
+	int _heldStep = -1;
 	PlanKind _plan;
 	/// <summary>YOK-155/166: the plan is a standing guard (idle guard or reactive block); <see cref="Emit"/> resolves back from the delayed view every tick.</summary>
 	bool _holdAway;
@@ -217,7 +224,14 @@ public sealed class NewcomerBot
 		else if ((r -= special) < 0)
 		{
 			var (slot, frames) = _kit.Specials[_rng.Next(_kit.Specials.Count)];
-			Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.None, Math.Max(1, frames - 1)));
+			int hold = _kit.ChargeSlots.Contains(slot) ? _cfg.SpecialHoldTicks : 0;
+			if (hold > 0)
+			{
+				// YOK-171 (AM11): press, keep Special held for the hold, then wait the move out from its release.
+				Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.Special, hold), (InputBits.None, Math.Max(1, frames)));
+				_heldStep = 1;
+			}
+			else Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.None, Math.Max(1, frames - 1)));
 			Stats.Specials++;
 		}
 		else if ((r -= thrw) < 0)
@@ -294,6 +308,7 @@ public sealed class NewcomerBot
 		_steps.Clear();
 		_steps.AddRange(steps);
 		_step = _stepTick = _sincePress = 0;
+		_heldStep = -1;
 	}
 
 	void Clear()
@@ -316,7 +331,7 @@ public sealed class NewcomerBot
 		_sincePress++;
 		if (_plan == PlanKind.Attack) bits = Flip(bits, facing);
 		if (_holdAway) bits = (bits & ~(InputBits.Left | InputBits.Right)) | Back(s, o);
-		if (_stepTick > 0) bits &= ~(InputBits.Attacks | InputBits.Special);
+		if (_stepTick > 0 && _step != _heldStep) bits &= ~(InputBits.Attacks | InputBits.Special);
 		if (++_stepTick >= ticks) { _step++; _stepTick = 0; }
 		if (_step >= _steps.Count) _plan = PlanKind.None;
 		return new FighterInput(bits);
