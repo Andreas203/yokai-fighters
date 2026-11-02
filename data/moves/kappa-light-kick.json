@@ -32,9 +32,9 @@
           6
         ],
         "rect": {
-          "x": 25,
+          "x": 40,
           "y": 55,
-          "w": 40,
+          "w": 45,
           "h": 80
         }
       },
@@ -44,9 +44,9 @@
           7
         ],
         "rect": {
-          "x": 45,
+          "x": 55,
           "y": 60,
-          "w": 30,
+          "w": 35,
           "h": 80
         }
       }
@@ -78,5 +78,5 @@
       }
     ]
   },
-  "notes": "Clip kappa-light-kick (GREYBOX reuse of ryo-light-kick, 16 frames, hit 6-7): 5/2/9. Frame data follows the clip exactly (F2); It equals the C8 row, no deviation. Damage is the C8 number; hitstun, blockstun and strength are copied from ryo-light-kick (placeholders, not in rules.md). Boxes are ryo-light-kick's boxes (placed on the same clip frames, YOK-33) scaled for the Kappa and rounded to 5: height x0.886 (1.551 m / Ryo's 1.75 m), reach x0.886 (short legs). Body hurtbox is the Kappa standing box 130 x 310 (shell on the back, 0.68 m deep); estimated, NOT re-placed from the posed Kappa rig: proposed, needs a YOK-33 style pass. Kitsune and Oni ship five normals (no light kick); the Kappa gets the sixth, C8's, on Ryo's light-kick clip (YOK-134 N3 free reuse): drop this file pair if the designer wants five. "
+  "notes": "Clip kappa-light-kick (GREYBOX reuse of ryo-light-kick, 16 frames, hit 6-7): 5/2/9. Frame data follows the clip exactly (F2); It equals the C8 row, no deviation. Damage is the C8 number; hitstun, blockstun and strength are copied from ryo-light-kick (placeholders, not in rules.md). Boxes are ryo-light-kick's boxes (placed on the same clip frames, YOK-33) scaled for the Kappa and rounded to 5: height x0.886 (1.551 m / Ryo's 1.75 m), reach x0.886 (short legs). Body hurtbox is the Kappa standing box 130 x 310 (shell on the back, 0.68 m deep); estimated, NOT re-placed from the posed Kappa rig: proposed, needs a YOK-33 style pass. Kitsune and Oni ship five normals (no light kick); the Kappa gets the sixth, C8's, on Ryo's light-kick clip (YOK-134 N3 free reuse): drop this file pair if the designer wants five. REACH FIX (Test Breaker, YOK-228): the scaled hitboxes (frame 6 x 25-65, frame 7 x 45-75) stopped at x 75, short of a standing Ryo at push contact (Kappa push 130 + Ryo 120 = centres 125 apart, Ryo's E5 body x +-45, so his body starts at x 80), so the kick could never connect. Now frame 6 is x 40, w 45 (reach 85) and frame 7 is x 55, w 35 (reach 90); y and h unchanged. Reach is the knee/shin at full extension, about 0.43-0.45 m from his origin, still the shortest kick reach of his kit (MK reaches 175). Still active frames 6-7 only (F2), estimated not measured from the posed rig: proposed. "
 }
