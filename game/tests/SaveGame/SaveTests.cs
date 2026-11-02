@@ -395,7 +395,7 @@ public static class SaveTests
 
 	// ---- the boot scene ----
 
-	static void WithBoot(Node runner, string? saveFile, Action<GameFlow> body, uint seed = 77)
+	static void WithBoot(Node runner, string? saveFile, Action<GameFlow> body, uint seed = 77, ControlScheme? direct = null)
 	{
 		var saved = FightScene.Sources;
 		var savedRun = FightScene.Run;
@@ -408,6 +408,7 @@ public static class SaveTests
 		flow.FixedRunSeed = seed;
 		flow.SaveFile = saveFile;
 		flow.ConfigureFight = f => f.ExternalDrive = true;
+		flow.DirectFight = direct; // YOK-216: what --fight does
 		try { runner.AddChild(flow); body(flow); }
 		finally
 		{
@@ -1781,4 +1782,45 @@ public static class SaveTests
 		});
 		return r;
 	}
+
+	/// <summary>Code critic (YOK-216): the flag follows the card shown. No first-loss card in the library = the band card, no flag; the next loss shows first-loss.</summary>
+	[Test]
+	public static void FirstLoss_NotShown_LeavesTheFlagUnset_SoTheNextLossShowsIt(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			var full = FightScene.LoadStory();
+			var without = new StoryLibrary(full.Cards.Where(c => c.Id != StoryLibrary.FirstLossId));
+			flow.ConfigureFight = f => { f.ExternalDrive = true; f.StorySource = without; };
+			var s = StartAndEnter(flow);
+			Assert.True(flow.Fight!.FirstLossPending && !flow.Fight.ShowedFirstLoss, "pending, but no first-loss card to show");
+			Assert.Equal(LaterLossText(flow), LoseText(flow), "the later-loss card instead");
+			Assert.True(s.LoseFight().Ok, "lost");
+			Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss) && !new SaveStore(path).Load().Data.Story.Has(StoryProgress.FirstLoss), "the flag is not written");
+			Assert.True(flow.ReturnToTitle(), "back to the title");
+
+			flow.ConfigureFight = f => { f.ExternalDrive = true; f.StorySource = full; };
+			var next = StartAndEnter(flow);
+			Assert.True(flow.Fight!.ShowedFirstLoss, "the next run's fight shows first-loss");
+			Assert.Equal(FirstLossText(flow, next), LoseText(flow), "first-loss on the screen");
+			Assert.True(next.LoseFight().Ok, "lost");
+			Assert.True(new SaveStore(path).Load().Data.Story.Has(StoryProgress.FirstLoss), "now the flag is written");
+		});
+	});
+
+	/// <summary>YOK-216: the --fight bypass (no run of the flow's) is never the save's first loss and writes no flag.</summary>
+	[Test]
+	public static void FirstLoss_DirectFight_IsNeverTheFirstLoss_AndSetsNoFlag(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Assert.True(flow.Session is null && flow.Fight is not null, "straight into the fight, no run of the flow's");
+			var f = flow.Fight!;
+			Assert.True(!flow.FirstLossPending && !f.FirstLossPending && !f.ShowedFirstLoss, "not the first loss in waiting");
+			Assert.True(LoseText(flow) != FightScene.LoadStory().FirstLoss(f.OpponentName, FightScene.CopyMoveOf(f.Session) ?? FightScene.FallbackMove).Text, "never first-loss");
+			if (f.Session is { } own) Assert.True(own.LoseFight().Ok, "the scene's own run lost");
+			Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss), "no flag in memory");
+			Assert.True(!File.Exists(path) || !new SaveStore(path).Load().Data.Story.Has(StoryProgress.FirstLoss), "nor in the file");
+		}, direct: ControlScheme.Kihon);
+	});
 }

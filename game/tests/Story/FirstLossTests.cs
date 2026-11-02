@@ -1,3 +1,4 @@
+using System.Linq;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
 using YokaiFighters.Story;
@@ -39,5 +40,36 @@ public static class FirstLossTests
 		var node = At("kitsune", 2);
 		Assert.Equal(FightScene.LoseCardFor(without, node, node.Fighter).Text, FightScene.LoseCardFor(without, node, node.Fighter, true, "Foxfire").Text,
 			"a library without first-loss shows the later-loss card, never throws");
+	}
+
+	[Test]
+	public static void CopyMoveOf_TheLockedCopyBeatsTheLiveTarget()
+	{
+		Assert.True(FightScene.CopyMoveOf(null) is null, "no run: no move");
+		string md = ContentPaths.Data("map");
+		var s = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+		var target = CopyRule.Target(s.Run);
+		Assert.True(target is not null && !s.CopyLocked, "a fresh run has a live target and no lock");
+		Assert.Equal(target!.Data.Name, FightScene.CopyMoveOf(s), "unlocked: the live target (CopyRule.Target, T2)");
+		// Walk to the Tanuki's node and enter it (T1: the lock point), then restore with a copy other than the live target.
+		while (s.Map.Graph.Node(s.Reachable()[0]).Type != NodeTypeRegistry.Boss)
+		{
+			s.Enter(s.Reachable()[0]);
+			if (s.Node!.Type is not ("merchant" or "dojo") && s.WinFight(840) is { } d)
+			{
+				var c = d.Offer.Cards[0];
+				d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null);
+			}
+			s.CompleteNode();
+		}
+		Assert.True(s.Enter(s.Reachable()[0]).Ok && s.CopyLocked, "entered the Tanuki's node: locked");
+		var live = CopyRule.Target(s.Run)!;
+		Assert.Equal(s.LockedCopy!.Data.Name, FightScene.CopyMoveOf(s), "locked: the locked copy");
+		var (slot, owned) = s.Run.Owned.First(o => o.Special.Data.Name != live.Data.Name); // another special Ryo holds (T2: a copy sits in its slot)
+		var other = owned.Data;
+		var locked = RunSession.Restore(s.Run, s.Pool, s.Scenes, s.Seed, true, new CopyTarget(slot, other, 1));
+		Assert.Equal(other.Name, FightScene.CopyMoveOf(locked), "locked: the locked copy, though the live target is another (T1)");
+		var lockedOnNothing = RunSession.Restore(s.Run, s.Pool, s.Scenes, s.Seed, true, null);
+		Assert.True(FightScene.CopyMoveOf(lockedOnNothing) is null, "locked on nothing: no move, never the live target (T1)");
 	}
 }
