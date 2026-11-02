@@ -40,7 +40,19 @@ public partial class GameFlow : Node
 	/// <summary>The map every new run walks (in data/map/).</summary>
 	public string MapFile { get; set; } = FileMapSource.DefaultFile;
 	/// <summary>YOK-77: the run in progress, from Start Game until the title is shown again. Null on the menus and in a direct fight.</summary>
-	public RunSession? Session { get; private set; }
+	public RunSession? Session
+	{
+		get => _session;
+		private set
+		{
+			if (_session?.DebugTemperament is { } t) _heldTemperament = t; // E23: the outgoing run's debug choice carries to the next (Restart, Continue, dev jump)
+			_session = value;
+		}
+	}
+
+	private RunSession? _session;
+	/// <summary>E23 debug (YOK-211): the last debug temperament a run of this flow held; seeds each adopted session.</summary>
+	private string? _heldTemperament;
 	/// <summary>YOK-78's map screen (<c>Menus/Map</c> in boot.tscn = <c>scenes/ui/map_screen.tscn</c>), shown on <see cref="Screen.Map"/>.</summary>
 	public MapScreen Map { get; private set; } = null!;
 	/// <summary>Pins every run's seed (tests, harness); null = a new random seed per run.</summary>
@@ -365,8 +377,10 @@ public partial class GameFlow : Node
 	/// </summary>
 	private void Adopt(RunSession session)
 	{
-		// E23, YOK-211: --temperament= holds from the run's first node, so the map's habit line follows it before any fight scene opens
-		if (OS.IsDebugBuild() && session.DebugTemperament is null) session.DebugTemperament = FightScene.TemperamentFromArgs(OS.GetCmdlineUserArgs());
+		// E23, YOK-211: a debug temperament is sticky across restart (the last run's F9/F6 choice, else --temperament=) and holds
+		// from the run's first node, so the map's habit line follows it before any fight scene opens
+		if (OS.IsDebugBuild() && session.DebugTemperament is null)
+			session.DebugTemperament = _heldTemperament ?? FightScene.TemperamentFromArgs(FightScene.UserArgs());
 		session.NodeEntered += n =>
 		{
 			GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");
