@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Tests;
@@ -62,5 +63,48 @@ public static class ForwardTravelExactBreakerProbes
 			catch (System.Text.Json.JsonException) { ok = false; }
 			Assert.True(!ok, $"{raw} is not a number of units");
 		}
+	}
+}
+
+/// <summary>
+/// Test Breaker round 3 for YOK-221: tools/validate_data.py <c>dotnet_decimal</c> against .NET's own
+/// <c>JsonElement.TryGetDecimal</c> (what MoveLoader's WholeInt and Effects.Whole read; designer ruling 2026-11-02).
+/// ForwardTravelDecimalGolden.json holds [text, value-or-null] for every text in ForwardTravelDecimalCases.txt (96-bit
+/// mantissa edge, half-to-even at the 28th digit, negatives, exponent forms, seeded random digit strings), taken from
+/// .NET; this test checks the golden still is what .NET gives, and test_dotnet_decimal_matches_the_loader_golden checks Python.
+/// </summary>
+public static class ForwardTravelDecimalBreakerProbes
+{
+	static string Dir => Godot.ProjectSettings.GlobalizePath("res://tests/probes/");
+
+	public static string Read(string text)
+	{
+		using var doc = System.Text.Json.JsonDocument.Parse(text);
+		return doc.RootElement.TryGetDecimal(out decimal d) ? d.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null";
+	}
+
+	[Test]
+	public static void Golden_IsWhatDotNetReadsForEveryCase()
+	{
+		var lines = System.IO.File.ReadAllLines(Dir + "ForwardTravelDecimalCases.txt").Where(l => l.Length > 0).ToArray();
+		var golden = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(Dir + "ForwardTravelDecimalGolden.json")).RootElement;
+		Assert.Equal(lines.Length, golden.GetArrayLength(), "one golden row per case");
+		var wrong = new List<string>();
+		int i = 0;
+		foreach (var row in golden.EnumerateArray())
+		{
+			string text = row[0].GetString()!, want = row[1].ValueKind == System.Text.Json.JsonValueKind.Null ? "null" : row[1].GetString()!;
+			if (text != lines[i++] || Read(text) != want) wrong.Add($"{text}: golden {want}, .NET {Read(text)}");
+		}
+		Assert.True(wrong.Count == 0, string.Join("; ", wrong.Take(5)));
+	}
+
+	// One-off generator (run once as a test with -- only=Golden_Write to make the golden); not in the suite.
+	public static void Golden_Write()
+	{
+		var rows = System.IO.File.ReadAllLines(Dir + "ForwardTravelDecimalCases.txt").Where(l => l.Length > 0)
+			.Select(t => new System.Text.Json.Nodes.JsonArray(t, Read(t) == "null" ? null : (System.Text.Json.Nodes.JsonNode)Read(t))).ToArray();
+		var arr = new System.Text.Json.Nodes.JsonArray(rows.Select(r => (System.Text.Json.Nodes.JsonNode?)r).ToArray());
+		System.IO.File.WriteAllText(Dir + "ForwardTravelDecimalGolden.json", arr.ToJsonString());
 	}
 }

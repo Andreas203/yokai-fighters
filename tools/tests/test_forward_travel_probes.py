@@ -143,3 +143,50 @@ class ForwardTravelExactnessProbes(unittest.TestCase):
             tmp.unlink()
         self.assertEqual(old_code, new_code, "exit code changed")
         self.assertEqual(old_lines, new_lines, "validator output on existing files changed")
+
+
+class DotnetDecimalProbes(unittest.TestCase):
+    """Round 3: validate_data.dotnet_decimal / whole() / loader_view against the values .NET's own
+    JsonElement.TryGetDecimal gave for 2046 texts (game/tests/probes/ForwardTravelDecimalGolden.json, kept honest by the
+    C# probe ForwardTravelDecimalBreakerProbes.Golden_IsWhatDotNetReadsForEveryCase)."""
+    GOLDEN = json.loads((ROOT / "game" / "tests" / "probes" / "ForwardTravelDecimalGolden.json").read_text(encoding="utf-8"))
+
+    def test_dotnet_decimal_matches_the_loader_golden(self):
+        import decimal
+        wrong = []
+        for text, want in self.GOLDEN:
+            got = validate_data.dotnet_decimal(text)
+            if (got is None) != (want is None) or (got is not None and got != decimal.Decimal(want)):
+                wrong.append(f"{text}: .NET {want}, dotnet_decimal {got}")
+        self.assertEqual([], wrong[:12], f"{len(wrong)} of {len(self.GOLDEN)} differ")
+
+    def test_whole_matches_the_loader_golden(self):
+        # The loader's WholeInt: TryGetInt32, else a decimal that is integral and inside int32.
+        import decimal
+        wrong = []
+        for text, want in self.GOLDEN:
+            d = None if want is None else decimal.Decimal(want)
+            expect = int(d) if d is not None and d == d.to_integral_value() and -2**31 <= d <= 2**31 - 1 else None
+            if "." in text or "e" in text.lower():
+                got = validate_data.whole(validate_data.JsonFloat(text))
+            else:
+                got = validate_data.whole(int(text))
+                expect = int(text) if -2**31 <= int(text) <= 2**31 - 1 else None
+            if got != expect:
+                wrong.append(f"{text}: loader {expect}, whole() {got}")
+        self.assertEqual([], wrong[:12], f"{len(wrong)} of {len(self.GOLDEN)} differ")
+
+    def test_loader_view_only_turns_loader_whole_numbers_into_ints(self):
+        import decimal
+        wrong = []
+        for text, want in self.GOLDEN:
+            if not ("." in text or "e" in text.lower()):
+                continue
+            seen = validate_data.loader_view(validate_data.JsonFloat(text))
+            d = None if want is None else decimal.Decimal(want)
+            whole_dec = d is not None and d == d.to_integral_value()
+            if whole_dec and not (isinstance(seen, int) and seen == int(d)):
+                wrong.append(f"{text}: .NET reads whole {d}, the schema sees {seen!r}")
+            if not whole_dec and isinstance(seen, int):
+                wrong.append(f"{text}: .NET does not read it as whole, the schema sees int {seen}")
+        self.assertEqual([], wrong[:12], f"{len(wrong)} differ")
