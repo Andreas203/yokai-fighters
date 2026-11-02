@@ -1,0 +1,33 @@
+{
+  "kind": "harness_bot",
+  "id": "newcomer-kihon-bot-calibration",
+  "status": "proposed",
+  "rules": ["R5", "R4", "R9", "P6", "K2", "Y4"],
+  "scheme": "kihon",
+  "fight": {
+    "reaction_frames": 24,
+    "decide_every": 8,
+    "mistake_pct": 0,
+    "block_pct": 100,
+    "idle_guard_pct": 50,
+    "anti_air_pct": 15,
+    "anti_air_button": "heavy_punch",
+    "poke_range": 230,
+    "throw_range": 120,
+    "preferred_min": 150,
+    "preferred_max": 360,
+    "walk_ticks": 12,
+    "block_ticks": 18,
+    "wait_ticks": 10,
+    "weights": { "walk": 30, "normal": 30, "special": 20, "throw": 8, "jump": 8, "wait": 10 },
+    "max_fight_ticks": 108000
+  },
+  "run": {
+    "route": { "rule": "prefer_types_else_random", "prefer_types": ["dojo"] },
+    "reward_order": ["upgrade", "new", "modifier"],
+    "merchant": "heal",
+    "dojo": "rest",
+    "menu_seconds_per_node": 45
+  },
+  "notes": "YOK-158 calibration bot (Sparring Partner rec 4 of YOK-154; R5, Y4). Not a default anywhere: it plays only through --bot data/harness/newcomer-kihon-bot-calibration.json. It is the newcomer bot (newcomer-kihon-bot.json) with exactly two fight values changed: block_pct 100 (guard up for every threat it sees) and mistake_pct 0 (never a random normal); idle_guard_pct stays at the newcomer's 50 (YOK-155) and every other value is the newcomer's. One batch (seed 1, 200 runs) asks whether any version of this bot reaches Y4 pace (about 4.5:1 unblocked hits landed to taken, decision 2026-10-21) against this AI; if not, the AI model is the problem, not the newcomer settings."
+}
