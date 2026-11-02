@@ -20,6 +20,27 @@ def run(*paths):
     return code, out.getvalue()
 
 
+def dumps_exact(obj):
+    """json.dumps, writing each JsonFloat as its original text (json writes float(text), which loses digits)."""
+    import json
+    texts = []
+
+    def mark(o):
+        if isinstance(o, validate_data.JsonFloat):
+            texts.append(o.text)
+            return f"\u0000jf{len(texts) - 1}\u0000"
+        if isinstance(o, dict):
+            return {k: mark(x) for k, x in o.items()}
+        if isinstance(o, list):
+            return [mark(x) for x in o]
+        return o
+
+    out = json.dumps(mark(obj))
+    for i, t in enumerate(texts):
+        out = out.replace(json.dumps(f"\u0000jf{i}\u0000"), t)
+    return out
+
+
 GATE_CASES = ROOT / "game" / "tests" / "fixtures" / "modifier-gate" / "cases.json"
 RETIME_CASES = ROOT / "game" / "tests" / "fixtures" / "clip-retime-gate" / "cases.json"
 
@@ -52,7 +73,8 @@ class ValidateDataTest(unittest.TestCase):
         """YOK-103: a special's own frame data, read by the same whole-number and stun rules as MoveLoader."""
         import json
         import tempfile
-        cases = json.loads(GATE_CASES.read_text(encoding="utf-8"))["special_cases"]
+        # YOK-221: the numbers as written (validate_data.loads keeps a fraction's text, dumps_exact writes it back).
+        cases = validate_data.loads(GATE_CASES.read_text(encoding="utf-8"))["special_cases"]
         self.assertGreaterEqual(len(cases), 8)
         wrong = []
         with tempfile.TemporaryDirectory() as tmp:
@@ -64,7 +86,7 @@ class ValidateDataTest(unittest.TestCase):
                 for k in c["remove"]:
                     fd.pop(k, None)
                 f = Path(tmp) / f"{c['name']}.json"
-                f.write_text(json.dumps(doc), encoding="utf-8")
+                f.write_text(dumps_exact(doc), encoding="utf-8")
                 code, out = run(f)
                 lines = [l for l in out.splitlines()[:-1] if "clip: clip '" not in l]  # fixtures have no clip file
                 if (not lines) != c["accept"]:
@@ -84,12 +106,23 @@ class ValidateDataTest(unittest.TestCase):
         self.assertTrue(errs(6, 2.5), "a fraction is refused (the whole-number rule)")
         self.assertEqual(errs(6, "charge_dash"), ["properties.forward_travel must be a whole number >= 0"], "the modifier switch is not a distance")
 
-    def test_whole_reads_a_written_number_exactly(self):
-        """YOK-221: the loader's decimal rule (Effects.Whole), not a float round-trip; copies keep the written text."""
+    def test_whole_reads_a_written_number_as_dotnet_decimal_does(self):
+        """YOK-221 (designer, 2026-11-02): Effects.Whole's TryGetDecimal: 28-29 significant digits, half to even, tiny
+        values are 0, past ~7.9e28 refused; copies keep the written text."""
         import copy
+        import time
         w = lambda text: validate_data.whole(validate_data.loads(text))
         self.assertEqual([w("300"), w("300.0"), w("3e2"), w("-0.0"), w("2147483647")], [300, 300, 300, 0, 2147483647])
-        self.assertEqual([w("300.0000000000000000001"), w("2.5"), w("1e400"), w("2147483648")], [None] * 4)
+        self.assertEqual(w("300.00000000000000000000000000000001"), 300, "past decimal's precision: rounds to 300")
+        self.assertEqual(w("2147483647.000000000000000000000001"), 2147483647)
+        self.assertEqual([w("1e-400"), w("-1e-400"), w("5e-29")], [0, 0, 0], "under decimal's smallest step: 0")
+        self.assertEqual([w("300.0000000000000000001"), w("2.5"), w("6e-29"), w("1e400"), w("2147483648"), w("1e29")],
+                         [None] * 6)
+        t = time.time()
+        self.assertIsNone(w("1e9999999"))
+        self.assertLess(time.time() - t, 0.5, "a huge exponent is refused at once, as the loader does")
+        self.assertEqual(str(validate_data.dotnet_decimal("0.30000000000000000000000000005")), "0.3000000000000000000000000000",
+                         "half to even on the 29th decimal place")
         self.assertIsNone(validate_data.whole(copy.deepcopy(validate_data.loads("300.0000000000000000001"))))
         self.assertEqual(validate_data.whole(300.0), 300, "a computed float is judged on its value")
 

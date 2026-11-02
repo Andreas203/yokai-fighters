@@ -370,7 +370,7 @@ INT32 = (-2**31, 2**31 - 1)
 
 class JsonFloat(float):
     """YOK-221: a JSON number written with a fraction or an exponent, as a float that keeps its text, so whole() can
-    read it exactly as the loader's decimal does (300.0000000000000000001 is not 300). Behaves as a float everywhere."""
+    read it as the loader's .NET decimal does (see dotnet_decimal). Behaves as a float everywhere else."""
     __slots__ = ("text",)
 
     def __new__(cls, text):
@@ -387,18 +387,64 @@ def loads(text: str):
     return json.loads(text, parse_float=JsonFloat)
 
 
+DECIMAL_MAX = 2**96 - 1  # .NET decimal: a 96-bit mantissa ...
+DECIMAL_SCALE = 28       # ... and at most 28 digits after the point
+
+
+def dotnet_decimal(text: str):
+    """The value .NET reads from a JSON number with JsonElement.TryGetDecimal (Number.TryNumberToDecimal), or None
+    where it can't: the leading digits that fit a 96-bit mantissa with at most 28 after the point (so 28 or 29
+    significant digits), rounded half to even on the rest; a value under 1e-28 or so becomes 0 (1e-400 is 0); more than
+    29 digits before the point (about 7.9e28 and up) is refused. Designer, YOK-221 (2026-11-02): the validator
+    judges numbers as the loader reads them."""
+    try:
+        d = decimal.Decimal(text)
+    except decimal.InvalidOperation:
+        return None
+    if not d.is_finite():
+        return None
+    sign, digits, exp = d.as_tuple()
+    ds = list(digits)
+    while len(ds) > 1 and ds[-1] == 0:  # trailing zeros carry no digits
+        ds.pop()
+        exp += 1
+    if ds == [0]:
+        return decimal.Decimal(0)
+    e = len(ds) + exp  # digits before the point
+    if e > 29:
+        return None  # at once: never builds the number (1e9999999)
+    m, i = 0, 0
+    while e > 0 or (i < len(ds) and e > -DECIMAL_SCALE):
+        c = ds[i] if i < len(ds) else 0
+        if m * 10 + c > DECIMAL_MAX:
+            break
+        m, i, e = m * 10 + c, i + 1, e - 1
+    if i < len(ds) and ds[i] >= 5 and not (ds[i] == 5 and m % 2 == 0 and not any(ds[i + 1:])):
+        m += 1
+        if m > DECIMAL_MAX:  # as .NET: the last digit goes and the rest stays at the top
+            m, e = 429496729 * 2**64 + 0x9999999999999999, e + 1
+    if e > 0:
+        return None
+    if e <= -29:
+        return decimal.Decimal(0)
+    return decimal.Decimal((sign, tuple(int(x) for x in str(m)), e))
+
+
 def whole(v):
     """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
     Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule. A number read from a
-    file is judged on its exact text (decimal), as the loader does; one computed here, on its float value."""
+    file (JsonFloat) is judged on the value .NET decimal reads from its text (dotnet_decimal: 300 followed by 32
+    decimal places ending in 1 is 300, 1e-400 is 0, 1e9999999 is refused); one computed here, on its float value."""
     if isinstance(v, bool):
         return None
     if isinstance(v, JsonFloat):
         try:
-            d = decimal.Decimal(v.text)
+            if not decimal.Decimal(v.text).is_zero() and decimal.Decimal(v.text).adjusted() > 9:
+                return None  # 1e10 and up is outside int32 however it rounds: refuse before reading it
         except decimal.InvalidOperation:
             return None
-        if not d.is_finite() or d != d.to_integral_value():
+        d = dotnet_decimal(v.text)
+        if d is None or d != d.to_integral_value():
             return None
         v = int(d)
     elif isinstance(v, float):
@@ -862,7 +908,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
     if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
-        if not any(p == "frame_data" and "forward_travel" in m for p, m in errs):
+        if not any(p.startswith("frame_data.properties.forward_travel") or (p == "frame_data" and "forward_travel" in m)
+                   for p, m in errs):
             errs.extend(("frame_data", m) for m in travel_errors(doc.get("frame_data")))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
