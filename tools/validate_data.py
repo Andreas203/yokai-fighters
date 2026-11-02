@@ -430,6 +430,31 @@ def dotnet_decimal(text: str):
     return decimal.Decimal((sign, tuple(int(x) for x in str(m)), e))
 
 
+def loader_view(o):
+    """YOK-221: the document as the loader reads its numbers, for the schema: a written number .NET decimal reads as
+    whole (1e-34 is 0, 300 then 32 places ending in 1 is 300) becomes that int; anything else is left as it is."""
+    if isinstance(o, JsonFloat):
+        try:
+            huge = not decimal.Decimal(o.text).is_zero() and decimal.Decimal(o.text).adjusted() > 29
+        except decimal.InvalidOperation:
+            return o
+        d = None if huge else dotnet_decimal(o.text)
+        return int(d) if d is not None and d == d.to_integral_value() else o
+    if isinstance(o, dict):
+        return {k: loader_view(x) for k, x in o.items()}
+    if isinstance(o, list):
+        return [loader_view(x) for x in o]
+    return o
+
+
+def one_travel_report(errs: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """YOK-221: when the schema already names frame_data.properties.forward_travel, the loader-mirror line that says
+    the same is dropped, so each problem is reported once."""
+    if not any(p.startswith("frame_data.properties.forward_travel") for p, _ in errs):
+        return errs
+    return [(p, m) for p, m in errs if not (p == "frame_data" and "forward_travel" in m)]
+
+
 def whole(v):
     """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
     Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule. A number read from a
@@ -1103,13 +1128,13 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             errs.append(("kind", f"unknown kind {doc.get('kind')!r}; expected one of {sorted(validators)}"))
         else:
             v = validators[doc["kind"]]
-            for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
+            for e in sorted(v.iter_errors(loader_view(doc)), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
             errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds))
         if errs:
-            failures[f] = errs
+            failures[f] = one_travel_report(errs)
 
     # YOK-90 (Y2): one twist per elder across the files checked together.
     twist_of: dict[str, Path] = {}
