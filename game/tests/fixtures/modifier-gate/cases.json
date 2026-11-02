@@ -102,6 +102,12 @@
     {"name": "evo-decoy-zero", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": [], "changes": [{"target": "decoy", "op": "set", "value": 0}]},
     {"name": "special-multi-hit-written-2-point-0", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"multi_hit": {"hits": 2.0, "interval": 3}}}, "remove": []},
     {"name": "special-throw-without-breakable", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80}}}, "remove": []},
-    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []}
+    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []},
+    {"name": "special-teleport-only-active-null", "accept": true, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "behind_opponent", "frame": 18}}}, "remove": []},
+    {"name": "special-teleport-on-the-last-frame", "accept": true, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "behind_opponent", "frame": 33}}}, "remove": []},
+    {"name": "special-teleport-frame-past-the-move", "accept": false, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "behind_opponent", "frame": 34}}}, "remove": []},
+    {"name": "special-teleport-frame-zero", "accept": false, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "behind_opponent", "frame": 0}}}, "remove": []},
+    {"name": "special-teleport-in-front", "accept": false, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "in_front", "frame": 18}}}, "remove": []},
+    {"name": "special-active-null-teleport-and-decoy", "accept": true, "base": "test-rising-talisman", "set": {"active": null, "hitboxes": [], "hurtboxes": [{"frames": [1, 33], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}], "properties": {"teleport": {"to": "behind_opponent", "frame": 18}, "decoy": 1}}, "remove": []}
   ]
 }

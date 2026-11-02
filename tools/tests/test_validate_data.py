@@ -73,6 +73,31 @@ class ValidateDataTest(unittest.TestCase):
                     wrong.append(f"{c['name']}: validator {'accepted' if not lines else 'refused'}\n{out}")
         self.assertEqual(wrong, [], "\n".join(wrong))
 
+    def test_teleport_frame_and_active_null(self):
+        """YOK-224: Fox Mirage is 18/—/10 with a teleport (active null, no projectile), and the teleport frame must
+        fall inside the move, as MoveData.ReadMirage says. Both the file check and the built-move check say so."""
+        import json
+        import tempfile
+        doc = json.loads((ROOT / "game" / "tests" / "fixtures" / "specials" / "test-rising-talisman.json").read_text(encoding="utf-8"))
+        fd = doc["levels"]["1"]["frame_data"]
+        fd.update({"startup": 18, "active": None, "recovery": 10, "hitboxes": [],
+                   "hurtboxes": [{"frames": [1, 28], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}],
+                   "properties": {"teleport": {"to": "behind_opponent", "frame": 18}}})
+        with tempfile.TemporaryDirectory() as tmp:
+            def check(frame):
+                fd["properties"]["teleport"]["frame"] = frame
+                doc["id"] = f"test-mirage-{frame}"
+                f = Path(tmp) / f"{doc['id']}.json"
+                f.write_text(json.dumps(doc), encoding="utf-8")
+                return [l for l in run(f)[1].splitlines()[:-1] if "clip: clip '" not in l]
+            self.assertEqual(check(18), [], "active null with a teleport is a valid move")
+            self.assertEqual(check(28), [], "the last frame is inside the move")
+            past = check(40)
+            self.assertTrue(any("teleport" in l and "40" in l for l in past), f"frame 40 on a 28-frame move: {past}")
+        self.assertEqual(validate_data.built_move_errors(fd | {"properties": {"teleport": {"to": "behind_opponent", "frame": 29}}}),
+                         ["properties.teleport.frame 29 is past the move's last frame (28)"])
+        self.assertEqual(validate_data.built_move_errors(fd | {"properties": {"teleport": {"to": "behind_opponent", "frame": 28}}}), [])
+
     def test_real_modifiers_build_on_every_special(self):
         code, out = run(ROOT / "data" / "modifiers")
         self.assertEqual(code, 0, out)

@@ -262,8 +262,9 @@ public static class Effects
 	/// Flag: set true / false. Armour: set { frames: [first, last], hits? }. ThrowBreak: set "startup".
 	/// MultiHit: set { hits, interval } (<see cref="MultiHit"/>). <c>ex.meter_cost</c> is modifier-only
 	/// (<see cref="ModifierData.ExCostFor"/>), not frame data. YOK-220: the evolution targets no fight code reads yet
-	/// (wall_bounce, throw.range, multi_hit, forward_travel as a distance, decoy) load and are ignored
-	/// (<see cref="MoveData.CheckPendingProperties"/>) until their behaviour tickets land.
+	/// (wall_bounce, throw.range, multi_hit, forward_travel as a distance) load and are ignored
+	/// (<see cref="MoveData.CheckPendingProperties"/>) until their behaviour tickets land; decoy is read by
+	/// <see cref="MoveData.ReadMirage"/> (YOK-224).
 	/// </summary>
 	public static readonly IReadOnlyDictionary<string, ValueKind> Vocabulary = new Dictionary<string, ValueKind>
 	{

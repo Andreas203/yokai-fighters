@@ -86,6 +86,7 @@ public static class MoveLoader
 		move = MoveData.ReadSpecialProperties(move, fd); // YOK-21: projectile, invuln, cancel windows
 		move = MoveData.ReadModifierProperties(move, fd); // YOK-103: armour, counterhit/projectile immunity, pull, heal...
 		move = MoveData.CheckPendingProperties(move, fd); // YOK-220: vocabulary no fight code reads yet (shape only)
+		move = MoveData.ReadMirage(move, fd); // YOK-224: properties.teleport and properties.decoy
 
 		if (move.Projectile != null && move.Damage > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
 			throw new FormatException($"{id}: a damaging projectile needs hitstun and blockstun");
