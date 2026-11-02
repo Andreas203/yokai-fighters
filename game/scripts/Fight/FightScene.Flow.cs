@@ -213,8 +213,17 @@ public partial class FightScene
 		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
 		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
 		DebugMenu.Bind(this);
-		foreach (string arg in OS.GetCmdlineUserArgs())
-			if (arg.StartsWith("--temperament=", StringComparison.Ordinal)) SetTemperament(arg["--temperament=".Length..]);
+		if (TemperamentFromArgs(OS.GetCmdlineUserArgs()) is { } t) SetTemperament(t);
+	}
+
+	/// <summary>E23 debug: the temperament <c>--temperament=</c> names (the last one given); null without the arg.</summary>
+	public static string? TemperamentFromArgs(string[] args)
+	{
+		const string Arg = "--temperament=";
+		string? t = null;
+		foreach (string arg in args)
+			if (arg.StartsWith(Arg, StringComparison.Ordinal)) t = arg[Arg.Length..];
+		return t;
 	}
 
 	/// <summary>

@@ -45,6 +45,12 @@ public sealed class RunSession
 	/// Empty = no trial is offered anywhere. Set by whoever starts or restores the session; read by each dojo stop.
 	/// </summary>
 	public IReadOnlyList<TrialData> Trials { get; set; } = Array.Empty<TrialData>();
+	/// <summary>
+	/// E23 debug (YOK-211): the temperament chosen in the fight's debug menu (F6/F9, <c>--temperament=</c>), sticky for the
+	/// rest of this run, so later fights and the map's habit line (<c>NodeProfiles.Pick</c>) both follow it. Null = each
+	/// node rolls its own (Y1/Y2). Debug state only: not saved, not in the state hash.
+	/// </summary>
+	public string? DebugTemperament { get; set; }
 
 	/// <summary>The node Ryo is on and the scene that runs it; null on the map (between nodes).</summary>
 	public NodeScene? Entered { get; private set; }

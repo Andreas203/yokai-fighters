@@ -365,6 +365,8 @@ public partial class GameFlow : Node
 	/// </summary>
 	private void Adopt(RunSession session)
 	{
+		// E23, YOK-211: --temperament= holds from the run's first node, so the map's habit line follows it before any fight scene opens
+		if (OS.IsDebugBuild() && session.DebugTemperament is null) session.DebugTemperament = FightScene.TemperamentFromArgs(OS.GetCmdlineUserArgs());
 		session.NodeEntered += n =>
 		{
 			GD.Print($"GameFlow: entered '{n.NodeId}' ({n.Type}, row {n.Row})");

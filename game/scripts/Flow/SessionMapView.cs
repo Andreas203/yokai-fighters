@@ -18,7 +18,7 @@ public sealed class SessionMapView : IMapView
 	public SessionMapView(RunSession session)
 	{
 		_session = session;
-		_map = new RunMapView(session.Map, session.Run, session.Scenes, session.Seed);
+		_map = new RunMapView(session.Map, session.Run, session.Scenes, session.Seed) { DebugTemperament = () => session.DebugTemperament }; // E23, YOK-211
 	}
 
 	public IReadOnlyList<MapNodeView> Nodes => _map.Nodes;

@@ -58,11 +58,17 @@ public sealed class MapGraph
 	public IReadOnlyList<int> Rows { get; }
 	/// <summary>Changes when any node, route or payload changes (mixed into <see cref="RunMap.StateHash"/>).</summary>
 	public ulong Fingerprint { get; }
+	/// <summary>YOK-211: the node types this graph was checked against; readers ask it what a node's type is (e.g. <see cref="INodeType.Fight"/>) instead of naming types.</summary>
+	public INodeTypeRegistry Types { get; }
+
+	/// <summary>YOK-211: the registered type of <paramref name="node"/> (every node of this graph has one, or it would not load); null for a type not registered.</summary>
+	public INodeType? TypeOf(MapNodeData node) => Types.Find(node.Type);
 
 	public MapGraph(string id, IEnumerable<MapNodeData> nodes, IEnumerable<MapRoute> routes, INodeTypeRegistry types, string? name = null)
 	{
 		Id = id;
 		Name = name;
+		Types = types;
 		Nodes = nodes.ToArray();
 		Routes = routes.ToArray();
 		var problems = new List<string>();
