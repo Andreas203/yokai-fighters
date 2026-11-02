@@ -33,6 +33,7 @@ public partial class FightScene
 			if (Dummy is { } dummy) p2 = dummy.Input(Match.P2); // YOK-197: the practice dummy's held stance, not P2's
 			Match.Step(p1, p2);
 		}
+		DataCues?.Advance(Match.Tick); // YOK-93: hit sounds with an offset start on their tick
 		ObserveTutorial(); // YOK-92
 		_lastP1 = p1.Bits; // YOK-pause-flow-wiring: what was held going into a pause
 		ObservePresentation(); // YOK-53: clip frames follow the sim tick

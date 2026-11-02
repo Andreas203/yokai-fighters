@@ -65,6 +65,7 @@ KIND_SCHEMA = {
     "harness_bot": "harness-bot.schema.json",
     "harness_bot_levels": "harness-bot-levels.schema.json",
     "level_preset": "level-preset.schema.json",
+    "sound_cue": "sound-cue.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -80,6 +81,7 @@ DIR_KIND = {
     "fighters": ("fighter",),
     "harness": ("harness_bot", "harness_bot_levels"),
     "presets": ("level_preset",),
+    "sound": ("sound_cue",),
 }
 # Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
 TRIAL_KATA_ONLY = ("motion", "precision", "kata")
@@ -745,6 +747,56 @@ def check_level_preset(doc: dict, specials: dict[str, dict]) -> list[tuple[str, 
     return errs
 
 
+# YOK-93: the sound-cue schema's patterns, matched whole (as HitCueLibrary does with \z).
+SOUND_SAMPLE = re.compile(r"res://sound/([A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(wav|ogg|mp3)")
+
+
+def sound_cue_when_key(when) -> str | None:
+    """YOK-93: one string per distinct `when` (HitCueLibrary refuses two rules with the same one), or None if malformed."""
+    if when is None:
+        when = {}
+    if not isinstance(when, dict):
+        return None
+    return json.dumps(when, sort_keys=True)
+
+
+def check_sound_cue(doc: dict) -> list[tuple[str, str]]:
+    """YOK-93 (V6): what HitCueLibrary also refuses (whole-matched ids and paths, integers only, one rule per `when`
+    within the file), plus every sample existing under game/."""
+    errs: list[tuple[str, str]] = []
+    cues = doc.get("cues") if isinstance(doc.get("cues"), list) else []
+    seen: dict[str, int] = {}
+    for i, cue in enumerate(cues):
+        if not isinstance(cue, dict):
+            continue
+        where = f"cues.{i}"
+        when = cue.get("when") if isinstance(cue.get("when"), dict) else {}
+        for key in ("move", "source"):
+            v = when.get(key)
+            if isinstance(v, str) and not PRESET_ID.fullmatch(v):
+                errs.append((f"{where}.when.{key}", f"{v!r} is not a lowercase kebab-case id (matched whole: no trailing newline)"))
+        for name, v in ((f"{where}.when.level", when.get("level")), (f"{where}.volume_db", cue.get("volume_db")),
+                        (f"{where}.offset_ticks", cue.get("offset_ticks"))):
+            if v is not None and not is_int(v):
+                errs.append((name, f"{v!r} must be a whole number (the loader reads integers only)"))
+        for part in ("thud", "sting"):
+            samples = cue.get(part) if isinstance(cue.get(part), list) else []
+            for j, path in enumerate(samples):
+                if not isinstance(path, str):
+                    continue
+                if not SOUND_SAMPLE.fullmatch(path):
+                    errs.append((f"{where}.{part}.{j}", f"{path!r} is not a res://sound/ .wav/.ogg/.mp3 path (matched whole)"))
+                elif not (ROOT / "game" / path[len("res://"):]).is_file():
+                    errs.append((f"{where}.{part}.{j}", f"game/{path[len('res://'):]} does not exist"))
+        key = sound_cue_when_key(cue.get("when"))
+        if key is not None:
+            if key in seen:
+                errs.append((f"{where}.when", f"same case as cues.{seen[key]} ({key}); one rule per case (V6)"))
+            else:
+                seen[key] = i
+    return errs
+
+
 def check_trial(doc: dict, move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
     """YOK-105 (R7): the checks of the game's TrialLoader the schema cannot express. Kihon-completable steps,
     one step lands the trial's own special, distance min <= max, block / counterhit steps only against an
@@ -907,6 +959,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
                 errs.append((key, f"story card '{card}' not found (expected data/story/{card}.json) (Y3)"))
     elif kind == "level_preset":  # YOK-198 (V8)
         errs.extend(check_level_preset(doc, specials or {}))
+    elif kind == "sound_cue":  # YOK-93 (V6)
+        errs.extend(check_sound_cue(doc))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
@@ -1100,6 +1154,22 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first != f:
                 failures.setdefault(f, []).append(
                     ("level", f"'{doc['special']}' Lv {doc['level']} already has a preset in {rel(first)} (V8: one per level)"))
+
+    # YOK-93 (V6): one rule per case across the cue tables checked together (HitCueLibrary throws on the same).
+    # data/samples/ is documentation.
+    cue_of: dict[str, tuple[Path, int]] = {}
+    for f, doc in docs.items():
+        if not (isinstance(doc, dict) and doc.get("kind") == "sound_cue" and isinstance(doc.get("cues"), list)) \
+                or SAMPLES_DIR in f.resolve().parents:
+            continue
+        for i, cue in enumerate(doc["cues"]):
+            key = sound_cue_when_key(cue.get("when")) if isinstance(cue, dict) else None
+            if key is None:
+                continue
+            first = cue_of.setdefault(key, (f, i))
+            if first[0] != f:
+                failures.setdefault(f, []).append(
+                    (f"cues.{i}.when", f"same case as cues.{first[1]} in {rel(first[0])} ({key}); one rule per case (V6)"))
 
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:

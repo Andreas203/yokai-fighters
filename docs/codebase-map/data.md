@@ -20,6 +20,7 @@
 | `fighter` | `fighter.schema.json` | `data/fighters/` | `push_width` (1–1,060; absent = `SimConfig.BodyWidth`). `FighterData`. |
 | `elder_twist` | `elder-twist.schema.json` | `data/twists/` | Y3: elder, effect, repeat/hits, label key, icon, intro and callout cards. `ElderTwistLoader`. |
 | `level_preset` | `level-preset.schema.json` | `data/presets/` | V8, A5: `special`, `level`, `colour`, optional `spark` (colour, scale, frames, textures, sheet columns, tint). One per special + level. `LevelPresetLibrary`. |
+| `sound_cue` | `sound-cue.schema.json` | `data/sound/` | V6: `cues` rules: optional `when` (`move`, `source`, `level`, `strength`, `outcome`), `thud` and optional `sting` sample lists (`res://sound/...`, must exist), `volume_db`, `offset_ticks`. Move beats source beats default, then more `when` fields, then first; one rule per case across tables. Absent/empty folder = placeholder hit pack. `HitCueLibrary`. |
 | `harness_bot` | `harness-bot.schema.json` | `data/harness/` | The newcomer Kihon bot (all values proposed). `BotConfig`. |
 | `harness_bot_levels` | `harness-bot-levels.schema.json` | `data/harness/` | Bot skill levels merged onto the base bot. `BotLevels`. |
 | — | `common.schema.json` | — | Shared `$defs`: id, yokai, rarity, status, ruleIds, card, frameRange, rect, timedRect, condition, effect, `effectTarget`/`effectShape` (= `Effects.Vocabulary`), `modifierCondition`, `stage`. |

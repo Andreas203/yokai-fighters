@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yokai-fighters.local/schema/sound-cue.schema.json",
+  "title": "Hit sound cue table",
+  "description": "data/sound/<id>.json (V6; YOK-93): which samples play when a hit lands. The fight raises one hit cue per impact on the impact tick (source, move or special id, level, strength, outcome); every table in data/sound/ is read together and the most specific matching rule plays its thud, plus its yokai sting when it names one. Specific to general: a rule naming a move beats one naming a source beats a default (no move, no source); between rules of the same rank, the one naming more of level / strength / outcome wins, then the first (files in name order, rules in array order). No rule matches = no sound. An empty or absent data/sound/ keeps the placeholder hit pack. Presentation only: the sim, AI, replays and harness never read it. Authored by the animator from the bought packs (AM1, AM5).",
+  "type": "object",
+  "required": ["kind", "id", "cues"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "sound_cue" },
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "status": { "$ref": "common.schema.json#/$defs/status" },
+    "rules": { "$ref": "common.schema.json#/$defs/ruleIds" },
+    "cues": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/cue" }
+    },
+    "notes": { "$ref": "common.schema.json#/$defs/notes" }
+  },
+  "$defs": {
+    "cue": {
+      "type": "object",
+      "required": ["thud"],
+      "additionalProperties": false,
+      "properties": {
+        "when": { "$ref": "#/$defs/when" },
+        "thud": { "$ref": "#/$defs/samples", "description": "Impact thuds; one is picked per hit from the hit's tick and attacker (no randomness), so a replay sounds the same." },
+        "sting": { "$ref": "#/$defs/samples", "description": "Short yokai stings layered on the thud (V6); left out = thud only." },
+        "volume_db": { "type": "integer", "minimum": -40, "maximum": 12, "description": "Volume of both samples in dB on the Effects bus (default 0)." },
+        "offset_ticks": { "type": "integer", "minimum": 0, "maximum": 30, "description": "Sim ticks after the impact tick the samples start (60 per second, F3; hitstop ticks count). Default 0 = on the impact tick." },
+        "notes": { "$ref": "common.schema.json#/$defs/notes" }
+      }
+    },
+    "when": {
+      "description": "What the hit must be for this rule to match. Every field is optional; a field left out matches anything. No fields = the default rule.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "move": { "$ref": "common.schema.json#/$defs/id", "description": "A move or special id (data/moves/). A special's id also matches its EX and evolved moves." },
+        "source": { "$ref": "common.schema.json#/$defs/id", "description": "The move's source: ryo, kitsune, oni, kappa, an elder (nine-tailed-kitsune, elder-oni, elder-kappa) or tanuki." },
+        "level": { "type": "integer", "minimum": 1, "maximum": 3, "description": "The special's level (A3); a normal or throw is level 1." },
+        "strength": { "enum": ["light", "medium", "heavy"], "description": "The move's hit strength (V2)." },
+        "outcome": { "enum": ["hit", "block", "counter"], "description": "Clean hit, blocked, or counterhit." }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sample" }
+    },
+    "sample": {
+      "description": "A sound file under game/sound/, as a Godot path (res://sound/...). The validator checks it exists.",
+      "type": "string",
+      "pattern": "^res://sound/([A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.(wav|ogg|mp3)$"
+    }
+  }
+}
