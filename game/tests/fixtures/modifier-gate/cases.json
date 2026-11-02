@@ -78,6 +78,8 @@
     { "name": "special-forward-travel-1e-34-written-out-reads-as-0", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 0.0000000000000000000000000000000001 } }, "remove": [] },
     { "name": "special-forward-travel-huge-exponent", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 1e9999999 } }, "remove": [] },
     { "name": "special-forward-travel-int32-max-past-precision", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 2147483647.000000000000000000000001 } }, "remove": [] },
-    { "name": "special-forward-travel-past-int32", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 2147483648 } }, "remove": [] }
+    { "name": "special-forward-travel-past-int32", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 2147483648 } }, "remove": [] },
+    { "name": "special-forward-travel-tie-after-29-digits-rounds-away-not-whole", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 1.00000000000000000000000000005 } }, "remove": [] },
+    { "name": "special-damage-tie-after-29-digits-rounds-away-past-int32", "accept": false, "base": "test-rising-talisman", "set": { "damage": 79228162514264337593543950334.5 }, "remove": [] }
   ]
 }

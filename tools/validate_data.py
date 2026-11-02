@@ -419,10 +419,11 @@ def dotnet_decimal(text: str):
         if m * 10 + c > DECIMAL_MAX:
             break
         m, i, e = m * 10 + c, i + 1, e - 1
-    if i < len(ds) and ds[i] >= 5 and not (ds[i] == 5 and m % 2 == 0 and not any(ds[i + 1:])):
+    # .NET rounds a tie half to even only while it has kept 28 digits or fewer; with 29 kept, a tie rounds away from zero
+    if i < len(ds) and ds[i] >= 5 and not (ds[i] == 5 and m % 2 == 0 and len(str(m)) < 29 and not any(ds[i + 1:])):
         m += 1
-        if m > DECIMAL_MAX:  # as .NET: the last digit goes and the rest stays at the top
-            m, e = 429496729 * 2**64 + 0x9999999999999999, e + 1
+        if m > DECIMAL_MAX:  # as .NET: the last digit goes and the value rounds up
+            m, e = (m + 9) // 10, e + 1
     if e > 0:
         return None
     if e <= -29:
