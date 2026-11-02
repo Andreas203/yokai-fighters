@@ -96,6 +96,10 @@ public sealed class NewcomerBot
 	bool _threatRolled, _jumpRolled;
 	/// <summary>YOK-184: this grab on Ryo has had its <c>throw_break_pct</c> roll.</summary>
 	bool _breakRolled;
+	/// <summary>YOK-184: the roll succeeded and the break press is still to go out (a held throw button is released first).</summary>
+	bool _breakDue;
+	/// <summary>YOK-184: the buttons the bot sent last tick, so a break press is always a fresh press (E12 edge).</summary>
+	InputBits _lastBits;
 	/// <summary>YOK-157 (designer): this fight's first jump seen under a held idle guard has passed unanswered.</summary>
 	bool _guardJumpSeen;
 	AiView? _prev;
@@ -128,6 +132,13 @@ public sealed class NewcomerBot
 	/// <summary>Feed this tick's screen; returns Ryo's raw input for the next sim step.</summary>
 	public FighterInput Next(AiView now)
 	{
+		var input = Step(now);
+		_lastBits = input.Bits;
+		return input;
+	}
+
+	FighterInput Step(AiView now)
+	{
 		int n = _seen.Length;
 		_seen[_calls % n] = now;
 		AiView view = _calls >= n - 1 ? _seen[(_calls - n + 1) % n]! : _seen[0]!;
@@ -138,7 +149,7 @@ public sealed class NewcomerBot
 
 		// Its own fighter it reads off the live screen: a move that is over, or a press that never came out, ends the attack plan.
 		FighterView me = now.Fighter(Self);
-		if (BreakThrow(me)) return new FighterInput(_kit.Throw.Bits);
+		if (BreakThrow(me, out var breakInput)) return breakInput;
 		if (_plan == PlanKind.Attack && _sincePress >= 2 && me.State == FighterState.Idle) Clear();
 
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
@@ -199,16 +210,25 @@ public sealed class NewcomerBot
 	/// <summary>
 	/// YOK-184 (C4, Y6): Ryo is grabbed (his own fighter, live screen, like a player who feels the grab; never the
 	/// opponent's buttons, P6). One <c>throw_break_pct</c> roll per grab, on its first tick, so the press lands on the
-	/// window's first frame (C4: 7). A break press drops the plan Ryo was in (the grab cut it short). 0 draws nothing from
+	/// window's first frame (C4: 7), or its second when a throw button is still down from the tick before. A break press drops the plan Ryo was in (the grab cut it short). 0 draws nothing from
 	/// the RNG, nor does a kit with no throw, so a 0 config plays exactly as the pre-YOK-184 bot.
 	/// </summary>
-	bool BreakThrow(FighterView me)
+	bool BreakThrow(FighterView me, out FighterInput input)
 	{
-		if (me.State != FighterState.Thrown) { _breakRolled = false; return false; }
-		if (_breakRolled) return false;
-		_breakRolled = true;
-		if (_kit.Throw.Bits == InputBits.None || !Roll(_cfg.ThrowBreakPct)) return false;
-		Clear();
+		input = FighterInput.None;
+		if (me.State != FighterState.Thrown) { _breakRolled = _breakDue = false; return false; }
+		if (!_breakRolled)
+		{
+			_breakRolled = true;
+			if (_kit.Throw.Bits != InputBits.None && Roll(_cfg.ThrowBreakPct)) { Clear(); _breakDue = true; }
+		}
+		if (!_breakDue) return false;
+		// E12/C4: the break needs a fresh press (InputBuffer.PressedAt is an edge). If a throw button is still down from
+		// the tick before (Ryo's own throw went out on the grab's tick), release it on the window's first frame and press
+		// on the second, still inside the 7.
+		if ((_lastBits & _kit.Throw.Bits) != 0) return true;
+		_breakDue = false;
+		input = new FighterInput(_kit.Throw.Bits);
 		Stats.ThrowBreakPresses++;
 		return true;
 	}
@@ -390,6 +410,10 @@ public sealed class BotStats
 	public int IdleGuards;
 	/// <summary>YOK-157: jumps let go under a held idle guard (at most one per fight).</summary>
 	public int GuardedJumpsLetGo;
-	/// <summary>YOK-184: grabs answered with the throw-break press (a press an elder's unbreakable throw refuses still counts).</summary>
+	/// <summary>
+	/// YOK-184: throw-break presses sent (one per successful roll). Not the same as throws broken (the fight log's
+	/// <see cref="FightLog.ThrowBreaks"/>): Elder Kappa's unbreakable-throws twist (YOK-90) refuses a press, which still
+	/// counts here, and a throw press from the bot's own throw plan can break a grab without a roll.
+	/// </summary>
 	public int ThrowBreakPresses;
 }

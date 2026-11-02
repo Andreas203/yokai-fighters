@@ -106,6 +106,56 @@ public static class BotThrowBreakTests
 		Assert.Equal(r.Grabs, r.Bot.Stats.ThrowBreakPresses, "one press per grab");
 	}
 
+	/// <summary>
+	/// Code Critic advisory (C4, E12 edge): Ryo's own throw press goes out on the very tick he is grabbed, so the throw
+	/// buttons are down the tick before the window opens. The break must still be a fresh press (release, then press on
+	/// the window's second frame), and must break. Ryo decides every 600 ticks and only throws, so he presses throw at
+	/// steps 0 and 600 only; the opponent walks into reach, stands, and throws once at a scanned step so that one of the
+	/// scanned timings grabs Ryo on step 600.
+	/// </summary>
+	[Test]
+	public static void ThrowBreak_100_BreaksWhenRyoPressedThrowOnTheGrabTick()
+	{
+		var cfg = Waiter(100) with { WaitWeight = 0, ThrowWeight = 1, ThrowRange = 4000, DecideEvery = 600 };
+		int coincident = 0;
+		for (int pressAt = 585; pressAt <= 600; pressAt++)
+		{
+			var session = RunSession.Start(Content.Pool, Content.Map, Content.Scenes, 5);
+			Assert.True(session.Enter(session.Reachable()[0]).Ok, "enter row 1");
+			var m = NodeFight.NewMatch(Content.Sources, session.Run, session, session.Node!.Fighter, ControlScheme.Kihon);
+			InputBits oppThrow = InputBits.None;
+			foreach (var mv in m.P2.Moves) if (mv.IsThrow) { oppThrow = mv.ThrowButtons; break; }
+			var kit = BotKit.From(m.P1);
+			var bot = new NewcomerBot(cfg, kit, 3);
+			InputBits sent = InputBits.None;
+			bool watching = false, resolved = false;
+			m.Throw += (_, e) =>
+			{
+				if (e.Attacker != 1) return;
+				if (e.Outcome == ThrowOutcome.Grab && (sent & kit.Throw.Bits) == kit.Throw.Bits) { watching = true; coincident++; }
+				else if (watching && e.Outcome is ThrowOutcome.Break or ThrowOutcome.Land)
+				{
+					Assert.Equal(ThrowOutcome.Break, e.Outcome, $"opponent press at step {pressAt}: grabbed on the tick Ryo pressed throw, still broken");
+					watching = false;
+					resolved = true;
+				}
+			};
+			for (int t = 0; t < 700 && m.Phase != MatchPhase.Over; t++)
+			{
+				var input = bot.Next(AiView.Capture(m));
+				var p2 = FighterInput.None;
+				if (t == pressAt) p2 = new FighterInput(oppThrow);
+				else if (t < pressAt && m.P2.State == FighterState.Idle && Math.Abs(m.P1.X - m.P2.X) / SimConfig.Scale > 130)
+					p2 = new FighterInput(m.P1.X < m.P2.X ? InputBits.Left : InputBits.Right);
+				sent = input.Bits;
+				m.Step(input, p2);
+			}
+			Assert.True(!watching, $"opponent press at step {pressAt}: the coincident grab resolved");
+			if (watching || resolved) Assert.Equal(1, bot.Stats.ThrowBreakPresses, $"opponent press at step {pressAt}: one break press");
+		}
+		Assert.True(coincident > 0, $"one scanned timing grabs Ryo on the tick he pressed throw ({coincident})");
+	}
+
 	[Test]
 	public static void ThrowBreak_FixedSeed_Repeatable_AndRollsPerGrab()
 	{
