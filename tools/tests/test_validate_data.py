@@ -940,6 +940,21 @@ class SoundCueTest(unittest.TestCase):
             self.assertEqual(code, 1, out)
             self.assertIn("same case as cues.0 in", out)
 
+    def test_one_rule_per_case_reads_the_rest_of_the_folder(self):
+        """Code-critic: checking one file of a folder finds a duplicate in a sibling on disk, as loading the folder would."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            oni = {"thud": [self.THUD], "when": {"source": "oni"}}
+            self._write(tmp, self._doc(cues=[{"thud": [self.THUD]}, oni], id="a"))
+            b = self._write(tmp, self._doc(oni, id="b"))
+            code, out = run(b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("b.json: cues.0.when: same case as cues.1 in", out)
+            self.assertIn("a.json", out)
+            self.assertEqual(out.count("same case"), 1, out)  # a.json is not in the run: no error reported on it
+            code, out = run(self._write(tmp, self._doc({"thud": [self.THUD], "when": {"source": "kitsune"}}, id="b")))
+            self.assertEqual(code, 0, out)
+
     def test_set_without_a_default_is_refused(self):
         """Code-critic (V6): a source rule alone would leave every other hit silent."""
         import tempfile

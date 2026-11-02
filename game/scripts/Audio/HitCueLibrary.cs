@@ -130,7 +130,11 @@ public sealed class HitCueLibrary
 		return new HitSound(thud, sting, r.VolumeDb, cue.Tick + r.OffsetTicks);
 	}
 
-	/// <summary>A deterministic index in 0..count-1 from the hit's tick and attacker (FNV-1a); <paramref name="salt"/> separates the thud from the sting.</summary>
+	/// <summary>
+	/// A deterministic index in 0..count-1 from the hit's tick and attacker; <paramref name="salt"/> separates the thud
+	/// from the sting. FNV-1a over the bytes, then the murmur3 finaliser: without it the low bits of FNV depend only on
+	/// the low bits of the input bytes, so with two samples the salt flipped parity and thud i always met sting 1 - i.
+	/// </summary>
 	public static int Pick(int count, int tick, int attacker, int salt)
 	{
 		if (count <= 1) return 0;
@@ -139,6 +143,7 @@ public sealed class HitCueLibrary
 			uint h = 2166136261;
 			foreach (int v in stackalloc int[] { tick, attacker, salt })
 				for (int b = 0; b < 4; b++) { h ^= (byte)(v >> (8 * b)); h *= 16777619; }
+			h ^= h >> 16; h *= 0x85EBCA6B; h ^= h >> 13; h *= 0xC2B2AE35; h ^= h >> 16;
 			return (int)(h % (uint)count);
 		}
 	}

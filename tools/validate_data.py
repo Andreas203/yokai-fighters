@@ -1186,37 +1186,46 @@ def validate(paths: list[str], out=sys.stdout) -> int:
                 failures.setdefault(f, []).append(
                     ("level", f"'{doc['special']}' Lv {doc['level']} already has a preset in {rel(first)} (V8: one per level)"))
 
-    # YOK-93 (V6): one rule per case across the cue tables checked together (HitCueLibrary throws on the same).
-    # data/samples/ is documentation.
-    cue_of: dict[str, tuple[Path, int]] = {}
+    # YOK-93 (V6): HitCueLibrary loads one folder as one set: every *.json in it. A cue table checked here is judged
+    # with the rest of its folder on disk (this run's copies in their place), so checking one file of data/sound/
+    # finds what loading the folder would. data/samples/ is documentation.
+    in_run = {f.resolve() for f in docs}
+    folders: dict[Path, list[Path]] = {}
     for f, doc in docs.items():
-        if not (isinstance(doc, dict) and doc.get("kind") == "sound_cue" and isinstance(doc.get("cues"), list)) \
-                or SAMPLES_DIR in f.resolve().parents:
+        if isinstance(doc, dict) and doc.get("kind") == "sound_cue" and SAMPLES_DIR not in f.resolve().parents:
+            folders.setdefault(f.resolve().parent, []).append(f)
+    siblings: dict[Path, list[tuple[Path, dict]]] = {}  # folder -> its other sound_cue files on disk, not in this run
+    for folder in folders:
+        for other in sorted(folder.glob("*.json")):
+            if other.resolve() in in_run:
+                continue
+            try:
+                d = json.loads(other.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(d, dict) and d.get("kind") == "sound_cue":
+                siblings.setdefault(folder, []).append((other, d))
+
+    # One rule per case (HitCueLibrary throws on the same): across the tables checked together and the rest of their
+    # folders. Files on disk go first, so the error lands on the file being checked.
+    cue_of: dict[str, tuple[Path, int]] = {}
+    pool = [pair for folder in folders for pair in siblings.get(folder, [])]
+    pool += [(f, docs[f]) for members in folders.values() for f in members]
+    for f, doc in pool:
+        if not isinstance(doc.get("cues"), list):
             continue
         for i, cue in enumerate(doc["cues"]):
             key = sound_cue_when_key(cue.get("when")) if isinstance(cue, dict) else None
             if key is None:
                 continue
             first = cue_of.setdefault(key, (f, i))
-            if first[0] != f:
+            if first[0] != f and f.resolve() in in_run:
                 failures.setdefault(f, []).append(
                     (f"cues.{i}.when", f"same case as cues.{first[1]} in {rel(first[0])} ({key}); one rule per case (V6)"))
 
-    # YOK-93 (V6): HitCueLibrary loads one folder as one set and refuses a set with no default (it would leave some
-    # hits silent); the set is every *.json in the folder on disk, with this run's copies in their place.
-    folders: dict[Path, list[Path]] = {}
-    for f, doc in docs.items():
-        if isinstance(doc, dict) and doc.get("kind") == "sound_cue" and SAMPLES_DIR not in f.resolve().parents:
-            folders.setdefault(f.resolve().parent, []).append(f)
+    # A set with no default would leave some hits silent; HitCueLibrary refuses it.
     for folder, members in folders.items():
-        tables = [d for f, d in docs.items() if f.resolve().parent == folder]
-        in_run = {f.resolve() for f in docs}
-        for other in sorted(folder.glob("*.json")):
-            if other.resolve() not in in_run:
-                try:
-                    tables.append(json.loads(other.read_text(encoding="utf-8")))
-                except (OSError, json.JSONDecodeError):
-                    pass
+        tables = [docs[f] for f in docs if f.resolve().parent == folder] + [d for _, d in siblings.get(folder, [])]
         tables = [t for t in tables if isinstance(t, dict) and t.get("kind") == "sound_cue"]
         if not sound_cues_cover_every_hit(tables):
             for f in members:

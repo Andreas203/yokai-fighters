@@ -21,6 +21,9 @@ public partial class HitSoundPool : Node, IHitSoundOut
 
 	public IReadOnlyList<AudioStreamPlayer> Players => _players;
 
+	/// <summary>Every sample asked for so far: its stream, or null when it did not load as audio (warned once).</summary>
+	public IReadOnlyDictionary<string, AudioStream?> Loaded => _streams;
+
 	public HitSoundPool()
 	{
 		Name = NodeName;
@@ -41,8 +44,9 @@ public partial class HitSoundPool : Node, IHitSoundOut
 	{
 		if (!_streams.TryGetValue(sample, out var stream))
 		{
-			stream = ResourceLoader.Exists(sample) ? ResourceLoader.Load<AudioStream>(sample) : null;
-			if (stream == null) GD.PushWarning($"HitSoundPool: could not load hit sound {sample}");
+			// Not Load<AudioStream>: that throws InvalidCastException on a resource that is not audio (test-breaker).
+			stream = ResourceLoader.Exists(sample) ? ResourceLoader.Load(sample) as AudioStream : null;
+			if (stream == null) GD.PushWarning($"HitSoundPool: could not load hit sound {sample} (missing or not audio); it stays silent");
 			_streams[sample] = stream;
 		}
 		if (stream == null) return;

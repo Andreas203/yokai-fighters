@@ -147,6 +147,56 @@ public static class HitSoundCueTests
 	}
 
 	[Test]
+	public static void Pick_PairsEveryThudWithEverySting()
+	{
+		// Test-breaker: plain FNV-1a % 2 tied the sting to the thud's parity (thud i always met sting 1 - i).
+		var lib = new HitCueLibrary(new[] { HitCueLibrary.Parse("{\"kind\":\"sound_cue\",\"id\":\"p\",\"cues\":[{\"thud\":[\"" + H +
+			"1.wav\",\"" + H + "2.wav\"],\"sting\":[\"" + H + "3.wav\",\"" + H + "4.wav\"]}]}") });
+		var pairs = new HashSet<(string, string?)>();
+		var thuds = new HashSet<string>();
+		var stings = new HashSet<string?>();
+		for (int t = 0; t < 120; t++)
+			for (int a = 0; a < 2; a++)
+			{
+				var s = lib.Resolve(Cue(tick: t, attacker: a))!.Value;
+				pairs.Add((s.Thud, s.Sting));
+				thuds.Add(s.Thud);
+				stings.Add(s.Sting);
+			}
+		Assert.Equal(4, pairs.Count, "all four thud and sting pairings occur over a fight");
+		Assert.Equal(2, thuds.Count, "both thuds play");
+		Assert.Equal(2, stings.Count, "both stings play");
+		for (int n = 2; n <= 6; n++)
+		{
+			var used = new HashSet<int>();
+			for (int t = 0; t < 200; t++) used.Add(HitCueLibrary.Pick(n, t, t % 2, 1));
+			Assert.Equal(n, used.Count, $"the sting pick uses every one of {n} samples");
+		}
+	}
+
+	[Test]
+	public static void Pool_NonAudioOrMissingSampleIsSkipped(Node runner)
+	{
+		var pool = new HitSoundPool();
+		runner.AddChild(pool);
+		try
+		{
+			const string image = "res://assets/generated/characters/kappa/shell_base_color.png";
+			Assert.True(ResourceLoader.Exists(image), "the probe image exists");
+			pool.Play(image, 0); // used to throw InvalidCastException (Load<AudioStream> on a texture)
+			pool.Play(image, 0);
+			pool.Play("res://sound/hits/no-such-hit.wav", 0);
+			Assert.True(pool.Loaded.ContainsKey(image) && pool.Loaded[image] is null, "a non-audio resource is cached as unplayable (warned once)");
+			Assert.True(pool.Loaded["res://sound/hits/no-such-hit.wav"] is null, "a missing file too");
+			Assert.True(pool.Players.All(p => p.Stream is null), "no player was used");
+			pool.Play(H + "1.wav", -3);
+			Assert.Equal(H + "1.wav", pool.Players[0].Stream?.ResourcePath, "the next real sample gets the first player: none was consumed");
+			Assert.Equal(-3f, pool.Players[0].VolumeDb, "at its volume");
+		}
+		finally { pool.QueueFree(); }
+	}
+
+	[Test]
 	public static void Sink_PlaysOnTheImpactTickOrAfterItsOffset()
 	{
 		var output = new Out();
