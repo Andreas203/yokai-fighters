@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using YokaiFighters.Audio;
 using YokaiFighters.Sim;
 
 namespace YokaiFighters.Fight;
@@ -17,8 +18,20 @@ public partial class FightScene
 	/// <summary>The fight's sparks (the layer draws them every render).</summary>
 	public HitSparks Sparks { get; } = new();
 
-	/// <summary>Where each impact's sound cue goes. Silent until the animator's cues (data/sound/) attach.</summary>
+	/// <summary>
+	/// Where each impact's sound cue goes. YOK-93: a <see cref="DataHitCueSink"/> when the cue tables (data/sound/, or
+	/// <see cref="SoundCueTables"/>) have a rule, set in <c>_Ready</c>; silent otherwise, and the placeholder hit pack plays.
+	/// </summary>
 	public IHitCueSink HitCues { get; set; } = SilentHitCues.Instance;
+
+	/// <summary>YOK-93: cue tables for this scene, set before it enters the tree (tests); null = <see cref="SoundCues"/>.</summary>
+	public HitCueLibrary? SoundCueTables { get; set; }
+
+	/// <summary>YOK-93: the data sink when the cue tables have a rule (it replaces the placeholder hit pack), else null.</summary>
+	public DataHitCueSink? DataCues { get; private set; }
+
+	/// <summary>YOK-93: the players the data sink plays through, or null.</summary>
+	public HitSoundPool? HitSoundPool { get; private set; }
 
 	/// <summary>The cue of the last impact (tests, debugging).</summary>
 	public HitCue? LastHitCue { get; private set; }
@@ -27,6 +40,35 @@ public partial class FightScene
 
 	private Match? _sparkMatch;
 	private static LevelPresetLibrary? _presets;
+	private static HitCueLibrary? _soundCues;
+
+	/// <summary>YOK-93 (V6): data/sound/, read once. A file the loader refuses is reported and the placeholder hit pack plays.</summary>
+	public static HitCueLibrary SoundCues => _soundCues ??= LoadSoundCues(ContentPaths.Data("sound"));
+
+	public static HitCueLibrary LoadSoundCues(string dir)
+	{
+		try { return HitCueLibrary.LoadDirectory(dir); }
+		catch (Exception e) when (e is FormatException or System.IO.IOException or UnauthorizedAccessException)
+		{
+			GD.PushError($"FightScene: hit sound cues not loaded, placeholder hit pack only: {e.Message}");
+			return HitCueLibrary.Empty;
+		}
+	}
+
+	/// <summary>
+	/// YOK-93: when the cue tables have a rule, every impact plays its cue through a <see cref="HitSoundPool"/> and the
+	/// placeholder round-robin is not set up (true). With none, nothing changes (false).
+	/// </summary>
+	private bool SetUpDataHitCues()
+	{
+		var tables = SoundCueTables ?? SoundCues;
+		if (!tables.HasCues) return false;
+		HitSoundPool = new HitSoundPool();
+		AddChild(HitSoundPool);
+		DataCues = new DataHitCueSink(tables, HitSoundPool);
+		HitCues = DataCues;
+		return true;
+	}
 
 	/// <summary>data/presets/ (V8), read once. A file the loader refuses is reported and every hit falls back to the default spark.</summary>
 	public static LevelPresetLibrary Presets => _presets ??= LoadPresets(ContentPaths.Data("presets"));
@@ -70,6 +112,7 @@ public partial class FightScene
 			_sparkMatch = Match;
 			Match.Impact += OnImpactSpark;
 			Sparks.Clear();
+			DataCues?.Clear(); // YOK-93: a delayed hit sound of the old match never plays in the new one
 		}
 		SparkLayer?.Draw(Sparks.Visible(Match));
 	}

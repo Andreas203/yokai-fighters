@@ -267,6 +267,7 @@ public partial class FightScene : Node3D
 
 	private void SetUpHitSounds()
 	{
+		if (SetUpDataHitCues()) return; // YOK-93: data/sound/ cue tables replace the placeholder hit pack (no double sound)
 		var clips = new List<AudioStreamWav>(HitClipPaths.Length);
 		foreach (string path in HitClipPaths)
 		{
@@ -296,6 +297,7 @@ public partial class FightScene : Node3D
 
 	private void AttachHitSounds(Match match)
 	{
+		if (DataCues != null) return; // YOK-93: the cue tables play through HitCues instead
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
 		_hitMatch = match;
 		_hitMatch.Hit += OnHit;
