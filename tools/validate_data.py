@@ -155,7 +155,7 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     if s is None or r is None or (fd.get("active") is not None and a is None):
         return
     total = s + (a or 0) + r
-    props = fd.get("properties") or {}
+    props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}  # the schema reports a non-object
     if a is None:
         if "projectile" not in props and "teleport" not in props:  # YOK-224: Fox Mirage is 18/—/10 with a teleport
             errs.append((f"{where}.active", "active is null ('—') but properties.projectile (or properties.teleport) is missing"))
@@ -165,9 +165,8 @@ def check_frame_data(fd, where, clip, clip_name, errs):
         check_ranges(fd.get("hitboxes"), s + 1, s + a, f"{where}.hitboxes", "hitbox", errs)
     check_ranges(fd.get("hurtboxes"), 1, total, f"{where}.hurtboxes", "hurtbox", errs)
     check_ranges(fd.get("cancel_windows"), 1, total, f"{where}.cancel_windows", "cancel window", errs)
-    tp = props.get("teleport")  # YOK-224: MoveData.ReadMirage
-    if isinstance(tp, dict) and whole(tp.get("frame")) is not None and not 1 <= whole(tp["frame"]) <= total:
-        errs.append((f"{where}.properties.teleport.frame", f"teleport frame {tp['frame']} is outside the move (1-{total})"))
+    # YOK-224: teleport.frame inside the move is built_move_errors' (every level and EX, normals and throws too since
+    # YOK-220's moves_ok), so it is reported once per build, not twice for Lv 1.
     proj = props.get("projectile")
     if isinstance(proj, dict) and whole(proj.get("spawn_frame")) is not None and not 1 <= whole(proj["spawn_frame"]) <= total:
         errs.append((f"{where}.properties.projectile.spawn_frame", f"spawn frame {proj['spawn_frame']} is outside the move (1-{total})"))
@@ -847,8 +846,12 @@ def load_schema(name: str) -> dict:
 
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
              specials: dict[str, dict] | None = None, schema_ok: bool = True,
-             move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
+             move_kinds: dict[str, str] | None = None, moves_ok: bool | None = None) -> list[tuple[str, str]]:
+    """moves_ok (YOK-220): the move's own frame data (a normal's or throw's frame_data, a special's levels and ex)
+    passed the schema, so the loader mirror runs even when another field failed (a fixture without a clip);
+    defaults to schema_ok."""
     errs: list[tuple[str, str]] = []
+    moves_ok = schema_ok if moves_ok is None else moves_ok
     kind = doc.get("kind")
     if doc.get("id") != path.stem:
         errs.append(("id", f"id '{doc.get('id')}' must equal the file name '{path.stem}'"))
@@ -868,7 +871,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         clip = clips.get(clip_id) if isinstance(clip_id, str) else None
         if isinstance(clip_id, str) and clip is None:
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
-    if kind in ("normal", "throw") and schema_ok and isinstance(doc.get("frame_data"), dict):
+    if kind in ("normal", "throw") and moves_ok and isinstance(doc.get("frame_data"), dict):
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
     if kind == "normal":
@@ -894,7 +897,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("starter", "starters must have source 'ryo' and rarity 'common' (A1, A9)"))
         lv1 = ((doc.get("levels") or {}).get("1") or {}).get("frame_data")
         check_frame_data(lv1, "levels.1.frame_data", clip, clip_id, errs)
-        if schema_ok:  # YOK-103: every level and EX version must still be a move the loader runs
+        if moves_ok:  # YOK-103: every level and EX version must still be a move the loader runs
             check_special_builds(doc, errs)
     elif kind == "modifier":
         if schema_ok:  # YOK-103: what the C# loader does with it (see the mirror above)
@@ -1067,7 +1070,10 @@ def validate(paths: list[str], out=sys.stdout) -> int:
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
-            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds))
+            # YOK-220: the loader mirror needs only the move's own frame data to be schema-valid.
+            move_errs = [p for p, _ in errs if p.split(".")[0] in ("frame_data", "levels", "ex")]
+            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds,
+                                 moves_ok=not move_errs and game_loads))
         if errs:
             failures[f] = errs
 

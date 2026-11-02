@@ -52,7 +52,8 @@ public static class EffectVocabularyTests
 
 	/// <summary>
 	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with wall_bounce, multi_hit, decoy and a
-	/// properties.throw added hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed.
+	/// properties.throw added hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed, by
+	/// its evolution or by a modifier (always and on_hit, Test Breaker finding).
 	/// forward_travel is left out: YOK-221 gives it behaviour. decoy stays: YOK-224 leaves a decoy only where a move
 	/// teleports, and Rising Talisman doesn't (FoxMirageTests covers the teleport). Each behaviour ticket drops its target from this list.
 	/// </summary>
@@ -73,28 +74,51 @@ public static class EffectVocabularyTests
 		var built = pending.Build(3, false);
 		Assert.Equal(plain.Build(3, false).TotalFrames, built.TotalFrames, "same frame data");
 
+		// The level path: the evolution carries them.
+		Trace(plain, null, pending, null, "evolution");
+		// The modifier path, plain and conditional (outcome variants): a same-id modifier carrying them against one
+		// whose only change is damage + 0.
+		const string pendingEffects =
+			"{\"target\":\"wall_bounce\",\"op\":\"set\",\"value\":true,\"when\":\"W\"}," +
+			"{\"target\":\"multi_hit\",\"op\":\"set\",\"value\":{\"hits\":2,\"interval\":4},\"when\":\"W\"}," +
+			"{\"target\":\"decoy\",\"op\":\"set\",\"value\":2,\"when\":\"W\"}," +
+			"{\"target\":\"throw.range\",\"op\":\"add\",\"value\":10,\"when\":\"W\"}";
+		const string noOp = "{\"target\":\"damage\",\"op\":\"add\",\"value\":0,\"when\":\"W\"}";
+		static ModifierData Mod(string effects, string when) => ModifierLoader.Parse(
+			"{\"kind\":\"modifier\",\"id\":\"yok220-pending\",\"source\":\"oni\",\"applies_to\":{\"requires\":[]},\"effects\":["
+			+ effects.Replace("\"W\"", $"\"{when}\"") + "]}");
+		foreach (string when in new[] { "always", "on_hit" })
+			Trace(pending, Mod(noOp, when), pending, Mod(pendingEffects + "," + noOp, when), $"modifier {when}");
+	}
+
+	/// <summary>Two fights, P1 Rising Talisman Lv 3 on tick 1 (P2 idle, then P2 jabbing): equal hashes on every tick.</summary>
+	static void Trace(SpecialData spA, ModifierData? modA, SpecialData spB, ModifierData? modB, string label)
+	{
 		foreach (bool p2Jabs in new[] { false, true })
 		{
-			Match Fight(SpecialData sp)
+			Match Fight(SpecialData sp, ModifierData? mod)
 			{
 				var m = new Match(null, Moves(), Moves());
-				m.P1.Equip(SpecialSlot.B, sp, 3);
+				m.P1.Equip(SpecialSlot.B, sp, 3, mod);
 				m.P1.X = -60 * S;
 				m.P2.X = 60 * S;
 				return m;
 			}
-			var a = Fight(plain);
-			var b = Fight(pending);
+			var a = Fight(spA, modA);
+			var b = Fight(spB, modB);
 			int lp = Array.FindIndex(a.P2.Moves, mv => mv.Button == InputBits.LightPunch && !mv.Air);
+			bool talismanHit = false;
 			for (int t = 1; t <= 120; t++)
 			{
 				var p1 = t == 1 ? FighterInput.Special(SpecialSlot.B) : FighterInput.None;
 				var p2 = p2Jabs && t == 1 ? FighterInput.Attack(lp) : FighterInput.None;
 				a.Step(p1, p2);
 				b.Step(p1, p2);
-				Assert.Equal(a.StateHash(), b.StateHash(), $"tick {t} (P2 jabs: {p2Jabs})");
+				talismanHit |= a.P2.Health < 1000;
+				Assert.Equal(a.StateHash(), b.StateHash(), $"{label}: tick {t} (P2 jabs: {p2Jabs})");
 			}
-			Assert.True(a.P1.Health < 1000 || a.P2.Health < 1000, "something connected");
+			Assert.True(talismanHit || p2Jabs, $"{label}: the talisman connected, so on_hit variants were played");
+			Assert.True(a.P1.Health < 1000 || a.P2.Health < 1000, $"{label}: something connected");
 		}
 	}
 

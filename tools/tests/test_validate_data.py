@@ -209,6 +209,26 @@ class ValidateDataTest(unittest.TestCase):
         for line in lines:
             self.assertTrue(line.endswith("(root): 'clip' is a required property"), line)
 
+    def test_loader_mirror_runs_when_only_another_field_fails_the_schema(self):
+        """YOK-220: a normal or throw missing only its clip still gets MoveLoader's whole-number rule (int32)."""
+        import json
+        import tempfile
+        cases = [(FIXTURE_NORMALS / "test-ryo-heavy-kick.json", ("damage",), 3000000000),
+                 (FIXTURE_NORMALS / "test-ryo-heavy-kick.json", ("properties", "decoy"), 3000000000),
+                 (FIXTURE_THROWS / "test-ryo-throw.json", ("damage",), 3000000000)]
+        with tempfile.TemporaryDirectory() as tmp:
+            for src, key, value in cases:
+                doc = json.loads(src.read_text(encoding="utf-8"))
+                node = doc["frame_data"]
+                for k in key[:-1]:
+                    node = node.setdefault(k, {})
+                node[key[-1]] = value
+                f = Path(tmp) / src.name
+                f.write_text(json.dumps(doc), encoding="utf-8")
+                code, out = run(f)
+                lines = [l for l in out.splitlines()[:-1] if "'clip' is a required" not in l]
+                self.assertTrue(any("not a whole number inside int32" in l for l in lines), f"{src.name} {key}: {out}")
+
     def test_throw_test_fixture_matches_schema_except_clip(self):
         # YOK-19 TEST FIXTURE: C4 numbers, grab clip still being retaken (YOK-31).
         self.assertIn("throw", validate_data.DIR_KIND["moves"])
