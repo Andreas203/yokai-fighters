@@ -53,6 +53,8 @@ public sealed record LaterLoss(string? Yokai, int RowMin, int RowMax)
 public sealed class StoryLibrary : Ui.IStorySource
 {
 	public const string BindingLineId = "binding-line", LoseScreenId = "lose-screen", DemoCompleteId = "demo-complete";
+	/// <summary>YOK-216, S3: the save's first loss (the Tanuki names the move it would have stolen).</summary>
+	public const string FirstLossId = "first-loss";
 
 	readonly Dictionary<string, StoryCardData> _cards;
 
@@ -76,6 +78,13 @@ public sealed class StoryLibrary : Ui.IStorySource
 	{
 		var c = LaterLossCard(winner, row);
 		return (c.FillTitle(yokai: name), c.FillText(yokai: name));
+	}
+
+	/// <summary>YOK-216, S3: the <c>first-loss</c> card, {yokai} = <paramref name="name"/>, {move} = <paramref name="move"/> (the copy target's name).</summary>
+	public (string? Title, string Text) FirstLoss(string name, string move)
+	{
+		var c = this[FirstLossId];
+		return (c.FillTitle(name, move), c.FillText(name, move));
 	}
 
 	/// <summary>

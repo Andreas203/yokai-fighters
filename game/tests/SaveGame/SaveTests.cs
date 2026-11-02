@@ -8,6 +8,7 @@ using YokaiFighters.Fight;
 using YokaiFighters.Flow;
 using YokaiFighters.SaveGame;
 using YokaiFighters.Sim;
+using YokaiFighters.Story;
 using YokaiFighters.Ui;
 
 namespace YokaiFighters.Tests;
@@ -1676,5 +1677,108 @@ public static class SaveTests
 			Assert.Equal(a, b, $"{node}: the entry save brings back the same offer");
 			Assert.True(a.Contains(":" + Table().Resolve(DefaultMap().Node(node)).Context.DraftYokai), $"{node}: {a}");
 		}
+	}
+
+	// YOK-216, S3: the save's first loss shows first-loss and sets StoryProgress.FirstLoss in the run-end write (M4, M5);
+	// every later loss shows the later-loss card (YOK-212). The flag is save data only: fight and run hash the same.
+	// The card choice itself is FirstLossTests.
+
+	/// <summary>Starts a run (Start, then the control select) and enters its first node's fight.</summary>
+	static RunSession StartAndEnter(GameFlow flow)
+	{
+		Press(flow.Title.StartButton);
+		Press(flow.ControlSelect.Start);
+		var s = flow.Session!;
+		Assert.True(flow.ChooseNode(s.Reachable()[0]).Ok && flow.Fight is not null, "row 1 fight entered");
+		return s;
+	}
+
+	static string LoseText(GameFlow flow) => flow.Fight!.GetNode<FightHud>("Hud").LoseText;
+
+	static string FirstLossText(GameFlow flow, RunSession s)
+	{
+		string? move = FightScene.CopyMoveOf(s);
+		Assert.True(move is not null, "the run has a copy target (T1)");
+		return FightScene.LoadStory().FirstLoss(flow.Fight!.OpponentName, move!).Text;
+	}
+
+	static string LaterLossText(GameFlow flow) =>
+		FightScene.LoadStory().LoseScreen(flow.Fight!.OpponentName, flow.Fight.OpponentYokai, flow.Fight.Node!.Row).Text;
+
+	[Test]
+	public static void FirstLoss_OnAFreshSave_ThenLaterLossesShowTheBandCard_AndTheFlagSurvivesReload(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss) && !flow.FirstLossPending, "fresh save; no run, nothing pending");
+			var s = StartAndEnter(flow);
+			Assert.True(flow.FirstLossPending && flow.Fight!.FirstLossPending, "the first run's fight is the first loss in waiting");
+			Assert.Equal(FirstLossText(flow, s), LoseText(flow), "S3: the first loss shows first-loss");
+			Assert.True(s.LoseFight().Ok, "lost");
+			Assert.True(flow.Saved.Story.Has(StoryProgress.FirstLoss), "the run end sets the flag");
+			Assert.True(new SaveStore(path).Load().Data.Story.Has(StoryProgress.FirstLoss), "M5: written to the file at the run end");
+			Assert.True(flow.ReturnToTitle(), "back to the title");
+
+			var second = StartAndEnter(flow);
+			Assert.True(!flow.FirstLossPending && !flow.Fight!.FirstLossPending, "nothing pending after the first loss");
+			Assert.Equal(LaterLossText(flow), LoseText(flow), "the second loss shows the later-loss card");
+			Assert.True(LoseText(flow) != FirstLossText(flow, second), "and never first-loss again");
+			Assert.True(second.LoseFight().Ok, "lost again");
+			Assert.True(flow.Saved.Story.Has(StoryProgress.FirstLoss), "the flag stays");
+		});
+		WithBoot(runner, path, flow =>
+		{
+			Assert.Equal(SaveLoadStatus.Loaded, flow.SaveLoaded!.Status, "the file loads");
+			Assert.True(flow.Saved.Story.Has(StoryProgress.FirstLoss), "the flag survives save and load");
+			StartAndEnter(flow);
+			Assert.Equal(LaterLossText(flow), LoseText(flow), "a new process: still a later loss");
+		});
+	});
+
+	[Test]
+	public static void FirstLoss_AWonRun_DoesNotSetTheFlag(Node runner) => WithTempFile(path =>
+	{
+		WithBoot(runner, path, flow =>
+		{
+			var s = StartAndEnter(flow);
+			if (s.WinFight(500) is { } draft)
+			{
+				var card = draft.Offer.Cards[0];
+				Assert.True(draft.Pick(0, card.Targets.Count > 0 ? card.Targets[0].Slot : null).Ok, "picked");
+			}
+			Assert.True(s.CompleteNode().Ok, "completed");
+			Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss) && flow.FirstLossPending, "a won node is no loss: still pending");
+		});
+	});
+
+	/// <summary>The flag is save data only: the same seed and inputs hash the same fight and run with or without it.</summary>
+	[Test]
+	public static void FirstLoss_TheFlag_ChangesNoStateHash_OnlyTheSaveField(Node runner)
+	{
+		(ulong Match, ulong Run, SaveData Saved) Play(bool flagSet) => FirstLossResult(runner, flagSet);
+		var fresh = Play(false);
+		var seen = Play(true);
+		Assert.Equal(fresh.Match, seen.Match, "the fight hashes the same (Match.StateHash)");
+		Assert.Equal(fresh.Run, seen.Run, "the run hashes the same (RunSession.StateHash)");
+		Assert.True(fresh.Saved.Story.Has(StoryProgress.FirstLoss) != seen.Saved.Story.Has(StoryProgress.FirstLoss), "only one has the flag");
+		Assert.Equal(SaveStore.Serialize(fresh.Saved with { Story = seen.Saved.Story }), SaveStore.Serialize(seen.Saved), "the saves differ only in the story field");
+	}
+
+	static (ulong, ulong, SaveData) FirstLossResult(Node runner, bool flagSet)
+	{
+		(ulong, ulong, SaveData) r = default;
+		WithTempFile(path =>
+		{
+			if (flagSet) new SaveStore(path).Save(SaveData.Empty.WithStory(StoryProgress.FirstLoss));
+			WithBoot(runner, path, flow =>
+			{
+				Assert.Equal(flagSet, flow.Saved.Story.Has(StoryProgress.FirstLoss), "set up");
+				var s = StartAndEnter(flow);
+				for (int t = 0; t < 30; t++)
+					flow.Fight!.Step(new FighterInput(t % 3 == 0 ? InputBits.DebugStrike : InputBits.None), new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None));
+				r = (flow.Fight!.Match.StateHash(), s.StateHash(), flow.Saved);
+			});
+		});
+		return r;
 	}
 }
