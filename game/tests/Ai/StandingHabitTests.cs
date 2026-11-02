@@ -337,9 +337,12 @@ public static class StandingHabitTests
 					var v = AiView.Capture(m).Fighter(1);
 					bool anyStart = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
 					// Code-critic r3: while a habit is pending, no other move may start (a buffered normal in place of the throw).
-					// YOK-228: a jump answer decided for this very step replaces the habit (counted below), so its move may start.
+					// YOK-228: a jump answer decided for this very step replaces the habit (counted below), so its own move, and
+					// only that move, may start (test-breaker: any other move on that step is still a substitution).
 					bool jumpAnswerNow = false;
-					for (int q = from; q < log.Count; q++) jumpAnswerNow |= log[q].Kind == "react" && log[q].Trigger == "opponent_jumping";
+					for (int q = from; q < log.Count; q++)
+						jumpAnswerNow |= log[q].Kind == "react" && log[q].Trigger == "opponent_jumping"
+							&& AiLoadout.From(m.P2).IsScreenMoveOf(BehaviourProfile.ParseAction(log[q].Action), v.MoveId);
 					Assert.True(!(anyStart && pendingTick >= 0 && v.MoveId != move && !jumpAnswerNow), $"{id} seed {seed}: {v.MoveId} started at {m.Tick} while the habit from {pendingTick} was pending");
 					bool moveStart = anyStart && v.MoveId == move && emitting;
 					prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
