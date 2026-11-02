@@ -69,9 +69,44 @@ public static class HitSoundCueTests
 		Assert.Equal(H + "1.wav", lv3.Thud, "naming the level narrows the move rule (the evolution)");
 		Assert.Equal(H + "2.wav", lv3.Sting, "with its sting");
 
-		var only = new HitCueLibrary(new[] { HitCueLibrary.Parse(
-			"{\"kind\":\"sound_cue\",\"id\":\"o\",\"cues\":[{\"when\":{\"source\":\"oni\"},\"thud\":[\"res://sound/hits/hit_01.wav\"]}]}") });
-		Assert.True(only.Resolve(Cue()) is null, "no matching rule = silent");
+		foreach (var src in new[] { "ryo", "kitsune", "oni", "kappa" })
+			foreach (var st in new[] { HitStrength.Light, HitStrength.Medium, HitStrength.Heavy })
+				foreach (var k in new[] { HitSparkKind.Hit, HitSparkKind.Block, HitSparkKind.Counter })
+					Assert.True(lib.Resolve(Cue(move: "any-move", source: src, strength: st, kind: k)) is not null, $"{src} {st} {k}: every hit sounds (V6)");
+	}
+
+	static HitCueTable Table(string id, params string[] whens) => HitCueLibrary.Parse(
+		$"{{\"kind\":\"sound_cue\",\"id\":\"{id}\",\"cues\":[" +
+		string.Join(",", whens.Select(w => $"{{\"when\":{w},\"thud\":[\"res://sound/hits/hit_01.wav\"]}}")) + "]}");
+
+	static string? Refusal(params HitCueTable[] tables)
+	{
+		try { _ = new HitCueLibrary(tables); return null; }
+		catch (FormatException e) { return e.Message; }
+	}
+
+	[Test]
+	public static void Coverage_ASetWithoutADefaultIsRefused()
+	{
+		string? why = Refusal(Table("kitsune", "{\"source\":\"kitsune\"}"));
+		Assert.True(why != null && why.Contains("no default"), $"a source rule alone would leave Ryo's hits silent: {why}");
+		Assert.True(Refusal(Table("a", "{\"move\":\"x\"}", "{\"level\":2}")) != null, "a level rule is not a default");
+		Assert.True(Refusal(Table("a", "{\"strength\":\"light\"}", "{\"strength\":\"medium\"}")) != null, "heavy hits uncovered");
+		Assert.True(Refusal(Table("a", "{\"outcome\":\"hit\",\"strength\":\"heavy\"}", "{\"outcome\":\"block\"}", "{\"outcome\":\"counter\"}")) != null,
+			"light and medium clean hits uncovered");
+		Assert.True(Refusal(Table("a", "{\"outcome\":\"hit\"}", "{\"outcome\":\"block\"}", "{\"outcome\":\"counter\"}")) is null,
+			"outcome rules covering every outcome are a default");
+		Assert.True(Refusal(Table("a", "{\"source\":\"oni\"}"), Table("b", "{}")) is null, "the default may sit in another table");
+		Assert.True(Refusal() is null && !HitCueLibrary.Empty.HasCues, "no tables at all is fine: the placeholder pack plays");
+
+		string tmp = Path.Combine(Path.GetTempPath(), "yok93-" + Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(tmp);
+		try
+		{
+			File.WriteAllText(Path.Combine(tmp, "kitsune.json"), "{\"kind\":\"sound_cue\",\"id\":\"kitsune\",\"cues\":[{\"when\":{\"source\":\"kitsune\"},\"thud\":[\"res://sound/hits/hit_01.wav\"]}]}");
+			Assert.Equal(HitCueLibrary.Empty, FightScene.LoadSoundCues(tmp), "the scene refuses a set with no default and keeps the placeholder pack");
+		}
+		finally { Directory.Delete(tmp, true); }
 	}
 
 	[Test]
@@ -83,6 +118,7 @@ public static class HitSoundCueTests
 		{
 			HitCueLibrary.Parse(T("a", "{\"source\":\"oni\",\"strength\":\"heavy\"}", "1")),
 			HitCueLibrary.Parse(T("b", "{\"source\":\"oni\",\"outcome\":\"hit\"}", "2")),
+			HitCueLibrary.Parse(T("c", "{}", "3")),
 		});
 		var s = lib.Resolve(Cue(source: "oni", strength: HitStrength.Heavy))!.Value;
 		Assert.Equal(H + "1.wav", s.Thud, "same tier and narrowing: the first table's rule");
@@ -209,6 +245,8 @@ public static class HitSoundCueTests
 			(Cue1("{" + thud + ",\"when\":{\"strength\":\"huge\"}}"), "cues.0.when.strength"),
 			(Cue1("{" + thud + ",\"when\":{\"outcome\":\"whiff\"}}"), "cues.0.when.outcome"),
 			(Cue1("{" + thud + ",\"when\":{\"move\":\"Foxfire\"}}"), "cues.0.when.move"),
+			(Cue1("{" + thud + ",\"when\":{\"source\":\"elder-oni\"}}"), "cues.0.when.source"),
+			(Cue1("{" + thud + ",\"when\":{\"source\":\"tanuki\"}}"), "cues.0.when.source"),
 			(Cue1("{" + thud + ",\"when\":{\"button\":\"LP\"}}"), "cues.0.when.button"),
 			(Cue1("{" + thud + "},{" + thud + ",\"when\":{}}"), "cues.1.when"),
 			(ok.TrimEnd('}') + ",\"status\":\"maybe\"}", "status"),

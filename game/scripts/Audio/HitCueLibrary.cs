@@ -53,8 +53,9 @@ public readonly record struct HitSound(string Thud, string? Sting, int VolumeDb,
 /// keeps its placeholder hit pack). Pure C#, presentation only: nothing in the sim, AI, replays or harness reads it.
 /// <see cref="Resolve"/> picks the most specific matching rule (<see cref="HitCueWhen.Tier"/>, then
 /// <see cref="HitCueWhen.Narrowing"/>, then the first: files in name order, rules in array order) and a sample from
-/// its lists by the hit's tick and attacker, never by an RNG, so a replay plays the same sounds. Throws
-/// <see cref="FormatException"/> naming the file and field on anything the schema refuses, so bad data fails at load.
+/// its lists by the hit's tick and attacker, never by an RNG, so a replay plays the same sounds. Every hit sounds (V6):
+/// a non-empty set must have a default (<see cref="CoversEveryHit"/>). Throws <see cref="FormatException"/> naming the
+/// file and field on anything the schema refuses, so bad data fails at load and the scene keeps its placeholder pack.
 /// </summary>
 public sealed class HitCueLibrary
 {
@@ -88,9 +89,24 @@ public sealed class HitCueLibrary
 				var first = seen[r.When.Key];
 				throw new FormatException($"sound cues '{first.Table}' cues.{first.Index} and '{r.Table}' cues.{r.Index} are the same case ({r.When.Key}); one rule per case (V6)");
 			}
+		if (Rules.Count > 0 && !CoversEveryHit(Rules))
+			throw new FormatException("sound cues have no default: some hits would be silent. Add a rule with no when (or rules naming only strength / outcome that cover every hit) (V6)");
 	}
 
-	/// <summary>The rule that plays for this hit, or null (no rule matches: silent).</summary>
+	/// <summary>
+	/// V6 "every hit": the rules naming no move, source or level match every strength and outcome, so
+	/// <see cref="Resolve"/> never returns null for any hit. tools/validate_data.py runs the same check.
+	/// </summary>
+	public static bool CoversEveryHit(IEnumerable<HitCueRule> rules)
+	{
+		var general = rules.Where(r => r.When.Move == null && r.When.Source == null && r.When.Level == null).ToList();
+		foreach (var s in Strengths.Values)
+			foreach (var o in Outcomes.Values)
+				if (!general.Any(r => (r.When.Strength ?? s) == s && (r.When.Outcome ?? o) == o)) return false;
+		return true;
+	}
+
+	/// <summary>The rule that plays for this hit; null only for <see cref="Empty"/> (a loaded set covers every hit).</summary>
 	public HitCueRule? RuleFor(in HitCue cue)
 	{
 		HitCueRule? best = null;
@@ -178,7 +194,7 @@ public sealed class HitCueLibrary
 			{
 				if (w.ValueKind != JsonValueKind.Object) throw new FormatException($"{at}.when: must be an object");
 				Unknown(w, WhenFields, at + ".when.");
-				when = new HitCueWhen(Id(w, "move", $"{at}.when.move"), Id(w, "source", $"{at}.when.source"),
+				when = new HitCueWhen(Id(w, "move", $"{at}.when.move"), Enum(w, "source", $"{at}.when.source", Sources),
 					Int(w, "level", $"{at}.when.level", 1, 3), Enum(w, "strength", $"{at}.when.strength", Strengths),
 					Enum(w, "outcome", $"{at}.when.outcome", Outcomes));
 			}
@@ -192,6 +208,8 @@ public sealed class HitCueLibrary
 		return new HitCueTable(id, rules, status);
 	}
 
+	/// <summary>common.schema.json yokai: a move's own source (HitSparks.Identify reads it from the move's file).</summary>
+	static readonly Dictionary<string, string> Sources = new() { ["ryo"] = "ryo", ["kitsune"] = "kitsune", ["oni"] = "oni", ["kappa"] = "kappa" };
 	static readonly Dictionary<string, HitStrength> Strengths = new()
 	{ ["light"] = HitStrength.Light, ["medium"] = HitStrength.Medium, ["heavy"] = HitStrength.Heavy };
 	static readonly Dictionary<string, HitSparkKind> Outcomes = new()
@@ -225,13 +243,14 @@ public sealed class HitCueLibrary
 		return n;
 	}
 
-	static T? Enum<T>(JsonElement obj, string name, string field, Dictionary<string, T> values) where T : struct
-	{
-		string? s = Str(obj, name, field);
-		if (s is null) return null;
-		if (!values.TryGetValue(s, out var v)) throw new FormatException($"{field}: '{s}' must be one of {string.Join(", ", values.Keys)}");
-		return v;
-	}
+	static T? Enum<T>(JsonElement obj, string name, string field, Dictionary<string, T> values) where T : struct =>
+		Str(obj, name, field) is { } s ? Lookup(s, field, values) : null;
+
+	static string? Enum(JsonElement obj, string name, string field, Dictionary<string, string> values) =>
+		Str(obj, name, field) is { } s ? Lookup(s, field, values) : null;
+
+	static T Lookup<T>(string s, string field, Dictionary<string, T> values) =>
+		values.TryGetValue(s, out var v) ? v : throw new FormatException($"{field}: '{s}' must be one of {string.Join(", ", values.Keys)}");
 
 	static IReadOnlyList<string>? Samples(JsonElement obj, string name, string at)
 	{

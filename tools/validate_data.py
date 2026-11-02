@@ -760,9 +760,27 @@ def sound_cue_when_key(when) -> str | None:
     return json.dumps(when, sort_keys=True)
 
 
-def check_sound_cue(doc: dict) -> list[tuple[str, str]]:
+SOUND_STRENGTHS = ("light", "medium", "heavy")
+SOUND_OUTCOMES = ("hit", "block", "counter")
+
+
+def sound_cues_cover_every_hit(tables: list) -> bool:
+    """YOK-93 (V6, same as HitCueLibrary.CoversEveryHit): rules naming no move, source or level cover every strength
+    and outcome, so no hit is silent. Tables that are not dicts or rules that are malformed count for nothing."""
+    general = []
+    for t in tables:
+        for cue in (t.get("cues") if isinstance(t, dict) and isinstance(t.get("cues"), list) else []):
+            when = cue.get("when", {}) if isinstance(cue, dict) else None
+            if isinstance(when, dict) and not ({"move", "source", "level"} & when.keys()):
+                general.append(when)
+    return all(any(w.get("strength", s) == s and w.get("outcome", o) == o for w in general)
+               for s in SOUND_STRENGTHS for o in SOUND_OUTCOMES)
+
+
+def check_sound_cue(doc: dict, move_ids: set[str] | None = None, sources: set[str] | None = None) -> list[tuple[str, str]]:
     """YOK-93 (V6): what HitCueLibrary also refuses (whole-matched ids and paths, integers only, one rule per `when`
-    within the file), plus every sample existing under game/."""
+    within the file), plus every sample existing under game/ and every `when.move` / `when.source` naming a move or a
+    source found in move data (data/moves/, the fixture specials and this run)."""
     errs: list[tuple[str, str]] = []
     cues = doc.get("cues") if isinstance(doc.get("cues"), list) else []
     seen: dict[str, int] = {}
@@ -775,6 +793,11 @@ def check_sound_cue(doc: dict) -> list[tuple[str, str]]:
             v = when.get(key)
             if isinstance(v, str) and not PRESET_ID.fullmatch(v):
                 errs.append((f"{where}.when.{key}", f"{v!r} is not a lowercase kebab-case id (matched whole: no trailing newline)"))
+        move, source = when.get("move"), when.get("source")
+        if isinstance(move, str) and move_ids is not None and move not in move_ids:
+            errs.append((f"{where}.when.move", f"move '{move}' not found (expected data/moves/{move}.json); the rule would never play"))
+        if isinstance(source, str) and sources is not None and source not in sources:
+            errs.append((f"{where}.when.source", f"no move in data/moves/ has source '{source}' (found: {', '.join(sorted(sources))}); the rule would never play"))
         for name, v in ((f"{where}.when.level", when.get("level")), (f"{where}.volume_db", cue.get("volume_db")),
                         (f"{where}.offset_ticks", cue.get("offset_ticks"))):
             if v is not None and not is_int(v):
@@ -871,9 +894,11 @@ def load_schema(name: str) -> dict:
 
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
              specials: dict[str, dict] | None = None, schema_ok: bool = True,
-             move_kinds: dict[str, str] | None = None) -> list[tuple[str, str]]:
+             move_kinds: dict[str, str] | None = None, move_sources: set[str] | None = None) -> list[tuple[str, str]]:
     errs: list[tuple[str, str]] = []
     kind = doc.get("kind")
+    sound_move_ids = set(move_kinds or {}) | set(specials or {}) if move_kinds is not None else None
+    sound_sources = move_sources
     if doc.get("id") != path.stem:
         errs.append(("id", f"id '{doc.get('id')}' must equal the file name '{path.stem}'"))
     parts = path.resolve().parts
@@ -883,6 +908,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         if folder in DIR_KIND and kind not in DIR_KIND[folder]:
             allowed = " or ".join(f"'{k}'" for k in DIR_KIND[folder])
             errs.append(("kind", f"files in data/{folder}/ must be kind {allowed}, got '{kind}'"))
+        if folder == "sound" and len(parts) - idx > 3:  # YOK-93: HitCueLibrary reads data/sound/*.json only
+            errs.append(("(file)", "the game reads data/sound/*.json only; a cue table in a subfolder would never load"))
     for i, rid in enumerate(doc.get("rules") or []):
         if isinstance(rid, str) and rid not in rule_ids:
             errs.append((f"rules.{i}", f"rule ID '{rid}' does not exist in docs/design/rules.md"))
@@ -960,7 +987,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
     elif kind == "level_preset":  # YOK-198 (V8)
         errs.extend(check_level_preset(doc, specials or {}))
     elif kind == "sound_cue":  # YOK-93 (V6)
-        errs.extend(check_sound_cue(doc))
+        errs.extend(check_sound_cue(doc, sound_move_ids, sound_sources))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
@@ -1083,9 +1110,12 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             move_docs.append(json.loads(mf.read_text(encoding="utf-8")))
         except (OSError, json.JSONDecodeError):
             pass
-    for d in move_docs + list(docs.values()):
+    move_sources: set[str] = set()  # YOK-93: what a hit cue's source can be (HitSparks.Identify reads the move's source)
+    for d in move_docs + list(docs.values()) + list(specials.values()):
         if isinstance(d, dict) and d.get("kind") in ("special", "normal", "throw") and isinstance(d.get("id"), str):
             move_kinds[d["id"]] = d["kind"]
+            if isinstance(d.get("source"), str):
+                move_sources.add(d["source"])
 
     for f, doc in docs.items():
         errs: list[tuple[str, str]] = []
@@ -1099,7 +1129,8 @@ def validate(paths: list[str], out=sys.stdout) -> int:
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
-            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds))
+            errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds,
+                                 move_sources=move_sources))
         if errs:
             failures[f] = errs
 
@@ -1170,6 +1201,28 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first[0] != f:
                 failures.setdefault(f, []).append(
                     (f"cues.{i}.when", f"same case as cues.{first[1]} in {rel(first[0])} ({key}); one rule per case (V6)"))
+
+    # YOK-93 (V6): HitCueLibrary loads one folder as one set and refuses a set with no default (it would leave some
+    # hits silent); the set is every *.json in the folder on disk, with this run's copies in their place.
+    folders: dict[Path, list[Path]] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "sound_cue" and SAMPLES_DIR not in f.resolve().parents:
+            folders.setdefault(f.resolve().parent, []).append(f)
+    for folder, members in folders.items():
+        tables = [d for f, d in docs.items() if f.resolve().parent == folder]
+        in_run = {f.resolve() for f in docs}
+        for other in sorted(folder.glob("*.json")):
+            if other.resolve() not in in_run:
+                try:
+                    tables.append(json.loads(other.read_text(encoding="utf-8")))
+                except (OSError, json.JSONDecodeError):
+                    pass
+        tables = [t for t in tables if isinstance(t, dict) and t.get("kind") == "sound_cue"]
+        if not sound_cues_cover_every_hit(tables):
+            for f in members:
+                failures.setdefault(f, []).append(
+                    ("cues", f"the cue tables in {rel(folder)}/ have no default: some hits would be silent. Add a rule with no "
+                             "when (or rules naming only strength / outcome that cover every hit) (V6)"))
 
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:
