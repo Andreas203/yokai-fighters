@@ -37,6 +37,11 @@ public readonly record struct ThrowEvent(int Attacker, string MoveId, ThrowOutco
 /// Input: the two throw buttons within ThrowPressWindow ticks; a normal the first button started is
 /// cancelled into the throw while still in startup. A landed throw builds meter and hitstop as a heavy
 /// hit (OnConnect). A Thrown defender cannot burst (TryBurst needs Hitstun): it breaks instead.
+///
+/// YOK-225 command grabs (River Grab): a special with <c>properties.throw</c> (<see cref="MoveData.IsCommandGrab"/>)
+/// starts from its special input, then resolves here exactly like the LP+LK throw (<see cref="MoveData.IsGrab"/>):
+/// same throwability, clash, Slippery Skin, twist and burst rules. The defender breaks it with the E12 throw input
+/// (LP+LK, <see cref="MoveData.BreakButtons"/>) unless its data says <c>breakable: false</c>.
 /// </summary>
 public sealed partial class Match
 {
@@ -115,8 +120,9 @@ public sealed partial class Match
 			Fighter d = Fighters[i], att = Fighters[1 - i];
 			if (d.State != FighterState.Thrown) continue;
 			MoveData? m = att.CurrentMove;
-			if (m is null || !m.IsThrow) continue;
-			if (!ThrowPressed(d.Input.Buffer, m.ThrowButtons)) continue; // same E12 leniency as the throw
+			if (m is null || !m.IsGrab) continue;
+			if (!ThrowPressed(d.Input.Buffer, m.BreakButtons)) continue; // same E12 leniency as the throw
+			if (!m.Breakable) continue; // YOK-225: properties.throw.breakable false; the press is not used up
 			if (Unbreakable(1 - i)) // YOK-90: the elder's throws can't be broken; the press is not used up either
 			{
 				TwistTriggered?.Invoke(this, new TwistEvent(1 - i, TwistEffect.UnbreakableThrows, m.Id));
@@ -150,7 +156,7 @@ public sealed partial class Match
 	private bool Grabs(Fighter att, Fighter def)
 	{
 		MoveData? m = att.CurrentMove;
-		if (m is null || !m.IsThrow || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
+		if (m is null || !m.IsGrab || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
 		if (!Throwable(def)) return false;
 		// Proposal: throws test the defender's stance body box, not a move's hurtboxes (a strike's
 		// invulnerable frames don't dodge a throw).
@@ -175,7 +181,7 @@ public sealed partial class Match
 	{
 		Fighter att = Fighters[attIndex], def = Fighters[1 - attIndex];
 		MoveData? m = att.CurrentMove;
-		if (m is null || !m.IsThrow) { ToIdle(def); return; } // defensive: the thrower's clip ended early
+		if (m is null || !m.IsGrab) { ToIdle(def); return; } // defensive: the thrower's clip ended early
 		int damage = Config.ScaleDamage(attIndex, m.Damage); // YOK-156, Y4
 		var at = BodyCentre(def); // YOK-198: the spark's place, before the knockdown and the slide
 		def.PendingDamage += damage;

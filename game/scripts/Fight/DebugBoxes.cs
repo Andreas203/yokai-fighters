@@ -65,7 +65,7 @@ public static class DebugBoxes
 	public static IEnumerable<Box> ThrowBoxes(Fighter f)
 	{
 		MoveData? m = f.CurrentMove;
-		if (m is null || !m.IsThrow || f.MoveConnected || !m.IsActive(f.MoveFrame)) yield break;
+		if (m is null || !m.IsGrab || f.MoveConnected || !m.IsActive(f.MoveFrame)) yield break;
 		foreach (var tb in m.Throwboxes)
 			if (tb.Covers(f.MoveFrame)) yield return tb.Box;
 	}

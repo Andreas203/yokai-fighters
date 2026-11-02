@@ -20,6 +20,8 @@ public sealed class BotKit
 	public Press Throw { get; }
 	/// <summary>YOK-171: slots whose special carries a charge hold (Sumo Stance, <see cref="MoveData.Charge"/>).</summary>
 	public IReadOnlySet<SpecialSlot> ChargeSlots { get; init; } = new HashSet<SpecialSlot>();
+	/// <summary>YOK-225: slots holding a command grab (<see cref="MoveData.IsCommandGrab"/>) → its reach in units, from his move list.</summary>
+	public IReadOnlyDictionary<SpecialSlot, int> GrabReach { get; init; } = new Dictionary<SpecialSlot, int>();
 	/// <summary>YOK-157: total frames of each of Ryo's own moves, by id (his move list, never the opponent's).</summary>
 	public IReadOnlyDictionary<string, int> MoveFrames { get; }
 
@@ -51,7 +53,10 @@ public sealed class BotKit
 		var charge = new HashSet<SpecialSlot>();
 		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
 			if (f.Specials[s]?.Move.Charge != null) charge.Add((SpecialSlot)s);
-		return new BotKit(normals, specials, thrw, frames) { ChargeSlots = charge };
+		var grabs = new Dictionary<SpecialSlot, int>();
+		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+			if (f.Specials[s]?.Move is { IsCommandGrab: true } g) grabs[(SpecialSlot)s] = g.GrabRange;
+		return new BotKit(normals, specials, thrw, frames) { ChargeSlots = charge, GrabReach = grabs };
 	}
 
 	/// <summary>
@@ -224,6 +229,7 @@ public sealed class NewcomerBot
 		else if ((r -= special) < 0)
 		{
 			var (slot, frames) = _kit.Specials[_rng.Next(_kit.Specials.Count)];
+			if (_kit.GrabReach.TryGetValue(slot, out int reach) && dist > reach - SimConfig.Default.IdleHurtbox.X) { Approach(s, o); return; } // YOK-225: a command grab only where its reach meets the body box (E5: 45 behind the centre)
 			int hold = _kit.ChargeSlots.Contains(slot) ? _cfg.SpecialHoldTicks : 0;
 			if (hold > 0)
 			{
