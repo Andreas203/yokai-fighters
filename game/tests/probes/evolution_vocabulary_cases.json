@@ -47,11 +47,12 @@
   "special_cases": [
     {"name": "p-throw-break-window-zero", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true, "break_window": 0}}}, "remove": []},
     {"name": "p-throw-break-window-one", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true, "break_window": 1}}}, "remove": []},
-    {"name": "p-throw-range-zero", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 0, "breakable": true}}}, "remove": []},
+    {"name": "p-throw-range-zero", "accept": false, "base": "test-rising-talisman", "set": {"hitboxes": [{"frames": [6, 13], "rect": {"x": -5, "y": 100, "w": 100, "h": 300}}], "properties": {"throw": {"range": 0, "breakable": true}}}, "remove": []},
     {"name": "p-throw-range-fraction", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80.5, "breakable": true}}}, "remove": []},
     {"name": "p-throw-range-string", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": "80", "breakable": true}}}, "remove": []},
     {"name": "p-throw-range-exponent", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 8e1, "breakable": false}}}, "remove": []},
     {"name": "p-throw-range-outside-int32", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 3000000000, "breakable": true}}}, "remove": []},
+    {"name": "p-throw-break-window-outside-int32", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true, "break_window": 3000000000}}}, "remove": []},
     {"name": "p-throw-breakable-string", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": "true"}}}, "remove": []},
     {"name": "p-throw-breakable-null", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": null}}}, "remove": []},
     {"name": "p-throw-extra-key", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true, "reach": 3}}}, "remove": []},
@@ -81,7 +82,7 @@
     {"name": "p-multi-hit-empty-array", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"multi_hit": []}}, "remove": []},
     {"name": "p-multi-hit-outside-int32", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"multi_hit": {"hits": 2147483648, "interval": 1}}}, "remove": []},
     {"name": "p-evo-throw-range-one-halved", "accept": true, "base": "test-rising-talisman", "set": {"hitboxes": [{"frames": [6, 13], "rect": {"x": 0, "y": 100, "w": 100, "h": 300}}], "properties": {"throw": {"range": 1, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "mul_pct", "value": 50}]},
-    {"name": "p-evo-throw-range-one-to-zero", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 1, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "mul_pct", "value": 49}]},
+    {"name": "p-evo-throw-range-one-to-zero", "accept": false, "base": "test-rising-talisman", "set": {"hitboxes": [{"frames": [6, 13], "rect": {"x": -5, "y": 100, "w": 100, "h": 300}}], "properties": {"throw": {"range": 1, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "mul_pct", "value": 49}]},
     {"name": "p-evo-throw-range-set-keeps-breakable", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "set", "value": 100}]},
     {"name": "p-evo-throw-range-overflow", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80, "breakable": true}}}, "remove": [], "changes": [{"target": "throw.range", "op": "add", "value": 2147483647}]},
     {"name": "p-evo-whole-throw-object", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": [], "changes": [{"target": "throw", "op": "set", "value": {"range": 80, "breakable": true}}]},
@@ -99,8 +100,6 @@
     {"name": "p-normal-wall-bounce", "accept": true, "properties": {"wall_bounce": true}},
     {"name": "p-normal-decoy-outside-int32", "accept": false, "properties": {"decoy": 3000000000}},
     {"name": "p-normal-travel-outside-int32", "accept": false, "properties": {"forward_travel": 3000000000}},
-    {"name": "p-normal-multi-hit-outside-int32", "accept": false, "properties": {"multi_hit": {"hits": 3000000000, "interval": 1}}},
-    {"name": "p-normal-throw-range-outside-int32", "accept": false, "properties": {"throw": {"range": 3000000000, "breakable": true}}},
-    {"name": "p-normal-throw-break-window-outside-int32", "accept": false, "properties": {"throw": {"range": 80, "breakable": true, "break_window": 3000000000}}}
+    {"name": "p-normal-multi-hit-outside-int32", "accept": false, "properties": {"multi_hit": {"hits": 3000000000, "interval": 1}}}
   ]
 }
