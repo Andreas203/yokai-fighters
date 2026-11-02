@@ -89,7 +89,7 @@ public partial class FightScene
 
 	/// <summary>
 	/// What the pause panel shows, from live state: both fighters' health in this duel (the match, not the run's carried
-	/// health), the position in the run, and Ryo's slots A-D with level and attached modifier (the run).
+	/// health), the position in the run, Ryo's slots A-D with level and attached modifier, and his held cancel rules (the run).
 	/// </summary>
 	public PauseRunSummary BuildPauseSummary()
 	{
@@ -101,7 +101,7 @@ public partial class FightScene
 				: new(slot.ToString(), "Empty", 0, ""));
 		return new PauseRunSummary(
 			Health(Story.StoryLibrary.DisplayName(Kit.Ryo).ToUpperInvariant(), Match.P1), Health(foe, Match.P2),
-			InPractice ? PracticeLine(foe) : $"Duel {Duel} of {Duels} · vs {foe}", slots); // YOK-197
+			InPractice ? PracticeLine(foe) : $"Duel {Duel} of {Duels} · vs {foe}", slots, PauseCancelSummary.Of(DemoRun)); // YOK-197; YOK-218: the held cancel rules
 
 		static PauseFighterSummary Health(string name, Fighter f) => new(name, Math.Max(0, f.Health), f.MaxHealth);
 	}

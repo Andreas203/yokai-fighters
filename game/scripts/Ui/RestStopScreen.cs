@@ -206,7 +206,7 @@ public partial class RestStopScreen : Control, INodeScene
 			GD.PushWarning($"RestStopScreen: pause move list not refreshed: {e.Message}");
 		}
 		string place = Model.Kind == RestStopKind.Dojo ? "Dojo" : "Merchant";
-		PauseMenu.SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(place, 0, 0), $"Row {Model.Row} of {_session.Steps} · {place}", slots));
+		PauseMenu.SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(place, 0, 0), $"Row {Model.Row} of {_session.Steps} · {place}", slots, PauseCancelSummary.Of(run)));
 		PauseMenu.Open();
 		return true;
 	}

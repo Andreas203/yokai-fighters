@@ -15,9 +15,16 @@ namespace YokaiFighters.Ui;
 /// </summary>
 public sealed record PauseFighterSummary(string Name, int Health, int MaxHealth);
 public sealed record PauseSlotSummary(string Slot, string Move, int Level, string Modifier, string? MoveId = null);
-/// <summary>Presentation only: the caller supplies position text, both health values and slots A-D.</summary>
+/// <summary>YOK-218 (X1, X2): a cancel rule Ryo holds, as the run panel lists it: name and the plain line from its data (A12).</summary>
+public sealed record PauseCancelSummary(string Id, string Name, string Plain)
+{
+	/// <summary>The rules the run holds, in the order taken.</summary>
+	public static PauseCancelSummary[] Of(RunState run) =>
+		run.CancelRules.Select(c => new PauseCancelSummary(c.Id, c.Name, c.CardPlain)).ToArray();
+}
+/// <summary>Presentation only: the caller supplies position text, both health values, slots A-D and (YOK-218) the held cancel rules (none = X1's start of a run).</summary>
 public sealed record PauseRunSummary(PauseFighterSummary Player, PauseFighterSummary Opponent,
- string Position, IReadOnlyList<PauseSlotSummary> Slots);
+ string Position, IReadOnlyList<PauseSlotSummary> Slots, IReadOnlyList<PauseCancelSummary>? Cancels = null);
 
 public partial class PauseMenu : Control
 {
@@ -94,7 +101,8 @@ public partial class PauseMenu : Control
 		_movesDir = movesDir;
 		var view = MoveListSource.Build(run, movesDir);
 		SetRunSummary(new(new("RYO", run.Health, RunState.MaxHealth), new(opponent, 0, 0),
-			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray()));
+			$"Row {row} of {rows} · vs {opponent}", view.Slots.Select(x => new PauseSlotSummary(x.Slot, x.Empty ? "Empty" : x.Name, x.Level, x.ModifierName, run[Enum.Parse<SpecialSlot>(x.Slot)]?.Data.Id)).ToArray(),
+			PauseCancelSummary.Of(run)));
 		MoveList.Bind(MoveListSource.Build(run, movesDir));
 	}
 
@@ -141,6 +149,47 @@ public partial class PauseMenu : Control
 			modifier.AddThemeFontSizeOverride("font_size", 26);
 			content.AddChild(modifier);
 			slots.AddChild(card);
+		}
+		SetCancelRules(summary.Cancels ?? Array.Empty<PauseCancelSummary>());
+	}
+
+	/// <summary>
+	/// The cancel rules held (X1, X2): one flat paper panel (no brush frame, so no stroke runs through the text) with
+	/// "CANCEL RULES n / 2" and one line per place: held rules in the order taken (icon and name), then open places.
+	/// The plain line and the path line are on the move list.
+	/// </summary>
+	private void SetCancelRules(IReadOnlyList<PauseCancelSummary> held)
+	{
+		var box = UiFind.Get<VBoxContainer>(this, "CancelRules");
+		foreach (Node child in box.GetChildren()) { box.RemoveChild(child); child.QueueFree(); }
+		var paper = new StyleBoxFlat { BgColor = Fight.FightHud.Paper, BorderColor = new Color(Fight.FightHud.Ink, 0.55f), ContentMarginLeft = 20, ContentMarginRight = 20, ContentMarginTop = 8, ContentMarginBottom = 8 };
+		paper.SetBorderWidthAll(3); paper.SetCornerRadiusAll(4);
+		var panel = new PanelContainer { Name = "CancelPanel", MouseFilter = MouseFilterEnum.Ignore };
+		panel.AddThemeStyleboxOverride("panel", paper);
+		var rows = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+		rows.AddThemeConstantOverride("separation", 2);
+		panel.AddChild(rows); box.AddChild(panel);
+		var head = new HBoxContainer { Name = "CancelHead", MouseFilter = MouseFilterEnum.Ignore };
+		var title = new Label { Name = "CancelHeading", Text = "CANCEL RULES", ThemeTypeVariation = "SealLabel", SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
+		title.AddThemeFontSizeOverride("font_size", 28);
+		var count = new Label { Name = "CancelCount", Text = $"{held.Count} / {MoveListView.CancelCap}", ThemeTypeVariation = "SealLabel", HorizontalAlignment = HorizontalAlignment.Right, MouseFilter = MouseFilterEnum.Ignore };
+		count.AddThemeFontSizeOverride("font_size", 28);
+		head.AddChild(title); head.AddChild(count);
+		rows.AddChild(head);
+		for (int i = 0; i < MoveListView.CancelCap; i++)
+		{
+			bool has = i < held.Count;
+			var row = new HBoxContainer { Name = $"Cancel{i + 1}", CustomMinimumSize = new(0, 40), MouseFilter = MouseFilterEnum.Ignore };
+			row.AddThemeConstantOverride("separation", 12);
+			row.AddChild(new TextureRect { Name = "CancelIcon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, CustomMinimumSize = new(40, 40),
+				Texture = has ? AbilityArt.ForId(held[i].Id) : null, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+				SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore });
+			var name = new Label { Name = "CancelName", Text = has ? held[i].Name : $"Cancel rule {i + 1}: open", SizeFlagsHorizontal = SizeFlags.ExpandFill,
+				VerticalAlignment = VerticalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore };
+			name.AddThemeFontSizeOverride("font_size", 28);
+			if (!has) name.AddThemeColorOverride("font_color", CancelRuleSlot.Grey);
+			row.AddChild(name);
+			rows.AddChild(row);
 		}
 	}
 

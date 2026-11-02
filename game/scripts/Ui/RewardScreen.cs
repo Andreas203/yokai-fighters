@@ -165,8 +165,12 @@ public partial class RewardScreen : Control
 		bool cards = Step == RewardStep.Cards;
 		_title.Text = cards ? $"{Offer.Yokai} yields {Offer.Cards.Count} talismans" : $"Where does {Offer.Cards[CardCursor].Name} go?";
 		UiFind.Get<Label>(this, "RewardHeading").Visible = cards;
-		_title.Position = cards ? new Vector2(735, 213) : new Vector2(235, 180);
-		_title.Size = cards ? new Vector2(830, 80) : new Vector2(1320, 110);
+		// YOK-218 (X2): the notice sits under the title, where the held-out cancel card would have been announced.
+		var notice = UiFind.Get<Label>(this, "Notice");
+		bool note = cards && !string.IsNullOrEmpty(Offer.Notice);
+		notice.Visible = note; notice.Text = Offer.Notice ?? "";
+		_title.Position = cards ? new Vector2(735, note ? 182 : 213) : new Vector2(235, 180);
+		_title.Size = cards ? new Vector2(830, note ? 70 : 80) : new Vector2(1320, 110);
 		_title.AddThemeFontSizeOverride("font_size", cards ? 36 : 52);
 		_cardsBox.Visible = cards; _hintCards.Visible = cards; _toggle.Visible = cards;
 		_targetsBox.Visible = !cards; _hintTarget.Visible = !cards; _targetHeading.Visible = !cards;
