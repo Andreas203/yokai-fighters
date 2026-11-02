@@ -1,0 +1,11 @@
+{
+  "kind": "fighter",
+  "id": "kappa",
+  "status": "proposed",
+  "rules": [
+    "E1",
+    "C2"
+  ],
+  "push_width": 130,
+  "notes": "YOK-228: provisional push box for the Kappa, the shortest and widest fighter (1.551 m with the shell on his back, shell 0.68 m deep = 136 units). The fight-wide default 120 is Ryo's 0.6 m body; 130 is movesmith's estimate from the shell depth, rounded down because the belly, not the shell, is what a front-on opponent meets. NOT measured from the posed rig; awaiting the designer. It matches the standing hurtbox width (130) of his normals and throw. Ryo and the Kitsune keep SimConfig.BodyWidth (120); the Oni has 150."
+}
