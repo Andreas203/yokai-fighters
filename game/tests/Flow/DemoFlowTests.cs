@@ -225,6 +225,9 @@ public static class DemoFlowTests
 		Assert.Equal(Ai.NodeTemperament.Roll(s.Session!.Seed, s.Node!.NodeId), s.Temperament, "the node's rolled temperament by default");
 		Assert.True(s.SetTemperament("patient"), "patient exists");
 		Assert.Equal("patient", s.P2Ai!.Profile.Temperament, "AI rebuilt as patient");
+		Assert.Equal("patient", s.Session!.DebugTemperament ?? "<null>", "YOK-211, E23: the choice is kept on the run's session (later nodes and the map's habit line follow it)");
+		Assert.Equal("patient", FightScene.TemperamentFromArgs(new[] { "--fight", "--temperament=aggressive", "--temperament=patient" }) ?? "<null>", "--temperament=: the last one given");
+		Assert.True(FightScene.TemperamentFromArgs(new[] { "--fight" }) == null, "no arg, no debug temperament");
 		Assert.True(!s.SetTemperament("sleepy"), "unknown temperament refused");
 		Assert.Equal("patient", s.Temperament, "unchanged by a refused switch");
 

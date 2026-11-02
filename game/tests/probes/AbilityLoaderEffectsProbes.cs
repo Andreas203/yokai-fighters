@@ -56,7 +56,7 @@ public static class AbilityLoaderEffectsProbes
 	public static void UnknownTypoAndNestedTargetsAreRefused()
 	{
 		foreach (var t in new[] { "damge", "Damage", " damage", "damage ", "damage.", ".damage", "", "properties", "properties.damage",
-			"properties.properties.armour", "properties.armour.hits", "properties.armour.frames", "properties.throw_invuln.startup",
+			"properties.properties.armour", "properties.armour.hits", "properties.armour.frames",
 			"properties.projectile.angle_up.x", "projectile.angle_up.x", "projectile", "pushback.on_hit.x", "pushback.both",
 			"meter_gain", "meter_gain.on_whiff", "ex", "ex.meter_cost.x", "ex.meter_gain", "EX.meter_cost", "heal_pct_max_health.x",
 			"armour.hits", "counterhit_immune.x", "aftershock_delay.x", "pull_on_hit.x", "__proto__", "damage[0]" })

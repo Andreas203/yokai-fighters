@@ -69,21 +69,17 @@ public partial class FightScene
 		if (Node is null || Profiles.Length == 0) return;
 		try
 		{
-			// YOK-174 (designer 2026-10-21): a named profile that is not the yokai's own (the apprentice's) comes from all of data/profiles/
-			Profiles = NodeProfiles.WithNamed(Node.NodeId, Profiles, Node.Profile, BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")));
+			// YOK-211: the one pick the map's habit line and the harness make too (NodeProfiles.PickFrom). YOK-174: a named
+			// profile that is not the yokai's own (the apprentice's) comes from all of data/profiles/ and is kept; else E23's
+			// debug temperament; else the node's seeded 50/50 temperament (Y1/Y2; same seed, same temperament; M5).
+			var pick = NodeProfiles.PickFrom(Node, Profiles, BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")), Session?.Seed ?? 0, DebugTemperament);
+			Profiles = pick.Profiles;
+			_profileIndex = pick.Index;
 		}
 		catch (InvalidOperationException e)
 		{
 			_nodeProfileError = "FightScene: " + e.Message; // refused in RebuildAi, never a fallback profile
-			return;
 		}
-		if (Node.Profile is null && DebugTemperament is { } t && Array.FindIndex(Profiles, p => p.Temperament == t) is var d and >= 0)
-		{
-			_profileIndex = d; // E23: the temperament chosen in the debug menu holds over the roll
-			return;
-		}
-		// YOK-174, Y1/Y2: the node's named profile, else its seeded 50/50 temperament (same seed, same temperament; M5).
-		_profileIndex = Math.Max(0, NodeTemperament.Pick(Profiles, Node, Session?.Seed ?? 0)); // a named profile is in Profiles now
 	}
 
 	/// <summary>YOK-174: the node names a profile found nowhere; <see cref="RebuildAi"/> refuses the fight.</summary>
@@ -92,8 +88,16 @@ public partial class FightScene
 	/// <summary>YOK-174: why the AI could not be built (a profile names a move P2's kit lacks); null when it was. The fight does not run then.</summary>
 	public string? AiSetupError { get; private set; }
 
-	/// <summary>E23 debug: the temperament last chosen in the debug menu (F6/F9, --temperament=); null = each node rolls its own (YOK-174).</summary>
-	public string? DebugTemperament { get; private set; }
+	/// <summary>E23 debug: the temperament last chosen in the debug menu (F6/F9, --temperament=); null = each node rolls its own (YOK-174).
+	/// YOK-211: also kept on the run's session (<see cref="RunSession.DebugTemperament"/>), so it holds across the run's later nodes
+	/// (each a new fight scene in the flow) and the map's habit line follows it.</summary>
+	public string? DebugTemperament
+	{
+		get => _debugTemperament ?? Session?.DebugTemperament;
+		private set { _debugTemperament = value; if (Session is { } s) s.DebugTemperament = value; }
+	}
+
+	private string? _debugTemperament;
 
 	/// <summary>New AI over the current match (fight start, reset, temperament swap): empty delay buffer.</summary>
 	public void RebuildAi()
