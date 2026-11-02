@@ -63,17 +63,22 @@ class ForwardTravelValidatorProbes(unittest.TestCase):
                         "a normal with forward_travel 300 and 0 active frames loads nowhere; the validator says nothing")
 
 
-# Round 2 (after ee46383: JsonFloat, exact Decimal judgement). (raw JSON text, is a whole number in int32 and >= 0, judged mathematically).
-EXACT_VALUES = [
-    ("300.00000000000000000000000000000000", True),   # 32 zeros: whole
-    ("300.00000000000000000000000000000001", False),  # past C# decimal's 28 digits, still a fraction
-    ("3.0000000000000000000000000000001e2", False),   # = 300.00000000000000000000000000001
-    ("0.0000000000000000000000000000000001", False),  # 1e-34: a fraction, not 0
-    ("-0.0000000000000000000000000000000000001", False),
-    ("1e-400", False), ("0e999999999", True),  # 1e999999999 has its own test: it hangs whole()
+# Round 2. Designer ruling 2026-11-02: the validator matches the loader, and a "whole number" is what .NET decimal
+# (TryGetDecimal) reads: it rounds past ~28 digits and tiny exponents become 0. So each row is the LOADER'S verdict
+# (True = accepted), pinned by ForwardTravelExactBreakerProbes.Loader_AndValidatorAgreeOnLongAndExtremeNumbers in C#,
+# which carries the same rows. 1e999999999 is only in the C# list: here it has its own (hang) test.
+DECIMAL_VALUES = [
+    ("300.00000000000000000000000000000000", True),
+    ("300.00000000000000000000000000000001", True),   # past decimal's digits: rounds to 300
+    ("3.0000000000000000000000000000001e2", True),
+    ("0.0000000000000000000000000000000001", True),   # 1e-34 reads as 0
+    ("-0.0000000000000000000000000000000000001", True),
+    ("1e-400", True), ("0e999999999", True),
     ("2147483647.0", True), ("2147483647.5", False), ("2147483648.0", False),
-    ("2147483647.0000000000000000000000000000000001", False),
+    ("2147483647.0000000000000000000000000000000001", True),
     ("-0.0e5", True), ("1E2", True), ("1e+2", True), ("0.3e3", True), ("3000e-1", True),
+    ("300.0000000000000000001", False),               # 22 digits: decimal keeps the fraction
+    ("-0.5", False), ("1e400", False),
 ]
 
 
@@ -81,9 +86,10 @@ class ForwardTravelExactnessProbes(unittest.TestCase):
     def travel_errors(self, raw):
         return ForwardTravelValidatorProbes.travel_errors(None, normal_with(raw))
 
-    def test_validator_verdict_is_the_mathematical_one_on_exact_edge_values(self):
-        wrong = [raw for raw, ok in EXACT_VALUES if bool(self.travel_errors(raw)) == ok]
-        self.assertEqual([], wrong, "validator verdict differs from the whole-number rule")
+    def test_validator_and_loader_agree_on_long_and_extreme_numbers(self):
+        wrong = [f"{raw}: loader {'accepts' if ok else 'refuses'}, validator {'refuses' if self.travel_errors(raw) else 'accepts'}"
+                 for raw, ok in DECIMAL_VALUES if bool(self.travel_errors(raw)) == ok]
+        self.assertEqual([], wrong, "validator verdict differs from the loader's")
 
     def test_nan_and_infinity_literals_are_refused_not_crashed(self):
         for raw in ("NaN", "Infinity", "-Infinity"):

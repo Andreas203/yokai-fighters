@@ -6,8 +6,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// Test Breaker round 2 for YOK-221: the loader half of ExactnessProbes in tools/tests/test_forward_travel_probes.py.
-/// The expected verdict is the whole-number rule (a number is whole when its written value is an integer in int32,
-/// so 300.00000000000000000000000000000001 is a fraction whatever the parser's precision), not what either side does.
+/// Parity with the validator on edge values, as .NET decimal reads them (designer ruling 2026-11-02).
 /// </summary>
 public static class ForwardTravelExactBreakerProbes
 {
@@ -23,28 +22,31 @@ public static class ForwardTravelExactBreakerProbes
 		}
 		""";
 
-	static readonly (string raw, bool whole)[] Values =
+	// Designer ruling 2026-11-02: a whole number is what .NET decimal reads (rounds past ~28 digits, tiny exponents are 0).
+	// Each row is the loader's verdict (true = accepted); tools/tests/test_forward_travel_probes.py DECIMAL_VALUES carries
+	// the same rows (less 1e999999999, which hangs its validator today) and checks the validator gives the same verdict.
+	static readonly (string raw, bool accepted)[] Values =
 	{
-		("300.00000000000000000000000000000000", true), ("300.00000000000000000000000000000001", false),
-		("3.0000000000000000000000000000001e2", false), ("0.0000000000000000000000000000000001", false),
-		("-0.0000000000000000000000000000000000001", false), ("1e-400", false), ("0e999999999", true), ("1e999999999", false),
+		("300.00000000000000000000000000000000", true), ("300.00000000000000000000000000000001", true),
+		("3.0000000000000000000000000000001e2", true), ("0.0000000000000000000000000000000001", true),
+		("-0.0000000000000000000000000000000000001", true), ("1e-400", true), ("0e999999999", true), ("1e999999999", false),
 		("2147483647.0", true), ("2147483647.5", false), ("2147483648.0", false),
-		("2147483647.0000000000000000000000000000000001", false),
+		("2147483647.0000000000000000000000000000000001", true),
 		("-0.0e5", true), ("1E2", true), ("1e+2", true), ("0.3e3", true), ("3000e-1", true),
+		("300.0000000000000000001", false), ("-0.5", false), ("1e400", false),
 	};
 
-	// Not one probe per value: a failing value names itself in the message (F3: the loader reads the number as written).
 	[Test]
-	public static void Loader_JudgesLongAndExtremeNumbersByTheirWrittenValue()
+	public static void Loader_AndValidatorAgreeOnLongAndExtremeNumbers()
 	{
 		var wrong = new List<string>();
-		foreach (var (raw, whole) in Values)
+		foreach (var (raw, accepted) in Values)
 		{
 			bool ok;
 			try { MoveLoader.Parse(Special(raw)); ok = true; }
 			catch (FormatException) { ok = false; }
 			catch (System.Text.Json.JsonException) { ok = false; }
-			if (ok != whole) wrong.Add($"{raw}: loader {(ok ? "accepts" : "refuses")}, a whole number is {whole}");
+			if (ok != accepted) wrong.Add($"{raw}: loader {(ok ? "accepts" : "refuses")}, the shared list says {(accepted ? "accepts" : "refuses")}");
 		}
 		Assert.True(wrong.Count == 0, string.Join("; ", wrong));
 	}
