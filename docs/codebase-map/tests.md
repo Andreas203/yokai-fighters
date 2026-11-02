@@ -40,7 +40,7 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/Sim/Input/` | `InputParserTests` |
 | `tests/Sim/Run/` | `RewardDraftTests`, `ElderCancelRuleTests` (YOK-186: elder cancel-rule offer, hold, continue, R8 provisional), `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests`, `LeaveNodeTests` |
 | `tests/Ai/` | `AiTests` (P6: identical P1 streams → identical AI output until t + reaction), `AiMeterTests`, `AiGuardTests`, `AiGuardHitstopTests`, `StandingHabitTests`, `PerYokaiProfileTests`, `TanukiPressureTests`, `ApprenticeDamageTests` |
-| `tests/Harness/` | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
+| `tests/Harness/` | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `BotThrowBreakTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
 | `tests/Tutorial/` | `TutorialTests` |
 | `tests/Replay/` | `ReplayTests` |
 | `tests/SaveGame/`, `tests/Settings/` | `SaveTests`; `SettingsTests` |

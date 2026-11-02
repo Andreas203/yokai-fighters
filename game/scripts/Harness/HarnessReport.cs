@@ -51,6 +51,7 @@ public static class HarnessReport
 			w.WriteString("bot", b.Name);
 			w.WriteNumber("base_seed", b.BaseSeed);
 			if (b.Bot.Fight.SpecialHoldTicks != 0) w.WriteNumber("special_hold_ticks", b.Bot.Fight.SpecialHoldTicks); // YOK-171: only when set
+			if (b.Bot.Fight.ThrowBreakPct != 0) w.WriteNumber("throw_break_pct", b.Bot.Fight.ThrowBreakPct); // YOK-184: only when set
 			w.WriteNumber("runs_played", b.Runs.Count);
 			w.WriteString("caveats", Caveats);
 			w.WritePropertyName("summary");
@@ -364,6 +365,7 @@ public static class HarnessReport
 			w.WriteNumber("idle_guards", f.Bot.IdleGuards);
 			w.WriteNumber("guarded_jumps_let_go", f.Bot.GuardedJumpsLetGo); // YOK-157
 			w.WriteNumber("anti_airs", f.Bot.AntiAirs);
+			if (f.Bot.ThrowBreakPresses != 0) w.WriteNumber("throw_break_presses", f.Bot.ThrowBreakPresses); // YOK-184: only when pressed
 			w.WriteNumber("mistakes", f.Bot.Mistakes);
 			w.WriteEndObject();
 			w.WriteString("match_hash", f.MatchHash.ToString("x16"));

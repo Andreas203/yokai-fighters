@@ -75,8 +75,9 @@ public sealed class BotKit
 /// guards (standing) against a seen threat with <c>block_pct</c>, anti-airs a seen jump with <c>anti_air_pct</c>, picks
 /// neutral actions by weight with simple spacing, holds a standing guard through <c>idle_guard_pct</c> of its wait and
 /// in-range walk plans (YOK-155), and on <c>mistake_pct</c> of its decisions presses a random
-/// normal whatever the range. The one thing it reads off the live screen is its own fighter (whether its move is
-/// over), never the opponent. No EX, burst, throw breaks or crouch guard. Deterministic: one seeded <see cref="SimRng"/>.
+/// normal whatever the range. On <c>throw_break_pct</c> of the grabs on Ryo it presses the throw buttons to break (C4,
+/// YOK-184). The one thing it reads off the live screen is its own fighter (whether its move is over, whether it is
+/// grabbed), never the opponent. No EX, burst or crouch guard. Deterministic: one seeded <see cref="SimRng"/>.
 /// </summary>
 public sealed class NewcomerBot
 {
@@ -93,6 +94,8 @@ public sealed class NewcomerBot
 	readonly BotKit.Press? _antiAir;
 	int _calls, _nextDecision;
 	bool _threatRolled, _jumpRolled;
+	/// <summary>YOK-184: this grab on Ryo has had its <c>throw_break_pct</c> roll.</summary>
+	bool _breakRolled;
 	/// <summary>YOK-157 (designer): this fight's first jump seen under a held idle guard has passed unanswered.</summary>
 	bool _guardJumpSeen;
 	AiView? _prev;
@@ -135,6 +138,7 @@ public sealed class NewcomerBot
 
 		// Its own fighter it reads off the live screen: a move that is over, or a press that never came out, ends the attack plan.
 		FighterView me = now.Fighter(Self);
+		if (BreakThrow(me)) return new FighterInput(_kit.Throw.Bits);
 		if (_plan == PlanKind.Attack && _sincePress >= 2 && me.State == FighterState.Idle) Clear();
 
 		FighterView s = view.Fighter(Self), o = view.Fighter(1 - Self);
@@ -190,6 +194,23 @@ public sealed class NewcomerBot
 			_nextDecision = _calls + _cfg.DecideEvery;
 		}
 		return Emit(me.Facing, s, o);
+	}
+
+	/// <summary>
+	/// YOK-184 (C4, Y6): Ryo is grabbed (his own fighter, live screen, like a player who feels the grab; never the
+	/// opponent's buttons, P6). One <c>throw_break_pct</c> roll per grab, on its first tick, so the press lands on the
+	/// window's first frame (C4: 7). A break press drops the plan Ryo was in (the grab cut it short). 0 draws nothing from
+	/// the RNG, nor does a kit with no throw, so a 0 config plays exactly as the pre-YOK-184 bot.
+	/// </summary>
+	bool BreakThrow(FighterView me)
+	{
+		if (me.State != FighterState.Thrown) { _breakRolled = false; return false; }
+		if (_breakRolled) return false;
+		_breakRolled = true;
+		if (_kit.Throw.Bits == InputBits.None || !Roll(_cfg.ThrowBreakPct)) return false;
+		Clear();
+		Stats.ThrowBreakPresses++;
+		return true;
 	}
 
 	/// <summary>
@@ -369,4 +390,6 @@ public sealed class BotStats
 	public int IdleGuards;
 	/// <summary>YOK-157: jumps let go under a held idle guard (at most one per fight).</summary>
 	public int GuardedJumpsLetGo;
+	/// <summary>YOK-184: grabs answered with the throw-break press (a press an elder's unbreakable throw refuses still counts).</summary>
+	public int ThrowBreakPresses;
 }
