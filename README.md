@@ -1089,7 +1089,7 @@ This Style Guide Agent will run in two places in my capstone pipeline: right aft
 
 ### Deliverable 1: playable link
 
-**Play: ⟨ITCH_URL⟩** (Windows). Mirror: [`demo-a7` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-a7).
+**Play: <https://shnabin.itch.io/yokai-fighters>** (Windows). Mirror: [`demo-a7` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-a7).
 
 Download the zip, extract it, and double-click `YokaiFighters.exe`. The game isn't code-signed, so Windows may say "Windows protected your PC": click **More info → Run anyway**. The start screen shows the controls (W A S D to move, U I O to punch, J K L to kick, Space for a special; a gamepad works too).
 
