@@ -9,6 +9,7 @@ You play Ryo, an apprentice exorcist who binds yokai instead of destroying them,
 > - Assignment 4 (Dynamic Content Pipeline): [Assignment 4: Dynamic content pipeline](#assignment-4-dynamic-content-pipeline)
 > - Assignment 5 (Goal-Oriented Coding Agent): [Assignment 5: Goal-oriented coding agent](#assignment-5-goal-oriented-coding-agent)
 > - Assignment 6 (Style Guide Agent): [Assignment 6: Style guide agent](#assignment-6-style-guide-agent)
+> - Assignment 7 (Complete AI Dev Pipeline): [Assignment 7: Complete AI dev pipeline](#assignment-7-complete-ai-dev-pipeline)
 
 ## The game at a glance
 
@@ -1077,6 +1078,211 @@ Live calls go through `claude -p` with every tool off and an empty working direc
 ### Where it fits
 
 This Style Guide Agent will run in two places in my capstone pipeline: right after Habit Writer drafts each story card, before the Rules Lawyer gate, and right after each Astra or Meshy take of a stage backdrop, before Asset Smith's acceptance check, so that only text and art that score 10/10 against the tone, lore and form rules of my GDD and `assets/specs/style.md` reach `data/story/` and `game/assets/`.
+
+## Assignment 7: Complete AI dev pipeline
+
+| | |
+|---|---|
+| **Student** | Andreas Papakonstantinou |
+| **Capstone game** | Yokai Fighters |
+| **Concept** | A single-player 2.5D roguelite fighting game for PC. Ryo, an apprentice exorcist, beats yokai and binds them instead of destroying them. Each one he beats lends him one of three abilities, so the fights he picks decide the fighter he becomes. The run ends against the Tanuki, which copies his most-invested special. |
+
+### Deliverable 1: playable link
+
+**Play: ⟨ITCH_URL⟩** (Windows). Mirror: [`demo-a7` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-a7).
+
+Download the zip, extract it, and double-click `YokaiFighters.exe`. The game isn't code-signed, so Windows may say "Windows protected your PC": click **More info → Run anyway**. The start screen shows the controls (W A S D to move, U I O to punch, J K L to kick, Space for a special; a gamepad works too).
+
+It is a download rather than a browser game because Godot 4 can't export a C# project to the web. The build is exported from this branch by [`tools/export-windows.sh`](tools/export-windows.sh) with Godot 4.7.2 (.NET), and the game in it is the current `main` plus the card text this assignment's run installed.
+
+### Deliverable 2: pipeline source and engine integration
+
+- **Pipeline repository:** <https://github.com/Andreas203/yokai-fighters>. The crew is defined in [`.claude/agents/`](.claude/agents/), the production pass in [`.claude/skills/produce/`](.claude/skills/produce/SKILL.md), and the scripted parts in [`tools/`](tools/).
+- **Pipeline run video:** ⟨VIDEO_URL⟩
+- **Target engine:** Godot 4.7 (.NET), C#.
+
+#### The pipeline
+
+```mermaid
+flowchart LR
+    GDD[("GDD + amendments<br/>rules.md, vault/")] --> P["producer<br/>gap → Linear tickets"]
+    P --> AS["asset-smith<br/>Meshy / Tripo / Astra"]
+    AS -->|GLB, PNG| RS["rig-specialist<br/>auto-rig + Blender scripts"]
+    RS --> AN["animator<br/>clips: generate, clean, measure, retime"]
+    AN -->|data/clips/*.json| MS["movesmith<br/>frame data, hitboxes, card text"]
+    GDD --> HW["habit-writer<br/>story cards, AI profiles"]
+    MS --> RL{"rules-lawyer<br/>+ schema check"}
+    HW --> RL
+    RL -->|pass| DATA[("data/*.json<br/>game/assets/generated/")]
+    RL -->|fail: rule + reason| MS
+    DATA --> GD["Godot: C# loaders + GLB importer"]
+    GD --> H["harness bot runs"] --> SP["sparring-partner<br/>tuning"] --> P
+    GD --> EX["export-windows.sh → playable zip"]
+```
+
+#### How the output lands in the engine
+
+Every agent writes the engine's own formats, so nothing is reformatted by hand:
+
+- **Data.** Moves, hitboxes, clip matches, modifiers, cancel rules, story cards, AI profiles, presets and trials are JSON files in [`data/`](data/), one per item, each with a schema in [`data/schema/`](data/schema/). [`tools/validate_data.py`](tools/validate_data.py) checks them in CI. The game's C# loaders read the files at start-up (`ContentPaths`): there is no build or import step for data. The export script copies `data/` next to the exe, so a changed file is in the next build as it is.
+- **Models and clips.** Generated GLBs go to [`game/assets/generated/`](game/assets/generated/). Godot imports them with its GLB importer (`godot --headless --import`, which the export script and CI run). The rig scripts in [`tools/blender/`](tools/blender/) put every rig on the shared skeleton's bone names, so the fight scene finds `Hips` and `RightHand` without per-model setup. A clip's timing goes into `data/clips/<move>.json`, and frame data is written from that measured clip (rule F2), so the hitboxes line up with the animation that plays.
+- **This run.** The content pipeline's new `install` command ([`run.py`](tools/content_pipeline/run.py) `cmd_install`) writes each passed modifier card into `card.plain` and `card.frames` of `data/modifiers/<id>.json`, then runs the schema check. The reward screen reads exactly those two fields.
+
+### Deliverable 3: pipeline audit and cost analysis
+
+#### 1. Production and functionality
+
+**What the pipeline produced that is in the playable build:**
+
+| Content | Agent | Where |
+|---|---|---|
+| 3D models of Ryo, the Kitsune, the Oni and the Kappa, plus the nine tails, the club and the shell | asset-smith (Meshy image-to-3D from Astra concept art; Ryo rebuilt on Tripo) | `game/assets/generated/characters/` |
+| Rigs on one shared skeleton, with weight repair | rig-specialist (auto-rig + Blender scripts) | same, `assets/specs/rigs/` |
+| 55 measured and retimed clips (80 clip GLBs) | animator (Meshy animate, video mocap, Blender cleanup) | `data/clips/`, `game/assets/generated/clips/` |
+| Frame data and 2D hitboxes for 23 moves, 13 modifiers, 3 cancel rules, 3 dojo trials | movesmith | `data/moves/`, `data/modifiers/`, `data/cancels/`, `data/trials/` |
+| 25 story cards (intro, binding line, wins, losses, elder intros, callouts, Tanuki reveal) and 8 AI behaviour profiles | habit-writer | `data/story/`, `data/profiles/` |
+| The bamboo-grove stage and 7 level presets | asset-smith | `game/assets/generated/stage/`, `data/presets/` |
+| 30 UI plates and textures (talisman paper, cards, portraits, shop) | ui-designer brief → Astra; HUD textures on Meshy | `game/assets/generated/ui/` |
+| The game code that plays all of it (deterministic 60-tick sim, AI, run map, reward draft, save) | gameplay-programmer, ui-designer, through the Code Critic and Test Breaker gates | `game/scripts/` |
+| **This run:** reward-card text for Oni's Hide, Iron Will, Slippery Skin and River Pull | content pipeline: movesmith writes, rules-lawyer critic | `data/modifiers/` (run [`a7-live`](tools/content_pipeline/runs/a7-live/trace.md)) |
+
+Content merges after the Rules Lawyer and the schema check. Code merges after the build-and-test loop and both code gates, and only when I approve it.
+
+**Manual steps that remain, and what would remove them:**
+
+| Manual step | Why it's manual | What would automate it |
+|---|---|---|
+| I approve every generation job and its credit spend, and merge every PR | By design: the pipeline spends money and changes the game | A per-ticket budget envelope enforced in code, the way the style loop's `--max-images` already is: I approve the envelope once, and jobs inside it run unattended. Merges stay with me. |
+| Tripo and AccuRIG 2 jobs run by hand; Astra runs through Codex, which reports no cost | No Tripo MCP or API client; AccuRIG is a desktop app | A Tripo API client in `tools/` that reads the credit cost from each response; Astra through the Images API, which returns usage |
+| The video-mocap takes for Ryo's heavy punch and heavy kick | Someone has to perform them | Pack clips or generator presets only, at a cost in feel |
+| Story cards from the content pipeline aren't installed (6 of this run's 10 pieces) | The game has no slot for a wake-up card by yokai (rule S3), and the elder intro cards it has are in the elder's own voice (S5) | A C# lookup for `wake-up-<yokai>-<band>` with the row-band card as fallback, then an `install` mapping for story cards |
+| Upload to itch.io | Needs my itch login | `butler push` in [`release.yml`](.github/workflows/release.yml) with an itch API key as a repo secret |
+
+#### 2. Architectural reflection
+
+**The decision I would change: the shared skeleton came from whichever generator rigged first.** The first shared skeleton was Meshy's 24-bone auto-rig. When Ryo moved to Tripo (AM16, 2026-10-19), Tripo's skeleton became the shared skeleton. `skeleton.md` was rewritten, every Tripo GLB needed a rebuild script (`canon_tripo_rig.py`: joints with no transforms, inverse binds in a Z-up frame), Ryo's clips were retargeted again, and the Kitsune, Oni and Kappa stayed on the old Meshy skeleton until their own Tripo redos. For a while the game carried two skeletons.
+
+**The alternative: an engine-owned skeleton with one adapter per generator.** Fix the skeleton on day one as Godot's `SkeletonProfileHumanoid` (its bone names and rest pose), plus named extra bones for tails, sleeves and props. Each generator gets one Blender adapter script (bone map, axis and rest-pose fix, prefix strip) that turns its rig into that profile on import, and every clip is stored already retargeted to the profile. Godot's import `BoneMap` checks the result. Changing vendor then means writing one adapter, with no change to the skeleton, the clips or the frame data.
+
+#### 3. Cost analysis
+
+**Total actual run cost: $2.31** for the content-pipeline run recorded for this assignment ([`runs/a7-live`](tools/content_pipeline/runs/a7-live/trace.md), 2026-11-03): 10 pieces, 34 model calls, 4 min 55 s. Eight pieces passed (three after the critic sent them back). The two elder intro cards were still being sent back after three drafts and went to me as "needs a human". The figure is what `claude -p` reported for each call (`total_cost_usd`, at API list price), recorded per call in `llm-calls.json` and added up in the trace. Cost recording was added to the recorder ([`llm.py`](tools/content_pipeline/llm.py)) for this run; before, it kept only the text.
+
+| Step | Calls | Input | Cache write | Cache read | Output | USD |
+|---|---|---|---|---|---|---|
+| writer (sonnet) | 10 | 20 | 71,789 | 0 | 7,209 | $0.3593 |
+| critic (opus) | 17 | 34 | 171,033 | 0 | 14,926 | $1.6669 |
+| reviser (sonnet) | 7 | 14 | 56,564 | 0 | 5,399 | $0.2803 |
+| **Total** | 34 | 68 | 299,386 | 0 | 27,534 | $2.3065 |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. | You wake with every paper talisman blank as fresh snow, while far up the mountain {yokai} walks back to the shrine gate and takes up its old post, as if nothing had happened. |
+|  | **01-vibe/Story.md**<br>The Oni goes back to guarding his shrine gate (S5). |  |
+|  | **01-vibe/Story.md**<br>Later losses vary by the row reached and by which yokai won. |  |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| code | form | you wake at the provinces edge your talismans | These 8 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example. | 01-vibe/Story.md | Say it in new words, with a different image. |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>A wake-up card after a run that ended at row 5 or earlier says the talismans are blank. | {yokai} wanders off into the bamboo with a teasing flick of its tails, in no hurry at all. You wake at the province's edge, and every talisman is blank. |
+|  | **01-vibe/Story.md**<br>A run that ended at row 5 or earlier leaves every talisman blank. |  |
+|  | **01-vibe/Story.md**<br>When Ryo falls, the loop closes and he wakes at the province's edge to walk in again. |  |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| code | form | yokai slips off between the lanterns tails swaying and does not look back | These 13 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example. | 01-vibe/Story.md | Say it in new words, with a different image. |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked. | {yokai} bows, spilling a little water from its dish, and walks off along the lantern riverbank. You wake at the province's edge with one paper talisman still faintly inked. |
+|  | **01-vibe/Story.md**<br>The yokai that won does not gloat and does not harm Ryo. |  |
+|  | **01-vibe/Characters.md**<br>The grappler of the lantern riverbank. |  |
+|  | **01-vibe/Characters.md**<br>Folklore reference: kappa are river spirits that love sumo and cucumbers and carry water in a dish on their heads; bow to one and it bows back, spilling the water. |  |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| code | form | you wake at the provinces edge your talismans are blank all but one | These 13 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example. | 01-vibe/Story.md | Say it in new words, with a different image. |
+| code | form | {yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge. Your talismans are blank, all but one, which stays faintly inked. | The card has 3 sentences; a card of this kind is one or two sentences. | 01-vibe/Tone.md#Card form | Rewrite as one or two sentences. |
+| critic | tone_drift | {yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge. Your talismans are blank, all but one, which stays faintly inked. | The card has three sentences, but a story card may have only one or two. | 01-vibe/Tone.md#Card form: A story card is one or two sentences (S2), at most 280 characters. | Join two of the sentences, for example: "{yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge, your talismans blank, all but one, which stays faintly inked." |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>\| Nine-Tailed Kitsune \| 5 or 8 \| Reflects any special used twice in a row \| | Nine tails sway among the lanterns, and the same trick used twice in a row is handed straight back to you. |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>\| Elder Oni \| 5 or 8 \| Armour on every special \| | Every special the Elder Oni uses shrugs off a flurry of jabs, the way rain runs off a roof tile. |
+|  | **02-mechanics/Yokai.md**<br>\| Habit the twist breaks \| Mashing jabs to interrupt it stops working \| |  |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | lore_break | once his iron club swings, no flurry of jabs will turn it aside | The draft ties the armour to the club swing, which misstates the twist: the armour is on every special, the club is also swung in ordinary attacks, and Oni Quake (a ground pound) gets no mention, so the player cannot work out the real twist. | 02-mechanics/Yokai.md#Oni: Elder twist \| Armour on every special | Name the trigger as every one of his signature or big committed blows, not his club swing, so the reader learns that each special shrugs off jabs. |
+| critic | lore_break | once his iron club swings | The ordinary Oni's Iron-Club Charge already has 1-hit armour, so armour on the club charge does not tell the player what the elder adds. | 02-mechanics/Abilities.md#Specials: Iron-Club Charge \| Oni, common \| 16 / 6 / 24 \| 110 \| Forward charge with 1-hit armour | Make the line cover all of his special blows rather than the charge the regular Oni already armours. |
+| critic | tone_drift | holds his snowy shrine gate, and once his iron club swings | The card carries two concrete images, the snowy shrine gate and the iron club, where the card form allows one. | 01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card | Keep a single image, for example drop the gate and build the line around his blows shrugging off jabs. |
+| critic | tone_drift | no flurry of jabs will turn it aside | The clause uses the future tense where cards are written in the present tense. | 01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card | Recast in present tense, for example "no flurry of jabs turns it aside". |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | lore_break | Every special the Elder Oni throws | The draft says the Oni 'throws' its specials, but they are a charge and a ground pound, and 'throws' is the word for the Elder Kappa's twist, so a player could misread which twist this card teaches. | 02-mechanics/Abilities.md#Specials: Iron-Club Charge \| Oni, common \| ... \| Forward charge with 1-hit armour; Oni Quake ◆ \| Oni, rare \| ... \| Ground pound; hits low (and 01-vibe/Story.md#Elder intro cards: Elder Kappa \| Its throws can't be broken) | Swap 'throws' for a verb the Oni's moves support, such as 'Every charge the Elder Oni makes shrugs off a flurry of jabs, the way rain runs off a roof tile.' |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | tone_drift | Every special the Elder Oni uses shrugs off a flurry of jabs, the way rain runs off a roof tile. | The line teaches the armour twist clearly, but it fails two of the three tone checks: nobody teases, bargains or gets away with something, and nothing is owed, borrowed, waiting or left behind. | 01-vibe/Tone.md#The tone line: Three checks for any line of text: Mischief: someone in the line is teasing, bargaining or getting away with something. Melancholy: something is owed, borrowed, waiting or left behind. | Add a small melancholy touch from the Oni's own lore, e.g. "Still keeping a gate no one may pass, the Elder Oni lets every special shrug off jabs like rain off a roof tile." |
+| Notes loaded by `habit-writer` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>01-vibe/Story.md<br>01-vibe/Characters.md<br>02-mechanics/Yokai.md | **01-vibe/Story.md**<br>\| Elder Kappa \| 5 or 8 \| Its throws can't be broken \| | On the lantern riverbank the Elder Kappa bows, steps politely into reach, and once it takes hold, no one slips free. |
+|  | **01-vibe/Characters.md**<br>The grappler of the lantern riverbank. |  |
+|  | **01-vibe/Characters.md**<br>Formal, stubborn and polite, it walks straight into throw range. |  |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | tone_drift | and no one slips free once it takes hold | The line has no melancholy: nothing in it is owed, borrowed, waiting or left behind. The Kappa's inescapable grip is its only beat, so the card fails one of the three checks the tone line applies to every line of text. | 01-vibe/Tone.md#The tone line: "Three checks for any line of text: ... Melancholy: something is owed, borrowed, waiting or left behind." | Keep the twist clause and add a small, specific melancholy touch within 140 characters, such as the elder bowing first as though it still owes a courtesy from some earlier autumn. |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | tone_drift | Made to fight again each loop, the Elder Kappa walks politely into throw range, where its throws cannot be broken. | The card has no concrete image from the game's world; it is all action and rule, with no lantern, riverbank, bow, water dish or similar. | 01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card: a lantern, a paper screen, a tail, a teacup, an ink stroke. | Anchor the line in one image from the Kappa's world, such as the lantern riverbank or the water dish on its head, while keeping it to one sentence under 140 characters. |
+| critic | tone_drift | where its throws cannot be broken | This states the elder's twist as a game rule in fighting-game terms instead of describing what a person standing there would see. | 01-vibe/Tone.md#Card form: A card does not explain a rule in system words. It does not say "health", "frames", "level" or "roguelite"; it says what a person standing there would see. | Show the unbreakable grip as something seen, such as a hold that no one has ever slipped once the Kappa takes it, so the player can still work out that its throws can't be broken. |
+| Caught by | Kind | Quote | Problem | Evidence | Fix |
+|---|---|---|---|---|---|
+| critic | tone_drift | On the lantern riverbank the Elder Kappa bows, steps politely into reach, and once it takes hold, no one slips free. | The line has mischief and stays clear of horror, but it fails the melancholy check: nothing in it is owed, borrowed, waiting or left behind. | 01-vibe/Tone.md#The tone line: Three checks for any line of text: ... Melancholy: something is owed, borrowed, waiting or left behind. | Add a small specific cost or wait, such as the elder bowing as if keeping a match long owed, and keep the inescapable-hold clause so the line stays one sentence under 140 characters. |
+| Notes loaded by `movesmith` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>02-mechanics/Abilities.md<br>01-vibe/Characters.md | **02-mechanics/Abilities.md**<br>\| Oni's Hide \| Armour on frames 1–5 \| no \| | plain: The Oni's thick hide: the special it's attached to has armour at its very start, so it can take a hit without flinching.<br>frames: Armour on frames 1–5 |
+|  | **02-mechanics/Abilities.md**<br>A modifier attaches to one special and changes how it plays without new animation (A10). |  |
+| Notes loaded by `movesmith` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>02-mechanics/Abilities.md<br>01-vibe/Characters.md | **02-mechanics/Abilities.md**<br>\| Iron Will \| Can't be interrupted by projectiles \| no \| | plain: The Oni holds his ground: projectiles can't interrupt the special this is attached to.<br>frames: Can't be interrupted by projectiles |
+|  | **02-mechanics/Abilities.md**<br>A modifier attaches to one special and changes how it plays without new animation (A10). The Oni offers these five. |  |
+| Notes loaded by `movesmith` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>02-mechanics/Abilities.md<br>01-vibe/Characters.md | **02-mechanics/Abilities.md**<br>\| Slippery Skin \| Throw-invulnerable during startup \| no \| | plain: Slick as river-wet stone, your special can't be thrown while it winds up.<br>frames: Throw-invulnerable during startup |
+|  | **02-mechanics/Abilities.md**<br>A modifier attaches to one special and changes how it plays without new animation (A10). The Kappa offers these four. |  |
+| Notes loaded by `movesmith` | Line the writer cited | Output |
+|---|---|---|
+| 01-vibe/Tone.md<br>02-mechanics/Abilities.md<br>01-vibe/Characters.md | **02-mechanics/Abilities.md**<br>\| River Pull \| Pulls the opponent one step closer on hit \| no \| | plain: The river tugs back: when this special hits, your foe is pulled one step closer to you.<br>frames: Pulls the opponent one step closer on hit |
+
+The four modifier cards that went into the build cost **$0.48** together (one writer and one critic call each; all four passed first time).
+
+**The most expensive step: the Rules Lawyer critic on Opus, $1.67 of $2.31 (72%)**. It made 17 calls at about $0.10 each. Every call re-reads the critic's five whole vault notes (about 10,000 tokens), and every round a piece fails adds another one: the two elder intros that never passed took three critic calls each. The writer and reviser on Sonnet cost $0.64 together.
+
+The trace also shows money left on the table. All 299,386 input tokens were billed as cache *writes* and none as cache reads. The prompt puts each piece's brief before the vault notes, so no two calls start with the same text, and each call pays to cache a prefix nobody reuses. Putting the notes first, or in the system prompt, would let 16 of the 17 critic calls read them from cache at a tenth of the input price. That is the next change; it is not measured yet.
+
+**.**
+
+The asset side of the pipeline, for the whole build so far, from the balances recorded in the job specs: **Meshy 645 credits** (balance 1,300 on 2026-10-05, down to 655 after the Oni clips on 2026-10-16), which is **$12.90** at the Pro plan's $0.02 a credit. That paid for the fighters' first models and props, their auto-rigs, the Meshy clip takes and the retarget gate, the bamboo-grove stage and the HUD textures. Tripo jobs were run by hand, and Astra (through Codex) reports no cost, so neither is in that figure. The agent crew itself runs inside my Claude Code subscription.
+
+**Sustainable for a solo developer or a small team: yes.** The cost that grows with content is small. Ten pieces of checked card text cost $2.31, about $0.23 each, so a hundred more pieces would cost about $25 at this rate. Every Meshy job behind the build so far cost $12.90. What dominates is fixed: the subscriptions (Claude Code for the crew, Codex for Astra, Meshy Pro at $20 a month, Tripo), which a small team pays whatever it makes. The constraint is not money but review time: every job and every merge waits on me, and the two "needs a human" cards show where that time goes. Two risks to watch: Opus as the critic is 72% of the content cost (a Sonnet critic would be about a third of that, at a quality risk I haven't measured), and Tripo and Astra report no cost, so their spend only shows up on the bills.
+
+#### 4. Mid-project cost-reduction change
+
+**Repair a defective rig by script instead of regenerating the model** (YOK-116, 2026-10-15).
+
+| | Before | After |
+|---|---|---|
+| Strategy | Ryo's Meshy rig failed the deep-crouch and high-kick checks (the thighs pulled the charm, pouch and sash). The plan was to regenerate the model through Meshy and rig it again ([`ryo-regen.md`](assets/specs/characters/ryo-regen.md)). | Repair the skin weights headless in Blender ([`repair_weights.py`](tools/blender/repair_weights.py)) on the same mesh and skeleton. Deep crouch FAIL → WARN (Hips weight 0.686 → 0.964); failing edges in the high kick 35 → 9. The 26 clips, the frame data and the Tanuki carried over unchanged. |
+| API cost | **44 credits** for take 1, up to **132** with the two retakes in reserve, plus about **69** to re-fetch the 26 clips if the new bones moved: **44–201 credits ($0.88–$4.02)** | **0 credits** |
+
+It became the default afterwards. The Kitsune's weights were repaired the same way ([`kitsune-weight-repair.md`](assets/specs/rigs/kitsune-weight-repair.md)), and the Tripo Ryo got stopgap clips by retargeting the accepted Meshy clips by script (0 credits) rather than new takes at 3 credits each.
+
+#### Reproduce it
+
+```
+python tools/content_pipeline/run.py generate --run a7-live --replay   # the recorded run, no model calls
+python tools/content_pipeline/run.py install --run a7-live              # card text into data/modifiers/
+bash tools/export-windows.sh                                            # the playable zip
+```
+
+A live run (`generate --run <new name>`) needs the `claude` CLI, logged in. To see the installed text in the game, start it with `--dev`, press F11 on the title screen, and on the Jump page open a reward draft for the Oni or the Kappa.
 
 ## The agent crew
 
