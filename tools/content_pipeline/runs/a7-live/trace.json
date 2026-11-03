@@ -1,0 +1,1015 @@
+{
+  "meta": {
+    "run": "a7-live",
+    "command": "generate",
+    "writer_model": "sonnet",
+    "critic_model": "opus",
+    "agents": {
+      "habit-writer": {
+        "role": "Writer: Wake-up cards (later losses), Elder intro cards",
+        "notes": [
+          "01-vibe/Tone.md",
+          "01-vibe/Story.md",
+          "01-vibe/Characters.md",
+          "02-mechanics/Yokai.md"
+        ],
+        "chars": 16979
+      },
+      "movesmith": {
+        "role": "Writer: Reward card text for modifiers",
+        "notes": [
+          "01-vibe/Tone.md",
+          "02-mechanics/Abilities.md",
+          "01-vibe/Characters.md"
+        ],
+        "chars": 14300
+      },
+      "rules-lawyer": {
+        "role": "Critic: checks every draft",
+        "notes": [
+          "01-vibe/Tone.md",
+          "01-vibe/Story.md",
+          "01-vibe/Characters.md",
+          "02-mechanics/Yokai.md",
+          "02-mechanics/Abilities.md"
+        ],
+        "chars": 22270
+      }
+    },
+    "cost": {
+      "by_step": {
+        "writer (sonnet)": {
+          "calls": 10,
+          "input_tokens": 20,
+          "cache_creation_input_tokens": 71789,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 7209,
+          "cost_usd": 0.359286
+        },
+        "critic (opus)": {
+          "calls": 17,
+          "input_tokens": 34,
+          "cache_creation_input_tokens": 171033,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 14926,
+          "cost_usd": 1.6669200000000002
+        },
+        "reviser (sonnet)": {
+          "calls": 7,
+          "input_tokens": 14,
+          "cache_creation_input_tokens": 56564,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 5399,
+          "cost_usd": 0.280274
+        }
+      },
+      "total": {
+        "calls": 34,
+        "input_tokens": 68,
+        "cache_creation_input_tokens": 299386,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 27534,
+        "cost_usd": 2.3064799999999996
+      },
+      "calls_without_usage": 0
+    }
+  },
+  "validation": {
+    "ran": true,
+    "ok": true,
+    "files": 6,
+    "report": "validate_data: 6 file(s), 6 valid, 0 invalid (6 with 'proposed' values awaiting the designer)"
+  },
+  "results": [
+    {
+      "id": "wake-up-oni-early",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Oni wins at row 2 or 3",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Oni at row 2 or 3. The run ended at row 5 or earlier.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "You wake at the province's edge, your talismans blank again. Far up the mountain, {yokai} is back at the shrine gate, snow settling on the old post, keeping watch.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that ended at row 5 or earlier says the talismans are blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "The Oni goes back to guarding his shrine gate (S5)."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "Later losses vary by the row reached and by which yokai won."
+              }
+            ]
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "form",
+              "check": "copied from the notes",
+              "quote": "you wake at the provinces edge your talismans",
+              "problem": "These 8 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example.",
+              "evidence": "01-vibe/Story.md",
+              "fix": "Say it in new words, with a different image."
+            }
+          ],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "You wake with every paper talisman blank as fresh snow, while far up the mountain {yokai} walks back to the shrine gate and takes up its old post, as if nothing had happened.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that ended at row 5 or earlier says the talismans are blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "The Oni goes back to guarding his shrine gate (S5)."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "Later losses vary by the row reached and by which yokai won."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-oni-early",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Oni at row 2 or 3 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "You wake with every paper talisman blank as fresh snow, while far up the mountain {yokai} walks back to the shrine gate and takes up its old post, as if nothing had happened.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "wake-up-nine-tails-row-5",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Nine-Tailed Kitsune wins at row 5",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Nine-Tailed Kitsune at row 5. The run ended at row 5 or earlier.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "{yokai} slips off between the lanterns, tails swaying, and does not look back. You wake at the province's edge, and every talisman is blank.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that ended at row 5 or earlier says the talismans are blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A run that ended at row 5 or earlier leaves every talisman blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "When Ryo falls, the loop closes and he wakes at the province's edge to walk in again."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "{yokai} slips off between the lanterns, tails swaying, and does not look back."
+              }
+            ]
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "form",
+              "check": "copied from the notes",
+              "quote": "yokai slips off between the lanterns tails swaying and does not look back",
+              "problem": "These 13 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example.",
+              "evidence": "01-vibe/Story.md",
+              "fix": "Say it in new words, with a different image."
+            }
+          ],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "{yokai} wanders off into the bamboo with a teasing flick of its tails, in no hurry at all. You wake at the province's edge, and every talisman is blank.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that ended at row 5 or earlier says the talismans are blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A run that ended at row 5 or earlier leaves every talisman blank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "When Ryo falls, the loop closes and he wakes at the province's edge to walk in again."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-nine-tails-row-5",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Nine-Tailed Kitsune at row 5 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "{yokai} wanders off into the bamboo with a teasing flick of its tails, in no hurry at all. You wake at the province's edge, and every talisman is blank.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "wake-up-kappa-row-6",
+      "type": "wake-up-card",
+      "label": "Wake-up card: Kappa wins at row 6",
+      "brief": "Write the wake-up story card shown after Ryo loses a duel to the Kappa at row 6. The run reached row 6.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "{yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge. Your talismans are blank, all but one, which stays faintly inked.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "The yokai that won does not gloat and does not harm Ryo."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "The grappler of the lantern riverbank."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "After a loss, Ryo's talismans are blank again."
+              }
+            ]
+          },
+          "code_issues": [
+            {
+              "by": "code",
+              "kind": "form",
+              "check": "copied from the notes",
+              "quote": "you wake at the provinces edge your talismans are blank all but one",
+              "problem": "These 13 words in a row are copied from 01-vibe/Story.md; a card is new text, not a quoted example.",
+              "evidence": "01-vibe/Story.md",
+              "fix": "Say it in new words, with a different image."
+            },
+            {
+              "by": "code",
+              "kind": "form",
+              "check": "S2 sentence count",
+              "quote": "{yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge. Your talismans are blank, all but one, which stays faintly inked.",
+              "problem": "The card has 3 sentences; a card of this kind is one or two sentences.",
+              "evidence": "01-vibe/Tone.md#Card form",
+              "fix": "Rewrite as one or two sentences."
+            }
+          ],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "{yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge. Your talismans are blank, all but one, which stays faintly inked.",
+              "problem": "The card has three sentences, but a story card may have only one or two.",
+              "evidence": "01-vibe/Tone.md#Card form: A story card is one or two sentences (S2), at most 280 characters.",
+              "fix": "Join two of the sentences, for example: \"{yokai} bows politely and walks back along the lantern riverbank, unhurried. You wake at the province's edge, your talismans blank, all but one, which stays faintly inked.\""
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "{yokai} bows, spilling a little water from its dish, and walks off along the lantern riverbank. You wake at the province's edge with one paper talisman still faintly inked.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "A wake-up card after a run that reached row 6 or further may say one talisman stays faintly inked."
+              },
+              {
+                "note": "01-vibe/Story.md",
+                "line": "The yokai that won does not gloat and does not harm Ryo."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "The grappler of the lantern riverbank."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "Folklore reference: kappa are river spirits that love sumo and cucumbers and carry water in a dish on their heads; bow to one and it bows back, spilling the water."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": true,
+      "final": {
+        "kind": "story_card",
+        "id": "wake-up-kappa-row-6",
+        "status": "proposed",
+        "trigger": "Later loss: Ryo is knocked out by the Kappa at row 6 (wake-up variant by row reached and winning yokai, S3)",
+        "text": "{yokai} bows, spilling a little water from its dish, and walks off along the lantern riverbank. You wake at the province's edge with one paper talisman still faintly inked.",
+        "placeholders": [
+          "yokai"
+        ],
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "M3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "elder-intro-nine-tailed-kitsune",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Nine-Tailed Kitsune",
+      "brief": "Write the one-line intro card shown on the map node of the Nine-Tailed Kitsune, before the duel starts.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "Nine tails sway among the lanterns, and the same trick used twice in a row is handed straight back to you.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Nine-Tailed Kitsune | 5 or 8 | Reflects any special used twice in a row |"
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-nine-tailed-kitsune",
+        "status": "proposed",
+        "trigger": "Intro card on the Nine-Tailed Kitsune's map node, rows 5 and 8 (Y3)",
+        "title": "Nine-Tailed Kitsune",
+        "text": "Nine tails sway among the lanterns, and the same trick used twice in a row is handed straight back to you.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "elder-intro-elder-oni",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Elder Oni",
+      "brief": "Write the one-line intro card shown on the map node of the Elder Oni, before the duel starts.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "The Elder Oni holds his snowy shrine gate, and once his iron club swings, no flurry of jabs will turn it aside.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Oni | 5 or 8 | Armour on every special |"
+              },
+              {
+                "note": "02-mechanics/Yokai.md",
+                "line": "| Habit the twist breaks | Mashing jabs to interrupt it stops working |"
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "Proud and blunt, it dashes in and swings an iron club."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "once his iron club swings, no flurry of jabs will turn it aside",
+              "problem": "The draft ties the armour to the club swing, which misstates the twist: the armour is on every special, the club is also swung in ordinary attacks, and Oni Quake (a ground pound) gets no mention, so the player cannot work out the real twist.",
+              "evidence": "02-mechanics/Yokai.md#Oni: Elder twist | Armour on every special",
+              "fix": "Name the trigger as every one of his signature or big committed blows, not his club swing, so the reader learns that each special shrugs off jabs."
+            },
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "once his iron club swings",
+              "problem": "The ordinary Oni's Iron-Club Charge already has 1-hit armour, so armour on the club charge does not tell the player what the elder adds.",
+              "evidence": "02-mechanics/Abilities.md#Specials: Iron-Club Charge | Oni, common | 16 / 6 / 24 | 110 | Forward charge with 1-hit armour",
+              "fix": "Make the line cover all of his special blows rather than the charge the regular Oni already armours."
+            },
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "holds his snowy shrine gate, and once his iron club swings",
+              "problem": "The card carries two concrete images, the snowy shrine gate and the iron club, where the card form allows one.",
+              "evidence": "01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card",
+              "fix": "Keep a single image, for example drop the gate and build the line around his blows shrugging off jabs."
+            },
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "no flurry of jabs will turn it aside",
+              "problem": "The clause uses the future tense where cards are written in the present tense.",
+              "evidence": "01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card",
+              "fix": "Recast in present tense, for example \"no flurry of jabs turns it aside\"."
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "Every special the Elder Oni throws shrugs off a flurry of jabs, the way rain runs off a roof tile.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Oni | 5 or 8 | Armour on every special |"
+              },
+              {
+                "note": "02-mechanics/Yokai.md",
+                "line": "| Habit the twist breaks | Mashing jabs to interrupt it stops working |"
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "lore_break",
+              "quote": "Every special the Elder Oni throws",
+              "problem": "The draft says the Oni 'throws' its specials, but they are a charge and a ground pound, and 'throws' is the word for the Elder Kappa's twist, so a player could misread which twist this card teaches.",
+              "evidence": "02-mechanics/Abilities.md#Specials: Iron-Club Charge | Oni, common | ... | Forward charge with 1-hit armour; Oni Quake ◆ | Oni, rare | ... | Ground pound; hits low (and 01-vibe/Story.md#Elder intro cards: Elder Kappa | Its throws can't be broken)",
+              "fix": "Swap 'throws' for a verb the Oni's moves support, such as 'Every charge the Elder Oni makes shrugs off a flurry of jabs, the way rain runs off a roof tile.'"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "draft": {
+            "text": "Every special the Elder Oni uses shrugs off a flurry of jabs, the way rain runs off a roof tile.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Oni | 5 or 8 | Armour on every special |"
+              },
+              {
+                "note": "02-mechanics/Yokai.md",
+                "line": "| Habit the twist breaks | Mashing jabs to interrupt it stops working |"
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "Every special the Elder Oni uses shrugs off a flurry of jabs, the way rain runs off a roof tile.",
+              "problem": "The line teaches the armour twist clearly, but it fails two of the three tone checks: nobody teases, bargains or gets away with something, and nothing is owed, borrowed, waiting or left behind.",
+              "evidence": "01-vibe/Tone.md#The tone line: Three checks for any line of text: Mischief: someone in the line is teasing, bargaining or getting away with something. Melancholy: something is owed, borrowed, waiting or left behind.",
+              "fix": "Add a small melancholy touch from the Oni's own lore, e.g. \"Still keeping a gate no one may pass, the Elder Oni lets every special shrug off jabs like rain off a roof tile.\""
+            }
+          ]
+        }
+      ],
+      "status": "needs_human",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-elder-oni",
+        "status": "proposed",
+        "trigger": "Intro card on the Elder Oni's map node, rows 5 and 8 (Y3)",
+        "title": "Elder Oni",
+        "text": "Every special the Elder Oni uses shrugs off a flurry of jabs, the way rain runs off a roof tile.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "elder-intro-elder-kappa",
+      "type": "elder-intro-card",
+      "label": "Elder intro card: Elder Kappa",
+      "brief": "Write the one-line intro card shown on the map node of the Elder Kappa, before the duel starts.",
+      "writer": "habit-writer",
+      "notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "text": "The Elder Kappa walks politely into throw range on the lantern riverbank, and no one slips free once it takes hold.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "Formal, stubborn and polite, it walks straight into throw range."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "The grappler of the lantern riverbank."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "and no one slips free once it takes hold",
+              "problem": "The line has no melancholy: nothing in it is owed, borrowed, waiting or left behind. The Kappa's inescapable grip is its only beat, so the card fails one of the three checks the tone line applies to every line of text.",
+              "evidence": "01-vibe/Tone.md#The tone line: \"Three checks for any line of text: ... Melancholy: something is owed, borrowed, waiting or left behind.\"",
+              "fix": "Keep the twist clause and add a small, specific melancholy touch within 140 characters, such as the elder bowing first as though it still owes a courtesy from some earlier autumn."
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "draft": {
+            "text": "Made to fight again each loop, the Elder Kappa walks politely into throw range, where its throws cannot be broken.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "Formal, stubborn and polite, it walks straight into throw range."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "The yokai are real spirits trapped in the Tanuki's illusion and made to fight again each loop, which is why Ryo's apologies matter."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "Made to fight again each loop, the Elder Kappa walks politely into throw range, where its throws cannot be broken.",
+              "problem": "The card has no concrete image from the game's world; it is all action and rule, with no lantern, riverbank, bow, water dish or similar.",
+              "evidence": "01-vibe/Tone.md#Card form: Present tense, plain words, one concrete image per card: a lantern, a paper screen, a tail, a teacup, an ink stroke.",
+              "fix": "Anchor the line in one image from the Kappa's world, such as the lantern riverbank or the water dish on its head, while keeping it to one sentence under 140 characters."
+            },
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "where its throws cannot be broken",
+              "problem": "This states the elder's twist as a game rule in fighting-game terms instead of describing what a person standing there would see.",
+              "evidence": "01-vibe/Tone.md#Card form: A card does not explain a rule in system words. It does not say \"health\", \"frames\", \"level\" or \"roguelite\"; it says what a person standing there would see.",
+              "fix": "Show the unbreakable grip as something seen, such as a hold that no one has ever slipped once the Kappa takes it, so the player can still work out that its throws can't be broken."
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "draft": {
+            "text": "On the lantern riverbank the Elder Kappa bows, steps politely into reach, and once it takes hold, no one slips free.",
+            "sources": [
+              {
+                "note": "01-vibe/Story.md",
+                "line": "| Elder Kappa | 5 or 8 | Its throws can't be broken |"
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "The grappler of the lantern riverbank."
+              },
+              {
+                "note": "01-vibe/Characters.md",
+                "line": "Formal, stubborn and polite, it walks straight into throw range."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "revise",
+          "critic_issues": [
+            {
+              "by": "critic",
+              "kind": "tone_drift",
+              "quote": "On the lantern riverbank the Elder Kappa bows, steps politely into reach, and once it takes hold, no one slips free.",
+              "problem": "The line has mischief and stays clear of horror, but it fails the melancholy check: nothing in it is owed, borrowed, waiting or left behind.",
+              "evidence": "01-vibe/Tone.md#The tone line: Three checks for any line of text: ... Melancholy: something is owed, borrowed, waiting or left behind.",
+              "fix": "Add a small specific cost or wait, such as the elder bowing as if keeping a match long owed, and keep the inescapable-hold clause so the line stays one sentence under 140 characters."
+            }
+          ]
+        }
+      ],
+      "status": "needs_human",
+      "corrected": false,
+      "final": {
+        "kind": "story_card",
+        "id": "elder-intro-elder-kappa",
+        "status": "proposed",
+        "trigger": "Intro card on the Elder Kappa's map node, rows 5 and 8 (Y3)",
+        "title": "Elder Kappa",
+        "text": "On the lantern riverbank the Elder Kappa bows, steps politely into reach, and once it takes hold, no one slips free.",
+        "speaker": "narrator",
+        "rules": [
+          "S1",
+          "S2",
+          "Y2",
+          "Y3"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by habit-writer from vault notes 01-vibe/Tone.md; 01-vibe/Story.md; 01-vibe/Characters.md; 02-mechanics/Yokai.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "onis-hide-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Oni's Hide",
+      "brief": "Write the reward card text for the modifier Oni's Hide, offered by the Oni.",
+      "writer": "movesmith",
+      "notes": [
+        "01-vibe/Tone.md",
+        "02-mechanics/Abilities.md",
+        "01-vibe/Characters.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "The Oni's thick hide: the special it's attached to has armour at its very start, so it can take a hit without flinching.",
+            "frames": "Armour on frames 1–5",
+            "sources": [
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "| Oni's Hide | Armour on frames 1–5 | no |"
+              },
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "A modifier attaches to one special and changes how it plays without new animation (A10)."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "Oni's Hide",
+        "source": "oni",
+        "status": "proposed",
+        "card": {
+          "plain": "The Oni's thick hide: the special it's attached to has armour at its very start, so it can take a hit without flinching.",
+          "frames": "Armour on frames 1–5"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by movesmith from vault notes 01-vibe/Tone.md; 02-mechanics/Abilities.md; 01-vibe/Characters.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "iron-will-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Iron Will",
+      "brief": "Write the reward card text for the modifier Iron Will, offered by the Oni.",
+      "writer": "movesmith",
+      "notes": [
+        "01-vibe/Tone.md",
+        "02-mechanics/Abilities.md",
+        "01-vibe/Characters.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "The Oni holds his ground: projectiles can't interrupt the special this is attached to.",
+            "frames": "Can't be interrupted by projectiles",
+            "sources": [
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "| Iron Will | Can't be interrupted by projectiles | no |"
+              },
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "A modifier attaches to one special and changes how it plays without new animation (A10). The Oni offers these five."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "Iron Will",
+        "source": "oni",
+        "status": "proposed",
+        "card": {
+          "plain": "The Oni holds his ground: projectiles can't interrupt the special this is attached to.",
+          "frames": "Can't be interrupted by projectiles"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by movesmith from vault notes 01-vibe/Tone.md; 02-mechanics/Abilities.md; 01-vibe/Characters.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "slippery-skin-card",
+      "type": "modifier-card",
+      "label": "Reward card text: Slippery Skin",
+      "brief": "Write the reward card text for the modifier Slippery Skin, offered by the Kappa.",
+      "writer": "movesmith",
+      "notes": [
+        "01-vibe/Tone.md",
+        "02-mechanics/Abilities.md",
+        "01-vibe/Characters.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "Slick as river-wet stone, your special can't be thrown while it winds up.",
+            "frames": "Throw-invulnerable during startup",
+            "sources": [
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "| Slippery Skin | Throw-invulnerable during startup | no |"
+              },
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "A modifier attaches to one special and changes how it plays without new animation (A10). The Kappa offers these four."
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "Slippery Skin",
+        "source": "kappa",
+        "status": "proposed",
+        "card": {
+          "plain": "Slick as river-wet stone, your special can't be thrown while it winds up.",
+          "frames": "Throw-invulnerable during startup"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by movesmith from vault notes 01-vibe/Tone.md; 02-mechanics/Abilities.md; 01-vibe/Characters.md; checked by rules-lawyer"
+      }
+    },
+    {
+      "id": "river-pull-card",
+      "type": "modifier-card",
+      "label": "Reward card text: River Pull",
+      "brief": "Write the reward card text for the modifier River Pull, offered by the Kappa.",
+      "writer": "movesmith",
+      "notes": [
+        "01-vibe/Tone.md",
+        "02-mechanics/Abilities.md",
+        "01-vibe/Characters.md"
+      ],
+      "critic": "rules-lawyer",
+      "critic_notes": [
+        "01-vibe/Tone.md",
+        "01-vibe/Story.md",
+        "01-vibe/Characters.md",
+        "02-mechanics/Yokai.md",
+        "02-mechanics/Abilities.md"
+      ],
+      "seeded": false,
+      "rounds": [
+        {
+          "round": 1,
+          "draft": {
+            "plain": "The river tugs back: when this special hits, your foe is pulled one step closer to you.",
+            "frames": "Pulls the opponent one step closer on hit",
+            "sources": [
+              {
+                "note": "02-mechanics/Abilities.md",
+                "line": "| River Pull | Pulls the opponent one step closer on hit | no |"
+              }
+            ]
+          },
+          "code_issues": [],
+          "critic_verdict": "pass",
+          "critic_issues": []
+        }
+      ],
+      "status": "passed",
+      "corrected": false,
+      "final": {
+        "modifier": "River Pull",
+        "source": "kappa",
+        "status": "proposed",
+        "card": {
+          "plain": "The river tugs back: when this special hits, your foe is pulled one step closer to you.",
+          "frames": "Pulls the opponent one step closer on hit"
+        },
+        "rules": [
+          "A2",
+          "A8",
+          "A10",
+          "A12"
+        ],
+        "notes": "Generated by tools/content_pipeline (run a7-live): written by movesmith from vault notes 01-vibe/Tone.md; 02-mechanics/Abilities.md; 01-vibe/Characters.md; checked by rules-lawyer"
+      }
+    }
+  ]
+}
