@@ -1081,12 +1081,6 @@ This Style Guide Agent will run in two places in my capstone pipeline: right aft
 
 ## Assignment 7: Complete AI dev pipeline
 
-| | |
-|---|---|
-| **Student** | Andreas Papakonstantinou |
-| **Capstone game** | Yokai Fighters |
-| **Concept** | A single-player 2.5D roguelite fighting game for PC. Ryo, an apprentice exorcist, beats yokai and binds them instead of destroying them. Each one he beats lends him one of three abilities, so the fights he picks decide the fighter he becomes. The run ends against the Tanuki, which copies his most-invested special. |
-
 ### Deliverable 1: playable link
 
 **Play: <https://shnabin.itch.io/yokai-fighters>** (Windows). Mirror: [`demo-a7` release](https://github.com/Andreas203/yokai-fighters/releases/tag/demo-a7).
