@@ -390,6 +390,9 @@ public partial class GameFlow : Node
 				string? carried = CarryOver.FromRunEnd(session.Run, end);
 				if (carried is not null) GD.Print($"GameFlow: '{carried}' carries to the next run at Lv {CarryOver.Level}");
 				SaveData after = Saved.WithRun(null).WithCarryOver(carried);
+				// YOK-216, S3: a lost run whose lose screen showed first-loss marks the first loss seen, in the same write (M5).
+				// Another card shown (none in the library, a bad fill) leaves it unset, so the next loss shows first-loss.
+				if (!end.Won && Fight is { ShowedFirstLoss: true }) after = after.WithStory(StoryProgress.FirstLoss);
 				// YOK-99, Y5: a Tanuki win raises the pressure on every later run (kept even with no file attached).
 				if (end.BeatTanuki) after = after.WithTanukiWin();
 				// YOK-86, M1: unlocks by the depth reached, the next still-locked ids in the fixed order, in the same write.
@@ -447,6 +450,13 @@ public partial class GameFlow : Node
 		if (Saved.Story.Has(StoryProgress.ApprenticeTutorial)) return;
 		Write(Saved.WithStory(StoryProgress.ApprenticeTutorial));
 	}
+
+	/// <summary>
+	/// YOK-216, S3: the next lost fight is this save's first loss: a run is on and will be saved (not a dev jump's,
+	/// <c>_unsavedSession</c>), and story progress has no <see cref="StoryProgress.FirstLoss"/>. The run end writes the flag only when
+	/// the lose screen showed <c>first-loss</c> (<see cref="FightScene.ShowedFirstLoss"/>).
+	/// </summary>
+	public bool FirstLossPending => Session is not null && Session != _unsavedSession && !Saved.Story.Has(StoryProgress.FirstLoss);
 
 	private void SaveRun(RunSession session)
 	{
@@ -602,6 +612,7 @@ public partial class GameFlow : Node
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
 			fight.TanukiWins = Saved.TanukiWins; // YOK-99, Y5: the pressure of earlier runs
 			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
+			fight.FirstLossPending = FirstLossPending; // YOK-216, S3: the first-loss card on this save's first loss only
 			fight.TutorialFinished += _ => MarkTutorialSeen();
 			fight.TitleRequested += () => Router.ReturnToTitle();
 			fight.RunRestartRequested += () => RestartRun();
