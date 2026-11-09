@@ -54,9 +54,6 @@ public class RunMapView : IMapView
 	public MapStatusView? Status => _run is null ? null
 		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count) { LastPlayRow = _playRows.Count == 0 ? 0 : _playRows.Max() };
 
-	public virtual CopyTarget? CopyTarget => _run is null ? null : CopyRule.Target(_run);
-	public virtual bool CopyLocked => false;
-
 	public MapNodeDetail? Detail(string nodeId) => _map.Graph.Has(nodeId) ? new MapNodeDetail(RewardLine(_map.Graph.Node(nodeId)), TwistLine(_map.Graph.Node(nodeId)), HabitLine(_map.Graph.Node(nodeId))) : null;
 
 	/// <summary>YOK-109: one legend row per distinct twist icon among the map's elders, worded by the twist's story label (a missing label drops the row, no stand-in text).</summary>

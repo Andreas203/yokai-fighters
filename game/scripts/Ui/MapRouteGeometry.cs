@@ -111,12 +111,19 @@ public static class MapRouteGeometry
 		return result;
 	}
 
+	/// <summary>Share of the shorter of the board height and the gap that the winding reaches at least (a test pins it, so the S-curves cannot silently flatten again).</summary>
+	public const float MinMeander = 0.07f;
+
+	/// <summary>The signed meander amplitude of the gap with hash <paramref name="h"/>: MinMeander to MinMeander + 0.03 of min(board height, gap). The same for every route of the gap, so the order of routes never changes.</summary>
+	public static float Amplitude(uint h, float boardHeight, float gap) =>
+		(MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (MinMeander + 0.03f * MapLayout.Unit(h, 2)) * Mathf.Min(boardHeight, gap);
+
 	static Vector2[] Build(Edge e, float? junction, float xOut, float xIn, float boardHeight)
 	{
 		if (!e.Ok) return Densify(new List<Vector2> { e.Start, e.End });
 		var pts = new List<Vector2> { e.Start, new Vector2(xOut, e.Ya) };
 		uint h = MapLayout.Hash("gap" + e.Ca + ":" + e.Cb);
-		float amp = (MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (0.025f + 0.02f * MapLayout.Unit(h, 2)) * Mathf.Min(boardHeight, xIn - xOut), turns = MapLayout.Unit(h, 3) > 0.5f ? 1f : 1.5f;
+		float amp = Amplitude(h, boardHeight, xIn - xOut), turns = 1f; // one full S (1.5 turns bent the steep flanks of a Y past the smoothness limit)
 		for (int i = 1; i < Samples; i++)
 		{
 			float u = i / (float)Samples;

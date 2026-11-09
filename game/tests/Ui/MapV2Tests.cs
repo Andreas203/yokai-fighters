@@ -625,4 +625,104 @@ public static class MapV2Tests
 		Assert.True(!l.IsFading && !l.Shown.Contains(rock), "without animation the scenery goes at once");
 		l.QueueFree();
 	}
+
+	// ---- YOK-240: map v2 polish -----------------------------------------------------------------------------------------------------
+
+	static StubMapView RowOfThree()
+	{
+		var v = new StubMapView();
+		v.Add("a", 1, "duel", "Apprentice");
+		v.Add("b0", 2, "merchant", null); v.Add("b1", 2, "duel", "Oni"); v.Add("b2", 2, "dojo", null);
+		foreach (var b in new[] { "b0", "b1", "b2" }) v.Route("a", b);
+		v.Open("a"); v.Select("a"); v.Complete();
+		return v;
+	}
+
+	/// <summary>A stall, the dojo or the tea house is drawn larger than a mask, yet its box, sprite rect and everything the layout reads are the same as a mask's (AM19).</summary>
+	[Test]
+	public static void BuildingsDrawLargerThanMasksWithoutChangingTheBox(Node host)
+	{
+		foreach (var size in new[] { P1080, P720 })
+		{
+			var s = Make(host, RowOfThree(), size);
+			var merchant = s.NodeFor("b0")!; var mask = s.NodeFor("b1")!; var dojo = s.NodeFor("b2")!;
+			Assert.True(merchant.Size.IsEqualApprox(mask.Size) && dojo.Size.IsEqualApprox(mask.Size), $"{size}: one box for every type in a row: {merchant.Size} {mask.Size} {dojo.Size}");
+			Assert.True(s.RectOf("b0").Size.IsEqualApprox(s.RectOf("b1").Size) && s.SpriteRectOf("b0").Size.IsEqualApprox(s.SpriteRectOf("b2").Size), "layout rect and sprite rect do not depend on the type");
+			float ratio(MapNode n) => UiFind.Get<TextureRect>(n, "IconTexture").Size.Y / n.SpriteRect.Size.Y;
+			Assert.True(ratio(merchant) >= 1.2f && ratio(dojo) >= 1.2f, $"{size}: the stall ({ratio(merchant):0.00}) and the dojo ({ratio(dojo):0.00}) draw at least 1.2x the sprite rect");
+			Assert.True(ratio(mask) <= 1.01f, $"{size}: a mask stays inside its rect ({ratio(mask):0.00})");
+			Assert.True(merchant.ArtRect.Encloses(merchant.SpriteRect), "the marks go round the larger art");
+			s.GetParent().QueueFree();
+		}
+		// a hidden node draws nothing, so nothing of its type can show through its size
+		var hidden = Make(host, RowOfThree());
+		var v2 = new StubMapView();
+		v2.Add("a", 1, "duel", "Apprentice"); v2.Add("b0", 2, "merchant", null); v2.Add("b1", 2, "duel", "Oni"); v2.Add("b2", 2, "dojo", null);
+		foreach (var b in new[] { "b0", "b1", "b2" }) v2.Route("a", b);
+		v2.Open("a");
+		var s2 = Make(host, v2);
+		Assert.True(s2.NodeFor("b0") == null && s2.NodeFor("b2") == null, "hidden nodes have no control to draw large");
+		Assert.True(s2.RectOf("b0") == hidden.RectOf("b0") && s2.RectOf("b2") == hidden.RectOf("b2"), "and the same box whether drawn or not");
+		hidden.GetParent().QueueFree(); s2.GetParent().QueueFree();
+	}
+
+	/// <summary>The boss's two extra tag lines sit inside its box at both sizes (they once hung below it).</summary>
+	[Test]
+	public static void BossTagSitsInsideItsBox(Node host)
+	{
+		var sess = Start();
+		while (sess.Map.Graph.Node(sess.Reachable()[0]).Type != "boss")
+			Walk(sess, sess.Reachable()[0]);
+		foreach (var size in new[] { P1080, P720 })
+		{
+			var s = Make(host, new SessionMapView(sess), size);
+			s.FinishPresentation();
+			var n = s.NodeFor("boss-tanuki") ?? s.NodeFor(sess.Reachable()[0])!;
+			Assert.True(n.TagText.Contains("copies your best move"), "the boss's tag has its two extra lines");
+			var tag = n.Tag;
+			Assert.True(tag.Position.Y + tag.Size.Y <= n.Size.Y + 0.5f, $"{size}: the tag's bottom {tag.Position.Y + tag.Size.Y} is inside the box ({n.Size.Y})");
+			s.GetParent().QueueFree();
+		}
+	}
+
+	/// <summary>The winding of every gap is at least a meaningful share of the gap, so the S-curves cannot silently flatten again.</summary>
+	[Test]
+	public static void MeanderIsAtLeastAFractionOfTheGap(Node host)
+	{
+		Assert.True(MapRouteGeometry.MinMeander >= 0.07f, "the pinned minimum share is not lowered");
+		foreach (var size in new[] { P1080, P720 })
+		{
+			var s = Make(host, Start() is { } sess ? new SessionMapView(sess) : null!, size);
+			float boardH = s.Board.Size.Y, gap = s.Board.Size.X / 8f * 0.5f; // about half a column between two columns
+			for (int i = 0; i < 200; i++)
+			{
+				float amp = Mathf.Abs(MapRouteGeometry.Amplitude(MapLayout.Hash("gap" + i + ":" + (i + 1)), boardH, gap));
+				Assert.True(amp >= 0.07f * Mathf.Min(boardH, gap), $"{size} gap {i}: amplitude {amp:0.0} against board {boardH:0} and gap {gap:0}");
+				Assert.True(amp >= 20f || size == P720, $"{size}: a winding of at least 20 px on a typical board ({amp:0.0})");
+			}
+			s.GetParent().QueueFree();
+		}
+	}
+
+	/// <summary>R2: the mist reaches past the end of every sketched route (it covers all that is hidden) and starts at the last drawn node.</summary>
+	[Test]
+	public static void MistCoversEverySketchedRoute(Node host)
+	{
+		var sess = Start();
+		var s = Make(host, new SessionMapView(sess));
+		float end = s.Routes.MistLines.SelectMany(l => l.Path).Max(p => p.X);
+		Assert.True(s.Mist.From + s.Board.Position.X <= s.RectOf("r1-apprentice").End.X + s.Board.Position.X + 20f, "starts at the last drawn node");
+		Assert.True(s.Mist.Right >= end, "ends past the far end of the last sketch");
+		s.GetParent().QueueFree();
+	}
+
+	/// <summary>The scroll's rollers are drawn 1.5x the texture's own width (as thick as the concept's).</summary>
+	[Test]
+	public static void ScrollRollersAreAsThickAsTheConcept(Node host)
+	{
+		Assert.True(MapScroll.RollerWidth >= 100f, $"roller width {MapScroll.RollerWidth}");
+		var s = Make(host, Start() is { } sess ? new SessionMapView(sess) : null!);
+		Assert.True(MapScroll.PaperLeft == MapScroll.RollerWidth, "the walkable paper starts after the thick roller");
+		s.GetParent().QueueFree();
+	}
 }

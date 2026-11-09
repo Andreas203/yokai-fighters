@@ -33,6 +33,8 @@ public partial class MapNode : Button
 	public Texture2D? SpriteTexture => UiFind.Get<TextureRect>(this, "IconTexture").Texture;
 	/// <summary>The illustration's rect inside this node (the routes end on it, the marks go round it).</summary>
 	public Rect2 SpriteRect { get; private set; }
+	/// <summary>Where the art is actually drawn (box coordinates): <see cref="SpriteRect"/> itself, or larger around it when the type's sprite is drawn bigger (a stall, the dojo, the tea house). Marks go round this; nothing else reads it.</summary>
+	public Rect2 ArtRect { get; private set; }
 	/// <summary>The mark the node wears now: the ring or halo drawn round the illustration, null for none.</summary>
 	public MapMark? Mark => State == MapNodeState.Current ? MapMark.Here : State == MapNodeState.Reachable ? (CursorOn ? MapMark.Selected : MapMark.Reachable) : null;
 	/// <summary>YOK-139: the twist icon id drawn on the elder mark; "" = the plain "E" mark (no twist data).</summary>
@@ -68,14 +70,16 @@ public partial class MapNode : Button
 		var cleared = UiFind.Get<Control>(this, "ClearedMark");
 		icon.Text = look.Icon; type.Text = look.Icon; name.Text = v.Yokai ?? look.Label;
 		tex.Texture = look.Sprite ?? look.IconTexture; tex.Visible = tex.Texture != null; icon.Visible = tex.Texture == null;
-		// fit the real art inside the fixed sprite rect (centred on it, its foot on the rect's foot); the layout never saw this art
+		// fit the real art inside the fixed sprite rect (centred on it, its foot on the rect's foot), then draw it SpriteScale times larger: only the drawn sprite
+		// overflows the rect (up and to the sides), the box, the routes and the layout never see it (AM19). Only a drawn (revealed) node is ever bound.
 		var art = sprite;
 		if (tex.Texture is { } t && t.GetHeight() > 0)
 		{
-			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight() * look.SpriteScale);
+			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight()) * Math.Max(0.1f, look.SpriteScale);
 			var sz = new Vector2(t.GetWidth(), t.GetHeight()) * k;
 			art = new Rect2(new Vector2(sprite.GetCenter().X - sz.X / 2f, sprite.End.Y - sz.Y), sz);
 		}
+		ArtRect = art.Merge(sprite);
 		tex.Position = art.Position; tex.Size = art.Size;
 		icon.Position = sprite.Position; icon.Size = sprite.Size;
 		icon.HorizontalAlignment = HorizontalAlignment.Center; icon.VerticalAlignment = VerticalAlignment.Center;
@@ -131,9 +135,9 @@ public partial class MapNode : Button
 	public override void _Draw()
 	{
 		if (SpriteRect.Size.X <= 0f || Mark is not { } mark) return;
-		var c = SpriteRect.GetCenter();
+		var c = ArtRect.GetCenter();
 		float pad = MapNodeBox.Pad(SpriteRect.Size.Y);
-		var r = SpriteRect.Size / 2f + new Vector2(pad * 0.72f, pad * 0.72f);
+		var r = ArtRect.Size / 2f + new Vector2(pad * 0.72f, pad * 0.72f);
 		uint seed = MapLayout.Hash(NodeId);
 		switch (mark)
 		{

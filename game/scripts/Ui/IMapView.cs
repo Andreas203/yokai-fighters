@@ -55,13 +55,9 @@ public interface IMapView
 	IReadOnlyList<MapRouteView> Routes { get; }
 	/// <summary>YOK-108: health, coins and rows done; null = no run behind this view (the panel hides).</summary>
 	MapStatusView? Status => null;
-	/// <summary>YOK-108, T6: what the Tanuki would copy right now (read-only, <c>CopyRule.Target</c>); null = no slot holds a special (T2).</summary>
-	CopyTarget? CopyTarget => null;
-	/// <summary>True once the copy is locked (T1): the chip then shows <see cref="CopyTarget"/> as the locked copy.</summary>
-	bool CopyLocked => false;
 	/// <summary>
-	/// YOK-119: who this view belongs to (the run). The screen forgets what the copy chip last showed when it changes, so a new run
-	/// starts with no pulse or toast. Null = unknown (the chip then carries over between views, as the tests' stubs do).
+	/// YOK-119: who this view belongs to (the run). The screen forgets its per-run presentation state when it changes, so a new run
+	/// starts fresh. Null = unknown (the state then carries over between views, as the tests' stubs do).
 	/// </summary>
 	object? RunKey => null;
 	/// <summary>YOK-108: the reward line (and twist line) for one node; null = nothing to add.</summary>
@@ -85,8 +81,6 @@ public sealed class StubMapView : IMapView
 
 	public List<string> Selected { get; } = new();
 	public MapStatusView? Status { get; set; }
-	public CopyTarget? CopyTarget { get; set; }
-	public bool CopyLocked { get; set; }
 	public Dictionary<string, MapNodeDetail> Details { get; } = new();
 	public List<MapTwistLegendEntry> Legend { get; } = new();
 	public IReadOnlyList<MapTwistLegendEntry> TwistLegend => Legend;

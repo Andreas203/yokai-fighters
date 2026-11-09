@@ -15,37 +15,32 @@ public partial class MapScroll : Control
 	public const string TexturePath = "res://assets/generated/ui/title-reason-scroll.png";
 
 	/// <summary>Width of the roller and the rolled paper on each end (the nine-patch's left / right margin); the walkable paper starts after it.</summary>
-	public const float RollerWidth = 72f;
+	public const float RollerWidth = 108f;
+	/// <summary>The texture's own roller width in pixels; the roller is drawn <see cref="RollerWidth"/> / this wide (1.5x: as thick as the concept's, map.png).</summary>
+	const float TexRoller = 72f;
 	/// <summary>The roller caps and the paper edge's outline above and below the flat paper (the nine-patch's top / bottom margin).</summary>
 	public const float TopInset = 52f, BottomInset = 50f;
 	/// <summary>Where the walkable paper begins along x, for the screen's layout.</summary>
 	public static float PaperLeft => RollerWidth;
 
-	static StyleBoxTexture? _box;
-
-	static StyleBoxTexture? Box
-	{
-		get
-		{
-			if (_box != null) return _box;
-			var tex = GD.Load<Texture2D>(TexturePath);
-			if (tex == null) return null;
-			_box = new StyleBoxTexture
-			{
-				Texture = tex,
-				TextureMarginLeft = RollerWidth, TextureMarginRight = RollerWidth, TextureMarginTop = TopInset, TextureMarginBottom = BottomInset,
-				AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Stretch, AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch,
-			};
-			return _box;
-		}
-	}
+	static Texture2D? _tex;
+	static Texture2D? Tex => _tex ??= GD.Load<Texture2D>(TexturePath);
 
 	public override void _Notification(int what) { if (what == NotificationResized) QueueRedraw(); }
 
 	public override void _Draw()
 	{
 		if (Size.X < 2 * RollerWidth + 40f || Size.Y < TopInset + BottomInset + 40f) return;
-		if (Box is { } box) DrawStyleBox(box, new Rect2(Vector2.Zero, Size));
+		if (Tex is { } tex)
+		{
+			// a nine-patch drawn by hand: the texture's corners and edges, but the roller columns drawn wider than the texture has them (1.5x), so the rollers read as thick as the concept's
+			float tw = tex.GetWidth(), th = tex.GetHeight();
+			float[] sx = { 0f, TexRoller, tw - TexRoller, tw }, dx = { 0f, RollerWidth, Size.X - RollerWidth, Size.X };
+			float[] sy = { 0f, TopInset, th - BottomInset, th }, dy = { 0f, TopInset, Size.Y - BottomInset, Size.Y };
+			for (int ix = 0; ix < 3; ix++)
+				for (int iy = 0; iy < 3; iy++)
+					DrawTextureRectRegion(tex, new Rect2(dx[ix], dy[iy], dx[ix + 1] - dx[ix], dy[iy + 1] - dy[iy]), new Rect2(sx[ix], sy[iy], sx[ix + 1] - sx[ix], sy[iy + 1] - sy[iy]));
+		}
 		else DrawRect(new Rect2(RollerWidth, TopInset, Size.X - 2 * RollerWidth, Size.Y - TopInset - BottomInset), PaperTone); // texture missing: plain paper still reads
 	}
 }

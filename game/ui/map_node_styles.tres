@@ -39,7 +39,7 @@ Icon = "B"
 Tagline = "waits at the end
 copies your best move"
 Sprite = ExtResource("t_node-tanuki")
-SpriteScale = 1.12
+SpriteScale = 1.28
 
 [sub_resource type="Resource" id="merchant"]
 script = ExtResource("2")
@@ -48,7 +48,7 @@ Label = "Merchant"
 Color = Color(0.2, 0.36, 0.27, 1)
 Icon = "M"
 Sprite = ExtResource("t_node-merchant")
-SpriteScale = 1.08
+SpriteScale = 1.25
 
 [sub_resource type="Resource" id="dojo"]
 script = ExtResource("2")
@@ -57,7 +57,7 @@ Label = "Dojo"
 Color = Color(0.8, 0.5, 0.2, 1)
 Icon = "J"
 Sprite = ExtResource("t_node-dojo")
-SpriteScale = 1.08
+SpriteScale = 1.25
 
 [sub_resource type="Resource" id="fallback"]
 script = ExtResource("2")

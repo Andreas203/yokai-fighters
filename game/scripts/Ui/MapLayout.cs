@@ -77,6 +77,8 @@ public static class MapLayout
 	/// the node size must not hint at how many nodes a later row holds. A row with more nodes than this shrinks its own nodes only.
 	/// </summary>
 	public const int TypicalRow = 3;
+	/// <summary>Tag lines a lone node's box reserves beyond the name (the boss's two).</summary>
+	public const int LoneExtraLines = 2;
 	/// <summary>The standard sprite height as a share of the board's height.</summary>
 	public const float SpriteShare = 0.225f;
 
@@ -123,6 +125,8 @@ public static class MapLayout
 				var v = row[j];
 				uint h = Hash(v.Id);
 				var shape = shapeOf(v);
+				// a lone node (the first row, the boss) has the column to itself: its box keeps room for a tag of three lines (the boss's name and two more), whoever waits there (AM19: by row size, never by type)
+				if (n == 1) shape = shape with { ExtraLines = Math.Max(shape.ExtraLines, LoneExtraLines) };
 				float s = s0 * shape.Scale;
 				var size = MapNodeBox.Size(s, shape);
 				// a crowded row shrinks its own nodes only; a lone node may use the column's whole height (the boss's two tag lines make it taller)
