@@ -279,7 +279,10 @@ public partial class MapLandmarks : Control
 		var set = routes?.ToHashSet();
 		if (set == null && _routes == null || set != null && _routes != null && set.SetEquals(_routes)) return;
 		if (animate && _routes != null && set != null)
-			foreach (int r in _routes.Where(r => !set.Contains(r)).ToList()) if (_plan.Any(l => l.Route == r)) _fading[r] = 1f;
+		{
+			foreach (int r in _routes.Where(r => !set.Contains(r)).ToList())
+				if (_plan.Any(l => l.Route == r)) _fading[r] = 1f;
+		}
 		else _fading.Clear();
 		_routes = set; SetProcess(_fading.Count > 0); QueueRedraw();
 	}

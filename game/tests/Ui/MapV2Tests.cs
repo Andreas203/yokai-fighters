@@ -602,4 +602,27 @@ public static class MapV2Tests
 		Assert.True(left.Count == 2, "two routes of row 1 were left behind");
 		s.GetParent().QueueFree();
 	}
+
+	/// <summary>
+	/// Code Critic (YOK-238): leaving behind a route with scenery together with routes without any must start the fade, not clear it
+	/// (a dangling <c>else</c> once wiped it whenever a scenery-less route came next). The fade keeps the scenery drawn until it ends or is skipped.
+	/// </summary>
+	[Test]
+	public static void LeftBehindSceneryFadesEvenWhenOtherLeftRoutesHaveNone(Node host)
+	{
+		var l = new MapLandmarks();
+		host.AddChild(l);
+		var rock = new MapLandmark(MapLandmarkKind.Rocks, new Rect2(10, 10, 20, 20)) { Route = 0 };
+		l.SetPlan(new[] { rock }, Vector2.Zero);
+		l.SetRoutes(new[] { 0, 1, 2, 3 });
+		l.SetRoutes(new int[0], animate: true);
+		Assert.True(l.IsFading, "the left-behind route's scenery starts fading although routes 1-3 carry none");
+		Assert.True(l.Shown.Contains(rock), "... and stays drawn while it fades");
+		l.FinishFade();
+		Assert.True(!l.IsFading && !l.Shown.Contains(rock), "skipping ends the fade and the scenery is gone");
+		l.SetRoutes(new[] { 0 });
+		l.SetRoutes(new int[0], animate: false);
+		Assert.True(!l.IsFading && !l.Shown.Contains(rock), "without animation the scenery goes at once");
+		l.QueueFree();
+	}
 }
