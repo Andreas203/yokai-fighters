@@ -145,8 +145,11 @@ public static class MapLayout
 					for (int it = 0; it < 16; it++) { float mid = (lo + hi) / 2f; if (MapNodeBox.Size(mid, shape).Y + MapNodeBox.OverflowTop(mid) > maxH) hi = mid; else lo = mid; }
 					s = lo; size = MapNodeBox.Size(s, shape);
 				}
-				float slack = Mathf.Max(0f, cell - size.Y) / 2f;
-				float cy = y0 + (j + 0.5f) * cell + slack * (2f * Unit(h, 2) - 1f) * 0.9f;
+				// the box AND the art and ring rising above it must stay inside this node's own cell, so the grown boxes of a column never overlap:
+				// the nudge is taken from the room left after the overflow, and the box sits under it (by the node's size alone, never its type)
+				float ov = MapNodeBox.OverflowTop(s);
+				float slack = Mathf.Max(0f, cell - size.Y - ov) / 2f;
+				float cy = y0 + (j + 0.5f) * cell + slack * (2f * Unit(h, 2) - 1f) * 0.9f + ov / 2f;
 				float lean = n > 1 ? (j % 2 == 0 ? -1f : 1f) * 0.03f + (Unit(h, 3) - 0.5f) * 0.02f : (Unit(h, 3) - 0.5f) * 0.08f;
 				float cx = (c + 0.5f) * colW + lean * colW;
 				var pos = new Vector2(Mathf.Clamp(cx - size.X / 2f, 0f, Mathf.Max(0f, board.X - size.X)), Mathf.Max(MapNodeBox.OverflowTop(s), Mathf.Min(cy - size.Y / 2f, Mathf.Max(0f, board.Y - reserve - size.Y))));

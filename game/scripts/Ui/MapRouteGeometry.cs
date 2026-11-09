@@ -95,8 +95,26 @@ public static class MapRouteGeometry
 					foreach (int i in g) { ys[edges[i].From] = edges[i].Ya; ys[edges[i].To] = edges[i].Yb; }
 					jy[g.Key] = ys.Values.Average();
 				}
+			// one meander scale per gap, decided from the gap's own routes together (never per route: that would change their order): the largest of 1, 0.9, ... 0
+			// at which no route of the gap leaves the board
+			var scale = new Dictionary<(int, int), float>();
+			foreach (var g in Enumerable.Range(0, n0).Where(i => edges[i].Ok).GroupBy(i => (edges[i].Ca, edges[i].Cb)))
+			{
+				float k = 1f;
+				for (; k > 0f; k = Mathf.Max(0f, k - 0.1f))
+				{
+					bool fits = true;
+					foreach (int i in g)
+					{
+						var pp = Build(edges[i], jy.TryGetValue(Find(i), out float jj) ? jj : (float?)null, xo[edges[i].Ca], xi[edges[i].Cb], boardHeight, k);
+						if (pp.Any(q => q.Y < 0f || q.Y > boardHeight)) { fits = false; break; }
+					}
+					if (fits) break;
+				}
+				scale[g.Key] = k;
+			}
 			for (int i = 0; i < n0; i++)
-				paths[i] = Build(edges[i], jy.TryGetValue(Find(i), out float y) ? y : (float?)null, edges[i].Ok ? xo[edges[i].Ca] : 0f, edges[i].Ok ? xi[edges[i].Cb] : 0f, boardHeight);
+				paths[i] = Build(edges[i], jy.TryGetValue(Find(i), out float y) ? y : (float?)null, edges[i].Ok ? xo[edges[i].Ca] : 0f, edges[i].Ok ? xi[edges[i].Cb] : 0f, boardHeight, edges[i].Ok ? scale[(edges[i].Ca, edges[i].Cb)] : 1f);
 			// routes of different buses that still cross: merge them and build again
 			bool merged = false;
 			for (int i = 0; i < n0 && !merged; i++)
@@ -118,12 +136,12 @@ public static class MapRouteGeometry
 	public static float Amplitude(uint h, float boardHeight, float gap) =>
 		(MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (MinMeander + 0.03f * MapLayout.Unit(h, 2)) * Mathf.Min(boardHeight, gap);
 
-	static Vector2[] Build(Edge e, float? junction, float xOut, float xIn, float boardHeight)
+	static Vector2[] Build(Edge e, float? junction, float xOut, float xIn, float boardHeight, float meanderScale = 1f)
 	{
 		if (!e.Ok) return Densify(new List<Vector2> { e.Start, e.End });
 		var pts = new List<Vector2> { e.Start, new Vector2(xOut, e.Ya) };
 		uint h = MapLayout.Hash("gap" + e.Ca + ":" + e.Cb);
-		float amp = Amplitude(h, boardHeight, xIn - xOut), turns = 1f; // one full S (1.5 turns bent the steep flanks of a Y past the smoothness limit)
+		float amp = meanderScale * Amplitude(h, boardHeight, xIn - xOut), turns = 1f; // one full S (1.5 turns bent the steep flanks of a Y past the smoothness limit)
 		for (int i = 1; i < Samples; i++)
 		{
 			float u = i / (float)Samples;
