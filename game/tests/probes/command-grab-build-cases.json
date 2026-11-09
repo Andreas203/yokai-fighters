@@ -1,0 +1,546 @@
+{
+ "about": "YOK-225 breaker probes: shared build cases. Each patches game/tests/fixtures/command-grabs/test-river-grab.json (path list -> value; null value deletes the key) and the special must load (accept) or be refused. Read by CommandGrabBuildProbes.cs and tools/tests/test_command_grab_probes.py. Expected values: C4/E12 (window under recovery), the schema (throw shape), F2/C4 (boxes inside the active window).",
+ "cases": [
+  {
+   "name": "ex-recovery-under-window",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "ex",
+      "changes"
+     ],
+     "value": [
+      {
+       "target": "recovery",
+       "op": "add",
+       "value": -25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ex-range-shrinks-under-box",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "ex",
+      "changes"
+     ],
+     "value": [
+      {
+       "target": "throw.range",
+       "op": "mul_pct",
+       "value": 10
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ex-range-grows",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "ex",
+      "changes"
+     ],
+     "value": [
+      {
+       "target": "throw.range",
+       "op": "add",
+       "value": 20
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "lv2-recovery-under-window",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "2",
+      "tuning"
+     ],
+     "value": {
+      "target": "recovery",
+      "op": "add",
+      "value": -25
+     }
+    }
+   ]
+  },
+  {
+   "name": "lv3-damage-and-range",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "3",
+      "evolution",
+      "changes"
+     ],
+     "value": [
+      {
+       "target": "throw.range",
+       "op": "mul_pct",
+       "value": 150
+      },
+      {
+       "target": "damage",
+       "op": "add",
+       "value": 10
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "range-written-130-point-0",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "range"
+     ],
+     "value": 130.0
+    }
+   ]
+  },
+  {
+   "name": "range-fraction",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "range"
+     ],
+     "value": 130.5
+    }
+   ]
+  },
+  {
+   "name": "range-zero",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "range"
+     ],
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "window-written-7-point-0",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "break_window"
+     ],
+     "value": 7.0
+    }
+   ]
+  },
+  {
+   "name": "window-zero",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "break_window"
+     ],
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "window-recovery-minus-one",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "break_window"
+     ],
+     "value": 29
+    }
+   ]
+  },
+  {
+   "name": "window-equals-recovery",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "break_window"
+     ],
+     "value": 30
+    }
+   ]
+  },
+  {
+   "name": "breakable-as-string",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "breakable"
+     ],
+     "value": "true"
+    }
+   ]
+  },
+  {
+   "name": "extra-throw-key",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw",
+      "reach"
+     ],
+     "value": 5
+    }
+   ]
+  },
+  {
+   "name": "throw-removed-hitboxes-need-stun",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw"
+     ],
+     "value": null
+    }
+   ]
+  },
+  {
+   "name": "throw-empty-object",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "throw"
+     ],
+     "value": {}
+    }
+   ]
+  },
+  {
+   "name": "hitbox-starts-before-active",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        5,
+        8
+       ],
+       "rect": {
+        "x": 20,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hitbox-ends-after-active",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        7,
+        9
+       ],
+       "rect": {
+        "x": 20,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hitbox-near-edge-equals-range",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        7,
+        8
+       ],
+       "rect": {
+        "x": 130,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hitbox-near-edge-one-under-range",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        7,
+        8
+       ],
+       "rect": {
+        "x": 129,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "second-hitbox-past-range",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        7,
+        7
+       ],
+       "rect": {
+        "x": 20,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      },
+      {
+       "frames": [
+        8,
+        8
+       ],
+       "rect": {
+        "x": 200,
+        "y": 150,
+        "w": 50,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hitbox-behind-thrower",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitboxes"
+     ],
+     "value": [
+      {
+       "frames": [
+        7,
+        8
+       ],
+       "rect": {
+        "x": -60,
+        "y": 150,
+        "w": 110,
+        "h": 120
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "with-hitstun-too",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "hitstun"
+     ],
+     "value": 20
+    },
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "blockstun"
+     ],
+     "value": 12
+    }
+   ]
+  },
+  {
+   "name": "with-multi-hit",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "multi_hit"
+     ],
+     "value": {
+      "hits": 2,
+      "interval": 3
+     }
+    }
+   ]
+  },
+  {
+   "name": "with-wall-bounce",
+   "accept": true,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "wall_bounce"
+     ],
+     "value": true
+    }
+   ]
+  },
+  {
+   "name": "with-aftershock",
+   "accept": false,
+   "patch": [
+    {
+     "path": [
+      "levels",
+      "1",
+      "frame_data",
+      "properties",
+      "aftershock_delay"
+     ],
+     "value": 4
+    }
+   ]
+  }
+ ]
+}

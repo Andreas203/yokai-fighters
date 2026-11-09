@@ -78,6 +78,7 @@ public static class MoveLoader
 			if (move.Recovery <= move.BreakWindow)
 				throw new FormatException($"{id}: a throw's recovery ({move.Recovery}) must outlast its break window ({move.BreakWindow})");
 		}
+		move = MoveData.ReadCommandGrab(move, fd); // YOK-225: properties.throw = a command grab; its hitboxes become throwboxes
 		foreach (var t in move.Throwboxes)
 			if (!move.IsActive(t.First) || !move.IsActive(t.Last))
 				throw new FormatException($"{id}: throwbox frames {t.First}-{t.Last} outside the active window");
