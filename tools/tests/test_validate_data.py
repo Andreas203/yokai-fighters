@@ -917,3 +917,150 @@ class LevelPresetTest(unittest.TestCase):
             code, out = run(g)
             self.assertEqual(code, 1, out)
             self.assertIn("files in data/presets/ must be kind 'level_preset'", out)
+
+
+def json_source(path):
+    import json
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8")).get("source")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+class SoundCueTest(unittest.TestCase):
+    """YOK-93 (V6): sound-cue schema and the checks HitCueLibrary mirrors."""
+    FIXTURE = ROOT / "game" / "tests" / "fixtures" / "sound" / "test-hits.json"
+    THUD = "res://sound/hits/hit_01.wav"
+
+    def _write(self, folder, doc, name=None):
+        import json
+        f = Path(folder) / f"{name or doc['id']}.json"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(doc), encoding="utf-8")
+        return f
+
+    def _doc(self, cue=None, **changes):
+        doc = {"kind": "sound_cue", "id": "t", "cues": [cue if cue is not None else {"thud": [self.THUD]}]}
+        doc.update(changes)
+        return doc
+
+    def test_fixture_is_valid(self):
+        code, out = run(self.FIXTURE)
+        self.assertEqual(code, 0, out)
+
+    def test_schema_refusals(self):
+        import tempfile
+        t = [self.THUD]
+        cases = [
+            (dict(cues=[]), "cues"), (dict(sound=1), "Additional properties"),
+            (dict(cue={}), "'thud' is a required property"), (dict(cue={"thud": []}), "cues.0.thud"),
+            (dict(cue={"thud": ["sound/hits/hit_01.wav"]}), "cues.0.thud.0"),
+            (dict(cue={"thud": ["res://sound/../x.wav"]}), "cues.0.thud.0"),
+            (dict(cue={"thud": [self.THUD, self.THUD]}), "cues.0.thud"),
+            (dict(cue={"thud": t, "volume_db": 13}), "cues.0.volume_db"),
+            (dict(cue={"thud": t, "volume_db": 1.5}), "cues.0.volume_db"),
+            (dict(cue={"thud": t, "offset_ticks": -1}), "cues.0.offset_ticks"),
+            (dict(cue={"thud": t, "offset_ticks": 31}), "cues.0.offset_ticks"),
+            (dict(cue={"thud": t, "when": {"level": 4}}), "cues.0.when.level"),
+            (dict(cue={"thud": t, "when": {"strength": "huge"}}), "cues.0.when.strength"),
+            (dict(cue={"thud": t, "when": {"outcome": "whiff"}}), "cues.0.when.outcome"),
+            (dict(cue={"thud": t, "when": {"button": "LP"}}), "Additional properties"),
+            (dict(cue={"thud": t, "when": {"move": "Foxfire"}}), "cues.0.when.move"),
+            (dict(cue={"thud": [self.THUD + "\n"]}), "cues.0.thud.0"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
+    def test_sample_must_exist_under_game(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc({"thud": ["res://sound/hits/missing.wav"]})))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.0.thud.0: game/sound/hits/missing.wav does not exist", out)
+
+    def test_one_rule_per_case(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            same = {"thud": [self.THUD], "when": {"source": "oni"}}
+            code, out = run(self._write(tmp, self._doc(cues=[same, dict(same)])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.1.when: same case as cues.0", out)
+            a = self._write(Path(tmp) / "a", self._doc(same, id="a"))
+            b = self._write(Path(tmp) / "b", self._doc(same, id="b"))
+            code, out = run(a, b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("same case as cues.0 in", out)
+
+    def test_one_rule_per_case_reads_the_rest_of_the_folder(self):
+        """Code-critic: checking one file of a folder finds a duplicate in a sibling on disk, as loading the folder would."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            oni = {"thud": [self.THUD], "when": {"source": "oni"}}
+            self._write(tmp, self._doc(cues=[{"thud": [self.THUD]}, oni], id="a"))
+            b = self._write(tmp, self._doc(oni, id="b"))
+            code, out = run(b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("b.json: cues.0.when: same case as cues.1 in", out)
+            self.assertIn("a.json", out)
+            self.assertEqual(out.count("same case"), 1, out)  # a.json is not in the run: no error reported on it
+            code, out = run(self._write(tmp, self._doc({"thud": [self.THUD], "when": {"source": "kitsune"}}, id="b")))
+            self.assertEqual(code, 0, out)
+
+    def test_set_without_a_default_is_refused(self):
+        """Code-critic (V6): a source rule alone would leave every other hit silent."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "a", self._doc({"thud": [self.THUD], "when": {"source": "kitsune"}}, id="kitsune"))
+            code, out = run(f)
+            self.assertEqual(code, 1, out)
+            self.assertIn("have no default: some hits would be silent", out)
+            outcomes = [{"thud": [self.THUD], "when": {"outcome": o}} for o in ("hit", "block", "counter")]
+            code, out = run(self._write(Path(tmp) / "b", self._doc(cues=outcomes)))
+            self.assertEqual(code, 0, out)
+            code, out = run(self._write(Path(tmp) / "c", self._doc(cues=outcomes[:2])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("no default", out)
+            # the default may sit in another file of the same folder, on disk or in the run
+            self._write(Path(tmp) / "a", self._doc(id="default"))
+            code, out = run(f)
+            self.assertEqual(code, 0, out)
+
+    def test_move_and_source_must_exist_in_move_data(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            cues = [{"thud": [self.THUD]}, {"thud": [self.THUD], "when": {"move": "no-such-move"}},
+                    {"thud": [self.THUD], "when": {"source": "kappa"}}]
+            code, out = run(self._write(tmp, self._doc(cues=cues)))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.1.when.move: move 'no-such-move' not found", out)
+            if not any(json_source(f) == "kappa" for f in (ROOT / "data" / "moves").glob("*.json")):
+                self.assertIn("cues.2.when.source: no move in data/moves/ has source 'kappa'", out)
+            ok = [{"thud": [self.THUD]}, {"thud": [self.THUD], "when": {"move": "ryo-light-punch", "source": "ryo"}}]
+            code, out = run(self._write(tmp, self._doc(cues=ok)))
+            self.assertEqual(code, 0, out)
+            code, out = run(self._write(tmp, self._doc(cues=[{"thud": [self.THUD], "when": {"source": "elder-oni"}}])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.0.when.source", out)
+
+    def test_sound_subfolder_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "data" / "sound" / "kitsune", self._doc())
+            code, out = run(f)
+            self.assertEqual(code, 1, out)
+            self.assertIn("the game reads data/sound/*.json only", out)
+
+    def test_sound_folder_takes_only_sound_cues(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "data" / "sound", self._doc())
+            code, out = run(f)
+            self.assertEqual(code, 0, out)
+            g = self._write(Path(tmp) / "data" / "sound", {"kind": "fighter", "id": "ryo"})
+            code, out = run(g)
+            self.assertEqual(code, 1, out)
+            self.assertIn("files in data/sound/ must be kind 'sound_cue'", out)
