@@ -2,6 +2,8 @@
 
 Ticket: YOK-150. Status: **APPROVED first pass, S1-S8 only, 66 credits. S9 (snowflake sprite sheet) NOT approved: the snowfall uses plain quads.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): core S1-S8, 66 credits. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/stages/bamboo-grove-dusk.md` (layers back to front: backdrop image, midground props, edge props, ground strip), style block `assets/specs/style.md`. Generator: Meshy MCP (`meshy_text_to_image`, `meshy_image_to_3d`), as the grove, because Meshy props passed there. A Tripo run is possible for the meshes if the designer prefers; the settings would then need re-costing.
 
+**2026-11-09 generator switch (designer): the Meshy approval above never ran and is replaced.** Backdrop: the style loop's Astra take 2, picked by the designer (no new spend). Props: Tripo H3.1 text-to-model, `smart_low_poly=true`, 30 credits each, take cap 1, the spec prompts below adapted to text-to-model. No ground/water strips generated: floors are Godot flat-colour materials. See Takes.
+
 Gameplay is a flat plane (F4): only the band behind the fighters needs detail. E1: the stage is 3,840 units (19.2 m) wide; the camera shows 1,060 to 1,540 units (up to about 1,900 in tall-body fights), so a 16:9 backdrop quad plus instanced props covers it, as in the grove.
 
 Stage mood: a high mountain shrine gate in snowfall at blue dusk. Cold and quiet against Oni's red. The gate frames the fight without standing in the fighter band.
@@ -77,5 +79,21 @@ Backdrop on a quad well behind the fight plane (crop the letterbox). Gate mesh (
 3. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet. Ledger: approved 66, spent 0, balance not checked.
+Take 1, 2026-11-09 (designer approved the switch, the backdrop pick and 210 Tripo credits across the three stages).
 
+| Job | Source | Task id | Credits |
+|---|---|---|---|
+| S1 backdrop | Astra take 2 of the style loop, `tools/style_agent/runs/visual/images/visual-1-look-take2.png` | (Codex) | 0 new |
+| S2/S3 pine cluster | Tripo H3.1 text-to-model, smart_low_poly, face_limit 3000 | cbeb1a14-17f9-4e42-bcf7-7ba1ed3f8773 | 30 |
+| S4/S5 snow lantern | Tripo H3.1, face_limit 2500 | 2b9cbf7e-18fa-421d-88c0-ba4f84e57899 | 30 |
+| S6/S7 gate mesh | not made: the gate is painted in the backdrop | - | 0 |
+| S8 ground strip | not made: flat-colour snow material in Godot | - | 0 |
+
+Total 60 Tripo credits. Outputs in `game/assets/generated/stage/shrine-gate/`: `backdrop.png`, `pine-cluster.glb`, `snow-lantern.glb`, `*-ref.png` (Tripo previews).
+
+## Acceptance
+- S1 backdrop: **PASS (designer pick)**. 1280x720, full-bleed, so no letterbox crop. Shrine-red gate with straw rope centre-right, snow-laden pines both sides, two stone lanterns, layered indigo mountains, a calm two-tone snow field in the lower third. Style-loop score 9/10 under guide v1; v1 docked only its detail level, which guide v2 no longer does.
+- Pine cluster: **PASS with WARN**. One mesh, one texture, no PBR. 5,490 tris against 3,000 (+83%). The texture reads teal next to pine #34483B, so it gets tinted in the scene.
+- Snow lantern: **PASS with WARN**. One mesh, one texture, 3,426 tris against 2,500 (+37%). Snow cap and warm window present.
+- Tripo props come normalised to a 1-unit box with the origin at the centre: re-pivot to the base and scale in Godot. Triangle counts run over target because `smart_low_poly` treats `face_limit` loosely; for background props that's no performance issue (WARN, not a retake). A Blender decimate by script is the free fix if wanted.
+- Licence: Astra and Tripo output terms unconfirmed (AM5, YOK-115).
