@@ -62,8 +62,9 @@
     {"name": "wall-bounce-by-a-modifier", "accept": true, "requires": [], "effects": [{"target": "properties.wall_bounce", "op": "set", "value": true}]},
     {"name": "wall-bounce-as-a-number", "accept": false, "requires": [], "effects": [{"target": "wall_bounce", "op": "set", "value": 1}]},
     {"name": "wall-bounce-added", "accept": false, "requires": [], "effects": [{"target": "wall_bounce", "op": "add", "value": true}]},
-    {"name": "forward-travel-distance-set", "accept": true, "requires": [], "effects": [{"target": "properties.forward_travel", "op": "set", "value": 120}]},
-    {"name": "forward-travel-short-form-on-hit", "accept": true, "requires": [], "effects": [{"target": "forward_travel", "op": "set", "value": 60, "when": "on_hit"}]},
+    {"name": "forward-travel-distance-set", "accept": true, "requires": [], "excludes": ["projectile"], "effects": [{"target": "properties.forward_travel", "op": "set", "value": 120}]},
+    {"name": "forward-travel-short-form-on-hit", "accept": true, "requires": [], "excludes": ["projectile"], "effects": [{"target": "forward_travel", "op": "set", "value": 60, "when": "on_hit"}]},
+    {"name": "forward-travel-on-a-projectile-special", "accept": false, "requires": [], "effects": [{"target": "properties.forward_travel", "op": "set", "value": 120}]},
     {"name": "forward-travel-negative", "accept": false, "requires": [], "effects": [{"target": "properties.forward_travel", "op": "set", "value": -5}]},
     {"name": "forward-travel-added-where-the-move-has-none", "accept": false, "requires": [], "effects": [{"target": "forward_travel", "op": "add", "value": 60}]},
     {"name": "charge-dash-short-form", "accept": false, "requires": [], "effects": [{"target": "forward_travel", "op": "set", "value": "charge_dash", "when": "charge_released"}], "charge": {"button": "special_trigger", "window_ticks": {"min": 0, "max": 30}, "step_ticks": 10, "dash": {"duration": "startup", "units_per_tick_by_step": [14], "cap_units_per_tick": 14}}},
@@ -76,7 +77,7 @@
     {"name": "throw-range-where-no-special-throws", "accept": false, "requires": [], "effects": [{"target": "throw.range", "op": "mul_pct", "value": 150}]},
     {"name": "throw-range-set-without-breakable", "accept": false, "requires": [], "effects": [{"target": "properties.throw.range", "op": "set", "value": 100}]}
   ],
-  "special_cases_about": "YOK-220: an optional 'changes' replaces levels.3.evolution.changes (the evolution targets). A special's own file: the named TEST FIXTURE special (game/tests/fixtures/specials/) with levels.1.frame_data changed by 'set' (field -> value) and 'remove' (fields deleted). The validator side ignores only the missing clip (fixtures have no clip file); the loader side runs SpecialLoader.Parse, which builds every level plain and EX.",
+  "special_cases_about": "YOK-220: an optional 'changes' replaces levels.3.evolution.changes (the evolution targets). Numbers are judged as .NET decimal reads them (designer, YOK-221: 300 then 32 decimal places ending in 1 is 300, 1e-400 is 0, 1e9999999 is refused). A special's own file: the named TEST FIXTURE special (game/tests/fixtures/specials/) with levels.1.frame_data changed by 'set' (field -> value) and 'remove' (fields deleted). The validator side ignores only the missing clip (fixtures have no clip file); the loader side runs SpecialLoader.Parse, which builds every level plain and EX.",
   "special_cases": [
     { "name": "special-unchanged", "accept": true, "base": "test-rising-talisman", "set": {}, "remove": [] },
     { "name": "special-recovery-written-28-point-0", "accept": true, "base": "test-rising-talisman", "set": { "recovery": 28.0 }, "remove": [] },
@@ -102,6 +103,17 @@
     {"name": "evo-decoy-zero", "accept": false, "base": "test-rising-talisman", "set": {}, "remove": [], "changes": [{"target": "decoy", "op": "set", "value": 0}]},
     {"name": "special-multi-hit-written-2-point-0", "accept": true, "base": "test-rising-talisman", "set": {"properties": {"multi_hit": {"hits": 2.0, "interval": 3}}}, "remove": []},
     {"name": "special-throw-without-breakable", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"throw": {"range": 80}}}, "remove": []},
-    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []}
+    {"name": "special-wall-bounce-as-a-number", "accept": false, "base": "test-rising-talisman", "set": {"properties": {"wall_bounce": 1}}, "remove": []},
+    { "name": "special-forward-travel-over-its-active-frames", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 300 } }, "remove": [] },
+    { "name": "special-forward-travel-written-3e2", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 3e2 } }, "remove": [] },
+    { "name": "special-forward-travel-past-decimal-precision-rounds-to-300", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 300.00000000000000000000000000000001 } }, "remove": [] },
+    { "name": "special-forward-travel-a-fraction-decimal-keeps", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 300.0000000000000000001 } }, "remove": [] },
+    { "name": "special-forward-travel-1e-400-reads-as-0", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 1e-400 } }, "remove": [] },
+    { "name": "special-forward-travel-1e-34-written-out-reads-as-0", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 0.0000000000000000000000000000000001 } }, "remove": [] },
+    { "name": "special-forward-travel-huge-exponent", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 1e9999999 } }, "remove": [] },
+    { "name": "special-forward-travel-int32-max-past-precision", "accept": true, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 2147483647.000000000000000000000001 } }, "remove": [] },
+    { "name": "special-forward-travel-past-int32", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 2147483648 } }, "remove": [] },
+    { "name": "special-forward-travel-tie-after-29-digits-rounds-away-not-whole", "accept": false, "base": "test-rising-talisman", "set": { "properties": { "forward_travel": 1.00000000000000000000000000005 } }, "remove": [] },
+    { "name": "special-damage-tie-after-29-digits-rounds-away-past-int32", "accept": false, "base": "test-rising-talisman", "set": { "damage": 79228162514264337593543950334.5 }, "remove": [] }
   ]
 }

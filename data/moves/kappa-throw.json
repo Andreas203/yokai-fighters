@@ -1,0 +1,61 @@
+{
+  "kind": "throw",
+  "id": "kappa-throw",
+  "name": "Kappa throw",
+  "status": "proposed",
+  "source": "kappa",
+  "clip": "kappa-throw",
+  "rules": [
+    "A8",
+    "C4",
+    "E4",
+    "E12",
+    "E15",
+    "F2",
+    "F3",
+    "K3",
+    "T0"
+  ],
+  "input": {
+    "buttons": [
+      "LP",
+      "LK"
+    ]
+  },
+  "frame_data": {
+    "startup": 5,
+    "active": 7,
+    "recovery": 18,
+    "damage": 120,
+    "break_window": 7,
+    "throwboxes": [
+      {
+        "frames": [
+          6,
+          12
+        ],
+        "rect": {
+          "x": 20,
+          "y": 135,
+          "w": 120,
+          "h": 105
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          30
+        ],
+        "rect": {
+          "x": -65,
+          "y": 0,
+          "w": 130,
+          "h": 310
+        }
+      }
+    ]
+  },
+  "notes": "Generic throw (C4), the 259 shove played on the Kappa. Clip 30 frames, palm reach window 6-12: 5/7/18, startup = C4's 5, damage 120, break window 7; recovery 18 outlasts the break window (E12). Same numbers as Kitsune's and Ryo's throws. Throwbox is Kitsune's (x 20, y 150, 110 x 120) reshaped for the Kappa: height x0.886 puts it at y 135, h 105; width x1.1 for his longer arms. The retarget gate measured his push landing at 0.91 m (182 units, inside y 135-240). Estimated, not re-placed from the posed rig: proposed. The clip carries a 28 cm hip advance that must be replaced by a data step (E15); throw.schema.json has no forward-travel field, so that step is NOT encoded (same open item as Kitsune's and Ryo's throws). Pushback left to fight defaults. Not River Grab: that is the Kappa's special (130 damage, 6/2/30, YOK-229). Same buttons in Kata and Kihon (K3)."
+}

@@ -95,6 +95,7 @@ public static class MoveLoader
 		foreach (var h in move.Hitboxes)
 			if (!move.IsActive(h.First) || !move.IsActive(h.Last))
 				throw new FormatException($"{id}: hitbox frames {h.First}-{h.Last} outside the active window");
+		move = MoveData.ReadTravel(move, fd); // YOK-221: properties.forward_travel
 		return MoveData.ReadAftershock(move, fd); // YOK-136: properties.aftershock_delay
 	}
 

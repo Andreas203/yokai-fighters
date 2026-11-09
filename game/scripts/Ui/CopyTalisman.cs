@@ -193,6 +193,16 @@ public partial class CopyTalisman : Control
 		DrawRect(r, none ? new Color(0.35f, 0.34f, 0.3f) : FightHud.Ink, false, 5f);
 		DrawRect(r.Grow(-8), FightHud.Seal, false, 2f);
 		if (!none) DrawRect(r.Grow(2), FightHud.Persimmon, false, 4f);
-		if (State == CopyTalismanState.Locked) Paint.Seal(this, SealRect.GetCenter(), SealRadius, "S"); // T1 red seal stamp
+		if (State == CopyTalismanState.Locked) DrawLockStamp(SealRect.GetCenter()); // T1 red seal stamp
+	}
+
+	/// <summary>H1/H2: the red stamp carries an abstract padlock (shackle arc over a body), not a letter.</summary>
+	private void DrawLockStamp(Vector2 c)
+	{
+		Paint.Seal(this, c, SealRadius, "");
+		var paper = FightHud.Paper;
+		DrawArc(c + new Vector2(0, -3), 5f, Mathf.Pi, Mathf.Tau, 12, paper, 2.5f, true);
+		DrawRect(new Rect2(c + new Vector2(-7, -3), new Vector2(14, 11)), paper);
+		DrawRect(new Rect2(c + new Vector2(-1, 0), new Vector2(2, 5)), FightHud.Seal);
 	}
 }

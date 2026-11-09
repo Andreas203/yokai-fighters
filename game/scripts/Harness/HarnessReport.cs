@@ -65,7 +65,7 @@ public static class HarnessReport
 
 	public const string Caveats =
 		"Not representative yet: every yokai except the Kitsune and the Tanuki fights on the Kitsune's kit (node-scenes.json fallback_fighter), " +
-		"but with its own behaviour profiles and its own move files where data/moves has them (YOK-174: the Oni's five normals are in his kit but unused until his profiles name them, so Oni fights are throw-only for now; the Kappa has none, so it fights with its profiles' generic actions (walk, dash, block, throw) on the Kitsune's normals and throw, and neither has a special);" +
+		"but with its own behaviour profiles and its own move files where data/moves has them (YOK-174: the Oni's five normals are in his kit but unused until his profiles name them, so Oni fights are throw-only for now; YOK-228: the Kappa's six normals and his throw are his own, his normals likewise unused until his profiles name them, so Kappa fights are his profiles' generic actions (walk, dash, block) and his own throw; neither has a special);" +
 		"each node's temperament is a seeded 50/50 roll from the run seed and node id unless node-scenes.json names a profile (see fight_mix); the apprentice's half damage (Y4, YOK-156) is applied; the bot never takes the dojo trial (YOK-98) and shops " +
 		"only when its config says so (the default newcomer heals at the merchant and rests at the dojo, R4's line), and fight time excludes menus (run length adds menu_seconds_per_node per node). " +
 		"YOK-179: elder nodes fight with their twist (data/twists/, applied as the fight scene does; elder_twists counts how often each fired; Elder Oni's armour cannot fire while the Oni has no special). " +

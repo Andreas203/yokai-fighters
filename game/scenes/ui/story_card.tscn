@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/generated/ui/burst-blank.png" id="seal"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/fox-mask.png" id="mask"]
 [ext_resource type="Texture2D" path="res://assets/generated/ui/ink-underline.png" id="rule"]
+[ext_resource type="PackedScene" path="res://scenes/ui/twist_scroll.tscn" id="scroll"]
 
 [node name="StoryCard" type="Control"]
 layout_mode = 1
@@ -29,6 +30,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+; Y3 elder-twist intro card (YOK-109): shown instead of Panel by StoryCard.Display(text, kicker, ...).
+[node name="TwistScroll" parent="." instance=ExtResource("scroll")]
+visible = false
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1

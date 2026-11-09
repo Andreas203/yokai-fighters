@@ -16,6 +16,10 @@ public static class TwistStripProbes
   public bool InTanukiFight { get; set; }
   public bool ElderFight { get; set; }
  }
+ // YOK-109: the elder strip needs the opponent's twist on the match and its label card in the story data.
+ static readonly ElderTwist StripTwist = new("elder-oni-armour", "elder-oni", TwistEffect.SpecialArmour, 0, 1, "twist.elder-oni-armour", "twist-armour", null, null);
+ static Match ElderMatch() { var m = new Match(); m.P2.Twist = StripTwist; return m; }
+ static Story.StoryLibrary StripStory() => new(new[] { new Story.StoryCardData("elder-oni-armour-label", null, "Armour on every special", System.Array.Empty<string>(), "HUD") });
  static string Root => System.IO.Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
  static FightHud Load(Node runner)
  {
@@ -29,10 +33,12 @@ public static class TwistStripProbes
  public static void Alpha_InRangeAndMonotonic_AcrossEveryTick(Node runner)
  {
   var hud = Load(runner);
+  var savedStory = TwistCopy.Story;
+  TwistCopy.Story = StripStory();
   try
   {
    hud.RunView = new View { ElderFight = true };
-   var m = new Match();
+   var m = ElderMatch();
    float prev = 2f;
    for (int i = 0; i < 700; i++)
    {
@@ -45,7 +51,7 @@ public static class TwistStripProbes
     m.Step(FighterInput.None, FighterInput.None);
    }
   }
-  finally { hud.Free(); }
+  finally { TwistCopy.Story = savedStory; hud.Free(); }
  }
 
  // AM6/T6: the top talisman stays up in the Tanuki fight after the strip is gone; strip never shows in a yokai fight or with no run.
@@ -98,17 +104,19 @@ public static class TwistStripProbes
  public static void NewMatchObject_AfterLateTick_ShowsStripAgain(Node runner)
  {
   var hud = Load(runner);
+  var savedStory = TwistCopy.Story;
+  TwistCopy.Story = StripStory();
   try
   {
    hud.RunView = new View { ElderFight = true };
-   var m = new Match();
+   var m = ElderMatch();
    for (int i = 0; i < 620; i++) m.Step(FighterInput.None, FighterInput.None);
    hud.Refresh(m);
    Assert.True(!hud.TwistStripVisible, "hidden");
-   hud.Refresh(new Match());
+   hud.Refresh(ElderMatch());
    Assert.True(hud.TwistStripVisible && hud.TwistStripAlpha >= 1f, "fresh match shows");
   }
-  finally { hud.Free(); }
+  finally { TwistCopy.Story = savedStory; hud.Free(); }
  }
 
  // Text fits the scroll: every special name in data, as the Tanuki line at Lv 3, laid out at the label font

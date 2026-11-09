@@ -26,8 +26,8 @@
     }
   ],
   "card": {
-    "plain": "Slick kappa skin slips any throw that catches you while the move starts up.",
-    "frames": "Breaks throws during startup"
+    "plain": "Slick as river-wet stone, your special can't be thrown while it winds up.",
+    "frames": "Throw-invulnerable during startup"
   },
-  "notes": "A move property the engine reads for throws (properties.throw_break, AM12 / YOK-172): a throw that would grab the carrier during the move's startup is broken automatically, a clash with no damage like throw vs throw. Not throw-invulnerability, so E17 ('throws ignore throw-invulnerability data') stands. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Wording from the rules.md modifiers table."
+  "notes": "A move property the engine reads for throws (properties.throw_break, AM12 / YOK-172): a throw that would grab the carrier during the move's startup is broken automatically, a clash with no damage like throw vs throw. Not throw-invulnerability, so E17 ('throws ignore throw-invulnerability data') stands. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Wording from the rules.md modifiers table. Card text from tools/content_pipeline run a7-live (movesmith, checked by rules-lawyer)."
 }

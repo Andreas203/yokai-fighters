@@ -205,24 +205,24 @@ theme_override_styles/panel = SubResource("paper_panel")
 
 [node name="Body" type="HBoxContainer" parent="Detail"]
 mouse_filter = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 12
 
 [node name="DetailSeal" type="Control" parent="Detail/Body"]
 visible = false
-custom_minimum_size = Vector2(64, 64)
+custom_minimum_size = Vector2(56, 56)
 mouse_filter = 2
 size_flags_vertical = 4
 script = ExtResource("seal")
 
 [node name="Title" type="VBoxContainer" parent="Detail/Body"]
-custom_minimum_size = Vector2(620, 0)
+custom_minimum_size = Vector2(435, 0)
 mouse_filter = 2
 theme_override_constants/separation = 2
 
 [node name="DetailName" type="Label" parent="Detail/Body/Title"]
 mouse_filter = 2
 clip_text = true
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 22
 text = "Name"
 theme_type_variation = &"BodyLabel"
 
