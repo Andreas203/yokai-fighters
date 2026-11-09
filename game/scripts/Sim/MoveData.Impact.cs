@@ -37,7 +37,7 @@ public sealed partial record MoveData
 	public static MoveData ReadImpact(MoveData move, JsonElement fd)
 	{
 		HitStrength strength = move.IsNormal ? StrengthOfButton(move.Button)
-			: move.IsThrow ? HitStrength.Heavy : HitStrength.Medium;
+			: move.IsGrab ? HitStrength.Heavy : HitStrength.Medium;
 		if (fd.TryGetProperty("strength", out var s))
 			strength = s.GetString() switch
 			{

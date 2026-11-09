@@ -25,9 +25,9 @@ public sealed record MultiHit(int Hits, int Interval)
 
 /// <summary>
 /// YOK-220 partial: the frame-data properties the effect vocabulary names (<see cref="Effects.Vocabulary"/>) that no
-/// fight code reads yet: <c>wall_bounce</c> (Crushing Charge), <c>throw</c> (Whirlpool Grab's <c>throw.range</c>),
-/// <c>multi_hit</c> (Torrent Spin). (Torrent Spin's <c>forward_travel</c> left for <see cref="ReadTravel"/>, YOK-221;
-/// <c>decoy</c>, Mirage Feint, moved to <see cref="ReadMirage"/> in YOK-224.) The loader checks their
+/// fight code reads yet: <c>wall_bounce</c> (Crushing Charge), <c>multi_hit</c> (Torrent Spin). <c>throw</c> moved to
+/// MoveData.CommandGrab.cs (YOK-225), <c>decoy</c> (Mirage Feint) to <see cref="ReadMirage"/> (YOK-224), Torrent Spin's
+/// <c>forward_travel</c> to <see cref="ReadTravel"/> (YOK-221). The loader checks their
 /// frame-data.schema.json shapes, so a level, EX or modifier effect can't leave one the schema would refuse, and
 /// otherwise ignores them: the move plays exactly as it would without them. Each behaviour ticket moves its property
 /// out of here into the reader that uses it. tools/validate_data.py <c>built_move_errors</c> runs the same checks.
@@ -45,17 +45,6 @@ public sealed partial record MoveData
 			throw Bad("wall_bounce must be true or false");
 		if (Has("multi_hit") && !MultiHit.TryRead(Node("multi_hit"), out _))
 			throw Bad("multi_hit must be { \"hits\": n >= 2, \"interval\": frames >= 1 }");
-		if (Has("throw") && !ThrowShape(Node("throw")))
-			throw Bad("throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)");
 		return move;
-	}
-
-	/// <summary>frame-data.schema.json <c>properties.throw</c>: range and breakable required, break_window optional.</summary>
-	static bool ThrowShape(JsonNode? node)
-	{
-		if (node is not JsonObject o || o.Any(kv => kv.Key is not ("range" or "breakable" or "break_window"))) return false;
-		if (!Effects.Whole(o["range"], out int range) || range < 1) return false;
-		if (o["breakable"] is not JsonValue b || b.GetValueKind() is not (JsonValueKind.True or JsonValueKind.False)) return false;
-		return !o.ContainsKey("break_window") || (Effects.Whole(o["break_window"], out int w) && w >= 1);
 	}
 }

@@ -379,8 +379,8 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
                "properties.aftershock_delay",
-               # YOK-220: evolution targets (throw.range shape-only in MoveData.CheckPendingProperties; forward_travel
-               # moves the fighter, YOK-221 MoveData.ReadTravel; decoy is read by MoveData.ReadMirage, YOK-224)
+               # YOK-220: evolution targets (forward_travel moves the fighter, YOK-221 MoveData.ReadTravel;
+               # throw.range is a command grab's reach, YOK-225; decoy is read by MoveData.ReadMirage, YOK-224)
                "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
@@ -563,6 +563,13 @@ def read_multi_hit(v):
     return {"hits": hits, "interval": interval}
 
 
+def is_command_grab(doc: dict) -> bool:
+    """YOK-225: a special whose Lv 1 frame data carries properties.throw (River Grab) is a throw for trials (R7).
+    No effect can add properties.throw, so the Lv 1 frame data decides for every build."""
+    fd = ((doc.get("levels") or {}).get("1") or {}).get("frame_data") if doc.get("kind") == "special" else None
+    return isinstance(fd, dict) and isinstance(fd.get("properties"), dict) and isinstance(fd["properties"].get("throw"), dict)
+
+
 def throw_shape_ok(v) -> bool:
     """MoveData.ThrowShape: frame-data.schema.json properties.throw."""
     if not isinstance(v, dict) or set(v) - {"range", "breakable", "break_window"}:
@@ -632,8 +639,9 @@ def travel_errors(fd) -> list[str]:
     return []
 
 
-def built_move_errors(fd: dict) -> list[str]:
-    """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects)."""
+def built_move_errors(fd: dict, kind: str = "special") -> list[str]:
+    """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects).
+    kind: the file's kind (a normal or throw can't carry properties.throw, YOK-225)."""
     out: list[str] = []
 
     def num(obj, name, default=None):
@@ -669,7 +677,9 @@ def built_move_errors(fd: dict) -> list[str]:
     props0 = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}
     if isinstance(props0.get("projectile"), dict) and num(fd, "damage") > 0 and not stun_given:
         out.append("a damaging projectile needs hitstun and blockstun")
-    if fd.get("hitboxes") and not stun_given:
+    # YOK-225: a command grab's hitboxes become its grab boxes (MoveData.ReadCommandGrab): no hitstun needed.
+    grab = kind == "special" and isinstance(props0.get("throw"), dict) and throw_shape_ok(props0["throw"])
+    if fd.get("hitboxes") and not stun_given and not grab:
         out.append("a move with hitboxes needs hitstun and blockstun")
     for i, hb in enumerate(fd.get("hitboxes") or []):
         fr = hb.get("frames") if isinstance(hb, dict) else None
@@ -711,8 +721,23 @@ def built_move_errors(fd: dict) -> list[str]:
         out.append("properties.wall_bounce must be true or false")
     if "multi_hit" in props and read_multi_hit(props["multi_hit"]) is None:
         out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
-    if "throw" in props and not throw_shape_ok(props["throw"]):
+    if "throw" in props and kind != "special":
+        out.append("properties.throw is for a special (a command grab); a throw or a normal can't carry it")
+    elif "throw" in props and not throw_shape_ok(props["throw"]):
         out.append("properties.throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)")
+    elif grab:  # YOK-225: MoveData.ReadCommandGrab
+        rng, window = whole(props["throw"]["range"]), whole(props["throw"].get("break_window", 7))  # C4: 7
+        boxes = fd.get("hitboxes") or []
+        if not boxes:
+            out.append("properties.throw needs hitboxes: they place the grab (C4)")
+        for hb in boxes:
+            x = whole((hb.get("rect") or {}).get("x")) if isinstance(hb, dict) else None
+            if x is not None and rng <= x:
+                out.append(f"properties.throw range {rng} must reach past the hitbox's near edge (x {x})")
+        if r <= window:
+            out.append(f"properties.throw break window ({window}) must be shorter than the recovery ({r}) (E12)")
+        if props.get("aftershock_delay") is not None:
+            out.append("properties.aftershock_delay can't go on a command grab: its hitboxes are its grab")
     # YOK-224: MoveData.ReadMirage (Fox Mirage's teleport, Mirage Feint's decoy).
     if "teleport" in props:
         tp = props["teleport"]
@@ -1098,7 +1123,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         if isinstance(clip_id, str) and clip is None:
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
     if kind in ("normal", "throw") and moves_ok and isinstance(doc.get("frame_data"), dict):
-        for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
+        for msg in built_move_errors(copy.deepcopy(doc["frame_data"]), kind):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
     if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
         if not any(p.startswith("frame_data.properties.forward_travel") or (p == "frame_data" and "forward_travel" in m)
@@ -1295,7 +1320,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     move_sources: set[str] = set()  # YOK-93: what a hit cue's source can be (HitSparks.Identify reads the move's source)
     for d in move_docs + list(docs.values()) + list(specials.values()):
         if isinstance(d, dict) and d.get("kind") in ("special", "normal", "throw") and isinstance(d.get("id"), str):
-            move_kinds[d["id"]] = d["kind"]
+            move_kinds[d["id"]] = "throw" if is_command_grab(d) else d["kind"]  # YOK-225: a command grab is a throw (R7)
             if isinstance(d.get("source"), str):
                 move_sources.add(d["source"])
 
