@@ -50,8 +50,12 @@ public static class MapLandmarkPlan
 		MapLandmarkKind.PineTall => 186f / 248f, MapLandmarkKind.PinesWide => 364f / 190f, MapLandmarkKind.Bridge => 228f / 116f, MapLandmarkKind.Torii => 176f / 164f, _ => 192f / 106f,
 	};
 
-	/// <summary>How far down its sprite the route runs: a bridge's deck, a torii's feet.</summary>
-	static float PathLevel(MapLandmarkKind k) => k == MapLandmarkKind.Bridge ? 0.44f : 0.86f;
+
+	/// <summary>The width of one screen of the map as the plan reckons it: about three columns (three board heights).</summary>
+	public static float ScreenWidth(Vector2 board) => board.Y * 3f;
+
+	/// <summary>At most this many pines and rocks per screen width, and never one kind twice within it.</summary>
+	public const int MaxSmallPerScreen = 4;
 
 	/// <param name="board">The board size.</param>
 	/// <param name="avoid">Every node box (board coordinates).</param>
@@ -64,29 +68,30 @@ public static class MapLandmarkPlan
 		var boxes = avoid.Select(r => new Rect2(r.Position, r.Size + new Vector2(0, reserve)).Grow(16f)).ToList();
 		var bounds = new Rect2(Vector2.Zero, board);
 		var taken = new List<Rect2>();
+		float screen = ScreenWidth(board);
 		int next = 0;
 		for (int ri = 0; ri < paths.Count; ri++)
 		{
 			var path = paths[ri];
-			float len = Length(path);
-			if (len < 150f) continue;
-			int slots = len > 330f ? 2 : 1;
-			for (int slot = 0; slot < slots; slot++)
+			if (Length(path) < 150f) continue;
+			bool placed = false;
+			for (int tryKind = 0; tryKind < Cycle.Length && !placed; tryKind++)
 			{
-				bool placed = false;
-				for (int tryKind = 0; tryKind < Cycle.Length && !placed; tryKind++)
+				var kind = Cycle[(next + tryKind) % Cycle.Length];
+				// never the same kind twice within a screen width, and a limited number of small items per screen
+				uint h = MapLayout.Hash("lm" + ri + ":" + (int)kind);
+				for (int attempt = 0; attempt < 40 && !placed; attempt++)
 				{
-					var kind = Cycle[(next + tryKind) % Cycle.Length];
-					uint h = MapLayout.Hash("lm" + ri + ":" + slot + ":" + (int)kind);
-					for (int attempt = 0; attempt < 28 && !placed; attempt++)
-					{
-						float f = 0.18f + 0.64f * MapLayout.Unit(h, 5 + attempt);
-						var lm = Place(kind, path, f, ri, h, attempt, paths, boxes, taken, bounds);
-						if (lm == null) continue;
-						result.Add(lm); taken.Add(lm.Rect.Grow(8f));
-						if (lm.Stream != null) taken.Add(Bounds(lm.Stream).Grow(14f));
-						placed = true; next = (next + tryKind + 1) % Cycle.Length;
-					}
+					float f = 0.12f + 0.76f * MapLayout.Unit(h, 5 + attempt);
+					var lm = Place(kind, path, f, ri, h, attempt, paths, boxes, taken, bounds);
+					if (lm == null) continue;
+					float cx = lm.Rect.GetCenter().X;
+					var near = result.Where(o => Mathf.Abs(o.Rect.GetCenter().X - cx) < screen).ToList();
+					if (near.Any(o => o.Kind == kind)) continue;
+					if (!lm.InFront && kind != MapLandmarkKind.Bridge && near.Count(o => !o.InFront) >= MaxSmallPerScreen) continue;
+					result.Add(lm); taken.Add(lm.Rect.Grow(8f));
+					if (lm.Stream != null) taken.Add(Bounds(lm.Stream).Grow(14f));
+					placed = true; next = (next + tryKind + 1) % Cycle.Length;
 				}
 			}
 		}
@@ -132,33 +137,52 @@ public static class MapLandmarkPlan
 		return false;
 	}
 
+	/// <summary>The part of the sprite's height at which the route passes: a bridge's deck, the lower third of a torii's posts.</summary>
+	public const float BridgeDeck = 0.44f, ToriiCrossing = 0.80f;
+	/// <summary>The torii's posts stand this share of its width in from each side (the inner faces of the gate).</summary>
+	public const float ToriiPostInset = 0.22f;
+	/// <summary>How far a stream reaches past the bridge's rect above and below (px at 1080p, scaled by board height).</summary>
+	static readonly float[] StreamReach = { 0.09f, 0.075f, 0.065f };
+
+	/// <summary>Degrees the route turns between the stretch before and the stretch after index <paramref name="i"/>, over <paramref name="k"/> samples each side.</summary>
+	static float Bend(Vector2[] p, int i, int k)
+	{
+		int a = Mathf.Max(0, i - k), b = Mathf.Min(p.Length - 1, i + k);
+		var d1 = p[i] - p[a]; var d2 = p[b] - p[i];
+		return d1.Length() < 1f || d2.Length() < 1f ? 0f : Mathf.RadToDeg(Mathf.Abs(d1.AngleTo(d2)));
+	}
+
 	static MapLandmark? Place(MapLandmarkKind kind, Vector2[] path, float f, int ri, uint h, int attempt, IReadOnlyList<Vector2[]> paths, List<Rect2> boxes, List<Rect2> taken, Rect2 bounds)
 	{
 		int i = IndexAt(path, f);
-		int a = Mathf.Max(0, i - 4), b = Mathf.Min(path.Length - 1, i + 4);
+		int a = Mathf.Max(0, i - 5), b = Mathf.Min(path.Length - 1, i + 5);
 		var d = path[b] - path[a];
 		if (d.X <= 1f) return null;
 		float slope = Mathf.Abs(d.Y / d.X);
-		var p = path[i];
+		var p = kind == MapLandmarkKind.Torii ? (path[i] + path[Mathf.Min(path.Length - 1, i + 1)]) / 2f : path[i]; // a torii is centred between two samples so the route crosses its post line cleanly
 		float ht = bounds.Size.Y * HeightShare(kind) * (0.9f + 0.2f * MapLayout.Unit(h, 2)), wd = ht * Aspect(kind);
 		Rect2 rect; Vector2[]? stream = null;
 		bool onPath = kind is MapLandmarkKind.Bridge or MapLandmarkKind.Torii;
 		if (onPath)
 		{
-			if (slope > (kind == MapLandmarkKind.Bridge ? 0.20f : 0.32f)) return null;
-			rect = new Rect2(p.X - wd / 2f, p.Y - PathLevel(kind) * ht, wd, ht);
+			// a fairly straight stretch: the bridge on a level one, the torii on a gently sloping one, so the route crosses the line between its posts
+			if (Bend(path, i, 5) > 9f) return null;
+			if (kind == MapLandmarkKind.Bridge ? slope > 0.2f : slope < 0.12f || slope > 0.9f) return null;
+			float level = kind == MapLandmarkKind.Bridge ? BridgeDeck : ToriiCrossing;
+			rect = new Rect2(p.X - wd / 2f, p.Y - level * ht, wd, ht);
 			if (kind == MapLandmarkKind.Bridge)
 			{
-				foreach (float sh in new[] { 0.36f, 0.26f, 0.18f })
+				foreach (float reach in StreamReach)
 				{
-					float half = bounds.Size.Y * sh / 2f;
-					var pts = new Vector2[10];
+					float up = BridgeDeck * ht + reach * bounds.Size.Y, down = (1f - BridgeDeck) * ht + reach * bounds.Size.Y;
+					var pts = new Vector2[11];
+					float sgn = MapLayout.Unit(h, 3) > 0.5f ? 1f : -1f;
 					for (int k = 0; k < pts.Length; k++)
 					{
 						float t = k / (float)(pts.Length - 1);
-						pts[k] = new Vector2(p.X + 4f + Mathf.Sin(t * Mathf.Tau) * 9f * (MapLayout.Unit(h, 3) > 0.5f ? 1f : -1f), p.Y - half + t * 2f * half);
+						pts[k] = new Vector2(p.X + 4f + Mathf.Sin(t * Mathf.Tau) * 10f * sgn, p.Y - up + t * (up + down));
 					}
-					var sb = Bounds(pts).Grow(15f);
+					var sb = Bounds(pts).Grow(20f);
 					if (!bounds.Encloses(sb) || boxes.Any(x => x.Intersects(sb)) || taken.Any(x => x.Intersects(sb))) continue;
 					if (HitsStroke(sb, paths, ri, false)) continue;
 					stream = pts; break;
@@ -168,16 +192,31 @@ public static class MapLandmarkPlan
 		}
 		else
 		{
-			// at the path's edge: step off along the normal by the stroke's half width plus a gap, to the side the hash picks, hugging bends
+			// beside a bend, its nearest edge about 18 px off the stroke, to the side the hash picks
+			if (Bend(path, i, 6) < 10f) return null;
 			var n = new Vector2(-d.Y, d.X).Normalized() * (MapLayout.Unit(h, 7 + attempt) > 0.5f ? 1f : -1f);
-			float reach = Mathf.Abs(n.X) * wd / 2f + Mathf.Abs(n.Y) * ht / 2f + 26f;
+			float reach = Mathf.Abs(n.X) * wd / 2f + Mathf.Abs(n.Y) * ht / 2f + 18f;
 			var c = p + n * reach;
 			rect = new Rect2(c.X - wd / 2f, c.Y - ht / 2f, wd, ht);
 		}
 		if (!bounds.Encloses(rect)) return null;
 		if (boxes.Any(x => x.Intersects(rect)) || taken.Any(x => x.Intersects(rect))) return null;
 		if (HitsStroke(rect.Grow(onPath ? 0f : 10f), paths, ri, !onPath)) return null;
+		if (!onPath && DistanceToStroke(rect, paths) > 30f) return null;
 		return new MapLandmark(kind, rect) { Stream = stream, OnPath = p, Route = ri };
+	}
+
+	/// <summary>The distance from <paramref name="r"/> to the nearest sample of any route's stroke.</summary>
+	public static float DistanceToStroke(Rect2 r, IEnumerable<Vector2[]> paths)
+	{
+		float best = float.MaxValue;
+		foreach (var path in paths)
+			foreach (var q in path)
+			{
+				float dx = Mathf.Max(Mathf.Max(r.Position.X - q.X, 0f), q.X - r.End.X), dy = Mathf.Max(Mathf.Max(r.Position.Y - q.Y, 0f), q.Y - r.End.Y);
+				best = Mathf.Min(best, Mathf.Sqrt(dx * dx + dy * dy));
+			}
+		return best;
 	}
 }
 
@@ -231,16 +270,31 @@ public partial class MapLandmarks : Control
 			if (Tex(l.Kind) is { } tex) DrawTextureRect(tex, new Rect2(l.Rect.Position + _origin, l.Rect.Size), false, new Color(1f, 1f, 1f, 0.95f));
 	}
 
-	/// <summary>A short stream: a tapered blue-grey ribbon with a pale highlight, under a bridge.</summary>
+	/// <summary>
+	/// A short stream under a bridge: a soft continuous band of muted indigo-blue wash with a thin ink edge on both banks, curving gently, running across the
+	/// route and fading out at both ends. The bridge deck is drawn over its middle, so nothing pokes through it.
+	/// </summary>
 	void DrawStream(Vector2[] pts)
 	{
-		for (int i = 0; i + 1 < pts.Length; i++)
+		const int steps = 40;
+		var line = new List<Vector2>();
+		for (int s = 0; s <= steps; s++)
 		{
-			float t = (i + 0.5f) / (pts.Length - 1), w = 16f + 28f * Mathf.Sin(Mathf.Pi * t);
-			var a = pts[i] + _origin; var b = pts[i + 1] + _origin;
-			DrawLine(a, b, new Color(0.40f, 0.52f, 0.60f, 0.55f), w + 5f, true);
-			DrawLine(a, b, new Color(0.66f, 0.77f, 0.82f, 0.95f), w, true);
-			DrawLine(a + new Vector2(-w * 0.18f, 0), b + new Vector2(-w * 0.18f, 0), new Color(0.92f, 0.96f, 0.97f, 0.7f), Mathf.Max(2f, w * 0.14f), true);
+			float t = s / (float)steps * (pts.Length - 1); int k = Mathf.Min(pts.Length - 2, (int)t);
+			line.Add(pts[k].Lerp(pts[k + 1], t - k) + _origin);
+		}
+		float width = 17f;
+		Vector2 N(int i) { var d = line[Mathf.Min(line.Count - 1, i + 1)] - line[Mathf.Max(0, i - 1)]; return new Vector2(-d.Y, d.X).Normalized(); }
+		float Fade(int i) { float t = i / (float)steps; return Mathf.Clamp(Mathf.Min(t, 1f - t) / 0.28f, 0f, 1f); }
+		for (int i = 0; i < line.Count - 1; i++)
+		{
+			float f0 = Fade(i), f1 = Fade(i + 1), w0 = width * (0.55f + 0.45f * f0), w1 = width * (0.55f + 0.45f * f1);
+			var quad = new[] { line[i] + N(i) * w0, line[i + 1] + N(i + 1) * w1, line[i + 1] - N(i + 1) * w1, line[i] - N(i) * w0 };
+			var c0 = new Color(0.42f, 0.54f, 0.68f, 0.62f * f0); var c1 = new Color(0.42f, 0.54f, 0.68f, 0.62f * f1);
+			DrawPolygon(quad, new[] { c0, c1, c1, c0 });
+			var ink = new Color(0.17f, 0.20f, 0.30f, 0.55f * (f0 + f1) / 2f);
+			DrawLine(line[i] + N(i) * w0, line[i + 1] + N(i + 1) * w1, ink, 1.6f, true);
+			DrawLine(line[i] - N(i) * w0, line[i + 1] - N(i + 1) * w1, ink, 1.6f, true);
 		}
 	}
 

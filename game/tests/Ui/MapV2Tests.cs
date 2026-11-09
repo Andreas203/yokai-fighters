@@ -210,7 +210,7 @@ public static class MapV2Tests
 			var s = Make(host, new SessionMapView(Start()), size);
 			var plan = s.Landmarks.Plan;
 			var paths = s.RoutePaths.Values.ToList();
-			Assert.True(plan.Count >= 8, $"{size}: the routes are dressed with scenery ({plan.Count})");
+			Assert.True(plan.Count >= 5, $"{size}: the routes are dressed with a few landmarks, not a crowd ({plan.Count})");
 			Assert.True(s.LandmarksFront.Plan.Count == plan.Count, $"{size}: the front layer holds the same plan");
 			var kinds = plan.Select(l => l.Kind).ToHashSet();
 			Assert.True(kinds.Contains(MapLandmarkKind.PineTall) && kinds.Contains(MapLandmarkKind.PinesWide) && kinds.Contains(MapLandmarkKind.Rocks) && kinds.Contains(MapLandmarkKind.Bridge) && kinds.Contains(MapLandmarkKind.Torii), $"{size}: pines, rocks, a footbridge and a torii all appear: " + string.Join(",", plan.Select(l => l.Kind)));
@@ -225,25 +225,45 @@ public static class MapV2Tests
 					Assert.True(!l.Rect.Intersects(s.RectOf(n.Id)), $"{size}: {l.Kind} at {l.Rect} overlaps node {n.Id} at {s.RectOf(n.Id)}");
 				for (int j = i + 1; j < plan.Count; j++) Assert.True(!l.Rect.Intersects(plan[j].Rect), $"{size}: {l.Kind} and {plan[j].Kind} overlap");
 				float near = paths.Min(p => p.Min(q => q.DistanceTo(l.OnPath)));
-				Assert.True(near < 1f, $"{size}: {l.Kind} is anchored on a route ({near:F1} px)");
+				Assert.True(near < 5f, $"{size}: {l.Kind} is anchored on a route ({near:F1} px)");
 				if (l.InFront)
 				{
 					Assert.True(l.Rect.HasPoint(l.OnPath), $"{size}: the route runs through the {l.Kind}");
 					// the stroke of any other route must not run through the bridge or torii
 					foreach (var p in paths)
 						foreach (var q in p)
-							if (l.Rect.HasPoint(q)) Assert.True(paths.Any(own => own.Any(o => o.DistanceTo(l.OnPath) < 1f) && own.Any(o => o.DistanceTo(q) < 10f)), $"{size}: a foreign route runs through the {l.Kind} at {q}");
+							if (l.Rect.HasPoint(q)) Assert.True(paths.Any(own => own.Any(o => o.DistanceTo(l.OnPath) < 5f) && own.Any(o => o.DistanceTo(q) < 10f)), $"{size}: a foreign route runs through the {l.Kind} at {q}");
 				}
 				else
+				{
 					foreach (var p in paths) Assert.True(!p.Any(q => l.Rect.HasPoint(q)), $"{size}: a {l.Kind} sits at the path's edge, not on a stroke");
+					float far = MapLandmarkPlan.DistanceToStroke(l.Rect, paths);
+					Assert.True(far <= 30f, $"{size}: a {l.Kind} at {l.Rect} is {far:F0} px from the nearest stroke (open paper)");
+				}
+				if (l.Kind == MapLandmarkKind.Torii)
+				{
+					var own = paths.First(p => p.Any(o => o.DistanceTo(l.OnPath) < 5f));
+					float y = l.Rect.Position.Y + MapLandmarkPlan.ToriiCrossing * l.Rect.Size.Y, x0 = l.Rect.Position.X + MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X, x1 = l.Rect.End.X - MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X;
+					Assert.True(MapRouteGeometry.Crosses(own, new[] { new Vector2(x0, y), new Vector2(x1, y) }), $"{size}: the route crosses the line between the torii's posts");
+					Assert.True(System.Math.Abs(l.OnPath.X - l.Rect.GetCenter().X) < 1f && System.Math.Abs(l.OnPath.Y - y) < 1f, $"{size}: and does so at the centre, in the lower third of the posts");
+				}
 				if (l.Kind == MapLandmarkKind.Bridge)
 				{
 					Assert.True(l.Stream != null && l.Stream.Length > 3, $"{size}: a bridge spans a stream");
-					var own = paths.First(p => p.Any(o => o.DistanceTo(l.OnPath) < 1f));
+					var own = paths.First(p => p.Any(o => o.DistanceTo(l.OnPath) < 5f));
 					Assert.True(MapRouteGeometry.Crosses(own, l.Stream!), $"{size}: the route crosses the stream under its bridge");
 					foreach (var n in s.View.Nodes) Assert.True(!s.RectOf(n.Id).Intersects(Rect(l.Stream!)), $"{size}: the stream reaches node {n.Id}");
 				}
 				else Assert.True(l.Stream == null, $"{size}: only a bridge has a stream");
+			}
+			float screen = MapLandmarkPlan.ScreenWidth(s.Board.Size);
+			foreach (var l in plan)
+			{
+				var within = plan.Where(o => System.Math.Abs(o.Rect.GetCenter().X - l.Rect.GetCenter().X) < screen).ToList();
+				Assert.Equal(1, within.Count(o => o.Kind == l.Kind), $"{size}: no {l.Kind} twice within one screen width");
+				var window = plan.Where(o => System.Math.Abs(o.Rect.GetCenter().X - l.Rect.GetCenter().X) < screen / 2f).ToList(); // a window one screen wide centred on it
+				Assert.True(window.Count(o => o.Kind == MapLandmarkKind.Bridge) <= 1 && window.Count(o => o.Kind == MapLandmarkKind.Torii) <= 1, $"{size}: at most one bridge and one torii per screen width");
+				Assert.True(window.Count(o => !o.InFront) <= MapLandmarkPlan.MaxSmallPerScreen, $"{size}: at most {MapLandmarkPlan.MaxSmallPerScreen} pines and rocks per screen width");
 			}
 			s.GetParent().QueueFree();
 		}
