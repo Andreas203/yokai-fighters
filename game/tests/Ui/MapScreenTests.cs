@@ -343,7 +343,7 @@ public static class MapScreenTests
 		Assert.Equal("The Tanuki", boss.YokaiText, "boss name (R2)");
 		Assert.Equal("waits at the end\ncopies your best move", boss.TagText, "designer-approved boss lines, from the styles resource");
 		Assert.Equal("", s.Nodes.First(n => n.NodeId != "boss-tanuki").TagText, "other cards carry no extra lines");
-		Assert.True(s.RectOf("boss-tanuki").Size.X > s.RectOf("r8-elder-oni").Size.X, "the boss card is a little larger");
+		Assert.True(Mathf.IsEqualApprox(s.SpriteRectOf("boss-tanuki").Size.X / s.SpriteRectOf("boss-tanuki").Size.Y, s.SpriteRectOf("r8-elder-oni").Size.X / s.SpriteRectOf("r8-elder-oni").Size.Y), "R2: every sprite rect has the same shape, hidden or not, so none can hint at a type");
 		Assert.True(boss.SpriteTexture != null && boss.SpriteTexture.ResourcePath.EndsWith("node-tanuki.png"), "the boss node is the tea house sprite; the Tanuki himself is never drawn");
 		s.GetParent().QueueFree();
 	}

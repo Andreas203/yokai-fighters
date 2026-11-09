@@ -83,7 +83,7 @@ public partial class MapScreen : Control
 	/// <summary>YOK-109: ids of the nodes drawn right now (cleared, here, choosable); everything else is blank paper.</summary>
 	public IReadOnlyCollection<string> ShownIds => _nodes.Keys;
 	/// <summary>True while Ryo's choice is on a pan or an ink animation the screen would skip on a key press (tests and captures use <see cref="FinishPresentation"/>).</summary>
-	public bool Presenting => Routes.IsPainting || _tweens.Any(t => t.IsValid() && t.IsRunning());
+	public bool Presenting => Routes.IsPainting || Landmarks.IsFading || _tweens.Any(t => t.IsValid() && t.IsRunning());
 
 	/// <summary>Pixels per wheel notch and per second of full right-stick push.</summary>
 	public const float WheelStep = 200f, StickSpeed = 1500f, StickDeadzone = 0.25f;
@@ -244,14 +244,11 @@ public partial class MapScreen : Control
 		if (_layoutValid) { PanTo(ScrollTarget); Update(); }
 	}
 
-	/// <summary>The shape each node's box takes from its illustration (YOK-238): the sprite's proportions, its type's scale, the extra tag lines.</summary>
-	MapNodeShape ShapeOf(MapNodeView v)
-	{
-		var look = Styles!.Look(v);
-		var tex = look.Sprite ?? look.IconTexture;
-		float aspect = tex != null && tex.GetHeight() > 0 ? tex.GetWidth() / (float)tex.GetHeight() : 0.78f;
-		return new MapNodeShape(aspect, look.SpriteScale, look.Tagline == "" ? 0 : look.Tagline.Split((char)10).Length);
-	}
+	/// <summary>
+	/// R2 [AM18, AM19]: every node, drawn or still hidden, is laid out with the same fixed box and sprite rect, so no hidden node's type, yokai or art can move a
+	/// stroke, a sketch or a landmark. The real illustration is fitted inside that rect when the node is drawn (<see cref="MapNode"/>).
+	/// </summary>
+	static MapNodeShape ShapeOf(MapNodeView v) => MapNodeShape.Standard;
 
 	/// <summary>Sizes the paper and the board from the viewport and the view's rows, and lays every node out (shown or not) on it.</summary>
 	bool ComputeLayout()
@@ -389,6 +386,7 @@ public partial class MapScreen : Control
 	public void FinishPresentation()
 	{
 		Routes.FinishPainting();
+		Landmarks.FinishFade(); LandmarksFront.FinishFade();
 		foreach (var t in _tweens) if (t.IsValid()) t.Kill();
 		_tweens.Clear();
 		foreach (var n in _fading) if (IsInstanceValid(n)) n.QueueFree(); // a node still fading out is gone now
@@ -453,7 +451,7 @@ public partial class MapScreen : Control
 		Routes.Paint(paint);
 		UpdateMist(all, shown, state);
 		var onPaper = _paths.Keys.Select((k, i) => (k, i)).Where(x => state.TryGetValue(x.k.From, out var fs) && state.TryGetValue(x.k.To, out var ts) && fs != MapNodeState.PassedOver && ts != MapNodeState.PassedOver).Select(x => x.i).ToList();
-		Landmarks.SetRoutes(onPaper); LandmarksFront.SetRoutes(onPaper);
+		bool animateScenery = !fresh; Landmarks.SetRoutes(onPaper, animateScenery); LandmarksFront.SetRoutes(onPaper, animateScenery);
 
 		if (_needsCentre)
 		{

@@ -33,7 +33,7 @@ public static class MapReveal
 public readonly record struct MapNodeShape(float Aspect, float Scale, int ExtraLines)
 {
 	/// <summary>A plain mask: (<c>new MapNodeShape()</c> would be all zeros, a struct ignores the defaults of a constructor).</summary>
-	public static readonly MapNodeShape Standard = new(0.78f, 1f, 0);
+	public static readonly MapNodeShape Standard = new(1.0f, 1f, 0);
 }
 
 /// <summary>
@@ -106,8 +106,8 @@ public static class MapLayout
 		var rows = nodes.GroupBy(n => n.Row).OrderBy(g => g.Key).Select(g => g.ToList()).ToList();
 		uint seed = Hash(string.Join("|", nodes.Select(n => n.Id)));
 		float colW = board.X / rows.Count;
-		float s0 = Mathf.Max(24f, board.Y * SpriteShare);
-		float reserve = MapNodeBox.LineHeight(s0);           // the "YOU ARE HERE" line hangs below the lowest node: keep it on the board
+		float s0 = Mathf.Max(24f, Mathf.Min(board.Y * SpriteShare, colW * 0.42f)); // never wider than its column leaves room for routes between
+		float reserve = 2f * MapNodeBox.LineHeight(s0);      // the "YOU ARE HERE" line (and the boss's two tag lines) hang below the lowest node: keep them on the board
 		float usable = Mathf.Max(60f, board.Y - reserve);
 		var std = MapNodeBox.Size(s0, MapNodeShape.Standard);
 		for (int c = 0; c < rows.Count; c++)

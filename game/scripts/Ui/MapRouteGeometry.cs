@@ -71,7 +71,7 @@ public static class MapRouteGeometry
 			}
 
 		Vector2[][] paths = new Vector2[n0][];
-		for (int round = 0; round < 12; round++)
+		for (int round = 0; round <= n0 + 2; round++) // each round that merges reduces the buses by one, so this always ends stable
 		{
 			// a bus takes in every route that touches one of its nodes, so a trunk is never shared with half of a node's routes
 			bool grew = true;
@@ -116,7 +116,7 @@ public static class MapRouteGeometry
 		if (!e.Ok) return Densify(new List<Vector2> { e.Start, e.End });
 		var pts = new List<Vector2> { e.Start, new Vector2(xOut, e.Ya) };
 		uint h = MapLayout.Hash("gap" + e.Ca + ":" + e.Cb);
-		float amp = (MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (0.025f + 0.02f * MapLayout.Unit(h, 2)) * boardHeight, turns = MapLayout.Unit(h, 3) > 0.5f ? 1f : 1.5f;
+		float amp = (MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (0.025f + 0.02f * MapLayout.Unit(h, 2)) * Mathf.Min(boardHeight, xIn - xOut), turns = MapLayout.Unit(h, 3) > 0.5f ? 1f : 1.5f;
 		for (int i = 1; i < Samples; i++)
 		{
 			float u = i / (float)Samples;

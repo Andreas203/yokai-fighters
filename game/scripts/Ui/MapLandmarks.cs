@@ -199,6 +199,8 @@ public static class MapLandmarkPlan
 			var c = p + n * reach;
 			rect = new Rect2(c.X - wd / 2f, c.Y - ht / 2f, wd, ht);
 		}
+		// a landmark belongs to one route: never at a spot another stroke also runs through (a shared trunk), so it cannot outlive its route on a trunk still drawn
+		for (int k = 0; k < paths.Count; k++) if (k != ri && (NearPath(paths[k], p, 16f) || NearPath(paths[k], rect.GetCenter(), 16f))) return null;
 		if (!bounds.Encloses(rect)) return null;
 		if (boxes.Any(x => x.Intersects(rect)) || taken.Any(x => x.Intersects(rect))) return null;
 		if (HitsStroke(rect.Grow(onPath ? 0f : 10f), paths, ri, !onPath)) return null;
@@ -235,22 +237,41 @@ public partial class MapLandmarks : Control
 	[Export] public bool Front { get; set; }
 	/// <summary>The scenery now on the paper, in board coordinates.</summary>
 	public IReadOnlyList<MapLandmark> Plan => _plan;
-	/// <summary>The landmarks drawn now: those of routes that are on the paper (not those of a row Ryo has left).</summary>
-	public IEnumerable<MapLandmark> Shown => _plan.Where(l => _routes == null || _routes.Contains(l.Route));
+	/// <summary>The landmarks drawn now: those of routes that are on the paper, plus those still fading out with a route that was just left behind.</summary>
+	public IEnumerable<MapLandmark> Shown => _plan.Where(l => Alpha(l.Route) > 0f);
 	HashSet<int>? _routes;
-	public Vector2 Origin => _origin;
+	readonly Dictionary<int, float> _fading = new(); // route -> alpha while its scenery fades out (as the nodes beside it do)
 
-	public override void _Ready() => MouseFilter = MouseFilterEnum.Ignore;
+	float Alpha(int route) => _routes == null || _routes.Contains(route) ? 1f : _fading.GetValueOrDefault(route, 0f);
+
+	public override void _Ready() { MouseFilter = MouseFilterEnum.Ignore; SetProcess(false); }
 	public override void _Notification(int what) { if (what == NotificationResized) QueueRedraw(); }
 
-	public void SetPlan(IEnumerable<MapLandmark> plan, Vector2 origin) { _plan = plan.ToList(); _origin = origin; QueueRedraw(); }
+	public void SetPlan(IEnumerable<MapLandmark> plan, Vector2 origin) { _plan = plan.ToList(); _origin = origin; _fading.Clear(); QueueRedraw(); }
 
-	/// <summary>Show only the landmarks of these routes (null = all). Scenery of a route that is no longer on the paper goes with it.</summary>
-	public void SetRoutes(IEnumerable<int>? routes)
+	/// <summary>
+	/// Show only the landmarks of these routes (null = all). Scenery of a route that is left behind fades out over a quarter second, like the nodes next to it,
+	/// when <paramref name="animate"/>; else it goes at once.
+	/// </summary>
+	public void SetRoutes(IEnumerable<int>? routes, bool animate = false)
 	{
 		var set = routes?.ToHashSet();
 		if (set == null && _routes == null || set != null && _routes != null && set.SetEquals(_routes)) return;
-		_routes = set; QueueRedraw();
+		if (animate && _routes != null && set != null)
+			foreach (int r in _routes.Where(r => !set.Contains(r)).ToList()) if (_plan.Any(l => l.Route == r)) _fading[r] = 1f;
+		else _fading.Clear();
+		_routes = set; SetProcess(_fading.Count > 0); QueueRedraw();
+	}
+
+	/// <summary>Ends every fade at once (a key press does this, with the other presentation).</summary>
+	public void FinishFade() { if (_fading.Count == 0) return; _fading.Clear(); SetProcess(false); QueueRedraw(); }
+	public bool IsFading => _fading.Count > 0;
+
+	public override void _Process(double delta)
+	{
+		foreach (int r in _fading.Keys.ToList()) { float a = _fading[r] - (float)delta / 0.25f; if (a <= 0f) _fading.Remove(r); else _fading[r] = a; }
+		if (_fading.Count == 0) SetProcess(false);
+		QueueRedraw();
 	}
 
 	static Texture2D? Tex(MapLandmarkKind k)
@@ -264,37 +285,36 @@ public partial class MapLandmarks : Control
 		if (!Front)
 		{
 			DrawHills();
-			foreach (var l in Shown.Where(l => l.Stream != null)) DrawStream(l.Stream!);
+			foreach (var l in Shown.Where(l => l.Stream != null)) DrawStream(l.Stream!, Alpha(l.Route));
 		}
 		foreach (var l in Shown.Where(l => l.InFront == Front).OrderBy(l => l.Rect.End.Y))
-			if (Tex(l.Kind) is { } tex) DrawTextureRect(tex, new Rect2(l.Rect.Position + _origin, l.Rect.Size), false, new Color(1f, 1f, 1f, 0.95f));
+			if (Tex(l.Kind) is { } tex) DrawTextureRect(tex, new Rect2(l.Rect.Position + _origin, l.Rect.Size), false, new Color(1f, 1f, 1f, 0.95f * Alpha(l.Route)));
 	}
 
 	/// <summary>
 	/// A short stream under a bridge: a soft continuous band of muted indigo-blue wash with a thin ink edge on both banks, curving gently, running across the
 	/// route and fading out at both ends. The bridge deck is drawn over its middle, so nothing pokes through it.
 	/// </summary>
-	void DrawStream(Vector2[] pts)
+	void DrawStream(Vector2[] pts, float alpha)
 	{
 		const int steps = 40;
 		var line = new List<Vector2>();
-		for (int s = 0; s <= steps; s++)
+		for (int i = 0; i <= steps; i++)
 		{
-			float t = s / (float)steps * (pts.Length - 1); int k = Mathf.Min(pts.Length - 2, (int)t);
+			float t = i / (float)steps * (pts.Length - 1); int k = Mathf.Min(pts.Length - 2, (int)t);
 			line.Add(pts[k].Lerp(pts[k + 1], t - k) + _origin);
 		}
 		float width = 17f;
 		Vector2 N(int i) { var d = line[Mathf.Min(line.Count - 1, i + 1)] - line[Mathf.Max(0, i - 1)]; return new Vector2(-d.Y, d.X).Normalized(); }
-		float Fade(int i) { float t = i / (float)steps; return Mathf.Clamp(Mathf.Min(t, 1f - t) / 0.28f, 0f, 1f); }
+		float Fade(int i) { float t = i / (float)steps; return Mathf.Clamp(Mathf.Min(t, 1f - t) / 0.28f, 0f, 1f) * alpha; }
+		// wide round-capped lines, not polygons: a bend cannot twist them into a shape the engine cannot triangulate
 		for (int i = 0; i < line.Count - 1; i++)
 		{
-			float f0 = Fade(i), f1 = Fade(i + 1), w0 = width * (0.55f + 0.45f * f0), w1 = width * (0.55f + 0.45f * f1);
-			var quad = new[] { line[i] + N(i) * w0, line[i + 1] + N(i + 1) * w1, line[i + 1] - N(i + 1) * w1, line[i] - N(i) * w0 };
-			var c0 = new Color(0.42f, 0.54f, 0.68f, 0.62f * f0); var c1 = new Color(0.42f, 0.54f, 0.68f, 0.62f * f1);
-			DrawPolygon(quad, new[] { c0, c1, c1, c0 });
-			var ink = new Color(0.17f, 0.20f, 0.30f, 0.55f * (f0 + f1) / 2f);
-			DrawLine(line[i] + N(i) * w0, line[i + 1] + N(i + 1) * w1, ink, 1.6f, true);
-			DrawLine(line[i] - N(i) * w0, line[i + 1] - N(i + 1) * w1, ink, 1.6f, true);
+			float f = (Fade(i) + Fade(i + 1)) / 2f, w = width * (0.55f + 0.45f * f / Mathf.Max(alpha, 0.001f));
+			DrawLine(line[i], line[i + 1], new Color(0.42f, 0.54f, 0.68f, 0.62f * f), w * 2f, true);
+			var ink = new Color(0.17f, 0.20f, 0.30f, 0.55f * f);
+			DrawLine(line[i] + N(i) * w, line[i + 1] + N(i + 1) * w, ink, 1.6f, true);
+			DrawLine(line[i] - N(i) * w, line[i + 1] - N(i + 1) * w, ink, 1.6f, true);
 		}
 	}
 

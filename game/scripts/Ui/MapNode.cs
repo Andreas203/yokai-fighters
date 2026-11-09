@@ -68,7 +68,15 @@ public partial class MapNode : Button
 		var cleared = UiFind.Get<Control>(this, "ClearedMark");
 		icon.Text = look.Icon; type.Text = look.Icon; name.Text = v.Yokai ?? look.Label;
 		tex.Texture = look.Sprite ?? look.IconTexture; tex.Visible = tex.Texture != null; icon.Visible = tex.Texture == null;
-		tex.Position = sprite.Position; tex.Size = sprite.Size;
+		// fit the real art inside the fixed sprite rect (centred on it, its foot on the rect's foot); the layout never saw this art
+		var art = sprite;
+		if (tex.Texture is { } t && t.GetHeight() > 0)
+		{
+			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight() * look.SpriteScale);
+			var sz = new Vector2(t.GetWidth(), t.GetHeight()) * k;
+			art = new Rect2(new Vector2(sprite.GetCenter().X - sz.X / 2f, sprite.End.Y - sz.Y), sz);
+		}
+		tex.Position = art.Position; tex.Size = art.Size;
 		icon.Position = sprite.Position; icon.Size = sprite.Size;
 		icon.HorizontalAlignment = HorizontalAlignment.Center; icon.VerticalAlignment = VerticalAlignment.Center;
 		icon.AddThemeFontSizeOverride("font_size", (int)Math.Max(24, sprite.Size.Y * 0.6f));
@@ -108,7 +116,7 @@ public partial class MapNode : Button
 		UiFind.Get<Label>(this, "ElderGlyph").Visible = !seal.Visible;
 		elder.CustomMinimumSize = new Vector2(sealS * 0.8f, sealS * 0.8f);
 		elder.Size = new Vector2(sealS, sealS);
-		elder.Position = new Vector2(sprite.End.X - sealS * 0.62f, sprite.Position.Y - sealS * 0.18f); // the seal on the mask's upper right
+		elder.Position = new Vector2(art.End.X - sealS * 0.62f, art.Position.Y - sealS * 0.18f); // the seal on the mask's upper right
 		elder.AddThemeStyleboxOverride("panel", seal.Visible ? new StyleBoxEmpty() : new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 14, CornerRadiusTopRight = 14, CornerRadiusBottomLeft = 14, CornerRadiusBottomRight = 14 });
 		UiFind.Get<Label>(this, "ElderGlyph").AddThemeColorOverride("font_color", MapNodePalette.Paper);
 

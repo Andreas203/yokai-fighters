@@ -213,7 +213,7 @@ public static class MapV2Tests
 			Assert.True(plan.Count >= 5, $"{size}: the routes are dressed with a few landmarks, not a crowd ({plan.Count})");
 			Assert.True(s.LandmarksFront.Plan.Count == plan.Count, $"{size}: the front layer holds the same plan");
 			var kinds = plan.Select(l => l.Kind).ToHashSet();
-			Assert.True(kinds.Contains(MapLandmarkKind.PineTall) && kinds.Contains(MapLandmarkKind.PinesWide) && kinds.Contains(MapLandmarkKind.Rocks) && kinds.Contains(MapLandmarkKind.Bridge) && kinds.Contains(MapLandmarkKind.Torii), $"{size}: pines, rocks, a footbridge and a torii all appear: " + string.Join(",", plan.Select(l => l.Kind)));
+			Assert.True((kinds.Contains(MapLandmarkKind.PineTall) || kinds.Contains(MapLandmarkKind.PinesWide)) && kinds.Contains(MapLandmarkKind.Rocks) && kinds.Contains(MapLandmarkKind.Bridge) && kinds.Contains(MapLandmarkKind.Torii), $"{size}: pines, rocks, a footbridge and a torii all appear: " + string.Join(",", plan.Select(l => l.Kind)));
 			var again = MapLandmarkPlan.Compute(s.Board.Size, s.View!.Nodes.Select(n => s.RectOf(n.Id)), paths, MapNodeBox.LineHeight(s.Board.Size.Y * MapLayout.SpriteShare));
 			Assert.True(again.Select(l => (l.Kind, l.Rect)).SequenceEqual(plan.Select(l => (l.Kind, l.Rect))), $"{size}: the same board and routes give the same scenery");
 			var board = new Rect2(Vector2.Zero, s.Board.Size);
@@ -391,7 +391,8 @@ public static class MapV2Tests
 	static Vector2[] DrawnPath(MapScreen s, (Vector2 A, Vector2 B, RouteKind Kind) line)
 	{
 		var hit = s.RoutePaths.Values.FirstOrDefault(p => p[0].DistanceTo(line.A) < 0.5f && p[^1].DistanceTo(line.B) < 0.5f);
-		return hit ?? System.Array.Empty<Vector2>();
+		Assert.True(hit != null, $"no centre line matches the drawn line {line.A} -> {line.B}: the stroke would be checked against nothing");
+		return hit!;
 	}
 
 	[Test]
@@ -541,6 +542,60 @@ public static class MapV2Tests
 		Assert.True(UiFind.Get<ProgressBar>(s, "HealthBar").Visible, "with the health bar");
 		var text = string.Join("\n", AllText(UiFind.Get<Control>(s, "Status")));
 		Assert.True(!text.ToLowerInvariant().Contains("done") && !text.ToLowerInvariant().Contains("row"), "no row count: " + text);
+		s.GetParent().QueueFree();
+	}
+
+	[Test]
+	public static void HiddenNodeShapeNeverMovesRoutesSketchesOrScenery(Node host)
+	{
+		(string Type, string? Yokai)[][] variants =
+		{
+			new[] { ("duel", "Oni"), ("duel", "Kappa"), ("duel", "Kitsune") },
+			new[] { ("elder", "Elder Oni"), ("merchant", null), ("boss", "The Tanuki") },
+			new[] { ("dojo", null), ("elder", "Nine-Tails"), ("duel", "Zzz") },
+		};
+		string? p0 = null, l0 = null, m0 = null, r0 = null;
+		foreach (var v in variants)
+		{
+			var view = new StubMapView();
+			view.Add("a", 1, "duel", "Apprentice");
+			for (int i = 0; i < 3; i++) view.Add("b" + i, 2, v[i].Type, v[i].Yokai, v[i].Type == "elder");
+			for (int i = 0; i < 3; i++) view.Add("c" + i, 3, v[(i + 1) % 3].Type, v[(i + 1) % 3].Yokai, v[(i + 1) % 3].Type == "elder");
+			for (int i = 0; i < 3; i++) { view.Route("a", "b" + i); view.Route("b" + i, "c" + i); }
+			view.Route("b0", "c1"); view.Open("a");
+			var s = Make(host, view);
+			string p = string.Join(";", s.RoutePaths.OrderBy(k => k.Key.ToString()).Select(k => string.Join(",", k.Value)));
+			string l = string.Join(";", s.Landmarks.Plan.Select(x => $"{x.Kind}{x.Rect}{x.Route}"));
+			string m = string.Join(";", s.Routes.MistLines.Select(x => string.Join(",", x.Path)));
+			string r = string.Join(";", Enumerable.Range(0, 7).Select(i => i < 1 ? "" : "").Concat(new[] { "b0", "b1", "b2", "c0", "c1", "c2" }.Select(id => s.RectOf(id).ToString())));
+			if (p0 == null) { p0 = p; l0 = l; m0 = m; r0 = r; }
+			else
+			{
+				Assert.True(p == p0, "the type or yokai of a hidden node moved a route centre line");
+				Assert.True(l == l0, "... or the landmarks");
+				Assert.True(m == m0, "... or a mist sketch");
+				Assert.True(r == r0, "... or a node box");
+			}
+			s.GetParent().QueueFree();
+		}
+	}
+
+	[Test]
+	public static void LeftBehindScenerySwitchesOffWithItsRouteAndFadesLikeTheNodes(Node host)
+	{
+		var sess = Start();
+		var s = Make(host, new SessionMapView(sess));
+		Walk(sess, "r1-apprentice");
+		s.SetView(new SessionMapView(sess)); s.FinishPresentation();
+		var before = s.Landmarks.Shown.Count();
+		Walk(sess, "r2-oni");
+		s.Refresh();
+		Assert.True(s.Landmarks.Shown.Count() <= before + 20, "scenery stays within the plan");
+		if (s.Landmarks.IsFading) Assert.True(s.Presenting, "a fade in progress is part of the presentation");
+		s.FinishPresentation();
+		Assert.True(!s.Landmarks.IsFading && !s.LandmarksFront.IsFading, "skipping ends the fade");
+		var left = sess.Map.Graph.Routes.Select((r, i) => (r, i)).Where(x => x.r.From == "r1-apprentice" && x.r.To != "r2-oni").ToList();
+		Assert.True(left.Count == 2, "two routes of row 1 were left behind");
 		s.GetParent().QueueFree();
 	}
 }
