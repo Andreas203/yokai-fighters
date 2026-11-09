@@ -227,14 +227,23 @@ public partial class FightScene
 		if (TwistCard == null || OwnsSession || !Node.Elder || Twist is not { } twist) return;
 		string name = OpponentName;
 		var line = TwistCopy.Intro(twist, TwistCopy.Story, name);
-		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E");
+		if (line.Placeholder) { ShowFirstMeetingCallout(twist); return; } // no intro card in the data: no scroll and no invented line; the callout still tells a first meeting
+		// E1: the elder's name is the card's speaker (data); the red rule line is the twist's label; the stamp is the map's seal.
+		string title = TwistCopy.IntroSpeaker(twist, TwistCopy.Story) ?? name;
+		string? rule = TwistCopy.Label(twist, TwistCopy.Story, name) is { Placeholder: false } label ? label.Text : null;
+		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E", title, rule, FightHud.PortraitPath(OpponentYokai));
 	}
 
 	private void OnTwistCardDone()
 	{
 		_suppress = HeldBits(); // the Enter/Space/A that closed the card must not fire a Special
-		if (!FirstMeeting || Twist is not { } twist) return;
-		_hud.ShowTwistCallout(TwistCopy.Callout(twist, TwistCopy.Story, OpponentName).Text, twist.Icon);
+		if (Twist is { } twist) ShowFirstMeetingCallout(twist);
+	}
+
+	private void ShowFirstMeetingCallout(ElderTwist twist)
+	{
+		if (!FirstMeeting) return;
+		if (TwistCopy.Callout(twist, TwistCopy.Story, OpponentName) is { Placeholder: false } callout) _hud.ShowTwistCallout(callout.Text, twist.Icon);
 	}
 
 	/// <summary>The temperament P2's AI plays (from its profile), e.g. "aggressive".</summary>

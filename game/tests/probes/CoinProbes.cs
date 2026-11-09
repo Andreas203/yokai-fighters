@@ -146,28 +146,60 @@ public static class CoinProbes
 	}
 
 	// ---- own: routes, purse edges, hashes ----
+	// R8 (PROVISIONAL since YOK-186): 25 per duel rows 1-6, 50 for the row-5 elder, and the row-8 elder pays a rare ability
+	// instead; an offer with no rare pays the most any elder pays (50) so the reward is never empty. Which rare is on offer
+	// follows X1/X2/X4 and A11: each elder offers its own rule unless Ryo holds it or Undertow is still locked. This walk
+	// takes the cancel card whenever an elder offers one (as an elder's first card), so the totals are pinned per route:
+	//   r5 Nine-Tails (Fox Step taken) then r8 Elder Oni (Oni Chain still on offer): 150
+	//   r5 Elder Oni (Oni Chain taken) then r8 Elder Oni (nothing rare left): 150 + 50 = 200
+	//   either r5 then r8 Elder Kappa (Undertow locked, nothing rare): 200
 	[Test]
-	public static void EveryRoute_Earns150_Has75AfterRow3() => OnFixtures(() =>
+	public static void EveryRoute_EarnsThePinnedTotal_Has75AfterRow3() => OnFixtures(() =>
 	{
 		var graph = DefaultMap();
-		var totals = new HashSet<int>(); var at3 = new HashSet<int>(); int routes = 0;
+		var byElders = new Dictionary<string, HashSet<int>>(); var at3 = new HashSet<int>(); int routes = 0;
+		var perPair = new Dictionary<string, int>();
+		void TakeRule(RunSession s)
+		{
+			var d = s.Draft;
+			if (d is null) return;
+			var c = d.Offer.Cards.FirstOrDefault(x => x.Kind == CardKind.CancelRule) ?? d.Offer.Cards[0];
+			Assert.True(d.Pick(c.Index, c.Targets.Count > 0 ? c.Targets[0].Slot : null).Ok, "pick");
+		}
 		void Walk(RunSession s)
 		{
 			var reach = s.Reachable();
-			if (s.IsOver) { totals.Add(s.Run.Coins); routes++; return; }
+			if (s.IsOver)
+			{
+				string key = s.Map.Visited.Single(v => v.StartsWith("r5-")) + "|" + s.Map.Visited.Single(v => v.StartsWith("r8-"));
+				if (!byElders.TryGetValue(key, out var set)) byElders[key] = set = new HashSet<int>();
+				set.Add(s.Run.Coins);
+				perPair[key] = perPair.GetValueOrDefault(key) + 1;
+				routes++; return;
+			}
 			foreach (var id in reach)
 			{
 				var branch = NewSession(graph, 3);
 				// replay the path so far
-				foreach (var v in s.Map.Visited) { branch.Enter(v); branch.WinFight(700); Take(branch); branch.CompleteNode(); }
-				branch.Enter(id); branch.WinFight(700); Take(branch); branch.CompleteNode();
+				foreach (var v in s.Map.Visited) { branch.Enter(v); branch.WinFight(700); TakeRule(branch); branch.CompleteNode(); }
+				branch.Enter(id); branch.WinFight(700); TakeRule(branch); branch.CompleteNode();
 				if (branch.Step == 3) at3.Add(branch.Run.Coins);
 				Walk(branch);
 			}
 		}
 		Walk(NewSession(graph, 3));
 		Assert.Equal(64, routes, "64 routes");
-		Assert.True(totals.SetEquals(new[] { 150 }), "all routes 150");
+		var want = new Dictionary<string, int>
+		{
+			["r5-nine-tails|r8-elder-oni"] = 150, ["r5-nine-tails|r8-elder-kappa"] = 200,
+			["r5-elder-oni|r8-elder-oni"] = 200, ["r5-elder-oni|r8-elder-kappa"] = 200,
+		};
+		Assert.Equal(4, byElders.Count, "the four elder pairings");
+		foreach (var (key, total) in want)
+		{
+			Assert.True(byElders[key].SetEquals(new[] { total }), $"{key}: every route pays {total} (got {string.Join(",", byElders[key])})");
+			Assert.Equal(16, perPair[key], $"{key}: 4 paths to r4 x 2 r6 x 2 r7");
+		}
 		Assert.True(at3.SetEquals(new[] { 75 }), "75 after row 3 (GDD 6.4: about 75 at row 4)");
 	});
 

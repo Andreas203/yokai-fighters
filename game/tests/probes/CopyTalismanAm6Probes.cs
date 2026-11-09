@@ -109,11 +109,14 @@ public static class CopyTalismanAm6Probes
    Assert.True(hud.CopyTarget.Visible, "boss node: shown");
    Assert.Equal(CopyTalismanState.Locked, hud.CopyTarget.State, "boss node: locked copy");
    Assert.True(hud.TwistStripVisible, "boss node: strip");
-   view.InTanukiFight = false; hud.Refresh(new Match());
+   TwistCopy.Story = new Story.StoryLibrary(new[] { new Story.StoryCardData("elder-oni-armour-label", null, "Armour on every special", System.Array.Empty<string>(), "HUD") });
+   var elder = new Match();
+   elder.P2.Twist = new ElderTwist("elder-oni-armour", "elder-oni", TwistEffect.SpecialArmour, 0, 1, "twist.elder-oni-armour", "twist-armour", null, null);
+   view.InTanukiFight = false; hud.Refresh(elder);
    Assert.True(!hud.CopyTarget.Visible, "elder only: hidden");
    Assert.True(hud.TwistStripVisible, "elder only: elder strip");
   }
-  finally { hud.Free(); }
+  finally { TwistCopy.Story = null; hud.Free(); }
  }
 
  // T6: a Tanuki fight with no copy (null) must not throw or show a stale name from the previous fight.

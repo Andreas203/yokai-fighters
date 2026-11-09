@@ -262,8 +262,9 @@ public static class Effects
 	/// Flag: set true / false. Armour: set { frames: [first, last], hits? }. ThrowBreak: set "startup".
 	/// MultiHit: set { hits, interval } (<see cref="MultiHit"/>). <c>ex.meter_cost</c> is modifier-only
 	/// (<see cref="ModifierData.ExCostFor"/>), not frame data. YOK-220: the evolution targets no fight code reads yet
-	/// (wall_bounce, throw.range, multi_hit, forward_travel as a distance, decoy) load and are ignored
-	/// (<see cref="MoveData.CheckPendingProperties"/>) until their behaviour tickets land.
+	/// (wall_bounce, multi_hit, decoy) load and are ignored (<see cref="MoveData.CheckPendingProperties"/>) until their
+	/// behaviour tickets land; forward_travel as a distance moves the fighter (YOK-221, <see cref="MoveData.ForwardTravel"/>);
+	/// throw.range is a command grab's reach (YOK-225, MoveData.CommandGrab.cs).
 	/// </summary>
 	public static readonly IReadOnlyDictionary<string, ValueKind> Vocabulary = new Dictionary<string, ValueKind>
 	{

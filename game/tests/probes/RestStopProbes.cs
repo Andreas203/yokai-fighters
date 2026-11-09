@@ -120,7 +120,11 @@ public static class RestStopProbes
 					var b = Play(seed, row7, false, win);
 					string tag = $"seed {seed} {row7} win={win}";
 					Assert.Equal(75, a.coinsAfterRow3, tag + ": R8 coins after row 3");
-					Assert.Equal(150, a.coinsAtBoss, tag + ": R8 coins by the boss (25x3 + 50 + 25, row 8 pays none)");
+					// R8 (PROVISIONAL, YOK-186): this walk takes the first reachable node and card 0 (an elder's cancel rule): the row-5 Elder Oni
+					// (50, Oni Chain taken) and the row-8 Elder Kappa, whose only rare is the still-locked Undertow, so its offer has no rare
+					// and it pays the row-5 elder's 50 instead of nothing: 25x3 + 50 + 25 + 50.
+					Assert.True(a.s.Map.Visited.Contains("r5-elder-oni") && a.s.Map.Visited.Contains("r8-elder-kappa"), tag + ": the walk is r5 Elder Oni, r8 Elder Kappa");
+					Assert.Equal(200, a.coinsAtBoss, tag + ": R8 coins by the boss (25x3 + 50 + 25, row 8 Elder Kappa: no rare, so 50)");
 					Assert.True(a.s.IsOver && a.s.Ended!.Won == win, tag + ": ends " + (win ? "won" : "lost"));
 					Assert.True(a.hashes.SequenceEqual(b.hashes), tag + ": the model path hashes like the rule classes");
 					Assert.True(a.offers.SequenceEqual(b.offers), tag + ": draft offers unchanged");

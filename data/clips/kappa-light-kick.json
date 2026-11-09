@@ -1,0 +1,33 @@
+{
+  "kind": "clip",
+  "id": "kappa-light-kick",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "Boxing_Guard_Step_Knee_Strike",
+  "frames_total": 16,
+  "trim_start": 44,
+  "trim_end": 74,
+  "retime": [
+    {
+      "frames": [
+        1,
+        16
+      ],
+      "ticks": [
+        44,
+        74
+      ],
+      "note": "one segment at 2x: the reused clip's own constant speed, so every frame lands on the same raw tick as ryo-light-kick"
+    }
+  ],
+  "file": "assets/generated/clips/ryo/ryo-lk.glb",
+  "hit_start": 6,
+  "hit_end": 7,
+  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). Source clip's own retarget result: Ryo rig 01a10e47-857e-73a0-9f7a-cd74795198fb (GO, YOK-31). No clipping. WARN: root travel in the clip (81 cm) and 12 cm planted-foot slide if the window drift is stripped; raw shift 3.3 / 2.3 cm.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of ryo-light-kick, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (44-74), 16 frames, hit frames 6-7; retime curve is one segment at 2x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
+}

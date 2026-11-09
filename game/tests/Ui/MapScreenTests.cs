@@ -243,7 +243,7 @@ public static class MapScreenTests
 		Assert.True(s.DetailNameText.EndsWith("row 5") && s.DetailNameText.Contains("Elder duel"), "detail names the focused node: " + s.DetailNameText);
 		Assert.True(s.DetailRewardText.Contains("Pays 50 coins") && s.DetailRewardText.Contains("rare"), "reward line from the node table: " + s.DetailRewardText);
 		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Twist: "), "YOK-139: the focused elder's twist line shows: " + s.DetailTwist.Text);
-		Assert.True(!s.DetailTwist.Text.Contains(TwistCopy.PlaceholderMark.Trim()), "YOK-109: the line is the story label, never a stand-in: " + s.DetailTwist.Text);
+		Assert.True(s.DetailTwist.Text.Length > "Twist: ".Length, "YOK-109: the line is the story label, never a stand-in (TwistCopy shows nothing without one): " + s.DetailTwist.Text);
 		Assert.Equal(4, s.LegendStateCount, "a swatch per state a drawn node can have (no \"later\", no \"passed over\": neither is drawn)");
 		Assert.True(s.LegendTypesText.Contains("merchant") && s.LegendTypesText.Contains("elder") && s.LegendTypesText.Contains("duel"), "legend types come from the styles resource: " + s.LegendTypesText);
 		Assert.True(!s.LegendTypesText.Contains("dojo") && !s.LegendTypesText.Contains("boss"), "and only for types that are drawn: " + s.LegendTypesText);

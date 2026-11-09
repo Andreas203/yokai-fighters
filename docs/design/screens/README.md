@@ -16,7 +16,7 @@ The target look for every screen: one 16:9 concept per screen (1672 x 941). The 
 | `story-card.png` | Story card (binding line) | `story_card.tscn` |
 | `defeat.png` | Lose screen | `lose_screen.tscn` |
 | `demo-complete.png` | Demo complete | `demo_complete.tscn` |
-| `map.png` | Run map (YOK-109; brief `astra-brief-map-hud-twist.md`) | `map_screen.tscn`, built to the rough |
+| `map.png` | Run map v2: title-style handscroll, mask nodes, merchant stand, winding routes, routes ahead sketched in mist (YOK-109, AM19; brief `astra-brief-map-v2.md`, take 3; mist as in take 1) | `map_screen.tscn`, still the v1 build: to be rebuilt to this concept |
 | `hud-copy-target.png` | Fight HUD in the Tanuki fight, locked copy talisman (AM6) | `hud.tscn` |
 | `hud-copy-target-states.png` | Copy-target talisman, states A–F | `CopyTalisman` |
 | `elder-twist-card.png` | Elder-twist intro card and first-meeting callout | `story_card.tscn` via `FightScene.Flow.cs` |

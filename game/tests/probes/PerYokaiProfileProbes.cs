@@ -78,7 +78,7 @@ public static class PerYokaiProfileProbes
 			Assert.True(a.Moves.Select(x => x.Id).Distinct().Count() == a.Moves.Length, y + ": no move twice");
 		}
 		var k = Kit.LoadAs("kappa", "kitsune", Sources).Body;
-		Assert.Equal(Kit.Load("kitsune", Sources).Body.PushWidth, k.PushWidth, "kappa push width = the body's");
+		Assert.Equal(130, k.PushWidth ?? 0, "kappa push width = data/fighters/kappa.json (YOK-228; was the Kitsune body's before his fighter file)");
 		Assert.True(Kit.Load("kitsune", Sources).Specials.Any(s => s.Id.Contains("foxfire")), "the Kitsune keeps Foxfire");
 	}
 

@@ -1,0 +1,2714 @@
+{
+ "cases": [
+  {
+   "name": "default-only",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds"
+  },
+  {
+   "name": "strength-only-three",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy"
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds: strength rules cover every hit"
+  },
+  {
+   "name": "outcome-missing-counter",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "outcome": "block"
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds: counter hits silent"
+  },
+  {
+   "name": "nine-strength-outcome",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "block"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "counter"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "block"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "counter"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy",
+        "outcome": "block"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy",
+        "outcome": "counter"
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds"
+  },
+  {
+   "name": "eight-of-nine",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "block"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "light",
+        "outcome": "counter"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "block"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "medium",
+        "outcome": "counter"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy",
+        "outcome": "hit"
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "heavy",
+        "outcome": "block"
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds: heavy counter silent"
+  },
+  {
+   "name": "default-in-other-file",
+   "ok": true,
+   "files": {
+    "a": {
+     "kind": "sound_cue",
+     "id": "a",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    },
+    "b": {
+     "kind": "sound_cue",
+     "id": "b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds"
+  },
+  {
+   "name": "source-rule-only",
+   "ok": false,
+   "files": {
+    "a": {
+     "kind": "sound_cue",
+     "id": "a",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds"
+  },
+  {
+   "name": "level-rule-not-default",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 1
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 2
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 3
+       }
+      }
+     ]
+    }
+   },
+   "why": "V6 every hit sounds: level rules are not general"
+  },
+  {
+   "name": "dup-implicit-vs-empty-when",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {}
+      }
+     ]
+    }
+   },
+   "why": "one rule per case"
+  },
+  {
+   "name": "dup-key-order",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo",
+        "level": 1
+       }
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 1,
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "one rule per case"
+  },
+  {
+   "name": "dup-across-files",
+   "ok": false,
+   "files": {
+    "a": {
+     "kind": "sound_cue",
+     "id": "a",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    },
+    "b": {
+     "kind": "sound_cue",
+     "id": "b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "one rule per case"
+  },
+  {
+   "name": "level-only-plus-default",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 2
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema when"
+  },
+  {
+   "name": "level-float",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 2.0
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema: whole number"
+  },
+  {
+   "name": "level-bool",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": true
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema: integer"
+  },
+  {
+   "name": "level-zero",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 0
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema 1-3"
+  },
+  {
+   "name": "level-three",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 3
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema 1-3"
+  },
+  {
+   "name": "level-four",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "level": 4
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema 1-3"
+  },
+  {
+   "name": "offset-0",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": 0,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-30",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": 30,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-31",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": 31,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset--1",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": -1,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-'5'",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": "5",
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-True",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": true,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-2.5",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": 2.5,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "offset-2.0",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "offset_ticks": 2.0,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema offset_ticks 0-30 integer"
+  },
+  {
+   "name": "volume--40",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": -40,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume-12",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": 12,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume--41",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": -41,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume-13",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": 13,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume-'0'",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": "0",
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume-None",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": null,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "volume--3.0",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "volume_db": -3.0,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema volume_db -40..12 integer"
+  },
+  {
+   "name": "when-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": null
+      }
+     ]
+    }
+   },
+   "why": "schema when object"
+  },
+  {
+   "name": "when-source-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": null
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "when-move-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "move": null
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "when-strength-upper",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "strength": "Light"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema enum"
+  },
+  {
+   "name": "when-source-tanuki",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "tanuki"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema yokai enum"
+  },
+  {
+   "name": "when-move-foxfire",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "move": "foxfire"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema when.move"
+  },
+  {
+   "name": "when-move-trailing-newline",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "move": "foxfire\n"
+       }
+      }
+     ]
+    }
+   },
+   "why": "id pattern"
+  },
+  {
+   "name": "when-move-underscore",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "move": "fox_fire"
+       }
+      }
+     ]
+    }
+   },
+   "why": "id pattern"
+  },
+  {
+   "name": "when-unknown-field",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "button": "LP"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "thud-string",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": "res://sound/hits/hit_01.wav",
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema array"
+  },
+  {
+   "name": "thud-empty",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema minItems"
+  },
+  {
+   "name": "thud-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": null,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "thud-missing",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema required"
+  },
+  {
+   "name": "sting-empty",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "sting": [],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema minItems"
+  },
+  {
+   "name": "sting-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "sting": null,
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "sting-ok",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "sting": [
+        "res://sound/hits/hit_02.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "sting-dup",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "sting": [
+        "res://sound/hits/hit_02.wav",
+        "res://sound/hits/hit_02.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema uniqueItems"
+  },
+  {
+   "name": "thud-dup",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav",
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema uniqueItems"
+  },
+  {
+   "name": "thud-number",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        1
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "thud-and-sting-same-sample",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "sting": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "uniqueItems is per list"
+  },
+  {
+   "name": "path-bad-0",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.WAV"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-1",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.Wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-2",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav\n"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-3",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav "
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-4",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav\r"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-5",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav\u0000"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-6",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits//hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-7",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/./hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-8",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/../hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-9",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav/"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-10",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-11",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/a.b.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-12",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/\u00e9.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-13",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "RES://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-14",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://Sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-15",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.flac"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-16",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits\\hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-17",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "user://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-18",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-19",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "/sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-20",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav?x"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-21",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit 01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-22",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-23",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-24",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_99.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match",
+   "loader_ok": true
+  },
+  {
+   "name": "path-bad-25",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "\nres://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-bad-26",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav.import"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema sample pattern, whole match"
+  },
+  {
+   "name": "path-ok-other",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      },
+      {
+       "thud": [
+        "res://sound/hits/hit_09.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "schema"
+  },
+  {
+   "name": "id-bad-0",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "T",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-1",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "-a",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-2",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "a-",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-3",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "a--b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-4",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "a_b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-5",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "\u00e9",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-6",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "a b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-bad-7",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case and file name"
+  },
+  {
+   "name": "id-trailing-newline",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t\n",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case, whole match"
+  },
+  {
+   "name": "id-mismatch",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "u",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id = file name"
+  },
+  {
+   "name": "id-kebab-ok",
+   "ok": true,
+   "files": {
+    "a-b1": {
+     "kind": "sound_cue",
+     "id": "a-b1",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "id kebab-case"
+  },
+  {
+   "name": "status-proposed",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "status": "proposed"
+    }
+   },
+   "why": "common status"
+  },
+  {
+   "name": "status-final",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "status": "final"
+    }
+   },
+   "why": "common status"
+  },
+  {
+   "name": "status-Final",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "status": "Final"
+    }
+   },
+   "why": "common status"
+  },
+  {
+   "name": "status-null",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "status": null
+    }
+   },
+   "why": "common status"
+  },
+  {
+   "name": "rules-v6",
+   "ok": true,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "rules": [
+      "V6"
+     ]
+    }
+   },
+   "why": "rules ids"
+  },
+  {
+   "name": "unknown-top-field",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ],
+     "sound": 1
+    }
+   },
+   "why": "schema additionalProperties"
+  },
+  {
+   "name": "cues-empty",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t",
+     "cues": []
+    }
+   },
+   "why": "schema minItems"
+  },
+  {
+   "name": "cues-missing",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "sound_cue",
+     "id": "t"
+    }
+   },
+   "why": "schema required"
+  },
+  {
+   "name": "kind-wrong",
+   "ok": false,
+   "files": {
+    "t": {
+     "kind": "level_preset",
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "schema kind"
+  },
+  {
+   "name": "kind-missing",
+   "ok": false,
+   "files": {
+    "t": {
+     "id": "t",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    }
+   },
+   "why": "schema required"
+  },
+  {
+   "name": "root-array",
+   "ok": false,
+   "files": {
+    "t": [
+     {
+      "kind": "sound_cue",
+      "id": "t",
+      "cues": [
+       {
+        "thud": [
+         "res://sound/hits/hit_01.wav"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "why": "schema type"
+  },
+  {
+   "name": "raw-trailing-comma",
+   "ok": false,
+   "files": {
+    "t": "{\"kind\":\"sound_cue\",\"id\":\"t\",\"cues\":[{\"thud\":[\"res://sound/hits/hit_01.wav\"],}]}"
+   },
+   "why": "JSON"
+  },
+  {
+   "name": "raw-empty-file",
+   "ok": false,
+   "files": {
+    "t": ""
+   },
+   "why": "JSON"
+  },
+  {
+   "name": "raw-offset-1e1",
+   "ok": false,
+   "files": {
+    "t": "{\"kind\":\"sound_cue\",\"id\":\"t\",\"cues\":[{\"thud\":[\"res://sound/hits/hit_01.wav\"]},{\"when\":{\"source\":\"ryo\"},\"thud\":[\"res://sound/hits/hit_01.wav\"],\"offset_ticks\":1e1}]}"
+   },
+   "why": "schema integer (loader reads whole numbers)"
+  },
+  {
+   "name": "raw-level-big",
+   "ok": false,
+   "files": {
+    "t": "{\"kind\":\"sound_cue\",\"id\":\"t\",\"cues\":[{\"thud\":[\"res://sound/hits/hit_01.wav\"]},{\"when\":{\"level\":99999999999},\"thud\":[\"res://sound/hits/hit_01.wav\"]}]}"
+   },
+   "why": "schema 1-3"
+  },
+  {
+   "name": "two-files-distinct-ok",
+   "ok": true,
+   "files": {
+    "a": {
+     "kind": "sound_cue",
+     "id": "a",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ]
+      }
+     ]
+    },
+    "b": {
+     "kind": "sound_cue",
+     "id": "b",
+     "cues": [
+      {
+       "thud": [
+        "res://sound/hits/hit_01.wav"
+       ],
+       "when": {
+        "source": "ryo"
+       }
+      }
+     ]
+    }
+   },
+   "why": "one rule per case"
+  }
+ ]
+}

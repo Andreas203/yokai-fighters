@@ -22,7 +22,9 @@
     "K1",
     "K2",
     "K3",
-    "V8"
+    "V8",
+    "X3",
+    "X4"
   ],
   "input": {
     "kata": {
@@ -113,7 +115,20 @@
               "against": "air"
             }
           ]
-        }
+        },
+        "cancel_windows": [
+          {
+            "frames": [
+              6,
+              19
+            ],
+            "on": [
+              "hit",
+              "block",
+              "whiff"
+            ]
+          }
+        ]
       },
       "preset": "rising-talisman-lv1"
     },
@@ -149,5 +164,5 @@
       }
     }
   },
-  "notes": "Re-derived from clip ryo-rising-talisman-strike (frames_total 41, hit 6-13): 5/8/28 = the table, no deviation left. Hand is back to 13% at the cut, so no blend-out is needed. Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX. Hitstun 24, blockstun 16 and the EX are first passes. Lv 2 is final (E21, recovery -6). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
+  "notes": "Re-derived from clip ryo-rising-talisman-strike (frames_total 41, hit 6-13): 5/8/28 = the table, no deviation left. Hand is back to 13% at the cut, so no blend-out is needed. Hitbox is tall (chest to above the head) for the anti-air job because the clip reads as a horizontal jab and the arc comes from VFX. Hitstun 24, blockstun 16 and the EX are first passes. Lv 2 is final (E21, recovery -6). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged. YOK-217 (proposed, designer to approve the window lengths): cancel_windows. Fox Step (Specials -> dash): open from the first active frame (6) to 6 frames into recovery (19) of the 41-frame clip."
 }

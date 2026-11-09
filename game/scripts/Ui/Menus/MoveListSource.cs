@@ -17,7 +17,22 @@ public sealed record MoveRow(string Id, string Name, string Input, string Plain,
 public sealed record SlotRow(string Slot, bool Empty, string Name, int Level, int MaxLevel, string KataInput, string KihonInput, string Plain, string Frames,
 	string ModifierName = "", string ModifierPlain = "", string MoveId = "");
 
-public sealed record MoveListView(IReadOnlyList<MoveRow> Base, IReadOnlyList<SlotRow> Slots);
+/// <summary>
+/// YOK-218 (X1, X2, A12): one cancel rule Ryo holds, from data/cancels: <see cref="Plain"/> first, the path line
+/// <see cref="Frames"/> behind the frame-data toggle. <see cref="Source"/> is the yokai it comes from.
+/// </summary>
+public sealed record CancelRow(string Id, string Name, string Source, string Plain, string Frames);
+
+/// <summary>
+/// The move list's content: the base kit, the four special slots and (YOK-218) the cancel rules held, in the order taken.
+/// <see cref="Cancels"/> is empty for a caller that gives none (a run holds none at the start, X1).
+/// </summary>
+public sealed record MoveListView(IReadOnlyList<MoveRow> Base, IReadOnlyList<SlotRow> Slots, IReadOnlyList<CancelRow>? HeldCancels = null)
+{
+	/// <summary>How many cancel rules Ryo can hold at once (X2); the sim's own limit, shown as "n / 2".</summary>
+	public const int CancelCap = Fighter.MaxCancelRules;
+	public IReadOnlyList<CancelRow> Cancels => HeldCancels ?? Array.Empty<CancelRow>();
+}
 
 /// <summary>
 /// YOK-58 MOCKUP: builds the move-list screen's content. Names, frame data and special text come from
@@ -104,7 +119,9 @@ public static class MoveListSource
 			string frames = FrameLine(m) + (mod is { CardFrames.Length: > 0 } ? $"\n{mod.Name}: {mod.CardFrames}" : "") + ex;
 			slots.Add(new(letter, false, owned.Data.Name, owned.Level, owned.Data.MaxLevel, kata, kihon, owned.Data.CardPlain, frames, mod?.Name ?? "", mod?.CardPlain ?? "", owned.Data.Id));
 		}
-		return new MoveListView(rows, slots);
+		var cancels = new List<CancelRow>();
+		foreach (var c in run.CancelRules) cancels.Add(new CancelRow(c.Id, c.Name, c.Source, c.CardPlain, c.CardFrames));
+		return new MoveListView(rows, slots, cancels);
 	}
 
 	private static MoveRow FromFile(string dir, string id, Func<string, string> input, bool air = false, int landing = 0)
