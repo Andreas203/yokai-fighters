@@ -15,7 +15,7 @@
 | `story_card` | `story-card.schema.json` | `data/story/` | Id, status, trigger (S3), title, text (S2, max 280), `placeholders` (S4), speaker, `later_loss` (S3: plain yokai?, integer `row_min`/`row_max`). `StoryLibrary`. |
 | `merchant_shop_lines` | `merchant-shop-lines.schema.json` | `data/story/shop/` | Merchant event lines and item lead-ins (S1, S2). `MerchantShopLines`. |
 | `run_map` | `run-map.schema.json` | `data/map/` | R1, R2, Y3: `schema_version` 1, `nodes` (id, row, open `type`, `yokai`, `elder`, `label`, `payload`), `routes`. `MapLoader`. |
-| `node_scenes` | `node-scenes.schema.json` | `data/map/` | R2, R3, A7, Y4: `default_scene`, `default_stage`, `fallback_fighter`, `tiers` (`reaction_frames`, `damage_dealt_pct`, `jump_punish_pct`), `types`, `nodes`, `rows`, `opponents` (`fighter`, `kit`, `plays_as`, `tier`, `profile`), `coins`. `NodeSceneTable`. |
+| `node_scenes` | `node-scenes.schema.json` | `data/map/` | R2, R3, A7, Y4: `default_scene`, `default_stage`, `fallback_fighter`, `tiers` (`reaction_frames`, `damage_dealt_pct`, `jump_punish_pct`), `types`, `nodes`, `rows`, `opponents` (`fighter`, `kit`, `plays_as`, `tier`, `profile`), `opponent_stages` (YOK-150: yokai id → stage; node → yokai → plays-as → type → default), `coins`. `NodeSceneTable`. |
 | `trial` | `trial.schema.json` | `data/trials/` | R7, K2: id, `special`, `prompt`, `attempts` 3, `setup` (distance, attempt frames, dummy), `goal.steps` 1–4. No Kata-only keys. `TrialLoader`. |
 | `fighter` | `fighter.schema.json` | `data/fighters/` | `push_width` (1–1,060; absent = `SimConfig.BodyWidth`). `FighterData`. |
 | `elder_twist` | `elder-twist.schema.json` | `data/twists/` | Y3: elder, effect, repeat/hits, label key, icon, intro and callout cards. `ElderTwistLoader`. |
