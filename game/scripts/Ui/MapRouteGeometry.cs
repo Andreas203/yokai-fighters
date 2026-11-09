@@ -13,11 +13,13 @@ namespace YokaiFighters.Ui;
 /// common arrival x and a stub into its target. Two such curves differ by a linear mix of their start and end height differences, so they cross
 /// exactly when the order of their sources differs from the order of their targets. Those routes (and any route that shares a node with them, and
 /// any pair found crossing afterwards) form a bus: all its sources merge into one junction in the middle of the gap, then split to the targets.
-/// A winding meander common to the whole gap is added to every curve, which keeps the differences, so the order cannot change mid-way.
+/// A junction is never a point: a bus runs as one shared trunk over a stretch of the gap (<see cref="Trunk"/>), with tangent Y-curves in and out. A winding meander common to the whole gap is added to every curve, which keeps the differences, so the order cannot change mid-way.
 /// </summary>
 public static class MapRouteGeometry
 {
-	const int Samples = 40;
+	const int Samples = 64;
+	/// <summary>A bus runs as one shared trunk over this share of the gap, with a smooth Y-join before it and a smooth Y-split after it.</summary>
+	public const float Trunk = 0.26f;
 
 	sealed class Edge
 	{
@@ -114,13 +116,17 @@ public static class MapRouteGeometry
 		if (!e.Ok) return Densify(new List<Vector2> { e.Start, e.End });
 		var pts = new List<Vector2> { e.Start, new Vector2(xOut, e.Ya) };
 		uint h = MapLayout.Hash("gap" + e.Ca + ":" + e.Cb);
-		float amp = (MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (0.035f + 0.03f * MapLayout.Unit(h, 2)) * boardHeight, turns = MapLayout.Unit(h, 3) > 0.5f ? 1f : 1.5f;
+		float amp = (MapLayout.Unit(h, 1) > 0.5f ? 1f : -1f) * (0.025f + 0.02f * MapLayout.Unit(h, 2)) * boardHeight, turns = MapLayout.Unit(h, 3) > 0.5f ? 1f : 1.5f;
 		for (int i = 1; i < Samples; i++)
 		{
 			float u = i / (float)Samples;
 			float m = amp * Mathf.Sin(Mathf.Tau * turns * u) * Mathf.Sin(Mathf.Pi * u);
 			float y;
-			if (junction is { } j) y = u <= 0.5f ? e.Ya + (j - e.Ya) * Smoother(u * 2f) : j + (e.Yb - j) * Smoother(u * 2f - 1f);
+			if (junction is { } j)
+			{
+				float t0 = (1f - Trunk) / 2f, t1 = 1f - t0;
+				y = u <= t0 ? e.Ya + (j - e.Ya) * Smoother(u / t0) : u >= t1 ? j + (e.Yb - j) * Smoother((u - t1) / t0) : j;
+			}
 			else y = e.Ya + (e.Yb - e.Ya) * Smoother(u);
 			pts.Add(new Vector2(Mathf.Lerp(xOut, xIn, u), y + m));
 		}

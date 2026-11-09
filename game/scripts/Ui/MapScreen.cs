@@ -261,7 +261,7 @@ public partial class MapScreen : Control
 		var nodes = View.Nodes;
 		float h = vs.Y;
 		float inset = MapScroll.TopInset + 14f, insetBottom = MapScroll.BottomInset + 14f;
-		float colW = Mathf.Clamp(h * 0.62f, 300f, 520f); // roomy columns: a screen shows about four rows, the rest waits off to the right
+		float colW = Mathf.Clamp(h * 0.80f, 380f, 680f); // roomy columns: a screen shows about four rows, the rest waits off to the right
 		int cols = Math.Max(1, nodes.Select(n => n.Row).Distinct().Count());
 		float boardTop = inset, boardH = Mathf.Max(60f, h - inset - insetBottom);
 		float pad = MapScroll.PaperLeft + 90f;

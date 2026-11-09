@@ -272,12 +272,69 @@ public static class MapV2Tests
 			}
 	}
 
+	/// <summary>The path resampled at even 8 px steps.</summary>
+	static List<Vector2> Even(Vector2[] p)
+	{
+		var o = new List<Vector2> { p[0] }; float acc = 0f; var last = p[0];
+		for (int i = 1; i < p.Length; i++)
+		{
+			float seg = last.DistanceTo(p[i]);
+			while (acc + seg >= 8f) { float t = (8f - acc) / seg; last = last.Lerp(p[i], t); o.Add(last); seg = last.DistanceTo(p[i]); acc = 0f; }
+			acc += seg; last = p[i];
+		}
+		return o;
+	}
+
+	static float Turn(Vector2 a, Vector2 b) => Mathf.RadToDeg(System.Math.Abs(a.AngleTo(b)));
+
+	/// <summary>No sharp corners: at 8 px steps no path turns more than 35 degrees in one step, nor more than 60 degrees over 24 px (the default map; the dense synthetic shapes get 70).</summary>
+	static void AssertSmooth(IReadOnlyList<(string Name, Vector2[] Path)> routes, string where, float window = 60f)
+	{
+		foreach (var (name, path) in routes)
+		{
+			var e = Even(path);
+			var d = Enumerable.Range(0, e.Count - 1).Select(i => (e[i + 1] - e[i]).Normalized()).ToList();
+			for (int i = 0; i + 1 < d.Count; i++)
+				Assert.True(Turn(d[i], d[i + 1]) <= 35f, $"{where}: {name} turns {Turn(d[i], d[i + 1]):F0} degrees in one 8 px step at {e[i + 1]}");
+			for (int i = 0; i + 3 < d.Count; i++)
+				Assert.True(Turn(d[i], d[i + 3]) <= window, $"{where}: {name} turns {Turn(d[i], d[i + 3]):F0} degrees over 24 px at {e[i + 1]}");
+		}
+	}
+
+	/// <summary>
+	/// Junctions are shared trunks, never points and never an X: for every pair of routes with different sources and targets that share vertices, the shared run is
+	/// at least <paramref name="minTrunk"/> px long, and in both routes the part before it lies to its left and the part after it to its right (join from one side, split to the other).
+	/// </summary>
+	static void AssertTrunks(IReadOnlyList<(string Name, Vector2[] Path)> routes, float minTrunk, string where)
+	{
+		for (int i = 0; i < routes.Count; i++)
+			for (int j = i + 1; j < routes.Count; j++)
+			{
+				var a = routes[i].Path; var b = routes[j].Path;
+				var common = new HashSet<Vector2>(a.Where(p => b.Contains(p)));
+				if (common.Count == 0) continue;
+				// the shared run as indices in a
+				int i0 = System.Array.FindIndex(a, common.Contains), i1 = System.Array.FindLastIndex(a, common.Contains);
+				bool atNode = i0 == 0 || i1 == a.Length - 1 || b[0] == a[i0] || b[^1] == a[i1]; // a shared source or target: a plain fork or merge at the node itself
+				float len = 0f; for (int k = i0; k < i1; k++) len += a[k].DistanceTo(a[k + 1]);
+				string pair = $"{where}: {routes[i].Name} and {routes[j].Name}";
+				Assert.True(a.Skip(i0).Take(i1 - i0 + 1).All(common.Contains), pair + " share one unbroken run");
+				if (!atNode) Assert.True(len >= minTrunk, $"{pair} meet in a trunk of only {len:F0} px (a point reads as an X)");
+				int j0 = System.Array.IndexOf(b, a[i0]), j1 = System.Array.IndexOf(b, a[i1]);
+				if (i0 > 0 && j0 > 0) Assert.True(a[i0 - 1].X < a[i0].X && b[j0 - 1].X < b[j0].X, pair + ": both come into the trunk from its left");
+				if (i1 < a.Length - 1 && j1 < b.Length - 1) Assert.True(a[i1 + 1].X > a[i1].X && b[j1 + 1].X > b[j1].X, pair + ": both leave it to its right");
+			}
+	}
+
 	static void AssertGeometry(IMapView view, Vector2 board, string where)
 	{
 		var layout = MapLayout.Compute(view.Nodes, board);
 		var paths = MapRouteGeometry.Compute(view.Nodes, view.Routes, layout, board.Y);
 		Assert.Equal(view.Routes.Count, paths.Count, where + ": a centre line per route");
-		AssertNoCrossing(paths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), where);
+		var named = paths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList();
+		AssertNoCrossing(named, where);
+		AssertSmooth(named, where, 70f); // the synthetic maps include complete 3x3 buses squeezed into one gap, harsher than the real map
+		AssertTrunks(named, 55f, where);
 		var again = MapRouteGeometry.Compute(view.Nodes, view.Routes, layout, board.Y);
 		Assert.True(paths.All(kv => kv.Value.SequenceEqual(again[kv.Key])), where + ": deterministic");
 	}
@@ -297,6 +354,8 @@ public static class MapV2Tests
 				// everything the screen draws now: the brushed routes and the mist sketches
 				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Concat(s.Routes.MistLines.Select((m, i) => ($"mist{i}", m.Path))).ToList();
 				AssertNoCrossing(drawn, $"{size} step {step}");
+				AssertSmooth(drawn.Where(d => d.Item2.Length > 1).ToList(), $"{size} step {step} (drawn and mist)");
+				AssertTrunks(s.RoutePaths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), 55f, $"{size} step {step}");
 				AssertNoCrossing(s.RoutePaths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), $"{size} step {step} (all routes)");
 				Assert.True(s.RoutePaths.All(kv => kv.Value.SequenceEqual(baseline[kv.Key])), $"{size} step {step}: no route moved when nodes were revealed");
 				if (s.ReachableIds.Count == 0) break;
@@ -320,7 +379,7 @@ public static class MapV2Tests
 	{
 		var shapes = new (int rows, int per)[] { (2, 1), (3, 2), (4, 3), (6, 5), (9, 3), (12, 3), (5, 6), (3, 1) };
 		foreach (var (rows, per) in shapes)
-			AssertGeometry(StubMapView.Grid(rows, per), new Vector2(rows * 460f, 612f), $"grid {rows}x{per}");
+			AssertGeometry(StubMapView.Grid(rows, per), new Vector2(rows * 595f, 612f), $"grid {rows}x{per}");
 		// sparse random graphs: every node has one to three routes forward, picked by a hash of the ids
 		for (int seed = 1; seed <= 12; seed++)
 		{
@@ -344,18 +403,18 @@ public static class MapV2Tests
 			var dedup = new StubMapView();
 			foreach (var n in v.Nodes) dedup.Add(n.Id, n.Row, n.Type, n.Yokai);
 			foreach (var r in v.Routes.Select(r => (r.From, r.To)).Distinct()) dedup.Route(r.From, r.To);
-			AssertGeometry(dedup, new Vector2(rows * 460f, 612f), $"random {seed}");
+			AssertGeometry(dedup, new Vector2(rows * 595f, 612f), $"random {seed}");
 		}
 		var cross = new StubMapView().Add("a1", 1, "duel").Add("a2", 1, "duel").Add("b1", 2, "duel").Add("b2", 2, "duel")
 			.Route("a1", "b2").Route("a2", "b1").Route("a1", "b1");
-		AssertGeometry(cross, new Vector2(920f, 612f), "inverted pair plus a fork");
+		AssertGeometry(cross, new Vector2(1190f, 612f), "inverted pair plus a fork");
 	}
 
 	[Test]
 	public static void SiblingRoutesJoinAndSplitOnASharedTrunk()
 	{
 		var v = new StubMapView().Add("a1", 1, "duel").Add("a2", 1, "duel").Add("b1", 2, "duel").Add("b2", 2, "duel").Route("a1", "b1").Route("a1", "b2").Route("a2", "b1").Route("a2", "b2");
-		var board = new Vector2(920f, 612f);
+		var board = new Vector2(1190f, 612f);
 		var layout = MapLayout.Compute(v.Nodes, board);
 		var paths = MapRouteGeometry.Compute(v.Nodes, v.Routes, layout, board.Y);
 		var all = paths.Values.ToList();
@@ -369,7 +428,7 @@ public static class MapV2Tests
 	public static void StrokesStillWindBetweenLevelNodes()
 	{
 		var v = new StubMapView().Add("a", 1, "duel").Add("b", 2, "duel").Route("a", "b");
-		var board = new Vector2(920f, 612f);
+		var board = new Vector2(1190f, 612f);
 		var layout = MapLayout.Compute(v.Nodes, board);
 		var p = MapRouteGeometry.Compute(v.Nodes, v.Routes, layout, board.Y)[("a", "b")];
 		float y0 = p[0].Y, y1 = p[^1].Y;

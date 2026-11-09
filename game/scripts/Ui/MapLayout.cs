@@ -135,7 +135,7 @@ public static class MapLayout
 				}
 				float slack = Mathf.Max(0f, cell - size.Y) / 2f;
 				float cy = y0 + (j + 0.5f) * cell + slack * (2f * Unit(h, 2) - 1f) * 0.9f;
-				float lean = n > 1 ? (j % 2 == 0 ? -1f : 1f) * 0.09f + (Unit(h, 3) - 0.5f) * 0.05f : (Unit(h, 3) - 0.5f) * 0.18f;
+				float lean = n > 1 ? (j % 2 == 0 ? -1f : 1f) * 0.03f + (Unit(h, 3) - 0.5f) * 0.02f : (Unit(h, 3) - 0.5f) * 0.08f;
 				float cx = (c + 0.5f) * colW + lean * colW;
 				var pos = new Vector2(Mathf.Clamp(cx - size.X / 2f, 0f, Mathf.Max(0f, board.X - size.X)), Mathf.Clamp(cy - size.Y / 2f, 0f, Mathf.Max(0f, board.Y - reserve - size.Y)));
 				rects[v.Id] = new Rect2(pos, size);
