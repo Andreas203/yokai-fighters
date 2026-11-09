@@ -2,17 +2,22 @@ using System.Collections.Generic;
 
 namespace YokaiFighters.Ui;
 
-public enum CardKind { NewMove, Upgrade, Modifier }
+/// <summary>YOK-186: <see cref="CancelRule"/> = a cancel rule from an elder (X1), held for the run; no target.</summary>
+public enum CardKind { NewMove, Upgrade, Modifier, CancelRule }
 
-/// <summary>One reward card as the UI shows it. <c>ToLevel</c> is the level an upgrade reaches (0 = unknown: a multi-target upgrade has no single level before the pick, so it shows no pips). All text comes from card data (A12): plain language first, frame data behind a toggle.</summary>
+/// <summary>One reward card as the UI shows it. <c>ToLevel</c> is the level an upgrade reaches (0 = unknown: a multi-target upgrade has no single level before the pick, so it shows no pips). All text comes from card data (A12): plain language first, frame data behind a toggle. <c>Rare</c> (YOK-186, A9): a cancel rule or a yokai's second special, from an elder.</summary>
 public sealed record CardView(
 	CardKind Kind, string Id, string Name, string Source, string Plain, string Frames,
-	string Tag, string? TargetPrompt = null, int ToLevel = 0);
+	string Tag, string? TargetPrompt = null, int ToLevel = 0, bool Rare = false);
 
 /// <summary>A special slot the modifier card can attach to (A2: one modifier per special).</summary>
 public sealed record TargetView(string Id, string Slot, string Name, int Level, string? CurrentModifier, bool Eligible, string? WhyNot = null);
 
-public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards, IReadOnlyList<TargetView> Targets);
+public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards, IReadOnlyList<TargetView> Targets)
+{
+	/// <summary>YOK-218 (X2): the elder's cancel rule is not offered because Ryo holds the most he can; the screen says so (plain text, no emoji or combining marks).</summary>
+	public string? Notice { get; init; }
+}
 
 /// <summary>
 /// What the reward screen needs from the draft system (YOK-47). Adapter needed: wrap the draft system's

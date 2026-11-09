@@ -24,6 +24,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM16](#am16) | 2026-10-19 | Tripo's skeleton becomes the shared skeleton | F6 | YOK-146 |
 | [AM17](#am17) | 2026-10-25 | A story-card style video on first meeting each yokai (extra, not MVP) | S6, header | YOK-207 |
 | [AM18](#am18) | 2026-10-25 | The map is a handscroll that shows only the next choice | R2 | YOK-109, PR #245 |
+| [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -419,3 +420,24 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended §6.1 The map | The whole map in view (Figure 6), "so choosing a path is choosing which powers you can earn" | A horizontal handscroll that shows only the walked path and the next choice; each choice still shows which yokai waits at each node. |
 | GDD short §1.2 Core loop | "The map has 8 rows, and you pick one node per row" | Unchanged, but the map reveals each row only when it is time to pick from it. |
 | rules.md R2 | "Each node shows which yokai waits there." | Each node shows which yokai waits there. The map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the nodes he can choose next, so later rows, the Tanuki included, stay hidden until their turn [AM18]. |
+
+<a id="am19"></a>
+
+## AM19 — The routes ahead show as sketches in mist (2026-11-09)
+
+**Status.** Decided by the designer on 2026-11-09 on YOK-109 (PR #273): "have sketches of the paths with mist for the upcoming routes", then, asked whether the sketches should be decoration or the real routes: "follow the real".
+
+**Decision.** Past the nodes Ryo can choose next, the map shows the real routes ahead, rows 6 to the Tanuki included, as faint sketched lines under drifting mist. Only the lines show: no node, yokai, type, twist icon or label appears in the mist. A row's nodes still appear only when it is their turn to be chosen (AM18).
+
+**Why.** Blank paper gave no sense of the road ahead. The sketches let the player see how the routes branch and join without telling them who waits there.
+
+**What does not change.** The route graph, its rows and node types (R1). Shown nodes still name their yokai (R2) and carry their twist icon (Y3). The reveal stays presentation only: the run, the saves (M5), the harness and the test bot do not change.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM18, "Decision" | "Later rows, the Tanuki included, stay blank paper until it is their turn to be chosen." | Later rows' nodes, the Tanuki's included, stay hidden until their turn; the routes between them show as sketched lines in mist. |
+| GDD extended §6.1 The map | (as amended by AM18) | The routes ahead are visible as sketches in mist; their nodes are not. |
+| GDD short §1.2 Core loop | (as amended by AM18) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
+| rules.md R2 | "...so later rows, the Tanuki included, stay hidden until their turn [AM18]." | "...so later rows' nodes, the Tanuki included, stay hidden until their turn [AM18]; the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." |

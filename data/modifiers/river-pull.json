@@ -26,8 +26,8 @@
     }
   ],
   "card": {
-    "plain": "The river tugs the opponent one step closer when the move hits.",
-    "frames": "Pulls opponent one step closer on hit"
+    "plain": "The river tugs back: when this special hits, your foe is pulled one step closer to you.",
+    "frames": "Pulls the opponent one step closer on hit"
   },
-  "notes": "'One step' distance is not defined in the GDD; value 1 = one step, unit distance is an open question for the designer. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+  "notes": "'One step' distance is not defined in the GDD; value 1 = one step, unit distance is an open question for the designer. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table. Card text from tools/content_pipeline run a7-live (movesmith, checked by rules-lawyer)."
 }

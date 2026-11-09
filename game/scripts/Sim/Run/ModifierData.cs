@@ -108,7 +108,7 @@ public static class ModifierLoader
 	/// <summary>
 	/// YOK-171 (AM11): the modifier-only target that turns on the charge dash. Its one shape is
 	/// <c>{ "target": "properties.forward_travel", "op": "set", "value": "charge_dash", "when": "charge_released" }</c>;
-	/// it changes no frame data (frame data's own <c>forward_travel</c> is a distance nothing reads): the move carries the
+	/// it changes no frame data (frame data's own <c>forward_travel</c> is a distance, <see cref="MoveData.ForwardTravel"/>, YOK-221): the move carries the
 	/// <see cref="ChargeSpec"/> (<see cref="MoveData.Charge"/>) and a release inside its window dashes at <see cref="ChargeSpec.SpeedFor"/>.
 	/// YOK-220: a string value on this target is the switch; an integer is the frame-data distance, an ordinary
 	/// <see cref="Effects.Vocabulary"/> target.

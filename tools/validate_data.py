@@ -25,6 +25,7 @@ Requires the `jsonschema` package (see tools/requirements.txt).
 from __future__ import annotations
 
 import copy
+import decimal
 import functools
 import json
 import os
@@ -65,6 +66,7 @@ KIND_SCHEMA = {
     "harness_bot": "harness-bot.schema.json",
     "harness_bot_levels": "harness-bot-levels.schema.json",
     "level_preset": "level-preset.schema.json",
+    "sound_cue": "sound-cue.schema.json",
 }
 # Folder under data/ -> the kinds its files may declare. Other folders (samples/) accept any kind.
 DIR_KIND = {
@@ -80,6 +82,7 @@ DIR_KIND = {
     "fighters": ("fighter",),
     "harness": ("harness_bot", "harness_bot_levels"),
     "presets": ("level_preset",),
+    "sound": ("sound_cue",),
 }
 # Step keys that only Kata can produce (K1); a trial must be Kihon-completable (R7, K2). Same list as TrialLoader.KataOnlyKeys.
 TRIAL_KATA_ONLY = ("motion", "precision", "kata")
@@ -91,6 +94,33 @@ def rel(path: Path) -> str:
         return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+INTRO_CARD_MAX = 260  # YOK-109: story-card.schema.json caps *-intro cards here (other story cards keep 280)
+
+
+# YOK-109: Godot 4.7.2's text server aborts on Linux (an out-of-bounds index in glyph shaping) when a Label is resized around a long
+# run of emoji, zero-width joiners or combining marks. Story-card text is shown in Labels, so the data may not contain them.
+_EMOJI_RANGES = ((0x1F000, 0x1FAFF), (0x1FC00, 0x1FFFD), (0x231A, 0x23FF), (0x2600, 0x27BF), (0x2B00, 0x2BFF), (0x2934, 0x2935), (0x203C, 0x203C), (0x2049, 0x2049))
+CARD_TEXT_FIELDS = ("title", "text", "speaker")
+
+
+def forbidden_glyph(text: str) -> tuple[str, str] | None:
+    """(what, character) for the first emoji (incl. regional-indicator flags), zero-width joiner, variation selector or combining mark
+    in `text` as written, else None. No normalisation: the game hands the text to the Label unchanged, so a decomposed o + U+0304
+    still reaches the text server as a combining mark; write the precomposed ō instead."""
+    import unicodedata
+    for ch in text:
+        cp = ord(ch)
+        if cp == 0x200D:
+            return "a zero-width joiner", ch
+        if 0xFE00 <= cp <= 0xFE0F or 0xE0100 <= cp <= 0xE01EF:
+            return "a variation selector", ch
+        if any(lo <= cp <= hi for lo, hi in _EMOJI_RANGES):
+            return "an emoji or flag", ch
+        if unicodedata.category(ch) == "Mn":
+            return "a combining mark", ch
+    return None
 
 
 def load_validators() -> dict[str, Draft202012Validator]:
@@ -250,7 +280,7 @@ STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_
 
 def _load_json(f: Path):
     try:
-        return json.loads(f.read_text(encoding="utf-8"))
+        return loads(f.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
 
@@ -321,7 +351,7 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             errs.append((where, f"stage scene '{stage}' does not exist under game/"))
     for other in sorted(path.parent.glob("*.json")):
         try:
-            m = json.loads(other.read_text(encoding="utf-8"))
+            m = loads(other.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
         if not isinstance(m, dict) or m.get("kind") != "run_map":
@@ -349,7 +379,8 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
                "properties.aftershock_delay",
-               # YOK-220: evolution targets (MoveData.CheckPendingProperties; decoy is read by MoveData.ReadMirage, YOK-224)
+               # YOK-220: evolution targets (throw.range shape-only in MoveData.CheckPendingProperties; forward_travel
+               # moves the fighter, YOK-221 MoveData.ReadTravel; decoy is read by MoveData.ReadMirage, YOK-224)
                "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
@@ -378,12 +409,112 @@ class Unbuildable(Exception):
 INT32 = (-2**31, 2**31 - 1)
 
 
+class JsonFloat(float):
+    """YOK-221: a JSON number written with a fraction or an exponent, as a float that keeps its text, so whole() can
+    read it as the loader's .NET decimal does (see dotnet_decimal). Behaves as a float everywhere else."""
+    __slots__ = ("text",)
+
+    def __new__(cls, text):
+        f = super().__new__(cls, text)
+        f.text = str(text)
+        return f
+
+    def __reduce__(self):  # copy.deepcopy keeps the text
+        return (JsonFloat, (self.text,))
+
+
+def loads(text: str):
+    """json.loads for content files: fractions and exponents become JsonFloat (see whole())."""
+    return json.loads(text, parse_float=JsonFloat)
+
+
+DECIMAL_MAX = 2**96 - 1  # .NET decimal: a 96-bit mantissa ...
+DECIMAL_SCALE = 28       # ... and at most 28 digits after the point
+
+
+def dotnet_decimal(text: str):
+    """The value .NET reads from a JSON number with JsonElement.TryGetDecimal (Number.TryNumberToDecimal), or None
+    where it can't: the leading digits that fit a 96-bit mantissa with at most 28 after the point (so 28 or 29
+    significant digits), rounded half to even on the rest; a value under 1e-28 or so becomes 0 (1e-400 is 0); more than
+    29 digits before the point (about 7.9e28 and up) is refused. Designer, YOK-221 (2026-11-02): the validator
+    judges numbers as the loader reads them."""
+    try:
+        d = decimal.Decimal(text)
+    except decimal.InvalidOperation:
+        return None
+    if not d.is_finite():
+        return None
+    sign, digits, exp = d.as_tuple()
+    ds = list(digits)
+    while len(ds) > 1 and ds[-1] == 0:  # trailing zeros carry no digits
+        ds.pop()
+        exp += 1
+    if ds == [0]:
+        return decimal.Decimal(0)
+    e = len(ds) + exp  # digits before the point
+    if e > 29:
+        return None  # at once: never builds the number (1e9999999)
+    m, i = 0, 0
+    while e > 0 or (i < len(ds) and e > -DECIMAL_SCALE):
+        c = ds[i] if i < len(ds) else 0
+        if m * 10 + c > DECIMAL_MAX:
+            break
+        m, i, e = m * 10 + c, i + 1, e - 1
+    # .NET rounds a tie half to even only while it has kept 28 digits or fewer; with 29 kept, a tie rounds away from zero
+    if i < len(ds) and ds[i] >= 5 and not (ds[i] == 5 and m % 2 == 0 and len(str(m)) < 29 and not any(ds[i + 1:])):
+        m += 1
+        if m > DECIMAL_MAX:  # as .NET: the last digit goes and the value rounds up
+            m, e = (m + 9) // 10, e + 1
+    if e > 0:
+        return None
+    if e <= -29:
+        return decimal.Decimal(0)
+    return decimal.Decimal((sign, tuple(int(x) for x in str(m)), e))
+
+
+def loader_view(o):
+    """YOK-221: the document as the loader reads its numbers, for the schema: a written number .NET decimal reads as
+    whole (1e-34 is 0, 300 then 32 places ending in 1 is 300) becomes that int; anything else is left as it is."""
+    if isinstance(o, JsonFloat):
+        try:
+            huge = not decimal.Decimal(o.text).is_zero() and decimal.Decimal(o.text).adjusted() > 29
+        except decimal.InvalidOperation:
+            return o
+        d = None if huge else dotnet_decimal(o.text)
+        return int(d) if d is not None and d == d.to_integral_value() else o
+    if isinstance(o, dict):
+        return {k: loader_view(x) for k, x in o.items()}
+    if isinstance(o, list):
+        return [loader_view(x) for x in o]
+    return o
+
+
+def one_travel_report(errs: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """YOK-221: when the schema already names frame_data.properties.forward_travel, the loader-mirror line that says
+    the same is dropped, so each problem is reported once."""
+    if not any(p.startswith("frame_data.properties.forward_travel") for p, _ in errs):
+        return errs
+    return [(p, m) for p, m in errs if not (p == "frame_data" and "forward_travel" in m)]
+
+
 def whole(v):
     """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
-    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule."""
+    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule. A number read from a
+    file (JsonFloat) is judged on the value .NET decimal reads from its text (dotnet_decimal: 300 followed by 32
+    decimal places ending in 1 is 300, 1e-400 is 0, 1e9999999 is refused); one computed here, on its float value."""
     if isinstance(v, bool):
         return None
-    if isinstance(v, float):
+    if isinstance(v, JsonFloat):
+        try:
+            if not decimal.Decimal(v.text).is_zero() and decimal.Decimal(v.text).adjusted() > 9:
+                return None  # 1e10 and up is outside int32 however it rounds: refuse before reading it
+        except decimal.InvalidOperation:
+            return None
+        d = dotnet_decimal(v.text)
+        if d is None or d != d.to_integral_value():
+            return None
+        v = int(d)
+    elif isinstance(v, float):
         if not v.is_integer():
             return None
         v = int(v)
@@ -466,6 +597,8 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     if op == "set":
         if key in INT_TARGETS:
             value = whole(value)
+            if value is None:  # Effects.Check: an Int target takes a whole number inside int32 (YOK-220 + YOK-221 merge)
+                raise Unbuildable(f"effect 'set' needs an integer at {target}")
         elif key == "properties.armour":
             value = read_armour(value)
             if value is None:
@@ -484,6 +617,21 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     node[leaf] = combine(op, cur, v, target)
 
 
+def travel_errors(fd) -> list[str]:
+    """YOK-221: what MoveData.ReadTravel refuses, for every move kind MoveLoader reads (special builds, normals,
+    throws): forward_travel is a whole number of units >= 0, and a move that travels needs active frames."""
+    props = fd.get("properties") if isinstance(fd, dict) and isinstance(fd.get("properties"), dict) else {}
+    if "forward_travel" not in props:
+        return []
+    travel = whole(props["forward_travel"])  # an explicit null is refused, as MoveData.ReadTravel does
+    if travel is None or travel < 0:
+        return ["properties.forward_travel must be a whole number >= 0"]
+    active = whole(fd["active"]) if fd.get("active") is not None else 0
+    if travel > 0 and active is not None and active <= 0:
+        return ["properties.forward_travel needs active frames to travel over"]
+    return []
+
+
 def built_move_errors(fd: dict) -> list[str]:
     """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects)."""
     out: list[str] = []
@@ -500,7 +648,7 @@ def built_move_errors(fd: dict) -> list[str]:
             for i, x in enumerate(o):
                 yield from bad_numbers(x, f"{where}.{i}")
         elif isinstance(o, (int, float)) and not isinstance(o, bool) and whole(o) is None:
-            yield f"{where} = {o} is not a whole number inside int32"
+            yield f"{where} = {getattr(o, 'text', o)} is not a whole number inside int32"
 
     out.extend(bad_numbers(fd, ""))
     if out:
@@ -554,15 +702,15 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay must be a whole number >= 1")
         elif not fd.get("hitboxes"):
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
+    out.extend(travel_errors(fd))  # YOK-221: MoveData.ReadTravel
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
-    # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only).
+    # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only). forward_travel
+    # left it for YOK-221's travel_errors above (MoveData.ReadTravel), decoy for YOK-224's check below (ReadMirage).
     if "wall_bounce" in props and not isinstance(props["wall_bounce"], bool):
         out.append("properties.wall_bounce must be true or false")
     if "multi_hit" in props and read_multi_hit(props["multi_hit"]) is None:
         out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
-    if "forward_travel" in props and (whole(props["forward_travel"]) is None or whole(props["forward_travel"]) < 0):
-        out.append("properties.forward_travel must be a whole number of units >= 0")
     if "throw" in props and not throw_shape_ok(props["throw"]):
         out.append("properties.throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)")
     # YOK-224: MoveData.ReadMirage (Fox Mirage's teleport, Mirage Feint's decoy).
@@ -705,7 +853,7 @@ def load_specials(docs: dict) -> dict[str, dict]:
     for d in SPECIAL_DIRS:
         for f in sorted(d.glob("*.json")) if d.is_dir() else []:
             try:
-                doc = json.loads(f.read_text(encoding="utf-8"))
+                doc = loads(f.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
             if isinstance(doc, dict) and doc.get("kind") == "special":
@@ -769,6 +917,79 @@ def check_level_preset(doc: dict, specials: dict[str, dict]) -> list[tuple[str, 
         t = textures.get(kind)
         if isinstance(t, str) and not (ROOT / "game" / t).is_file():
             errs.append((f"spark.textures.{kind}", f"game/{t} does not exist"))
+    return errs
+
+
+# YOK-93: the sound-cue schema's patterns, matched whole (as HitCueLibrary does with \z).
+SOUND_SAMPLE = re.compile(r"res://sound/([A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(wav|ogg|mp3)")
+
+
+def sound_cue_when_key(when) -> str | None:
+    """YOK-93: one string per distinct `when` (HitCueLibrary refuses two rules with the same one), or None if malformed."""
+    if when is None:
+        when = {}
+    if not isinstance(when, dict):
+        return None
+    return json.dumps(when, sort_keys=True)
+
+
+SOUND_STRENGTHS = ("light", "medium", "heavy")
+SOUND_OUTCOMES = ("hit", "block", "counter")
+
+
+def sound_cues_cover_every_hit(tables: list) -> bool:
+    """YOK-93 (V6, same as HitCueLibrary.CoversEveryHit): rules naming no move, source or level cover every strength
+    and outcome, so no hit is silent. Tables that are not dicts or rules that are malformed count for nothing."""
+    general = []
+    for t in tables:
+        for cue in (t.get("cues") if isinstance(t, dict) and isinstance(t.get("cues"), list) else []):
+            when = cue.get("when", {}) if isinstance(cue, dict) else None
+            if isinstance(when, dict) and not ({"move", "source", "level"} & when.keys()):
+                general.append(when)
+    return all(any(w.get("strength", s) == s and w.get("outcome", o) == o for w in general)
+               for s in SOUND_STRENGTHS for o in SOUND_OUTCOMES)
+
+
+def check_sound_cue(doc: dict, move_ids: set[str] | None = None, sources: set[str] | None = None) -> list[tuple[str, str]]:
+    """YOK-93 (V6): what HitCueLibrary also refuses (whole-matched ids and paths, integers only, one rule per `when`
+    within the file), plus every sample existing under game/ and every `when.move` / `when.source` naming a move or a
+    source found in move data (data/moves/, the fixture specials and this run)."""
+    errs: list[tuple[str, str]] = []
+    cues = doc.get("cues") if isinstance(doc.get("cues"), list) else []
+    seen: dict[str, int] = {}
+    for i, cue in enumerate(cues):
+        if not isinstance(cue, dict):
+            continue
+        where = f"cues.{i}"
+        when = cue.get("when") if isinstance(cue.get("when"), dict) else {}
+        for key in ("move", "source"):
+            v = when.get(key)
+            if isinstance(v, str) and not PRESET_ID.fullmatch(v):
+                errs.append((f"{where}.when.{key}", f"{v!r} is not a lowercase kebab-case id (matched whole: no trailing newline)"))
+        move, source = when.get("move"), when.get("source")
+        if isinstance(move, str) and move_ids is not None and move not in move_ids:
+            errs.append((f"{where}.when.move", f"move '{move}' not found (expected data/moves/{move}.json); the rule would never play"))
+        if isinstance(source, str) and sources is not None and source not in sources:
+            errs.append((f"{where}.when.source", f"no move in data/moves/ has source '{source}' (found: {', '.join(sorted(sources))}); the rule would never play"))
+        for name, v in ((f"{where}.when.level", when.get("level")), (f"{where}.volume_db", cue.get("volume_db")),
+                        (f"{where}.offset_ticks", cue.get("offset_ticks"))):
+            if v is not None and not is_int(v):
+                errs.append((name, f"{v!r} must be a whole number (the loader reads integers only)"))
+        for part in ("thud", "sting"):
+            samples = cue.get(part) if isinstance(cue.get(part), list) else []
+            for j, path in enumerate(samples):
+                if not isinstance(path, str):
+                    continue
+                if not SOUND_SAMPLE.fullmatch(path):
+                    errs.append((f"{where}.{part}.{j}", f"{path!r} is not a res://sound/ .wav/.ogg/.mp3 path (matched whole)"))
+                elif not (ROOT / "game" / path[len("res://"):]).is_file():
+                    errs.append((f"{where}.{part}.{j}", f"game/{path[len('res://'):]} does not exist"))
+        key = sound_cue_when_key(cue.get("when"))
+        if key is not None:
+            if key in seen:
+                errs.append((f"{where}.when", f"same case as cues.{seen[key]} ({key}); one rule per case (V6)"))
+            else:
+                seen[key] = i
     return errs
 
 
@@ -846,13 +1067,16 @@ def load_schema(name: str) -> dict:
 
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
              specials: dict[str, dict] | None = None, schema_ok: bool = True,
-             move_kinds: dict[str, str] | None = None, moves_ok: bool | None = None) -> list[tuple[str, str]]:
+             move_kinds: dict[str, str] | None = None, move_sources: set[str] | None = None,
+             moves_ok: bool | None = None) -> list[tuple[str, str]]:
     """moves_ok (YOK-220): the move's own frame data (a normal's or throw's frame_data, a special's levels and ex)
     passed the schema, so the loader mirror runs even when another field failed (a fixture without a clip);
     defaults to schema_ok."""
     errs: list[tuple[str, str]] = []
     moves_ok = schema_ok if moves_ok is None else moves_ok
     kind = doc.get("kind")
+    sound_move_ids = set(move_kinds or {}) | set(specials or {}) if move_kinds is not None else None
+    sound_sources = move_sources
     if doc.get("id") != path.stem:
         errs.append(("id", f"id '{doc.get('id')}' must equal the file name '{path.stem}'"))
     parts = path.resolve().parts
@@ -862,6 +1086,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         if folder in DIR_KIND and kind not in DIR_KIND[folder]:
             allowed = " or ".join(f"'{k}'" for k in DIR_KIND[folder])
             errs.append(("kind", f"files in data/{folder}/ must be kind {allowed}, got '{kind}'"))
+        if folder == "sound" and len(parts) - idx > 3:  # YOK-93: HitCueLibrary reads data/sound/*.json only
+            errs.append(("(file)", "the game reads data/sound/*.json only; a cue table in a subfolder would never load"))
     for i, rid in enumerate(doc.get("rules") or []):
         if isinstance(rid, str) and rid not in rule_ids:
             errs.append((f"rules.{i}", f"rule ID '{rid}' does not exist in docs/design/rules.md"))
@@ -874,6 +1100,10 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
     if kind in ("normal", "throw") and moves_ok and isinstance(doc.get("frame_data"), dict):
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
+    if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
+        if not any(p.startswith("frame_data.properties.forward_travel") or (p == "frame_data" and "forward_travel" in m)
+                   for p, m in errs):
+            errs.extend(("frame_data", m) for m in travel_errors(doc.get("frame_data")))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
         if "landing_recovery" in doc and doc.get("air") is not True:  # E11: only jump-ins land mid-move
@@ -925,6 +1155,12 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("placeholders", f"{{{name}}} is used but not listed in placeholders (S4)"))
         for name in sorted(listed - used):
             errs.append(("placeholders", f"'{name}' is listed but {{{name}}} is not used in title or text"))
+        for key in CARD_TEXT_FIELDS:  # YOK-109: no emoji, ZWJ or combining marks (engine crash on Linux)
+            if isinstance(doc.get(key), str) and (bad := forbidden_glyph(doc[key])):
+                errs.append((key, f"{key} contains {bad[0]} (U+{ord(bad[1]):04X}); Godot 4.7.2's text server crashes on Linux when it shapes long runs of emoji, zero-width joiners and combining marks, so use plain letters or a precomposed accent"))
+        # YOK-109 (Y3): mirrors the schema's -intro cap: the elder-twist scroll's quote box holds 260 characters whole
+        if str(doc.get("id", "")).endswith("-intro") and isinstance(doc.get("text"), str) and len(doc["text"]) > INTRO_CARD_MAX:
+            errs.append(("text", f"an elder-twist intro card (id ending -intro) is capped at {INTRO_CARD_MAX} characters, this one has {len(doc['text'])} (Y3)"))
     elif kind == "elder_twist":  # YOK-90 (Y3): the intro card and callout are story cards
         for key in ("intro_card", "callout_card"):
             card = doc.get(key)
@@ -932,6 +1168,8 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
                 errs.append((key, f"story card '{card}' not found (expected data/story/{card}.json) (Y3)"))
     elif kind == "level_preset":  # YOK-198 (V8)
         errs.extend(check_level_preset(doc, specials or {}))
+    elif kind == "sound_cue":  # YOK-93 (V6)
+        errs.extend(check_sound_cue(doc, sound_move_ids, sound_sources))
     elif kind == "run_map":
         errs.extend(check_run_map(doc))
     elif kind == "node_scenes":
@@ -1029,14 +1267,14 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     failures: dict[Path, list[tuple[str, str]]] = {}
     for f in files:
         try:
-            docs[f] = json.loads(f.read_text(encoding="utf-8"))
+            docs[f] = loads(f.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as e:
             failures[f] = [("(file)", f"cannot read JSON: {e}")]
     # Clips referenced by specials and normals: everything in data/clips/ plus clips in this run.
     clips: dict[str, dict] = {}
     for c in sorted((DATA / "clips").glob("*.json")) if (DATA / "clips").is_dir() else []:
         try:
-            d = json.loads(c.read_text(encoding="utf-8"))
+            d = loads(c.read_text(encoding="utf-8"))
             clips[d.get("id", c.stem)] = d
         except (OSError, json.JSONDecodeError, AttributeError):
             pass
@@ -1051,12 +1289,15 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     move_docs = []
     for mf in sorted((DATA / "moves").glob("*.json")) if (DATA / "moves").is_dir() else []:
         try:
-            move_docs.append(json.loads(mf.read_text(encoding="utf-8")))
+            move_docs.append(loads(mf.read_text(encoding="utf-8")))
         except (OSError, json.JSONDecodeError):
             pass
-    for d in move_docs + list(docs.values()):
+    move_sources: set[str] = set()  # YOK-93: what a hit cue's source can be (HitSparks.Identify reads the move's source)
+    for d in move_docs + list(docs.values()) + list(specials.values()):
         if isinstance(d, dict) and d.get("kind") in ("special", "normal", "throw") and isinstance(d.get("id"), str):
             move_kinds[d["id"]] = d["kind"]
+            if isinstance(d.get("source"), str):
+                move_sources.add(d["source"])
 
     for f, doc in docs.items():
         errs: list[tuple[str, str]] = []
@@ -1066,16 +1307,16 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             errs.append(("kind", f"unknown kind {doc.get('kind')!r}; expected one of {sorted(validators)}"))
         else:
             v = validators[doc["kind"]]
-            for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
+            for e in sorted(v.iter_errors(loader_view(doc)), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
             # YOK-220: the loader mirror needs only the move's own frame data to be schema-valid.
             move_errs = [p for p, _ in errs if p.split(".")[0] in ("frame_data", "levels", "ex")]
             errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds,
-                                 moves_ok=not move_errs and game_loads))
+                                 move_sources=move_sources, moves_ok=not move_errs and game_loads))
         if errs:
-            failures[f] = errs
+            failures[f] = one_travel_report(errs)
 
     # YOK-90 (Y2): one twist per elder across the files checked together.
     twist_of: dict[str, Path] = {}
@@ -1128,6 +1369,53 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             if first != f:
                 failures.setdefault(f, []).append(
                     ("level", f"'{doc['special']}' Lv {doc['level']} already has a preset in {rel(first)} (V8: one per level)"))
+
+    # YOK-93 (V6): HitCueLibrary loads one folder as one set: every *.json in it. A cue table checked here is judged
+    # with the rest of its folder on disk (this run's copies in their place), so checking one file of data/sound/
+    # finds what loading the folder would. data/samples/ is documentation.
+    in_run = {f.resolve() for f in docs}
+    folders: dict[Path, list[Path]] = {}
+    for f, doc in docs.items():
+        if isinstance(doc, dict) and doc.get("kind") == "sound_cue" and SAMPLES_DIR not in f.resolve().parents:
+            folders.setdefault(f.resolve().parent, []).append(f)
+    siblings: dict[Path, list[tuple[Path, dict]]] = {}  # folder -> its other sound_cue files on disk, not in this run
+    for folder in folders:
+        for other in sorted(folder.glob("*.json")):
+            if other.resolve() in in_run:
+                continue
+            try:
+                d = json.loads(other.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(d, dict) and d.get("kind") == "sound_cue":
+                siblings.setdefault(folder, []).append((other, d))
+
+    # One rule per case (HitCueLibrary throws on the same): across the tables checked together and the rest of their
+    # folders. Files on disk go first, so the error lands on the file being checked.
+    cue_of: dict[str, tuple[Path, int]] = {}
+    pool = [pair for folder in folders for pair in siblings.get(folder, [])]
+    pool += [(f, docs[f]) for members in folders.values() for f in members]
+    for f, doc in pool:
+        if not isinstance(doc.get("cues"), list):
+            continue
+        for i, cue in enumerate(doc["cues"]):
+            key = sound_cue_when_key(cue.get("when")) if isinstance(cue, dict) else None
+            if key is None:
+                continue
+            first = cue_of.setdefault(key, (f, i))
+            if first[0] != f and f.resolve() in in_run:
+                failures.setdefault(f, []).append(
+                    (f"cues.{i}.when", f"same case as cues.{first[1]} in {rel(first[0])} ({key}); one rule per case (V6)"))
+
+    # A set with no default would leave some hits silent; HitCueLibrary refuses it.
+    for folder, members in folders.items():
+        tables = [docs[f] for f in docs if f.resolve().parent == folder] + [d for _, d in siblings.get(folder, [])]
+        tables = [t for t in tables if isinstance(t, dict) and t.get("kind") == "sound_cue"]
+        if not sound_cues_cover_every_hit(tables):
+            for f in members:
+                failures.setdefault(f, []).append(
+                    ("cues", f"the cue tables in {rel(folder)}/ have no default: some hits would be silent. Add a rule with no "
+                             "when (or rules naming only strength / outcome that cover every hit) (V6)"))
 
     proposed = sum(1 for d in docs.values() if isinstance(d, dict) and '"proposed"' in json.dumps(d))
     for f in files:

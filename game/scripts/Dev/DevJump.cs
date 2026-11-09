@@ -120,7 +120,7 @@ public static class DevJump
 	/// <summary>
 	/// The opponents. One is built when the node-scene table gives it a fighter of its own, or when it stands in on
 	/// another fighter's kit but has a body of its own (<see cref="FighterAnimSet.HasBody"/>: the Oni and Kappa fight as
-	/// themselves on the Kitsune's moves). A stand-in with no body of its own stays greyed.
+	/// themselves, on their own move files where data/moves has them and the Kitsune's for the rest, <see cref="Kit.LoadAs"/>). A stand-in with no body of its own stays greyed.
 	/// </summary>
 	public static IReadOnlyList<DevOpponent> Opponents(NodeSceneTable? table = null)
 	{
@@ -234,12 +234,14 @@ public static class DevJump
 
 	/// <summary>
 	/// The A7 draft from <paramref name="yokai"/>, seeded. <paramref name="rares"/> = the elder's spread (commons and
-	/// rares, A9); off = a duel's (commons only). The run is the source's, given to the screen so a pick lands on it.
+	/// rares, A9, and the elder's cancel rule when available, X1); off = a duel's (commons only). The run is the source's, given to the screen so a pick lands on it.
 	/// </summary>
 	public static (RewardDraft Draft, RunState Run) BuildDraft(AbilityPool pool, string yokai, uint seed, bool rares, IDevRunStateSource? source = null)
 	{
 		var run = (source ?? DevRunStates.Source).Build(pool);
-		return (RewardDraft.Build(run, pool, yokai, seed, elder: rares), run);
+		// YOK-186: an elder preview names the elder whose cancel rule is this yokai's (data: offered_by), so its CANCEL card shows.
+		string? elderId = rares ? pool.CancelRules.Where(c => c.Source == yokai).Select(c => c.OfferedBy).FirstOrDefault() : null;
+		return (RewardDraft.Build(run, pool, yokai, seed, elder: rares, elderId: elderId), run);
 	}
 
 	/// <summary>Every Jump target. Data-driven where the content is: one entry per story card and per dojo trial.</summary>

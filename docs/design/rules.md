@@ -180,12 +180,12 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **T3** Ties: most recently levelled, then lower slot.
 - **T4** Strength: at Ryo's level, **never** his modifiers or evolution. An evolved Lv 3 move always beats its copy.
 - **T5** Always defined: the merchant won't release Ryo's last special.
-- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20) [AM15]. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6].
+- **T6** Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost. Expected cost is the copied move's damage per hit at Ryo's level, read from data; it is always available, so there is no "not enough fights" state (decided 2026-10-20) [AM15]. In fights the HUD shows the talisman **only in the Tanuki fight** (the locked copy, T1); no yokai or elder fight shows it [AM6]. In the Tanuki fight the talisman and the copy strip show Ryo's level for the copied move; the strip says the copy runs with no modifiers and no evolution (T4) (designer, 2026-10-25, YOK-109).
 
 ## R — The run
 
 - **R1** 8 rows, one node per row. Rows 1–3, 5, 6, 8 duels; 5 and 8 always elders; row 4 always merchant; row 7 merchant or dojo; row 1 apprentice. Tanuki after row 8.
-- **R2** Each node shows which yokai waits there. The map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the nodes he can choose next, so later rows, the Tanuki included, stay hidden until their turn [AM18].
+- **R2** Each node shows which yokai waits there. The map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the nodes he can choose next, so later rows' nodes, the Tanuki included, stay hidden until their turn [AM18]; the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19].
 - **R3** Binding a yokai restores 50 health.
 - **R4** Arrival-health targets: newcomer heal@4 + rest@7 ≈ 520; heal@4 + train@7 ≈ 370; shop@4 + rest@7 ≈ 270 (short of boss cost); average shop@4 + train@7 ≈ 490.
 - **R5** Harness target: 200 simulated first runs by a newcomer-profile Kihon bot → 50–70% reach the Tanuki, 40–60% of those beat it. Calibrated against outside playtests (end of weeks 2 and 4).
@@ -241,5 +241,4 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - Whether Ryo may leave a rest stop without choosing, and whether a heal at full health should be offered (R6, R7).
 - The shop's item count per visit: 9 (3 shelves of 3) proposed, 6 as a balance alternative; balance decides (R6). How the items are picked.
 - What the Tanuki does when it copies a charged special such as Sumo Stance (AM11, T4).
-- In the Tanuki fight, whether the player is shown Ryo's level for the copied move or the strength the Tanuki copies it at (T4, T6).
 - The first-meeting video (S6, AM17): its length; whether it can be skipped; whether elders, the Tanuki and the row-1 apprentice count; how it is made (generated video, which needs a tool and spend, or an animated card in the engine); whether it may land before the week-3 feature freeze (G5).

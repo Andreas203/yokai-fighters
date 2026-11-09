@@ -96,7 +96,7 @@ public static class TripoRyoProbes
 		var missing = new List<string>();
 		foreach (var (moveId, clip) in FightScene.MoveClips)
 		{
-			if (moveId.StartsWith("kitsune-") || moveId.StartsWith("oni-")) continue;
+			if (moveId.StartsWith("kitsune-") || moveId.StartsWith("oni-") || moveId.StartsWith("kappa-")) continue; // a yokai's own kit (YOK-228: the Kappa's), never on the Tanuki or Ryo
 			string c = set.MoveClip(clip);
 			if (!set.CanPlay(Cat[c])) missing.Add($"{moveId}->{c}");
 		}

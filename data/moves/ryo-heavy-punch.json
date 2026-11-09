@@ -12,7 +12,9 @@
     "F2",
     "F3",
     "K3",
-    "V2"
+    "V2",
+    "X3",
+    "X4"
   ],
   "input": {
     "button": "HP"
@@ -75,7 +77,19 @@
           "h": 105
         }
       }
+    ],
+    "cancel_windows": [
+      {
+        "frames": [
+          11,
+          20
+        ],
+        "on": [
+          "hit",
+          "block"
+        ]
+      }
     ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 34, S/A/R 10/4/20. Arm is at 74% reach at the cut: blend the retraction out over 4-6 ticks. Hitstun 24 and blockstun 21 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 34, S/A/R 10/4/20. Arm is at 74% reach at the cut: blend the retraction out over 4-6 ticks. Hitstun 24 and blockstun 21 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged. YOK-217 (proposed, designer to approve the window lengths): cancel_windows. Oni Chain (Heavy normals -> specials): open from the first active frame (11) to 6 frames into recovery (20) of the 34-frame clip, on hit or block only (the rule excludes whiff)."
 }

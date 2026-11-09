@@ -225,7 +225,9 @@ public static class BotIdleGuardTests
 		var batch = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content), bot, 1, 3); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		// YOK-174: all three re-pinned (were 1144460045766550, cd0500c43b604051, 8091329b164ab95a): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
-		var want = new[] { "201847ea51c823ea", "d1e10892cbb135b5", "e6080dde358a775a" };
+		// YOK-228: seed 2 re-pinned (was d1e10892cbb135b5): it is the one run of the three that fights Kappa nodes (r2-kappa, r3-kappa), now
+		// on his own normals, throw and push width (data/moves/kappa-*.json, data/fighters/kappa.json); seeds 1 and 3 unchanged.
+		var want = new[] { "201847ea51c823ea", "f74356e37f6dce83", "e6080dde358a775a" };
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
 		var got = Enumerable.Range(0, want.Length).Select(i => runs[i].GetProperty("session_hash").GetString()).ToArray();
@@ -239,7 +241,8 @@ public static class BotIdleGuardTests
 		var on = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content) with { StandingHabits = true }, bot, 1, 3);
 		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
 		var runsOn = docOn.RootElement.GetProperty("runs");
-		var wantOn = new[] { "154d762679e8fa9e", "c5a8b3d97602d4e5", "3eead3f9f53bac43" };
+		// YOK-228: seed 2 re-pinned (was c5a8b3d97602d4e5), the Kappa run as above.
+		var wantOn = new[] { "154d762679e8fa9e", "896456518ab6e186", "3eead3f9f53bac43" };
 		var gotOn = Enumerable.Range(0, wantOn.Length).Select(i => runsOn[i].GetProperty("session_hash").GetString()).ToArray();
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", gotOn), "runs seed 1-3 with YOK-177 standing habits");
 	}
