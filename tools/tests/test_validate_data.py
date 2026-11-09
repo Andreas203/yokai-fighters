@@ -648,6 +648,11 @@ class ValidateDataTest(unittest.TestCase):
     def test_node_scenes_validate_and_cover_the_maps(self):
         self.assertEqual(self._node_scenes(lambda d: None)[0], 0)
 
+        def yokai_stage(d):  # YOK-150
+            d["opponent_stages"]["elder-oni"] = "res://scenes/stage/placeholder.tscn"
+        code, out = self._node_scenes(yokai_stage)
+        self.assertEqual(code, 0, out)
+
         def per_node(d):
             d["nodes"]["boss-tanuki"] = {"scene": "res://scenes/tanuki_den.tscn", "tier": "tanuki"}
             d["opponents"]["oni"] = {"fighter": "oni", "profile": "oni-patient"}
@@ -669,6 +674,11 @@ class ValidateDataTest(unittest.TestCase):
             (lambda d: d["types"]["duel"].update(stage="res://scenes/stage//placeholder.tscn"), "not a scene path under res://scenes/stage/"),
             (lambda d: d.update(default_stage="res://scenes/stage/sub\\placeholder.tscn"), "not a scene path under res://scenes/stage/"),
             (lambda d: d["types"]["duel"].update(stage="res://scenes/stage/placeholder.tscn\n"), "not a scene path under res://scenes/stage/"),
+            # YOK-150: opponent_stages, a stage per yokai, checked like every other stage.
+            (lambda d: d["opponent_stages"].update(oni="res://scenes/stage/no_such_stage.tscn"), "opponent_stages.oni"),
+            (lambda d: d["opponent_stages"].update(kappa="res://scenes/fight.tscn"), "does not match"),
+            (lambda d: d["opponent_stages"].update(tanuki="res://scenes/stage/../fight.tscn"), "not a scene path under res://scenes/stage/"),
+            (lambda d: d["opponent_stages"].update(oni=3), "is not of type 'string'"),
         ]
         for edit, expect in cases:
             code, out = self._node_scenes(edit)

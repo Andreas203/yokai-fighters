@@ -54,11 +54,12 @@ public static class StageContainerTests
 	}
 
 	[Test]
-	public static void DataTable_EveryFightNodeShowsTheBambooGrove()
+	public static void DataTable_KitsuneFightsShowTheBambooGrove()
 	{
+		// YOK-150: the other yokai have stages of their own (StageSetTests.DataTable_EachYokaiFightsOnItsStage); the Kitsune keeps default_stage.
 		var t = NodeSceneTable.Default(ContentPaths.Data("map"));
 		foreach (string type in new[] { "duel", "elder", "boss" })
-			Assert.Equal(FightScene.GroveScene, t.Resolve(new MapNodeData("n", 1, type, "kitsune")).Context.Stage, $"{type}: the grove (unchanged by YOK-144)");
+			Assert.Equal(FightScene.GroveScene, t.Resolve(new MapNodeData("n", 1, type, "kitsune")).Context.Stage, $"{type}: the grove");
 	}
 
 	[Test]
