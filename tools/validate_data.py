@@ -25,6 +25,7 @@ Requires the `jsonschema` package (see tools/requirements.txt).
 from __future__ import annotations
 
 import copy
+import decimal
 import functools
 import json
 import os
@@ -275,7 +276,7 @@ STAGE_PATTERN = re.compile(r"^res://scenes/stage/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_
 
 def _load_json(f: Path):
     try:
-        return json.loads(f.read_text(encoding="utf-8"))
+        return loads(f.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
 
@@ -346,7 +347,7 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
             errs.append((where, f"stage scene '{stage}' does not exist under game/"))
     for other in sorted(path.parent.glob("*.json")):
         try:
-            m = json.loads(other.read_text(encoding="utf-8"))
+            m = loads(other.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
         if not isinstance(m, dict) or m.get("kind") != "run_map":
@@ -394,12 +395,112 @@ class Unbuildable(Exception):
 INT32 = (-2**31, 2**31 - 1)
 
 
+class JsonFloat(float):
+    """YOK-221: a JSON number written with a fraction or an exponent, as a float that keeps its text, so whole() can
+    read it as the loader's .NET decimal does (see dotnet_decimal). Behaves as a float everywhere else."""
+    __slots__ = ("text",)
+
+    def __new__(cls, text):
+        f = super().__new__(cls, text)
+        f.text = str(text)
+        return f
+
+    def __reduce__(self):  # copy.deepcopy keeps the text
+        return (JsonFloat, (self.text,))
+
+
+def loads(text: str):
+    """json.loads for content files: fractions and exponents become JsonFloat (see whole())."""
+    return json.loads(text, parse_float=JsonFloat)
+
+
+DECIMAL_MAX = 2**96 - 1  # .NET decimal: a 96-bit mantissa ...
+DECIMAL_SCALE = 28       # ... and at most 28 digits after the point
+
+
+def dotnet_decimal(text: str):
+    """The value .NET reads from a JSON number with JsonElement.TryGetDecimal (Number.TryNumberToDecimal), or None
+    where it can't: the leading digits that fit a 96-bit mantissa with at most 28 after the point (so 28 or 29
+    significant digits), rounded half to even on the rest; a value under 1e-28 or so becomes 0 (1e-400 is 0); more than
+    29 digits before the point (about 7.9e28 and up) is refused. Designer, YOK-221 (2026-11-02): the validator
+    judges numbers as the loader reads them."""
+    try:
+        d = decimal.Decimal(text)
+    except decimal.InvalidOperation:
+        return None
+    if not d.is_finite():
+        return None
+    sign, digits, exp = d.as_tuple()
+    ds = list(digits)
+    while len(ds) > 1 and ds[-1] == 0:  # trailing zeros carry no digits
+        ds.pop()
+        exp += 1
+    if ds == [0]:
+        return decimal.Decimal(0)
+    e = len(ds) + exp  # digits before the point
+    if e > 29:
+        return None  # at once: never builds the number (1e9999999)
+    m, i = 0, 0
+    while e > 0 or (i < len(ds) and e > -DECIMAL_SCALE):
+        c = ds[i] if i < len(ds) else 0
+        if m * 10 + c > DECIMAL_MAX:
+            break
+        m, i, e = m * 10 + c, i + 1, e - 1
+    # .NET rounds a tie half to even only while it has kept 28 digits or fewer; with 29 kept, a tie rounds away from zero
+    if i < len(ds) and ds[i] >= 5 and not (ds[i] == 5 and m % 2 == 0 and len(str(m)) < 29 and not any(ds[i + 1:])):
+        m += 1
+        if m > DECIMAL_MAX:  # as .NET: the last digit goes and the value rounds up
+            m, e = (m + 9) // 10, e + 1
+    if e > 0:
+        return None
+    if e <= -29:
+        return decimal.Decimal(0)
+    return decimal.Decimal((sign, tuple(int(x) for x in str(m)), e))
+
+
+def loader_view(o):
+    """YOK-221: the document as the loader reads its numbers, for the schema: a written number .NET decimal reads as
+    whole (1e-34 is 0, 300 then 32 places ending in 1 is 300) becomes that int; anything else is left as it is."""
+    if isinstance(o, JsonFloat):
+        try:
+            huge = not decimal.Decimal(o.text).is_zero() and decimal.Decimal(o.text).adjusted() > 29
+        except decimal.InvalidOperation:
+            return o
+        d = None if huge else dotnet_decimal(o.text)
+        return int(d) if d is not None and d == d.to_integral_value() else o
+    if isinstance(o, dict):
+        return {k: loader_view(x) for k, x in o.items()}
+    if isinstance(o, list):
+        return [loader_view(x) for x in o]
+    return o
+
+
+def one_travel_report(errs: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """YOK-221: when the schema already names frame_data.properties.forward_travel, the loader-mirror line that says
+    the same is dropped, so each problem is reported once."""
+    if not any(p.startswith("frame_data.properties.forward_travel") for p, _ in errs):
+        return errs
+    return [(p, m) for p, m in errs if not (p == "frame_data" and "forward_travel" in m)]
+
+
 def whole(v):
     """A whole number in any JSON notation (2, 2.0, 1e1) inside int32, as an int, else None: the loader's
-    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule."""
+    Effects.Whole / WholeInt. Frame data, effect values and results all follow this one rule. A number read from a
+    file (JsonFloat) is judged on the value .NET decimal reads from its text (dotnet_decimal: 300 followed by 32
+    decimal places ending in 1 is 300, 1e-400 is 0, 1e9999999 is refused); one computed here, on its float value."""
     if isinstance(v, bool):
         return None
-    if isinstance(v, float):
+    if isinstance(v, JsonFloat):
+        try:
+            if not decimal.Decimal(v.text).is_zero() and decimal.Decimal(v.text).adjusted() > 9:
+                return None  # 1e10 and up is outside int32 however it rounds: refuse before reading it
+        except decimal.InvalidOperation:
+            return None
+        d = dotnet_decimal(v.text)
+        if d is None or d != d.to_integral_value():
+            return None
+        v = int(d)
+    elif isinstance(v, float):
         if not v.is_integer():
             return None
         v = int(v)
@@ -476,6 +577,21 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     node[leaf] = combine(op, cur, v, target)
 
 
+def travel_errors(fd) -> list[str]:
+    """YOK-221: what MoveData.ReadTravel refuses, for every move kind MoveLoader reads (special builds, normals,
+    throws): forward_travel is a whole number of units >= 0, and a move that travels needs active frames."""
+    props = fd.get("properties") if isinstance(fd, dict) and isinstance(fd.get("properties"), dict) else {}
+    if props.get("forward_travel") is None:
+        return []
+    travel = whole(props["forward_travel"])
+    if travel is None or travel < 0:
+        return ["properties.forward_travel must be a whole number >= 0"]
+    active = whole(fd["active"]) if fd.get("active") is not None else 0
+    if travel > 0 and active is not None and active <= 0:
+        return ["properties.forward_travel needs active frames to travel over"]
+    return []
+
+
 def built_move_errors(fd: dict) -> list[str]:
     """What MoveLoader and SpecialData.Legal refuse in a special as built (after level, EX and modifier effects)."""
     out: list[str] = []
@@ -492,7 +608,7 @@ def built_move_errors(fd: dict) -> list[str]:
             for i, x in enumerate(o):
                 yield from bad_numbers(x, f"{where}.{i}")
         elif isinstance(o, (int, float)) and not isinstance(o, bool) and whole(o) is None:
-            yield f"{where} = {o} is not a whole number inside int32"
+            yield f"{where} = {getattr(o, 'text', o)} is not a whole number inside int32"
 
     out.extend(bad_numbers(fd, ""))
     if out:
@@ -546,6 +662,7 @@ def built_move_errors(fd: dict) -> list[str]:
             out.append("properties.aftershock_delay must be a whole number >= 1")
         elif not fd.get("hitboxes"):
             out.append("properties.aftershock_delay needs the move's own hitboxes to replay")
+    out.extend(travel_errors(fd))  # YOK-221: MoveData.ReadTravel
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
     return out
@@ -678,7 +795,7 @@ def load_specials(docs: dict) -> dict[str, dict]:
     for d in SPECIAL_DIRS:
         for f in sorted(d.glob("*.json")) if d.is_dir() else []:
             try:
-                doc = json.loads(f.read_text(encoding="utf-8"))
+                doc = loads(f.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
             if isinstance(doc, dict) and doc.get("kind") == "special":
@@ -843,6 +960,10 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
     if kind in ("normal", "throw") and schema_ok and isinstance(doc.get("frame_data"), dict):
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
+    if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
+        if not any(p.startswith("frame_data.properties.forward_travel") or (p == "frame_data" and "forward_travel" in m)
+                   for p, m in errs):
+            errs.extend(("frame_data", m) for m in travel_errors(doc.get("frame_data")))
     if kind == "normal":
         check_frame_data(doc.get("frame_data"), "frame_data", clip, clip_id, errs)
         if "landing_recovery" in doc and doc.get("air") is not True:  # E11: only jump-ins land mid-move
@@ -1004,14 +1125,14 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     failures: dict[Path, list[tuple[str, str]]] = {}
     for f in files:
         try:
-            docs[f] = json.loads(f.read_text(encoding="utf-8"))
+            docs[f] = loads(f.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as e:
             failures[f] = [("(file)", f"cannot read JSON: {e}")]
     # Clips referenced by specials and normals: everything in data/clips/ plus clips in this run.
     clips: dict[str, dict] = {}
     for c in sorted((DATA / "clips").glob("*.json")) if (DATA / "clips").is_dir() else []:
         try:
-            d = json.loads(c.read_text(encoding="utf-8"))
+            d = loads(c.read_text(encoding="utf-8"))
             clips[d.get("id", c.stem)] = d
         except (OSError, json.JSONDecodeError, AttributeError):
             pass
@@ -1026,7 +1147,7 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     move_docs = []
     for mf in sorted((DATA / "moves").glob("*.json")) if (DATA / "moves").is_dir() else []:
         try:
-            move_docs.append(json.loads(mf.read_text(encoding="utf-8")))
+            move_docs.append(loads(mf.read_text(encoding="utf-8")))
         except (OSError, json.JSONDecodeError):
             pass
     for d in move_docs + list(docs.values()):
@@ -1041,13 +1162,13 @@ def validate(paths: list[str], out=sys.stdout) -> int:
             errs.append(("kind", f"unknown kind {doc.get('kind')!r}; expected one of {sorted(validators)}"))
         else:
             v = validators[doc["kind"]]
-            for e in sorted(v.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path))):
+            for e in sorted(v.iter_errors(loader_view(doc)), key=lambda e: list(map(str, e.absolute_path))):
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
             errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds))
         if errs:
-            failures[f] = errs
+            failures[f] = one_travel_report(errs)
 
     # YOK-90 (Y2): one twist per elder across the files checked together.
     twist_of: dict[str, Path] = {}
