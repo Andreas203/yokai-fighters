@@ -243,9 +243,13 @@ public static class MapV2Tests
 				if (l.Kind == MapLandmarkKind.Torii)
 				{
 					var own = paths.First(p => p.Any(o => o.DistanceTo(l.OnPath) < 5f));
-					float y = l.Rect.Position.Y + MapLandmarkPlan.ToriiCrossing * l.Rect.Size.Y, x0 = l.Rect.Position.X + MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X, x1 = l.Rect.End.X - MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X;
-					Assert.True(MapRouteGeometry.Crosses(own, new[] { new Vector2(x0, y), new Vector2(x1, y) }), $"{size}: the route crosses the line between the torii's posts");
-					Assert.True(System.Math.Abs(l.OnPath.X - l.Rect.GetCenter().X) < 1f && System.Math.Abs(l.OnPath.Y - y) < 1f, $"{size}: and does so at the centre, in the lower third of the posts");
+					float ht = l.Rect.Size.Y, top = l.Rect.Position.Y, feet = top + MapLandmarkPlan.ToriiFeet * ht;
+					float xl = l.Rect.Position.X + MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X, xr = l.Rect.End.X - MapLandmarkPlan.ToriiPostInset * l.Rect.Size.X, xc = l.Rect.GetCenter().X;
+					var yl = MapLandmarkPlan.YAt(own, xl); var yc = MapLandmarkPlan.YAt(own, xc); var yr = MapLandmarkPlan.YAt(own, xr);
+					Assert.True(yl != null && yc != null && yr != null, $"{size}: the route's x range covers both posts and the centre");
+					foreach (var y in new[] { yl!.Value, yc!.Value, yr!.Value }) Assert.True(y >= top && y <= feet, $"{size}: the route at a post or the centre is at y {y:F0}, outside the posts' span {top:F0}..{feet:F0}");
+					float fc = (yc.Value - top) / ht;
+					Assert.True(fc >= 0.60f && fc <= 0.85f, $"{size}: the route crosses the gate at {fc:P0} of the posts' height, not in the lower third");
 				}
 				if (l.Kind == MapLandmarkKind.Bridge)
 				{

@@ -138,9 +138,19 @@ public static class MapLandmarkPlan
 	}
 
 	/// <summary>The part of the sprite's height at which the route passes: a bridge's deck, the lower third of a torii's posts.</summary>
-	public const float BridgeDeck = 0.44f, ToriiCrossing = 0.80f;
+	public const float BridgeDeck = 0.44f, ToriiCrossing = 0.72f;
 	/// <summary>The torii's posts stand this share of its width in from each side (the inner faces of the gate).</summary>
 	public const float ToriiPostInset = 0.22f;
+	/// <summary>The posts run from the top of the sprite to this share of its height (their feet).</summary>
+	public const float ToriiFeet = 0.95f;
+
+	/// <summary>The route's y at <paramref name="x"/> (null when the route does not reach x).</summary>
+	public static float? YAt(Vector2[] p, float x)
+	{
+		for (int i = 0; i + 1 < p.Length; i++)
+			if ((p[i].X <= x && x <= p[i + 1].X) || (p[i + 1].X <= x && x <= p[i].X)) { float dx = p[i + 1].X - p[i].X; return Mathf.Abs(dx) < 0.001f ? p[i].Y : Mathf.Lerp(p[i].Y, p[i + 1].Y, (x - p[i].X) / dx); }
+		return null;
+	}
 	/// <summary>How far a stream reaches past the bridge's rect above and below (px at 1080p, scaled by board height).</summary>
 	static readonly float[] StreamReach = { 0.09f, 0.075f, 0.065f };
 
@@ -159,7 +169,7 @@ public static class MapLandmarkPlan
 		var d = path[b] - path[a];
 		if (d.X <= 1f) return null;
 		float slope = Mathf.Abs(d.Y / d.X);
-		var p = kind == MapLandmarkKind.Torii ? (path[i] + path[Mathf.Min(path.Length - 1, i + 1)]) / 2f : path[i]; // a torii is centred between two samples so the route crosses its post line cleanly
+		var p = path[i];
 		float ht = bounds.Size.Y * HeightShare(kind) * (0.9f + 0.2f * MapLayout.Unit(h, 2)), wd = ht * Aspect(kind);
 		Rect2 rect; Vector2[]? stream = null;
 		bool onPath = kind is MapLandmarkKind.Bridge or MapLandmarkKind.Torii;
@@ -167,9 +177,20 @@ public static class MapLandmarkPlan
 		{
 			// a fairly straight stretch: the bridge on a level one, the torii on a gently sloping one, so the route crosses the line between its posts
 			if (Bend(path, i, 5) > 9f) return null;
-			if (kind == MapLandmarkKind.Bridge ? slope > 0.2f : slope < 0.12f || slope > 0.9f) return null;
+			if (kind == MapLandmarkKind.Bridge ? slope > 0.2f : slope > 0.30f) return null;
 			float level = kind == MapLandmarkKind.Bridge ? BridgeDeck : ToriiCrossing;
 			rect = new Rect2(p.X - wd / 2f, p.Y - level * ht, wd, ht);
+			if (kind == MapLandmarkKind.Torii)
+			{
+				// the route must pass between the posts: near-straight across the gate, and at both posts and the centre inside the posts' span, the centre in the lower third
+				float xl = rect.Position.X + ToriiPostInset * wd, xr = rect.End.X - ToriiPostInset * wd;
+				if (YAt(path, xl) is not { } yl || YAt(path, xr) is not { } yr) return null;
+				float top = rect.Position.Y, feet = top + ToriiFeet * ht;
+				if (yl < top || yl > feet || yr < top || yr > feet) return null;
+				float fc = (p.Y - top) / ht;
+				if (fc < 0.60f || fc > 0.85f) return null;
+				if (Mathf.Abs(yl - yr) > 0.25f * ht) return null;
+			}
 			if (kind == MapLandmarkKind.Bridge)
 			{
 				foreach (float reach in StreamReach)
