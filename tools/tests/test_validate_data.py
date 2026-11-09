@@ -983,6 +983,32 @@ class LevelPresetTest(unittest.TestCase):
             code, out = run(self._write(tmp, self._doc(spark={"textures": {"hit": real}})))
             self.assertEqual(code, 0, out)
 
+    def test_vfx_blocks(self):
+        """YOK-242: projectile / cast / release / impact blocks, refused where LevelPresetLibrary refuses them."""
+        import tempfile
+        good = dict(projectile={"look": "ink_wave", "core": "#F1E8D4", "scale_pct": 160},
+                    cast={"look": "seal"}, release={"look": "none"}, impact={"look": "dust", "frames": 30})
+        cases = [
+            (dict(projectile={"look": "seal"}), "projectile.look"),
+            (dict(cast={"look": "fox_flame"}), "cast.look"),
+            (dict(projectile={"frames": 10}), "Additional properties"),
+            (dict(impact={"glow": 1}), "Additional properties"),
+            (dict(release={"scale_pct": 10}), "release.scale_pct"),
+            (dict(cast={"frames": 1}), "cast.frames"),
+            (dict(impact={"core": "#12345"}), "impact.core"),
+            (dict(projectile={"colour": "#102030\n"}), "projectile.colour: '#102030\\n' is not a #RRGGBB colour"),
+            (dict(projectile={"texture": "vfx/projectiles/missing.png"}), "projectile.texture: game/vfx/projectiles/missing.png does not exist"),
+            (dict(cast={"texture": "res://x.png"}), "cast.texture"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc(**good)))
+            self.assertEqual(code, 0, out)
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
     def test_one_preset_per_special_and_level(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:

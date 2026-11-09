@@ -36,9 +36,41 @@
         "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true: author images white or greyscale). false = show the image's own colours." }
       }
     },
+    "projectile": {
+      "description": "YOK-242: how the projectile looks in flight. Drawn over the data hitbox: the drawn quad keeps the box's leading edge and vertical centre, and the look's trail runs back behind it. Left out = an orb in the preset's colour.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "look": { "enum": ["orb", "ink_wave", "fox_flame"], "description": "Procedural projectile look (default orb)." },
+        "colour": { "$ref": "#/$defs/hex", "description": "Fill colour; left out = the preset's colour." },
+        "core": { "$ref": "#/$defs/hex", "description": "Inner colour of the two-tone look; left out = rice paper #F1E8D4." },
+        "scale_pct": { "type": "integer", "minimum": 25, "maximum": 400, "description": "Size against the look's default over the hitbox (100 = unchanged)." },
+        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = game/vfx/projectiles/<look>.png when it exists, else the procedural shader." },
+        "sheet_columns": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Frames side by side in the image, looped at 4 ticks a frame; 1 = a still image." },
+        "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true). false = the image's own colours." }
+      }
+    },
+    "cast": { "$ref": "#/$defs/effect", "description": "YOK-242: the effect when the special starts, placed from the caster (trail and ring ride on the caster while the move plays)." },
+    "release": { "$ref": "#/$defs/effect", "description": "YOK-242: the effect on the release: at the hand when the projectile spawns, else on the special's first active frame." },
+    "impact": { "$ref": "#/$defs/effect", "description": "YOK-242: the effect where the special connects (hit, block, projectile clash; a command grab on the grab)." },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }
   },
   "$defs": {
+    "effect": {
+      "description": "YOK-242: one special-move effect. Every field is optional; left out = the default for the move's generic properties (Fight/Vfx/SpecialVfxStyle.cs): cast seal (teleport: afterimage; charge or forward travel: trail; projectile invulnerability: ring); release: the projectile's splash (hits low: dust); impact: splash (command grab: grab; hits low: dust).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "look": { "enum": ["none", "seal", "ink_splash", "flame_burst", "dust", "trail", "ring", "afterimage", "grab"], "description": "Procedural effect look; none = no effect." },
+        "colour": { "$ref": "#/$defs/hex", "description": "Fill colour; left out = the preset's colour." },
+        "core": { "$ref": "#/$defs/hex", "description": "Inner colour of the two-tone look; left out = rice paper #F1E8D4." },
+        "scale_pct": { "type": "integer", "minimum": 25, "maximum": 400, "description": "Size against the look's default (100 = unchanged)." },
+        "frames": { "type": "integer", "minimum": 2, "maximum": 120, "description": "Ticks the effect shows (60 per second, F3); left out = the look's default (trail and ring: while the move plays)." },
+        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = game/vfx/effects/<look>.png when it exists, else the procedural shader." },
+        "sheet_columns": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Frames side by side in the image, played once over the effect's life; 1 = a still image." },
+        "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true). false = the image's own colours." }
+      }
+    },
     "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
     "texture": { "type": "string", "pattern": "^[a-z0-9_-]+(/[a-z0-9_-]+)*\\.(png|webp)$" }
   }

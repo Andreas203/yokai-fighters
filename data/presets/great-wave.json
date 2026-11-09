@@ -14,5 +14,18 @@
     "colour": "#1D1B21",
     "scale_pct": 130
   },
-  "notes": "Colour-only (YOK-213). Lv 3 Great Wave: Indigo #2D3A5E (style.md palette). Spark stays Ink #1D1B21 (V5 Ryo ink black), 30% larger. Water teal is not used: it is Kappa's spark colour (V5). Wave texture is on the follow-up list, not generated."
+  "projectile": {
+    "look": "ink_wave",
+    "core": "#F1E8D4",
+    "scale_pct": 160
+  },
+  "cast": {
+    "look": "seal",
+    "scale_pct": 130
+  },
+  "impact": {
+    "look": "ink_splash",
+    "scale_pct": 150
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Great Wave: Indigo #2D3A5E (style.md palette). Spark stays Ink #1D1B21 (V5 Ryo ink black), 30% larger. Water teal is not used: it is Kappa's spark colour (V5). Wave texture is on the follow-up list, not generated. YOK-242 (proposed): the Spirit Wave look 60% larger in Indigo, so the evolution reads at a glance; bigger seal and splash."
 }

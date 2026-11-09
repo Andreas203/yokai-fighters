@@ -10,5 +10,21 @@
     "A5"
   ],
   "colour": "#F2A23A",
-  "notes": "Colour-only (YOK-213, G3 fallback; no texture). Lv 1 base: Foxfire #F2A23A (style.md palette; V5 foxfire orange). Default spark image."
+  "projectile": {
+    "look": "fox_flame",
+    "colour": "#A9B4C8",
+    "core": "#FBF6EC"
+  },
+  "cast": {
+    "look": "flame_burst",
+    "colour": "#A9B4C8",
+    "core": "#FBF6EC"
+  },
+  "release": {
+    "look": "flame_burst",
+    "colour": "#A9B4C8",
+    "core": "#FBF6EC",
+    "scale_pct": 80
+  },
+  "notes": "Colour-only (YOK-213, G3 fallback; no texture). Lv 1 base: Foxfire #F2A23A (style.md palette; V5 foxfire orange). Default spark image. YOK-242 (proposed): the flame itself is kitsune-bi, blue-white (Snow shade #A9B4C8 round a Fur white #FBF6EC core); the impact splash keeps the preset's Foxfire orange, as the V5 hit spark does."
 }

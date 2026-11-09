@@ -14,5 +14,9 @@
     "colour": "#1D1B21",
     "scale_pct": 130
   },
-  "notes": "Colour-only (YOK-213). Lv 3 Heaven Seal: Rice paper #F1E8D4 (style.md palette), the ofuda colour. Spark stays Ink #1D1B21 (V5 Ryo ink black) and is 30% larger. Seal-glyph texture is on the follow-up list, not generated."
+  "cast": {
+    "look": "seal",
+    "scale_pct": 140
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Heaven Seal: Rice paper #F1E8D4 (style.md palette), the ofuda colour. Spark stays Ink #1D1B21 (V5 Ryo ink black) and is 30% larger. Seal-glyph texture is on the follow-up list, not generated. YOK-242 (proposed): a larger talisman seal on the cast; the impact splash is the default ink splash in Rice paper."
 }
