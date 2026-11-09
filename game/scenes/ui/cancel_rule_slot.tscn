@@ -1,0 +1,45 @@
+[gd_scene format=3]
+[ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
+[ext_resource type="StyleBox" path="res://ui/kit/paper_card_style.tres" id="card_style"]
+[ext_resource type="Script" path="res://scripts/Ui/Menus/CancelRuleSlot.cs" id="r1"]
+
+[node name="CancelRuleSlot" type="PanelContainer"]
+theme = ExtResource("theme")
+theme_type_variation = &"PaperCard"
+theme_override_styles/panel = ExtResource("card_style")
+mouse_filter = 2
+size_flags_horizontal = 3
+script = ExtResource("r1")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" type="TextureRect" parent="Row"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="Row/Text"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 28
+
+[node name="Body" type="Label" parent="Row/Text"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 26

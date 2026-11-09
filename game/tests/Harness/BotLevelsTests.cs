@@ -59,7 +59,9 @@ public static class BotLevelsTests
 	{
 		// YOK-174: all three re-pinned (were a4a30e288fb83033, 28a9873a8981ac73, 9be8a5bed90de1fa): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
-		var want = new[] { "d573ca8d44add598", "d0fd95d189fe78ed", "974faac26a455244" };
+		// YOK-228: seed 2 re-pinned (was d0fd95d189fe78ed): it is the one run of the three that fights Kappa nodes (r2-kappa, r3-kappa), now
+		// on his own normals, throw and push width (data/moves/kappa-*.json, data/fighters/kappa.json); seeds 1 and 3 unchanged.
+		var want = new[] { "d573ca8d44add598", "2a5e5618c13ec981", "974faac26a455244" };
 		var legacy = AiGuardTests.LegacyOpponent(Content); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		var level = Hashes(RunHarness.PlayBatch(legacy, Levels["newcomer"], 1, 3));
 		var file = Hashes(RunHarness.PlayBatch(legacy, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));
@@ -67,7 +69,8 @@ public static class BotLevelsTests
 		Assert.Equal(string.Join(" ", want), string.Join(" ", level), "the newcomer level's batch is the same runs");
 
 		// YOK-177: with standing-trigger habits on (the apprentice's at_close_range habit rolls), new pins.
-		var wantOn = new[] { "cf6713769fe717d7", "f18751e91e881a0e", "9e001f30a06b1cb0" };
+		// YOK-228: seed 2 re-pinned (was f18751e91e881a0e), the Kappa run as above.
+		var wantOn = new[] { "cf6713769fe717d7", "71ecf83ab3df90c5", "9e001f30a06b1cb0" };
 		var on = legacy with { StandingHabits = true };
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3))), "the base file's batch with standing habits (pinned)");
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, Levels["newcomer"], 1, 3))), "the newcomer level's, the same");

@@ -13,7 +13,11 @@ public sealed record CardView(
 /// <summary>A special slot the modifier card can attach to (A2: one modifier per special).</summary>
 public sealed record TargetView(string Id, string Slot, string Name, int Level, string? CurrentModifier, bool Eligible, string? WhyNot = null);
 
-public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards, IReadOnlyList<TargetView> Targets);
+public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards, IReadOnlyList<TargetView> Targets)
+{
+	/// <summary>YOK-218 (X2): the elder's cancel rule is not offered because Ryo holds the most he can; the screen says so (plain text, no emoji or combining marks).</summary>
+	public string? Notice { get; init; }
+}
 
 /// <summary>
 /// What the reward screen needs from the draft system (YOK-47). Adapter needed: wrap the draft system's

@@ -23,7 +23,9 @@
     "K1",
     "K2",
     "K3",
-    "V8"
+    "V8",
+    "X3",
+    "X4"
   ],
   "input": {
     "kata": {
@@ -114,7 +116,20 @@
             },
             "hits": 1
           }
-        }
+        },
+        "cancel_windows": [
+          {
+            "frames": [
+              15,
+              20
+            ],
+            "on": [
+              "hit",
+              "block",
+              "whiff"
+            ]
+          }
+        ]
       },
       "preset": "spirit-wave-lv1"
     },
@@ -150,5 +165,5 @@
       }
     }
   },
-  "notes": "Re-derived from clip ryo-spirit-wave-cast (frames_total 44, release frame 14 = hit_end): startup 13 = table; active is null (the hit is the projectile); recovery is stored as 31 because the validator sums startup + recovery to 44 and frame 14 is the one spawn frame; counted from the release it is the table's 30 (card text 13 / \u2014 / 30). Hand is back to 36% at the cut: 4-tick blend-out. Projectile spawns on frame 14; speed 12, its box, stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 is final (E21, recovery -4). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
+  "notes": "Re-derived from clip ryo-spirit-wave-cast (frames_total 44, release frame 14 = hit_end): startup 13 = table; active is null (the hit is the projectile); recovery is stored as 31 because the validator sums startup + recovery to 44 and frame 14 is the one spawn frame; counted from the release it is the table's 30 (card text 13 / \u2014 / 30). Hand is back to 36% at the cut: 4-tick blend-out. Projectile spawns on frame 14; speed 12, its box, stun values and the EX (two hits, +4 speed, 100 meter per E16/C5) are first passes. Lv 2 is final (E21, recovery -4). YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged. YOK-217 (proposed, designer to approve the window lengths): cancel_windows. Fox Step (Specials -> dash): open from the frame after the release (projectile spawns on 14) to 6 frames later (20) of the 44-frame clip. The sim only counts a projectile special as connected for body hits, so today it reads as a whiff and only the whiff entry fires."
 }

@@ -163,7 +163,6 @@ public sealed partial class Match
 			if (f.State == FighterState.Dash)
 				f.X += f.DashDir * Config.DashStep(f.DashFrame, f.DashDir == f.Facing ? Config.DashDistance : Config.BackDashDistance);
 			if (f.Airborne) f.X += f.JumpDir * Config.JumpSpeedX;
-			ChargeDashStep(f); // YOK-171: a released charge's dash through the startup frames
 
 			if (f.Actionable && f.Pressed(input, InputBits.DebugCrossUp))
 			{
@@ -179,6 +178,7 @@ public sealed partial class Match
 			f.PrevBits = input.Bits;
 		}
 
+		StepTravel(moved);    // YOK-221: forward travel and the YOK-171 charge dash, both fighters at once
 		ResolveThrowBreaks(); // YOK-19: after both fighters' input, so neither side acts first
 		ResolvePositions(moved);
 		UpdateFacing();

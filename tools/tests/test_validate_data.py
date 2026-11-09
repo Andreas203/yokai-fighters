@@ -20,6 +20,27 @@ def run(*paths):
     return code, out.getvalue()
 
 
+def dumps_exact(obj):
+    """json.dumps, writing each JsonFloat as its original text (json writes float(text), which loses digits)."""
+    import json
+    texts = []
+
+    def mark(o):
+        if isinstance(o, validate_data.JsonFloat):
+            texts.append(o.text)
+            return f"\u0000jf{len(texts) - 1}\u0000"
+        if isinstance(o, dict):
+            return {k: mark(x) for k, x in o.items()}
+        if isinstance(o, list):
+            return [mark(x) for x in o]
+        return o
+
+    out = json.dumps(mark(obj))
+    for i, t in enumerate(texts):
+        out = out.replace(json.dumps(f"\u0000jf{i}\u0000"), t)
+    return out
+
+
 GATE_CASES = ROOT / "game" / "tests" / "fixtures" / "modifier-gate" / "cases.json"
 RETIME_CASES = ROOT / "game" / "tests" / "fixtures" / "clip-retime-gate" / "cases.json"
 
@@ -52,7 +73,8 @@ class ValidateDataTest(unittest.TestCase):
         """YOK-103: a special's own frame data, read by the same whole-number and stun rules as MoveLoader."""
         import json
         import tempfile
-        cases = json.loads(GATE_CASES.read_text(encoding="utf-8"))["special_cases"]
+        # YOK-221: the numbers as written (validate_data.loads keeps a fraction's text, dumps_exact writes it back).
+        cases = validate_data.loads(GATE_CASES.read_text(encoding="utf-8"))["special_cases"]
         self.assertGreaterEqual(len(cases), 8)
         wrong = []
         with tempfile.TemporaryDirectory() as tmp:
@@ -64,12 +86,45 @@ class ValidateDataTest(unittest.TestCase):
                 for k in c["remove"]:
                     fd.pop(k, None)
                 f = Path(tmp) / f"{c['name']}.json"
-                f.write_text(json.dumps(doc), encoding="utf-8")
+                f.write_text(dumps_exact(doc), encoding="utf-8")
                 code, out = run(f)
                 lines = [l for l in out.splitlines()[:-1] if "clip: clip '" not in l]  # fixtures have no clip file
                 if (not lines) != c["accept"]:
                     wrong.append(f"{c['name']}: validator {'accepted' if not lines else 'refused'}\n{out}")
         self.assertEqual(wrong, [], "\n".join(wrong))
+
+    def test_forward_travel_needs_whole_units_and_active_frames(self):
+        """YOK-221: per build, as MoveData.ReadTravel: a level or EX that takes the active frames away can't keep its travel."""
+        def errs(active, travel):
+            fd = {"startup": 5, "active": active, "recovery": 20, "damage": 0, "properties": {"forward_travel": travel}}
+            return [e for e in validate_data.built_move_errors(fd) if "forward_travel" in e]
+        self.assertEqual(errs(6, 300), [])
+        self.assertEqual(errs(6, 300.0), [], "a whole number in any notation")
+        self.assertEqual(errs(0, 0), [], "no travel needs no active frames")
+        self.assertEqual(errs(0, 300), ["properties.forward_travel needs active frames to travel over"])
+        self.assertEqual(errs(6, -1), ["properties.forward_travel must be a whole number >= 0"])
+        self.assertTrue(errs(6, 2.5), "a fraction is refused (the whole-number rule)")
+        self.assertEqual(errs(6, "charge_dash"), ["properties.forward_travel must be a whole number >= 0"], "the modifier switch is not a distance")
+
+    def test_whole_reads_a_written_number_as_dotnet_decimal_does(self):
+        """YOK-221 (designer, 2026-11-02): Effects.Whole's TryGetDecimal: 28-29 significant digits, half to even, tiny
+        values are 0, past ~7.9e28 refused; copies keep the written text."""
+        import copy
+        import time
+        w = lambda text: validate_data.whole(validate_data.loads(text))
+        self.assertEqual([w("300"), w("300.0"), w("3e2"), w("-0.0"), w("2147483647")], [300, 300, 300, 0, 2147483647])
+        self.assertEqual(w("300.00000000000000000000000000000001"), 300, "past decimal's precision: rounds to 300")
+        self.assertEqual(w("2147483647.000000000000000000000001"), 2147483647)
+        self.assertEqual([w("1e-400"), w("-1e-400"), w("5e-29")], [0, 0, 0], "under decimal's smallest step: 0")
+        self.assertEqual([w("300.0000000000000000001"), w("2.5"), w("6e-29"), w("1e400"), w("2147483648"), w("1e29")],
+                         [None] * 6)
+        t = time.time()
+        self.assertIsNone(w("1e9999999"))
+        self.assertLess(time.time() - t, 0.5, "a huge exponent is refused at once, as the loader does")
+        self.assertEqual(str(validate_data.dotnet_decimal("0.30000000000000000000000000005")), "0.3000000000000000000000000000",
+                         "half to even on the 29th decimal place")
+        self.assertIsNone(validate_data.whole(copy.deepcopy(validate_data.loads("300.0000000000000000001"))))
+        self.assertEqual(validate_data.whole(300.0), 300, "a computed float is judged on its value")
 
     def test_real_modifiers_build_on_every_special(self):
         code, out = run(ROOT / "data" / "modifiers")
@@ -862,3 +917,150 @@ class LevelPresetTest(unittest.TestCase):
             code, out = run(g)
             self.assertEqual(code, 1, out)
             self.assertIn("files in data/presets/ must be kind 'level_preset'", out)
+
+
+def json_source(path):
+    import json
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8")).get("source")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+class SoundCueTest(unittest.TestCase):
+    """YOK-93 (V6): sound-cue schema and the checks HitCueLibrary mirrors."""
+    FIXTURE = ROOT / "game" / "tests" / "fixtures" / "sound" / "test-hits.json"
+    THUD = "res://sound/hits/hit_01.wav"
+
+    def _write(self, folder, doc, name=None):
+        import json
+        f = Path(folder) / f"{name or doc['id']}.json"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(doc), encoding="utf-8")
+        return f
+
+    def _doc(self, cue=None, **changes):
+        doc = {"kind": "sound_cue", "id": "t", "cues": [cue if cue is not None else {"thud": [self.THUD]}]}
+        doc.update(changes)
+        return doc
+
+    def test_fixture_is_valid(self):
+        code, out = run(self.FIXTURE)
+        self.assertEqual(code, 0, out)
+
+    def test_schema_refusals(self):
+        import tempfile
+        t = [self.THUD]
+        cases = [
+            (dict(cues=[]), "cues"), (dict(sound=1), "Additional properties"),
+            (dict(cue={}), "'thud' is a required property"), (dict(cue={"thud": []}), "cues.0.thud"),
+            (dict(cue={"thud": ["sound/hits/hit_01.wav"]}), "cues.0.thud.0"),
+            (dict(cue={"thud": ["res://sound/../x.wav"]}), "cues.0.thud.0"),
+            (dict(cue={"thud": [self.THUD, self.THUD]}), "cues.0.thud"),
+            (dict(cue={"thud": t, "volume_db": 13}), "cues.0.volume_db"),
+            (dict(cue={"thud": t, "volume_db": 1.5}), "cues.0.volume_db"),
+            (dict(cue={"thud": t, "offset_ticks": -1}), "cues.0.offset_ticks"),
+            (dict(cue={"thud": t, "offset_ticks": 31}), "cues.0.offset_ticks"),
+            (dict(cue={"thud": t, "when": {"level": 4}}), "cues.0.when.level"),
+            (dict(cue={"thud": t, "when": {"strength": "huge"}}), "cues.0.when.strength"),
+            (dict(cue={"thud": t, "when": {"outcome": "whiff"}}), "cues.0.when.outcome"),
+            (dict(cue={"thud": t, "when": {"button": "LP"}}), "Additional properties"),
+            (dict(cue={"thud": t, "when": {"move": "Foxfire"}}), "cues.0.when.move"),
+            (dict(cue={"thud": [self.THUD + "\n"]}), "cues.0.thud.0"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
+    def test_sample_must_exist_under_game(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc({"thud": ["res://sound/hits/missing.wav"]})))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.0.thud.0: game/sound/hits/missing.wav does not exist", out)
+
+    def test_one_rule_per_case(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            same = {"thud": [self.THUD], "when": {"source": "oni"}}
+            code, out = run(self._write(tmp, self._doc(cues=[same, dict(same)])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.1.when: same case as cues.0", out)
+            a = self._write(Path(tmp) / "a", self._doc(same, id="a"))
+            b = self._write(Path(tmp) / "b", self._doc(same, id="b"))
+            code, out = run(a, b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("same case as cues.0 in", out)
+
+    def test_one_rule_per_case_reads_the_rest_of_the_folder(self):
+        """Code-critic: checking one file of a folder finds a duplicate in a sibling on disk, as loading the folder would."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            oni = {"thud": [self.THUD], "when": {"source": "oni"}}
+            self._write(tmp, self._doc(cues=[{"thud": [self.THUD]}, oni], id="a"))
+            b = self._write(tmp, self._doc(oni, id="b"))
+            code, out = run(b)
+            self.assertEqual(code, 1, out)
+            self.assertIn("b.json: cues.0.when: same case as cues.1 in", out)
+            self.assertIn("a.json", out)
+            self.assertEqual(out.count("same case"), 1, out)  # a.json is not in the run: no error reported on it
+            code, out = run(self._write(tmp, self._doc({"thud": [self.THUD], "when": {"source": "kitsune"}}, id="b")))
+            self.assertEqual(code, 0, out)
+
+    def test_set_without_a_default_is_refused(self):
+        """Code-critic (V6): a source rule alone would leave every other hit silent."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "a", self._doc({"thud": [self.THUD], "when": {"source": "kitsune"}}, id="kitsune"))
+            code, out = run(f)
+            self.assertEqual(code, 1, out)
+            self.assertIn("have no default: some hits would be silent", out)
+            outcomes = [{"thud": [self.THUD], "when": {"outcome": o}} for o in ("hit", "block", "counter")]
+            code, out = run(self._write(Path(tmp) / "b", self._doc(cues=outcomes)))
+            self.assertEqual(code, 0, out)
+            code, out = run(self._write(Path(tmp) / "c", self._doc(cues=outcomes[:2])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("no default", out)
+            # the default may sit in another file of the same folder, on disk or in the run
+            self._write(Path(tmp) / "a", self._doc(id="default"))
+            code, out = run(f)
+            self.assertEqual(code, 0, out)
+
+    def test_move_and_source_must_exist_in_move_data(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            cues = [{"thud": [self.THUD]}, {"thud": [self.THUD], "when": {"move": "no-such-move"}},
+                    {"thud": [self.THUD], "when": {"source": "kappa"}}]
+            code, out = run(self._write(tmp, self._doc(cues=cues)))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.1.when.move: move 'no-such-move' not found", out)
+            if not any(json_source(f) == "kappa" for f in (ROOT / "data" / "moves").glob("*.json")):
+                self.assertIn("cues.2.when.source: no move in data/moves/ has source 'kappa'", out)
+            ok = [{"thud": [self.THUD]}, {"thud": [self.THUD], "when": {"move": "ryo-light-punch", "source": "ryo"}}]
+            code, out = run(self._write(tmp, self._doc(cues=ok)))
+            self.assertEqual(code, 0, out)
+            code, out = run(self._write(tmp, self._doc(cues=[{"thud": [self.THUD], "when": {"source": "elder-oni"}}])))
+            self.assertEqual(code, 1, out)
+            self.assertIn("cues.0.when.source", out)
+
+    def test_sound_subfolder_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "data" / "sound" / "kitsune", self._doc())
+            code, out = run(f)
+            self.assertEqual(code, 1, out)
+            self.assertIn("the game reads data/sound/*.json only", out)
+
+    def test_sound_folder_takes_only_sound_cues(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            f = self._write(Path(tmp) / "data" / "sound", self._doc())
+            code, out = run(f)
+            self.assertEqual(code, 0, out)
+            g = self._write(Path(tmp) / "data" / "sound", {"kind": "fighter", "id": "ryo"})
+            code, out = run(g)
+            self.assertEqual(code, 1, out)
+            self.assertIn("files in data/sound/ must be kind 'sound_cue'", out)

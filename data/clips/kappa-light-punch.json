@@ -1,0 +1,33 @@
+{
+  "kind": "clip",
+  "id": "kappa-light-punch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "210 Boxing_Guard_Prep_Straight_Punch (F5 substitute: the medium punch clip, faster)",
+  "frames_total": 13,
+  "trim_start": 106,
+  "trim_end": 124,
+  "retime": [
+    {
+      "frames": [
+        1,
+        13
+      ],
+      "ticks": [
+        106,
+        124
+      ],
+      "note": "one segment at 1.5x: the reused clip's own constant speed, so every frame lands on the same raw tick as kitsune-light-punch"
+    }
+  ],
+  "file": "assets/generated/clips/kitsune/kitsune-mp.glb",
+  "hit_start": 5,
+  "hit_end": 6,
+  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). Source clip's own retarget result: Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb. F5 substitute for the light punch (the 192 jab failed at the hit frames on her sleeves, 16.6x): the same clip and notes as kitsune-medium-punch (cross with a hip turn, sleeve flare 7.7x at full reach, accepted WARN class), played at 1.5x with a tighter trim. Root travel 5 cm. Tail clear.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of kitsune-light-punch, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (106-124), 13 frames, hit frames 5-6; retime curve is one segment at 1.5x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
+}

@@ -62,6 +62,7 @@ public static class AiGuardTests
 	{
 		Scenes = new LegacyScenes(c.Scenes),
 		StandingHabits = false, // YOK-177: standing-trigger habits never rolled before it
+		NeutralThrowHeld = false, // YOK-228: a neutral throw was raw LP+LK at once before it
 	};
 
 	sealed class LegacyScenes(INodeSceneResolver inner) : INodeSceneResolver
