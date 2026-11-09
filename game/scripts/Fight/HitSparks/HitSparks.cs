@@ -28,8 +28,8 @@ public readonly record struct HitSparkFrame(HitSpark Spark, int Age, int ScalePc
 
 /// <summary>
 /// The frame-timed sound hook (V6, YOK-198): one cue per impact on the impact tick, with everything a cue table
-/// needs to pick the thud and the yokai sting. Nothing listens yet: the animator's cues (data/sound/, after the
-/// sound purchase, YOK-54) attach here; the scene's placeholder hit-pack sound is separate and unchanged.
+/// needs to pick the thud and the yokai sting. YOK-93: the cue tables in data/sound/ play through
+/// <c>Audio.DataHitCueSink</c>; with none, the scene keeps its placeholder hit pack and this hook stays silent.
 /// </summary>
 public readonly record struct HitCue(int Tick, int Attacker, string MoveId, string Source, string? Special, int Level,
 	HitStrength Strength, HitSparkKind Kind, int X, int Y);

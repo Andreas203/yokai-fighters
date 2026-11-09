@@ -1,0 +1,71 @@
+{
+  "kind": "normal",
+  "id": "kappa-medium-punch",
+  "name": "Kappa medium punch",
+  "status": "proposed",
+  "source": "kappa",
+  "clip": "kappa-medium-punch",
+  "rules": [
+    "A8",
+    "C8",
+    "E1",
+    "E5",
+    "F2",
+    "F3",
+    "K3",
+    "V2"
+  ],
+  "input": {
+    "button": "MP"
+  },
+  "frame_data": {
+    "startup": 6,
+    "active": 3,
+    "recovery": 12,
+    "damage": 50,
+    "hitstun": 17,
+    "blockstun": 13,
+    "strength": "medium",
+    "hitboxes": [
+      {
+        "frames": [
+          7,
+          9
+        ],
+        "rect": {
+          "x": 60,
+          "y": 205,
+          "w": 85,
+          "h": 35
+        }
+      }
+    ],
+    "hurtboxes": [
+      {
+        "frames": [
+          1,
+          21
+        ],
+        "rect": {
+          "x": -65,
+          "y": 0,
+          "w": 130,
+          "h": 310
+        }
+      },
+      {
+        "frames": [
+          7,
+          13
+        ],
+        "rect": {
+          "x": 60,
+          "y": 200,
+          "w": 85,
+          "h": 45
+        }
+      }
+    ]
+  },
+  "notes": "Clip kappa-medium-punch (GREYBOX reuse of kitsune-medium-punch, 21 frames, hit 7-9): 6/3/12. Frame data follows the clip exactly (F2); It equals the C8 row, no deviation. Damage is the C8 number; hitstun, blockstun and strength are copied from kitsune-medium-punch (placeholders, not in rules.md). Boxes are kitsune-medium-punch's boxes (placed on the same clip frames, YOK-33) scaled for the Kappa and rounded to 5: height x0.886 (1.551 m / Ryo's 1.75 m), reach x0.975 (arms about 10% longer than Ryo's). Body hurtbox is the Kappa standing box 130 x 310 (shell on the back, 0.68 m deep); estimated, NOT re-placed from the posed Kappa rig: proposed, needs a YOK-33 style pass. "
+}

@@ -46,6 +46,17 @@ theme_override_font_sizes/font_size = 36
 autowrap_mode = 3
 vertical_alignment = 1
 
+[node name="Notice" type="Label" parent="."]
+visible = false
+offset_left = 735
+offset_top = 252
+offset_right = 1565
+offset_bottom = 290
+mouse_filter = 2
+theme_override_font_sizes/font_size = 26
+theme_type_variation = &"PersimmonLabel"
+vertical_alignment = 1
+
 [node name="TitleRule" type="TextureRect" parent="."]
 offset_left = 235
 offset_top = 298

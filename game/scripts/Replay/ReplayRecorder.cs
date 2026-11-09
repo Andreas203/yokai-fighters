@@ -46,6 +46,7 @@ public sealed class ReplayRecorder
 		AggressionBonus = ai.AggressionBonus,
 		GuardPct = ai.GuardPct, // YOK-165
 		StandingHabits = ai.StandingHabits, // YOK-177
+		NeutralThrowHeld = ai.NeutralThrowHeld, // YOK-228
 	};
 
 	static FighterSetup Capture(Fighter f)

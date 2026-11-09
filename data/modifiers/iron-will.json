@@ -25,8 +25,8 @@
     }
   ],
   "card": {
-    "plain": "Stubborn as iron: enemy projectiles can't interrupt this move.",
+    "plain": "The Oni holds his ground: projectiles can't interrupt the special this is attached to.",
     "frames": "Can't be interrupted by projectiles"
   },
-  "notes": "Projectile hits still deal damage; only the interruption is removed (open: confirm with designer). Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+  "notes": "Projectile hits still deal damage; only the interruption is removed (open: confirm with designer). Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table. Card text from tools/content_pipeline run a7-live (movesmith, checked by rules-lawyer)."
 }

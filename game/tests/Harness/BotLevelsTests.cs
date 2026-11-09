@@ -59,22 +59,25 @@ public static class BotLevelsTests
 	{
 		// YOK-174: all three re-pinned (were a4a30e288fb83033, 28a9873a8981ac73, 9be8a5bed90de1fa): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
+		// YOK-228: seed 2 re-pinned (was d0fd95d189fe78ed, f18751e91e881a0e with standing habits): it is the one run of the three that fights
+		// Kappa nodes (r2-kappa, r3-kappa), now on his own normals, throw and push width; seeds 1 and 3 unchanged.
 		var legacy = AiGuardTests.LegacyOpponent(Content); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		// YOK-184: at throw_break_pct 0 (no RNG draw) the pre-YOK-184 pins replay unchanged, with and without standing habits.
 		var b0 = BotConfig.LoadDefault(ContentPaths.DataDir);
 		var noBreak = b0 with { Fight = b0.Fight with { ThrowBreakPct = 0 } };
-		Assert.Equal("d573ca8d44add598 d0fd95d189fe78ed 974faac26a455244", string.Join(" ", Hashes(RunHarness.PlayBatch(legacy, noBreak, 1, 3))), "throw_break_pct 0: the old batch");
-		Assert.Equal("cf6713769fe717d7 f18751e91e881a0e 9e001f30a06b1cb0", string.Join(" ", Hashes(RunHarness.PlayBatch(legacy with { StandingHabits = true }, noBreak, 1, 3))), "throw_break_pct 0: the old standing-habits batch");
+		Assert.Equal("d573ca8d44add598 2a5e5618c13ec981 974faac26a455244", string.Join(" ", Hashes(RunHarness.PlayBatch(legacy, noBreak, 1, 3))), "throw_break_pct 0: the old batch");
+		Assert.Equal("cf6713769fe717d7 71ecf83ab3df90c5 9e001f30a06b1cb0", string.Join(" ", Hashes(RunHarness.PlayBatch(legacy with { StandingHabits = true }, noBreak, 1, 3))), "throw_break_pct 0: the old standing-habits batch");
 
-		// YOK-184: re-pinned for the base file's throw_break_pct 15 (the pre-YOK-184 pins are the two above).
-		var want = new[] { "269c6d581c2c3d89", "5234678eedfe214b", "2854a16540631489" };
+		// YOK-184: re-pinned for the base file's throw_break_pct 15 (the pre-YOK-184 pins are the two above);
+		// seed 2 re-pinned again on merging YOK-228 (was 5234678eedfe214b): the Kappa run, on his own kit with throw breaks on.
+		var want = new[] { "269c6d581c2c3d89", "e5a7c3fcbe83b9dd", "2854a16540631489" };
 		var level = Hashes(RunHarness.PlayBatch(legacy, Levels["newcomer"], 1, 3));
 		var file = Hashes(RunHarness.PlayBatch(legacy, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3));
 		Assert.Equal(string.Join(" ", want), string.Join(" ", file), "the base file's batch (pinned)");
 		Assert.Equal(string.Join(" ", want), string.Join(" ", level), "the newcomer level's batch is the same runs");
 
 		// YOK-177: with standing-trigger habits on (the apprentice's at_close_range habit rolls), its own pins.
-		var wantOn = new[] { "cf6713769fe717d7", "b7ed7606ab3bddb6", "a168e38f1aee56fc" }; // YOK-184: runs 2-3 re-pinned for throw_break_pct 15
+		var wantOn = new[] { "cf6713769fe717d7", "ba685d4ea5260e9c", "a168e38f1aee56fc" }; // YOK-184: runs 2-3 re-pinned for throw_break_pct 15; run 2 again with YOK-228 (was b7ed7606ab3bddb6)
 		var on = legacy with { StandingHabits = true };
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, BotConfig.LoadDefault(ContentPaths.DataDir), 1, 3))), "the base file's batch with standing habits (pinned)");
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", Hashes(RunHarness.PlayBatch(on, Levels["newcomer"], 1, 3))), "the newcomer level's, the same");
