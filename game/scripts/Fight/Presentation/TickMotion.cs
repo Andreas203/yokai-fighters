@@ -3,8 +3,8 @@ using Godot;
 namespace YokaiFighters.Fight;
 
 /// <summary>
-/// YOK-150/151/152: a gentle bob and sway driven by the sim tick (<see cref="StageClock.Tick"/>): the riverbank's floating
-/// lanterns bob on the water, the tea house's hanging lanterns sway. The node sits at its rest transform plus
+/// YOK-150/152: a gentle bob and sway driven by the sim tick (<see cref="StageClock.Tick"/>): the tea house's hanging
+/// lanterns sway (the bob served the riverbank's floating lanterns, removed 2026-11-09). The node sits at its rest transform plus
 /// <c>offset = A * sin(tick * w + phase)</c>, w = 2 pi / <see cref="PeriodTicks"/>: no physics, no wall clock, so a replay
 /// or a capture shows the same pose on the same tick. Visual only.
 /// </summary>

@@ -1,9 +1,9 @@
-// YOK-151: the riverbank's near water, from the bank all the way back to the painting. Deep indigo near the bank (behind
-// the fighters, so the Kappa's teal parts from it by hue), easing with distance into the painted water's tinted colour at
-// the join (far_color at far_z, the backdrop's plane), so there is no seam. Teal only as thin, broken ripple lines that
-// fade out where they would crowd toward the horizon. All a pure function of the world position (no time): flat cel
-// colours, unshaded and fog-free like the backdrop it meets, no reflections, no glow. Palette: indigo #2D3A5E, ink
-// #1D1B21, teal #3E7F86.
+// YOK-151: the riverbank's near swamp water, from the bank all the way back to the painting. Dark pine-green near the bank
+// (behind the fighters, darker and greener than the Kappa's teal shell, so the shell parts from it), easing with distance
+// into the painted water's colour at the join (far_color at far_z, the backdrop's plane), so there is no seam. Teal only as
+// thin, faint, broken ripple lines that fade out where they would crowd toward the horizon. All a pure function of the world
+// position (no time): flat cel colours, unshaded and fog-free like the backdrop it meets, no reflections, no glow. Palette:
+// pine #34483B, ink #1D1B21, teal #3E7F86; far water #2B4140 (the painting's).
 shader_type spatial;
 render_mode unshaded, fog_disabled;
 

@@ -1,9 +1,8 @@
-"""YOK-150/151: recolour three Tripo stage props' textures toward the stage palette (assets/specs/style.md).
+"""YOK-150/151: recolour two Tripo stage props' textures toward the stage palette (assets/specs/style.md).
 
 Godot extracts each glb's embedded texture next to it (`<prop>_Color_<id>.jpg`); this writes a recoloured PNG beside it,
 which the prop's material in game/materials/stage/ uses (the glb's import settings swap that material in):
   - pine-cluster: teal needles toward pine #34483B (hue only; low-saturation snow is left alone).
-  - floating-lantern: the pale paper to persimmon #D8632C (its material adds a flat persimmon emission, no bloom).
   - reeds: the bright green leaves toward the dry olive-tan of the riverbank backdrop's painted reeds.
 Deterministic (pure per-pixel HSV maps). Run: python tools/stage/recolor_props.py
 """
@@ -62,15 +61,6 @@ def pine():
     rgb(h, s, v).save(os.path.join(ROOT, "shrine-gate", "pine-cluster_pine.png"))
 
 
-def floating_lantern():
-    h, s, v = hsv(source("riverbank", "floating-lantern"))
-    paper = (h >= 15) & (h <= 50) & (s > 0.35) & (v > 0.70)
-    h = np.where(paper, 19.0, h)
-    s = np.where(paper, 0.80, s)
-    v = np.where(paper, np.maximum(v, 0.85), v)
-    rgb(h, s, v).save(os.path.join(ROOT, "riverbank", "floating-lantern_persimmon.png"))
-
-
 def reeds():
     h, s, v = hsv(source("riverbank", "reeds"))
     m = (s > 0.25) & (h > 60) & (h < 140)
@@ -82,6 +72,5 @@ def reeds():
 
 if __name__ == "__main__":
     pine()
-    floating_lantern()
     reeds()
-    print("recoloured: pine-cluster_pine.png, floating-lantern_persimmon.png, reeds_dry.png")
+    print("recoloured: pine-cluster_pine.png, reeds_dry.png")

@@ -11,9 +11,10 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-150/151/152: the shrine gate, the riverbank and the tea house keep the grove's rules (StageTests): every prop behind
-/// the gameplay plane and the clear band, lanterns deep, a handful of shadowless lights, the art covering every camera
-/// framing; scenery moves only with the sim tick; the tea house's seasons follow the round; missing assets fall back;
-/// each yokai's fights are wired to its stage.
+/// the gameplay plane and the clear band, lanterns deep, a handful of shadowless lights (the riverbank's swamp has no
+/// lanterns, designer 2026-11-09), the art covering every camera framing; scenery moves only with the sim tick; the tea
+/// house's seasons follow the round; the riverbank's far painting meets its water; missing assets fall back; each yokai's
+/// fights are wired to its stage.
 /// </summary>
 public static class StageSetTests
 {
@@ -54,7 +55,7 @@ public static class StageSetTests
 
 	static IEnumerable<MeshInstance3D> Meshes(Node n) => n.FindChildren("*", "MeshInstance3D", true, false).Cast<MeshInstance3D>();
 
-	/// <summary>Every placed prop under Props with its transform in Props space; a plain grouping node (no mesh of its own, e.g. Props/Floats) counts its children one by one.</summary>
+	/// <summary>Every placed prop under Props with its transform in Props space; a plain grouping node (no mesh of its own) counts its children one by one.</summary>
 	static IEnumerable<(Node3D Node, Transform3D Xf)> PropItems(Node props)
 	{
 		foreach (var n in props.GetChildren().Cast<Node3D>())
@@ -125,15 +126,16 @@ public static class StageSetTests
 				Assert.True(front <= StageRules.ClearBandBackZ + 1e-3f, $"{st.Kind}/{n.Name} at ({p.X}, {p.Z}), footprint x {p.X - radius:0.00}..{p.X + radius:0.00}, reaches z {front}, inside the clear band");
 			Assert.True(front <= limit + 1e-3f, $"{st.Kind}/{n.Name}: front z {front} past its limit {limit}");
 		}
-		Assert.True(lanterns >= 2, $"{st.Kind}: its lanterns were checked ({lanterns})");
-		if (st.Kind == "riverbank") Assert.True(lanterns >= 12 && lanterns <= 15, $"riverbank: 12-15 floating lanterns (decision log 2026-11-09, riverbank lanterns second pass), got {lanterns}");
+		if (st.Kind == "riverbank") Assert.Equal(0, lanterns, "riverbank: a swamp without lanterns (designer 2026-11-09)");
+		else Assert.True(lanterns >= 2, $"{st.Kind}: its lanterns were checked ({lanterns})");
 	});
 
 	[Test]
 	public static void NewStages_AHandfulOfShadowlessLanternLights(Node runner) => ForEachStage(runner, (scene, st) =>
 	{
 		var lights = scene.StageRoot.FindChildren("*", "OmniLight3D", true, false).Cast<OmniLight3D>().ToList();
-		Assert.True(lights.Count >= 2 && lights.Count <= StageRules.MaxLanternLights, $"{st.Kind}: a handful of lantern lights, got {lights.Count}");
+		int fewest = st.Kind == "riverbank" ? 0 : 2; // the riverbank's swamp has no lanterns (designer 2026-11-09)
+		Assert.True(lights.Count >= fewest && lights.Count <= StageRules.MaxLanternLights, $"{st.Kind}: a handful of lantern lights, got {lights.Count}");
 		foreach (var l in lights)
 		{
 			Assert.True(!l.ShadowEnabled && l.OmniRange <= 4f && l.LightSpecular == 0f, $"{st.Kind}/{l.GetPath()}: shadowless, local, no highlight");
@@ -181,29 +183,6 @@ public static class StageSetTests
 		Assert.True(Mathf.Abs(bob.Position.Y - (2f + expect)) < 1e-5f, $"offset = A sin(tick w + phase): {bob.Position.Y} vs {2f + expect}");
 		Assert.True(Mathf.IsEqualApprox(bob.Position.X, 1f) && Mathf.IsEqualApprox(bob.Position.Z, -12f), "bobs only up and down");
 		bob.Free();
-	}
-
-	[Test]
-	public static void Riverbank_LanternsBobWithTheSimTick_NeitherWallClockNorFrames(Node runner)
-	{
-		var scene = Load(runner, StageCatalog.RiverbankScene);
-		try
-		{
-			var floats = scene.StageRoot.GetNode("Props/Floats").GetChildren().Cast<TickMotion>().ToList();
-			Assert.True(floats.All(f => f.BobMetres > 0f && f.BobMetres <= 0.1f), "every floating lantern bobs, gently");
-			Assert.True(floats.Select(f => f.PhaseTicks).Distinct().Count() > floats.Count / 2, "out of step with each other");
-			string Pose() => string.Join(";", floats.Select(f => f.Position.Y.ToString("0.00000")));
-			for (int i = 0; i < 37; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal(37, ((FightStage)scene.StageRoot).Clock.Tick, "the stage got the sim tick");
-			string at37 = Pose();
-			var rests = floats.Select(f => f.Rest.Origin.Y).ToList();
-			for (int i = 0; i < floats.Count; i++)
-				Assert.True(Mathf.Abs(floats[i].Position.Y - (rests[i] + floats[i].BobMetres * TickMotion.Wave(37, floats[i].PeriodTicks, floats[i].PhaseTicks))) < 1e-4f, $"{floats[i].Name}: offset from the tick");
-			scene.ResetFight(); // a new round: tick 0 again
-			for (int i = 0; i < 37; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal(at37, Pose(), "tick 37 of the next round: the same pose");
-		}
-		finally { scene.QueueFree(); }
 	}
 
 	// ---- tea house seasons (designer 2026-11-09: on the Tanuki's health beats) ----
@@ -352,116 +331,56 @@ public static class StageSetTests
 		finally { SeasonScreens.SeasonDirOverride = null; }
 	}
 
-	// ---- riverbank depth and lanterns (designer 2026-11-09) ----
+	// ---- riverbank: the far swamp (designer 2026-11-09, swamp retake: Astra take 4, no lanterns) ----
 
-	/// <summary>World y of a row (0 = the image's top, of 720) of the riverbank's far painting.</summary>
+	static ShaderMaterial FarMaterial(MeshInstance3D backdrop) => (ShaderMaterial)backdrop.MaterialOverride;
+
+	static Texture2D FarTexture(MeshInstance3D backdrop) => FarMaterial(backdrop).GetShaderParameter("tex").As<Texture2D>();
+
+	/// <summary>Metres per painting pixel on the quad: (across, down).</summary>
+	static (float Across, float Down) FarScale(MeshInstance3D backdrop)
+	{
+		var mat = FarMaterial(backdrop);
+		var tex = FarTexture(backdrop);
+		Vector4 art = mat.GetShaderParameter("art_rect").AsVector4();
+		float sky = mat.GetShaderParameter("sky").AsSingle();
+		var size = ((QuadMesh)backdrop.Mesh).Size;
+		return (size.X / (art.Z * tex.GetWidth()), size.Y * (1f - sky) / (art.W * tex.GetHeight()));
+	}
+
+	/// <summary>World y of a pixel row (0 = the image's top) of the riverbank's far painting.</summary>
 	static float RowY(MeshInstance3D backdrop, float row)
 	{
-		var mat = (ShaderMaterial)backdrop.MaterialOverride;
-		float sky = mat.GetShaderParameter("sky").AsSingle(), dv = mat.GetShaderParameter("art_rect").AsVector4().W;
+		var mat = FarMaterial(backdrop);
+		float sky = mat.GetShaderParameter("sky").AsSingle(), top0 = mat.GetShaderParameter("art_rect").AsVector4().Y * FarTexture(backdrop).GetHeight();
 		var size = ((QuadMesh)backdrop.Mesh).Size;
-		float top = backdrop.Position.Y + size.Y / 2;
-		return top - sky * size.Y - row / 720f / dv * (1f - sky) * size.Y;
+		float top = backdrop.Position.Y + size.Y / 2 - sky * size.Y;
+		return top - (row - top0) * FarScale(backdrop).Down;
 	}
 
-	/// <summary>The row (fractional) where the painting meets the 3D water plane (world y 0): pixel rows below it are hidden.</summary>
-	static float JoinRow(MeshInstance3D backdrop)
+	/// <summary>The row (fractional) where the painting meets the 3D water plane at <paramref name="waterY"/>: rows below it are hidden.</summary>
+	static float JoinRow(MeshInstance3D backdrop, float waterY)
 	{
 		float y0 = RowY(backdrop, 0f), y1 = RowY(backdrop, 1f);
-		return y0 / (y0 - y1);
+		return (y0 - waterY) / (y0 - y1);
 	}
-
-	/// <summary>The painted horizon (the far reed line) and the first of the painting's big near lanterns, rows of backdrop.png (720 tall).</summary>
-	const int PaintedHorizonRow = 185, FirstBigPaintedLanternRow = 210;
-	/// <summary>A painted lantern's dark wooden cap sits above its orange body, which is what the colour search finds (measured: rows 192-193 over a body from 194).</summary>
-	const int PaintedLanternCapRows = 2;
 
 	/// <summary>
-	/// The painting's floating lanterns near the far water (rows 186-299), found by colour: persimmon/orange pixels (red well
-	/// above green and blue) stand out against the indigo water and the tan reeds. One blob per lantern (8-connected, 6 px
-	/// or more): its top (cap included, <see cref="PaintedLanternCapRows"/>) and bottom rows.
+	/// The painting's far waterline and its flat water, measured: the water colour is the median of the bottom row; a row is
+	/// water where at least half its pixels are within 20 (summed RGB) of it. Waterline = the first row of the band of water
+	/// rows that runs to the bottom of the image (the far bank's ink line sits just above it).
 	/// </summary>
-	static List<(int Top, int Bottom)> PaintedLanterns()
+	static (int WaterlineRow, Color Water, int Rows) PaintedWater()
 	{
 		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(StageCatalog.Riverbank.DefaultDir + "backdrop.png"));
-		const int r0 = 186, r1 = 300;
-		int w = img.GetWidth();
-		var hit = new bool[r1 - r0, w];
-		for (int y = r0; y < r1; y++)
-			for (int x = 0; x < w; x++)
-			{
-				Color c = img.GetPixel(x, y);
-				hit[y - r0, x] = c.R8 - c.B8 > 60 && c.R8 - c.G8 > 35 && c.R8 > 110;
-			}
-		var seen = new bool[r1 - r0, w];
-		var blobs = new List<(int, int)>();
-		for (int y = 0; y < r1 - r0; y++)
-			for (int x = 0; x < w; x++)
-			{
-				if (!hit[y, x] || seen[y, x]) continue;
-				var stack = new Stack<(int X, int Y)>();
-				stack.Push((x, y)); seen[y, x] = true;
-				int top = y, bottom = y, n = 0;
-				while (stack.Count > 0)
-				{
-					var (px, py) = stack.Pop();
-					n++; top = Math.Min(top, py); bottom = Math.Max(bottom, py);
-					for (int dy = -1; dy <= 1; dy++)
-						for (int dx = -1; dx <= 1; dx++)
-						{
-							int u = px + dx, v = py + dy;
-							if (u < 0 || u >= w || v < 0 || v >= r1 - r0 || !hit[v, u] || seen[v, u]) continue;
-							seen[v, u] = true; stack.Push((u, v));
-						}
-				}
-				if (n >= 6) blobs.Add((top + r0 - PaintedLanternCapRows, bottom + r0));
-			}
+		int w = img.GetWidth(), h = img.GetHeight();
+		int Median(Func<Color, int> ch) => Enumerable.Range(0, w).Select(x => ch(img.GetPixel(x, h - 1))).OrderBy(v => v).ElementAt(w / 2);
+		int r = Median(c => c.R8), g = Median(c => c.G8), b = Median(c => c.B8);
+		bool WaterRow(int y) => Enumerable.Range(0, w).Count(x => { Color c = img.GetPixel(x, y); return Math.Abs(c.R8 - r) + Math.Abs(c.G8 - g) + Math.Abs(c.B8 - b) < 20; }) * 2 >= w;
+		int row = h - 1;
+		while (row > 0 && WaterRow(row - 1)) row--;
 		img.Dispose();
-		return blobs;
-	}
-
-	[Test]
-	public static void Riverbank_NoPaintedLanternIsCutByTheWater(Node runner)
-	{
-		// Each painted lantern is either wholly above the join (shown with its reflection) or wholly under the 3D water,
-		// never a half-dome at the cut.
-		var scene = Load(runner, StageCatalog.RiverbankScene);
-		try
-		{
-			float join = JoinRow(scene.StageRoot.GetNode<MeshInstance3D>("Backdrop"));
-			var lanterns = PaintedLanterns();
-			Assert.True(lanterns.Count >= 10, $"the painting's lanterns are found by colour ({lanterns.Count})");
-			foreach (var (top, bottom) in lanterns)
-				Assert.True(bottom + 1 <= join || top >= join, $"the painted lantern at rows {top}-{bottom} is cut by the water at row {join:0.0}");
-		}
-		finally { scene.QueueFree(); }
-	}
-
-	[Test]
-	public static void Riverbank_ThePaintingIsTheFarViewOnly_HorizonAtTheEyeLine(Node runner)
-	{
-		var scene = Load(runner, StageCatalog.RiverbankScene);
-		try
-		{
-			var stage = scene.StageRoot;
-			var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
-			var water = stage.GetNode<MeshInstance3D>("Water");
-			var ws = ((PlaneMesh)water.Mesh).Size;
-			float eye = scene.Cam.Config.BaseHeightMeters, horizon = RowY(backdrop, PaintedHorizonRow), join = JoinRow(backdrop);
-			Assert.True(Mathf.Abs(horizon - eye) <= 0.3f, $"the painted horizon sits at the camera's eye line: y {horizon:0.00} vs {eye:0.00}");
-			Assert.True(join <= FirstBigPaintedLanternRow, $"the painting's near water and big lanterns sit below the water plane (join at row {join:0.0})");
-			Assert.True(backdrop.Position.Z <= -30f, $"the painting is far back (z {backdrop.Position.Z})");
-			Assert.True(water.Position.Z - ws.Y / 2 <= backdrop.Position.Z && water.Position.Z + ws.Y / 2 >= -7f, "the 3D water runs from the bank to the painting: no gap, no seam to fill");
-			// Perspective from bank to horizon: the nearest 3D lantern reads larger on screen than any painted one left showing.
-			float px = ((QuadMesh)backdrop.Mesh).Size.X / 1280f;
-			float painted = PaintedLanterns().Where(l => l.Bottom + 1 <= join).Select(l => (l.Bottom - l.Top + 1) * px).DefaultIfEmpty(0f).Max();
-			var floats = stage.GetNode("Props/Floats").GetChildren().Cast<Node3D>().ToList();
-			var nearest = floats.OrderByDescending(f => f.Position.Z).First();
-			float nearSize = nearest.Scale.Y, nearZ = nearest.Position.Z;
-			foreach (float d in new[] { FightScene.CameraDistance(scene.Match.Config) * scene.Cam.MinWidth / scene.Cam.MaxWidth, FightScene.CameraDistance(scene.Match.Config) })
-				Assert.True(nearSize / (d - nearZ) > painted / (d - backdrop.Position.Z), $"camera {d:0.0} m out: the nearest 3D lantern ({nearSize:0.00} m at z {nearZ}) reads larger than a painted one ({painted:0.00} m at z {backdrop.Position.Z})");
-		}
-		finally { scene.QueueFree(); }
+		return (row, Color.Color8((byte)r, (byte)g, (byte)b), h);
 	}
 
 	/// <summary>Normalised screen position (-1..1, y up) of a world point, as <see cref="DynamicCamera.Project"/> does for the Z = 0 plane.</summary>
@@ -474,90 +393,109 @@ public static class StageSetTests
 		return (rx / (depth * tanV * cam.Config.Aspect), yc / (depth * tanV));
 	}
 
-	static Rect2 ScreenRect(DynamicCamera cam, Aabb box)
+	[Test]
+	public static void Riverbank_ASwampWithoutLanterns_StillAWarmFill(Node runner)
 	{
-		var pts = Enumerable.Range(0, 8).Select(i => ProjectPoint(cam, box.GetEndpoint(i))).ToList();
-		float x0 = pts.Min(p => p.X), y0 = pts.Min(p => p.Y);
-		return new Rect2(x0, y0, pts.Max(p => p.X) - x0, pts.Max(p => p.Y) - y0);
-	}
-
-	static void Walk(FightScene s, InputBits p1, InputBits p2, int ticks) { for (int t = 0; t < ticks; t++) s.Step(new FighterInput(p1), new FighterInput(p2)); }
-
-	static void Corner(FightScene s, int side)
-	{
-		var toward = side < 0 ? InputBits.Left : InputBits.Right;
-		for (int t = 0, lastX = int.MinValue; t < 1500 && s.Match.Fighters[side < 0 ? 0 : 1].X != lastX; t++)
+		// Designer 2026-11-09: "resemble a swamp more without the lanterns". The other stages keep theirs (StageRules).
+		var scene = Load(runner, StageCatalog.RiverbankScene);
+		try
 		{
-			lastX = s.Match.Fighters[side < 0 ? 0 : 1].X;
-			s.Step(new FighterInput(toward), new FighterInput(toward));
+			var stage = scene.StageRoot;
+			var all = stage.FindChildren("*", "", true, false);
+			Assert.Equal(0, all.Count(n => n.IsInGroup(LanternGroup)), "no lantern in the group");
+			Assert.Equal(0, stage.FindChildren("*", "OmniLight3D", true, false).Count, "no lantern lights");
+			Assert.Equal(0, all.Count(n => n is TickMotion), "nothing bobbing on the water");
+			Assert.True(!stage.HasNode("Props/Floats"), "the floating lanterns are gone");
+			Assert.True(!StageCatalog.Riverbank.Required.Contains("floating-lantern.glb"), "and the catalog no longer asks for their model");
+			var fill = stage.GetNode<DirectionalLight3D>("Fill");
+			Assert.True(fill.LightEnergy > 0f && fill.LightColor.R > fill.LightColor.B + 0.2f && !fill.ShadowEnabled, "a little warm fill keeps the fighters from going flat");
+			foreach (var (n, _) in PropItems(stage.GetNode("Props")))
+				Assert.True(n.Name.ToString().StartsWith("Reeds") || n.Name.ToString().StartsWith("Post"), $"{n.Name}: the reeds and mooring posts stay, nothing else");
 		}
-		Walk(s, toward, toward, 30);
+		finally { scene.QueueFree(); }
 	}
-
-	/// <summary>A lantern drawn at most this share of the nearest one's size reads as background (designer 2026-11-09): it may pass behind a fighter.</summary>
-	const float DeepLanternShare = 0.6f;
 
 	[Test]
-	public static void Riverbank_Lanterns_NearOnesNeverBehindAFighter_CentreShotsShowFourOrMore(Node runner)
+	public static void Riverbank_ThePaintingDownToItsWaterline_MeetsTheWater_HorizonAtTheEyeLine(Node runner)
 	{
-		// The standard framings (the stage capture's: close, mid, max separation, both corners), the Kappa as the opponent.
-		// A near lantern's screen box never overlaps a fighter's from hip (0.8 m) to head (1.8 m), body half-width 0.6 m.
-		// A deep one, drawn at most DeepLanternShare of the nearest lantern's size in that framing, is background and may.
-		// The centre framings (close, max) show at least four lanterns clear of the fighters.
-		var poses = new (string Name, Action<FightScene> Pose)[]
+		var scene = Load(runner, StageCatalog.RiverbankScene);
+		try
 		{
-			("close", s => Walk(s, InputBits.Right, InputBits.Left, 40)),
-			("mid", s => Walk(s, InputBits.Left, InputBits.Right, 11)),
-			("max", s => Walk(s, InputBits.Left, InputBits.Right, 400)),
-			("left corner", s => Corner(s, -1)),
-			("right corner", s => Corner(s, 1)),
-		};
-		foreach (var (name, pose) in poses)
-		{
-			var jump = YokaiFighters.Dev.DevJump.BuildFight(new YokaiFighters.Dev.DevFightSetup("kappa"), FightScene.LoadAbilityPool());
-			Assert.True(jump.Session.Enter(jump.NodeId).Ok, "the Kappa's node");
-			var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
-			scene.ExternalDrive = true;
-			scene.Session = jump.Session;
-			runner.AddChild(scene);
-			try
-			{
-				Assert.Equal("riverbank", scene.StageKind, "the Kappa fights on the riverbank");
-				pose(scene);
-				Walk(scene, InputBits.None, InputBits.None, 90);
-				var cam = scene.Cam;
-				var z0 = new Vector3(0.37f, 1.1f, 0f);
-				var (px, py) = cam.Project(z0.X * 200f, z0.Y);
-				var mine = ProjectPoint(cam, z0);
-				Assert.True(Mathf.Abs(px - mine.X) < 1e-4f && Mathf.Abs(py - mine.Y) < 1e-4f, "the depth projection agrees with DynamicCamera.Project on the Z = 0 plane");
-				var floats = scene.StageRoot.GetNode("Props/Floats").GetChildren().Cast<Node3D>().ToList();
-				Assert.True(floats.Count >= 12 && floats.Count <= 15, $"12-15 floating lanterns (decision log 2026-11-09, riverbank lanterns second pass), got {floats.Count}");
-				float d = cam.Transform.Z;
-				var nearest = floats.OrderByDescending(f => f.Position.Z).First();
-				float Drawn(Node3D f) => f.Scale.Y / (d - f.Position.Z);
-				int deep = 0, clearShown = 0;
-				foreach (var f in floats)
-				{
-					Aabb box = Meshes(f).Select(m => m.GlobalTransform * m.Mesh.GetAabb()).Aggregate((a, b) => a.Merge(b));
-					Rect2 lantern = ScreenRect(cam, box);
-					bool background = Drawn(f) <= DeepLanternShare * Drawn(nearest);
-					if (background) deep++;
-					bool behind = false;
-					foreach (var fighter in scene.Match.Fighters)
-					{
-						float x = FightScene.ToMeters(fighter.X), y = FightScene.ToMeters(fighter.Y);
-						Rect2 body = ScreenRect(cam, new Aabb(new Vector3(x - 0.6f, y + 0.8f, 0f), new Vector3(1.2f, 1.0f, 0f)));
-						if (!lantern.Intersects(body)) continue;
-						behind = true;
-						Assert.True(background, $"{name}: near lantern {f.Name} at ({f.Position.X}, {f.Position.Z}) shows behind a fighter at x {x:0.00}");
-					}
-					if (!behind && lantern.Position.X > -1f && lantern.End.X < 1f && lantern.Position.Y > -1f && lantern.End.Y < 1f) clearShown++;
-				}
-				Assert.True(deep >= 2 && deep < floats.Count, $"{name}: some lanterns are deep background, most are not ({deep})");
-				if (name is "close" or "max") Assert.True(clearShown >= 4, $"{name}: at least four lanterns show clear of the fighters ({clearShown})");
-			}
-			finally { scene.QueueFree(); }
+			var stage = scene.StageRoot;
+			var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+			var water = stage.GetNode<MeshInstance3D>("Water");
+			var ws = ((PlaneMesh)water.Mesh).Size;
+			var mat = FarMaterial(backdrop);
+			var (waterline, _, rows) = PaintedWater();
+			Assert.True(waterline > rows * 0.7f && waterline < rows * 0.95f, $"the painting's far waterline is found low in the frame (row {waterline} of {rows})");
+			Vector4 art = mat.GetShaderParameter("art_rect").AsVector4();
+			float bottomRow = (art.Y + art.W) * rows, join = JoinRow(backdrop, water.Position.Y);
+			Assert.True(art.X == 0f && art.Y == 0f && art.Z == 1f, "the whole painting from its top row, edge to edge");
+			Assert.True(join >= waterline && join <= waterline + 12, $"the 3D water meets the painting just under its waterline: join row {join:0.0}, waterline {waterline}");
+			Assert.True(bottomRow >= join + 1f, $"the art reaches below the join (bottom row {bottomRow:0.0}): no gap");
+			Assert.True(backdrop.Position.Y - ((QuadMesh)backdrop.Mesh).Size.Y / 2 <= water.Position.Y, "the quad reaches down past the water");
+			Assert.True(Mathf.Abs(mat.GetShaderParameter("water_v").AsSingle() * rows - waterline) <= 1f, "the shader's water starts at the measured waterline");
+			Assert.True(backdrop.Position.Z <= -30f, $"the painting is far back (z {backdrop.Position.Z})");
+			Assert.True(water.Position.Z - ws.Y / 2 <= backdrop.Position.Z && water.Position.Z + ws.Y / 2 >= -7f, "the 3D water runs from the bank to the painting: no gap");
+			// The painted horizon (its far waterline) sits at about the eye line in the close framing at the stage's centre.
+			var cam = new DynamicCamera(scene.Match.Config);
+			cam.Place(cam.MinWidth, cam.Config.BaseHeightMeters, 0f);
+			var (_, sy) = ProjectPoint(cam, new Vector3(0f, RowY(backdrop, waterline), backdrop.Position.Z));
+			Assert.True(Mathf.Abs(sy) <= 0.15f, $"the far waterline is near the eye line: screen y {sy:0.000} (of -1..1)");
 		}
+		finally { scene.QueueFree(); }
+	}
+
+	[Test]
+	public static void Riverbank_FarPainting_SharpUnstretched_TreesNotGiants(Node runner)
+	{
+		var scene = Load(runner, StageCatalog.RiverbankScene);
+		try
+		{
+			var backdrop = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop");
+			var (across, down) = FarScale(backdrop);
+			var (waterline, _, _) = PaintedWater();
+			Assert.True(across / down >= 0.9f && across / down <= 1.1f, $"at most about 10% anamorphic stretch (across/down {across / down:0.000})");
+			var cam = new DynamicCamera(scene.Match.Config);
+			float tanV = Mathf.Tan(Mathf.DegToRad(FightScene.CameraFovDegrees / 2f));
+			float near = cam.DistanceFor(cam.MinWidth), depth = near - backdrop.Position.Z;
+			// Sharp: in the closest framing at 1080 rows, one painting pixel spans at most 1.5 screen pixels (it was 7.4).
+			float screenPx = down * 1080f / (2f * tanV * depth);
+			Assert.True(screenPx <= 1.5f, $"one painting pixel draws {screenPx:0.00} screen pixels at 1080p in the closest framing");
+			// Not giants: everything the painting shows above its waterline (the trees' full height) draws at most 1.6 times a
+			// fighter's height (the tallest body top) in that framing.
+			float tallest = CameraConfig.Default.TallBodyTopMeters.Values.Append(CameraConfig.Default.ModelTopMeters).Max();
+			float trees = waterline * down / depth, fighter = tallest / near;
+			Assert.True(trees <= 1.6f * fighter, $"the far trees draw {trees / fighter:0.00} times a fighter's height");
+		}
+		finally { scene.QueueFree(); }
+	}
+
+	[Test]
+	public static void Riverbank_SwampWater_EasesIntoThePaintedWater_KappaPartsFromIt(Node runner)
+	{
+		var scene = Load(runner, StageCatalog.RiverbankScene);
+		try
+		{
+			var stage = scene.StageRoot;
+			var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
+			var wm = (ShaderMaterial)((PlaneMesh)stage.GetNode<MeshInstance3D>("Water").Mesh).Material;
+			var fm = FarMaterial(backdrop);
+			var (_, painted, _) = PaintedWater();
+			Color far = wm.GetShaderParameter("far_color").AsColor(), near = wm.GetShaderParameter("near_color").AsColor();
+			bool Close(Color a, Color b) => Mathf.Abs(a.R - b.R) <= 3f / 255f && Mathf.Abs(a.G - b.G) <= 3f / 255f && Mathf.Abs(a.B - b.B) <= 3f / 255f;
+			Assert.True(Close(far, painted), $"the 3D water's far colour {far.ToHtml(false)} is the painted water's {painted.ToHtml(false)}: no seam");
+			Assert.True(Mathf.IsEqualApprox(wm.GetShaderParameter("far_z").AsSingle(), backdrop.Position.Z), "and it reaches that colour at the painting's plane");
+			float tint = fm.GetShaderParameter("water_tint_amount").AsSingle();
+			Assert.True(tint == 0f || Close(fm.GetShaderParameter("water_tint").AsColor(), far), "any tint on the painted water pulls toward the same colour");
+			// The Kappa's teal shell (#3E7F86) parts from the water behind it: near the bank the water is darker and greener.
+			var teal = new Color("3e7f86");
+			float Lum(Color x) => 0.299f * x.R + 0.587f * x.G + 0.114f * x.B;
+			Assert.True(near.G > near.B && near.G > near.R, $"near water {near.ToHtml(false)} is green, not teal");
+			Assert.True(Lum(near) <= 0.6f * Lum(teal) && Lum(near) < Lum(far), $"near water {near.ToHtml(false)} is darker than the Kappa's teal and the far water");
+			Assert.True(wm.GetShaderParameter("ripple_mix").AsSingle() <= 0.3f, "the ripple lines stay faint");
+		}
+		finally { scene.QueueFree(); }
 	}
 
 	// ---- fallbacks ----

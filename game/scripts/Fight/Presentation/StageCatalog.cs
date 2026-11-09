@@ -35,9 +35,9 @@ public static class StageCatalog
 	/// <summary>YOK-150: the Oni's snowbound shrine gate at cold dusk (V9, S5).</summary>
 	public static readonly StageAssets ShrineGate = new(ShrineGateScene, "shrine-gate", "res://assets/generated/stage/shrine-gate/",
 		"backdrop.png", "pine-cluster.glb", "snow-lantern.glb");
-	/// <summary>YOK-151: the Kappa's lantern riverbank at night (V9).</summary>
+	/// <summary>YOK-151: the Kappa's riverbank at night, a still swamp without lanterns (V9; designer 2026-11-09).</summary>
 	public static readonly StageAssets Riverbank = new(RiverbankScene, "riverbank", "res://assets/generated/stage/riverbank/",
-		"backdrop.png", "reeds.glb", "floating-lantern.glb", "mooring-post.glb");
+		"backdrop.png", "reeds.glb", "mooring-post.glb");
 	/// <summary>YOK-152: the Tanuki's tea house, lamplit (V9); its season paintings are optional (<see cref="SeasonScreens"/>).</summary>
 	public static readonly StageAssets TeaHouse = new(TeaHouseScene, TeaHouseStage.Kind, TeaHouseStage.DefaultDir,
 		"backdrop.png", "panel-mask.png", "tea-table.glb", "hanging-lantern.glb");
