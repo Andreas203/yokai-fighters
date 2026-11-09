@@ -59,8 +59,8 @@ Yokai normals clip IDs: Kitsune D (N01-N06), Oni and Kappa use N01-N06 not for t
 | S02 | Rising Talisman | R | Rising uppercut or upward talisman slap, airborne feet-off-ground late | 41 (5/8/28) | D | Low. Common uppercut |
 | S03 | Foxfire | K (also Ryo when drafted, and Tanuki copy) | Two-hand flick or cast releasing a slow flame | 49 (15/4/30) | D | Low-medium. Any one-handed cast/throw |
 | S04 | Fox Mirage | K | Vanish and re-appear behind the opponent | 28 (18/-/10) | - | **YES.** See flag 1 |
-| S05 | Iron-Club Charge | O | Lunging forward charge, shoulder or club lead | 46 (16/6/24) | - | **YES.** See flag 2 |
-| S06 | Oni Quake | O | Overhead two-hand ground slam, hits low | 53 (22/5/26) | - | Medium. See flag 3 |
+| S05 | Iron-Club Charge | O | Lunging forward charge, shoulder or club lead | 46 (16/6/24; AM24: the greybox clip is 32, 12/6/14) | - | **YES.** See flag 2 |
+| S06 | Oni Quake | O | Overhead two-hand ground slam, hits low | 53 (22/5/26; AM24: the measured clip is 56, 27/4/25) | - | Medium. See flag 3 |
 | S07 | Shell Spin | B | In-place spinning body with long active window | 48 (10/18/20) | - | **YES.** See flag 4 |
 | (T01) | River Grab | B | Reuses T01 grab clip | 38 (6/2/30) | - | Low (reuse) but see flag 5 |
 

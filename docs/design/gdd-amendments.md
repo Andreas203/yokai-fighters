@@ -27,6 +27,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
+| [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -483,3 +484,23 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 |---|---|---|
 | GDD extended §2.1 Setting, tone and art direction, "Stages" | "a riverbank of floating lanterns (Kappa)" | "a night swamp without lanterns (Kappa)" |
 | rules.md V9 | "lantern riverbank (Kappa)" | "night swamp without lanterns (Kappa) [AM21]" |
+
+<a id="am24"></a>
+
+## AM24 — Iron-Club Charge and Oni Quake take the timing of their greybox clips (2026-11-09)
+
+**Status.** The route was decided by the designer on 2026-11-01 (YOK-219, route A: a move with no take of its own reuses a measured clip, and its frame data follows that clip, F2) and the designer asked on 2026-11-09 to fill the greybox abilities first. The exact numbers below are movesmith's reading of the clips and stay `proposed` until the designer confirms them on the YOK-227 pull request.
+
+**Decision.** Iron-Club Charge is 12 / 6 / 14 frames (32 in all), not 16 / 6 / 24. Its clip is 14 clean frames of a stride; at the slowest allowed speed (0.5x) plus the longest allowed holds it reaches 32 frames, not 46. Oni Quake is 27 / 4 / 25 frames (56 in all), not 22 / 5 / 26: the measured clip has a 4-frame held overhead tell and its slam lands on frame 28. Damage (110 and 90) is unchanged.
+
+**Why.** F2: frame data that does not match its clip is invalid, and F5 forbids stretching the clip by hand. The alternative was to wait for new takes. When a real take lands, the frame data is re-derived from it and this amendment is superseded.
+
+**What does not change.** Damage, notes and Lv 3 evolutions of both specials; the 1-hit armour and the low hit.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended specials table, Iron-Club Charge | "16 / 6 / 24" | "12 / 6 / 14" |
+| GDD extended specials table, Oni Quake | "22 / 5 / 26" | "27 / 4 / 25" |
+| rules.md specials table (A) | "16/6/24" and "22/5/26" | "12/6/14 [AM24]" and "27/4/25 [AM24]" |

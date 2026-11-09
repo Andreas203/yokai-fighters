@@ -1,0 +1,165 @@
+{
+  "kind": "special",
+  "id": "oni-quake",
+  "name": "Oni Quake",
+  "status": "proposed",
+  "source": "oni",
+  "starter": false,
+  "rarity": "rare",
+  "locked": true,
+  "clip": "oni-quake",
+  "rules": [
+    "A11",
+    "A12",
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "C3",
+    "C5",
+    "E1",
+    "E16",
+    "E5",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "T0",
+    "V5",
+    "V8"
+  ],
+  "input": {
+    "kata": {
+      "slot": "D",
+      "motion": "22"
+    },
+    "kihon": {
+      "slot": "D",
+      "direction": "down"
+    }
+  },
+  "card": {
+    "plain": "Slam the club into the ground; the shock hits low.",
+    "frames": "27 / 4 / 25 frames, 90 damage, hits low"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "damage",
+        "op": "mul_pct",
+        "value": 130
+      },
+      {
+        "target": "properties.knockdown",
+        "op": "set",
+        "value": true
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 27,
+        "active": 4,
+        "recovery": 25,
+        "damage": 90,
+        "hitstun": 26,
+        "blockstun": 20,
+        "strength": "heavy",
+        "hitboxes": [
+          {
+            "frames": [
+              28,
+              31
+            ],
+            "rect": {
+              "x": 110,
+              "y": 0,
+              "w": 200,
+              "h": 110
+            }
+          }
+        ],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              56
+            ],
+            "rect": {
+              "x": -45,
+              "y": 0,
+              "w": 110,
+              "h": 415
+            }
+          },
+          {
+            "frames": [
+              10,
+              27
+            ],
+            "rect": {
+              "x": -30,
+              "y": 330,
+              "w": 100,
+              "h": 110
+            }
+          },
+          {
+            "frames": [
+              28,
+              40
+            ],
+            "rect": {
+              "x": 50,
+              "y": 130,
+              "w": 110,
+              "h": 80
+            }
+          }
+        ],
+        "properties": {
+          "low": true
+        }
+      },
+      "preset": "oni-quake-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -4
+      },
+      "card": {
+        "plain": "Lv 1 → Lv 2: Oni Quake recovers 4 frames faster, so a blocked slam costs less.",
+        "frames": "27 / 4 / 21 frames (recovery -4), 90 damage, hits low"
+      },
+      "preset": "oni-quake-lv2",
+      "notes": "Proposed (open question, A4). Recovery is the tail of the clip (frames 32-56, the eased-out settle), so the step needs no change to the startup the clip shows. Chosen for the Oni's rushdown identity: a 27-frame tell is read by the player, and the step makes the blocked slam less of a free punish rather than making it faster to see coming. Startup -4 was rejected: the hit would land before the club does (F2). Overlap to decide: Brute Recovery already takes 4 recovery frames off on block."
+    },
+    "3": {
+      "evolution": {
+        "id": "aftershock",
+        "name": "Aftershock",
+        "status": "proposed",
+        "preset": "aftershock",
+        "changes": [
+          {
+            "target": "properties.aftershock_delay",
+            "op": "set",
+            "value": 30
+          }
+        ],
+        "card": {
+          "plain": "A second quake cracks the ground where the first struck.",
+          "frames": "27 / 4 / 25 frames, 90 damage, hits low, second quake 30 frames after the first"
+        }
+      }
+    }
+  },
+  "notes": "Clip oni-quake (GREYBOX reuse of the oni-heavy-punch overhead slam, preset 128, 56 frames via its retime curve, hit 28-31; route A on YOK-219): 27/4/25. Delta against the rules.md first pass 22/5/26: +5 startup, -1 active, -1 recovery; clip timing kept (F2), the rules.md row changes by amendment AM21 in the same PR (the held overhead tell is 4 of the 27 startup frames). Hits low (C3, properties.low): a ground-level box x 110-310, y 0-110 in front of the club, since the slam's shock is the hit, not the club head. Boxes are the YOK-132 estimates, not re-placed from the posed rig. Input slot D (22 / down) is a proposal: rules.md names no slot for Oni's specials. Locked: marked with the diamond (A11). Lv 3 aftershock_delay is read by the engine (YOK-136). Damage 90 is the table; hitstun and blockstun are placeholders. EX (C5, E16) is a first pass: +30% damage and a knockdown. T0 flag: the clip file is on the Oni's rig; a copy by the Tanuki plays it on Ryo's Tripo body only once a Ryo-rig retarget exists (assets/specs/clips/yok-137-oni-specials.md step Q0, 0 credits). Preset ids are references for Asset Smith, no preset file written."
+}

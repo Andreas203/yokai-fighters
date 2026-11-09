@@ -122,8 +122,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 | Rising Talisman | Ryo starter | 5/8/28 | 90 | Anti-air; air-invuln frames 1–5 | Heaven Seal: launches for a follow-up |
 | Foxfire | Kitsune, common | 15/4/30 | 70 | Slow projectile | Piercing Foxfire: passes through projectiles |
 | Fox Mirage ◆ | Kitsune, rare | 18/—/10 | 0 | Teleport behind opponent | Mirage Feint: decoy absorbs one hit |
-| Iron-Club Charge | Oni, common | 16/6/24 | 110 | Forward charge, 1-hit armour | Crushing Charge: wall bounce |
-| Oni Quake ◆ | Oni, rare | 22/5/26 | 90 | Ground pound, hits low | Aftershock: second quake 30f later |
+| Iron-Club Charge | Oni, common | 12/6/14 [AM24] | 110 | Forward charge, 1-hit armour | Crushing Charge: wall bounce |
+| Oni Quake ◆ | Oni, rare | 27/4/25 [AM24] | 90 | Ground pound, hits low | Aftershock: second quake 30f later |
 | River Grab | Kappa, common | 6/2/30 | 130 | Command grab (generic throw); counts as a throw (C4, R7) for trials and cancels | Whirlpool Grab: +50% range |
 | Shell Spin ◆ | Kappa, rare | 10/18/20 | 80 | Spins through projectiles | Torrent Spin: travels forward, multi-hit |
 
