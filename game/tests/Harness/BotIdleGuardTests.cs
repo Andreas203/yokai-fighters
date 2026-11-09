@@ -221,7 +221,8 @@ public static class BotIdleGuardTests
 	[Test]
 	public static void IdleGuard_0_PlaysTheOldBatch()
 	{
-		var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = 0 } };
+		// YOK-184: throw_break_pct 0 too (the base file now proposes 15), so the pre-YOK-184 pins below hold unchanged.
+		var bot = Bot with { Fight = Bot.Fight with { IdleGuardPct = 0, ThrowBreakPct = 0 } };
 		var batch = RunHarness.PlayBatch(AiGuardTests.LegacyOpponent(Content), bot, 1, 3); // YOK-165: the opponent as on main before it (no tier jump-punish rate)
 		// YOK-174: all three re-pinned (were 1144460045766550, cd0500c43b604051, 8091329b164ab95a): every run opens on
 		// r1-apprentice, which now fights with its own apprentice profile (designer 2026-10-21) instead of a Kitsune roll.
