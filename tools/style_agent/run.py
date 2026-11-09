@@ -163,7 +163,9 @@ def cmd_visual(args) -> int:
     meta = {"run": args.run, "command": "visual", "image_model": args.image_model, "evaluator_model": args.evaluator_model,
             "refiner_model": args.refiner_model, "target": args.target, "max_rounds": args.max_rounds,
             "max_images": args.max_images, "refiner": "v1, no keep rule" if args.refiner_v1 else "v2, with the keep rule",
-            "seeded_from": args.seed_from, "guide": guide}
+            "seeded_from": args.seed_from}
+    if guide != "v1":
+        meta["guide"] = guide   # v1 traces were recorded without the key; leaving it out keeps a v1 replay byte-identical
     results = []
     for case in cases:
         print(f"  {case['id']}")
