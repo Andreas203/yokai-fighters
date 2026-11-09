@@ -28,18 +28,28 @@ public partial class MapScroll : Control
 
 	public override void _Notification(int what) { if (what == NotificationResized) QueueRedraw(); }
 
+	/// <summary>
+	/// The nine pieces the paper is drawn from for a scroll of <paramref name="size"/>: where each goes and which part of the texture it shows (texture pixels of a
+	/// <paramref name="texSize"/> image). The roller columns go out <see cref="RollerWidth"/> wide from a <see cref="TexRoller"/>-wide source; the rest stretches.
+	/// </summary>
+	public static (Rect2 Dst, Rect2 Src)[] Slices(Vector2 size, Vector2 texSize)
+	{
+		float[] sx = { 0f, TexRoller, texSize.X - TexRoller, texSize.X }, dx = { 0f, RollerWidth, size.X - RollerWidth, size.X };
+		float[] sy = { 0f, TopInset, texSize.Y - BottomInset, texSize.Y }, dy = { 0f, TopInset, size.Y - BottomInset, size.Y };
+		var o = new (Rect2, Rect2)[9];
+		for (int ix = 0; ix < 3; ix++)
+			for (int iy = 0; iy < 3; iy++)
+				o[ix * 3 + iy] = (new Rect2(dx[ix], dy[iy], dx[ix + 1] - dx[ix], dy[iy + 1] - dy[iy]), new Rect2(sx[ix], sy[iy], sx[ix + 1] - sx[ix], sy[iy + 1] - sy[iy]));
+		return o;
+	}
+
 	public override void _Draw()
 	{
 		if (Size.X < 2 * RollerWidth + 40f || Size.Y < TopInset + BottomInset + 40f) return;
 		if (Tex is { } tex)
 		{
-			// a nine-patch drawn by hand: the texture's corners and edges, but the roller columns drawn wider than the texture has them (1.5x), so the rollers read as thick as the concept's
-			float tw = tex.GetWidth(), th = tex.GetHeight();
-			float[] sx = { 0f, TexRoller, tw - TexRoller, tw }, dx = { 0f, RollerWidth, Size.X - RollerWidth, Size.X };
-			float[] sy = { 0f, TopInset, th - BottomInset, th }, dy = { 0f, TopInset, Size.Y - BottomInset, Size.Y };
-			for (int ix = 0; ix < 3; ix++)
-				for (int iy = 0; iy < 3; iy++)
-					DrawTextureRectRegion(tex, new Rect2(dx[ix], dy[iy], dx[ix + 1] - dx[ix], dy[iy + 1] - dy[iy]), new Rect2(sx[ix], sy[iy], sx[ix + 1] - sx[ix], sy[iy + 1] - sy[iy]));
+			// a nine-patch drawn by hand: the roller columns drawn wider than the texture has them (1.5x), so the rollers read as thick as the concept's
+			foreach (var (dst, src) in Slices(Size, new Vector2(tex.GetWidth(), tex.GetHeight()))) DrawTextureRectRegion(tex, dst, src);
 		}
 		else DrawRect(new Rect2(RollerWidth, TopInset, Size.X - 2 * RollerWidth, Size.Y - TopInset - BottomInset), PaperTone); // texture missing: plain paper still reads
 	}

@@ -269,7 +269,7 @@ public partial class MapScreen : Control
 		Board.Position = new Vector2(boardX, boardTop); Board.Size = new Vector2(cols * colW, boardH);
 		_layout = MapLayout.Compute(nodes, Board.Size, ShapeOf);
 		_paths = MapRouteGeometry.Compute(nodes, View.Routes, _layout, Board.Size.Y);
-		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Values, _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
+		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Select(kv => MapNodeBox.Grown(kv.Value, _layout.Sprites[kv.Key].Size.Y)), _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
 		Landmarks.SetPlan(plan, Board.Position);
 		LandmarksFront.Position = Vector2.Zero; LandmarksFront.Size = Board.Size;
 		LandmarksFront.SetPlan(plan, Vector2.Zero);

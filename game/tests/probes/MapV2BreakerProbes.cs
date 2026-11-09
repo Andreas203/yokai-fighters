@@ -221,9 +221,9 @@ public static class MapV2BreakerProbes
 		}
 	}
 
-	// T6 [AM20]: the map view carries no copy target at all, so nothing about the copy on the map.
+	// T6 [AM20]: the map shows nothing about the copy target (the view no longer carries one).
 	[Test]
-	public static void LockedCopyTargetLeavesNoCopyTextOnTheMap(Node host)
+	public static void MapShowsNoCopyText(Node host)
 	{
 		var v = StubMapView.Grid(4, 2);
 		var s = Make(host, v);

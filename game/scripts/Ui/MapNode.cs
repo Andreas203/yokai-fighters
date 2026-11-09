@@ -75,7 +75,7 @@ public partial class MapNode : Button
 		var art = sprite;
 		if (tex.Texture is { } t && t.GetHeight() > 0)
 		{
-			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight()) * Math.Max(0.1f, look.SpriteScale);
+			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight()) * Math.Clamp(look.SpriteScale, 0.1f, MapNodeBox.MaxArtScale);
 			var sz = new Vector2(t.GetWidth(), t.GetHeight()) * k;
 			art = new Rect2(new Vector2(sprite.GetCenter().X - sz.X / 2f, sprite.End.Y - sz.Y), sz);
 		}
