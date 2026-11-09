@@ -5,6 +5,7 @@ using Godot;
 using YokaiFighters.Dev;
 using YokaiFighters.Fight;
 using YokaiFighters.Flow;
+using YokaiFighters.SaveGame;
 using YokaiFighters.Sim;
 using YokaiFighters.Ui;
 
@@ -540,4 +541,19 @@ public static class DevJumpTests
 				Assert.True(Enumerable.Range(0, 64).Any(seed => DevJump.BuildDraft(pool, yokai, (uint)seed, true).Draft.Offer.Cards.Any(c => c.AbilityId is { } id && Rare(id))), $"{yokai}: the elder's spread can offer its rare");
 		}
 	}
+
+	// YOK-216, S3: a dev jump's run is never saved, so its loss is never the save's first loss and sets no flag.
+	[Test]
+	public static void DevJumpLoss_IsNeverTheFirstLoss_AndSetsNoFlag(Node runner) => WithDev(() => WithBoot(runner, null, flow =>
+	{
+		var setup = new DevFightSetup("kitsune");
+		var jump = DevJump.BuildFight(setup, FightScene.LoadAbilityPool());
+		Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss), "no loss yet");
+		Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, setup.Scheme).Ok, "dev fight");
+		var f = flow.Fight!;
+		Assert.True(!flow.FirstLossPending && !f.FirstLossPending && !f.ShowedFirstLoss, "not the first loss in waiting");
+		Assert.Equal(DevJump.LoseCardOf(setup, FightScene.LoadStory()).Text, f.GetNode<FightHud>("Hud").LoseText, "the later-loss card, as the jump preview shows");
+		Assert.True(jump.Session.LoseFight().Ok, "lost");
+		Assert.True(!flow.Saved.Story.Has(StoryProgress.FirstLoss), "no first-loss flag");
+	}));
 }

@@ -23,7 +23,7 @@ public sealed record BotLevels
 
 	static readonly string[] FightKeys =
 	{
-		"reaction_frames", "decide_every", "mistake_pct", "block_pct", "idle_guard_pct", "anti_air_pct", "anti_air_button",
+		"reaction_frames", "decide_every", "mistake_pct", "block_pct", "idle_guard_pct", "throw_break_pct", "anti_air_pct", "anti_air_button",
 		"poke_range", "throw_range", "preferred_min", "preferred_max", "walk_ticks", "block_ticks", "wait_ticks", "weights",
 	};
 	static readonly string[] WeightKeys = { "walk", "normal", "special", "throw", "jump", "wait" };

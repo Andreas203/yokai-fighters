@@ -33,8 +33,10 @@ public sealed partial record MoveData
 	internal static MoveData ReadTravel(MoveData move, JsonElement fd)
 	{
 		if (!fd.TryGetProperty("properties", out var props) || props.ValueKind != JsonValueKind.Object
-			|| !props.TryGetProperty("forward_travel", out var v) || v.ValueKind == JsonValueKind.Null)
+			|| !props.TryGetProperty("forward_travel", out var v))
 			return move;
+		// An explicit null is refused like any other non-number (the schema's integer; YOK-220's shape check did this
+		// before forward_travel left MoveData.Pending).
 		// The one whole-number rule (Effects.Whole): 300, 300.0 and 3e2 are all 300 units.
 		int travel = v.ValueKind == JsonValueKind.Number && Effects.Whole(JsonNode.Parse(v.GetRawText()), out int d) ? d
 			: throw new FormatException($"{move.Id}: properties.forward_travel must be a whole number of units");

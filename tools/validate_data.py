@@ -185,7 +185,7 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     if s is None or r is None or (fd.get("active") is not None and a is None):
         return
     total = s + (a or 0) + r
-    props = fd.get("properties") or {}
+    props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}  # the schema reports a non-object
     if a is None:
         if "projectile" not in props:
             errs.append((f"{where}.active", "active is null ('—') but properties.projectile is missing"))
@@ -376,13 +376,23 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "meter_gain.on_hit", "meter_gain.on_block", "properties.projectile.speed", "properties.projectile.hits",
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
-               "properties.aftershock_delay"}
+               "properties.aftershock_delay",
+               # YOK-220: evolution targets (throw.range and decoy shape-only in MoveData.CheckPendingProperties;
+               # forward_travel moves the fighter, YOK-221 MoveData.ReadTravel)
+               "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
                    "properties.pull_on_hit": 0, "properties.heal_pct_max_health": 0}
 START_CONDITIONS = ("first_use_each_round", "ryo_health_below_30pct", "holding_up", "charge_released")
 # YOK-171 (AM11): the modifier-only charge dash switch (ModifierLoader.ForwardTravel); it changes no frame data.
+# YOK-220: only its string value is the switch; an integer on the same target is the frame-data distance.
 FORWARD_TRAVEL = "properties.forward_travel"
+CHARGE_DASH = "charge_dash"
+
+
+def is_charge_dash(e: dict) -> bool:
+    """ModifierData.Parse's switch branch: the full-form target with a string value."""
+    return e.get("target") == FORWARD_TRAVEL and isinstance(e.get("value"), str)
 # Folders whose specials the game's ability pool can hold (AbilityPool.LoadRepo / LoadFixtures).
 SPECIAL_DIRS = (DATA / "moves", ROOT / "game" / "tests" / "fixtures" / "specials", ROOT / "game" / "tests" / "fixtures" / "rewards")
 
@@ -541,6 +551,26 @@ def read_armour(v):
     return {"frames": [first, last], "hits": hits}
 
 
+def read_multi_hit(v):
+    """MultiHit.TryRead: exactly hits >= 2 and interval >= 1, whole numbers."""
+    if not isinstance(v, dict) or set(v) != {"hits", "interval"}:
+        return None
+    hits, interval = whole(v["hits"]), whole(v["interval"])
+    if hits is None or interval is None or hits < 2 or interval < 1:
+        return None
+    return {"hits": hits, "interval": interval}
+
+
+def throw_shape_ok(v) -> bool:
+    """MoveData.ThrowShape: frame-data.schema.json properties.throw."""
+    if not isinstance(v, dict) or set(v) - {"range", "breakable", "break_window"}:
+        return False
+    rng = whole(v.get("range"))
+    if rng is None or rng < 1 or not isinstance(v.get("breakable"), bool):
+        return False
+    return "break_window" not in v or (whole(v["break_window"]) is not None and whole(v["break_window"]) >= 1)
+
+
 def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     """Effects.Apply: one unconditional effect on a frame_data dict (already schema-valid)."""
     target, op, value = effect["target"], effect["op"], effect["value"]
@@ -565,10 +595,16 @@ def apply_effect(fd: dict, effect: dict, defaults: bool) -> None:
     if op == "set":
         if key in INT_TARGETS:
             value = whole(value)
+            if value is None:  # Effects.Check: an Int target takes a whole number inside int32 (YOK-220 + YOK-221 merge)
+                raise Unbuildable(f"effect 'set' needs an integer at {target}")
         elif key == "properties.armour":
             value = read_armour(value)
             if value is None:
                 raise Unbuildable("armour needs frames [first, last] with first <= last and hits >= 1")
+        elif key == "properties.multi_hit":
+            value = read_multi_hit(value)
+            if value is None:
+                raise Unbuildable('multi_hit needs { "hits": n >= 2, "interval": frames >= 1 }')
         node[leaf] = copy.deepcopy(value)
         return
     cur, v = whole(node.get(leaf)), whole(value)
@@ -583,9 +619,9 @@ def travel_errors(fd) -> list[str]:
     """YOK-221: what MoveData.ReadTravel refuses, for every move kind MoveLoader reads (special builds, normals,
     throws): forward_travel is a whole number of units >= 0, and a move that travels needs active frames."""
     props = fd.get("properties") if isinstance(fd, dict) and isinstance(fd.get("properties"), dict) else {}
-    if props.get("forward_travel") is None:
+    if "forward_travel" not in props:
         return []
-    travel = whole(props["forward_travel"])
+    travel = whole(props["forward_travel"])  # an explicit null is refused, as MoveData.ReadTravel does
     if travel is None or travel < 0:
         return ["properties.forward_travel must be a whole number >= 0"]
     active = whole(fd["active"]) if fd.get("active") is not None else 0
@@ -667,6 +703,16 @@ def built_move_errors(fd: dict) -> list[str]:
     out.extend(travel_errors(fd))  # YOK-221: MoveData.ReadTravel
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
+    # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only). forward_travel
+    # left it for YOK-221's travel_errors above (MoveData.ReadTravel).
+    if "wall_bounce" in props and not isinstance(props["wall_bounce"], bool):
+        out.append("properties.wall_bounce must be true or false")
+    if "multi_hit" in props and read_multi_hit(props["multi_hit"]) is None:
+        out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
+    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
+        out.append("properties.decoy must be a whole number of hits >= 1")
+    if "throw" in props and not throw_shape_ok(props["throw"]):
+        out.append("properties.throw needs a whole range >= 1 and breakable true or false (break_window, if given, >= 1)")
     return out
 
 
@@ -725,7 +771,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
     charge = doc.get("charge")
     if charge is None and any(e.get("when") == "charge_released" for e in effects):
         errs.append(("effects", "charge_released needs a charge object"))
-    if charge is not None and not any(e.get("target") == FORWARD_TRAVEL for e in effects):
+    if charge is not None and not any(is_charge_dash(e) for e in effects):
         errs.append(("charge", f"a charge object needs the {FORWARD_TRAVEL} charge_dash effect"))
     window = charge.get("window_ticks") if isinstance(charge, dict) else None
     if isinstance(window, dict) and whole(window.get("min")) is not None and whole(window.get("max")) is not None \
@@ -733,7 +779,7 @@ def check_modifier(doc: dict, specials: dict[str, dict], errs) -> None:
         errs.append(("charge.window_ticks", "min must be <= max"))
     for i, e in enumerate(effects):
         target = e.get("target")
-        if not isinstance(target, str) or target in ("ex.meter_cost", FORWARD_TRAVEL):
+        if not isinstance(target, str) or target == "ex.meter_cost" or is_charge_dash(e):
             continue
         path = resolve_target(target)
         if path[:2] == ["properties", "projectile"] and "projectile" not in requires:
@@ -1011,8 +1057,13 @@ def load_schema(name: str) -> dict:
 
 def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
              specials: dict[str, dict] | None = None, schema_ok: bool = True,
-             move_kinds: dict[str, str] | None = None, move_sources: set[str] | None = None) -> list[tuple[str, str]]:
+             move_kinds: dict[str, str] | None = None, move_sources: set[str] | None = None,
+             moves_ok: bool | None = None) -> list[tuple[str, str]]:
+    """moves_ok (YOK-220): the move's own frame data (a normal's or throw's frame_data, a special's levels and ex)
+    passed the schema, so the loader mirror runs even when another field failed (a fixture without a clip);
+    defaults to schema_ok."""
     errs: list[tuple[str, str]] = []
+    moves_ok = schema_ok if moves_ok is None else moves_ok
     kind = doc.get("kind")
     sound_move_ids = set(move_kinds or {}) | set(specials or {}) if move_kinds is not None else None
     sound_sources = move_sources
@@ -1036,7 +1087,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
         clip = clips.get(clip_id) if isinstance(clip_id, str) else None
         if isinstance(clip_id, str) and clip is None:
             errs.append(("clip", f"clip '{clip_id}' not found (expected data/clips/{clip_id}.json) (F2)"))
-    if kind in ("normal", "throw") and schema_ok and isinstance(doc.get("frame_data"), dict):
+    if kind in ("normal", "throw") and moves_ok and isinstance(doc.get("frame_data"), dict):
         for msg in built_move_errors(copy.deepcopy(doc["frame_data"])):  # YOK-103: what MoveLoader refuses
             errs.append(("frame_data", msg))
     if kind in ("normal", "throw"):  # YOK-221: also when a schema error kept the loader mirror above from running
@@ -1066,7 +1117,7 @@ def semantic(doc: dict, path: Path, rule_ids: set[str], clips: dict[str, dict],
             errs.append(("starter", "starters must have source 'ryo' and rarity 'common' (A1, A9)"))
         lv1 = ((doc.get("levels") or {}).get("1") or {}).get("frame_data")
         check_frame_data(lv1, "levels.1.frame_data", clip, clip_id, errs)
-        if schema_ok:  # YOK-103: every level and EX version must still be a move the loader runs
+        if moves_ok:  # YOK-103: every level and EX version must still be a move the loader runs
             check_special_builds(doc, errs)
     elif kind == "modifier":
         if schema_ok:  # YOK-103: what the C# loader does with it (see the mirror above)
@@ -1250,8 +1301,10 @@ def validate(paths: list[str], out=sys.stdout) -> int:
                 errs.append((field(e.absolute_path), e.message))
             # data/samples/ is documentation the game never loads: no loader mirror there (YOK-103).
             game_loads = SAMPLES_DIR not in f.resolve().parents
+            # YOK-220: the loader mirror needs only the move's own frame data to be schema-valid.
+            move_errs = [p for p, _ in errs if p.split(".")[0] in ("frame_data", "levels", "ex")]
             errs.extend(semantic(doc, f, rule_ids, clips, specials, schema_ok=not errs and game_loads, move_kinds=move_kinds,
-                                 move_sources=move_sources))
+                                 move_sources=move_sources, moves_ok=not move_errs and game_loads))
         if errs:
             failures[f] = one_travel_report(errs)
 

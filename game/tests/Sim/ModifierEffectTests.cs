@@ -191,6 +191,7 @@ public static class ModifierEffectTests
 			var fd = doc["levels"]!["1"]!["frame_data"]!.AsObject();
 			foreach (var kv in c["set"]!.AsObject()) fd[kv.Key] = kv.Value!.DeepClone();
 			foreach (var k in c["remove"]!.AsArray()) fd.Remove(k!.GetValue<string>());
+			if (c["changes"] is { } changes) doc["levels"]!["3"]!["evolution"]!["changes"] = changes.DeepClone(); // YOK-220
 			string? refused = null;
 			try { SpecialLoader.Parse(doc.ToJsonString()); }
 			catch (FormatException e) { refused = e.Message; }
