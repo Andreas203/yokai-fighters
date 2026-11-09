@@ -42,7 +42,7 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/Sim/Input/` | `InputParserTests` |
 | `tests/Sim/Run/` | `RewardDraftTests`, `ElderCancelRuleTests` (YOK-186: elder cancel-rule offer, hold, continue, R8 provisional), `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests`, `LeaveNodeTests` |
 | `tests/Ai/` | `AiTests` (P6: identical P1 streams → identical AI output until t + reaction), `AiMeterTests`, `AiGuardTests`, `AiGuardHitstopTests`, `StandingHabitTests`, `PerYokaiProfileTests`, `TanukiPressureTests`, `ApprenticeDamageTests` |
-| `tests/Harness/` | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
+| `tests/Harness/` | `RunHarnessTests`, `BotLevelsTests`, `BotIdleGuardTests`, `BotThrowBreakTests`, `MerchantShopBotTests`, `HitLogTests`, `PunishWindowTests`, `HarnessTwistTests` |
 | `tests/Tutorial/` | `TutorialTests` |
 | `tests/Audio/` | `HitSoundCueTests` (YOK-93, V6: cue precedence, sample pick, offsets, empty-folder fallback, scene switch) |
 | `tests/Replay/` | `ReplayTests` |
@@ -50,5 +50,5 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
 | `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
 | `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `HeldCancelRuleUiTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
-| `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures) |
+| `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures), `FirstLossTests` (YOK-216: first-loss vs later-loss card, `CopyMoveOf`; the save side is `SaveTests.FirstLoss_*`) |
 | `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |

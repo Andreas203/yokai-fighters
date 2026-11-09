@@ -51,6 +51,7 @@ public static class HarnessReport
 			w.WriteString("bot", b.Name);
 			w.WriteNumber("base_seed", b.BaseSeed);
 			if (b.Bot.Fight.SpecialHoldTicks != 0) w.WriteNumber("special_hold_ticks", b.Bot.Fight.SpecialHoldTicks); // YOK-171: only when set
+			if (b.Bot.Fight.ThrowBreakPct != 0) w.WriteNumber("throw_break_pct", b.Bot.Fight.ThrowBreakPct); // YOK-184: only when set
 			w.WriteNumber("runs_played", b.Runs.Count);
 			w.WriteString("caveats", Caveats);
 			w.WritePropertyName("summary");
@@ -364,6 +365,14 @@ public static class HarnessReport
 			w.WriteNumber("idle_guards", f.Bot.IdleGuards);
 			w.WriteNumber("guarded_jumps_let_go", f.Bot.GuardedJumpsLetGo); // YOK-157
 			w.WriteNumber("anti_airs", f.Bot.AntiAirs);
+			// YOK-184: only when pressed (never at throw_break_pct 0, so old output is unchanged). Presses are not breaks:
+			// Elder Kappa's unbreakable throws refuse a press, and the bot's own throw plan can break one without a roll,
+			// so the throws Ryo actually broke this fight (the fight log's count, hit log on) sit next to them.
+			if (f.Bot.ThrowBreakPresses != 0)
+			{
+				w.WriteNumber("throw_break_presses", f.Bot.ThrowBreakPresses);
+				if (f.Log is { } bl) w.WriteNumber("throws_broken", bl.ThrowBreaks[NewcomerBot.Self]);
+			}
 			w.WriteNumber("mistakes", f.Bot.Mistakes);
 			w.WriteEndObject();
 			w.WriteString("match_hash", f.MatchHash.ToString("x16"));
