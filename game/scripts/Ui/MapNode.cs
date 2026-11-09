@@ -18,7 +18,7 @@ public partial class MapNode : Button
 	public bool CursorOn { get; private set; }
 	/// <summary>The type's letter on the tag (D, E, M, J, B; "?" for an unknown type).</summary>
 	public string TypeText => UiFind.Get<Label>(this, "TypeLabel").Text;
-	/// <summary>The type's full label ("Duel", "Elder duel"), also the tag's tooltip.</summary>
+	/// <summary>The type's full label ("Duel", "Elder duel"); the node carries no tooltip.</summary>
 	public string TypeName { get; private set; } = "";
 	/// <summary>The node's name as shown: the yokai, or the type's label when no yokai waits there.</summary>
 	public string YokaiText => UiFind.Get<Label>(this, "NameLabel").Text;

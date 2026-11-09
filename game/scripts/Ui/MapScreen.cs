@@ -25,7 +25,7 @@ namespace YokaiFighters.Ui;
 /// of rows Ryo has left disappear (fade out, nothing left behind).
 /// YOK-238 (map v2, designer 2026-11-09): the paper is the title screen's plain handscroll; nodes are illustrated objects with a torn name tag at
 /// staggered heights (<see cref="MapLayout"/>), joined by winding brush strokes, among scattered landmarks (<see cref="MapLandmarkPlan"/>). AM19: the
-/// real routes ahead show as dashed sketches trailing into mist (<see cref="MapMist"/>), never a node. AM20: no copy-target chip, no row headings, no row count. A newly shown node inks in and its route paints out from Ryo: presentation
+/// real routes ahead show as dashed sketches trailing into mist (<see cref="MapMist"/>), never a node. AM20: no copy-target chip. Map v2 review (YOK-238, designer 2026-11-09): no row headings, no row count. A newly shown node inks in and its route paints out from Ryo: presentation
 /// only, ended at once by any key or click (<see cref="FinishPresentation"/>); nothing in the flow waits for it.
 /// </summary>
 public partial class MapScreen : Control

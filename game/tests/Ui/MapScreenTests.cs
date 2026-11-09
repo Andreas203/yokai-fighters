@@ -21,7 +21,7 @@ public static class MapScreenTests
 		return s;
 	}
 
-	/// <summary>YOK-238 (AM20, designer 2026-11-09): no "row N of 8 done" in the status panel and no "ROW 1" headings over the columns.</summary>
+	/// <summary>YOK-238 (map v2 review, designer 2026-11-09): no "row N of 8 done" in the status panel and no "ROW 1" headings over the columns.</summary>
 	static void AssertNoRowCountOrHeadings(MapScreen s)
 	{
 		Assert.True(s.FindChild("RowsText", true, false) == null && s.FindChild("RowHeaders", true, false) == null, "neither the row count label nor the heading holder exists");
