@@ -3,63 +3,41 @@ using Godot;
 
 namespace YokaiFighters.Ui;
 
-/// <summary>The colours of each node state, shared by the nodes and the legend's swatches so the two cannot drift (YOK-108).</summary>
-public static class MapNodePalette
-{
-	public static readonly Color Paper = new(0.945f, 0.91f, 0.831f), Ink = new(0.114f, 0.106f, 0.129f), Persimmon = new(0.89f, 0.42f, 0.24f),
-		ElderRed = new(0.72f, 0.2f, 0.16f), Gold = new(0.98f, 0.8f, 0.3f);
-	public static readonly Color Cleared = new(0.40f, 0.39f, 0.40f), Later = new(0.20f, 0.22f, 0.30f),
-		PassedOverFill = new(0.12f, 0.13f, 0.21f, 0.55f), PassedOverLine = new(0.62f, 0.63f, 0.70f, 0.7f);
-
-	public static bool Lit(MapNodeState s) => s is MapNodeState.Reachable or MapNodeState.Current;
-
-	public static Color Fill(MapNodeState s) => s switch
-	{
-		MapNodeState.Reachable or MapNodeState.Current => Paper,
-		MapNodeState.Visited => Cleared,
-		MapNodeState.PassedOver => PassedOverFill,
-		_ => Later,
-	};
-
-	public static Color Border(MapNodeState s, bool cursor, Color typeColor) =>
-		cursor ? Gold : s switch
-		{
-			MapNodeState.Current => Persimmon,
-			MapNodeState.Reachable => typeColor,
-			MapNodeState.PassedOver => Colors.Transparent, // drawn dashed instead
-			_ => new Color(typeColor, 0.6f),
-		};
-
-	public static string Caption(MapNodeState s, bool cursor) => s switch
-	{
-		MapNodeState.Current => "YOU ARE HERE",
-		MapNodeState.Visited => "cleared",
-		MapNodeState.Reachable => cursor ? "selected" : "reachable",
-		MapNodeState.PassedOver => "passed over",
-		_ => "",
-	};
-}
-
 /// <summary>
-/// One node on the map screen (<c>scenes/ui/map_node.tscn</c>): a button showing the type label and icon, the name of whoever
-/// waits there (R2; a merchant or dojo shows its type name), the elder marker (Y3) and a state style: cleared, here, reachable,
-/// selected, later, passed over (YOK-108). Only reachable nodes are enabled, so a click cannot pick any other.
-/// The look comes in as a <see cref="MapNodeLook"/> (from the styles resource); nothing here names a node type.
+/// One node on the map screen (<c>scenes/ui/map_node.tscn</c>), YOK-238 map v2: not a card but an illustrated object (a yokai's mask, the
+/// merchant's stall, the dojo, the tea house) with a small torn rice-paper name tag below: the type letter, the name of whoever waits there
+/// (R2; a merchant or dojo shows its type name), a red tick once cleared, and "YOU ARE HERE" under the node Ryo is on. An elder (Y3) wears its
+/// twist seal at the illustration's upper right. States are marks round the illustration: here = a loose persimmon brush ring, reachable = a
+/// thin indigo ring, selected = a foxfire halo with a small pointer on its left. The button's rect (illustration, ring clearance and tag) is the
+/// hit area; only a reachable node is enabled, so a click cannot pick any other. The look comes in as a <see cref="MapNodeLook"/>; nothing here names a node type.
 /// </summary>
 public partial class MapNode : Button
 {
 	public string NodeId { get; private set; } = "";
 	public MapNodeState State { get; private set; } = MapNodeState.Locked;
 	public bool CursorOn { get; private set; }
+	/// <summary>The type's letter on the tag (D, E, M, J, B; "?" for an unknown type).</summary>
 	public string TypeText => UiFind.Get<Label>(this, "TypeLabel").Text;
+	/// <summary>The type's full label ("Duel", "Elder duel"); the node carries no tooltip.</summary>
+	public string TypeName { get; private set; } = "";
 	/// <summary>The node's name as shown: the yokai, or the type's label when no yokai waits there.</summary>
 	public string YokaiText => UiFind.Get<Label>(this, "NameLabel").Text;
+	/// <summary>"YOU ARE HERE" on the node Ryo is on, else "".</summary>
 	public string StateText => UiFind.Get<Label>(this, "StateLabel").Text;
 	/// <summary>YOK-109: the lines under the name from the type's style (the boss: "waits at the end" / "copies your best move"); "" = none shown.</summary>
 	public string TagText => UiFind.Get<Label>(this, "TagLabel").Text;
 	public bool ElderShown => UiFind.Get<Control>(this, "ElderMark").Visible;
+	/// <summary>The red tick on the tag: shown for a cleared node.</summary>
+	public bool ClearedShown => UiFind.Get<Control>(this, "ClearedMark").Visible;
+	/// <summary>The illustration: its yokai's mask, or the type's sprite; null = the big type letter stands in.</summary>
+	public Texture2D? SpriteTexture => UiFind.Get<TextureRect>(this, "IconTexture").Texture;
+	/// <summary>The illustration's rect inside this node (the routes end on it, the marks go round it).</summary>
+	public Rect2 SpriteRect { get; private set; }
+	/// <summary>The mark the node wears now: the ring or halo drawn round the illustration, null for none.</summary>
+	public MapMark? Mark => State == MapNodeState.Current ? MapMark.Here : State == MapNodeState.Reachable ? (CursorOn ? MapMark.Selected : MapMark.Reachable) : null;
 	/// <summary>YOK-139: the twist icon id drawn on the elder mark; "" = the plain "E" mark (no twist data).</summary>
 	public string TwistIconId { get; private set; } = "";
+	public Control Tag => UiFind.Get<Control>(this, "Tag");
 
 	public event Action<MapNode>? Chosen, Hovered;
 
@@ -68,79 +46,103 @@ public partial class MapNode : Button
 		FocusMode = FocusModeEnum.None; // the screen owns the cursor; Godot focus never reaches a locked node
 		Pressed += () => Chosen?.Invoke(this);
 		MouseEntered += () => Hovered?.Invoke(this);
+		foreach (var s in new[] { "normal", "hover", "pressed", "disabled", "focus" }) AddThemeStyleboxOverride(s, new StyleBoxEmpty());
 	}
 
-	public void Bind(MapNodeView v, MapNodeLook look, Vector2 size, bool cursor, MapNodeLook? twistLook = null)
+	/// <param name="size">The node's box.</param>
+	/// <param name="sprite">The illustration's rect inside the box.</param>
+	/// <param name="lineH">Height of one tag line; the tag's text scales with it.</param>
+	public void Bind(MapNodeView v, MapNodeLook look, Vector2 size, Rect2 sprite, float lineH, bool cursor, MapNodeLook? twistLook = null)
 	{
-		NodeId = v.Id; State = v.State; CursorOn = cursor;
+		NodeId = v.Id; State = v.State; CursorOn = cursor; SpriteRect = sprite; TypeName = look.Label;
 		Name = "Node_" + v.Id;
 		CustomMinimumSize = size; Size = size;
-		int font = (int)Math.Clamp(size.X / 8f, 13, 26);
+		int font = (int)Math.Clamp(lineH * 0.78f, 13, 28);
 		var icon = UiFind.Get<Label>(this, "IconLabel");
 		var type = UiFind.Get<Label>(this, "TypeLabel");
 		var name = UiFind.Get<Label>(this, "NameLabel");
 		var stateLabel = UiFind.Get<Label>(this, "StateLabel");
-		var tex = UiFind.Get<TextureRect>(this, "IconTexture");
-		icon.Text = look.Icon; type.Text = look.Label; name.Text = v.Yokai ?? look.Label;
-		tex.Texture = look.IconTexture; tex.Visible = look.IconTexture != null; icon.Visible = look.IconTexture == null;
-		stateLabel.Text = MapNodePalette.Caption(v.State, cursor);
-		stateLabel.Visible = stateLabel.Text != "";
 		var tag = UiFind.Get<Label>(this, "TagLabel");
-		tag.Text = look.Tagline; tag.Visible = look.Tagline != "";		foreach (var l in new[] { icon, type, name, stateLabel, tag })
-			l.AddThemeFontSizeOverride("font_size", l == name ? font + 2 : l == tag ? font - 8 : font - 2);
+		var tex = UiFind.Get<TextureRect>(this, "IconTexture");
+		var tagBox = UiFind.Get<MapTag>(this, "Tag");
+		var cleared = UiFind.Get<Control>(this, "ClearedMark");
+		icon.Text = look.Icon; type.Text = look.Icon; name.Text = v.Yokai ?? look.Label;
+		tex.Texture = look.Sprite ?? look.IconTexture; tex.Visible = tex.Texture != null; icon.Visible = tex.Texture == null;
+		// fit the real art inside the fixed sprite rect (centred on it, its foot on the rect's foot); the layout never saw this art
+		var art = sprite;
+		if (tex.Texture is { } t && t.GetHeight() > 0)
+		{
+			float k = Math.Min(sprite.Size.X / t.GetWidth(), sprite.Size.Y / t.GetHeight() * look.SpriteScale);
+			var sz = new Vector2(t.GetWidth(), t.GetHeight()) * k;
+			art = new Rect2(new Vector2(sprite.GetCenter().X - sz.X / 2f, sprite.End.Y - sz.Y), sz);
+		}
+		tex.Position = art.Position; tex.Size = art.Size;
+		icon.Position = sprite.Position; icon.Size = sprite.Size;
+		icon.HorizontalAlignment = HorizontalAlignment.Center; icon.VerticalAlignment = VerticalAlignment.Center;
+		icon.AddThemeFontSizeOverride("font_size", (int)Math.Max(24, sprite.Size.Y * 0.6f));
+		icon.AddThemeColorOverride("font_color", look.Color);
+		stateLabel.Text = v.State == MapNodeState.Current ? "YOU ARE HERE" : "";
+		stateLabel.Visible = stateLabel.Text != "";
+		tag.Text = look.Tagline; tag.Visible = look.Tagline != "";
+		cleared.Visible = v.State == MapNodeState.Visited;
+		cleared.CustomMinimumSize = new Vector2(font, font);
+		foreach (var l in new[] { type, name, stateLabel, tag })
+			l.AddThemeFontSizeOverride("font_size", l == name ? font : l == tag || l == stateLabel ? Math.Max(11, font - 5) : font);
+		foreach (var l in new[] { tag, stateLabel }) l.AddThemeConstantOverride("line_spacing", -2); // the theme's caption leading would gap the boss's two lines
+		type.AddThemeColorOverride("font_color", look.Color);
+		name.AddThemeColorOverride("font_color", MapNodePalette.Ink);
+		tag.AddThemeColorOverride("font_color", new Color(MapNodePalette.Ink, 0.85f));
+		stateLabel.AddThemeColorOverride("font_color", MapNodePalette.ElderRed);
+		tagBox.Seed = MapLayout.Hash(v.Id);
+		tagBox.SetMargins(font * 0.5f, 2f, font * 0.5f, 5f);
+
+		// the tag sits under the illustration, overlapping its foot, centred; it is as wide as its text needs
+		tagBox.ResetSize();
+		var ts = tagBox.GetCombinedMinimumSize();
+		tagBox.Size = ts;
+		tagBox.Position = new Vector2((size.X - ts.X) / 2f, MapNodeBox.TagTop(sprite.Size.Y));
+		TooltipText = "";
+
 		var elder = UiFind.Get<Control>(this, "ElderMark");
 		elder.Visible = v.Elder;
 		TwistIconId = v.Elder && twistLook != null ? v.TwistIcon ?? "" : "";
 		// YOK-139 (Y3): an elder with twist data wears its twist's seal (red stamp, placeholder shape) in place of the plain "E".
+		float sealS = Math.Clamp(sprite.Size.Y * 0.3f, 26f, 48f);
 		var seal = elder.GetNodeOrNull<TwistSeal>("TwistSeal");
-		if (seal == null) { seal = new TwistSeal { Name = "TwistSeal", CustomMinimumSize = new Vector2(30, 30), SizeFlagsVertical = SizeFlags.ShrinkCenter }; elder.AddChild(seal); }
+		if (seal == null) { seal = new TwistSeal { Name = "TwistSeal", SizeFlagsVertical = SizeFlags.ShrinkCenter }; elder.AddChild(seal); }
+		seal.CustomMinimumSize = new Vector2(sealS, sealS);
 		seal.Visible = TwistIconId != "";
 		if (seal.Visible) { seal.Icon = TwistIconId; seal.Fallback = twistLook!.Value.Icon; }
 		UiFind.Get<Label>(this, "ElderGlyph").Visible = !seal.Visible;
+		elder.CustomMinimumSize = new Vector2(sealS * 0.8f, sealS * 0.8f);
+		elder.Size = new Vector2(sealS, sealS);
+		elder.Position = new Vector2(art.End.X - sealS * 0.62f, art.Position.Y - sealS * 0.18f); // the seal on the mask's upper right
+		elder.AddThemeStyleboxOverride("panel", seal.Visible ? new StyleBoxEmpty() : new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 14, CornerRadiusTopRight = 14, CornerRadiusBottomLeft = 14, CornerRadiusBottomRight = 14 });
+		UiFind.Get<Label>(this, "ElderGlyph").AddThemeColorOverride("font_color", MapNodePalette.Paper);
 
 		bool reachable = v.State == MapNodeState.Reachable;
 		Disabled = !reachable;
 		MouseDefaultCursorShape = reachable ? CursorShape.PointingHand : CursorShape.Arrow;
-		bool lit = MapNodePalette.Lit(v.State);
-		var box = new StyleBoxFlat
-		{
-			BgColor = MapNodePalette.Fill(v.State),
-			BorderColor = MapNodePalette.Border(v.State, cursor, look.Color),
-			CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6, CornerRadiusBottomLeft = 6, CornerRadiusBottomRight = 6,
-		};
-		box.SetBorderWidthAll(v.State == MapNodeState.PassedOver ? 0 : cursor ? 7 : lit ? 4 : 2);
-		box.ShadowColor = new Color(0.1f, 0.06f, 0.02f, v.State == MapNodeState.PassedOver ? 0f : 0.38f); // a card lying on the paper (YOK-109)
-		box.ShadowSize = 7; box.ShadowOffset = new Vector2(3, 5);
-		foreach (var s in new[] { "normal", "hover", "pressed", "disabled", "focus" }) AddThemeStyleboxOverride(s, box);
-		var dimText = v.State == MapNodeState.Visited ? new Color(0.78f, 0.76f, 0.72f) : v.State == MapNodeState.PassedOver ? new Color(0.5f, 0.52f, 0.6f) : new Color(0.62f, 0.63f, 0.70f);
-		icon.AddThemeColorOverride("font_color", lit ? look.Color : dimText);
-		type.AddThemeColorOverride("font_color", lit ? look.Color : dimText);
-		name.AddThemeColorOverride("font_color", lit ? MapNodePalette.Ink : dimText);
-		tag.AddThemeColorOverride("font_color", lit ? new Color(MapNodePalette.Ink, 0.8f) : dimText);
-		stateLabel.AddThemeColorOverride("font_color", v.State == MapNodeState.Current ? MapNodePalette.ElderRed : lit ? new Color(MapNodePalette.Ink, 0.8f) : dimText);
-		elder.AddThemeStyleboxOverride("panel", seal.Visible ? new StyleBoxEmpty() : new StyleBoxFlat { BgColor = MapNodePalette.ElderRed, CornerRadiusTopLeft = 12, CornerRadiusTopRight = 12, CornerRadiusBottomLeft = 12, CornerRadiusBottomRight = 12 });
-		UiFind.Get<Label>(this, "ElderGlyph").AddThemeColorOverride("font_color", MapNodePalette.Paper);
 		ZIndex = cursor ? 2 : 0;
 		QueueRedraw();
 	}
 
-	/// <summary>Over the button's own box: the dashed edge of a passed-over node, the gold glow and pointer of the selected one.</summary>
+	/// <summary>Behind the illustration and the tag: the state's ring or halo, and the pointer of the selected node.</summary>
 	public override void _Draw()
 	{
-		var r = new Rect2(Vector2.Zero, Size);
-		if (State == MapNodeState.PassedOver)
+		if (SpriteRect.Size.X <= 0f || Mark is not { } mark) return;
+		var c = SpriteRect.GetCenter();
+		float pad = MapNodeBox.Pad(SpriteRect.Size.Y);
+		var r = SpriteRect.Size / 2f + new Vector2(pad * 0.72f, pad * 0.72f);
+		uint seed = MapLayout.Hash(NodeId);
+		switch (mark)
 		{
-			var c = MapNodePalette.PassedOverLine;
-			DrawDashedLine(r.Position, new Vector2(r.End.X, 0), c, 2f, 8f);
-			DrawDashedLine(new Vector2(r.End.X, 0), r.End, c, 2f, 8f);
-			DrawDashedLine(r.End, new Vector2(0, r.End.Y), c, 2f, 8f);
-			DrawDashedLine(new Vector2(0, r.End.Y), r.Position, c, 2f, 8f);
-		}
-		if (CursorOn)
-		{
-			for (int i = 2; i >= 1; i--) DrawRect(r.Grow(i * 4f), new Color(MapNodePalette.Gold, 0.25f), false, 4f);
-			float y = Size.Y / 2;
-			DrawColoredPolygon(new[] { new Vector2(-24, y - 16), new Vector2(-24, y + 16), new Vector2(-6, y) }, MapNodePalette.Gold);
+			case MapMark.Here: MapNodeArt.Ring(this, c, r, MapNodePalette.Persimmon, Mathf.Max(5f, SpriteRect.Size.Y * 0.045f), seed); break;
+			case MapMark.Reachable: MapNodeArt.Ring(this, c, r, MapNodePalette.Indigo, Mathf.Max(2.5f, SpriteRect.Size.Y * 0.02f), seed); break;
+			case MapMark.Selected:
+				MapNodeArt.Halo(this, c, r, Mathf.Max(3f, SpriteRect.Size.Y * 0.025f));
+				MapNodeArt.Pointer(this, c.X - r.X - 4f, c.Y, Mathf.Max(11f, SpriteRect.Size.Y * 0.1f));
+				break;
 		}
 	}
 }

@@ -36,6 +36,8 @@ public sealed record MapNodeView(string Id, int Row, string Type, string? Yokai,
 {
 	/// <summary>YOK-139 (Y3): the icon id of this elder node's twist (data/twists/*.json <c>icon</c>); null = no twist data for it.</summary>
 	public string? TwistIcon { get; init; }
+	/// <summary>YOK-238: the yokai's data id ("elder-oni"), which picks its mask; null = only <see cref="Yokai"/> (the display name) is known.</summary>
+	public string? YokaiId { get; init; }
 }
 
 /// <summary>A route between two node ids; goes from the lower row to the higher.</summary>

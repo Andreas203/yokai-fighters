@@ -21,6 +21,14 @@ public static class MapScreenTests
 		return s;
 	}
 
+	/// <summary>YOK-238 (map v2 review, designer 2026-11-09): no "row N of 8 done" in the status panel and no "ROW 1" headings over the columns.</summary>
+	static void AssertNoRowCountOrHeadings(MapScreen s)
+	{
+		Assert.True(s.FindChild("RowsText", true, false) == null && s.FindChild("RowHeaders", true, false) == null, "neither the row count label nor the heading holder exists");
+		var text = string.Join("\n", AllLabels(s).Select(l => l.Text));
+		Assert.True(!System.Text.RegularExpressions.Regex.IsMatch(text, @"(?i)\brow \d|rows? done|of \d+ done|after row") || text.Contains("· row ") || text.Contains("· after row"), "no 'ROW 1' heading or 'row N of 8 done' count anywhere: " + text);
+	}
+
 	static void Press(MapScreen s, string action) => s._UnhandledInput(new InputEventAction { Action = action, Pressed = true });
 
 	static StubMapView Fork()
@@ -45,17 +53,19 @@ public static class MapScreenTests
 		s.Refresh();
 		Assert.Equal(4, s.Nodes.Count, "the cleared node and the three it leads to; the last row stays blank");
 		Assert.Equal(3, s.Routes.Lines.Count, "a stroke to each choice (the boss node is not on the paper, so its routes are not drawn)");
-		Assert.Equal("Duel", s.NodeFor("a")!.TypeText, "type label from the styles resource");
+		Assert.Equal("D", s.NodeFor("a")!.TypeText, "the tag opens with the type letter from the styles resource");
+		Assert.Equal("Duel", s.NodeFor("a")!.TypeName, "and the type label is kept for the tooltip and the detail panel");
 		Assert.Equal("Kitsune", s.NodeFor("a")!.YokaiText, "the yokai that waits (R2)");
 		Assert.Equal("Oni", s.NodeFor("b")!.YokaiText, "the yokai that waits at a choice (R2)");
 		Assert.True(s.NodeFor("c")!.ElderShown && !s.NodeFor("b")!.ElderShown, "elder marker only on the elder node (Y3)");
-		Assert.Equal("Shrine", s.NodeFor("d")!.TypeText, "unknown type still renders, with its id as label");
+		Assert.Equal("Shrine", s.NodeFor("d")!.TypeName, "unknown type still renders, with its id as label");
+		Assert.Equal("?", s.NodeFor("d")!.TypeText, "and the fallback letter");
 		Assert.Equal("Shrine", s.NodeFor("d")!.YokaiText, "no yokai: the node shows its type name, never a blank");
 		Assert.True(s.NodeFor("a")!.State == MapNodeState.Current && s.NodeFor("b")!.State == MapNodeState.Reachable, "states shown");
 		foreach (var (a, b, _) in s.Routes.Lines) Assert.True(a.X < b.X, "routes run forward");
-		var r = s.RectOf("a");
+		var sprite = s.SpriteRectOf("a");
 		var line = s.Routes.Lines.First();
-		Assert.True(Mathf.IsEqualApprox(line.A.X, r.End.X) && Mathf.IsEqualApprox(line.A.Y, r.GetCenter().Y), "route starts on its node's edge");
+		Assert.True(line.A.X > sprite.GetCenter().X && line.A.X <= sprite.End.X && Mathf.IsEqualApprox(line.A.Y, sprite.GetCenter().Y), "YOK-238: a route starts on the edge of its node's illustration, at mid-height");
 		s.GetParent().QueueFree();
 	}
 
@@ -121,7 +131,10 @@ public static class MapScreenTests
 			for (int i = 0; i < rects.Count; i++)
 				for (int j = i + 1; j < rects.Count; j++)
 					Assert.True(!rects[i].Intersects(rects[j]), $"{rows}x{per}: nodes {i} and {j} overlap");
-			Assert.Equal(rows, rects.Select(r => (int)r.Position.X).Distinct().Count(), $"{rows}x{per}: one column per row");
+			float colW = s.Board.Size.X / rows;
+			var cols = s.View.Nodes.Select(n => (n.Row, Col: (int)(s.RectOf(n.Id).GetCenter().X / colW))).ToList();
+			Assert.True(cols.All(c => c.Col == c.Row - 1), $"{rows}x{per}: every node sits in its own row's column (stagger leans nodes inside the column, never across)");
+			Assert.Equal(rows, cols.Select(c => c.Col).Distinct().Count(), $"{rows}x{per}: one column per row");
 			Assert.True(s.Board.Size.X >= rows * 300f, $"{rows}x{per}: a roomy column per row (at least 300 px), so the board is wider than the screen");
 			Assert.Equal(1, s.Nodes.Count, $"{rows}x{per}: only the first row is drawn at the start");
 			s.GetParent().QueueFree();
@@ -133,7 +146,7 @@ public static class MapScreenTests
 	{
 		var nodes = new List<MapNodeView> { new("x", 10, "duel", null, false, MapNodeState.Locked), new("y", 40, "duel", null, false, MapNodeState.Locked), new("z", 40, "duel", null, false, MapNodeState.Locked) };
 		var l = MapLayout.Compute(nodes, new Vector2(1000, 600));
-		Assert.True(l.Rects["x"].Position.X < l.Rects["y"].Position.X && Mathf.IsEqualApprox(l.Rects["y"].Position.X, l.Rects["z"].Position.X), "sparse row values still make adjacent columns");
+		Assert.True(l.Rects["x"].GetCenter().X < 500f && l.Rects["y"].GetCenter().X > 500f && l.Rects["z"].GetCenter().X > 500f, "sparse row values still make adjacent columns (two of them, so the halves of the 1000 px board)");
 		Assert.True(l.Rects["y"].Position.Y < l.Rects["z"].Position.Y, "order within the row is the view's order");
 		Assert.Equal(0, MapLayout.Compute(new List<MapNodeView>(), new Vector2(100, 100)).Rects.Count, "empty map is empty");
 	}
@@ -212,13 +225,16 @@ public static class MapScreenTests
 	{
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
-		Assert.Equal("selected", s.NodeFor("r1-apprentice")!.StateText, "the cursor node reads selected");
+		Assert.True(s.NodeFor("r1-apprentice")!.CursorOn && s.NodeFor("r1-apprentice")!.Mark == MapMark.Selected, "the cursor node wears the selected halo");
+		Assert.Equal("", s.NodeFor("r1-apprentice")!.StateText, "no caption under a node that is not the one Ryo is on");
 		Walk(sess, "r1-apprentice", "r2-oni");
 		s.SetView(new SessionMapView(sess));
 		Assert.Equal(MapNodeState.Visited, s.NodeFor("r1-apprentice")!.State, "cleared");
-		Assert.Equal("cleared", s.NodeFor("r1-apprentice")!.StateText, "caption");
+		Assert.True(s.NodeFor("r1-apprentice")!.ClearedShown && s.NodeFor("r1-apprentice")!.Mark == null, "cleared: the red tick on its tag and no ring");
 		Assert.Equal(MapNodeState.Current, s.NodeFor("r2-oni")!.State, "here");
 		Assert.Equal("YOU ARE HERE", s.NodeFor("r2-oni")!.StateText, "caption");
+		Assert.True(s.NodeFor("r2-oni")!.Mark == MapMark.Here && !s.NodeFor("r2-oni")!.ClearedShown, "here: the persimmon ring, no tick");
+		Assert.True(s.NodeFor("r3-oni")!.Mark == MapMark.Selected && s.NodeFor("r3-kappa")!.Mark == MapMark.Reachable, "choices: the cursor one glows, the other wears the thin indigo ring");
 		Assert.True(s.NodeFor("r2-kitsune") == null && s.NodeFor("r2-kappa") == null, "YOK-109: the nodes Ryo did not take in a row he has left are not drawn (they leave, nothing stays as faint ink)");
 		Assert.True(s.NodeFor("r3-oni")!.State == MapNodeState.Reachable && s.NodeFor("r3-kappa")!.State == MapNodeState.Reachable, "row 3 opens");
 		Assert.True(s.NodeFor("r6-kitsune") == null, "later rows are not drawn: no node, no caption");
@@ -227,7 +243,7 @@ public static class MapScreenTests
 	}
 
 	[Test]
-	public static void StatusRowHeadersDetailAndLegend(Node host)
+	public static void StatusDetailAndLegendWithNoRowCountOrHeadings(Node host)
 	{
 		var sess = StartSession();
 		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
@@ -235,16 +251,13 @@ public static class MapScreenTests
 		var s = Make(host, new SessionMapView(sess));
 		Assert.Equal("RYO · 840 / 1000", s.StatusHealthText, "health as the HUD words it (C1)");
 		Assert.Equal($"{sess.Run.Coins} coins", s.StatusCoinsText, "coins (R8)");
-		Assert.Equal("row 4 of 8 done", s.StatusRowsText, "rows done; the boss row is not counted");
-		Assert.Equal(5, s.HeaderTexts.Count, "YOK-109: a header only for each row that is drawn (rows 1-4 walked, row 5 the choice)");
-		Assert.Equal("ROW 1", s.HeaderTexts[0], "plain row");
-		Assert.Equal("ROW 5 · ELDER", s.HeaderTexts[4], "the row being chosen is marked elder (R1, Y3)");
-		Assert.True(!s.HeaderTexts.Any(t => t.StartsWith("AFTER")) && !s.HeaderTexts.Contains("ROW 8 · ELDER"), "no header for a row that is not drawn");
+		AssertNoRowCountOrHeadings(s);
 		Assert.True(s.DetailNameText.EndsWith("row 5") && s.DetailNameText.Contains("Elder duel"), "detail names the focused node: " + s.DetailNameText);
 		Assert.True(s.DetailRewardText.Contains("Pays 50 coins") && s.DetailRewardText.Contains("rare"), "reward line from the node table: " + s.DetailRewardText);
 		Assert.True(s.DetailTwist.Visible && s.DetailTwist.Text.StartsWith("Twist: "), "YOK-139: the focused elder's twist line shows: " + s.DetailTwist.Text);
 		Assert.True(s.DetailTwist.Text.Length > "Twist: ".Length, "YOK-109: the line is the story label, never a stand-in (TwistCopy shows nothing without one): " + s.DetailTwist.Text);
-		Assert.Equal(4, s.LegendStateCount, "a swatch per state a drawn node can have (no \"later\", no \"passed over\": neither is drawn)");
+		Assert.Equal(4, s.LegendStateCount, "a swatch per mark a drawn node can wear: cleared tick, here ring, reachable ring, selected halo");
+		Assert.True(UiFind.Get<Control>(s, "LegendStates").GetChildren().Select(c => c.GetNode<MapStateSwatch>("Swatch").Mark).SequenceEqual(new[] { MapMark.Cleared, MapMark.Here, MapMark.Reachable, MapMark.Selected }), "in that order, drawn the way a node wears them");
 		Assert.True(s.LegendTypesText.Contains("merchant") && s.LegendTypesText.Contains("elder") && s.LegendTypesText.Contains("duel"), "legend types come from the styles resource: " + s.LegendTypesText);
 		Assert.True(!s.LegendTypesText.Contains("dojo") && !s.LegendTypesText.Contains("boss"), "and only for types that are drawn: " + s.LegendTypesText);
 		string before = sess.StateHash().ToString();
@@ -330,8 +343,8 @@ public static class MapScreenTests
 		Assert.Equal("The Tanuki", boss.YokaiText, "boss name (R2)");
 		Assert.Equal("waits at the end\ncopies your best move", boss.TagText, "designer-approved boss lines, from the styles resource");
 		Assert.Equal("", s.Nodes.First(n => n.NodeId != "boss-tanuki").TagText, "other cards carry no extra lines");
-		Assert.True(s.RectOf("boss-tanuki").Size.X > s.RectOf("r8-elder-oni").Size.X, "the boss card is a little larger");
-		Assert.Equal("AFTER ROW 8", s.HeaderTexts[^1], "the boss column header, once the boss is the choice");
+		Assert.True(Mathf.IsEqualApprox(s.SpriteRectOf("boss-tanuki").Size.X / s.SpriteRectOf("boss-tanuki").Size.Y, s.SpriteRectOf("r8-elder-oni").Size.X / s.SpriteRectOf("r8-elder-oni").Size.Y), "R2: every sprite rect has the same shape, hidden or not, so none can hint at a type");
+		Assert.True(boss.SpriteTexture != null && boss.SpriteTexture.ResourcePath.EndsWith("node-tanuki.png"), "the boss node is the tea house sprite; the Tanuki himself is never drawn");
 		s.GetParent().QueueFree();
 	}
 
@@ -359,16 +372,14 @@ public static class MapScreenTests
 	}
 
 	[Test]
-	public static void CopyChipShowsTheLiveTargetOrNothing(Node host)
+	public static void TheMapHasNoCopyChip(Node host)
 	{
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
-		var target = CopyRule.Target(sess.Run);
-		Assert.True(target != null && s.CopyChip.State == CopyTalismanState.Defined, "a new run has a target at turn one (T2): the lowest-slot starter");
-		Assert.Equal(target!.Data.Name.ToUpperInvariant(), s.CopyChip.MoveName, "the chip names the target's move");
-		Assert.Equal($"Lv {target.Level}", s.CopyChip.LevelText, "and its level");
+		Assert.True(CopyRule.Target(sess.Run) != null, "the run has a copy target (T2) ...");
+		Assert.True(s.FindChild("CopyChip", true, false) == null && s.FindChild("Toast", true, false) == null, "... and the map shows no chip and no toast for it (AM20, T6)");
 		var bare = Make(host, Fork());
-		Assert.Equal(CopyTalismanState.None, bare.CopyChip.State, "no target in the view: the chip is the grey plate");
+		Assert.True(bare.FindChild("CopyChip", true, false) == null, "a view with no run has none either");
 		s.GetParent().QueueFree(); bare.GetParent().QueueFree();
 	}
 
@@ -383,8 +394,7 @@ public static class MapScreenTests
 		Assert.Equal("Q E / LB RB", chips[3], "and a page at a time with Q / E and LB / RB, the menus' tab keys");
 		Assert.Equal(4, chips.Length, "no Esc / Start chip: the map has no pause binding, so none is claimed");
 		Assert.True(!UiFind.Get<Control>(s, "Status").Visible, "no run behind the view: no status panel");
-		Assert.Equal("ROW 1", s.HeaderTexts[0], "no play-row count: every drawn column is a plain row");
-		Assert.Equal(1, s.HeaderTexts.Count, "only the first row is drawn");
+		AssertNoRowCountOrHeadings(s);
 		s.GetParent().QueueFree();
 	}
 
@@ -419,7 +429,7 @@ public static class MapScreenTests
 	}
 
 	[Test]
-	public static void AfterRowUsesTheLastPlayRowNotTheCount(Node host)
+	public static void DetailSaysAfterRowForTheBossRowAndNoRowCountShows(Node host)
 	{
 		// play rows 1, 2, 4 (three of them), boss on row 5: the boss header must read "AFTER ROW 4", not "AFTER ROW 3"
 		var v = new StubMapView().Add("a", 1, "duel", "A").Add("b", 2, "duel", "B").Add("c", 4, "duel", "C").Add("d", 5, "boss", "D")
@@ -427,10 +437,8 @@ public static class MapScreenTests
 		v.Status = new MapStatusView(1000, 1000, 0, 0, 3) { LastPlayRow = 4 };
 		var s = Make(host, v);
 		foreach (var id in new[] { "a", "b", "c" }) { Assert.True(s.View!.Select(id), id); v.Complete(); s.Refresh(); }
-		Assert.Equal("ROW 4", s.HeaderTexts[2], "row 4 is a play row");
-		Assert.Equal("AFTER ROW 4", s.HeaderTexts[3], "the boss column");
-		Assert.Equal("row 0 of 3 done", s.StatusRowsText, "the count still says how many play rows");
-		Assert.Equal("AFTER ROW 4", MapScreen.HeaderText(5, false, v.Status.PlayRowLimit), "pure helper agrees");
+		AssertNoRowCountOrHeadings(s);
+		Assert.True(s.DetailNameText.EndsWith("after row 4"), "the boss row is 'after row 4', not 'after row 3': " + s.DetailNameText);
 		s.GetParent().QueueFree();
 	}
 
@@ -479,7 +487,7 @@ public static class MapScreenTests
 		string all = string.Join("\n", AllLabels(s).Select(l => l.Text)).ToLowerInvariant();
 		foreach (var secret in new[] { "tanuki", "elder", "nine-tails", "merchant", "dojo", "kappa", "kitsune", "boss" })
 			Assert.True(!all.Contains(secret), $"no text anywhere on the screen names '{secret}' before its row is the choice");
-		Assert.Equal(1, s.HeaderTexts.Count, "one header: the row that is drawn");
+		AssertNoRowCountOrHeadings(s);
 		Assert.Equal(0, s.LegendTwists.Count, "no twist seal in the legend");
 		Assert.Equal("D duel", s.LegendTypesText, "the legend names only the drawn type");
 		Assert.Equal(0, s.Routes.Lines.Count, "no stroke toward blank paper");
@@ -628,22 +636,21 @@ public static class MapScreenTests
 		var l1 = MapLayout.Compute(thin, board); var l2 = MapLayout.Compute(wide, board);
 		Assert.Equal(l1.Rects["a"].Size.Y, l2.Rects["a"].Size.Y, "a row's cards are the same height whatever a later row holds");
 		Assert.Equal(l1.Rects["b"].Size.Y, l2.Rects["b"].Size.Y, "row 2 too");
-		Assert.True(l2.Rects["w1"].Size.Y < l2.Rects["a"].Size.Y, "a row with more than the typical three shrinks its own cards only");
+		Assert.True(l2.Rects["w1"].Size.Y < l2.Rects["a"].Size.Y, $"a row with more than the typical three shrinks its own cards only: w1 {l2.Rects["w1"].Size}, a {l2.Rects["a"].Size}");
 		var rs = new[] { "w1", "w2", "w3", "w4", "w5" }.Select(id => l2.Rects[id]).ToList();
 		Assert.True(rs.All(r => new Rect2(Vector2.Zero, board).Encloses(r)), "and they still fit the board");
 		for (int i = 0; i < rs.Count; i++) for (int j = i + 1; j < rs.Count; j++) Assert.True(!rs[i].Intersects(rs[j]), "without overlapping");
 	}
 
 	[Test]
-	public static void CursorMovesKeepTheHeadersAndFadingNodesAreCoveredBySkip(Node host)
+	public static void CursorMovesKeepTheNodesAndFadingNodesAreCoveredBySkip(Node host)
 	{
 		var sess = StartSession();
 		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
 		var s = Make(host, new SessionMapView(sess));
-		var headers = UiFind.Get<Control>(s, "RowHeaders").GetChildren().OfType<Godot.Label>().ToList();
+		var nodes = s.Nodes.ToList();
 		Press(s, "ui_down"); Press(s, "ui_up");
-		var after = UiFind.Get<Control>(s, "RowHeaders").GetChildren().OfType<Godot.Label>().ToList();
-		Assert.True(headers.Count == after.Count && headers.Zip(after).All(p => ReferenceEquals(p.First, p.Second)), "moving the cursor does not rebuild the header labels");
+		Assert.True(nodes.Count == s.Nodes.Count && nodes.All(n => ReferenceEquals(n, s.NodeFor(n.NodeId))), "moving the cursor does not rebuild the node controls");
 		var v = Fork();
 		var s2 = Make(host, v);
 		Press(s2, "ui_accept"); v.Complete(); s2.Refresh();

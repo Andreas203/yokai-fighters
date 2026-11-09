@@ -47,7 +47,7 @@ public class RunMapView : IMapView
 				: _map.IsVisited(n.Id) ? MapNodeState.Visited
 				: reachable.Contains(n.Id) ? MapNodeState.Reachable
 				: n.Row <= leftRow ? MapNodeState.PassedOver
-				: MapNodeState.Locked) { TwistIcon = n.Elder ? Fight.FightScene.Twists.ForNode(n)?.Icon : null }).ToList();
+				: MapNodeState.Locked) { TwistIcon = n.Elder ? Fight.FightScene.Twists.ForNode(n)?.Icon : null, YokaiId = n.Yokai }).ToList();
 		}
 	}
 

@@ -8,7 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/kit_backdrop.tscn" id="backdrop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/map_node.tscn" id="node"]
-[ext_resource type="PackedScene" path="res://scenes/ui/copy_chip.tscn" id="chip"]
+[ext_resource type="Script" path="res://scripts/Ui/MapLandmarks.cs" id="landmarks"]
+[ext_resource type="Script" path="res://scripts/Ui/MapMist.cs" id="mist"]
 [ext_resource type="Resource" path="res://ui/map_node_styles.tres" id="styles"]
 
 [sub_resource type="StyleBoxFlat" id="paper_panel"]
@@ -61,27 +62,6 @@ theme_type_variation = &"HeadingLabelPaper"
 mouse_filter = 2
 anchor_right = 1.0
 offset_bottom = 142.0
-
-[node name="CopyChip" parent="TopBar" instance=ExtResource("chip")]
-offset_left = 660.0
-offset_top = 16.0
-offset_right = 1240.0
-offset_bottom = 104.0
-
-[node name="Toast" type="Label" parent="TopBar"]
-mouse_filter = 2
-offset_left = 540.0
-offset_top = 110.0
-offset_right = 1380.0
-offset_bottom = 142.0
-theme_override_colors/font_color = Color(0.945, 0.91, 0.831, 1)
-theme_override_colors/font_outline_color = Color(0.114, 0.106, 0.129, 1)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
-clip_text = true
-text_overrun_behavior = 3
-theme_type_variation = &"BodyLabel"
 
 [node name="Status" type="PanelContainer" parent="TopBar"]
 offset_left = 1260.0
@@ -141,12 +121,6 @@ value = 1000.0
 show_percentage = false
 theme_type_variation = &"HealthBar"
 
-[node name="RowsText" type="Label" parent="TopBar/Status/Rows/Bottom"]
-mouse_filter = 2
-theme_override_font_sizes/font_size = 22
-text = "row 0 of 8 done"
-theme_type_variation = &"CaptionLabel"
-
 [node name="ScrollView" type="Control" parent="."]
 clip_contents = true
 anchor_right = 1.0
@@ -163,9 +137,10 @@ mouse_filter = 2
 anchors_preset = 0
 script = ExtResource("paper")
 
-[node name="RowHeaders" type="Control" parent="ScrollView/Scroll"]
+[node name="Landmarks" type="Control" parent="ScrollView/Scroll"]
 mouse_filter = 2
 anchors_preset = 0
+script = ExtResource("landmarks")
 
 [node name="Board" type="Control" parent="ScrollView/Scroll"]
 mouse_filter = 2
@@ -176,6 +151,17 @@ mouse_filter = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("routes")
+
+[node name="LandmarksFront" type="Control" parent="ScrollView/Scroll/Board"]
+mouse_filter = 2
+script = ExtResource("landmarks")
+Front = true
+
+[node name="Mist" type="Control" parent="ScrollView/Scroll/Board"]
+mouse_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("mist")
 
 [node name="ShadeLeft" type="Control" parent="ScrollView"]
 mouse_filter = 2

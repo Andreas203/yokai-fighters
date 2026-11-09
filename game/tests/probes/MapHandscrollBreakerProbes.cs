@@ -152,13 +152,13 @@ public static class MapHandscrollBreakerProbes
 	}
 
 	// R2 / Y3 / T6 still apply to what is drawn (AM18): every drawn node names its yokai (or its type when none waits), an elder wears its twist
-	// seal, a non-elder wears none, its caption matches its state, and the copy chip is on the map at every step.
+	// seal, a non-elder wears none, its caption matches its state, and no copy chip is on the map at any step (AM20).
 	[Test]
 	public static void EveryDrawnNodeStillNamesItsYokaiAndWearsItsTwistSeal(Node host)
 	{
 		Drive(host, (s, view, sess, where) =>
 		{
-			Assert.True(s.CopyChip.Visible && s.CopyChip.IsVisibleInTree(), where + ": T6: the copy chip is on the map");
+			Assert.True(s.FindChild("CopyChip", true, false) == null, where + ": AM20: no copy chip on the map");
 			Assert.Equal(s.ShownIds.Count, s.Nodes.Count, where + ": one card per drawn id");
 			foreach (var v in view.Nodes.Where(n => s.ShownIds.Contains(n.Id)))
 			{
@@ -175,13 +175,11 @@ public static class MapHandscrollBreakerProbes
 	static string Snap(MapScreen s, bool withScroll) => string.Join("\n", new[]
 	{
 		"shown=" + string.Join(",", s.ShownIds.OrderBy(x => x)),
-		"headers=" + string.Join("|", s.HeaderTexts),
 		"twists=" + string.Join("|", s.LegendTwists.Select(t => t.Icon + "=" + t.Text)),
 		"types=" + s.LegendTypesText,
 		"lines=" + string.Join(";", s.Routes.Lines.Select(l => $"{l.A.X:F1},{l.A.Y:F1}>{l.B.X:F1},{l.B.Y:F1}:{l.Kind}").OrderBy(x => x)),
 		"cursor=" + s.CursorId, "focus=" + s.FocusId, withScroll ? "locked=" + s.Locked : "", // Locked is the pick lock: set after a live pick by design, never in a screen built mid-node
 		"name=" + s.DetailNameText, "reward=" + s.DetailRewardText, "habit=" + s.DetailHabit.Visible + s.DetailHabit.Text, "twist=" + s.DetailTwist.Visible + s.DetailTwist.Text,
-		"rows=" + s.StatusRowsText, "chip=" + s.CopyChip.Visible,
 		withScroll ? $"scroll={s.ScrollTarget:F1}" : "",
 	});
 
@@ -344,19 +342,19 @@ public static class MapHandscrollBreakerProbes
 		s.GetParent().QueueFree();
 	}
 
-	// AM18 / R1: a restart on the same screen puts everything back: one header, no twist, no stroke, scroll at the left, cursor on row 1, unlocked.
+	// AM18 / R1: a restart on the same screen puts everything back: one node, no twist, no stroke, scroll at the left, cursor on row 1, unlocked.
 	[Test]
-	public static void RestartResetsHeadersLegendStrokesScrollAndCursor(Node host)
+	public static void RestartResetsNodesLegendStrokesScrollAndCursor(Node host)
 	{
 		var old = Start(5); WalkTo(old, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
 		var s = Make(host, new SessionMapView(old));
 		Pick(s, "r5-elder-oni");
-		Assert.True(s.LegendTwists.Count > 0 && s.Routes.Lines.Count > 0 && s.HeaderTexts.Count == 5, "precondition: a run in progress shows twists, strokes, five headers");
+		Assert.True(s.LegendTwists.Count > 0 && s.Routes.Lines.Count > 0 && s.ShownIds.Count == 5, "precondition: a run in progress shows twists, strokes, five nodes");
 		s.PanTo(s.MaxScroll); s.SnapScroll();
 		old.LoseFight();
 		s.SetView(new SessionMapView(Start(5)));
 		s.FinishPresentation();
-		Assert.Equal("ROW 1", string.Join("|", s.HeaderTexts), "headers of the last run are gone");
+		Assert.Equal("r1-apprentice", string.Join("|", s.ShownIds), "the nodes of the last run are gone");
 		Assert.Equal(0, s.LegendTwists.Count, "no twist is listed again before an elder is drawn");
 		Assert.Equal("D duel", s.LegendTypesText, "only the drawn type");
 		Assert.Equal(0, s.Routes.Lines.Count, "no stroke");
@@ -366,7 +364,7 @@ public static class MapHandscrollBreakerProbes
 		s.GetParent().QueueFree();
 	}
 
-	// AM18: calling SetView with the same state again and again, or Refresh, never duplicates a node, a header, a legend row or a stroke.
+	// AM18: calling SetView with the same state again and again, or Refresh, never duplicates a node, a legend row or a stroke.
 	[Test]
 	public static void RepeatedSetViewAndRefreshWithTheSameStateDrawOnceOnly(Node host)
 	{
@@ -382,7 +380,7 @@ public static class MapHandscrollBreakerProbes
 			var cards = s.Board.GetChildren().OfType<MapNode>().Where(n => !n.IsQueuedForDeletion()).ToList();
 			Assert.Equal(s.ShownIds.Count, cards.Count, $"round {i}: one card per drawn node");
 			Assert.Equal(cards.Count, cards.Select(c => c.NodeId).Distinct().Count(), $"round {i}: no duplicate card");
-			Assert.Equal(s.HeaderTexts.Count, UiFind.Get<Control>(s, "RowHeaders").GetChildren().OfType<Label>().Count(l => !l.IsQueuedForDeletion()), $"round {i}: one header label per header");
+			Assert.True(s.FindChild("RowHeaders", true, false) == null, $"round {i}: no row heading holder (YOK-238)");
 			Assert.Equal(lines, s.Routes.Lines.Count, $"round {i}: strokes unchanged");
 		}
 		s.FinishPresentation();
@@ -398,7 +396,7 @@ public static class MapHandscrollBreakerProbes
 		var s = Make(host, new SessionMapView(sess));
 		s.SetView(new StubMapView());
 		s.FinishPresentation();
-		Assert.Equal(0, s.ShownIds.Count + s.HeaderTexts.Count + s.LegendTwists.Count + s.Routes.Lines.Count, "nothing drawn");
+		Assert.Equal(0, s.ShownIds.Count + s.LegendTwists.Count + s.Routes.Lines.Count + s.Routes.MistLines.Count, "nothing drawn");
 		Assert.Equal(0, s.Board.GetChildren().OfType<MapNode>().Count(n => !n.IsQueuedForDeletion()), "no card left under the board");
 		Assert.True(!UiFind.Get<Control>(s, "Detail").Visible && !UiFind.Get<Control>(s, "Status").Visible, "no detail and no status without a run");
 		Assert.True(s.ScrollOffset >= 0f && s.ScrollOffset <= s.MaxScroll, "scroll in range");
@@ -567,7 +565,7 @@ public static class MapHandscrollBreakerProbes
 			Assert.True(s.Confirm(), tag + ": pick the third of five");
 			v.Complete(); s.Refresh(); s.FinishPresentation();
 			Assert.Equal("c", string.Join(",", s.ReachableIds), tag + ": the lone node");
-			Assert.True(Math.Abs(s.RectOf("c").GetCenter().Y - s.Board.Size.Y / 2f) < 1f, tag + ": a single node sits in the middle of its column");
+			Assert.True(new Rect2(Vector2.Zero, s.Board.Size).Encloses(s.RectOf("c")), tag + ": a single node sits inside the board (YOK-238: it wanders in its column, it is no longer centred)");
 			s.Confirm(); v.Complete(); s.Refresh(); s.FinishPresentation();
 			AssertRowLaysOut(s, new[] { "x1", "x2", "x3", "x4", "x5", "x6" }, tag + " six");
 			s.GetParent().QueueFree();
@@ -577,14 +575,14 @@ public static class MapHandscrollBreakerProbes
 	static List<string> Strings(this MapScreen s) => Strings(s, true);
 
 	// T6 / Y3 / AM18: with every drawn twist listed (the row-8 choice lists the row-5 elder and both row-8 elders) the legend still fits the
-	// 1920 screen, stays clear of the detail strip and the footer, and the copy chip is visible.
+	// 1920 screen, stays clear of the detail strip and the footer, and the map has no copy chip (AM20).
 	[Test]
-	public static void ChipLegendAndDetailFitTheScreenWithEveryDrawnTwist(Node host)
+	public static void LegendAndDetailFitTheScreenWithEveryDrawnTwist(Node host)
 	{
 		var sess = Start(); WalkTo(sess, Path.Take(7).ToArray());
 		var s = Make(host, new SessionMapView(sess), P1080);
 		Assert.True(s.LegendTwists.Count >= 2, "precondition: several twists are listed: " + s.LegendTwists.Count);
-		Assert.True(s.CopyChip.Visible, "T6: the copy chip is shown on the map");
+		Assert.True(s.FindChild("CopyChip", true, false) == null, "AM20: the map shows no copy chip");
 		var legend = UiFind.Get<Control>(s, "Legend"); var detail = UiFind.Get<Control>(s, "Detail"); var hint = UiFind.Get<Control>(s, "Hint");
 		float w = Math.Max(legend.Size.X, legend.GetCombinedMinimumSize().X), h = Math.Max(legend.Size.Y, legend.GetCombinedMinimumSize().Y);
 		float left = 960f - w / 2f, top = legend.GlobalPosition.Y;
