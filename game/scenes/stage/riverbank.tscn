@@ -30,14 +30,14 @@ fog_depth_end = 70.0
 render_priority = 0
 shader = ExtResource("11_far")
 shader_parameter/tex = ExtResource("5_back")
-shader_parameter/art_rect = Vector4(0, 0, 1, 0.4583333)
-shader_parameter/sky = 0.2570914
+shader_parameter/art_rect = Vector4(0, 0, 1, 0.3333333)
+shader_parameter/sky = 0.01150557
 shader_parameter/water_v = 0.2638889
 shader_parameter/water_tint = Color(0.1765, 0.2275, 0.3686, 1)
 shader_parameter/water_tint_amount = 0.6
 
 [sub_resource type="QuadMesh" id="QuadMesh_back"]
-size = Vector2(80, 27.7625)
+size = Vector2(181.169, 34.3646)
 
 [sub_resource type="ShaderMaterial" id="Material_floor"]
 render_priority = 0
@@ -87,7 +87,7 @@ light_color = Color(0.9098, 0.6275, 0.4392, 1)
 light_energy = 0.3
 
 [node name="Backdrop" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.11875, -40.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.3177, -40.0)
 material_override = SubResource("Material_back")
 cast_shadow = 0
 mesh = SubResource("QuadMesh_back")
@@ -246,6 +246,26 @@ PeriodTicks = 224
 transform = Transform3D(0.408591, 0, 0.801906, 0, 0.9, 0, -0.801906, 0, 0.408591, -16.4, -0.06, -18.6)
 PhaseTicks = 133
 PeriodTicks = 237
+
+[node name="Float10" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
+transform = Transform3D(-0.273616, 0, 0.751754, 0, 0.8, 0, -0.751754, 0, -0.273616, 9.53, -0.06, -27)
+PhaseTicks = 170
+PeriodTicks = 190
+
+[node name="Float11" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
+transform = Transform3D(-0.690379, 0, 0.293048, 0, 0.75, 0, -0.293048, 0, -0.690379, -10.95, -0.06, -31)
+PhaseTicks = 7
+PeriodTicks = 203
+
+[node name="Float12" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
+transform = Transform3D(-0.685159, 0, -0.305052, 0, 0.75, 0, 0.305052, 0, -0.685159, 2.9, -0.06, -34)
+PhaseTicks = 44
+PeriodTicks = 216
+
+[node name="Float13" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
+transform = Transform3D(-0.227898, 0, -0.661863, 0, 0.7, 0, 0.661863, 0, -0.227898, -3.5, -0.06, -36)
+PhaseTicks = 81
+PeriodTicks = 229
 
 [node name="PropToon" type="Node" parent="."]
 script = ExtResource("2_toon")

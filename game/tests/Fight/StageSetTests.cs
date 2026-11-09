@@ -126,7 +126,7 @@ public static class StageSetTests
 			Assert.True(front <= limit + 1e-3f, $"{st.Kind}/{n.Name}: front z {front} past its limit {limit}");
 		}
 		Assert.True(lanterns >= 2, $"{st.Kind}: its lanterns were checked ({lanterns})");
-		if (st.Kind == "riverbank") Assert.True(lanterns >= 8 && lanterns <= 10, $"riverbank: 8-10 floating lanterns (designer 2026-11-09), got {lanterns}");
+		if (st.Kind == "riverbank") Assert.True(lanterns >= 12 && lanterns <= 15, $"riverbank: 12-15 floating lanterns (designer 2026-11-09), got {lanterns}");
 	});
 
 	[Test]
@@ -333,8 +333,8 @@ public static class StageSetTests
 
 	// ---- riverbank depth and lanterns (designer 2026-11-09) ----
 
-	/// <summary>The backdrop row (0 = the image's top, of 720) the riverbank's far painting shows at world height <paramref name="y"/>'s inverse: the world y of a row.</summary>
-	static float RowY(MeshInstance3D backdrop, int row)
+	/// <summary>World y of a row (0 = the image's top, of 720) of the riverbank's far painting.</summary>
+	static float RowY(MeshInstance3D backdrop, float row)
 	{
 		var mat = (ShaderMaterial)backdrop.MaterialOverride;
 		float sky = mat.GetShaderParameter("sky").AsSingle(), dv = mat.GetShaderParameter("art_rect").AsVector4().W;
@@ -343,10 +343,78 @@ public static class StageSetTests
 		return top - sky * size.Y - row / 720f / dv * (1f - sky) * size.Y;
 	}
 
+	/// <summary>The row (fractional) where the painting meets the 3D water plane (world y 0): pixel rows below it are hidden.</summary>
+	static float JoinRow(MeshInstance3D backdrop)
+	{
+		float y0 = RowY(backdrop, 0f), y1 = RowY(backdrop, 1f);
+		return y0 / (y0 - y1);
+	}
+
 	/// <summary>The painted horizon (the far reed line) and the first of the painting's big near lanterns, rows of backdrop.png (720 tall).</summary>
 	const int PaintedHorizonRow = 185, FirstBigPaintedLanternRow = 210;
-	/// <summary>The tallest painted lantern above that row (measured: rows 199-210 and 200-210, 11 px), with a pixel to spare.</summary>
-	const int PaintedLanternMaxPx = 12;
+	/// <summary>A painted lantern's dark wooden cap sits above its orange body, which is what the colour search finds (measured: rows 192-193 over a body from 194).</summary>
+	const int PaintedLanternCapRows = 2;
+
+	/// <summary>
+	/// The painting's floating lanterns near the far water (rows 186-299), found by colour: persimmon/orange pixels (red well
+	/// above green and blue) stand out against the indigo water and the tan reeds. One blob per lantern (8-connected, 6 px
+	/// or more): its top (cap included, <see cref="PaintedLanternCapRows"/>) and bottom rows.
+	/// </summary>
+	static List<(int Top, int Bottom)> PaintedLanterns()
+	{
+		var img = Image.LoadFromFile(ProjectSettings.GlobalizePath(StageCatalog.Riverbank.DefaultDir + "backdrop.png"));
+		const int r0 = 186, r1 = 300;
+		int w = img.GetWidth();
+		var hit = new bool[r1 - r0, w];
+		for (int y = r0; y < r1; y++)
+			for (int x = 0; x < w; x++)
+			{
+				Color c = img.GetPixel(x, y);
+				hit[y - r0, x] = c.R8 - c.B8 > 60 && c.R8 - c.G8 > 35 && c.R8 > 110;
+			}
+		var seen = new bool[r1 - r0, w];
+		var blobs = new List<(int, int)>();
+		for (int y = 0; y < r1 - r0; y++)
+			for (int x = 0; x < w; x++)
+			{
+				if (!hit[y, x] || seen[y, x]) continue;
+				var stack = new Stack<(int X, int Y)>();
+				stack.Push((x, y)); seen[y, x] = true;
+				int top = y, bottom = y, n = 0;
+				while (stack.Count > 0)
+				{
+					var (px, py) = stack.Pop();
+					n++; top = Math.Min(top, py); bottom = Math.Max(bottom, py);
+					for (int dy = -1; dy <= 1; dy++)
+						for (int dx = -1; dx <= 1; dx++)
+						{
+							int u = px + dx, v = py + dy;
+							if (u < 0 || u >= w || v < 0 || v >= r1 - r0 || !hit[v, u] || seen[v, u]) continue;
+							seen[v, u] = true; stack.Push((u, v));
+						}
+				}
+				if (n >= 6) blobs.Add((top + r0 - PaintedLanternCapRows, bottom + r0));
+			}
+		img.Dispose();
+		return blobs;
+	}
+
+	[Test]
+	public static void Riverbank_NoPaintedLanternIsCutByTheWater(Node runner)
+	{
+		// Each painted lantern is either wholly above the join (shown with its reflection) or wholly under the 3D water,
+		// never a half-dome at the cut.
+		var scene = Load(runner, StageCatalog.RiverbankScene);
+		try
+		{
+			float join = JoinRow(scene.StageRoot.GetNode<MeshInstance3D>("Backdrop"));
+			var lanterns = PaintedLanterns();
+			Assert.True(lanterns.Count >= 10, $"the painting's lanterns are found by colour ({lanterns.Count})");
+			foreach (var (top, bottom) in lanterns)
+				Assert.True(bottom + 1 <= join || top >= join, $"the painted lantern at rows {top}-{bottom} is cut by the water at row {join:0.0}");
+		}
+		finally { scene.QueueFree(); }
+	}
 
 	[Test]
 	public static void Riverbank_ThePaintingIsTheFarViewOnly_HorizonAtTheEyeLine(Node runner)
@@ -358,14 +426,14 @@ public static class StageSetTests
 			var backdrop = stage.GetNode<MeshInstance3D>("Backdrop");
 			var water = stage.GetNode<MeshInstance3D>("Water");
 			var ws = ((PlaneMesh)water.Mesh).Size;
-			float eye = scene.Cam.Config.BaseHeightMeters, horizon = RowY(backdrop, PaintedHorizonRow);
+			float eye = scene.Cam.Config.BaseHeightMeters, horizon = RowY(backdrop, PaintedHorizonRow), join = JoinRow(backdrop);
 			Assert.True(Mathf.Abs(horizon - eye) <= 0.3f, $"the painted horizon sits at the camera's eye line: y {horizon:0.00} vs {eye:0.00}");
-			float sinkRow = Enumerable.Range(0, 720).First(r => RowY(backdrop, r) <= 0f);
-			Assert.True(sinkRow <= FirstBigPaintedLanternRow, $"the painting's near water and big lanterns sit below the water plane (y 0 at row {sinkRow})");
+			Assert.True(join <= FirstBigPaintedLanternRow, $"the painting's near water and big lanterns sit below the water plane (join at row {join:0.0})");
 			Assert.True(backdrop.Position.Z <= -30f, $"the painting is far back (z {backdrop.Position.Z})");
 			Assert.True(water.Position.Z - ws.Y / 2 <= backdrop.Position.Z && water.Position.Z + ws.Y / 2 >= -7f, "the 3D water runs from the bank to the painting: no gap, no seam to fill");
-			// Perspective from bank to horizon: the nearest 3D lantern reads larger on screen than any painted one.
-			float px = ((QuadMesh)backdrop.Mesh).Size.X / 1280f, painted = PaintedLanternMaxPx * px;
+			// Perspective from bank to horizon: the nearest 3D lantern reads larger on screen than any painted one left showing.
+			float px = ((QuadMesh)backdrop.Mesh).Size.X / 1280f;
+			float painted = PaintedLanterns().Where(l => l.Bottom + 1 <= join).Select(l => (l.Bottom - l.Top + 1) * px).DefaultIfEmpty(0f).Max();
 			var floats = stage.GetNode("Props/Floats").GetChildren().Cast<Node3D>().ToList();
 			var nearest = floats.OrderByDescending(f => f.Position.Z).First();
 			float nearSize = nearest.Scale.Y, nearZ = nearest.Position.Z;
@@ -405,11 +473,16 @@ public static class StageSetTests
 		Walk(s, toward, toward, 30);
 	}
 
+	/// <summary>A lantern drawn at most this share of the nearest one's size reads as background (designer 2026-11-09): it may pass behind a fighter.</summary>
+	const float DeepLanternShare = 0.6f;
+
 	[Test]
-	public static void Riverbank_FewLanterns_NoneBehindAFighterBetweenHipAndHead(Node runner)
+	public static void Riverbank_Lanterns_NearOnesNeverBehindAFighter_CentreShotsShowFourOrMore(Node runner)
 	{
 		// The standard framings (the stage capture's: close, mid, max separation, both corners), the Kappa as the opponent.
-		// No floating lantern's screen box overlaps a fighter's from hip (0.8 m) to head (1.8 m), body half-width 0.6 m.
+		// A near lantern's screen box never overlaps a fighter's from hip (0.8 m) to head (1.8 m), body half-width 0.6 m.
+		// A deep one, drawn at most DeepLanternShare of the nearest lantern's size in that framing, is background and may.
+		// The centre framings (close, max) show at least four lanterns clear of the fighters.
 		var poses = new (string Name, Action<FightScene> Pose)[]
 		{
 			("close", s => Walk(s, InputBits.Right, InputBits.Left, 40)),
@@ -437,21 +510,30 @@ public static class StageSetTests
 				var mine = ProjectPoint(cam, z0);
 				Assert.True(Mathf.Abs(px - mine.X) < 1e-4f && Mathf.Abs(py - mine.Y) < 1e-4f, "the depth projection agrees with DynamicCamera.Project on the Z = 0 plane");
 				var floats = scene.StageRoot.GetNode("Props/Floats").GetChildren().Cast<Node3D>().ToList();
-				Assert.True(floats.Count >= 8 && floats.Count <= 10, $"8-10 floating lanterns, got {floats.Count}");
-				int onScreen = 0;
+				Assert.True(floats.Count >= 12 && floats.Count <= 15, $"12-15 floating lanterns, got {floats.Count}");
+				float d = cam.Transform.Z;
+				var nearest = floats.OrderByDescending(f => f.Position.Z).First();
+				float Drawn(Node3D f) => f.Scale.Y / (d - f.Position.Z);
+				int deep = 0, clearShown = 0;
 				foreach (var f in floats)
 				{
 					Aabb box = Meshes(f).Select(m => m.GlobalTransform * m.Mesh.GetAabb()).Aggregate((a, b) => a.Merge(b));
 					Rect2 lantern = ScreenRect(cam, box);
-					if (lantern.Position.X < 1f && lantern.End.X > -1f) onScreen++;
+					bool background = Drawn(f) <= DeepLanternShare * Drawn(nearest);
+					if (background) deep++;
+					bool behind = false;
 					foreach (var fighter in scene.Match.Fighters)
 					{
 						float x = FightScene.ToMeters(fighter.X), y = FightScene.ToMeters(fighter.Y);
 						Rect2 body = ScreenRect(cam, new Aabb(new Vector3(x - 0.6f, y + 0.8f, 0f), new Vector3(1.2f, 1.0f, 0f)));
-						Assert.True(!lantern.Intersects(body), $"{name}: {f.Name} at ({f.Position.X}, {f.Position.Z}) shows behind a fighter at x {x:0.00}");
+						if (!lantern.Intersects(body)) continue;
+						behind = true;
+						Assert.True(background, $"{name}: near lantern {f.Name} at ({f.Position.X}, {f.Position.Z}) shows behind a fighter at x {x:0.00}");
 					}
+					if (!behind && lantern.Position.X > -1f && lantern.End.X < 1f && lantern.Position.Y > -1f && lantern.End.Y < 1f) clearShown++;
 				}
-				if (name is "close" or "max") Assert.True(onScreen >= 2, $"{name}: some lanterns show ({onScreen})");
+				Assert.True(deep >= 2 && deep < floats.Count, $"{name}: some lanterns are deep background, most are not ({deep})");
+				if (name is "close" or "max") Assert.True(clearShown >= 4, $"{name}: at least four lanterns show clear of the fighters ({clearShown})");
 			}
 			finally { scene.QueueFree(); }
 		}
