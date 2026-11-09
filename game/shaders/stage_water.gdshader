@@ -1,17 +1,22 @@
-// YOK-151: the riverbank's water strip between the bank and the backdrop. Flat deep indigo (the painted water at the
-// seam) with a few broad teal bands and thin, broken ripple lines, all a pure function of the world position (no time):
-// flat cel colours, unshaded like the backdrop so it meets the painted water, no reflections, no glow.
+// YOK-151: the riverbank's near water, from the bank all the way back to the painting. Deep indigo near the bank (behind
+// the fighters, so the Kappa's teal parts from it by hue), easing with distance into the painted water's tinted colour at
+// the join (far_color at far_z, the backdrop's plane), so there is no seam. Teal only as thin, broken ripple lines that
+// fade out where they would crowd toward the horizon. All a pure function of the world position (no time): flat cel
+// colours, unshaded and fog-free like the backdrop it meets, no reflections, no glow. Palette: indigo #2D3A5E, ink
+// #1D1B21, teal #3E7F86.
 shader_type spatial;
-render_mode unshaded;
+render_mode unshaded, fog_disabled;
 
-uniform vec3 deep : source_color = vec3(0.12, 0.17, 0.26);
+uniform vec3 near_color : source_color = vec3(0.149, 0.176, 0.275);
+uniform vec3 far_color : source_color = vec3(0.133, 0.196, 0.290);
 uniform vec3 teal : source_color = vec3(0.243, 0.498, 0.525);
-/// How far the broad bands and the ripple lines lean toward teal.
-uniform float band_mix = 0.18;
-uniform float ripple_mix = 0.45;
-/// Ripple lines per metre of depth and their width (fraction of a line period).
+/// World z where the near colour starts easing, and where the water meets the painting.
+uniform float near_z = -9.0;
+uniform float far_z = -40.0;
+/// How far the ripple lines lean toward teal, lines per metre of depth and their width in metres.
+uniform float ripple_mix = 0.4;
 uniform float ripple_density = 0.9;
-uniform float ripple_width = 0.06;
+uniform float ripple_width = 0.05;
 
 varying vec3 world;
 
@@ -25,13 +30,16 @@ float hash(float n) {
 
 void fragment() {
 	vec2 p = world.xz;
-	float band = step(0.72, 0.5 + 0.5 * sin(p.y * 1.1 + 0.8 * sin(p.x * 0.23)));
-	vec3 c = mix(deep, teal, band * band_mix);
-	float t = (p.y + 0.12 * sin(p.x * 0.7)) * ripple_density;
-	float line = 1.0 - step(ripple_width, fract(t));
-	float row = floor(t);
-	// Broken lines: each row shows in a few dashes of its own length and offset.
+	float t = clamp((near_z - p.y) / (near_z - far_z), 0.0, 1.0);
+	vec3 c = mix(near_color, far_color, t * t * (3.0 - 2.0 * t));
+	float r = (p.y + 0.12 * sin(p.x * 0.7)) * ripple_density;
+	float f = fract(r);
+	float d = min(f, 1.0 - f) / ripple_density; // metres to the nearest line
+	float aa = fwidth(r) / ripple_density;
+	float line = 1.0 - smoothstep(ripple_width * 0.5, ripple_width * 0.5 + aa, d);
+	float row = floor(r + 0.5);
 	float dash = step(0.55, fract(p.x * (0.08 + 0.05 * hash(row)) + hash(row + 3.0)));
-	c = mix(c, teal, line * dash * ripple_mix);
+	float fade = clamp(1.0 - fwidth(r) * 4.0, 0.0, 1.0); // gone where lines come closer than a few pixels
+	c = mix(c, teal, line * dash * ripple_mix * fade);
 	ALBEDO = c;
 }

@@ -42,11 +42,12 @@ public partial class FightStage : Node3D
 }
 
 /// <summary>
-/// YOK-150: what the fight presentation tells the stage each render. <see cref="Round"/> counts the round starts the
-/// presentation has seen on this node's fight (1 = the first; a reset or rematch starts the next, C1: one round per
-/// fight); <see cref="Tick"/> is the sim tick of the round in progress (<c>Match.Tick</c>, 0 at the round start).
+/// YOK-150: what the fight presentation tells the stage after every sim tick and render. <see cref="Round"/> counts the
+/// round starts the fight scene has seen (a new one = a new fight, a Restart or a reset); <see cref="Tick"/> is the sim
+/// tick of the round in progress (<c>Match.Tick</c>, 0 at the round start); <see cref="OpponentHealth"/> of
+/// <see cref="OpponentMaxHealth"/> is the opponent's (P2's) health that tick (YOK-152: the tea house's season beats).
 /// </summary>
-public readonly record struct StageClock(int Round, int Tick);
+public readonly record struct StageClock(int Round, int Tick, int OpponentHealth = 0, int OpponentMaxHealth = 0);
 
 /// <summary>YOK-150: stage scenery that moves or changes with the <see cref="StageClock"/> only (no wall clock, no physics, no free-running animation).</summary>
 public interface IStageScenery

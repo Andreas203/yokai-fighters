@@ -37,6 +37,7 @@ public partial class FightScene
 		ObserveTutorial(); // YOK-92
 		_lastP1 = p1.Bits; // YOK-pause-flow-wiring: what was held going into a pause
 		ObservePresentation(); // YOK-53: clip frames follow the sim tick
+		PresentStage(); // YOK-152: the stage sees every tick (the tea house's health beats)
 		StepCamera(); // YOK-129: the dynamic camera eases once per sim tick
 		Recorder?.Record(p1, p2, Match.StateHash());
 	}

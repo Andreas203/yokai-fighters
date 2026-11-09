@@ -4,8 +4,8 @@ namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-152: Tanuki's tea house (V9, the boss stage), <c>res://scenes/stage/tea_house.tscn</c>. The back wall's eight paper
-/// screens show the seasons (<see cref="SeasonScreens"/>): which season a round shows is <see cref="SeasonForRound"/>,
-/// the one place to change it (designer 2026-10-20: the season changes at round start only, never mid-round).
+/// screens show the seasons (<see cref="SeasonScreens"/>), on the Tanuki's health beats (designer 2026-11-09, replacing
+/// round start): <see cref="SeasonForHealth"/> and <see cref="SeasonBelowPct"/> are the one place to change them.
 /// </summary>
 public static class TeaHouseStage
 {
@@ -16,12 +16,26 @@ public static class TeaHouseStage
 	public static readonly string[] Seasons = { "spring", "summer", "autumn", "winter" };
 
 	/// <summary>
-	/// The season a round shows, an index into <see cref="Seasons"/>: round n shows (n - 1) mod 4, so round 1 is spring and
-	/// round 5 spring again. A round below 1 (none seen yet) counts as round 1. Pure; the designer's knob.
+	/// The health beats: the opponent's health below each percent (of its maximum) brings the next season in. Spring at
+	/// the fight's start; summer below 75%, autumn below 50%, winter below 25% (designer 2026-11-09).
 	/// </summary>
-	public static int SeasonForRound(int round) => (Mathf.Max(1, round) - 1) % Seasons.Length;
+	public static readonly int[] SeasonBelowPct = { 75, 50, 25 };
 
-	/// <summary>Ticks the screens take to cross-fade from the last round's season into this round's, from the round start (0 = a hard cut).</summary>
+	/// <summary>
+	/// Pure: the season (index into <see cref="Seasons"/>) that health <paramref name="health"/> of <paramref name="maxHealth"/>
+	/// has reached: the number of beats it is strictly below. Integer maths (health x 100 &lt; pct x max). No maximum (0 or
+	/// less) = spring. Which season shows is the lowest health seen in the fight (<see cref="SeasonBeats"/>: never back).
+	/// </summary>
+	public static int SeasonForHealth(int health, int maxHealth)
+	{
+		if (maxHealth <= 0) return 0;
+		int season = 0;
+		foreach (int pct in SeasonBelowPct)
+			if ((long)health * 100 < (long)pct * maxHealth) season++;
+		return season;
+	}
+
+	/// <summary>Ticks the screens take to cross-fade into a new season, from the tick its beat is crossed (0 = a hard cut).</summary>
 	public const int SeasonFadeTicks = 30;
 
 	/// <summary>

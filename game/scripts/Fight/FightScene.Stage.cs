@@ -11,7 +11,8 @@ namespace YokaiFighters.Fight;
 /// <see cref="PlaceholderScene"/> when its assets are missing, and <see cref="UsePlaceholderStage"/> (debug, user arg
 /// <c>--stage=placeholder</c>) forces the placeholder. YOK-150: the shrine gate, riverbank and tea house
 /// (<see cref="StageCatalog"/>) fall back to the grove when their assets are missing; each render hands the stage its
-/// <see cref="StageClock"/> (<see cref="PresentStage"/>: the round starts seen on this node and <c>Match.Tick</c>).
+/// <see cref="StageClock"/> (<see cref="PresentStage"/>, every sim tick and every render: the round starts seen, <c>Match.Tick</c>
+/// and the opponent's health, which the tea house's seasons follow).
 /// Purely visual: nothing here writes the sim, the sim never reads the stage, and every prop sits behind the Z = 0
 /// gameplay plane (F4; checked by StageTests, not by code placement).
 /// </summary>
@@ -87,27 +88,27 @@ public partial class FightScene
 		container.AddChild(stage);
 		StageRoot = stage;
 		StageKind = stage.Kind;
-		_roundNode = null; // a new stage counts its rounds from 1
 	}
 
 	/// <summary>
-	/// YOK-150: round starts the presentation has seen on this node's fight (1 = the first). A new <c>Match</c> or a
-	/// <c>Match.Tick</c> that went back (a reset, a rematch) starts the next; a new node or stage starts over at 1. C1 has
-	/// one round per fight, so round 2 on is a replayed duel. Read only by the stage (the tea house's seasons).
+	/// YOK-150: round starts this fight scene has seen (1 = the first). A new <c>Match</c> (a new node's fight, a Restart, a
+	/// rematch) or a <c>Match.Tick</c> that went back (a reset, a practice reset) starts the next. The stage uses it only to
+	/// know a round started over (the tea house goes back to spring); C1 has one round per fight.
 	/// </summary>
 	public int StageRound { get; private set; }
-	private object? _roundNode;
 	private Match? _roundMatch;
 	private int _roundTick;
 
-	/// <summary>YOK-150: counts a round start if one happened, then hands the stage its clock (round, <c>Match.Tick</c>). Called from <c>Render</c>.</summary>
+	/// <summary>
+	/// YOK-150: counts a round start if one happened, then hands the stage its clock: the round, <c>Match.Tick</c> and the
+	/// opponent's (P2's) health. Called after every sim tick (so a health beat is seen on the tick it happens, whatever the
+	/// frame rate: same tick, same picture) and from <c>Render</c>; presenting the same tick twice changes nothing.
+	/// </summary>
 	private void PresentStage()
 	{
-		object nodeKey = (object?)Node ?? this;
-		if (!ReferenceEquals(_roundNode, nodeKey)) { _roundNode = nodeKey; StageRound = 0; _roundMatch = null; }
 		if (!ReferenceEquals(_roundMatch, Match) || Match.Tick < _roundTick) { StageRound++; _roundMatch = Match; }
 		_roundTick = Match.Tick;
-		(StageRoot as FightStage)?.Present(new StageClock(StageRound, Match.Tick));
+		(StageRoot as FightStage)?.Present(new StageClock(StageRound, Match.Tick, Match.P2.Health, Match.P2.MaxHealth));
 	}
 
 	/// <summary>Camera distance from the Z = 0 plane at the widest zoom: <see cref="SimConfig.ViewWidth"/> fills a 16:9 screen at FOV 25 (F4). YOK-129: the dynamic camera is at or closer than this.</summary>

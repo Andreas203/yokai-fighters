@@ -10,28 +10,34 @@
 [ext_resource type="PackedScene" path="res://assets/generated/stage/riverbank/mooring-post.glb" id="8_post"]
 [ext_resource type="PackedScene" path="res://scenes/stage_props/floating_lantern.tscn" id="9_float"]
 [ext_resource type="Shader" path="res://shaders/stage_water.gdshader" id="10_water"]
+[ext_resource type="Shader" path="res://shaders/backdrop_far.gdshader" id="11_far"]
 
 [sub_resource type="Environment" id="Environment_env"]
 background_mode = 1
-background_color = Color(0.08235, 0.1059, 0.2, 1)
+background_color = Color(0.1137, 0.1255, 0.1804, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.3608, 0.3843, 0.5098, 1)
 ambient_light_energy = 0.5
 fog_enabled = true
 fog_mode = 1
 fog_light_color = Color(0.1176, 0.1529, 0.2588, 1)
-fog_density = 0.4
+fog_density = 0.3
 fog_depth_curve = 1.2
-fog_depth_begin = 16.0
-fog_depth_end = 34.0
+fog_depth_begin = 20.0
+fog_depth_end = 70.0
 
-[sub_resource type="StandardMaterial3D" id="Material_back"]
-shading_mode = 0
-disable_fog = true
-albedo_texture = ExtResource("5_back")
+[sub_resource type="ShaderMaterial" id="Material_back"]
+render_priority = 0
+shader = ExtResource("11_far")
+shader_parameter/tex = ExtResource("5_back")
+shader_parameter/art_rect = Vector4(0, 0, 1, 0.4583333)
+shader_parameter/sky = 0.2570914
+shader_parameter/water_v = 0.2638889
+shader_parameter/water_tint = Color(0.1765, 0.2275, 0.3686, 1)
+shader_parameter/water_tint_amount = 0.6
 
 [sub_resource type="QuadMesh" id="QuadMesh_back"]
-size = Vector2(36.0, 20.25)
+size = Vector2(80, 27.7625)
 
 [sub_resource type="ShaderMaterial" id="Material_floor"]
 render_priority = 0
@@ -48,12 +54,15 @@ shader_parameter/edge_rim = 0.6
 [sub_resource type="ShaderMaterial" id="Material_water"]
 render_priority = 0
 shader = ExtResource("10_water")
-shader_parameter/deep = Color(0.1216, 0.1686, 0.2588, 1)
+shader_parameter/near_color = Color(0.149, 0.1765, 0.2745, 1)
+shader_parameter/far_color = Color(0.1333, 0.1961, 0.2902, 1)
 shader_parameter/teal = Color(0.2431, 0.498, 0.5255, 1)
+shader_parameter/near_z = -9.0
+shader_parameter/far_z = -40.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_water"]
 material = SubResource("Material_water")
-size = Vector2(40, 11)
+size = Vector2(100, 34.5)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 material = SubResource("Material_floor")
@@ -78,7 +87,7 @@ light_color = Color(0.9098, 0.6275, 0.4392, 1)
 light_energy = 0.3
 
 [node name="Backdrop" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.835, -16.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.11875, -40.0)
 material_override = SubResource("Material_back")
 cast_shadow = 0
 mesh = SubResource("QuadMesh_back")
@@ -88,7 +97,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 mesh = SubResource("PlaneMesh_floor")
 
 [node name="Water" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, -11.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, -23.25)
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_water")
 
@@ -127,7 +136,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Model" parent="Props/Reeds3/Pivot" instance=ExtResource("7_reeds")]
 
 [node name="Reeds4" type="Node3D" parent="Props"]
-transform = Transform3D(-1.50351, 0, -0.547232, 0, 1.6, 0, 0.547232, 0, -1.50351, -6, 0, -15)
+transform = Transform3D(-1.69145, 0, -0.615636, 0, 1.8, 0, 0.615636, 0, -1.69145, -10.8, 0, -6.2)
 
 [node name="Pivot" type="Node3D" parent="Props/Reeds4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
@@ -135,20 +144,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Model" parent="Props/Reeds4/Pivot" instance=ExtResource("7_reeds")]
 
 [node name="Reeds5" type="Node3D" parent="Props"]
-transform = Transform3D(1.14907, 0, -0.964181, 0, 1.5, 0, 0.964181, 0, 1.14907, 7.5, 0, -15)
+transform = Transform3D(1.30228, 0, -1.09274, 0, 1.7, 0, 1.09274, 0, 1.30228, 10.9, 0, -6.4)
 
 [node name="Pivot" type="Node3D" parent="Props/Reeds5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 
 [node name="Model" parent="Props/Reeds5/Pivot" instance=ExtResource("7_reeds")]
-
-[node name="Reeds6" type="Node3D" parent="Props"]
-transform = Transform3D(7.34788e-17, 0, 1.2, 0, 1.2, 0, -1.2, 0, 7.34788e-17, 1, 0, -15.2)
-
-[node name="Pivot" type="Node3D" parent="Props/Reeds6"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-
-[node name="Model" parent="Props/Reeds6/Pivot" instance=ExtResource("7_reeds")]
 
 [node name="Post0" type="Node3D" parent="Props"]
 transform = Transform3D(1.44889, 0, 0.388229, 0, 1.5, 0, -0.388229, 0, 1.44889, -11.2, 0, -5.6)
@@ -169,7 +170,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Floats" type="Node3D" parent="Props"]
 
 [node name="Float0" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.758373, 0, 0, 0, 0.758373, 0, -0, 0, 0.758373, 8.76994, -0.06, -10.7794)
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, -0, 0, 0.8, -3.05, -0.06, -10.9)
 PhaseTicks = 0
 PeriodTicks = 180
 
@@ -181,12 +182,19 @@ light_specular = 0.0
 omni_range = 2.5
 
 [node name="Float1" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.739607, 0, 0.793131, 0, 1.08447, 0, -0.793131, 0, 0.739607, -12.8709, -0.06, -11.4513)
+transform = Transform3D(0.545599, 0, 0.585083, 0, 0.8, 0, -0.585083, 0, 0.545599, 14, -0.06, -10.9)
 PhaseTicks = 37
 PeriodTicks = 193
 
+[node name="Light" type="OmniLight3D" parent="Props/Floats/Float1/Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+light_color = Color(1, 0.55, 0.3, 1)
+light_energy = 1.4
+light_specular = 0.0
+omni_range = 2.5
+
 [node name="Float2" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.0606894, 0, 0.867899, 0, 0.870019, 0, -0.867899, 0, -0.0606894, 3.60062, -0.06, -11.5222)
+transform = Transform3D(-0.0697565, 0, 0.997564, 0, 1, 0, -0.997564, 0, -0.0697565, -14.3, -0.06, -11.6)
 PhaseTicks = 74
 PeriodTicks = 206
 
@@ -198,93 +206,46 @@ light_specular = 0.0
 omni_range = 2.5
 
 [node name="Float3" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.739893, 0, 0.599153, 0, 0.952064, 0, -0.599153, 0, -0.739893, 1.70362, -0.06, -11.6521)
+transform = Transform3D(-0.699431, 0, 0.566388, 0, 0.9, 0, -0.566388, 0, -0.699431, 15.2, -0.06, -12.8)
 PhaseTicks = 111
 PeriodTicks = 219
 
-[node name="Light" type="OmniLight3D" parent="Props/Floats/Float3/Pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-light_color = Color(1, 0.55, 0.3, 1)
-light_energy = 1.4
-light_specular = 0.0
-omni_range = 2.5
-
 [node name="Float4" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.857032, 0, -0.120448, 0, 0.865454, 0, 0.120448, 0, -0.857032, -14.8833, -0.06, -11.6963)
+transform = Transform3D(-1.03978, 0, -0.146132, 0, 1.05, 0, 0.146132, 0, -1.03978, -15.2, -0.06, -13.9)
 PhaseTicks = 148
 PeriodTicks = 232
 
 [node name="Float5" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.583294, 0, -0.83303, 0, 1.01694, 0, 0.83303, 0, -0.583294, 5.59159, -0.06, -12.0687)
+transform = Transform3D(-0.544898, 0, -0.778194, 0, 0.95, 0, 0.778194, 0, -0.544898, 15.6, -0.06, -15.2)
 PhaseTicks = 185
 PeriodTicks = 185
 
-[node name="Light" type="OmniLight3D" parent="Props/Floats/Float5/Pivot"]
+[node name="Float6" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
+transform = Transform3D(0.176725, 0, -0.831425, 0, 0.85, 0, 0.831425, 0, 0.176725, 3.9, -0.06, -15.9)
+PhaseTicks = 22
+PeriodTicks = 198
+
+[node name="Light" type="OmniLight3D" parent="Props/Floats/Float6/Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 light_color = Color(1, 0.55, 0.3, 1)
 light_energy = 1.4
 light_specular = 0.0
 omni_range = 2.5
 
-[node name="Float6" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.205278, 0, -0.965759, 0, 0.987334, 0, 0.965759, 0, 0.205278, 7.44033, -0.06, -12.2521)
-PhaseTicks = 22
-PeriodTicks = 198
-
 [node name="Float7" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.956997, 0, -0.575022, 0, 1.11646, 0, 0.575022, 0, 0.956997, -7.08631, -0.06, -12.4287)
+transform = Transform3D(0.728592, 0, -0.437782, 0, 0.85, 0, 0.437782, 0, 0.728592, -16, -0.06, -15.9)
 PhaseTicks = 59
 PeriodTicks = 211
 
 [node name="Float8" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.868241, 0, 0.248964, 0, 0.903231, 0, -0.248964, 0, 0.868241, -0.981965, -0.06, -12.5004)
+transform = Transform3D(0.961262, 0, 0.275637, 0, 1, 0, -0.275637, 0, 0.961262, 16.3, -0.06, -18.5)
 PhaseTicks = 96
 PeriodTicks = 224
 
 [node name="Float9" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.450464, 0, 0.884086, 0, 0.992233, 0, -0.884086, 0, 0.450464, 9.5606, -0.06, -13.1546)
+transform = Transform3D(0.408591, 0, 0.801906, 0, 0.9, 0, -0.801906, 0, 0.408591, -16.4, -0.06, -18.6)
 PhaseTicks = 133
 PeriodTicks = 237
-
-[node name="Float10" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.315104, 0, 0.865741, 0, 0.921303, 0, -0.865741, 0, -0.315104, 13.0124, -0.06, -13.3897)
-PhaseTicks = 170
-PeriodTicks = 190
-
-[node name="Float11" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.940675, 0, 0.399293, 0, 1.02191, 0, -0.399293, 0, -0.940675, 4.1631, -0.06, -13.4034)
-PhaseTicks = 7
-PeriodTicks = 203
-
-[node name="Float12" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-1.00074, 0, -0.445558, 0, 1.09545, 0, 0.445558, 0, -1.00074, -12.3183, -0.06, -14.1055)
-PhaseTicks = 44
-PeriodTicks = 216
-
-[node name="Float13" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(-0.264665, 0, -0.768643, 0, 0.812932, 0, 0.768643, 0, -0.264665, -0.871265, -0.06, -14.2547)
-PhaseTicks = 81
-PeriodTicks = 229
-
-[node name="Float14" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.430984, 0, -0.810563, 0, 0.91802, 0, 0.810563, 0, 0.430984, -5.70553, -0.06, -14.5185)
-PhaseTicks = 118
-PeriodTicks = 182
-
-[node name="Float15" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.866862, 0, -0.232275, 0, 0.897441, 0, 0.232275, 0, 0.866862, -2.71488, -0.06, -14.5675)
-PhaseTicks = 155
-PeriodTicks = 195
-
-[node name="Float16" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.817047, 0, 0.510548, 0, 0.963444, 0, -0.510548, 0, 0.817047, 11.8119, -0.06, -14.6387)
-PhaseTicks = 192
-PeriodTicks = 208
-
-[node name="Float17" parent="Props/Floats" groups=["stage_lantern"] instance=ExtResource("9_float")]
-transform = Transform3D(0.21278, 0, 1.09466, 0, 1.11515, 0, -1.09466, 0, 0.21278, 7.07988, -0.06, -14.6672)
-PhaseTicks = 29
-PeriodTicks = 221
 
 [node name="PropToon" type="Node" parent="."]
 script = ExtResource("2_toon")
