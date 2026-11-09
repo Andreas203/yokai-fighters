@@ -704,15 +704,18 @@ public static class MapV2Tests
 		}
 	}
 
-	/// <summary>R2: the mist reaches past the end of every sketched route (it covers all that is hidden) and starts at the last drawn node.</summary>
+	/// <summary>R2: the cloud bank starts past the last drawn node (open paper between), reaches past the paper's end, and is denser at the right than where it starts.</summary>
 	[Test]
 	public static void MistCoversEverySketchedRoute(Node host)
 	{
 		var sess = Start();
 		var s = Make(host, new SessionMapView(sess));
 		float end = s.Routes.MistLines.SelectMany(l => l.Path).Max(p => p.X);
-		Assert.True(s.Mist.From + s.Board.Position.X <= s.RectOf("r1-apprentice").End.X + s.Board.Position.X + 20f, "starts at the last drawn node");
-		Assert.True(s.Mist.Right >= end, "ends past the far end of the last sketch");
+		Assert.True(s.Mist.From >= s.RectOf("r1-apprentice").End.X, "starts past the last drawn node");
+		Assert.True(s.Mist.BankStart > s.Mist.From + 300f, "the sketches run over open paper before the clouds begin");
+		Assert.True(s.Mist.Right >= Mathf.Max(end, s.Board.Size.X + MapScroll.PaperLeft), "ends past the far end of the last sketch and of the paper");
+		Assert.True(s.Mist.Density(s.Mist.Right) > s.Mist.Density(s.Mist.BankStart + 40f) && s.Mist.Density(s.Mist.BankStart + 40f) > 0f && s.Mist.Density(s.Mist.From) == 0f, "denser at the right than at its start");
+		Assert.True(s.Mist.Density(s.Mist.Right) >= 0.99f, "full body by the paper's end");
 		s.GetParent().QueueFree();
 	}
 
