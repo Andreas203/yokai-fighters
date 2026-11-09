@@ -12,6 +12,7 @@ namespace YokaiFighters.Tests;
 /// at the start, and part-way through the walk (rows 1-4 done, health 840, the first card of each draft taken, row 5 reachable).
 /// YOK-109: the map is a paper scroll panned inside the screen; every capture ends the ink / paint animation and snaps the pan first, so no
 /// frame is half-drawn, and one more capture (map_midrun_walked) is panned 120 px in from the left end to show the walked brush path from its start.
+/// YOK-238: map v2 (paper scroll, illustrated nodes, winding strokes, mist ahead); map_boss shows the end of the walk. The copy-chip captures are gone (AM20).
 /// Also the standalone way to run the screen for review: it needs no boot flow.
 /// Run: godot --path game res://tests/captures/map_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p] [stub=12]
 /// </summary>
@@ -56,35 +57,21 @@ public partial class MapCapture : Node
 		screen.PanTo(120); // YOK-109: the same screen near the paper's left end (the first row and the walked brush path from its first stroke; 120 px in keeps the edge chevron and shade off the Merchant card)
 		await Snap(dir + $"/map_midrun_walked{suffix}.png");
 
-		// YOK-119: the chip's other states. Changed: another special overtakes the target, so the toast shows on the way back to the map.
-		var fresh = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
-		screen.SetView(new SessionMapView(fresh));
-		var owned = fresh.Run.Owned.GetEnumerator(); owned.MoveNext(); owned.MoveNext();
-		fresh.Run.LevelUp(owned.Current.Slot);
-		screen.SetView(new SessionMapView(fresh));
-		await Snap(dir + $"/map_copy_changed{suffix}.png");
-
-		// Locked: the Tanuki's node entered (T1).
-		while (fresh.Map.Graph.Node(fresh.Reachable()[0]).Type != "boss")
+		// YOK-238: the end of the walk: row 8 cleared, the tea house (the Tanuki's node, never the Tanuki himself) is the only choice and no mist is left.
+		var late = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
+		while (late.Map.Graph.Node(late.Reachable()[0]).Type != "boss")
 		{
-			fresh.Enter(fresh.Reachable()[0]);
-			if (fresh.Node!.Type is not ("merchant" or "dojo"))
+			late.Enter(late.Reachable()[0]);
+			if (late.Node!.Type is not ("merchant" or "dojo"))
 			{
-				var d = fresh.WinFight(840);
+				var d = late.WinFight(840);
 				if (d != null) { var c = d.Offer.Cards[0]; d.Pick(0, c.Targets.Count > 0 ? c.Targets[0].Slot : null); }
 			}
-			fresh.CompleteNode();
+			late.CompleteNode();
 		}
-		fresh.Enter(fresh.Reachable()[0]);
-		screen.SetView(new SessionMapView(fresh));
-		await Snap(dir + $"/map_copy_locked{suffix}.png");
-
-		// None: no slot holds a special.
-		var graph = FileMapSource.Default(md).Load();
-		var bare = RunState.Restore(840, System.Array.Empty<(SpecialSlot, OwnedSpecial)>());
-		bare.StartMap(graph);
-		screen.SetView(new SessionMapView(new RunSession(bare, FightScene.LoadAbilityPool(), NodeSceneTable.Default(md), 5)));
-		await Snap(dir + $"/map_copy_none{suffix}.png");
+		late.Run.SetHealth(840);
+		screen.SetView(new SessionMapView(late));
+		await Snap(dir + $"/map_boss{suffix}.png");
 
 		// YOK-109: mid-animation frame (not kept in docs/screenshots/current): Ryo has just come back to the map, the choice is inking in and its strokes are painting.
 		if (OS.GetCmdlineUserArgs().Contains("anim=1"))

@@ -279,13 +279,15 @@ public static class MapConceptProbes
 		var sess = StartSession();
 		var s = Make(host, new SessionMapView(sess));
 		var r = s.RectOf("boss-tanuki");
-		Assert.True(!s.Routes.Lines.Any(l => Mathf.IsEqualApprox(l.B.X, r.Position.X)), "start: no stroke ends on the (undrawn) boss card");
+		var sp = s.SpriteRectOf("boss-tanuki");
+		bool EndsOnBoss(Vector2 b) => b.X > sp.Position.X - 1f && b.X < sp.GetCenter().X; // YOK-238: a stroke ends on the left edge of the illustration
+		Assert.True(!s.Routes.Lines.Any(l => EndsOnBoss(l.B) && Mathf.IsEqualApprox(l.B.Y, sp.GetCenter().Y)), "start: no stroke ends on the (undrawn) boss node");
 		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kitsune", "r7-dojo", "r8-elder-kappa");
 		s.SetView(new SessionMapView(sess)); s.FinishPresentation();
 		Assert.True(s.NodeFor("boss-tanuki") != null, "the boss is the choice now, so it is drawn");
-		var into = s.Routes.Lines.Where(l => Mathf.IsEqualApprox(l.B.X, r.Position.X)).ToList();
-		Assert.True(into.Count >= 1, "a route ends on the boss card's left edge");
-		foreach (var l in into) Assert.True(Mathf.IsEqualApprox(l.B.Y, r.GetCenter().Y), "and on its centre line");
+		var into = s.Routes.Lines.Where(l => EndsOnBoss(l.B)).ToList();
+		Assert.True(into.Count >= 1, "a route ends on the boss node's left edge");
+		foreach (var l in into) Assert.True(Mathf.IsEqualApprox(l.B.Y, sp.GetCenter().Y), "and on the illustration's mid-height");
 		foreach (var n in s.Nodes.Where(n => n.NodeId != "boss-tanuki"))
 			Assert.True(!s.RectOf(n.NodeId).Intersects(r), $"boss card overlaps {n.NodeId}");
 		s.GetParent().QueueFree();

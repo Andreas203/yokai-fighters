@@ -22,7 +22,10 @@ namespace YokaiFighters.Ui;
 /// clipping viewport: mouse wheel and click-drag (both only while the pointer is over the viewport, so an overlay such as the dev menu keeps its own wheel), pad right stick, Q / E and LB / RB (a page at a time; the keys and the stick only while no control outside the map has focus). Pan is eased and clamped to the
 /// paper; moving the cursor to a node off screen centres it. A node is drawn only once it is time to pick it or it is on Ryo's walked path
 /// (<see cref="MapReveal"/>): later rows, the Tanuki included, are blank paper with no name, icon, twist seal or row header. Not-taken nodes
-/// of rows Ryo has left disappear (fade out, nothing left behind). A newly shown node inks in and its route paints out from Ryo: presentation
+/// of rows Ryo has left disappear (fade out, nothing left behind).
+/// YOK-238 (map v2, designer 2026-11-09): the paper is the title screen's plain handscroll; nodes are illustrated objects with a torn name tag at
+/// staggered heights (<see cref="MapLayout"/>), joined by winding brush strokes, among scattered landmarks (<see cref="MapLandmarkPlan"/>). AM19: the
+/// real routes ahead show as dashed sketches trailing into mist (<see cref="MapMist"/>), never a node. AM20: no copy-target chip. Map v2 review (YOK-238, designer 2026-11-09): no row headings, no row count. A newly shown node inks in and its route paints out from Ryo: presentation
 /// only, ended at once by any key or click (<see cref="FinishPresentation"/>); nothing in the flow waits for it.
 /// </summary>
 public partial class MapScreen : Control
@@ -44,16 +47,19 @@ public partial class MapScreen : Control
 	public Control ScrollView => _view ??= UiFind.Get<Control>(this, "ScrollView");
 	/// <summary>YOK-109: the paper strip itself (many screens wide); its x is minus <see cref="ScrollOffset"/>.</summary>
 	public Control Scroll => _scroll ??= UiFind.Get<Control>(this, "Scroll");
+	/// <summary>YOK-238: the scenery behind the routes and nodes.</summary>
+	public MapLandmarks Landmarks => UiFind.Get<MapLandmarks>(this, "Landmarks");
+	/// <summary>YOK-238: the landmarks drawn over the routes (bridge decks, torii), so a route runs under the deck and through the posts.</summary>
+	public MapLandmarks LandmarksFront => UiFind.Get<MapLandmarks>(this, "LandmarksFront");
+	/// <summary>YOK-238: the centre line of every route of the map (board coordinates), keyed (from, to); routes only join and split, never cross.</summary>
+	public IReadOnlyDictionary<(string From, string To), Vector2[]> RoutePaths => _paths;
+	/// <summary>YOK-238 (AM19): the mist past the choosable row.</summary>
+	public MapMist Mist => UiFind.Get<MapMist>(this, "Mist");
 
-	/// <summary>YOK-108, T6: the copy-target chip. Same control, icon and glow as the HUD talisman (<see cref="CopyTalisman"/>), laid out as a strip.</summary>
-	public CopyTalisman CopyChip => UiFind.Get<CopyTalisman>(this, "CopyChip");
 	/// <summary>The node whose detail panel shows: the cursor, else the node Ryo is on.</summary>
 	public string? FocusId => CursorId ?? View?.Nodes.FirstOrDefault(n => n.State == MapNodeState.Current)?.Id;
-	/// <summary>Row header texts left to right ("ROW 5 · ELDER", "AFTER ROW 8"): only the rows that are drawn.</summary>
-	public IReadOnlyList<string> HeaderTexts => _headers.Select(l => l.Text).ToList();
 	public string StatusHealthText => UiFind.Get<Label>(this, "HealthText").Text;
 	public string StatusCoinsText => UiFind.Get<Label>(this, "CoinsText").Text;
-	public string StatusRowsText => UiFind.Get<Label>(this, "RowsText").Text;
 	public string DetailNameText => UiFind.Get<Label>(this, "DetailName").Text;
 	public string DetailRewardText => UiFind.Get<Label>(this, "DetailReward").Text;
 	/// <summary>The twist line's slot (Y3, YOK-90): hidden while the view gives no twist text.</summary>
@@ -77,14 +83,12 @@ public partial class MapScreen : Control
 	/// <summary>YOK-109: ids of the nodes drawn right now (cleared, here, choosable); everything else is blank paper.</summary>
 	public IReadOnlyCollection<string> ShownIds => _nodes.Keys;
 	/// <summary>True while Ryo's choice is on a pan or an ink animation the screen would skip on a key press (tests and captures use <see cref="FinishPresentation"/>).</summary>
-	public bool Presenting => Routes.IsPainting || _tweens.Any(t => t.IsValid() && t.IsRunning());
+	public bool Presenting => Routes.IsPainting || Landmarks.IsFading || _tweens.Any(t => t.IsValid() && t.IsRunning());
 
 	/// <summary>Pixels per wheel notch and per second of full right-stick push.</summary>
 	public const float WheelStep = 200f, StickSpeed = 1500f, StickDeadzone = 0.25f;
 
-	static readonly Color ElderHeader = MapNodePalette.ElderRed;
 	readonly Dictionary<string, MapNode> _nodes = new();
-	readonly List<Label> _headers = new();
 	readonly List<Tween> _tweens = new();
 	HashSet<string>? _shownIds;                      // ids drawn at the end of the last Update; null = nothing shown yet for this run
 	Dictionary<(string, string), RouteKind>? _routeKinds;
@@ -92,9 +96,10 @@ public partial class MapScreen : Control
 	int[] _pads = Array.Empty<int>();                // connected pads, kept by Input.JoyConnectionChanged (no per-frame allocation)
 	MapEdgeShade? _shadeLeft, _shadeRight;
 	bool _legendBuilt, _layoutValid, _needsCentre, _snapNext, _dragging;
-	string? _twistKey, _headerKey;
+	string? _twistKey;
 	object? _runKey;
 	Control? _board, _view, _scroll; MapRoutes? _routes;
+	Dictionary<(string From, string To), Vector2[]> _paths = new();
 	MapLayoutResult _layout = new(new Dictionary<string, Rect2>(), Vector2.Zero);
 	bool _ready;
 
@@ -124,7 +129,6 @@ public partial class MapScreen : Control
 		View = view; CursorId = null; Locked = false; _runKey = view.RunKey ?? _runKey;
 		if (fresh) { _shownIds = null; _routeKinds = null; }
 		_needsCentre = true; _snapNext = fresh;
-		if (_ready && newRun) CopyChip.Reset(); // a new run's first chip is a first show: no "levelled" / "changed" against the last run
 		if (_ready) Rebuild();
 	}
 
@@ -137,6 +141,8 @@ public partial class MapScreen : Control
 	public IReadOnlyCollection<MapNode> Nodes => _nodes.Values;
 	/// <summary>Where the node sits on the board, drawn or not (the layout covers the whole map).</summary>
 	public Rect2 RectOf(string id) => _layout.Rects[id];
+	/// <summary>YOK-238: where the node's illustration sits on the board (routes end on it); inside <see cref="RectOf"/>.</summary>
+	public Rect2 SpriteRectOf(string id) => _layout.Sprites[id];
 	/// <summary>YOK-109: the node's rect in the viewport's own coordinates at the current <see cref="ScrollOffset"/> (on screen when it lies inside the viewport's size).</summary>
 	public Rect2 ViewRectOf(string id) { var r = _layout.Rects[id]; return new Rect2(r.Position + Board.Position - new Vector2(ScrollOffset, 0), r.Size); }
 
@@ -238,6 +244,12 @@ public partial class MapScreen : Control
 		if (_layoutValid) { PanTo(ScrollTarget); Update(); }
 	}
 
+	/// <summary>
+	/// R2 [AM18, AM19]: every node, drawn or still hidden, is laid out with the same fixed box and sprite rect, so no hidden node's type, yokai or art can move a
+	/// stroke, a sketch or a landmark. The real illustration is fitted inside that rect when the node is drawn (<see cref="MapNode"/>).
+	/// </summary>
+	static MapNodeShape ShapeOf(MapNodeView v) => MapNodeShape.Standard;
+
 	/// <summary>Sizes the paper and the board from the viewport and the view's rows, and lays every node out (shown or not) on it.</summary>
 	bool ComputeLayout()
 	{
@@ -245,65 +257,23 @@ public partial class MapScreen : Control
 		if (View == null || !_ready || vs.X < 100f || vs.Y < 60f) return false;
 		var nodes = View.Nodes;
 		float h = vs.Y;
-		float mount = Mathf.Clamp(h * 0.045f, 18f, 36f), band = Mathf.Clamp(h * 0.07f, 30f, 52f);
-		float colW = Mathf.Clamp(h * 0.62f, 300f, 520f); // roomy columns: a screen shows about four rows, the rest waits off to the right
+		float inset = MapScroll.TopInset + 14f, insetBottom = MapScroll.BottomInset + 14f;
+		float colW = Mathf.Clamp(h * 0.80f, 380f, 680f); // roomy columns: a screen shows about four rows, the rest waits off to the right
 		int cols = Math.Max(1, nodes.Select(n => n.Row).Distinct().Count());
-		float boardTop = mount + band + 8f, boardH = Mathf.Max(60f, h - mount - 14f - boardTop);
+		float boardTop = inset, boardH = Mathf.Max(60f, h - inset - insetBottom);
 		float pad = MapScroll.PaperLeft + 90f;
 		float width = Mathf.Max(vs.X, 2f * pad + cols * colW), boardX = (width - cols * colW) / 2f;
 		Scroll.Size = new Vector2(width, h);
 		UiFind.Get<Control>(this, "Paper").Size = new Vector2(width, h);
+		Landmarks.Position = Vector2.Zero; Landmarks.Size = new Vector2(width, h);
 		Board.Position = new Vector2(boardX, boardTop); Board.Size = new Vector2(cols * colW, boardH);
-		var holder = UiFind.Get<Control>(this, "RowHeaders");
-		holder.Position = new Vector2(boardX, mount + 6f); holder.Size = new Vector2(cols * colW, band);
-		_layout = MapLayout.Compute(nodes, Board.Size);
-		// YOK-109: a card that says more than its name (the boss's "waits at the end / copies your best move") is a little larger, about its centre.
-		var rects = _layout.Rects.ToDictionary(k => k.Key, k => k.Value);
-		foreach (var v in nodes)
-			if (Styles!.Look(v.Type).Tagline != "") { var r = rects[v.Id]; var big = r.Size * new Vector2(1.2f, 1.15f); rects[v.Id] = new Rect2(r.GetCenter() - big / 2, big); }
-		_layout = _layout with { Rects = rects };
+		_layout = MapLayout.Compute(nodes, Board.Size, ShapeOf);
+		_paths = MapRouteGeometry.Compute(nodes, View.Routes, _layout, Board.Size.Y);
+		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Values, _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
+		Landmarks.SetPlan(plan, Board.Position);
+		LandmarksFront.Position = Vector2.Zero; LandmarksFront.Size = Board.Size;
+		LandmarksFront.SetPlan(plan, Vector2.Zero);
 		return true;
-	}
-
-	/// <summary>Header over a row's column: "ROW 3", "ROW 5 · ELDER" (R1, Y3), "AFTER ROW 8" for the row past the last play row.</summary>
-	public static string HeaderText(int row, bool elder, int? lastPlayRow) =>
-		lastPlayRow is { } n && row > n ? $"AFTER ROW {n}" : elder ? $"ROW {row} · ELDER" : $"ROW {row}";
-
-	/// <summary>Headers only for rows that have a drawn node (a hidden row gives away neither its number's type nor its elder mark). Rows with a new node ink in.</summary>
-	void BuildHeaders(IReadOnlyList<MapNodeView> shown, HashSet<int> newRows)
-	{
-		var holder = UiFind.Get<Control>(this, "RowHeaders");
-		int? playRows = View!.Status?.PlayRowLimit;
-		var wanted = new List<(int Row, float X, string Text, bool Elder)>();
-		foreach (var (row, x) in _layout.Columns)
-		{
-			var inRow = shown.Where(n => n.Row == row).ToList();
-			if (inRow.Count == 0) continue;
-			bool elder = inRow.Any(n => n.Elder);
-			wanted.Add((row, x, HeaderText(row, elder, playRows), elder));
-		}
-		// a cursor move or hover changes nothing here: the labels are rebuilt only when the drawn rows, their texts or the column size change
-		string key = _layout.ColumnWidth.ToString("F1") + "|" + holder.Size.Y.ToString("F0") + "|" + string.Join("|", wanted.Select(w => $"{w.Row}:{w.Text}"));
-		if (key == _headerKey) return;
-		_headerKey = key;
-		var oldRows = _headers.Select(l => l.Name.ToString()).ToHashSet();
-		foreach (var l in _headers) { holder.RemoveChild(l); l.QueueFree(); }
-		_headers.Clear();
-		foreach (var (row, x, text, elder) in wanted)
-		{
-			var l = new Label
-			{
-				Text = text, Name = "Header" + row, MouseFilter = MouseFilterEnum.Ignore,
-				HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-				Position = new Vector2(x - _layout.ColumnWidth / 2, 0), Size = new Vector2(_layout.ColumnWidth, holder.Size.Y),
-				ThemeTypeVariation = "PaperLabel",
-			};
-			l.AddThemeFontSizeOverride("font_size", 22);
-			l.AddThemeColorOverride("font_color", elder ? ElderHeader : MapNodePalette.Ink);
-			holder.AddChild(l);
-			_headers.Add(l);
-			if (newRows.Contains(row) && !oldRows.Contains(l.Name.ToString())) InkIn(l);
-		}
 	}
 
 	/// <summary>YOK-109: one row per elder twist among the drawn nodes: its seal and its label text (from the view; story data, never typed here).</summary>
@@ -328,7 +298,7 @@ public partial class MapScreen : Control
 		}
 	}
 
-	/// <summary>The legend names only what is on the paper: the four states a drawn node can be in, the types and twists of the drawn nodes.</summary>
+	/// <summary>The legend names only what is on the paper: the four marks a drawn node can wear (cleared tick, here ring, reachable ring, selected halo), the types and twists of the drawn nodes.</summary>
 	void BuildLegend(IReadOnlyList<MapNodeView> shown)
 	{
 		BuildTwistLegend(shown);
@@ -336,16 +306,11 @@ public partial class MapScreen : Control
 		{
 			_legendBuilt = true;
 			var states = UiFind.Get<Control>(this, "LegendStates");
-			foreach (var (label, state, cursor) in new[] {
-				("cleared", MapNodeState.Visited, false), ("here", MapNodeState.Current, false), ("reachable", MapNodeState.Reachable, false), ("selected", MapNodeState.Reachable, true) })
+			foreach (var (label, mark) in new[] { ("cleared", MapMark.Cleared), ("here", MapMark.Here), ("reachable", MapMark.Reachable), ("selected", MapMark.Selected) })
 			{
 				var item = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Name = "Legend_" + label.Replace(' ', '_') };
-				item.AddThemeConstantOverride("separation", 6);
-				var sw = new Panel { CustomMinimumSize = new Vector2(20, 20), MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-				var box = new StyleBoxFlat { BgColor = MapNodePalette.Fill(state), BorderColor = MapNodePalette.Border(state, cursor, MapNodePalette.Ink) };
-				box.SetBorderWidthAll(cursor ? 5 : 3); box.SetCornerRadiusAll(4);
-				sw.AddThemeStyleboxOverride("panel", box);
-				item.AddChild(sw);
+				item.AddThemeConstantOverride("separation", 8);
+				item.AddChild(new MapStateSwatch { Name = "Swatch", Mark = mark, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter });
 				var t = new Label { Text = label, MouseFilter = MouseFilterEnum.Ignore, ThemeTypeVariation = "PaperLabel" };
 				t.AddThemeFontSizeOverride("font_size", 17);
 				item.AddChild(t);
@@ -356,10 +321,9 @@ public partial class MapScreen : Control
 		UiFind.Get<Label>(this, "LegendTypes").Text = string.Join(" · ", Styles!.Styles.Where(s => s != null && types.Contains(s.Type)).Select(s => $"{s.Icon} {s.Label.ToLowerInvariant()}"));
 	}
 
-	/// <summary>Chip, status panel and detail panel read from the view (read-only; nothing here writes the run).</summary>
+	/// <summary>Status panel and detail panel read from the view (read-only; nothing here writes the run).</summary>
 	void BindPanels()
 	{
-		CopyChip.Apply(View!.CopyTarget, View.CopyLocked);
 		var status = View.Status;
 		var panel = UiFind.Get<Control>(this, "Status");
 		panel.Visible = status != null;
@@ -367,7 +331,6 @@ public partial class MapScreen : Control
 		{
 			UiFind.Get<Label>(this, "HealthText").Text = $"RYO · {status.Health} / {status.MaxHealth}";
 			UiFind.Get<Label>(this, "CoinsText").Text = $"{status.Coins} coins";
-			UiFind.Get<Label>(this, "RowsText").Text = $"row {status.RowsDone} of {status.RowsTotal} done";
 			var bar = UiFind.Get<ProgressBar>(this, "HealthBar");
 			bar.MaxValue = status.MaxHealth; bar.Value = status.Health;
 		}
@@ -423,12 +386,12 @@ public partial class MapScreen : Control
 	public void FinishPresentation()
 	{
 		Routes.FinishPainting();
+		Landmarks.FinishFade(); LandmarksFront.FinishFade();
 		foreach (var t in _tweens) if (t.IsValid()) t.Kill();
 		_tweens.Clear();
 		foreach (var n in _fading) if (IsInstanceValid(n)) n.QueueFree(); // a node still fading out is gone now
 		_fading.Clear();
 		foreach (var n in _nodes.Values) { n.Modulate = Colors.White; n.Scale = Vector2.One; }
-		foreach (var l in _headers) { l.Modulate = Colors.White; l.Scale = Vector2.One; }
 	}
 
 	// ---- state ------------------------------------------------------------------------------------------------------------------
@@ -454,15 +417,14 @@ public partial class MapScreen : Control
 				Board.AddChild(n);
 				n.Chosen += OnNodeChosen; n.Hovered += OnNodeHovered;
 				_nodes[v.Id] = n;
-				n.Bind(v, Styles!.Look(v.Type), r.Size, false, Styles.TwistLook(v.TwistIcon));
+				BindNode(n, v, false);
 				// the choice inks in even on a run's first show; cleared nodes already on the walk just are there
 				if (!before.Contains(v.Id) && (!fresh || v.State == MapNodeState.Reachable)) { InkIn(n); newRows.Add(v.Row); }
 			}
 			n.Position = r.Position;
-			n.Bind(v, Styles!.Look(v.Type), r.Size, v.Id == CursorId && !Locked, Styles.TwistLook(v.TwistIcon));
+			BindNode(n, v, v.Id == CursorId && !Locked);
 		}
 		_shownIds = shownIds;
-		BuildHeaders(shown, newRows);
 		BuildLegend(shown);
 		BindPanels();
 
@@ -471,11 +433,13 @@ public partial class MapScreen : Control
 		var lines = new List<(Vector2 A, Vector2 B, RouteKind Kind)>();
 		var kinds = new Dictionary<(string, string), RouteKind>();
 		var paint = new List<(Vector2 A, Vector2 B)>();
+		var linePaths = new Dictionary<(Vector2, Vector2), Vector2[]>();
 		foreach (var r in View.Routes.Where(r => shownIds.Contains(r.From) && shownIds.Contains(r.To))) // a stroke needs both ends on the paper
 		{
-			var a = _layout.Rects[r.From]; var b = _layout.Rects[r.To];
 			var kind = Done(r.From) && Done(r.To) ? RouteKind.Walked : Done(r.From) && state[r.To] == MapNodeState.Reachable ? RouteKind.Open : RouteKind.Idle;
-			var line = (new Vector2(a.End.X, a.GetCenter().Y), new Vector2(b.Position.X, b.GetCenter().Y), kind);
+			var (ea, eb) = RouteEnds(r.From, r.To);
+			var line = (ea, eb, kind);
+			if (_paths.TryGetValue((r.From, r.To), out var centre)) linePaths[(ea, eb)] = centre;
 			lines.Add(line);
 			kinds[(r.From, r.To)] = kind;
 			// a stroke paints in when it is new or has just become the walked one (a pick); on a run's first show only the open choice does
@@ -483,8 +447,11 @@ public partial class MapScreen : Control
 			if (changed && kind != RouteKind.Idle) paint.Add((line.Item1, line.Item2));
 		}
 		_routeKinds = kinds;
-		Routes.SetLines(lines);
+		Routes.SetLines(lines, linePaths);
 		Routes.Paint(paint);
+		UpdateMist(all, shown, state);
+		var onPaper = _paths.Keys.Select((k, i) => (k, i)).Where(x => state.TryGetValue(x.k.From, out var fs) && state.TryGetValue(x.k.To, out var ts) && fs != MapNodeState.PassedOver && ts != MapNodeState.PassedOver).Select(x => x.i).ToList();
+		bool animateScenery = !fresh; Landmarks.SetRoutes(onPaper, animateScenery); LandmarksFront.SetRoutes(onPaper, animateScenery);
 
 		if (_needsCentre)
 		{
@@ -494,6 +461,46 @@ public partial class MapScreen : Control
 			_snapNext = false;
 		}
 		ApplyScroll();
+	}
+
+	void BindNode(MapNode n, MapNodeView v, bool cursor)
+	{
+		var r = _layout.Rects[v.Id];
+		n.Bind(v, Styles!.Look(v), r.Size, new Rect2(_layout.Sprites[v.Id].Position - r.Position, _layout.Sprites[v.Id].Size), _layout.LineHeights[v.Id], cursor, Styles.TwistLook(v.TwistIcon));
+	}
+
+	/// <summary>Where a stroke between two nodes starts and ends: on the edge of each illustration (the ink runs a little under it), at its mid-height.</summary>
+	(Vector2 A, Vector2 B) RouteEnds(string from, string to)
+	{
+		var a = _layout.Sprites[from]; var b = _layout.Sprites[to];
+		return (new Vector2(a.End.X - a.Size.X * 0.08f, a.GetCenter().Y), new Vector2(b.Position.X + b.Size.X * 0.08f, b.GetCenter().Y));
+	}
+
+	/// <summary>
+	/// AM19: the ends of a sketched route. A node that is not drawn is only a point on the path (the stroke runs through where it would stand), so the
+	/// sketch is one continuous road with junctions and no gap, box or mark at a hidden node.
+	/// </summary>
+	(Vector2 A, Vector2 B, Vector2[] Path) MistEnds(string from, string to, Dictionary<string, MapNodeState> state)
+	{
+		var (a, b) = RouteEnds(from, to);
+		var path = new List<Vector2>(_paths.TryGetValue((from, to), out var p) ? p : new[] { a, b });
+		if (!MapReveal.IsRevealed(state[from])) { a = _layout.Sprites[from].GetCenter(); path.Insert(0, a); }
+		if (!MapReveal.IsRevealed(state[to])) { b = _layout.Sprites[to].GetCenter(); path.Add(b); }
+		return (a, b, path.ToArray());
+	}
+
+	/// <summary>
+	/// AM19: the real routes still ahead (a route whose far end is not drawn and not on a row Ryo has left), through every row not yet revealed to the Tanuki,
+	/// as dashed sketches under a bank of mist that starts just right of the last drawn node. Only lines and soft shapes: no node, name, type or seal is drawn there.
+	/// </summary>
+	void UpdateMist(IReadOnlyList<MapNodeView> all, IReadOnlyList<MapNodeView> shown, Dictionary<string, MapNodeState> state)
+	{
+		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => MistEnds(r.From, r.To, state)).ToList();
+		float from = shown.Count == 0 ? 0f : shown.Max(n => _layout.Rects[n.Id].End.X);
+		Routes.SetMistLines(ahead, from, Mathf.Max(600f, Board.Size.X - from));
+		bool any = ahead.Count > 0 || all.Any(n => n.State == MapNodeState.Locked);
+		Mist.Visible = any;
+		Mist.From = from + 10f; Mist.Right = any ? Board.Size.X + MapScroll.PaperLeft + 60f : from;
 	}
 
 	/// <summary>Step the cursor through the reachable nodes (wraps). Does nothing when none are reachable or a pick already went through.</summary>
