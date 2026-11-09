@@ -49,6 +49,10 @@ public partial class MapScreen : Control
 	public Control Scroll => _scroll ??= UiFind.Get<Control>(this, "Scroll");
 	/// <summary>YOK-238: the scenery behind the routes and nodes.</summary>
 	public MapLandmarks Landmarks => UiFind.Get<MapLandmarks>(this, "Landmarks");
+	/// <summary>YOK-238: the landmarks drawn over the routes (bridge decks, torii), so a route runs under the deck and through the posts.</summary>
+	public MapLandmarks LandmarksFront => UiFind.Get<MapLandmarks>(this, "LandmarksFront");
+	/// <summary>YOK-238: the centre line of every route of the map (board coordinates), keyed (from, to); routes only join and split, never cross.</summary>
+	public IReadOnlyDictionary<(string From, string To), Vector2[]> RoutePaths => _paths;
 	/// <summary>YOK-238 (AM19): the mist past the choosable row.</summary>
 	public MapMist Mist => UiFind.Get<MapMist>(this, "Mist");
 
@@ -95,6 +99,7 @@ public partial class MapScreen : Control
 	string? _twistKey;
 	object? _runKey;
 	Control? _board, _view, _scroll; MapRoutes? _routes;
+	Dictionary<(string From, string To), Vector2[]> _paths = new();
 	MapLayoutResult _layout = new(new Dictionary<string, Rect2>(), Vector2.Zero);
 	bool _ready;
 
@@ -266,8 +271,11 @@ public partial class MapScreen : Control
 		Landmarks.Position = Vector2.Zero; Landmarks.Size = new Vector2(width, h);
 		Board.Position = new Vector2(boardX, boardTop); Board.Size = new Vector2(cols * colW, boardH);
 		_layout = MapLayout.Compute(nodes, Board.Size, ShapeOf);
-		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Values, MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
+		_paths = MapRouteGeometry.Compute(nodes, View.Routes, _layout, Board.Size.Y);
+		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Values, _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
 		Landmarks.SetPlan(plan, Board.Position);
+		LandmarksFront.Position = Vector2.Zero; LandmarksFront.Size = Board.Size;
+		LandmarksFront.SetPlan(plan, Vector2.Zero);
 		return true;
 	}
 
@@ -427,11 +435,13 @@ public partial class MapScreen : Control
 		var lines = new List<(Vector2 A, Vector2 B, RouteKind Kind)>();
 		var kinds = new Dictionary<(string, string), RouteKind>();
 		var paint = new List<(Vector2 A, Vector2 B)>();
+		var linePaths = new Dictionary<(Vector2, Vector2), Vector2[]>();
 		foreach (var r in View.Routes.Where(r => shownIds.Contains(r.From) && shownIds.Contains(r.To))) // a stroke needs both ends on the paper
 		{
 			var kind = Done(r.From) && Done(r.To) ? RouteKind.Walked : Done(r.From) && state[r.To] == MapNodeState.Reachable ? RouteKind.Open : RouteKind.Idle;
 			var (ea, eb) = RouteEnds(r.From, r.To);
 			var line = (ea, eb, kind);
+			if (_paths.TryGetValue((r.From, r.To), out var centre)) linePaths[(ea, eb)] = centre;
 			lines.Add(line);
 			kinds[(r.From, r.To)] = kind;
 			// a stroke paints in when it is new or has just become the walked one (a pick); on a run's first show only the open choice does
@@ -439,9 +449,11 @@ public partial class MapScreen : Control
 			if (changed && kind != RouteKind.Idle) paint.Add((line.Item1, line.Item2));
 		}
 		_routeKinds = kinds;
-		Routes.SetLines(lines);
+		Routes.SetLines(lines, linePaths);
 		Routes.Paint(paint);
 		UpdateMist(all, shown, state);
+		var onPaper = _paths.Keys.Select((k, i) => (k, i)).Where(x => state.TryGetValue(x.k.From, out var fs) && state.TryGetValue(x.k.To, out var ts) && fs != MapNodeState.PassedOver && ts != MapNodeState.PassedOver).Select(x => x.i).ToList();
+		Landmarks.SetRoutes(onPaper); LandmarksFront.SetRoutes(onPaper);
 
 		if (_needsCentre)
 		{
@@ -470,12 +482,13 @@ public partial class MapScreen : Control
 	/// AM19: the ends of a sketched route. A node that is not drawn is only a point on the path (the stroke runs through where it would stand), so the
 	/// sketch is one continuous road with junctions and no gap, box or mark at a hidden node.
 	/// </summary>
-	(Vector2 A, Vector2 B) MistEnds(string from, string to, Dictionary<string, MapNodeState> state)
+	(Vector2 A, Vector2 B, Vector2[] Path) MistEnds(string from, string to, Dictionary<string, MapNodeState> state)
 	{
 		var (a, b) = RouteEnds(from, to);
-		if (!MapReveal.IsRevealed(state[from])) a = _layout.Sprites[from].GetCenter();
-		if (!MapReveal.IsRevealed(state[to])) b = _layout.Sprites[to].GetCenter();
-		return (a, b);
+		var path = new List<Vector2>(_paths.TryGetValue((from, to), out var p) ? p : new[] { a, b });
+		if (!MapReveal.IsRevealed(state[from])) { a = _layout.Sprites[from].GetCenter(); path.Insert(0, a); }
+		if (!MapReveal.IsRevealed(state[to])) { b = _layout.Sprites[to].GetCenter(); path.Add(b); }
+		return (a, b, path.ToArray());
 	}
 
 	/// <summary>

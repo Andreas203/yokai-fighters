@@ -203,32 +203,183 @@ public static class MapV2Tests
 	// ---- landmarks -----------------------------------------------------------------------------------------------------------------
 
 	[Test]
-	public static void LandmarksAreDeterministicAndNeverOnANodeOrItsTag(Node host)
+	public static void LandmarksAreDeterministicAndAlongTheRoutes(Node host)
 	{
 		foreach (var size in new[] { P1080, P720 })
 		{
 			var s = Make(host, new SessionMapView(Start()), size);
 			var plan = s.Landmarks.Plan;
-			Assert.True(plan.Count >= 8, $"{size}: the paper is dressed with scenery ({plan.Count})");
+			var paths = s.RoutePaths.Values.ToList();
+			Assert.True(plan.Count >= 8, $"{size}: the routes are dressed with scenery ({plan.Count})");
+			Assert.True(s.LandmarksFront.Plan.Count == plan.Count, $"{size}: the front layer holds the same plan");
 			var kinds = plan.Select(l => l.Kind).ToHashSet();
 			Assert.True(kinds.Contains(MapLandmarkKind.PineTall) && kinds.Contains(MapLandmarkKind.PinesWide) && kinds.Contains(MapLandmarkKind.Rocks) && kinds.Contains(MapLandmarkKind.Bridge) && kinds.Contains(MapLandmarkKind.Torii), $"{size}: pines, rocks, a footbridge and a torii all appear: " + string.Join(",", plan.Select(l => l.Kind)));
-			var again = MapLandmarkPlan.Compute(s.Board.Size, s.View!.Nodes.Select(n => s.RectOf(n.Id)), MapNodeBox.LineHeight(s.Board.Size.Y * MapLayout.SpriteShare));
-			Assert.True(again.Select(l => (l.Kind, l.Rect)).SequenceEqual(plan.Select(l => (l.Kind, l.Rect))), $"{size}: the same board gives the same scenery");
+			var again = MapLandmarkPlan.Compute(s.Board.Size, s.View!.Nodes.Select(n => s.RectOf(n.Id)), paths, MapNodeBox.LineHeight(s.Board.Size.Y * MapLayout.SpriteShare));
+			Assert.True(again.Select(l => (l.Kind, l.Rect)).SequenceEqual(plan.Select(l => (l.Kind, l.Rect))), $"{size}: the same board and routes give the same scenery");
 			var board = new Rect2(Vector2.Zero, s.Board.Size);
-			foreach (var l in plan)
+			for (int i = 0; i < plan.Count; i++)
 			{
+				var l = plan[i];
 				Assert.True(board.Encloses(l.Rect), $"{size}: {l.Kind} at {l.Rect} stays on the board");
 				foreach (var n in s.View.Nodes)
 					Assert.True(!l.Rect.Intersects(s.RectOf(n.Id)), $"{size}: {l.Kind} at {l.Rect} overlaps node {n.Id} at {s.RectOf(n.Id)}");
+				for (int j = i + 1; j < plan.Count; j++) Assert.True(!l.Rect.Intersects(plan[j].Rect), $"{size}: {l.Kind} and {plan[j].Kind} overlap");
+				float near = paths.Min(p => p.Min(q => q.DistanceTo(l.OnPath)));
+				Assert.True(near < 1f, $"{size}: {l.Kind} is anchored on a route ({near:F1} px)");
+				if (l.InFront)
+				{
+					Assert.True(l.Rect.HasPoint(l.OnPath), $"{size}: the route runs through the {l.Kind}");
+					// the stroke of any other route must not run through the bridge or torii
+					foreach (var p in paths)
+						foreach (var q in p)
+							if (l.Rect.HasPoint(q)) Assert.True(paths.Any(own => own.Any(o => o.DistanceTo(l.OnPath) < 1f) && own.Any(o => o.DistanceTo(q) < 10f)), $"{size}: a foreign route runs through the {l.Kind} at {q}");
+				}
+				else
+					foreach (var p in paths) Assert.True(!p.Any(q => l.Rect.HasPoint(q)), $"{size}: a {l.Kind} sits at the path's edge, not on a stroke");
+				if (l.Kind == MapLandmarkKind.Bridge)
+				{
+					Assert.True(l.Stream != null && l.Stream.Length > 3, $"{size}: a bridge spans a stream");
+					var own = paths.First(p => p.Any(o => o.DistanceTo(l.OnPath) < 1f));
+					Assert.True(MapRouteGeometry.Crosses(own, l.Stream!), $"{size}: the route crosses the stream under its bridge");
+					foreach (var n in s.View.Nodes) Assert.True(!s.RectOf(n.Id).Intersects(Rect(l.Stream!)), $"{size}: the stream reaches node {n.Id}");
+				}
+				else Assert.True(l.Stream == null, $"{size}: only a bridge has a stream");
 			}
 			s.GetParent().QueueFree();
 		}
 	}
 
-	// ---- routes and mist -----------------------------------------------------------------------------------------------------------
+	static Rect2 Rect(Vector2[] p) => new(p.Min(q => q.X), p.Min(q => q.Y), p.Max(q => q.X) - p.Min(q => q.X), p.Max(q => q.Y) - p.Min(q => q.Y));
+
+	// ---- no crossing, no overlap ---------------------------------------------------------------------------------------------------
+
+	/// <summary>Routes only join and split: no two centre lines properly cross, and two that come within 4 px of each other do so where they share a trunk vertex.</summary>
+	static void AssertNoCrossing(IReadOnlyList<(string Name, Vector2[] Path)> routes, string where)
+	{
+		for (int i = 0; i < routes.Count; i++)
+			for (int j = i + 1; j < routes.Count; j++)
+			{
+				var a = routes[i].Path; var b = routes[j].Path;
+				Assert.True(!MapRouteGeometry.Crosses(a, b), $"{where}: {routes[i].Name} and {routes[j].Name} cross");
+				var shared = a.Where(p => b.Contains(p)).ToList(); // exact common vertices: a junction or a stub both routes share
+				foreach (var p in a)
+				{
+					if (p.X < 0) continue;
+					var q = b.OrderBy(x => x.DistanceSquaredTo(p)).First();
+					if (q.DistanceTo(p) >= 4f) continue;
+					Assert.True(shared.Any(v => System.Math.Abs(v.X - p.X) < 100f), $"{where}: {routes[i].Name} and {routes[j].Name} run on top of each other at {p} with no shared trunk near");
+				}
+			}
+	}
+
+	static void AssertGeometry(IMapView view, Vector2 board, string where)
+	{
+		var layout = MapLayout.Compute(view.Nodes, board);
+		var paths = MapRouteGeometry.Compute(view.Nodes, view.Routes, layout, board.Y);
+		Assert.Equal(view.Routes.Count, paths.Count, where + ": a centre line per route");
+		AssertNoCrossing(paths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), where);
+		var again = MapRouteGeometry.Compute(view.Nodes, view.Routes, layout, board.Y);
+		Assert.True(paths.All(kv => kv.Value.SequenceEqual(again[kv.Key])), where + ": deterministic");
+	}
 
 	[Test]
-	public static void StrokesWindEvenBetweenNodesAtTheSameHeight()
+	public static void RoutesOfTheDefaultMapNeverCrossAtAnySizeOrReveal(Node host)
+	{
+		foreach (var size in new[] { P1080, P720 })
+		{
+			var sess = Start();
+			var s = Make(host, new SessionMapView(sess), size);
+			var baseline = s.RoutePaths.ToDictionary(kv => kv.Key, kv => kv.Value);
+			Assert.Equal(sess.Map.Graph.Routes.Count, baseline.Count, "a centre line per route");
+			int step = 0;
+			while (true)
+			{
+				// everything the screen draws now: the brushed routes and the mist sketches
+				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Concat(s.Routes.MistLines.Select((m, i) => ($"mist{i}", m.Path))).ToList();
+				AssertNoCrossing(drawn, $"{size} step {step}");
+				AssertNoCrossing(s.RoutePaths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), $"{size} step {step} (all routes)");
+				Assert.True(s.RoutePaths.All(kv => kv.Value.SequenceEqual(baseline[kv.Key])), $"{size} step {step}: no route moved when nodes were revealed");
+				if (s.ReachableIds.Count == 0) break;
+				Walk(sess, s.ReachableIds[step % s.ReachableIds.Count]);
+				s.SetView(new SessionMapView(sess)); s.FinishPresentation();
+				step++;
+			}
+			Assert.True(step >= 9, "the walk went the whole way to the boss");
+			s.GetParent().QueueFree();
+		}
+	}
+
+	static Vector2[] DrawnPath(MapScreen s, (Vector2 A, Vector2 B, RouteKind Kind) line)
+	{
+		var hit = s.RoutePaths.Values.FirstOrDefault(p => p[0].DistanceTo(line.A) < 0.5f && p[^1].DistanceTo(line.B) < 0.5f);
+		return hit ?? System.Array.Empty<Vector2>();
+	}
+
+	[Test]
+	public static void RoutesNeverCrossOnUnusualMapShapes()
+	{
+		var shapes = new (int rows, int per)[] { (2, 1), (3, 2), (4, 3), (6, 5), (9, 3), (12, 3), (5, 6), (3, 1) };
+		foreach (var (rows, per) in shapes)
+			AssertGeometry(StubMapView.Grid(rows, per), new Vector2(rows * 460f, 612f), $"grid {rows}x{per}");
+		// sparse random graphs: every node has one to three routes forward, picked by a hash of the ids
+		for (int seed = 1; seed <= 12; seed++)
+		{
+			var v = new StubMapView();
+			int rows = 5 + seed % 4;
+			var ids = new List<List<string>>();
+			for (int r = 1; r <= rows; r++)
+			{
+				int cnt = 1 + (int)(MapLayout.Hash("c" + seed + r) % 4);
+				ids.Add(Enumerable.Range(0, cnt).Select(i => $"n{r}-{i}").ToList());
+				foreach (var id in ids[^1]) v.Add(id, r, "duel", id);
+			}
+			for (int r = 0; r + 1 < rows; r++)
+				foreach (var a in ids[r])
+				{
+					uint h = MapLayout.Hash(a + seed);
+					var tgt = ids[r + 1];
+					v.Route(a, tgt[(int)(h % (uint)tgt.Count)]);
+					if (tgt.Count > 1 && MapLayout.Unit(h, 1) > 0.45f) v.Route(a, tgt[((int)(h % (uint)tgt.Count) + 1) % tgt.Count]);
+				}
+			var dedup = new StubMapView();
+			foreach (var n in v.Nodes) dedup.Add(n.Id, n.Row, n.Type, n.Yokai);
+			foreach (var r in v.Routes.Select(r => (r.From, r.To)).Distinct()) dedup.Route(r.From, r.To);
+			AssertGeometry(dedup, new Vector2(rows * 460f, 612f), $"random {seed}");
+		}
+		var cross = new StubMapView().Add("a1", 1, "duel").Add("a2", 1, "duel").Add("b1", 2, "duel").Add("b2", 2, "duel")
+			.Route("a1", "b2").Route("a2", "b1").Route("a1", "b1");
+		AssertGeometry(cross, new Vector2(920f, 612f), "inverted pair plus a fork");
+	}
+
+	[Test]
+	public static void SiblingRoutesJoinAndSplitOnASharedTrunk()
+	{
+		var v = new StubMapView().Add("a1", 1, "duel").Add("a2", 1, "duel").Add("b1", 2, "duel").Add("b2", 2, "duel").Route("a1", "b1").Route("a1", "b2").Route("a2", "b1").Route("a2", "b2");
+		var board = new Vector2(920f, 612f);
+		var layout = MapLayout.Compute(v.Nodes, board);
+		var paths = MapRouteGeometry.Compute(v.Nodes, v.Routes, layout, board.Y);
+		var all = paths.Values.ToList();
+		var common = all[0].Where(p => all.All(q => q.Contains(p))).ToList();
+		Assert.True(common.Count >= 1, "all four routes pass one junction point (a join, then a split)");
+		Assert.True(paths[("a1", "b1")].Where(p => paths[("a1", "b2")].Contains(p)).Count() > 5, "routes out of one node leave together");
+		Assert.True(paths[("a1", "b1")].Where(p => paths[("a2", "b1")].Contains(p)).Count() > 5, "routes into one node arrive together");
+	}
+
+	[Test]
+	public static void StrokesStillWindBetweenLevelNodes()
+	{
+		var v = new StubMapView().Add("a", 1, "duel").Add("b", 2, "duel").Route("a", "b");
+		var board = new Vector2(920f, 612f);
+		var layout = MapLayout.Compute(v.Nodes, board);
+		var p = MapRouteGeometry.Compute(v.Nodes, v.Routes, layout, board.Y)[("a", "b")];
+		float y0 = p[0].Y, y1 = p[^1].Y;
+		float swing = p.Max(q => System.Math.Abs(q.Y - (y0 + (y1 - y0) * (q.X - p[0].X) / (p[^1].X - p[0].X))));
+		Assert.True(swing > 8f, $"a lone route winds off the straight line by {swing:F1} px");
+		Assert.True(p.Zip(p.Skip(1)).All(q => q.Second.X >= q.First.X - 0.01f), "and never doubles back along x");
+	}
+
+	[Test]
+	public static void FallbackCurveWindsEvenBetweenLevelNodes()
 	{
 		var pts = MapRoutes.Path(new Vector2(0, 200), new Vector2(400, 200), 48, out var normals);
 		Assert.True(pts[0] == new Vector2(0, 200) && pts[^1].DistanceTo(new Vector2(400, 200)) < 0.01f, "the path starts and ends on its anchors");
