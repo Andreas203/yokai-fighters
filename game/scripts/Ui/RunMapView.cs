@@ -13,8 +13,8 @@ namespace YokaiFighters.Ui;
 /// (<c>RunMap.Select</c>); the run flow owns <c>Complete</c> and what the node does.
 /// State: the node Ryo is on (entered, or just completed) is Current; other completed nodes Visited; <c>Reachable()</c> Reachable;
 /// an unchosen node in a row Ryo has left (row at or below the Current node's) PassedOver (YOK-108); the rest Locked.
-/// YOK-108: with a <see cref="RunState"/> the view also gives the status panel's numbers and the T6 copy target (read-only,
-/// <see cref="CopyRule.Target"/>); with an <see cref="INodeSceneResolver"/> it words each node's reward line from the same
+/// YOK-108: with a <see cref="RunState"/> the view also gives the status panel's numbers (the map shows no copy target,
+/// AM20, YOK-240); with an <see cref="INodeSceneResolver"/> it words each node's reward line from the same
 /// table the run flow uses (<c>NodeContext.Coins</c>, <c>Binds</c>), so no reward number is typed here.
 /// </summary>
 public class RunMapView : IMapView
