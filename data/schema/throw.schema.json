@@ -57,6 +57,10 @@
         "hurtboxes": {
           "type": "array",
           "items": { "$ref": "common.schema.json#/$defs/timedRect" }
+        },
+        "cancel_windows": {
+          "$ref": "frame-data.schema.json#/properties/cancel_windows",
+          "description": "YOK-220: frames in which a held cancel rule (X4) may fire out of the throw, as on normals and specials (Undertow: out of a landed throw = on hit). Each range inside 1..total frames."
         }
       }
     },

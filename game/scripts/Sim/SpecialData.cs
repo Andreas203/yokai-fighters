@@ -250,14 +250,20 @@ public static class Effects
 		"meter_gain", "hitboxes", "hurtboxes", "cancel_windows", "properties",
 	};
 
-	/// <summary>A target's value: an integer, a flag, the pushback pair, an armour window, the throw-break phase.</summary>
-	public enum ValueKind { Int, Flag, IntPair, Armour, ThrowBreak }
+	/// <summary>
+	/// A target's value: an integer, a flag, the pushback pair, an armour window, the throw-break phase, a multi-hit
+	/// (YOK-220).
+	/// </summary>
+	public enum ValueKind { Int, Flag, IntPair, Armour, ThrowBreak, MultiHit }
 
 	/// <summary>
 	/// YOK-103: every target the loader accepts (resolved path, see <see cref="Resolve"/>) and its value kind.
 	/// Int: add / mul_pct / set with an integer. IntPair (pushback): add / mul_pct on on_hit and on_block alike.
 	/// Flag: set true / false. Armour: set { frames: [first, last], hits? }. ThrowBreak: set "startup".
-	/// <c>ex.meter_cost</c> is modifier-only (<see cref="ModifierData.ExCostFor"/>), not frame data.
+	/// MultiHit: set { hits, interval } (<see cref="MultiHit"/>). <c>ex.meter_cost</c> is modifier-only
+	/// (<see cref="ModifierData.ExCostFor"/>), not frame data. YOK-220: the evolution targets no fight code reads yet
+	/// (wall_bounce, throw.range, multi_hit, decoy) load and are ignored (<see cref="MoveData.CheckPendingProperties"/>)
+	/// until their behaviour tickets land; forward_travel as a distance moves the fighter (YOK-221, <see cref="MoveData.ForwardTravel"/>).
 	/// </summary>
 	public static readonly IReadOnlyDictionary<string, ValueKind> Vocabulary = new Dictionary<string, ValueKind>
 	{
@@ -274,6 +280,11 @@ public static class Effects
 		["properties.armour"] = ValueKind.Armour, ["properties.throw_break"] = ValueKind.ThrowBreak,
 		["properties.pull_on_hit"] = ValueKind.Int, ["properties.heal_pct_max_health"] = ValueKind.Int,
 		["properties.aftershock_delay"] = ValueKind.Int, // YOK-136: Oni Quake Lv 3 Aftershock (A5)
+		// YOK-220, the remaining Lv 3 evolutions (rules.md specials table, A5): Crushing Charge, Whirlpool Grab
+		// (+50% range = mul_pct 150), Torrent Spin (travels forward, multi-hit), Mirage Feint (decoy absorbs one hit).
+		["properties.wall_bounce"] = ValueKind.Flag, ["properties.throw.range"] = ValueKind.Int,
+		["properties.multi_hit"] = ValueKind.MultiHit, ["properties.forward_travel"] = ValueKind.Int,
+		["properties.decoy"] = ValueKind.Int,
 	};
 
 	/// <summary>The modifier-only target that changes the special's EX cost (Ninefold Spark), not its frame data.</summary>
@@ -314,6 +325,7 @@ public static class Effects
 			ValueKind.Armour => op == "set" && ArmourWindow.TryRead(value, out _),
 			ValueKind.ThrowBreak => op == "set" && value is JsonValue sv && sv.GetValueKind() == JsonValueKind.String
 				&& sv.GetValue<string>() == ThrowBreakStartup,
+			ValueKind.MultiHit => op == "set" && MultiHit.TryRead(value, out _),
 			_ => false,
 		};
 		if (!ok) throw new FormatException($"{id}: effect '{op}' on {target} needs {Describe(kind)}");
@@ -375,6 +387,7 @@ public static class Effects
 		ValueKind.IntPair => "add or mul_pct with an integer",
 		ValueKind.Flag => "set with true or false",
 		ValueKind.Armour => "set with { \"frames\": [first, last], \"hits\": n }",
+		ValueKind.MultiHit => "set with { \"hits\": n >= 2, \"interval\": frames >= 1 }",
 		_ => $"set with \"{ThrowBreakStartup}\"",
 	};
 
@@ -444,6 +457,8 @@ public static class Effects
 				ValueKind.Int when Whole(value, out int w) => JsonValue.Create(w),
 				ValueKind.Armour when ArmourWindow.TryRead(value, out var a) =>
 					new JsonObject { ["frames"] = new JsonArray(a!.First, a.Last), ["hits"] = a.Hits },
+				ValueKind.MultiHit when MultiHit.TryRead(value, out var mh) =>
+					new JsonObject { ["hits"] = mh!.Hits, ["interval"] = mh.Interval },
 				_ => value.DeepClone(),
 			};
 			return;
