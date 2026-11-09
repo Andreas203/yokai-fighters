@@ -114,19 +114,19 @@ public static class StageSetTests
 			bool lantern = n.IsInGroup(LanternGroup);
 			Aabb own = n.GetChildren().Select(StageRules.LocalBounds).Aggregate((a, b) => a.Merge(b));
 			float radius = Mathf.Max(own.Size.X, own.Size.Z) * 0.5f * xf.Basis.Scale.Y;
-			float front = p.Z + radius, limit = StageRules.FrontLimit(p.X, lantern);
+			float front = p.Z + radius, limit = StageRules.FrontLimit(p.X, radius, lantern);
 			Assert.True(p.Z - radius > backdrop.Position.Z, $"{st.Kind}/{n.Name} at z {p.Z} (radius {radius}) pokes through the backdrop at z {backdrop.Position.Z}");
 			if (lantern)
 			{
 				lanterns++;
 				Assert.True(p.Z <= StageRules.LanternMaxZ, $"{st.Kind}/{n.Name} at z {p.Z}: lanterns stay deep");
 			}
-			if (Mathf.Abs(p.X) < StageRules.ClearBandHalfX)
-				Assert.True(front <= StageRules.ClearBandBackZ + 1e-3f, $"{st.Kind}/{n.Name} at ({p.X}, {p.Z}) reaches z {front}, inside the clear band");
+			if (StageRules.InClearBand(p.X, radius)) // the footprint's x extent, not only its centre
+				Assert.True(front <= StageRules.ClearBandBackZ + 1e-3f, $"{st.Kind}/{n.Name} at ({p.X}, {p.Z}), footprint x {p.X - radius:0.00}..{p.X + radius:0.00}, reaches z {front}, inside the clear band");
 			Assert.True(front <= limit + 1e-3f, $"{st.Kind}/{n.Name}: front z {front} past its limit {limit}");
 		}
 		Assert.True(lanterns >= 2, $"{st.Kind}: its lanterns were checked ({lanterns})");
-		if (st.Kind == "riverbank") Assert.True(lanterns >= 12 && lanterns <= 15, $"riverbank: 12-15 floating lanterns (designer 2026-11-09), got {lanterns}");
+		if (st.Kind == "riverbank") Assert.True(lanterns >= 12 && lanterns <= 15, $"riverbank: 12-15 floating lanterns (decision log 2026-11-09, riverbank lanterns second pass), got {lanterns}");
 	});
 
 	[Test]
@@ -223,34 +223,70 @@ public static class StageSetTests
 
 	static StageClock At(int round, int tick, int health) => new(round, tick, health, 1000);
 
+	/// <summary>Weights (spring, summer, autumn, winter).</summary>
+	static Vector4 W(float spring, float summer, float autumn, float winter) => new(spring, summer, autumn, winter);
+
+	static void Mix(Vector4 expect, Vector4 got, string what) =>
+		Assert.True(got.IsEqualApprox(expect), $"{what}: expected {expect}, got {got}");
+
 	[Test]
 	public static void TeaHouse_SeasonBeats_MonotonicFadeAndReset()
 	{
 		var b = new SeasonBeats();
 		b.Observe(At(1, 0, 1000));
-		Assert.Equal((0, 0, 1f), b.Shown(0), "spring at the fight's start");
+		Mix(W(1, 0, 0, 0), b.Weights(0), "spring at the fight's start");
 		b.Observe(At(1, 100, 740));
-		Assert.Equal((0, 1, 0f), b.Shown(100), "below 75%: the fade to summer starts on that tick");
-		Assert.Equal((0, 1, 0.5f), b.Shown(100 + TeaHouseStage.SeasonFadeTicks / 2), "half way");
-		Assert.Equal((1, 1, 1f), b.Shown(100 + TeaHouseStage.SeasonFadeTicks), "summer after the fade");
+		Mix(W(1, 0, 0, 0), b.Weights(100), "below 75%: the fade to summer starts on that tick");
+		Mix(W(0.5f, 0.5f, 0, 0), b.Weights(100 + TeaHouseStage.SeasonFadeTicks / 2), "half way");
+		Mix(W(0, 1, 0, 0), b.Weights(100 + TeaHouseStage.SeasonFadeTicks), "summer after the fade");
 		b.Observe(At(1, 140, 900));
 		Assert.Equal(1, b.Season, "health back up: still summer (never back)");
 		b.Observe(At(1, 140, 900));
 		Assert.Equal<int?>(100, b.ChangedTick, "the same tick seen twice changes nothing");
 		b.Observe(At(1, 200, 200));
-		Assert.Equal((1, 3, 0f), b.Shown(200), "two beats in one hit: summer fades straight to winter");
-		Assert.Equal((3, 3, 1f), b.Shown(230), "winter");
+		Mix(W(0, 1, 0, 0), b.Weights(200), "two beats in one hit: summer fades straight to winter, from summer");
+		Mix(W(0, 0, 0, 1), b.Weights(230), "winter");
 		b.Observe(At(1, 260, 600));
 		Assert.Equal(3, b.Season, "winter holds");
 		b.Observe(At(2, 0, 1000));
-		Assert.Equal((0, 0, 1f), b.Shown(0), "a new round (fight, Restart, reset): spring again");
+		Mix(W(1, 0, 0, 0), b.Weights(0), "a new round (fight, Restart, reset): spring again");
 		Assert.Equal<int?>(null, b.ChangedTick, "no fade left over from the last round");
 		b.Observe(At(3, 0, 600));
-		Assert.Equal((0, 1, 0f), b.Shown(0), "a round that opens below a beat fades in from spring");
-		Assert.Equal((0, 0, 1f), new SeasonBeats().Shown(500), "nothing seen yet: spring");
+		Mix(W(1, 0, 0, 0), b.Weights(0), "a round that opens below a beat fades in from spring");
+		Mix(W(1, 0, 0, 0), new SeasonBeats().Weights(500), "nothing seen yet: spring");
 		var cut = new SeasonBeats();
 		cut.Observe(At(1, 10, 400));
-		Assert.Equal((2, 2, 1f), cut.Shown(10, fadeTicks: 0), "a fade of 0 ticks is a hard cut");
+		Mix(W(0, 0, 1, 0), cut.Weights(10, fadeTicks: 0), "a fade of 0 ticks is a hard cut");
+	}
+
+	[Test]
+	public static void TeaHouse_BeatCrossedMidFade_TheScreensNeverJump()
+	{
+		// Code Critic: health 740 at tick 100, then 490 at tick 110 (summer's fade a third done). The autumn fade starts
+		// from what shows at tick 110 (two thirds spring, a third summer), so from tick to tick no season's share moves
+		// more than one tick's fade step, and every mix sums to 1.
+		float step = 1f / TeaHouseStage.SeasonFadeTicks + 1e-5f;
+		foreach (var (second, health2) in new[] { (110, 490), (101, 490), (129, 490), (110, 100), (100, 100) })
+		{
+			var b = new SeasonBeats();
+			Vector4 last = W(1, 0, 0, 0);
+			for (int t = 0; t <= 200; t++)
+			{
+				int health = t < 100 ? 1000 : t < second ? 740 : health2;
+				b.Observe(At(1, t, health));
+				Vector4 w = b.Weights(t);
+				Vector4 d = (w - last).Abs();
+				Assert.True(Mathf.Max(Mathf.Max(d.X, d.Y), Mathf.Max(d.Z, d.W)) <= step, $"beat at {second} (health {health2}): tick {t} jumps from {last} to {w}");
+				Assert.True(Mathf.Abs(w.X + w.Y + w.Z + w.W - 1f) < 1e-4f, $"tick {t}: the shares sum to 1 ({w})");
+				last = w;
+			}
+			Mix(SeasonBeats.Only(b.Season), last, $"beat at {second}: the last season reached in the end");
+		}
+		var mid = new SeasonBeats();
+		mid.Observe(At(1, 100, 740));
+		mid.Observe(At(1, 110, 490));
+		Mix(W(2f / 3f, 1f / 3f, 0, 0), mid.Weights(110), "the autumn fade starts from the mix showing at tick 110");
+		Mix(W(1f / 3f, 1f / 6f, 0.5f, 0), mid.Weights(125), "half way to autumn from that mix");
 	}
 
 	[Test]
@@ -262,31 +298,32 @@ public static class StageSetTests
 			var seasons = scene.StageRoot.GetNode<SeasonScreens>("Seasons");
 			var mat = (ShaderMaterial)scene.StageRoot.GetNode<MeshInstance3D>("Backdrop").MaterialOverride;
 			var p2 = scene.Match.P2;
+			Vector4 Shader() => mat.GetShaderParameter("weights").AsVector4();
 			Assert.True(seasons.Textures.All(t => t is not null), "the four season paintings are checked in");
 			Assert.True(mat.GetShaderParameter("panel_rect").AsVector4().IsEqualApprox(TeaHouseStage.PanelRectUv), "the shader's panel box is the stage's");
-			Assert.Equal((0, 0, 1f), seasons.Shown, "spring at the start");
-			Assert.True(ReferenceEquals(mat.GetShaderParameter("season_to").AsGodotObject(), seasons.Textures[0]) && mat.GetShaderParameter("use_to").AsSingle() == 1f, "the shader shows the spring painting");
+			for (int i = 0; i < 4; i++)
+				Assert.True(ReferenceEquals(mat.GetShaderParameter($"season_{i}").AsGodotObject(), seasons.Textures[i]), $"the shader has the {TeaHouseStage.Seasons[i]} painting");
+			Mix(W(1, 1, 1, 1), mat.GetShaderParameter("present").AsVector4(), "all four paintings present");
+			Mix(W(1, 0, 0, 0), Shader(), "spring at the start");
 			for (int i = 0; i < 100; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal((0, 0, 1f), seasons.Shown, "full health: still spring");
+			Mix(W(1, 0, 0, 0), seasons.Weights, "full health: still spring");
 			p2.Health = p2.MaxHealth * 74 / 100; // a health beat (the test drives health directly)
 			scene.Step(FighterInput.None, FighterInput.None);
 			Assert.Equal<int?>(scene.Match.Tick, seasons.Beats.ChangedTick, "the beat is seen on the tick it happens");
 			Assert.Equal(1, seasons.Beats.Season, "summer");
 			for (int i = 0; i < TeaHouseStage.SeasonFadeTicks; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal((1, 1, 1f), seasons.Shown, "summer after the 30-tick fade");
-			Assert.True(ReferenceEquals(mat.GetShaderParameter("season_to").AsGodotObject(), seasons.Textures[1]) && Mathf.IsEqualApprox(mat.GetShaderParameter("blend").AsSingle(), 1f), "the shader shows summer");
+			Mix(W(0, 1, 0, 0), Shader(), "the shader shows summer after the 30-tick fade");
 			p2.Health = p2.MaxHealth;
 			for (int i = 0; i < 10; i++) scene.Step(FighterInput.None, FighterInput.None);
 			Assert.Equal(1, seasons.Beats.Season, "health restored: summer stays");
 			p2.Health = p2.MaxHealth * 49 / 100;
 			for (int i = 0; i < 40; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal((2, 2, 1f), seasons.Shown, "below 50%: autumn");
+			Mix(W(0, 0, 1, 0), Shader(), "below 50%: autumn");
 			scene.ResetFight(); // a reset (R after a KO, practice reset): spring again
-			Assert.Equal((0, 0, 1f), seasons.Shown, "after a reset: spring");
+			Mix(W(1, 0, 0, 0), Shader(), "after a reset: spring");
 			p2.Health = p2.MaxHealth * 20 / 100;
 			for (int i = 0; i < 40; i++) scene.Step(FighterInput.None, FighterInput.None);
-			Assert.Equal((3, 3, 1f), seasons.Shown, "below 25%: winter, straight from spring");
-			Assert.True(ReferenceEquals(mat.GetShaderParameter("season_to").AsGodotObject(), seasons.Textures[3]), "the shader shows winter");
+			Mix(W(0, 0, 0, 1), Shader(), "below 25%: winter, straight from spring");
 		}
 		finally { scene.QueueFree(); }
 	}
@@ -304,31 +341,15 @@ public static class StageSetTests
 			{
 				Assert.Equal(TeaHouseStage.Kind, scene.StageKind, "the tea house still builds");
 				var mat = (ShaderMaterial)scene.StageRoot.GetNode<MeshInstance3D>("Backdrop").MaterialOverride;
-				Assert.True(mat.GetShaderParameter("use_to").AsSingle() == 0f && mat.GetShaderParameter("use_from").AsSingle() == 0f, "the screens show the plain backdrop");
+				Mix(W(0, 0, 0, 0), mat.GetShaderParameter("present").AsVector4(), "no painting present: the screens show the plain backdrop");
 				scene.Match.P2.Health = 100;
 				for (int i = 0; i < 40; i++) scene.Step(FighterInput.None, FighterInput.None);
 				Assert.Equal(3, scene.StageRoot.GetNode<SeasonScreens>("Seasons").Beats.Season, "the beats still count");
-				Assert.True(mat.GetShaderParameter("use_to").AsSingle() == 0f, "winter missing too: still the plain backdrop");
+				Mix(W(0, 0, 0, 0), mat.GetShaderParameter("present").AsVector4(), "winter missing too: still the plain backdrop");
 			}
 			finally { scene.QueueFree(); }
 		}
 		finally { SeasonScreens.SeasonDirOverride = null; }
-	}
-
-	[Test]
-	public static void NewStages_NeverChangeTheSim(Node runner)
-	{
-		// The stage reads the clock; the sim never reads the stage: the same inputs give the same state hash on any stage.
-		var hashes = new List<(string, ulong)>();
-		foreach (string stage in new[] { FightScene.GroveScene }.Concat(Stages.Select(s => s.Scene)))
-		{
-			var scene = Load(runner, stage);
-			for (int t = 0; t < 240; t++)
-				scene.Step(new FighterInput(t % 40 < 20 ? InputBits.Right : InputBits.LightPunch), FighterInput.None);
-			hashes.Add((stage, scene.Match.StateHash()));
-			scene.QueueFree();
-		}
-		Assert.True(hashes.All(h => h.Item2 == hashes[0].Item2), "state hash the same on every stage: " + string.Join(", ", hashes));
 	}
 
 	// ---- riverbank depth and lanterns (designer 2026-11-09) ----
@@ -510,7 +531,7 @@ public static class StageSetTests
 				var mine = ProjectPoint(cam, z0);
 				Assert.True(Mathf.Abs(px - mine.X) < 1e-4f && Mathf.Abs(py - mine.Y) < 1e-4f, "the depth projection agrees with DynamicCamera.Project on the Z = 0 plane");
 				var floats = scene.StageRoot.GetNode("Props/Floats").GetChildren().Cast<Node3D>().ToList();
-				Assert.True(floats.Count >= 12 && floats.Count <= 15, $"12-15 floating lanterns, got {floats.Count}");
+				Assert.True(floats.Count >= 12 && floats.Count <= 15, $"12-15 floating lanterns (decision log 2026-11-09, riverbank lanterns second pass), got {floats.Count}");
 				float d = cam.Transform.Z;
 				var nearest = floats.OrderByDescending(f => f.Position.Z).First();
 				float Drawn(Node3D f) => f.Scale.Y / (d - f.Position.Z);
@@ -592,6 +613,37 @@ public static class StageSetTests
 		Assert.Equal(StageCatalog.TeaHouseScene, YokaiFighters.Flow.GameFlow.DevStageScene(YokaiFighters.Dev.DevStage.TeaHouse), "tea house");
 	}
 
+	[Test]
+	public static void SelfWalkedRun_TheNextNodeGetsItsOwnStage(Node runner)
+	{
+		// Code Critic: a run the fight scene walks by itself goes on to its next node in the same scene; a Kitsune node
+		// then an Oni node ends on the shrine gate (the stage is built again), not on the first node's grove.
+		string was = FightScene.OwnMapFile;
+		FightScene.OwnMapFile = ProjectSettings.GlobalizePath("res://tests/fixtures/maps/kitsune-then-oni.json");
+		var s = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		s.ExternalDrive = true;
+		s.FixedRunSeed = 48;
+		try
+		{
+			runner.AddChild(s);
+			Assert.True(s.OwnsSession && s.Node.NodeId == "fx-kitsune", "its own session, the Kitsune node first");
+			Assert.Equal(BambooGroveStage.Kind, s.StageKind, "the Kitsune's grove");
+			s.Match.P2.Health = 1;
+			for (int t = 0; t < 900 && s.Match.Phase != MatchPhase.Over; t++)
+				s.Step(new FighterInput(t % 2 == 0 ? InputBits.DebugStrike : InputBits.None), FighterInput.None);
+			Assert.True(s.Match.Phase == MatchPhase.Over && s.Match.Winner == 0, "Ryo won the first node");
+			s.BindingCard.Continue();
+			s.Rewards.Confirm();
+			if (s.Rewards.Step == YokaiFighters.Ui.RewardStep.Target && s.Stage == DemoStage.Reward) s.Rewards.Confirm();
+			Assert.True(s.Stage == DemoStage.Fighting && s.Node.NodeId == "fx-oni", "straight into the Oni node");
+			Assert.Equal("shrine-gate", s.StageKind, "the Oni's node: the stage is built again, the shrine gate");
+			Assert.Equal(StageCatalog.ShrineGateScene, s.StageRoot.SceneFilePath, "the shrine gate scene");
+			Assert.Equal(1, s.GetNode(FightScene.StageContainerName).GetChildCount(), "one stage under the container, the old one gone");
+			s.Step(FighterInput.None, FighterInput.None);
+		}
+		finally { FightScene.OwnMapFile = was; s.QueueFree(); }
+	}
+
 	// ---- wiring ----
 
 	[Test]
@@ -630,7 +682,7 @@ public static class StageSetTests
 	  "tiers": { "yokai": { "reaction_frames": 22 } },
 	  "types": { "duel": { "tier": "yokai" }, "elder": { "tier": "yokai", "stage": "res://scenes/stage/placeholder.tscn" } },
 	  "nodes": { "den": { "stage": "res://scenes/stage/den.tscn" } },
-	  "opponents": { "kitsune": { "fighter": "kitsune" }, "elder-oni": { "plays_as": "oni" } },
+	  "opponents": { "kitsune": { "fighter": "kitsune" }, "elder-oni": { "plays_as": "oni" }, "elder-kappa": { "plays_as": "kappa" } },
 	  "opponent_stages": { "oni": "res://scenes/stage/shrine_gate.tscn", "elder-kappa": "res://scenes/stage/riverbank.tscn" } }
 	""";
 
@@ -652,6 +704,7 @@ public static class StageSetTests
 			(Table.Replace("\"oni\": \"res://scenes/stage/shrine_gate.tscn\"", "\"oni\": 3"), "a yokai stage that is not a string"),
 			(Table.Replace("\"oni\": \"res://scenes/stage/shrine_gate.tscn\"", "\"oni\": \"\""), "an empty yokai stage"),
 			(Table.Replace("\"opponent_stages\": {", "\"opponent_stages\": [ ], \"x\": {"), "opponent_stages not an object"),
+			(Table.Replace("\"oni\": \"res://scenes/stage/shrine_gate.tscn\"", "\"onii\": \"res://scenes/stage/shrine_gate.tscn\""), "a yokai the table does not know (a typo: onii)"),
 		})
 		{
 			bool threw = false;

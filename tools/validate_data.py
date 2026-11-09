@@ -340,9 +340,18 @@ def check_node_scenes(doc: dict, path: Path) -> list[tuple[str, str]]:
     for section in ("types", "nodes"):
         entries = doc.get(section) if isinstance(doc.get(section), dict) else {}
         stages += [(f"{section}.{name}.stage", e.get("stage")) for name, e in entries.items() if isinstance(e, dict)]
-    # YOK-150: a stage per yokai (opponent_stages), checked the same way.
+    # YOK-150: a stage per yokai (opponent_stages), checked the same way; each key must be a yokai the table knows, as
+    # NodeSceneTable.Parse requires (an 'opponents' id, a 'plays_as', a 'fighter' or the fallback_fighter).
     by_yokai = doc.get("opponent_stages") if isinstance(doc.get("opponent_stages"), dict) else {}
     stages += [(f"opponent_stages.{name}", stage) for name, stage in by_yokai.items()]
+    opponents = doc.get("opponents") if isinstance(doc.get("opponents"), dict) else {}
+    known = set(opponents) | {doc.get("fallback_fighter")}
+    for entry in opponents.values():
+        if isinstance(entry, dict):
+            known |= {entry.get(k) for k in ("plays_as", "fighter") if isinstance(entry.get(k), str)}
+    for name in by_yokai:
+        if name not in known:
+            errs.append((f"opponent_stages.{name}", f"'{name}' is not a yokai the table knows (an 'opponents' id, a 'plays_as', a 'fighter' or the fallback_fighter)"))
     for where, stage in stages:
         if not isinstance(stage, str):
             continue

@@ -679,6 +679,7 @@ class ValidateDataTest(unittest.TestCase):
             (lambda d: d["opponent_stages"].update(kappa="res://scenes/fight.tscn"), "does not match"),
             (lambda d: d["opponent_stages"].update(tanuki="res://scenes/stage/../fight.tscn"), "not a scene path under res://scenes/stage/"),
             (lambda d: d["opponent_stages"].update(oni=3), "is not of type 'string'"),
+            (lambda d: d["opponent_stages"].update(onii="res://scenes/stage/shrine_gate.tscn"), "'onii' is not a yokai the table knows"),
         ]
         for edit, expect in cases:
             code, out = self._node_scenes(edit)

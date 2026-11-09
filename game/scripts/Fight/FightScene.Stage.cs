@@ -71,11 +71,29 @@ public partial class FightScene
 		return chosen;
 	}
 
+	/// <summary>The stage scene the current node (or the debug choice) wants, with the fallbacks; <paramref name="warn"/> gets each substitution.</summary>
+	private string WantedStage(System.Action<string>? warn) =>
+		StageSceneFor(ForcedStage ?? Node?.Stage, UsePlaceholderStage, BambooGroveStage.AssetsPresent(StageDir), p => ResourceLoader.Exists(p), warn, StageCatalog.AssetsPresent);
+
+	/// <summary>The scene the last <see cref="BuildStage"/> chose (null before the first).</summary>
+	private string? _stageScene;
+
+	/// <summary>
+	/// YOK-150 (Code Critic): a self-walked run goes on to its next node in this same scene (<c>BeginNode</c>); when that
+	/// node wants another stage (a Kitsune node then an Oni node), the stage is built again. Nothing before the first build.
+	/// </summary>
+	private void RefreshStageForNode()
+	{
+		if (_stageScene is null || WantedStage(null) == _stageScene) return;
+		BuildStage();
+	}
+
 	private void BuildStage()
 	{
 		var container = GetNodeOrNull<Node3D>(StageContainerName);
 		if (container is null) { container = new Node3D { Name = StageContainerName }; AddChild(container); MoveChild(container, 0); }
-		string want = StageSceneFor(ForcedStage ?? Node?.Stage, UsePlaceholderStage, BambooGroveStage.AssetsPresent(StageDir), p => ResourceLoader.Exists(p), w => GD.PushWarning(w), StageCatalog.AssetsPresent);
+		string want = WantedStage(w => GD.PushWarning(w));
+		_stageScene = want;
 		var made = GD.Load<PackedScene>(want)?.Instantiate();
 		if (made is not FightStage stage)
 		{

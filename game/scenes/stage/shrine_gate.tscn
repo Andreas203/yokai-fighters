@@ -83,7 +83,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Model" parent="Props/Pine0/Pivot" instance=ExtResource("7_pine")]
 
 [node name="Pine1" type="Node3D" parent="Props"]
-transform = Transform3D(-4.59627, 0, 3.85673, 0, 6, 0, -3.85673, 0, -4.59627, -12.5, 0, -10.5)
+transform = Transform3D(-4.59627, 0, 3.85673, 0, 6, 0, -3.85673, 0, -4.59627, -13.6, 0, -10.5)
 
 [node name="Pivot" type="Node3D" parent="Props/Pine1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

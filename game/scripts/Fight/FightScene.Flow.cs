@@ -38,6 +38,8 @@ public partial class FightScene
 	public const Key DebugMenuKey = Key.F9;
 	/// <summary>The map the scene walks by itself when no session was handed to it.</summary>
 	public const string DemoMapFile = "demo-map.json";
+	/// <summary>YOK-150, tests: the map a self-walked run uses (a file in data/map/, or an absolute path); <see cref="DemoMapFile"/> by default.</summary>
+	public static string OwnMapFile { get; set; } = DemoMapFile;
 	/// <summary>Placeholder end card for a won run (the Tanuki fight and its win card are not built).</summary>
 	public const string RunWonTitle = "Run complete", RunWonText = "Placeholder end card: the run's last node is cleared.";
 
@@ -145,7 +147,7 @@ public partial class FightScene
 			Pool = LoadAbilityPool();
 			PickRunSeed();
 			OwnsSession = true;
-			Session = NewSession(DemoMapFile, RunSeed, Pool, Run);
+			Session = NewSession(OwnMapFile, RunSeed, Pool, Run);
 		}
 		BeginNode();
 		Match = InTrial ? NewTrialMatch() : NewDuel(); // YOK-98: a dojo trial plays on this same loop
@@ -166,6 +168,7 @@ public partial class FightScene
 		GD.Print($"FightScene: node '{Node.NodeId}' ({Node.Type}, row {Node.Row}): vs {Node.Fighter}, Y4 {Node.Tier} {Node.ReactionFrames}f{(Node.StandIn ? " [stand-in]" : "")}");
 		foreach (string note in Node.Notes) GD.Print("FightScene: " + note);
 		if (Profiles.Length > 0) LoadNodeProfiles(); // a later node of a self-walked run (the first one loads in SetUpAi)
+		RefreshStageForNode(); // YOK-150: a later node may want another stage
 	}
 
 	/// <summary>The next duel of <see cref="DemoRun"/>, with P1 on the scheme chosen for this run.</summary>
@@ -359,7 +362,7 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 		if (!OwnsSession && RunRestartRequested is { } host) { host(); return; }
 		PickRunSeed();
 		OwnsSession = true;
-		Session = NewSession(DemoMapFile, RunSeed, Pool);
+		Session = NewSession(OwnMapFile, RunSeed, Pool);
 		BeginNode();
 		_suppress = HeldBits(); // the Space/A that pressed Restart must not fire a Special
 		Draft = null;

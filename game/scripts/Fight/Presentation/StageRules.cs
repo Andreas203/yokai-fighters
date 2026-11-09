@@ -23,12 +23,21 @@ public static class StageRules
 	/// <summary>A stage's lantern light budget, all OmniLight3D together (shadowless, a handful at most).</summary>
 	public const int MaxLanternLights = 6;
 
-	/// <summary>Limit for a prop's front at <paramref name="x"/>: the gameplay plane, the lantern depth, the clear band.</summary>
-	public static float FrontLimit(float x, bool lantern)
+	/// <summary>Limit for a prop's front at <paramref name="x"/>: the gameplay plane, the lantern depth, the clear band (a point: its centre).</summary>
+	public static float FrontLimit(float x, bool lantern) => FrontLimit(x, 0f, lantern);
+
+	/// <summary>
+	/// Limit for the front of a prop centred at <paramref name="x"/> with footprint radius <paramref name="radius"/>: the clear
+	/// band applies when any of its footprint reaches inside |x| &lt; <see cref="ClearBandHalfX"/> (Code Critic, YOK-150).
+	/// </summary>
+	public static float FrontLimit(float x, float radius, bool lantern)
 	{
 		float limit = lantern ? LanternMaxZ : PropMaxZ;
-		return Mathf.Abs(x) < ClearBandHalfX ? Mathf.Min(limit, ClearBandBackZ) : limit;
+		return InClearBand(x, radius) ? Mathf.Min(limit, ClearBandBackZ) : limit;
 	}
+
+	/// <summary>Any of a footprint centred at <paramref name="x"/> with radius <paramref name="radius"/> lies inside the clear band's x range.</summary>
+	public static bool InClearBand(float x, float radius) => Mathf.Abs(x) - Mathf.Max(0f, radius) < ClearBandHalfX;
 
 	/// <summary>Bounds of every mesh under <paramref name="n"/> in its parent's space (works before entering the tree).</summary>
 	public static Aabb LocalBounds(Node n)

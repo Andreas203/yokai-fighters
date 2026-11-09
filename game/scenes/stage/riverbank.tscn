@@ -136,7 +136,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Model" parent="Props/Reeds3/Pivot" instance=ExtResource("7_reeds")]
 
 [node name="Reeds4" type="Node3D" parent="Props"]
-transform = Transform3D(-1.69145, 0, -0.615636, 0, 1.8, 0, 0.615636, 0, -1.69145, -10.8, 0, -6.2)
+transform = Transform3D(-1.69145, 0, -0.615636, 0, 1.8, 0, 0.615636, 0, -1.69145, -11.6, 0, -6.2)
 
 [node name="Pivot" type="Node3D" parent="Props/Reeds4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
@@ -144,7 +144,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Model" parent="Props/Reeds4/Pivot" instance=ExtResource("7_reeds")]
 
 [node name="Reeds5" type="Node3D" parent="Props"]
-transform = Transform3D(1.30228, 0, -1.09274, 0, 1.7, 0, 1.09274, 0, 1.30228, 10.9, 0, -6.4)
+transform = Transform3D(1.30228, 0, -1.09274, 0, 1.7, 0, 1.09274, 0, 1.30228, 11.4, 0, -6.4)
 
 [node name="Pivot" type="Node3D" parent="Props/Reeds5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

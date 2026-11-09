@@ -5,12 +5,13 @@ namespace YokaiFighters.Fight;
 
 /// <summary>
 /// YOK-152: the tea house's season screens. On the backdrop quad's ShaderMaterial (<c>shaders/season_backdrop.gdshader</c>)
-/// it sets two season paintings and a blend: the shader shows <c>mix(backdrop, season, panel mask)</c> with the painting's
-/// UV remapped onto <see cref="TeaHouseStage.PanelRectUv"/>, so the screen frames stay painted. The seasons follow the
-/// Tanuki's health beats (<see cref="SeasonBeats"/>, designer 2026-11-09): spring at the fight's start, the next season
-/// once its beat is first crossed, cross-faded over <see cref="TeaHouseStage.SeasonFadeTicks"/> ticks from that tick,
-/// never back within the fight; a new round (fight, Restart, reset) starts at spring. A missing season painting shows
-/// the plain backdrop in its place (one warning, no crash).
+/// it sets the four season paintings and each one's share (<see cref="Weights"/>): the shader shows
+/// <c>mix(backdrop, seasons, panel mask)</c> with each painting's UV remapped onto <see cref="TeaHouseStage.PanelRectUv"/>,
+/// so the screen frames stay painted. The seasons follow the Tanuki's health beats (<see cref="SeasonBeats"/>, designer
+/// 2026-11-09): spring at the fight's start, the next season once its beat is first crossed, cross-faded over
+/// <see cref="TeaHouseStage.SeasonFadeTicks"/> ticks from that tick and from whatever the screens show then, never back
+/// within the fight; a new round (fight, Restart, reset) starts at spring. A missing season painting shows the plain
+/// backdrop in its share (one warning, no crash).
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -32,8 +33,8 @@ public partial class SeasonScreens : Node, IStageScenery
 	/// <summary>The health beats seen this round.</summary>
 	public SeasonBeats Beats { get; } = new();
 
-	/// <summary>The seasons shown now: from, to and the blend (1 = all <c>To</c>).</summary>
-	public (int From, int To, float Blend) Shown { get; private set; } = (0, 0, 1f);
+	/// <summary>Each season's share of the screens now (spring, summer, autumn, winter; they sum to 1).</summary>
+	public Vector4 Weights { get; private set; } = SeasonBeats.Only(0);
 
 	/// <summary>The paintings under <paramref name="dir"/>; a missing one is null, with one warning naming them all.</summary>
 	public static Texture2D?[] Load(string dir)
@@ -55,20 +56,21 @@ public partial class SeasonScreens : Node, IStageScenery
 	public void Present(StageClock clock)
 	{
 		Beats.Observe(clock);
-		Shown = Beats.Shown(clock.Tick);
+		Weights = Beats.Weights(clock.Tick);
 		Apply();
 	}
 
 	private void Apply()
 	{
 		if (GetNodeOrNull<MeshInstance3D>(Backdrop)?.MaterialOverride is not ShaderMaterial mat) return;
-		var (from, to, blend) = Shown;
-		Texture2D? a = Textures[from], b = Textures[to];
-		mat.SetShaderParameter("season_from", a);
-		mat.SetShaderParameter("season_to", b);
-		mat.SetShaderParameter("use_from", a is null ? 0f : 1f);
-		mat.SetShaderParameter("use_to", b is null ? 0f : 1f);
-		mat.SetShaderParameter("blend", blend);
+		var present = new float[4];
+		for (int i = 0; i < 4; i++)
+		{
+			mat.SetShaderParameter($"season_{i}", Textures[i]);
+			present[i] = Textures[i] is null ? 0f : 1f;
+		}
+		mat.SetShaderParameter("present", new Vector4(present[0], present[1], present[2], present[3]));
+		mat.SetShaderParameter("weights", Weights);
 	}
 }
 
@@ -76,35 +78,40 @@ public partial class SeasonScreens : Node, IStageScenery
 /// YOK-152: the tea house's season state within a round, from the <see cref="StageClock"/> seen every sim tick. The season
 /// is the furthest health beat reached (<see cref="TeaHouseStage.SeasonForHealth"/> of the health that tick, kept if
 /// higher): monotonic, so health rising never brings a season back. A new <see cref="StageClock.Round"/> starts over at
-/// spring. Crossing a beat starts a fade from the season reached before (a jump of two beats in one hit fades straight
-/// across) at that tick. Observing the same tick twice changes nothing, so the picture is a function of the ticks seen.
+/// spring. Crossing a beat starts a fade at that tick from whatever the screens show then (the mix of a fade still
+/// running, or a whole season) toward the new season: the picture never jumps, each share moving at most
+/// 1 / <see cref="TeaHouseStage.SeasonFadeTicks"/> a tick, and two beats in one hit fade straight across. Observing the
+/// same tick twice changes nothing, so the picture is a function of the ticks seen.
 /// </summary>
 public sealed class SeasonBeats
 {
 	private int _round = int.MinValue;
+	private Vector4 _start = Only(0);
 
 	/// <summary>The season reached (index into <see cref="TeaHouseStage.Seasons"/>).</summary>
 	public int Season { get; private set; }
-	/// <summary>The season it fades from (the one reached before).</summary>
-	public int From { get; private set; }
 	/// <summary>The tick the latest beat was crossed (null: none yet this round).</summary>
 	public int? ChangedTick { get; private set; }
 
+	/// <summary>All of one season, none of the others.</summary>
+	public static Vector4 Only(int season) => new(season == 0 ? 1 : 0, season == 1 ? 1 : 0, season == 2 ? 1 : 0, season == 3 ? 1 : 0);
+
 	public void Observe(StageClock clock)
 	{
-		if (clock.Round != _round) { _round = clock.Round; Season = From = 0; ChangedTick = null; }
+		if (clock.Round != _round) { _round = clock.Round; Season = 0; _start = Only(0); ChangedTick = null; }
 		int s = TeaHouseStage.SeasonForHealth(clock.OpponentHealth, clock.OpponentMaxHealth);
 		if (s <= Season) return;
-		From = Season;
+		_start = Weights(clock.Tick); // what shows on this tick, before the new beat
 		Season = s;
 		ChangedTick = clock.Tick;
 	}
 
-	/// <summary>Pure: what shows at <paramref name="tick"/>: (from, to, blend), the blend rising over <paramref name="fadeTicks"/> from the crossing tick.</summary>
-	public (int From, int To, float Blend) Shown(int tick, int fadeTicks = TeaHouseStage.SeasonFadeTicks)
+	/// <summary>Pure: each season's share at <paramref name="tick"/>: the mix at the crossing, eased linearly to the season reached over <paramref name="fadeTicks"/>.</summary>
+	public Vector4 Weights(int tick, int fadeTicks = TeaHouseStage.SeasonFadeTicks)
 	{
-		if (ChangedTick is not { } at || fadeTicks <= 0) return (Season, Season, 1f);
-		float t = Mathf.Clamp((tick - at) / (float)fadeTicks, 0f, 1f);
-		return t >= 1f ? (Season, Season, 1f) : (From, Season, t);
+		Vector4 target = Only(Season);
+		if (ChangedTick is not { } at || fadeTicks <= 0) return target;
+		float k = Mathf.Clamp((tick - at) / (float)fadeTicks, 0f, 1f);
+		return k >= 1f ? target : _start.Lerp(target, k);
 	}
 }

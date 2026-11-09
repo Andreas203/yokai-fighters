@@ -168,8 +168,18 @@ public sealed class NodeSceneTable : INodeSceneResolver
 		{
 			DefaultStage = StagePath(Text(o, "default_stage", "the table"), "default_stage"),
 		};
-		foreach (var (name, node) in Section(o, "opponent_stages")) // YOK-150: a stage per yokai, apart from its fight data
+		// YOK-150: a stage per yokai, apart from its fight data. A key must be a yokai the table knows (Code Critic: a typo
+		// such as "onii" would otherwise fall back to the grove unnoticed), refused like an unknown tier.
+		var known = new HashSet<string>(table._opponents.Keys) { fallback };
+		foreach (var e in table._opponents.Values)
 		{
+			if (e.PlaysAs is { } p) known.Add(p);
+			if (e.Fighter is { } f) known.Add(f);
+		}
+		foreach (var (name, node) in Section(o, "opponent_stages"))
+		{
+			if (!known.Contains(name))
+				throw new FormatException($"node scenes: opponent_stages.{name}: '{name}' is not a yokai the table knows (an 'opponents' id, a 'plays_as', a 'fighter' or the fallback_fighter)");
 			if (node is not JsonValue sv || !sv.TryGetValue(out string? stage) || string.IsNullOrEmpty(stage))
 				throw new FormatException($"node scenes: opponent_stages.{name} must be a stage scene path");
 			table._opponentStages[name] = StagePath(stage, $"opponent_stages.{name}")!;
