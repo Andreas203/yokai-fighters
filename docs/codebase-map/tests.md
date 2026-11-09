@@ -36,7 +36,7 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 
 | Folder | Classes |
 |---|---|
-| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `EffectVocabularyTests` (YOK-220: C# vs schema target list, unread targets play unchanged, throw cancel windows) |
+| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `FoxMirageTests` (YOK-224), `ModifierEffectTests`, `EffectVocabularyTests` (YOK-220: C# vs schema target list, unread targets play unchanged, throw cancel windows) |
 | (cont.) | `ChargeHoldTests` (YOK-171 Sumo Stance hold: steps, cap, window, hash, replay, bot hold), `ForwardTravelTests` (YOK-221), `SlipperySkinTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
 | `tests/Sim/Input/` | `InputParserTests` |
 | `tests/Sim/Run/` | `RewardDraftTests`, `ElderCancelRuleTests` (YOK-186: elder cancel-rule offer, hold, continue, R8 provisional), `DraftFromBeatenYokaiTests`, `RunMapTests`, `RunFlowTests`, `CoinTests`, `MerchantTests`, `MerchantShopTests` + `MerchantShopSaveTests`, `ShopShelfTests`, `DojoTests`, `DojoTrialTests`, `TrialTests`, `CarryOverTests`, `UnlockTests`, `UnlockEffectTests`, `CopyRuleTests`, `CopyLockTests`, `RunSavePaidNodeTests`, `PracticeTests`, `LeaveNodeTests` |

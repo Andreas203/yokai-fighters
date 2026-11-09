@@ -126,34 +126,30 @@ class ForwardTravelExactnessProbes(unittest.TestCase):
         self.assertEqual(300.0, json.loads(json.dumps(v))["a"])
 
     def test_no_existing_data_file_changes_verdict(self):
-        # Every JSON under data/ and the C# fixtures: the validator's output text matches the pre-YOK-221 validator's.
+        # Every JSON under data/ and the C# fixtures keeps the verdict (valid or not) the pre-YOK-221 validator gave it.
+        # Verdicts, not message text: later tickets reword messages (YOK-224's "(or properties.teleport)") and add kinds
+        # (YOK-93's sound_cue), and neither is a forward_travel change.
         import subprocess
         old = subprocess.run(["git", "show", "c2f48d9:tools/validate_data.py"], cwd=ROOT, capture_output=True)
         self.assertEqual(0, old.returncode, old.stderr)  # bytes: the source holds non-ASCII text
         tmp = ROOT / "tools" / "_validate_data_main_probe.py"
         tmp.write_bytes(old.stdout)
+        # Features added after c2f48d9 that the old validator can't read: YOK-93's sound_cue kind, and YOK-225's command-grab
+        # fixture (a grab has no hitstun), which every requires-[] modifier is built onto.
+        later = re.compile(r"unknown kind '(sound_cue)'|: on test-river-grab Lv ")
         try:
             paths = [str(ROOT / "data"), str(ROOT / "game" / "tests" / "fixtures")]
             def run_with(mod):
                 r = subprocess.run([sys.executable, str(mod)] + paths, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT, timeout=900,
                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"})
-                return r.returncode, sorted(later_kinds_out((r.stdout + r.stderr).splitlines()))
-            def later_kinds_out(lines):
-                # Kinds the validator learned after c2f48d9 (YOK-93's sound_cue) are not forward_travel verdicts: the old
-                # validator can't read their files, and they lengthen every "expected one of [...]" list. Drop both, and
-                # the totals line those files move; every other file's lines still have to match exactly.
-                later = re.compile(r"unknown kind '(sound_cue)'")
-                skip = {l.split(": ", 1)[0] for l in lines if later.search(l)}
-                for l in lines:
-                    if l.split(": ", 1)[0] in skip or l.startswith("validate_data: "):
-                        continue
-                    yield re.sub(r"expected one of \[[^\]]*\]", "expected one of [kinds]", l)
-            old_code, old_lines = run_with(tmp)
-            new_code, new_lines = run_with(ROOT / "tools" / "validate_data.py")
+                lines = [l for l in (r.stdout + r.stderr).splitlines() if ": " in l and not l.startswith("validate_data: ")]
+                return r.returncode, {l.split(": ", 1)[0] for l in lines}, {l.split(": ", 1)[0] for l in lines if later.search(l)}
+            old_code, old_bad, old_later = run_with(tmp)
+            new_code, new_bad, _ = run_with(ROOT / "tools" / "validate_data.py")
         finally:
             tmp.unlink()
         self.assertEqual(old_code, new_code, "exit code changed")
-        self.assertEqual(old_lines, new_lines, "validator output on existing files changed")
+        self.assertEqual(sorted(old_bad - old_later), sorted(new_bad - old_later), "the set of files the validator refuses changed")
 
 
 class DotnetDecimalProbes(unittest.TestCase):

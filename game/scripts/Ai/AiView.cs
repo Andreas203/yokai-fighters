@@ -28,6 +28,9 @@ public readonly record struct FighterView(
 
 public readonly record struct ProjectileView(int Owner, int X, int Dir);
 
+/// <summary>YOK-224: a Mirage Feint decoy on screen: whose, where, which way it faces (P6: visible, not a flag).</summary>
+public readonly record struct DecoyView(int Owner, int X, int Facing);
+
 /// <summary>
 /// A read-only snapshot of the screen after one sim tick. The AI only ever receives these (through its
 /// reaction-delay buffer), never <see cref="Match"/>: that is what makes reading inputs before they show
@@ -53,6 +56,9 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 	/// fight constant like the frame counts above.</summary>
 	public int LightHitstop { get; init; }
 
+	/// <summary>YOK-224: the decoys standing on screen (Match.DecoyOf), at most one per fighter.</summary>
+	public IReadOnlyList<DecoyView> Decoys { get; init; } = System.Array.Empty<DecoyView>();
+
 	/// <summary>The only bridge from the sim to the AI: copies on-screen state, nothing else.</summary>
 	public static AiView Capture(Match m)
 	{
@@ -62,7 +68,16 @@ public sealed record AiView(int Tick, MatchPhase Phase, int HitstopLeft, Fighter
 			WakeUpFrames = m.Config.WakeUpFrames, BurstFrames = m.Config.BurstFrames,
 			P1JumpPunishPct = m.Config.P1JumpPunishPct, P2JumpPunishPct = m.Config.P2JumpPunishPct,
 			LightHitstop = m.Config.HitstopEnabled ? m.Config.HitstopLight : 0,
+			Decoys = CaptureDecoys(m),
 		};
+	}
+
+	private static DecoyView[] CaptureDecoys(Match m)
+	{
+		var list = new List<DecoyView>(2);
+		for (int i = 0; i < 2; i++)
+			if (m.DecoyOf(i) is { } d) list.Add(new(d.Owner, d.X, d.Facing));
+		return list.ToArray();
 	}
 
 	private static FighterView Of(Fighter f)
