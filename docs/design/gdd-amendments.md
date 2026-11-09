@@ -26,6 +26,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM18](#am18) | 2026-10-25 | The map is a handscroll that shows only the next choice | R2 | YOK-109, PR #245 |
 | [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
+| [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -463,3 +464,22 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | AM6, "Decision" | "Outside fights the target stays visible all run: the map still shows the glowing copy-target talisman, and the rest-stop forecast still names the move, its level and its expected cost." | Outside fights only the rest-stop forecast names the move, its level and its expected cost. |
 | AM18, "What does not change" | "The copy-target talisman still shows on the map (T6)." | The map does not show the copy target (AM20). |
 | rules.md T6 | "Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost." | "Named at every rest stop: the rest-stop forecast names the target, its level and expected cost; the map does not show it [AM20]." |
+
+<a id="am21"></a>
+
+## AM21 — The Kappa's stage is a night swamp without lanterns (2026-11-09)
+
+**Status.** Decided by the designer on 2026-11-09 on PR #277 (YOK-151), after seeing the riverbank built: "lets do retakes and have it resemble a swamp more without the lanterns". The designer picked swamp take 4 of four Astra takes.
+
+**Decision.** The Kappa's stage is a still, overgrown marsh swamp at night. It has twisted swamp trees with hanging moss, reeds, mossy logs, low mist and murky green water. It has no lanterns at all, neither painted nor 3D.
+
+**Why.** A swamp suits the Kappa, a water yokai of ponds and marshes, better than a festive lantern river. Without the lanterns, the Kappa's teal is the only accent against the dark water.
+
+**What does not change.** One stage per yokai; the other three stages and their lanterns. The internal names keep the old wording on purpose: the stage id `riverbank`, `game/scenes/stage/riverbank.tscn`, `DevStage.Riverbank`, the `opponent_stages` entry, and the spec file `assets/specs/stages/lantern-riverbank.md`. They are ids, not descriptions, so don't rename them.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §2.1 Setting, tone and art direction, "Stages" | "a riverbank of floating lanterns (Kappa)" | "a night swamp without lanterns (Kappa)" |
+| rules.md V9 | "lantern riverbank (Kappa)" | "night swamp without lanterns (Kappa) [AM21]" |

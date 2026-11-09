@@ -33,7 +33,7 @@ Fighters and stages are 3D models, but every rule happens on a flat 2D plane. A 
 |---|---|---|
 | Bamboo grove at dusk | Kitsune | Tall bamboo, low orange light |
 | Snowbound mountain shrine gate | Oni | A torii in snow |
-| Riverbank of floating lanterns | Kappa | Lanterns drifting on dark water |
+| Night swamp (AM21; was a riverbank of floating lanterns) | Kappa | Twisted trees, hanging moss and murky water, no lanterns |
 | The Tanuki's tea house | Tanuki | Paper screens that flicker between seasons |
 
 Reference image: `game/assets/generated/stage/bamboo-grove/backdrop.png`.

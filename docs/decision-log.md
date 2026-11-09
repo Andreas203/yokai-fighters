@@ -31,6 +31,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM18** 2026-10-25 (designer, YOK-109, PR #245): the map is a horizontal handscroll with the walked route painted as a brush stroke; it shows only cleared nodes, Ryo's node and the next choice, so later rows and the Tanuki stay hidden until their turn (R2). Presentation only.
 - **AM19** 2026-11-09 (designer, YOK-109, PR #273): the real routes ahead, to the Tanuki, show as sketched lines under mist; their nodes, names and icons stay hidden until their turn (R2, amends AM18). Presentation only.
 - **AM20** 2026-11-09 (designer, YOK-238): the map no longer shows the copy-target talisman; outside fights only the rest-stop forecast names the target, its level and expected cost (T6, amends AM6 and AM18). The copy rule itself is unchanged.
+- **AM21** 2026-11-09 (designer, YOK-151, PR #277): the Kappa's stage is a night swamp without lanterns, painted or 3D (V9). The stage id `riverbank` and its file names stay.
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
