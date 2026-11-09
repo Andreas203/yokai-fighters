@@ -5,7 +5,7 @@ References: none yet (`docs/design/characters/kappa/` does not exist). The conce
 
 ## Character
 
-The grappler of the lantern riverbank. Formal, stubborn and polite (personality proposed in the vault, designer to confirm); it walks straight into throw range. Offers River Grab and Shell Spin. Hit sparks are kappa teal (V5). Stage: lantern riverbank (V9). Elder Kappa is told apart by preset colour and VFX, not a new model.
+The grappler of the night swamp. Formal, stubborn and polite (personality proposed in the vault, designer to confirm); it walks straight into throw range. Offers River Grab and Shell Spin. Hit sparks are kappa teal (V5). Stage: night swamp (V9, AM21; stage id `riverbank`). Elder Kappa is told apart by preset colour and VFX, not a new model.
 
 - **Silhouette:** low and wide: hunched shoulders, short thick legs, big hands, a round shell on the back, a flat dish on the crown. About 1.5 m, the shortest fighter. Reads as "round and grounded" at 720p. The shell gives a back bulge; the dish a flat-topped head.
 - **Face:** beaked mouth, round eyes, calm stubborn expression, webbed hands and feet.
