@@ -30,6 +30,10 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 	public BehaviourProfile[] ProfilesForNode(NodeContext node) =>
 		NodeProfiles.WithNamed(node.NodeId, Profiles(node.MovesAndProfilesOf), node.Profile, AllProfiles);
 
+	/// <summary>YOK-211: <see cref="ProfilesForNode"/> and the one <paramref name="node"/> fights with (<see cref="NodeProfiles.PickFrom"/>, the fight scene's and the map's pick).</summary>
+	public NodePick PickForNode(NodeContext node, uint runSeed) =>
+		NodeProfiles.PickFrom(node, Profiles(node.MovesAndProfilesOf), AllProfiles, runSeed);
+
 	/// <summary>YOK-157: tally each fight's hits, throws and habit rolls into <see cref="FightRecord.Log"/> (listening only; on by default).</summary>
 	public bool HitLog { get; init; } = true;
 	/// <summary>YOK-157: also keep every hit as a raw line (<c>hit_log</c> in the results; large, off by default). Needs <see cref="HitLog"/>.</summary>
@@ -63,7 +67,7 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 		var problems = new List<string>();
 		foreach (var mapNode in Map.Nodes)
 		{
-			if (mapNode.Type is NodeTypeRegistry.Merchant or NodeTypeRegistry.Dojo) continue;
+			if (Map.TypeOf(mapNode) is not { Fight: true }) continue; // YOK-211: node-type data says which nodes fight
 			var node = Scenes.Resolve(mapNode).Context;
 			if (node.Kit is not null) continue;
 			var kit = Kit.LoadAs(node.MovesAndProfilesOf, node.Fighter, Sources);
@@ -179,9 +183,10 @@ public static class RunHarness
 	public static FightRecord PlayFight(HarnessContent content, BotConfig bot, RunSession session, uint runSeed, Match m)
 	{
 		var node = session.Node!;
-		var profiles = content.ProfilesForNode(node); // YOK-174: the yokai's own profiles (even on a stand-in kit) plus the node's named one
+		// YOK-211: the fight scene's and the map's own pick. YOK-174: the yokai's own profiles (even on a stand-in kit) plus the
+		// node's named one; Y1/Y2: the named profile, else the seeded 50/50 temperament roll (no debug temperament in the harness).
+		var (profiles, pi) = content.PickForNode(node, session.Seed);
 		if (profiles.Length == 0) throw new InvalidOperationException($"no behaviour profile for '{node.MovesAndProfilesOf}'");
-		int pi = Math.Max(0, NodeTemperament.Pick(profiles, node, session.Seed)); // YOK-174, Y1/Y2: named profile, else the seeded 50/50 temperament roll
 		uint step = (uint)session.Step;
 		var loadout = AiLoadout.From(m.P2);
 		if (loadout.Missing(profiles[pi]) is { Count: > 0 } missing) // YOK-174: never skip a named move silently

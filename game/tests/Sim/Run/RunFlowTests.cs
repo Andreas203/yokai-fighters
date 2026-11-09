@@ -341,6 +341,54 @@ public static class RunFlowTests
 		Assert.True(flow.Session == null && !flow.Map.Visible && flow.Title.Visible, "title: the run is dropped");
 	});
 
+	/// <summary>The habit line the map shows for <paramref name="nodeId"/> when its yokai plays <paramref name="temperament"/>.</summary>
+	static string HabitOf(string yokai, string temperament) =>
+		RunMapView.HabitSentence(RunMapView.Profiles!.First(p => p.Yokai == yokai && p.Temperament == temperament).Habit.Description)!;
+
+	[Test]
+	public static void Boot_DebugTemperament_ArgThenF9_HoldsAcrossNodesAndRestart_MapAndFightAgree_E23(Node runner)
+	{
+		var savedArgs = FightScene.UserArgs;
+		FightScene.UserArgs = () => new[] { "--temperament=aggressive" };
+		try
+		{
+			WithBoot(runner, flow =>
+			{
+				Press(flow.Title.StartButton);
+				Press(flow.ControlSelect.Start);
+				var session = flow.Session!;
+				Assert.Equal("aggressive", session.DebugTemperament ?? "<null>", "--temperament= is on the run from its first node");
+				Assert.Equal(HabitOf("kitsune", "aggressive"), new SessionMapView(session).Detail("r2-kitsune")!.Habit ?? "<null>", "the map shows the arg's habit");
+
+				Assert.True(flow.ChooseNode("r1-apprentice").Ok, "node 1");
+				var first = flow.Fight!;
+				Assert.Equal("apprentice", first.P2Ai!.Profile.Id, "AM13: the apprentice node keeps its named profile over the arg, as the map does");
+				Assert.Equal("aggressive", session.DebugTemperament ?? "<null>", "the arg is not re-forced onto the session");
+				Assert.True(first.SetTemperament("patient"), "F9 at node 1: patient");
+				Assert.Equal("patient", session.DebugTemperament ?? "<null>", "the F9 choice is the run's now");
+				Win(first, taken: 0);
+				first.BindingCard.Continue();
+				first.Rewards.Confirm();
+				if (first.Stage == DemoStage.Reward) first.Rewards.Confirm();
+				Assert.Equal(Screen.Map, flow.Router.Current, "back on the map");
+				Assert.Equal(HabitOf("kitsune", "patient"), new SessionMapView(session).Detail("r2-kitsune")!.Habit ?? "<null>", "the map shows the F9 habit for node 2");
+
+				Assert.True(flow.ChooseNode("r2-kitsune").Ok, "node 2");
+				var second = flow.Fight!;
+				Assert.True(!ReferenceEquals(first, second), "a new fight scene");
+				Assert.Equal("patient", second.P2Ai!.Profile.Temperament, "node 2 plays the F9 temperament, not the arg again");
+				Assert.Equal("patient", second.Temperament, "and says so");
+				Assert.Equal("patient", session.DebugTemperament ?? "<null>", "the session keeps the F9 choice");
+
+				Assert.True(flow.RestartRun(), "Restart");
+				Assert.True(!ReferenceEquals(session, flow.Session), "a new run");
+				Assert.Equal("patient", flow.Session!.DebugTemperament ?? "<null>", "E23: the choice holds across restart");
+				Assert.Equal(HabitOf("kitsune", "patient"), new SessionMapView(flow.Session).Detail("r2-kitsune")!.Habit ?? "<null>", "and the new run's map follows it");
+			});
+		}
+		finally { FightScene.UserArgs = savedArgs; }
+	}
+
 	[Test]
 	public static void Boot_LastNodeWon_ShowsTheEndCard_AndPauseQuitDropsTheRun(Node runner) => WithBoot(runner, flow =>
 	{

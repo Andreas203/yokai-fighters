@@ -104,13 +104,14 @@ public partial class TwistScroll : Control
 		l.AddThemeFontOverride("font", italic);
 	}
 
-	/// <summary>Fill the scroll. <paramref name="title"/> null/empty = no title row text; <paramref name="rule"/> null/empty hides the red rule line; a null or missing <paramref name="portraitPath"/> leaves the portrait out.</summary>
+	/// <summary>Fill the scroll. <paramref name="title"/> null/empty = no title row text; <paramref name="rule"/> null, empty or whitespace hides the red rule line (YOK-211); a null or missing <paramref name="portraitPath"/> leaves the portrait out.</summary>
 	public void Show(string quote, string kicker, string? iconId, string fallbackGlyph, string? title, string? rule, string? portraitPath)
 	{
 		Bind();
 		_kicker.Text = kicker;
 		_title.Text = title ?? "";
 		_quote.Text = quote;
+		rule = rule?.Trim();
 		_rule.Text = rule ?? "";
 		_rule.Visible = _ruleLine.Visible = !string.IsNullOrEmpty(rule);
 		_stamp.Icon = iconId ?? ""; _stamp.Fallback = fallbackGlyph;

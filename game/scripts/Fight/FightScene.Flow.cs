@@ -213,8 +213,22 @@ public partial class FightScene
 		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
 		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
 		DebugMenu.Bind(this);
-		foreach (string arg in OS.GetCmdlineUserArgs())
-			if (arg.StartsWith("--temperament=", StringComparison.Ordinal)) SetTemperament(arg["--temperament=".Length..]);
+		// E23: the arg only seeds a choice; once one is held (an F9 pick, or the run's session, seeded by GameFlow.Adopt and
+		// already applied by LoadNodeProfiles with the named-profile rule) it is not forced again on each new node.
+		if (DebugTemperament is null && TemperamentFromArgs(UserArgs()) is { } t) SetTemperament(t);
+	}
+
+	/// <summary>The command line's user args (after <c>--</c>); tests swap it to stand in for <c>--temperament=</c>.</summary>
+	public static Func<string[]> UserArgs { get; set; } = OS.GetCmdlineUserArgs;
+
+	/// <summary>E23 debug: the temperament <c>--temperament=</c> names (the last one given); null without the arg.</summary>
+	public static string? TemperamentFromArgs(string[] args)
+	{
+		const string Arg = "--temperament=";
+		string? t = null;
+		foreach (string arg in args)
+			if (arg.StartsWith(Arg, StringComparison.Ordinal)) t = arg[Arg.Length..];
+		return t;
 	}
 
 	/// <summary>
