@@ -319,17 +319,25 @@ public static class StageTests
 	public static void Stage_CoversCameraRangeAtBothCorners(Node runner)
 	{
 		var scene = Load(runner);
-		// YOK-129: the dynamic camera's extreme framings: closest and widest zoom (plus the pitch's 1% slack), at rest and
-		// raised for a jump apex at the top of the HUD clamp, pushed to either stage edge. Every screen corner's ray must
-		// land on the backdrop (above the floor) or on the floor.
+		AssertCoversCameraRange(scene, "Floor");
+		scene.QueueFree();
+	}
+
+	/// <summary>
+	/// YOK-129: the dynamic camera's extreme framings: closest and widest zoom (plus the pitch's 1% slack), at rest and
+	/// raised for a jump apex at the top of the HUD clamp, pushed to either stage edge. Every screen corner's ray must
+	/// land on the backdrop (above the floor) or on one of <paramref name="grounds"/> (YOK-150: the riverbank's bank and
+	/// water are two planes). Shared by every stage's tests.
+	/// </summary>
+	internal static void AssertCoversCameraRange(FightScene scene, params string[] grounds)
+	{
 		var c = scene.Match.Config;
 		var cam = new DynamicCamera(c);
 		var backdrop = scene.StageRoot.GetNode<MeshInstance3D>("Backdrop");
 		var size = ((QuadMesh)backdrop.Mesh).Size;
-		var floor = scene.StageRoot.GetNode<MeshInstance3D>("Floor");
-		var fs = ((PlaneMesh)floor.Mesh).Size;
+		var planes = grounds.Select(g => scene.StageRoot.GetNode<MeshInstance3D>(g)).Select(m => (m.Position, Size: ((PlaneMesh)m.Mesh).Size)).ToList();
 		Assert.True(backdrop.Position.Y - size.Y / 2 <= 0f, "backdrop meets the floor");
-		Assert.True(floor.Position.Z - fs.Y / 2 <= backdrop.Position.Z, "floor reaches the backdrop");
+		Assert.True(planes.Min(p => p.Position.Z - p.Size.Y / 2) <= backdrop.Position.Z, "floor reaches the backdrop");
 		float apex = c.JumpY(c.JumpFrames / 2) / (float)SimConfig.Scale;
 		var air = new DynamicCamera.Subject(new DynamicCamera.Body(0, apex, -240, 240), new DynamicCamera.Body(0, 0, -240, 240), 0, 0);
 		var framings = new System.Collections.Generic.List<(DynamicCamera Cam, float W, float H)>();
@@ -379,11 +387,10 @@ public static class StageTests
 						else
 						{
 							float tf = -o.Y / dir.Y, fx = o.X + dir.X * tf, fz = o.Z + dir.Z * tf;
-							Assert.True(Mathf.Abs(fx - floor.Position.X) <= fs.X / 2 && Mathf.Abs(fz - floor.Position.Z) <= fs.Y / 2, $"{at}: floor covers ({fx:0.00}, {fz:0.00})");
+							Assert.True(planes.Any(p => Mathf.Abs(fx - p.Position.X) <= p.Size.X / 2 && Mathf.Abs(fz - p.Position.Z) <= p.Size.Y / 2), $"{at}: floor covers ({fx:0.00}, {fz:0.00})");
 						}
 					}
 				}
-		scene.QueueFree();
 	}
 
 	[Test]

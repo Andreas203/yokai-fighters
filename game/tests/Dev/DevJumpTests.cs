@@ -250,7 +250,7 @@ public static class DevJumpTests
 				foreach (string temp in DevJump.Temperaments(DevJump.PlaysAsOf(probe)))
 					foreach (var scheme in new[] { ControlScheme.Kihon, ControlScheme.Kata })
 					{
-						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Grove };
+						var setup = probe with { Temperament = temp, Scheme = scheme, Stage = scheme == ControlScheme.Kata ? DevStage.Placeholder : DevStage.Node };
 						var jump = DevJump.BuildFight(setup, pool);
 						string what = $"{foe.Yokai} elder={elder} {temp} {scheme}";
 						Assert.True(flow.StartDevRun(jump.Session, jump.NodeId, scheme, setup.Stage).Ok, what + ": started");
@@ -262,7 +262,9 @@ public static class DevJumpTests
 						string type = foe.Yokai == DevJump.TanukiId ? NodeTypeRegistry.Boss : elder ? NodeTypeRegistry.ElderDuel : NodeTypeRegistry.Duel;
 						Assert.Equal(type, f.Node.Type, what + ": node type");
 						bool groveThere = BambooGroveStage.AssetsPresent(FightScene.StageDir);
-						Assert.Equal(setup.Stage == DevStage.Grove && groveThere ? FightScene.GroveScene : FightScene.PlaceholderScene, f.StageRoot.SceneFilePath, what + ": stage");
+						// YOK-150: "the node's own stage" is the node-scene table's (the Oni's shrine gate...), with its fallbacks.
+						string own = FightScene.StageSceneFor(f.Node.Stage, false, groveThere, p => ResourceLoader.Exists(p), null, StageCatalog.AssetsPresent);
+						Assert.Equal(setup.Stage == DevStage.Node ? own : FightScene.PlaceholderScene, f.StageRoot.SceneFilePath, what + ": stage");
 						flow.ReturnToTitle();
 					}
 			}

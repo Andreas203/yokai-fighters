@@ -1,0 +1,138 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FightStage.cs" id="1_stage"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="2_toon"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="3_toonmat"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="4_ink"]
+[ext_resource type="Texture2D" path="res://assets/generated/stage/shrine-gate/backdrop.png" id="5_back"]
+[ext_resource type="Shader" path="res://shaders/stage_floor.gdshader" id="6_floor"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/shrine-gate/pine-cluster.glb" id="7_pine"]
+[ext_resource type="PackedScene" path="res://scenes/stage_props/snow_lantern_lit.tscn" id="8_lantern"]
+
+[sub_resource type="Environment" id="Environment_env"]
+background_mode = 1
+background_color = Color(0.1765, 0.2275, 0.3686, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.4706, 0.5176, 0.6588, 1)
+ambient_light_energy = 0.6
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.2902, 0.3451, 0.4706, 1)
+fog_density = 0.45
+fog_depth_curve = 1.2
+fog_depth_begin = 15.0
+fog_depth_end = 32.0
+
+[sub_resource type="StandardMaterial3D" id="Material_back"]
+shading_mode = 0
+disable_fog = true
+albedo_texture = ExtResource("5_back")
+
+[sub_resource type="QuadMesh" id="QuadMesh_back"]
+size = Vector2(36.0, 20.25)
+
+[sub_resource type="ShaderMaterial" id="Material_floor"]
+render_priority = 0
+shader = ExtResource("6_floor")
+shader_parameter/pattern = 0
+shader_parameter/color_a = Color(0.7843, 0.8039, 0.8549, 1)
+shader_parameter/color_b = Color(0.9451, 0.9098, 0.8314, 1)
+shader_parameter/patch_scale = 0.22
+shader_parameter/patch_amount = 0.42
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+material = SubResource("Material_floor")
+size = Vector2(40, 25)
+
+[node name="Stage" type="Node3D"]
+script = ExtResource("1_stage")
+Kind = "shrine-gate"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.57357645, 0.33317915, -0.7483326, 0, 0.9135454, 0.40673664, 0.81915206, -0.23329456, 0.5239881, 0, 0, 0)
+light_color = Color(0.7882, 0.8314, 0.9412, 1)
+light_energy = 1.05
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.49999997, -0.4967318, 0.70940655, 0, 0.81915206, 0.57357645, -0.86602545, -0.2867882, 0.409576, 0, 0, 0)
+light_color = Color(0.549, 0.6235, 0.8784, 1)
+light_energy = 0.35
+
+[node name="Backdrop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, -16.0)
+material_override = SubResource("Material_back")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_back")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.5)
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Pine0" type="Node3D" parent="Props"]
+transform = Transform3D(5.16831, 0, 1.88111, 0, 5.5, 0, -1.88111, 0, 5.16831, -16.5, 0, -6)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine0/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Pine1" type="Node3D" parent="Props"]
+transform = Transform3D(-4.59627, 0, 3.85673, 0, 6, 0, -3.85673, 0, -4.59627, -12.5, 0, -10.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine1/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Pine2" type="Node3D" parent="Props"]
+transform = Transform3D(1.2941, 0, 4.82963, 0, 5, 0, -4.82963, 0, 1.2941, -7, 0, -12.6)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine2/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Pine3" type="Node3D" parent="Props"]
+transform = Transform3D(-3.2909, 0, -1.9, 0, 3.8, 0, 1.9, 0, -3.2909, -3.8, 0, -13.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine3/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Pine4" type="Node3D" parent="Props"]
+transform = Transform3D(2.5, 0, -4.33013, 0, 5, 0, 4.33013, 0, 2.5, 15.5, 0, -5.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine4/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Pine5" type="Node3D" parent="Props"]
+transform = Transform3D(4.91491, 0, 3.44146, 0, 6, 0, -3.44146, 0, 4.91491, 17.5, 0, -10.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Pine5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Pine5/Pivot" instance=ExtResource("7_pine")]
+
+[node name="Lantern0" parent="Props" groups=["stage_lantern"] instance=ExtResource("8_lantern")]
+transform = Transform3D(1.59748, 0, 0.581434, 0, 1.7, 0, -0.581434, 0, 1.59748, -10.8, 0, -10.8)
+
+
+[node name="Lantern1" parent="Props" groups=["stage_lantern"] instance=ExtResource("8_lantern")]
+transform = Transform3D(1.45009, 0, -0.676189, 0, 1.6, 0, 0.676189, 0, 1.45009, 11.2, 0, -10.9)
+
+
+[node name="PropToon" type="Node" parent="."]
+script = ExtResource("2_toon")
+Toon = ExtResource("3_toonmat")
+Outline = ExtResource("4_ink")
+OutlineMetres = 0.02
+Target = NodePath("../Props")

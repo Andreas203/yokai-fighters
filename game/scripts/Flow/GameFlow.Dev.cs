@@ -59,9 +59,21 @@ public partial class GameFlow
 	{
 		if (_devStage is not { } stage) return;
 		bool launch = FightScene.UsePlaceholderStage;
+		string? launchForced = FightScene.ForcedStage;
 		FightScene.UsePlaceholderStage = stage == DevStage.Placeholder;
-		fight.Ready += () => FightScene.UsePlaceholderStage = launch;
+		FightScene.ForcedStage = DevStageScene(stage);
+		fight.Ready += () => { FightScene.UsePlaceholderStage = launch; FightScene.ForcedStage = launchForced; };
 	}
+
+	/// <summary>YOK-150: the stage scene a dev choice forces; null = the node's own (or the placeholder flag).</summary>
+	public static string? DevStageScene(DevStage stage) => stage switch
+	{
+		DevStage.Grove => FightScene.GroveScene,
+		DevStage.ShrineGate => StageCatalog.ShrineGateScene,
+		DevStage.Riverbank => StageCatalog.RiverbankScene,
+		DevStage.TeaHouse => StageCatalog.TeaHouseScene,
+		_ => null,
+	};
 
 	/// <summary>
 	/// Shows <paramref name="screen"/> on its own in the dev viewer, over the title or the map (hidden meanwhile, so

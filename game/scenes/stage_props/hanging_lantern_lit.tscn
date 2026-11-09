@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/TickMotion.cs" id="1_tick"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/tea-house/hanging-lantern.glb" id="2_lant"]
+
+[node name="HangingLantern" type="Node3D"]
+script = ExtResource("1_tick")
+SwayDegrees = 2.5
+PeriodTicks = 300
+
+[node name="Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Model" parent="Pivot" instance=ExtResource("2_lant")]
+
+[node name="Light" type="OmniLight3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0.3)
+light_color = Color(1, 0.66, 0.4, 1)
+light_energy = 1.0
+light_specular = 0.0
+omni_range = 4.0

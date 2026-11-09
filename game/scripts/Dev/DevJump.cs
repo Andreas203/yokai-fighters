@@ -37,14 +37,15 @@ public sealed record DevOpponent(string Yokai, string Name, string? NotBuilt, st
 public sealed record DevElder(string Yokai, string ElderYokai, string Name, string Twist);
 
 /// <summary>Stage choice. Level presets (data/presets/) are not built yet, so the stage is the only look to pick.</summary>
-public enum DevStage { Grove, Placeholder }
+/// <summary>YOK-125 dev stage choice. YOK-150: <see cref="Node"/> (was "Grove", the data default then) shows the node's own stage from the node-scene table; the others force one stage.</summary>
+public enum DevStage { Node, Placeholder, Grove, ShrineGate, Riverbank, TeaHouse }
 
 /// <summary>Everything the fight setup chooses (YOK-125).</summary>
 public sealed record DevFightSetup(
 	string Opponent = "kitsune",
 	string? Temperament = null,
 	bool Elder = false,
-	DevStage Stage = DevStage.Grove,
+	DevStage Stage = DevStage.Node,
 	ControlScheme Scheme = ControlScheme.Kihon,
 	string? CopySpecial = null,
 	int CopyLevel = 1,
