@@ -25,6 +25,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM17](#am17) | 2026-10-25 | A story-card style video on first meeting each yokai (extra, not MVP) | S6, header | YOK-207 |
 | [AM18](#am18) | 2026-10-25 | The map is a handscroll that shows only the next choice | R2 | YOK-109, PR #245 |
 | [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
+| [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -441,3 +442,24 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended §6.1 The map | (as amended by AM18) | The routes ahead are visible as sketches in mist; their nodes are not. |
 | GDD short §1.2 Core loop | (as amended by AM18) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
 | rules.md R2 | "...so later rows, the Tanuki included, stay hidden until their turn [AM18]." | "...so later rows' nodes, the Tanuki included, stay hidden until their turn [AM18]; the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." |
+
+<a id="am20"></a>
+
+## AM20 — The map no longer shows the copy target; the rest-stop forecast names it (2026-11-09)
+
+**Status.** Decided by the designer on 2026-11-09 on YOK-238. The designer asked whether the copy target should be a secret rather than shown on the map, and chose the middle ground: take the copy-target talisman off the map and leave the warning to the rest-stop forecast.
+
+**Decision.** The map does not show the copy target. Outside fights, the target is named only by the rest-stop forecast (the move, its level and its expected cost), at every merchant and dojo node. Row 4 is always the merchant (R1), so every run is told the target before its first elder and again at row 7. In fights, the HUD still shows the talisman only in the Tanuki fight (AM6).
+
+**Why.** The copy target reads better as something the merchant lets slip than as a fact pinned to the map. The merchant is the Tanuki in disguise, so hearing the target at his stall fits the reveal, and it clears the map's top bar.
+
+**What does not change.** The copy rule (T0–T5): the target, ties, strength, lock point and "always defined". The forecast's content and expected cost (AM15). The row-4 merchant line templated to the target (S3). The talisman in the Tanuki fight (AM6, T1).
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §5.3 The Tanuki, point 6 (as amended by AM6) | "Visible all run outside fights: the map shows the target's glowing talisman and the rest-stop forecast names it." | "Named at every rest stop: the rest-stop forecast names the target, its level and expected cost; the map does not show it. In fights, the HUD shows it only against the Tanuki." |
+| AM6, "Decision" | "Outside fights the target stays visible all run: the map still shows the glowing copy-target talisman, and the rest-stop forecast still names the move, its level and its expected cost." | Outside fights only the rest-stop forecast names the move, its level and its expected cost. |
+| AM18, "What does not change" | "The copy-target talisman still shows on the map (T6)." | The map does not show the copy target (AM20). |
+| rules.md T6 | "Visible all run outside fights: the map shows the target talisman glowing; the rest-stop forecast names it, its level and expected cost." | "Named at every rest stop: the rest-stop forecast names the target, its level and expected cost; the map does not show it [AM20]." |

@@ -1,7 +1,18 @@
-[gd_resource type="Resource" script_class="MapNodeStyles" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="MapNodeStyles" load_steps=34 format=3]
 
 [ext_resource type="Script" path="res://scripts/Ui/MapNodeStyles.cs" id="1"]
 [ext_resource type="Script" path="res://scripts/Ui/MapNodeStyle.cs" id="2"]
+[ext_resource type="Script" path="res://scripts/Ui/MapYokaiMask.cs" id="3"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-apprentice.png" id="t_mask-apprentice"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-oni.png" id="t_mask-oni"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-kitsune.png" id="t_mask-kitsune"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-kappa.png" id="t_mask-kappa"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-elder-oni.png" id="t_mask-elder-oni"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-nine-tails.png" id="t_mask-nine-tails"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/mask-elder-kappa.png" id="t_mask-elder-kappa"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/node-merchant.png" id="t_node-merchant"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/node-dojo.png" id="t_node-dojo"]
+[ext_resource type="Texture2D" path="res://assets/generated/ui/map/node-tanuki.png" id="t_node-tanuki"]
 
 [sub_resource type="Resource" id="duel"]
 script = ExtResource("2")
@@ -9,6 +20,7 @@ Type = "duel"
 Label = "Duel"
 Color = Color(0.176, 0.227, 0.369, 1)
 Icon = "D"
+Sprite = ExtResource("t_mask-apprentice")
 
 [sub_resource type="Resource" id="elder"]
 script = ExtResource("2")
@@ -16,6 +28,7 @@ Type = "elder"
 Label = "Elder duel"
 Color = Color(0.72, 0.2, 0.16, 1)
 Icon = "E"
+Sprite = ExtResource("t_mask-apprentice")
 
 [sub_resource type="Resource" id="boss"]
 script = ExtResource("2")
@@ -25,6 +38,8 @@ Color = Color(0.72, 0.2, 0.16, 1)
 Icon = "B"
 Tagline = "waits at the end
 copies your best move"
+Sprite = ExtResource("t_node-tanuki")
+SpriteScale = 1.12
 
 [sub_resource type="Resource" id="merchant"]
 script = ExtResource("2")
@@ -32,6 +47,8 @@ Type = "merchant"
 Label = "Merchant"
 Color = Color(0.2, 0.36, 0.27, 1)
 Icon = "M"
+Sprite = ExtResource("t_node-merchant")
+SpriteScale = 1.08
 
 [sub_resource type="Resource" id="dojo"]
 script = ExtResource("2")
@@ -39,6 +56,8 @@ Type = "dojo"
 Label = "Dojo"
 Color = Color(0.8, 0.5, 0.2, 1)
 Icon = "J"
+Sprite = ExtResource("t_node-dojo")
+SpriteScale = 1.08
 
 [sub_resource type="Resource" id="fallback"]
 script = ExtResource("2")
@@ -46,6 +65,7 @@ Type = ""
 Label = ""
 Color = Color(0.45, 0.42, 0.38, 1)
 Icon = "?"
+Sprite = ExtResource("t_mask-apprentice")
 
 [sub_resource type="Resource" id="twist_grip"]
 script = ExtResource("2")
@@ -68,8 +88,49 @@ Label = "Reflects repeats"
 Color = Color(0.72, 0.2, 0.16, 1)
 Icon = "R"
 
+[sub_resource type="Resource" id="mask_0"]
+script = ExtResource("3")
+Yokai = "apprentice"
+Mask = ExtResource("t_mask-apprentice")
+
+[sub_resource type="Resource" id="mask_1"]
+script = ExtResource("3")
+Yokai = "kitsune"
+Mask = ExtResource("t_mask-kitsune")
+
+[sub_resource type="Resource" id="mask_2"]
+script = ExtResource("3")
+Yokai = "oni"
+Mask = ExtResource("t_mask-oni")
+
+[sub_resource type="Resource" id="mask_3"]
+script = ExtResource("3")
+Yokai = "kappa"
+Mask = ExtResource("t_mask-kappa")
+
+[sub_resource type="Resource" id="mask_4"]
+script = ExtResource("3")
+Yokai = "elder-oni"
+Mask = ExtResource("t_mask-elder-oni")
+
+[sub_resource type="Resource" id="mask_5"]
+script = ExtResource("3")
+Yokai = "nine-tailed-kitsune"
+Mask = ExtResource("t_mask-nine-tails")
+
+[sub_resource type="Resource" id="mask_6"]
+script = ExtResource("3")
+Yokai = "nine-tails"
+Mask = ExtResource("t_mask-nine-tails")
+
+[sub_resource type="Resource" id="mask_7"]
+script = ExtResource("3")
+Yokai = "elder-kappa"
+Mask = ExtResource("t_mask-elder-kappa")
+
 [resource]
 script = ExtResource("1")
 Styles = Array[Object]([SubResource("duel"), SubResource("elder"), SubResource("boss"), SubResource("merchant"), SubResource("dojo")])
 Fallback = SubResource("fallback")
 TwistIcons = Array[Object]([SubResource("twist_grip"), SubResource("twist_armour"), SubResource("twist_reflect")])
+YokaiMasks = Array[Object]([SubResource("mask_0"), SubResource("mask_1"), SubResource("mask_2"), SubResource("mask_3"), SubResource("mask_4"), SubResource("mask_5"), SubResource("mask_6"), SubResource("mask_7")])
