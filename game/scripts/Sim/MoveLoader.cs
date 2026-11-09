@@ -85,6 +85,7 @@ public static class MoveLoader
 		move = MoveData.ReadImpact(move, fd); // YOK-20: hit strength (V2) and meter gain (C5)
 		move = MoveData.ReadSpecialProperties(move, fd); // YOK-21: projectile, invuln, cancel windows
 		move = MoveData.ReadModifierProperties(move, fd); // YOK-103: armour, counterhit/projectile immunity, pull, heal...
+		move = MoveData.CheckPendingProperties(move, fd); // YOK-220: vocabulary no fight code reads yet (shape only)
 
 		if (move.Projectile != null && move.Damage > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
 			throw new FormatException($"{id}: a damaging projectile needs hitstun and blockstun");
@@ -94,6 +95,7 @@ public static class MoveLoader
 		foreach (var h in move.Hitboxes)
 			if (!move.IsActive(h.First) || !move.IsActive(h.Last))
 				throw new FormatException($"{id}: hitbox frames {h.First}-{h.Last} outside the active window");
+		move = MoveData.ReadTravel(move, fd); // YOK-221: properties.forward_travel
 		return MoveData.ReadAftershock(move, fd); // YOK-136: properties.aftershock_delay
 	}
 

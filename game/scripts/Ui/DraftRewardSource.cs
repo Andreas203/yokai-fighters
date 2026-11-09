@@ -18,6 +18,9 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 	readonly RunState _run;
 	readonly Lazy<IStorySource> _story;
 
+	/// <summary>YOK-218 (X2): shown where the elder's cancel card would be when Ryo already holds two. ASCII only.</summary>
+	public static string FullNotice => $"No cancel rule offered. You already hold {Fighter.MaxCancelRules} of {Fighter.MaxCancelRules}.";
+
 	public RewardOffer Offer { get; }
 	public PickResult? LastResult { get; private set; }
 
@@ -40,7 +43,7 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 				: "Can't carry this modifier";
 			return new TargetView(owned.Data.Id, slot.ToString(), owned.Data.Name, owned.Level, owned.Modifier?.Name, ok, why);
 		}).ToArray();
-		Offer = new RewardOffer(Title(draft.Offer.Yokai), cards, targets);
+		Offer = new RewardOffer(Title(draft.Offer.Yokai), cards, targets) { Notice = draft.Offer.CancelRuleHeldOut ? FullNotice : null };
 	}
 
 	/// <summary>S3 binding line from data/story/binding-line.json, {yokai} filled (S4).</summary>

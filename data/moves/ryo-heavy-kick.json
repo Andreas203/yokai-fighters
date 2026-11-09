@@ -13,7 +13,9 @@
     "F2",
     "F3",
     "K3",
-    "V2"
+    "V2",
+    "X3",
+    "X4"
   ],
   "input": {
     "button": "HK"
@@ -115,7 +117,19 @@
     ],
     "properties": {
       "knockdown": true
-    }
+    },
+    "cancel_windows": [
+      {
+        "frames": [
+          12,
+          21
+        ],
+        "on": [
+          "hit",
+          "block"
+        ]
+      }
+    ]
   },
-  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 38, S/A/R 11/4/23. Foot is still at 66% reach at the cut: blend the retraction out over 6 ticks. Hitstun 27 and blockstun 24 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. HEAD-HIGH kick (clip 215 High_Kick, foot at 129-144 cm). The designer asked for a mid kick; the preset library has no mid variant, so this kick hits high: it must be blocked standing and a crouching opponent can duck it (E6). FLAG for the designer. C8 target 12/4/22; clip gives 11/4/23 (clip wins, F2). Knockdown per C8. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged."
+  "notes": "Re-derived from the re-timed clip (PR #41): frames_total 38, S/A/R 11/4/23. Foot is still at 66% reach at the cut: blend the retraction out over 6 ticks. Hitstun 27 and blockstun 24 give about +4 on hit and +1 on block (not in rules.md; the harness tunes them). Boxes in units (E1) read from clip stills; the second hurtbox is the extended limb. HEAD-HIGH kick (clip 215 High_Kick, foot at 129-144 cm). The designer asked for a mid kick; the preset library has no mid variant, so this kick hits high: it must be blocked standing and a crouching opponent can duck it (E6). FLAG for the designer. C8 target 12/4/22; clip gives 11/4/23 (clip wins, F2). Knockdown per C8. YOK-33: boxes re-placed from the rigged model poses on their frames (bones at 200 u/m, +pads); frame timing unchanged. YOK-217 (proposed, designer to approve the window lengths): cancel_windows. Oni Chain (Heavy normals -> specials): open from the first active frame (12) to 6 frames into recovery (21) of the 38-frame clip, on hit or block only (the rule excludes whiff)."
 }

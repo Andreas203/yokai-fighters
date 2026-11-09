@@ -35,11 +35,11 @@ public sealed class RewardDraft : IRewardDraft
 	public RewardOffer Offer { get; }
 	public bool Picked { get; private set; }
 
-	RewardDraft(RunState run, string yokai, List<Entry> cards)
+	RewardDraft(RunState run, string yokai, List<Entry> cards, bool cancelHeldOut = false)
 	{
 		_run = run;
 		_cards = cards;
-		Offer = new RewardOffer(yokai, cards.Select(c => c.View).ToArray());
+		Offer = new RewardOffer(yokai, cards.Select(c => c.View).ToArray()) { CancelRuleHeldOut = cancelHeldOut };
 	}
 
 	/// <param name="elderId">YOK-186: the beaten elder's own id from the map (<see cref="NodeContext.BindingName"/>, e.g.
@@ -93,7 +93,10 @@ public sealed class RewardDraft : IRewardDraft
 		{
 			if (modPool.Count > 0) AddModifier(); else AddNew();
 		}
-		return new RewardDraft(run, yokai, cards);
+		// YOK-218 (X2): an elder with a rule to give, none offered only because Ryo's two places are full.
+		bool heldOut = elderId is not null && run.CancelRules.Count >= Fighter.MaxCancelRules
+			&& pool.CancelRules.Any(c => c.OfferedBy == elderId && pool.IsAvailable(c) && !run.HoldsCancelRule(c.Id));
+		return new RewardDraft(run, yokai, cards, heldOut);
 	}
 
 	static T Take<T>(List<T> list, SimRng rng)

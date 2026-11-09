@@ -19,7 +19,7 @@ Rows say what a file is and its public surface, plus the invariants, rule IDs an
 | [Tutorial](tutorial.md) | `game/scripts/Tutorial/` | Guided apprentice fight (Y6) |
 | [Story](story.md) | `game/scripts/Story/` | Story-card and merchant-line loaders |
 | [Dev](dev.md) | `game/scripts/Dev/` | Dev mode, dev menu, free travel, jumps, run-state editor |
-| [Audio](audio.md) | `game/scripts/Audio/` | Music player |
+| [Audio](audio.md) | `game/scripts/Audio/` | Music player, hit-sound cue tables (V6) and their sink and player pool |
 | [Settings](settings.md) | `game/scripts/Settings/` | Settings data and store |
 | [Project](project.md) | `game/` | `ContentPaths.cs`, export, the scenes the code relies on, editing in Godot |
 | [Data](data.md) | `data/`, `data/schema/` | Content kinds, schemas, the loader for each, data conventions |

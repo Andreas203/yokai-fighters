@@ -143,17 +143,57 @@ public partial class FightScene : Node3D
 	/// the yokai that won (<see cref="YokaiOf"/>: an elder as its yokai, <see cref="NodeContext.DraftYokai"/>) and the
 	/// node's row (<see cref="Story.StoryLibrary.LaterLossCard"/>), {yokai} = <see cref="NameOf"/> ("Elder Oni").
 	/// No node (a fight off the map) = <c>lose-screen</c>.
+	/// YOK-216, S3: on the save's first loss (<paramref name="firstLoss"/>, <see cref="FirstLossPending"/>) the
+	/// <c>first-loss</c> card instead, {move} = <paramref name="move"/> (the copy target, <see cref="CopyMoveOf"/>;
+	/// none = <see cref="FallbackMove"/>); a library without that card falls back to the later-loss card.
 	/// </summary>
-	public static (string? Title, string Text) LoseCardFor(Story.StoryLibrary story, NodeContext? node, string opponent) =>
-		story.LoseScreen(NameOf(node, opponent), YokaiOf(node, opponent), FoughtOn(node, opponent)?.Row);
+	public static (string? Title, string Text) LoseCardFor(Story.StoryLibrary story, NodeContext? node, string opponent,
+		bool firstLoss = false, string? move = null) =>
+		ShowsFirstLoss(story, firstLoss)
+			? story.FirstLoss(NameOf(node, opponent), move ?? FallbackMove)
+			: story.LoseScreen(NameOf(node, opponent), YokaiOf(node, opponent), FoughtOn(node, opponent)?.Row);
 
-	/// <summary>Fills the HUD lose screen with <see cref="LoseCardFor"/> this node; keeps the placeholder (and warns) if the card is missing or bad.</summary>
+	/// <summary>YOK-216: does <see cref="LoseCardFor"/> pick <c>first-loss</c>? Only when it is the first loss and the library has the card.</summary>
+	public static bool ShowsFirstLoss(Story.StoryLibrary story, bool firstLoss) => firstLoss && story.Has(Story.StoryLibrary.FirstLossId);
+
+	/// <summary>
+	/// YOK-216, S3: true once the lose screen holds the <c>first-loss</c> card (filled without error). GameFlow marks the
+	/// first loss seen only then, so a save whose first loss showed another card (no <c>first-loss</c> in the library, a
+	/// bad card) still gets <c>first-loss</c> on its next loss.
+	/// </summary>
+	public bool ShowedFirstLoss { get; private set; }
+
+	/// <summary>YOK-216: the story cards the lose screen reads; null = <see cref="LoadStory"/> (data/story/). Tests set it before the scene is added.</summary>
+	public Story.StoryLibrary? StorySource { get; set; }
+
+	/// <summary>YOK-216: {move} when the run has no copy target (the word the merchant's row-4 line falls back to).</summary>
+	public const string FallbackMove = "special";
+
+	/// <summary>
+	/// YOK-216, S3: true while the save this fight belongs to has not lost a run yet (<see cref="Story.StoryLibrary.FirstLossId"/>
+	/// not in its story progress, M4). Set by the host before the scene is added (GameFlow: only for a run it saves);
+	/// default false = every loss is a later loss. Presentation only: the sim never reads it.
+	/// </summary>
+	public bool FirstLossPending { get; set; }
+
+	/// <summary>YOK-216, S3, T1: the name of the move the Tanuki would copy from <paramref name="session"/>'s run: the locked copy once locked, else <see cref="CopyRule.Target"/>.</summary>
+	public static string? CopyMoveOf(RunSession? session) =>
+		session is null ? null : (session.CopyLocked ? session.LockedCopy : CopyRule.Target(session.Run))?.Data.Name;
+
+	/// <summary>
+	/// Fills the HUD lose screen with <see cref="LoseCardFor"/> this node; keeps what it holds (and warns) if the card is
+	/// missing or bad. YOK-216: <see cref="ShowedFirstLoss"/> follows the card actually put on the screen; a failed fill
+	/// changes neither the screen nor it.
+	/// </summary>
 	private void ApplyLoseCard()
 	{
 		try
 		{
-			var (title, text) = LoseCardFor(LoadStory(), Node, Opponent);
+			var story = StorySource ?? LoadStory();
+			bool first = ShowsFirstLoss(story, FirstLossPending);
+			var (title, text) = LoseCardFor(story, Node, Opponent, FirstLossPending, CopyMoveOf(Session));
 			_hud.SetLoseText(title, text);
+			ShowedFirstLoss = first;
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
 			or System.Collections.Generic.KeyNotFoundException or System.InvalidOperationException)
@@ -267,6 +307,7 @@ public partial class FightScene : Node3D
 
 	private void SetUpHitSounds()
 	{
+		if (SetUpDataHitCues()) return; // YOK-93: data/sound/ cue tables replace the placeholder hit pack (no double sound)
 		var clips = new List<AudioStreamWav>(HitClipPaths.Length);
 		foreach (string path in HitClipPaths)
 		{
@@ -296,6 +337,7 @@ public partial class FightScene : Node3D
 
 	private void AttachHitSounds(Match match)
 	{
+		if (DataCues != null) return; // YOK-93: the cue tables play through HitCues instead
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
 		_hitMatch = match;
 		_hitMatch.Hit += OnHit;

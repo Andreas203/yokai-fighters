@@ -30,8 +30,8 @@
     }
   ],
   "card": {
-    "plain": "A thick oni hide lets the opening of the move shrug off a hit.",
-    "frames": "Armour on frames 1-5"
+    "plain": "The Oni's thick hide: the special it's on has armour at its very start, so it takes a hit without flinching.",
+    "frames": "Armour on frames 1–5"
   },
-  "notes": "Armour = absorbs a hit without being interrupted. How many hits is the programmer's reading of 'armour'; open question. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table."
+  "notes": "Armour = absorbs a hit without being interrupted. How many hits is the programmer's reading of 'armour'; open question. Data only, no new animation (A10); visual is a preset reference for clip-matcher. Number from the rules.md modifiers table. Card text from tools/content_pipeline run a7-live (movesmith, checked by rules-lawyer)."
 }

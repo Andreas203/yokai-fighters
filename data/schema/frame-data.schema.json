@@ -120,7 +120,7 @@
           "required": ["range", "breakable"],
           "additionalProperties": false,
           "properties": {
-            "range": { "type": "integer", "minimum": 1 },
+            "range": { "type": "integer", "minimum": 1, "description": "YOK-220: an effect target (Whirlpool Grab: mul_pct 150). Loads; no fight code reads properties.throw yet." },
             "breakable": { "type": "boolean" },
             "break_window": { "type": "integer", "minimum": 1 }
           }
@@ -128,7 +128,9 @@
         "anti_air": { "type": "boolean" },
         "knockdown": { "type": "boolean" },
         "launch": { "type": "boolean" },
-        "wall_bounce": { "type": "boolean" },
+        "wall_bounce": { "type": "boolean", "description": "YOK-220 (Crushing Charge, Iron-Club Charge Lv 3): the hit bounces the opponent off the wall. Loads; no fight code reads it yet." },
+        "multi_hit": { "$ref": "common.schema.json#/$defs/multiHit" },
+        "decoy": { "type": "integer", "minimum": 1, "description": "YOK-220 (Mirage Feint, Fox Mirage Lv 3): hits the decoy absorbs. Loads; no fight code reads it yet." },
         "passes_projectiles": { "type": "boolean" },
         "absorbs_hits": { "type": "integer", "minimum": 0 },
         "teleport": {
@@ -140,7 +142,7 @@
             "frame": { "type": "integer", "minimum": 1 }
           }
         },
-        "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move." },
+        "forward_travel": { "type": "integer", "minimum": 0, "description": "Units moved forward over the move (YOK-220: a level, EX or modifier effect can add or set it, Torrent Spin). A modifier's string \"charge_dash\" on this target is the Sumo Stance switch (YOK-171), never written here." },
         "counterhit_immune": { "type": "boolean", "description": "YOK-103: a hit during this move is never a counterhit (C7)." },
         "projectile_interrupt_immune": { "type": "boolean", "description": "YOK-103: projectile hits deal damage but don't interrupt the move." },
         "throw_break": { "const": "startup", "description": "AM12 (YOK-172): a throw that would grab the fighter during this move's startup breaks automatically: a clash, no damage, like throw vs throw. Not throw-invulnerability (E17)." },
