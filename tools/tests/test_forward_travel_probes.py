@@ -4,6 +4,7 @@ The same value list runs through the C# loader in game/tests/probes/ForwardTrave
 Run: python3 -m unittest discover -s tools -p 'test_*.py'"""
 import io
 import json
+import re
 import os
 import sys
 import tempfile
@@ -136,7 +137,17 @@ class ForwardTravelExactnessProbes(unittest.TestCase):
             def run_with(mod):
                 r = subprocess.run([sys.executable, str(mod)] + paths, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT, timeout=900,
                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"})
-                return r.returncode, sorted(l for l in (r.stdout + r.stderr).splitlines())
+                return r.returncode, sorted(later_kinds_out((r.stdout + r.stderr).splitlines()))
+            def later_kinds_out(lines):
+                # Kinds the validator learned after c2f48d9 (YOK-93's sound_cue) are not forward_travel verdicts: the old
+                # validator can't read their files, and they lengthen every "expected one of [...]" list. Drop both, and
+                # the totals line those files move; every other file's lines still have to match exactly.
+                later = re.compile(r"unknown kind '(sound_cue)'")
+                skip = {l.split(": ", 1)[0] for l in lines if later.search(l)}
+                for l in lines:
+                    if l.split(": ", 1)[0] in skip or l.startswith("validate_data: "):
+                        continue
+                    yield re.sub(r"expected one of \[[^\]]*\]", "expected one of [kinds]", l)
             old_code, old_lines = run_with(tmp)
             new_code, new_lines = run_with(ROOT / "tools" / "validate_data.py")
         finally:
