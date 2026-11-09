@@ -81,7 +81,7 @@
       "enum": ["always", "on_hit", "on_block", "first_use_each_round", "ryo_health_below_30pct", "holding_up", "charge_released"]
     },
     "effectTarget": {
-      "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). YOK-220 adds the remaining Lv 3 evolutions' targets (wall_bounce, throw.range, multi_hit, forward_travel as a distance, decoy): they load and change nothing until their behaviour lands. A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
+      "description": "YOK-103: exactly the targets the C# loader accepts (Effects.Vocabulary). YOK-220 adds the remaining Lv 3 evolutions' targets (wall_bounce, throw.range, multi_hit, forward_travel as a distance, decoy): they load and change nothing until their behaviour lands (decoy has it since YOK-224: a teleport leaves the decoy). A path into frame data; a first segment that is not a frame-data field resolves under 'properties', so 'projectile.speed' = 'properties.projectile.speed'.",
       "type": "string",
       "pattern": "^(startup|active|recovery|damage|hitstun|blockstun|pushback\\.(on_hit|on_block)|meter_gain\\.(on_hit|on_block)|(properties\\.)?(projectile\\.(speed|hits|absorbs_projectiles|max_active|lifetime)|pull_on_hit|heal_pct_max_health|aftershock_delay|throw\\.range|decoy|forward_travel)|pushback|(properties\\.)?(projectile\\.(passes_projectiles|angle_up)|knockdown|launch|wall_bounce|counterhit_immune|projectile_interrupt_immune)|(properties\\.)?(armour|throw_break|multi_hit))$"
     },

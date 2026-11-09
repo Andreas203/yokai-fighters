@@ -189,7 +189,7 @@ public static class ModifierEffectTests
 				ProjectSettings.GlobalizePath(FightScene.FixtureSpecialsDir) + $"/{c["base"]!.GetValue<string>()}.json"))!.AsObject();
 			doc["id"] = name;
 			var fd = doc["levels"]!["1"]!["frame_data"]!.AsObject();
-			foreach (var kv in c["set"]!.AsObject()) fd[kv.Key] = kv.Value!.DeepClone();
+			foreach (var kv in c["set"]!.AsObject()) fd[kv.Key] = kv.Value?.DeepClone(); // YOK-224: "active": null (a teleport-only move)
 			foreach (var k in c["remove"]!.AsArray()) fd.Remove(k!.GetValue<string>());
 			if (c["changes"] is { } changes) doc["levels"]!["3"]!["evolution"]!["changes"] = changes.DeepClone(); // YOK-220
 			string? refused = null;

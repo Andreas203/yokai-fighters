@@ -9,7 +9,7 @@ using YokaiFighters.Ui;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>YOK-119 probes: the map's copy chip (T1-T3, T6, AM6). Each expectation cites its rule.</summary>
+/// <summary>YOK-119 probes of the map's copy chip, turned (YOK-238, AM20) into probes that the chip is gone from every state it used to appear in. Each expectation cites its rule.</summary>
 public static class MapCopyChipProbes
 {
 	static RunSession NewSession(uint seed = 5)
@@ -57,152 +57,76 @@ public static class MapCopyChipProbes
 		public bool Select(string nodeId) => false;
 	}
 
-	// T3: equal levels, the one levelled most recently wins, whichever slot: level B then A -> A; A then B -> B. The chip follows the rule, not the call order.
+	static System.Collections.Generic.IEnumerable<Node> Descendants(Node n)
+	{
+		foreach (var c in n.GetChildren()) { yield return c; foreach (var d in Descendants(c)) yield return d; }
+	}
+
+	static void AssertNoChip(MapScreen screen, string where)
+	{
+		var all = Descendants(screen).ToList();
+		Assert.True(!all.OfType<CopyTalisman>().Any(), where + ": AM20 / T6: the map holds no copy talisman");
+		var text = string.Join(" | ", all.OfType<Label>().Select(l => l.Text));
+		Assert.True(!text.ToUpperInvariant().Contains("COPY TARGET") && !text.ToUpperInvariant().Contains("LOCKED"), where + ": no label names the copy target or its lock: " + text);
+	}
+
+	// T3 / T6: the tie-break and the levelled pop-up used to show on the map; now whichever order two specials are levelled in, the map says nothing.
 	[Test]
-	public static void TieBreakFollowsLevelOrderNotCallOrder(Node host)
+	public static void NoPopUpWhicheverSpecialIsLevelledFirst(Node host)
 	{
 		foreach (bool aFirst in new[] { true, false })
 		{
 			var s = NewSession();
 			var slots = Slots(s.Run);
-			var first = aFirst ? slots[0] : slots[1];
-			var last = aFirst ? slots[1] : slots[0];
 			var screen = Show(host, s);
-			s.Run.LevelUp(first); s.Run.LevelUp(last);
+			s.Run.LevelUp(aFirst ? slots[0] : slots[1]);
+			s.Run.LevelUp(aFirst ? slots[1] : slots[0]);
 			screen.SetView(new SessionMapView(s));
-			string want = s.Run[last]!.Data.Name.ToUpperInvariant();
-			Assert.Equal(want, screen.CopyChip.MoveName, $"T3: most recently levelled ({last}) is the target (aFirst={aFirst})");
-			screen.GetParent().Free();
+			AssertNoChip(screen, $"aFirst={aFirst}");
+			screen.GetParent().QueueFree();
 		}
 	}
 
-	// T2/T3: nobody levelled -> lower slot.
+	// T2: a released target moves on; T1: the lock. The map shows neither.
 	[Test]
-	public static void ReleasingTheTargetThenReturningToTheMapChangesTheChip(Node host)
+	public static void ReleasedTargetAndTheLockShowNothingOnTheMap(Node host)
 	{
 		var s = NewSession();
 		var screen = Show(host, s);
 		var slots = Slots(s.Run);
 		s.Run.LevelUp(slots[1]);
 		screen.SetView(new SessionMapView(s));
-		Assert.Equal(s.Run[slots[1]]!.Data.Name.ToUpperInvariant(), screen.CopyChip.MoveName, "levelled one is the target");
 		s.Run.Release(slots[1]);
 		screen.SetView(new SessionMapView(s));
-		Assert.Equal(s.Run[slots[0]]!.Data.Name.ToUpperInvariant(), screen.CopyChip.MoveName, "T2: released move is not a candidate");
-		Assert.Equal("changed", screen.CopyChip.LastEvent, "T6: the changed pop-up fires on the map");
-		Assert.True(screen.CopyChip.ToastText.Contains(s.Run[slots[0]]!.Data.Name), "toast names the new target");
-		screen.GetParent().Free();
-	}
-
-	// T2: the last special can't be released (T5); chip never goes grey on a real run.
-	[Test]
-	public static void LockedWithNoSpecialIsGreyPlate(Node host)
-	{
-		var s = NewSession();
+		AssertNoChip(screen, "T2: the target slot was released");
 		WalkToBossDoor(s);
 		s.Enter(s.Reachable()[0]);
-		var r = RunSession.Restore(s.Run, s.Pool, s.Scenes, s.Seed, true, null);
-		var screen = Show(host, new SessionMapView(r));
-		Assert.Equal(CopyTalismanState.None, screen.CopyChip.State, "T1: lock found nothing; the live target must not leak in");
-		Assert.Equal("-", screen.CopyChip.MoveName, "no name");
-		screen.GetParent().Free();
-	}
-
-	// T1: Continue from a save taken after the lock: first show is LOCKED, no toast, even though the live target differs.
-	[Test]
-	public static void ContinueAfterLockShowsLockedNoEvent(Node host)
-	{
-		var s = NewSession();
-		WalkToBossDoor(s);
-		s.Enter(s.Reachable()[0]);
-		var locked = s.LockedCopy!;
-		// make the live target differ from the lock
-		var other = Slots(s.Run).First(x => x != locked.Slot);
-		if (s.Run.CanLevelUp(other)) { s.Run.LevelUp(other); s.Run.LevelUp(other); }
-		var r = RunSession.Restore(s.Run, s.Pool, s.Scenes, s.Seed, true, locked);
-		var screen = Show(host, new SessionMapView(r));
-		Assert.Equal(CopyTalismanState.Locked, screen.CopyChip.State, "locked");
-		Assert.Equal(locked.Data.Name.ToUpperInvariant(), screen.CopyChip.MoveName, "T1: the locked copy");
-		Assert.Equal("LOCKED", screen.CopyChip.CaptionText, "caption");
-		Assert.Equal("", screen.CopyChip.LastEvent + screen.CopyChip.ToastText, "first show: nothing fires");
-		screen.GetParent().Free();
-	}
-
-	// T1/AM6: a "changed" toast still up when the lock lands is cleared; locked chip never toasts.
-	[Test]
-	public static void NewRunAfterLockedRunIsAFreshChip(Node host)
-	{
-		var a = NewSession();
-		WalkToBossDoor(a); a.Enter(a.Reachable()[0]);
-		var screen = Show(host, a);
-		Assert.Equal(CopyTalismanState.Locked, screen.CopyChip.State, "setup: run one locked");
-		var b = NewSession(9);
-		screen.SetView(new SessionMapView(b));
-		Assert.Equal(CopyTalismanState.Defined, screen.CopyChip.State, "run two defined");
-		Assert.Equal("COPY TARGET", screen.CopyChip.CaptionText, "caption reset");
-		Assert.Equal("", screen.CopyChip.LastEvent + screen.CopyChip.ToastText, "nothing fires");
-		screen.GetParent().Free();
-	}
-
-	// New run straight after a pulse: the tint of run one's pulse must not carry over.
-	[Test]
-	public static void SetViewTwiceDoesNotReplayEvents(Node host)
-	{
-		var s = NewSession();
-		var screen = Show(host, s);
-		var v = new SessionMapView(s);
-		s.Run.LevelUp(Slots(s.Run)[1]);
-		screen.SetView(v);
-		Assert.Equal("changed", screen.CopyChip.LastEvent, "first set");
-		screen.SetView(v);
-		Assert.Equal("", screen.CopyChip.LastEvent, "second SetView with same view: no event");
 		screen.SetView(new SessionMapView(s));
-		Assert.Equal("", screen.CopyChip.LastEvent, "new view over the same run is not a new run");
-		Assert.True(screen.CopyChip.ToastText != "", "the toast from the real change is still up (not wiped by a same-run SetView)");
-		screen.GetParent().Free();
+		AssertNoChip(screen, "T1: the copy is locked (it was the LOCKED chip)");
+		screen.GetParent().QueueFree();
 	}
 
-	// Rebuild from Board.Resized neither replays nor wipes a toast.
+	// A view that carries a copy target does not make the screen show it: the view API may still hold the target, the screen ignores it.
 	[Test]
-	public static void NullRunKeyCarriesOver(Node host)
+	public static void AViewThatCarriesATargetDoesNotMakeTheChipAppear(Node host)
 	{
 		var s = NewSession();
-		var screen = Show(host, s);
-		var t = CopyRule.Target(s.Run)!;
-		var stub = new StubView { Target = t, Key = null };
-		screen.SetView(stub);
-		Assert.Equal("", screen.CopyChip.LastEvent, "same target: nothing");
-		var lvl = t with { Level = t.Level + 1 };
-		stub.Target = lvl;
-		screen.SetView(stub);
-		Assert.Equal("levelled", screen.CopyChip.LastEvent, "null key: carried over, so a level change pulses");
-		// back to the real session: same key as before the stub, not a new run.
-		screen.SetView(new SessionMapView(s));
-		Assert.True(screen.CopyChip.State == CopyTalismanState.Defined, "still defined");
-		screen.GetParent().Free();
-	}
-
-	// The chip and the detail panel only read: hash identical across every node's Detail, SetView, Refresh, Move.
-	[Test]
-	public static void EveryReadLeavesTheHashAlone(Node host)
-	{
-		var s = NewSession(3);
-		var view = new SessionMapView(s);
+		var view = new StubView { Target = CopyRule.Target(s.Run), Locked = true, Key = new object() };
 		var screen = Show(host, view);
-		ulong h = s.StateHash(), rh = s.Run.StateHash();
-		foreach (var n in view.Nodes) view.Detail(n.Id);
-		_ = view.CopyTarget; _ = view.CopyLocked; _ = view.RunKey;
-		screen.SetView(view); screen.Refresh(); screen.Move(1); screen.Move(-1);
-		Assert.Equal(h, s.StateHash(), "session hash unchanged");
-		Assert.Equal(rh, s.Run.StateHash(), "run hash unchanged");
-		WalkToBossDoor(s);
-		s.Enter(s.Reachable()[0]);
-		h = s.StateHash();
-		foreach (var n in view.Nodes) view.Detail(n.Id);
+		AssertNoChip(screen, "a stub view with a locked target");
+		view.Key = new object();
 		screen.SetView(view);
-		Assert.Equal(h, s.StateHash(), "locked: reads change nothing");
-		screen.GetParent().Free();
+		AssertNoChip(screen, "a second run key");
+		screen.GetParent().QueueFree();
 	}
 
-
+	// The status panel keeps health and coins only; the toast label of the old chip is not left behind in the top bar.
+	[Test]
+	public static void TopBarHoldsOnlyTheStatusPanel(Node host)
+	{
+		var screen = Show(host, NewSession());
+		var topBar = UiFind.Get<Control>(screen, "TopBar");
+		Assert.True(topBar.GetChildren().OfType<Control>().Select(c => c.Name.ToString()).SequenceEqual(new[] { "Status" }), "TopBar: " + string.Join(",", topBar.GetChildren().Select(c => c.Name.ToString())));
+		screen.GetParent().QueueFree();
+	}
 }

@@ -54,7 +54,9 @@ public static class EffectVocabularyTests
 	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with wall_bounce, multi_hit and decoy added
 	/// hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed, by its evolution or by a
 	/// modifier (always and on_hit, Test Breaker finding). forward_travel is left out: YOK-221 gives it behaviour; so is
-	/// properties.throw: YOK-225 makes it a command grab (CommandGrabTests). Each behaviour ticket drops its target here.
+	/// properties.throw: YOK-225 makes it a command grab (CommandGrabTests). decoy stays: YOK-224 leaves a decoy only
+	/// where a move teleports, and Rising Talisman doesn't (FoxMirageTests covers the teleport). Each behaviour ticket
+	/// drops its target here.
 	/// </summary>
 	[Test]
 	public static void TargetsWithNoBehaviourYetLoadAndPlayUnchanged()
@@ -65,7 +67,7 @@ public static class EffectVocabularyTests
 		var changes = doc["levels"]!["3"]!["evolution"]!["changes"]!.AsArray();
 		changes.Add(new JsonObject { ["target"] = "properties.wall_bounce", ["op"] = "set", ["value"] = true });
 		changes.Add(new JsonObject { ["target"] = "multi_hit", ["op"] = "set", ["value"] = new JsonObject { ["hits"] = 3, ["interval"] = 6.0 } });
-		changes.Add(new JsonObject { ["target"] = "decoy", ["op"] = "set", ["value"] = 1 });
+		changes.Add(new JsonObject { ["target"] = "decoy", ["op"] = "set", ["value"] = 1 }); // no teleport: no decoy (YOK-224)
 		var pending = SpecialLoader.Parse(doc.ToJsonString());
 
 		var built = pending.Build(3, false);

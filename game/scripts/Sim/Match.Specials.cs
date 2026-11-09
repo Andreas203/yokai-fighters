@@ -323,6 +323,7 @@ public sealed partial class Match
 			foreach (var b in Projectiles)
 				if (a.Owner == 0 && b.Owner == 1 && a.HitsLeft > 0 && b.HitsLeft > 0 && Overlaps(a.WorldBox(), b.WorldBox()))
 					Clash(a, b);
+		DecoysTakeProjectiles(); // YOK-224: after the clashes (E17), before the hits
 
 		bool any = false;
 		foreach (var p in Projectiles)

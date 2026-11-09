@@ -187,14 +187,16 @@ def check_frame_data(fd, where, clip, clip_name, errs):
     total = s + (a or 0) + r
     props = fd.get("properties") if isinstance(fd.get("properties"), dict) else {}  # the schema reports a non-object
     if a is None:
-        if "projectile" not in props:
-            errs.append((f"{where}.active", "active is null ('—') but properties.projectile is missing"))
+        if "projectile" not in props and "teleport" not in props:  # YOK-224: Fox Mirage is 18/—/10 with a teleport
+            errs.append((f"{where}.active", "active is null ('—') but properties.projectile (or properties.teleport) is missing"))
         if fd.get("hitboxes"):
             errs.append((f"{where}.hitboxes", "active is null ('—'), so the body has no hitboxes; put the hit on the projectile"))
     else:
         check_ranges(fd.get("hitboxes"), s + 1, s + a, f"{where}.hitboxes", "hitbox", errs)
     check_ranges(fd.get("hurtboxes"), 1, total, f"{where}.hurtboxes", "hurtbox", errs)
     check_ranges(fd.get("cancel_windows"), 1, total, f"{where}.cancel_windows", "cancel window", errs)
+    # YOK-224: teleport.frame inside the move is built_move_errors' (every level and EX, normals and throws too since
+    # YOK-220's moves_ok), so it is reported once per build, not twice for Lv 1.
     proj = props.get("projectile")
     if isinstance(proj, dict) and whole(proj.get("spawn_frame")) is not None and not 1 <= whole(proj["spawn_frame"]) <= total:
         errs.append((f"{where}.properties.projectile.spawn_frame", f"spawn frame {proj['spawn_frame']} is outside the move (1-{total})"))
@@ -377,8 +379,8 @@ INT_TARGETS = {"startup", "active", "recovery", "damage", "hitstun", "blockstun"
                "properties.projectile.absorbs_projectiles", "properties.projectile.max_active",
                "properties.projectile.lifetime", "properties.pull_on_hit", "properties.heal_pct_max_health",
                "properties.aftershock_delay",
-               # YOK-220: evolution targets (decoy shape-only in MoveData.CheckPendingProperties; forward_travel
-               # moves the fighter, YOK-221 MoveData.ReadTravel; throw.range is a command grab's reach, YOK-225)
+               # YOK-220: evolution targets (forward_travel moves the fighter, YOK-221 MoveData.ReadTravel;
+               # throw.range is a command grab's reach, YOK-225; decoy is read by MoveData.ReadMirage, YOK-224)
                "properties.throw.range", "properties.decoy", "properties.forward_travel"}
 # SimConfig defaults a modifier scales when the move omits the value (C5 meter gains, E5 pushback).
 EFFECT_DEFAULTS = {"meter_gain.on_hit": 6, "meter_gain.on_block": 3, "pushback.on_hit": 40, "pushback.on_block": 50,
@@ -714,13 +716,11 @@ def built_move_errors(fd: dict, kind: str = "special") -> list[str]:
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
     # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only). forward_travel
-    # left it for YOK-221's travel_errors above (MoveData.ReadTravel).
+    # left it for YOK-221's travel_errors above (MoveData.ReadTravel), decoy for YOK-224's check below (ReadMirage).
     if "wall_bounce" in props and not isinstance(props["wall_bounce"], bool):
         out.append("properties.wall_bounce must be true or false")
     if "multi_hit" in props and read_multi_hit(props["multi_hit"]) is None:
         out.append('properties.multi_hit must be { "hits": n >= 2, "interval": frames >= 1 }')
-    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
-        out.append("properties.decoy must be a whole number of hits >= 1")
     if "throw" in props and kind != "special":
         out.append("properties.throw is for a special (a command grab); a throw or a normal can't carry it")
     elif "throw" in props and not throw_shape_ok(props["throw"]):
@@ -738,6 +738,16 @@ def built_move_errors(fd: dict, kind: str = "special") -> list[str]:
             out.append(f"properties.throw break window ({window}) must be shorter than the recovery ({r}) (E12)")
         if props.get("aftershock_delay") is not None:
             out.append("properties.aftershock_delay can't go on a command grab: its hitboxes are its grab")
+    # YOK-224: MoveData.ReadMirage (Fox Mirage's teleport, Mirage Feint's decoy).
+    if "teleport" in props:
+        tp = props["teleport"]
+        fr = whole(tp.get("frame")) if isinstance(tp, dict) else None
+        if not isinstance(tp, dict) or set(tp) != {"to", "frame"} or tp.get("to") != "behind_opponent" or fr is None or fr < 1:
+            out.append('properties.teleport must be { "to": "behind_opponent", "frame": n >= 1 }')
+        elif fr > total:
+            out.append(f"properties.teleport.frame {fr} is past the move's last frame ({total})")
+    if "decoy" in props and (whole(props["decoy"]) is None or whole(props["decoy"]) < 1):
+        out.append("properties.decoy must be a whole number of hits >= 1")
     return out
 
 

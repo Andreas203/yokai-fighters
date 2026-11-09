@@ -39,6 +39,13 @@ public static class DebugBoxes
 		foreach (var (ax0, ay0, ax1, ay1) in match.AftershockBoxes(fighter))
 			list.Add(new DebugBox(DebugBoxKind.Hit, ax0, ay0, ax1, ay1));
 
+		// YOK-224: this fighter's decoy, exactly the box Match.ResolveDecoys tests (greybox: drawn as a hurtbox).
+		if (match.DecoyOf(fighter) is { } d)
+		{
+			var (dx0, dy0, dx1, dy1) = match.DecoyBox(d);
+			list.Add(new DebugBox(DebugBoxKind.Hurt, dx0, dy0, dx1, dy1));
+		}
+
 		MoveData? m = f.CurrentMove;
 		bool hittable = !f.KnockedOut && !f.State.IsDown();
 		if (m is null)

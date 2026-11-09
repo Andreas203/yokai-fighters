@@ -36,7 +36,7 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 
 | Folder | Classes |
 |---|---|
-| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `ModifierEffectTests`, `EffectVocabularyTests` (YOK-220: C# vs schema target list, unread targets play unchanged, throw cancel windows) |
+| `tests/Sim/` | `FightLoopTests` (clock, facing, walls, KO, determinism), `MoveSystemTests`, `KihonTests` (K3 hash-identical Kata/Kihon), `RyoKitTests`, `ThrowTests`, `SpecialTests`, `AirNormalTests`, `MeterBurstHitstopTests`, `WakeUpTests`, `PushBoxAftershockTests`, `FoxMirageTests` (YOK-224), `ModifierEffectTests`, `EffectVocabularyTests` (YOK-220: C# vs schema target list, unread targets play unchanged, throw cancel windows) |
 | (cont.) | `ChargeHoldTests` (YOK-171 Sumo Stance hold: steps, cap, window, hash, replay, bot hold), `ForwardTravelTests` (YOK-221), `SlipperySkinTests`, `ElderTwistTests`, `KitTests`, `TanukiKitTests`, `ContentPathsTests` |
 | (cont.) | `CommandGrabTests` (YOK-225: River Grab fixture through the throw pipeline, Whirlpool range, Undertow, trials, Tanuki copy, Sumo dash, replay) |
 | `tests/Sim/Input/` | `InputParserTests` |
@@ -49,6 +49,6 @@ Each test class sits in `tests/<Area>/`, mirroring `scripts/`; the capture tools
 | `tests/SaveGame/`, `tests/Settings/` | `SaveTests`; `SettingsTests` |
 | `tests/Flow/` | `BootFlowTests`, `DemoFlowTests`, `EndScreenTitleTests`, `PauseFlowTests` |
 | `tests/Fight/` | `ModelPresentationTests`, `ClipRetimeTests`, `HipScaleTests`, `OniKappaBodyTests`, `TripoRyoTests`, `ModelExtentTests`, `CameraTests`, `DynamicCameraTests`, `TallestFighterCameraTests`, `StageTests`, `StageContainerTests`, `EditableSceneTests`, `EditorPreviewTests`, `DebugOverlayTests`, `HitSparkTests`, `FightHudTests`, `TextCutTests`, `YokaiNameTests` |
-| `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapCopyChipTests`, `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `HeldCancelRuleUiTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
+| `tests/Ui/` | `RewardScreenTests`, `MapScreenTests`, `MapV2Tests` (YOK-238), `MapCopyChipTests` (the map has no chip), `RestStopTests`, `RestStopDojoPickerTests`, `RestStopLeaveTests`, `ForecastCostTests`, `ShopScreenTests` (+ `ShopScreenFixtures`), `StoryScreenTests`, `TwistUiTests`, `AbilityArtTests`, `AbilityIconScreensTests`, `MenuMockupTests`, `MenuInputPathTests`, `PauseLayoutTests`, `HeldCancelRuleUiTests`, `SettingsLayoutTests`, `StartScreenTests`, `BootScreenLayoutTests`, `KitScreenTests` |
 | `tests/Story/` | `StoryTests`, `LoseCardTests` (YOK-212: later-loss card by yokai and row; Oni cards are fixtures), `FirstLossTests` (YOK-216: first-loss vs later-loss card, `CopyMoveOf`; the save side is `SaveTests.FirstLoss_*`) |
 | `tests/Dev/` | `DevModeTests`, `DevMapTests`, `DevJumpTests`, `DevRunStateTests` |
