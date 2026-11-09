@@ -1,80 +1,87 @@
 [gd_scene format=3]
 [ext_resource type="Theme" path="res://ui/talisman_theme.tres" id="theme"]
 [ext_resource type="Script" path="res://scripts/Ui/MapNode.cs" id="script"]
+[ext_resource type="Script" path="res://scripts/Ui/MapTag.cs" id="tag"]
+[ext_resource type="Script" path="res://scripts/Ui/MapTickMark.cs" id="tick"]
 
 [node name="MapNode" type="Button"]
-custom_minimum_size = Vector2(150, 100)
-offset_right = 150.0
-offset_bottom = 100.0
+custom_minimum_size = Vector2(190, 200)
+offset_right = 190.0
+offset_bottom = 200.0
 theme = ExtResource("theme")
 focus_mode = 0
 script = ExtResource("script")
 
-[node name="Content" type="VBoxContainer" parent="."]
+[node name="IconTexture" type="TextureRect" parent="."]
 mouse_filter = 2
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
-theme_override_constants/separation = 0
-
-[node name="Top" type="HBoxContainer" parent="Content"]
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="IconLabel" type="Label" parent="Content/Top"]
-mouse_filter = 2
-text = "?"
-theme_type_variation = &"BodyLabel"
-
-[node name="IconTexture" type="TextureRect" parent="Content/Top"]
-visible = false
-custom_minimum_size = Vector2(24, 24)
-mouse_filter = 2
+offset_right = 120.0
+offset_bottom = 150.0
 expand_mode = 1
 stretch_mode = 5
 
-[node name="TypeLabel" type="Label" parent="Content/Top"]
-mouse_filter = 2
-size_flags_horizontal = 3
-clip_text = true
-text = "Type"
-theme_type_variation = &"CaptionLabel"
-
-[node name="ElderMark" type="PanelContainer" parent="Content/Top"]
+[node name="IconLabel" type="Label" parent="."]
 visible = false
-custom_minimum_size = Vector2(24, 24)
 mouse_filter = 2
-size_flags_vertical = 4
+offset_right = 120.0
+offset_bottom = 150.0
+text = "?"
+theme_type_variation = &"BodyLabel"
 
-[node name="ElderGlyph" type="Label" parent="Content/Top/ElderMark"]
+[node name="ElderMark" type="PanelContainer" parent="."]
+visible = false
+custom_minimum_size = Vector2(28, 28)
+mouse_filter = 2
+offset_right = 36.0
+offset_bottom = 36.0
+
+[node name="ElderGlyph" type="Label" parent="ElderMark"]
 mouse_filter = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "E"
 theme_type_variation = &"CaptionLabel"
 
-[node name="NameLabel" type="Label" parent="Content"]
+[node name="Tag" type="PanelContainer" parent="."]
 mouse_filter = 2
-size_flags_vertical = 3
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 3
-clip_text = true
+offset_top = 140.0
+offset_right = 150.0
+offset_bottom = 175.0
+script = ExtResource("tag")
+
+[node name="Lines" type="VBoxContainer" parent="Tag"]
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Top" type="HBoxContainer" parent="Tag/Lines"]
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TypeLabel" type="Label" parent="Tag/Lines/Top"]
+mouse_filter = 2
+text = "D"
+theme_type_variation = &"BodyLabel"
+
+[node name="NameLabel" type="Label" parent="Tag/Lines/Top"]
+mouse_filter = 2
 text = "Yokai"
 theme_type_variation = &"BodyLabel"
 
-[node name="TagLabel" type="Label" parent="Content"]
+[node name="ClearedMark" type="Control" parent="Tag/Lines/Top"]
+visible = false
+custom_minimum_size = Vector2(18, 18)
+mouse_filter = 2
+size_flags_vertical = 4
+script = ExtResource("tick")
+
+[node name="TagLabel" type="Label" parent="Tag/Lines"]
 visible = false
 mouse_filter = 2
 horizontal_alignment = 1
-clip_text = true
 text = ""
 theme_type_variation = &"CaptionLabel"
 
-[node name="StateLabel" type="Label" parent="Content"]
+[node name="StateLabel" type="Label" parent="Tag/Lines"]
 mouse_filter = 2
 horizontal_alignment = 1
 text = ""

@@ -11,6 +11,8 @@ public enum RouteKind { Idle, Open, Walked }
 /// Draws the map's routes as brush strokes on the scroll (YOK-109, designer 2026-10-25). The walked route is a bold persimmon stroke, an open
 /// route (the choice ahead) a fainter sumi one, an idle one fainter still; all are tapered at both ends with a ragged edge, bristle streaks
 /// and dry gaps, drawn in code from deterministic noise, no texture. Lines come from <see cref="MapScreen"/>; this knows no map rules.
+/// YOK-238 (map v2): strokes wind (an S-curve that meanders even between nodes at the same height), and <see cref="SetMistLines"/> adds the
+/// real routes still ahead as thin dashed sketches that fade out along x (AM19); they are not <see cref="Lines"/> and carry no kind.
 /// <see cref="Paint"/> makes chosen strokes paint in from their start over a short time (presentation only, <see cref="FinishPainting"/>
 /// ends it at once; nothing reads it back).
 /// </summary>
@@ -19,7 +21,19 @@ public partial class MapRoutes : Control
 	readonly List<(Vector2 A, Vector2 B, RouteKind Kind)> _lines = new();
 	readonly Dictionary<(Vector2, Vector2), float> _progress = new(); // 0..1 while a stroke paints in; absent = fully painted
 	float _paintSeconds = 0.6f;
+	readonly List<(Vector2 A, Vector2 B)> _mist = new();
+	float _mistFrom, _mistSpan = 1500f;
 	public IReadOnlyList<(Vector2 A, Vector2 B, RouteKind Kind)> Lines => _lines;
+	/// <summary>AM19: the routes still ahead, drawn as faint dashed sketches (end points in the same coordinates as <see cref="Lines"/>).</summary>
+	public IReadOnlyList<(Vector2 A, Vector2 B)> MistLines => _mist;
+
+	/// <summary>AM19: sketch these routes; the ink fades from full at x = <paramref name="fadeFrom"/> to nearly nothing <paramref name="fadeSpan"/> px further on.</summary>
+	public void SetMistLines(IEnumerable<(Vector2 A, Vector2 B)> lines, float fadeFrom, float fadeSpan = 1500f)
+	{
+		_mist.Clear(); _mist.AddRange(lines);
+		_mistFrom = fadeFrom; _mistSpan = Mathf.Max(100f, fadeSpan);
+		QueueRedraw();
+	}
 	/// <summary>True while any stroke is still painting in.</summary>
 	public bool IsPainting => _progress.Count > 0;
 
@@ -58,6 +72,7 @@ public partial class MapRoutes : Control
 
 	public override void _Draw()
 	{
+		foreach (var (a, b) in _mist) DrawSketch(a, b);
 		foreach (var kind in new[] { RouteKind.Idle, RouteKind.Open, RouteKind.Walked }) // bold ink over faint ink, never the other way round
 			foreach (var (a, b, k) in _lines)
 				if (k == kind) DrawBrushStroke(a, b, Style(k), _progress.TryGetValue((a, b), out float p) ? Ease(p) : 1f);
@@ -80,6 +95,48 @@ public partial class MapRoutes : Control
 
 	const int BrushSamples = 48;
 
+	/// <summary>
+	/// The centre line of a route: a cubic that leaves a and enters b flat, plus a lateral meander (one S, sometimes one and a half) so even two
+	/// nodes at the same height are joined by a winding path, not a ruler line. Deterministic from the end points. Normals out through <paramref name="normals"/>.
+	/// </summary>
+	public static Vector2[] Path(Vector2 a, Vector2 b, int samples, out Vector2[] normals)
+	{
+		int seed = (int)(a.X * 31 + a.Y * 17 + b.X * 13 + b.Y * 7);
+		float len = a.DistanceTo(b), dx = Mathf.Max(24f, b.X - a.X);
+		Vector2 c1 = a + new Vector2(dx * 0.45f, 0), c2 = b - new Vector2(dx * 0.45f, 0);
+		float amp = Mathf.Clamp(len * 0.09f, 0f, 34f) * (Noise(seed + 3) > 0.5f ? 1f : -1f), turns = Noise(seed + 5) > 0.5f ? 1f : 1.5f;
+		var p = new Vector2[samples + 1]; normals = new Vector2[samples + 1];
+		for (int i = 0; i <= samples; i++)
+		{
+			float t = i / (float)samples, u = 1 - t;
+			Vector2 d = 3 * u * u * (c1 - a) + 6 * u * t * (c2 - c1) + 3 * t * t * (b - c2);
+			var n = d.Length() > 0.001f ? new Vector2(-d.Y, d.X).Normalized() : Vector2.Down;
+			normals[i] = n;
+			float bend = amp * Mathf.Sin(Mathf.Tau * turns * t) * Mathf.Sin(Mathf.Pi * t);
+			p[i] = u * u * u * a + 3 * u * u * t * c1 + 3 * u * t * t * c2 + t * t * t * b + n * bend;
+		}
+		return p;
+	}
+
+	/// <summary>AM19: one route ahead as a thin dashed pencil-and-ink line that grows fainter the further right it runs, so it trails into the mist.</summary>
+	void DrawSketch(Vector2 a, Vector2 b)
+	{
+		int seed = (int)(a.X * 31 + a.Y * 17 + b.X * 13 + b.Y * 7);
+		var p = Path(a, b, 72, out var n);
+		float run = 0f;
+		for (int i = 0; i < p.Length - 1; i++)
+		{
+			float seg = p[i].DistanceTo(p[i + 1]);
+			bool on = (run % 24f) < 14f;
+			run += seg;
+			if (!on) continue;
+			float fade = Mathf.Clamp((p[i].X - _mistFrom) / _mistSpan, 0f, 1f);
+			float alpha = Mathf.Lerp(0.62f, 0.16f, fade);
+			var o = n[i] * (Smooth(seed, i, 6f) - 0.5f) * 2.2f; // a hand-drawn line: it drifts a little off the curve
+			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, alpha), 2.4f, true);
+		}
+	}
+
 	/// <summary>Deterministic 0..1 noise from an integer, so a stroke looks the same every frame and every run.</summary>
 	static float Noise(int n)
 	{
@@ -98,21 +155,17 @@ public partial class MapRoutes : Control
 	void DrawBrushStroke(Vector2 a, Vector2 b, StrokeStyle st, float progress)
 	{
 		int seed = (int)(a.X * 31 + a.Y * 17 + b.X * 13 + b.Y * 7);
-		a -= new Vector2(10f, 0); b += new Vector2(10f, 0); // the ink runs a little under each card, so the tapered ends read as part of the stroke
+		a -= new Vector2(10f, 0); b += new Vector2(10f, 0); // the ink runs a little under each node, so the tapered ends read as part of the stroke
 		float width = Mathf.Clamp(a.DistanceTo(b) * 0.09f, st.MinWidth, st.MaxWidth);
-		float dx = Mathf.Max(24f, b.X - a.X);
-		Vector2 c1 = a + new Vector2(dx * 0.45f, 0), c2 = b - new Vector2(dx * 0.45f, 0);
+		var curve = Path(a, b, BrushSamples, out var n);
 		var p = new Vector2[BrushSamples + 1];
-		var n = new Vector2[BrushSamples + 1];
 		var w = new float[BrushSamples + 1];
 		for (int i = 0; i <= BrushSamples; i++)
 		{
-			float t = i / (float)BrushSamples, u = 1 - t;
-			Vector2 d = 3 * u * u * (c1 - a) + 6 * u * t * (c2 - c1) + 3 * t * t * (b - c2);
-			n[i] = d.Length() > 0.001f ? new Vector2(-d.Y, d.X).Normalized() : Vector2.Down;
+			float t = i / (float)BrushSamples;
 			float taper = Mathf.Max(0.12f, Mathf.Pow(Mathf.Sin(Mathf.Pi * t), 0.5f));
 			w[i] = width * taper * (0.78f + 0.4f * Smooth(seed, i, 5f)); // an uneven edge: the brush swells and thins along the stroke
-			p[i] = u * u * u * a + 3 * u * u * t * c1 + 3 * u * t * t * c2 + t * t * t * b + n[i] * (Smooth(seed + 7, i, 9f) - 0.5f) * width * 0.5f; // the hand wanders off the curve
+			p[i] = curve[i] + n[i] * (Smooth(seed + 7, i, 9f) - 0.5f) * width * 0.5f; // the hand wanders off the curve
 		}
 		float painted = progress * BrushSamples;
 		int last = Mathf.Min(BrushSamples, Mathf.FloorToInt(painted));
