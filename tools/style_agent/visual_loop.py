@@ -9,13 +9,14 @@ from pathlib import Path
 
 from agents import clean_card, parse_evaluation
 from image_tools import measure_image
-from visual_agents import (EVALUATOR_SYSTEM, GENERATOR_NOTE, REFINER_SYSTEM, BudgetSpent, evaluator_prompt,
+from visual_agents import (GENERATOR_NOTE, REFINER_SYSTEM, BudgetSpent, evaluator_prompt, evaluator_system,
                            refiner_prompt, wrap_prompt)
 from visual_cases import SLOTS
 
 
 def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
     slot = SLOTS[case["slot"]]
+    guide = "v1" if getattr(args, "guide_v1", False) else "v2"
     prompt = f"{GENERATOR_NOTE} {slot['subject']} {case['brief']}"
     scene = prompt   # what the Refiner rewrites: the whole first prompt, then its own scene descriptions
     take = astra.render(prompt, f"{case['id']}-take1")
@@ -23,7 +24,7 @@ def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
     best = None   # (score, round) of the best take so far; the Refiner always works from it
     for n in range(1, args.max_rounds + 1):
         m = measure_image(take)
-        reply = vllm.complete_with_images("evaluator", args.evaluator_model, EVALUATOR_SYSTEM, evaluator_prompt(slot, m),
+        reply = vllm.complete_with_images("evaluator", args.evaluator_model, evaluator_system(guide), evaluator_prompt(slot, m, guide),
                                           [reference, take])
         ev = parse_evaluation(reply)
         reason = ev["reason"]
@@ -46,7 +47,7 @@ def run_visual_case(vllm, astra, reference: Path, args, case: dict) -> dict:
         _, _, base_scene, base_score, base_reason, base_m = best
         scene = clean_card(vllm.complete("refiner", args.refiner_model, REFINER_SYSTEM,
                                          refiner_prompt(slot, base_scene, base_score, base_reason, base_m,
-                                                        keep=not getattr(args, "refiner_v1", False))))
+                                                        keep=not getattr(args, "refiner_v1", False), guide=guide)))
         prompt = wrap_prompt(scene)
         try:
             take = astra.render(prompt, f"{case['id']}-take{n + 1}")
@@ -70,8 +71,11 @@ def render_visual(meta: dict, results: list[dict]) -> str:
              f"{meta.get('refiner', 'v1, no keep rule')}."
              + (f" Take 1 of each example is reused from `runs/{meta['seeded_from']}` (same brief, same picture; not paid "
                 "for again)." if meta.get("seeded_from") else ""), "",
-             "The Evaluator sees two images: the accepted bamboo grove backdrop as REFERENCE "
-             "([`images/reference-bamboo-grove.png`](images/reference-bamboo-grove.png)), then the take.", "",
+             ("The Evaluator sees two images: the accepted bamboo grove backdrop as REFERENCE "
+              "([`images/reference-bamboo-grove.png`](images/reference-bamboo-grove.png)), then the take."
+              if meta.get("guide", "v1") == "v1" else
+              "Style guide v2. The Evaluator sees two images: the four accepted stages as one REFERENCE "
+              "([`images/reference-accepted-set.png`](images/reference-accepted-set.png)), then the take."), "",
              "| Example | Violation class | Asset slot | Before | After (best take) | Takes |", "|---|---|---|---|---|---|"]
     for r in results:
         after = (f"{r['after_score']}/10, take {r['best_take']}"

@@ -22,7 +22,7 @@ from pathlib import Path
 
 from image_tools import format_image_measurements, image_block, store_take
 from llm import LLM
-from visual_guide import NEGATIVE_BLOCK, RUBRIC, STYLE_BLOCK, render_guide
+from visual_guide import ACCEPTED_SET, GUIDES, NEGATIVE_BLOCK, STYLE_BLOCK, render_guide
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 # The accepted Kitsune stage, cropped to the box the grove spec keeps (Meshy's letterbox removed).
@@ -37,6 +37,14 @@ EVALUATOR_SYSTEM = (
     "down matters of taste that no rule covers. The first image is the REFERENCE, an accepted stage; the second is the "
     "TAKE you grade. Reply strictly in the format you are given and nothing else."
 )
+# v2 (default): the REFERENCE is the accepted set, the grove and the designer's three picks of 2026-11-09, as one 2x2 image.
+EVALUATOR_SYSTEM_V2 = EVALUATOR_SYSTEM.replace(
+    "The first image is the REFERENCE, an accepted stage;",
+    "The first image is the REFERENCE, the four accepted stages in a 2x2 grid;")
+
+
+def evaluator_system(guide: str = "v2") -> str:
+    return EVALUATOR_SYSTEM if guide == "v1" else EVALUATOR_SYSTEM_V2
 
 REFINER_SYSTEM = (
     "You are the visual style Refiner for Yokai Fighters. You rewrite the prompt for an image generator so that its next "
@@ -63,10 +71,10 @@ def wrap_prompt(scene: str) -> str:
     return f"{STYLE_BLOCK} {scene.strip()} {NEGATIVE_BLOCK}"
 
 
-def evaluator_prompt(slot: dict, m: dict) -> str:
+def evaluator_prompt(slot: dict, m: dict, guide: str = "v2") -> str:
     return (
-        f"STYLE GUIDE\n{render_guide()}\n"
-        f"SCORING\n{RUBRIC}\n\n"
+        f"STYLE GUIDE\n{render_guide(guide)}\n"
+        f"SCORING\n{GUIDES[guide][1]}\n\n"
         f"ASSET SLOT\n{describe_slot(slot)}\n\n"
         f"MEASUREMENTS OF THE TAKE (by code; trust these over your own estimate)\n{format_image_measurements(m)}\n\n"
         "Review the TAKE (the second image). Grade it on a scale of 1-10 against the style guide's three constraint types: "
@@ -84,9 +92,9 @@ KEEP_RULE = ("Change only what the REASON criticises: keep every element, colour
              "did not criticise exactly as the prompt has it, and fix each violation by the smallest change that removes it. ")
 
 
-def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict, keep: bool = True) -> str:
+def refiner_prompt(slot: dict, scene: str, score: int, reason: str, m: dict, keep: bool = True, guide: str = "v2") -> str:
     return (
-        f"STYLE GUIDE\n{render_guide()}\n"
+        f"STYLE GUIDE\n{render_guide(guide)}\n"
         f"ASSET SLOT\n{describe_slot(slot)}\n\n"
         f"PROMPT THAT MADE THE TAKE (scored {score}/10)\n<<<\n{scene}\n>>>\n\n"
         f"MEASUREMENTS OF THE TAKE (by code)\n{format_image_measurements(m)}\n\n"
@@ -234,11 +242,27 @@ def new_codex_images(since: float) -> list[Path]:
     return sorted((p for p in CODEX_IMAGES.glob("*/*.png") if p.stat().st_mtime >= since - 1), key=lambda p: p.stat().st_mtime)
 
 
-def reference_image(run_dir: Path) -> Path:
-    """The grove reference, cropped to the spec's box and kept in the run folder so a replay sees the same bytes."""
+def reference_image(run_dir: Path, guide: str = "v2") -> Path:
+    """The REFERENCE, kept in the run folder so a replay sees the same bytes.
+
+    v1: the grove, cropped to the spec's box. v2: the accepted set (visual_guide.ACCEPTED_SET) as a 2x2 grid of 640x360
+    tiles, the grove cropped the same way, so the Evaluator scores against every accepted stage and not the grove alone.
+    """
     from PIL import Image
-    path = run_dir / "images" / "reference-bamboo-grove.png"
+    if guide == "v1":
+        path = run_dir / "images" / "reference-bamboo-grove.png"
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            Image.open(REFERENCE).convert("RGB").crop(REFERENCE_CROP).save(path, "PNG", optimize=True)
+        return path
+    path = run_dir / "images" / "reference-accepted-set.png"
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        Image.open(REFERENCE).convert("RGB").crop(REFERENCE_CROP).save(path, "PNG", optimize=True)
+        grid = Image.new("RGB", (1280, 720))
+        for i, rel in enumerate(ACCEPTED_SET):
+            im = Image.open(ROOT / rel).convert("RGB")
+            if ROOT / rel == REFERENCE:
+                im = im.crop(REFERENCE_CROP)
+            grid.paste(im.resize((640, 360), Image.LANCZOS), ((i % 2) * 640, (i // 2) * 360))
+        grid.save(path, "PNG", optimize=True)
     return path
