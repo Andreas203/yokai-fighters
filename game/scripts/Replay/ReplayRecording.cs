@@ -85,6 +85,11 @@ public sealed class AiSetup
 	/// made since writes true; left out (false) = a recording made before YOK-177, replayed with the old rule.</summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public bool StandingHabits { get; set; }
+	/// <summary>YOK-228: a neutral throw pick waited for the first actionable tick and was pressed as the throw's slot
+	/// request (<see cref="ProfileAi.NeutralThrowHeld"/>). Every recording made since writes true; left out (false) = a
+	/// recording made before YOK-228, replayed with the raw LP+LK press.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public bool NeutralThrowHeld { get; set; }
 }
 
 /// <summary>

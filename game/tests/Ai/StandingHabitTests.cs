@@ -337,7 +337,13 @@ public static class StandingHabitTests
 					var v = AiView.Capture(m).Fighter(1);
 					bool anyStart = v.State == FighterState.Attack && (prevState != FighterState.Attack || prevMove != v.MoveId || v.MoveFrame < prevFrame);
 					// Code-critic r3: while a habit is pending, no other move may start (a buffered normal in place of the throw).
-					Assert.True(!(anyStart && pendingTick >= 0 && v.MoveId != move), $"{id} seed {seed}: {v.MoveId} started at {m.Tick} while the habit from {pendingTick} was pending");
+					// YOK-228: a jump answer decided for this very step replaces the habit (counted below), so its own move, and
+					// only that move, may start (test-breaker: any other move on that step is still a substitution).
+					bool jumpAnswerNow = false;
+					for (int q = from; q < log.Count; q++)
+						jumpAnswerNow |= log[q].Kind == "react" && log[q].Trigger == "opponent_jumping"
+							&& AiLoadout.From(m.P2).IsScreenMoveOf(BehaviourProfile.ParseAction(log[q].Action), v.MoveId);
+					Assert.True(!(anyStart && pendingTick >= 0 && v.MoveId != move && !jumpAnswerNow), $"{id} seed {seed}: {v.MoveId} started at {m.Tick} while the habit from {pendingTick} was pending");
 					bool moveStart = anyStart && v.MoveId == move && emitting;
 					prevState = v.State; prevMove = v.MoveId; prevFrame = v.MoveFrame;
 					for (; from < log.Count; from++)
@@ -424,8 +430,9 @@ public static class StandingHabitTests
 	}
 
 	/// <summary>
-	/// Code-critic r3: the YOK-165 anti-air with a throw answer (the Kappa's, on the Kitsune kit) under random pressure.
-	/// The Kappa profile names no normal, so any Kitsune normal it starts is a throw press turned into a buffered normal.
+	/// Code-critic r3: the YOK-165 anti-air with a throw answer (the Kappa's profile, played here on the Kitsune kit: the rule
+	/// is kit-independent) under random pressure. The Kappa profile names no normal, so any normal it starts is a throw
+	/// press turned into a buffered normal.
 	/// Under the YOK-177 rule the throw answer is a slot request, so no normal starts within 60 ticks of a throw answer
 	/// (windows where it also threw on the raw buttons, from neutral or a reaction, are skipped).
 	/// </summary>
