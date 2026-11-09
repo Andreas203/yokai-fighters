@@ -1,0 +1,33 @@
+{
+  "kind": "clip",
+  "id": "ryo-fox-mirage",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "mage_soell_cast_7",
+  "frames_total": 28,
+  "trim_start": 32,
+  "trim_end": 86,
+  "retime": [
+    {
+      "frames": [
+        1,
+        28
+      ],
+      "ticks": [
+        32,
+        86
+      ],
+      "note": "one segment at 2x (54 raw ticks over 27 frame steps): the top of the 0.5x-2x limit, no holds. Teleport frame 18 shows the hand at full extension."
+    }
+  ],
+  "file": "assets/generated/clips/ryo/ryo-foxfire.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Same take and rig as ryo-foxfire-cast (Ryo rig GO, YOK-31; WARN only for the root step). Only raw 32-86 are used: the hand is at full extension (raw 54-98 hold) on the last frame, so the last 4-6 ticks need a data blend to idle. The 55 cm root step is stripped (the teleport is the move's position change, in data). Joint rate at 2x NOT re-measured: no job run.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of ryo-foxfire-cast, replace when a take of its own lands. Route A (designer, YOK-219). Frame-for-frame twin of kitsune-fox-mirage (T0: the Tanuki casts Fox Mirage on Ryo's model with Ryo's clips): trim raw 32-86 of ryo-foxfire-cast's 32-104, 28 frames, one segment at 2x, no holds, teleport on frame 18 (raw 66). Presentation needs ClipOverrides[\"kitsune-fox-mirage\"] = \"ryo-fox-mirage\" in FighterAnimSet.RyoBody, beside the foxfire entry (code, reported not changed). No job run; 0 credits."
+}
