@@ -45,7 +45,14 @@ public sealed record CardView(
 }
 
 /// <summary>The three cards after a duel (A7), from the yokai beaten.</summary>
-public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards);
+public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards)
+{
+	/// <summary>
+	/// YOK-218 (X2): true when the beaten elder has an available cancel rule Ryo does not hold, but no card offers it
+	/// because Ryo already holds <see cref="Fighter.MaxCancelRules"/>. The reward screen says so where the card would be.
+	/// </summary>
+	public bool CancelRuleHeldOut { get; init; }
+}
 
 /// <summary>Outcome of <see cref="IRewardDraft.Pick"/>. On failure nothing in the run changed.</summary>
 public sealed record PickResult(bool Ok, string Error, CardView? Card, SpecialSlot Slot, int Level)
