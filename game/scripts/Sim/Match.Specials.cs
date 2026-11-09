@@ -242,6 +242,7 @@ public sealed partial class Match
 		Fighter f = Fighters[i];
 		MoveData? m = f.CurrentMove;
 		if (m is null || f.CancelRules.Count == 0) return false;
+		if (m.IsGrab && Fighters[1 - i].State == FighterState.Thrown) return false; // YOK-225: no cancel out of a held grab (C4, E12)
 		bool whiff = !f.MoveConnected, block = f.MoveConnected && f.MoveBlocked, hit = f.MoveConnected && !f.MoveBlocked;
 		bool inWindow = false;
 		foreach (var w in m.CancelWindows)
@@ -257,7 +258,7 @@ public sealed partial class Match
 				CancelFrom.HeavyNormals => m.IsNormal && m.Button is InputBits.HeavyPunch or InputBits.HeavyKick,
 				CancelFrom.Normals => m.IsNormal,
 				// YOK-103 (Undertow): a throw counts once it has landed, not while the opponent can still break it.
-				CancelFrom.SuccessfulThrows => m.IsThrow && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
+				CancelFrom.SuccessfulThrows => m.IsGrab && f.MoveConnected && Fighters[1 - i].State != FighterState.Thrown,
 				_ => false,
 			};
 			if (!from) continue;
@@ -322,6 +323,7 @@ public sealed partial class Match
 			foreach (var b in Projectiles)
 				if (a.Owner == 0 && b.Owner == 1 && a.HitsLeft > 0 && b.HitsLeft > 0 && Overlaps(a.WorldBox(), b.WorldBox()))
 					Clash(a, b);
+		DecoysTakeProjectiles(); // YOK-224: after the clashes (E17), before the hits
 
 		bool any = false;
 		foreach (var p in Projectiles)

@@ -189,6 +189,22 @@ public static class TwistUiTests
 	}
 
 	[Test]
+	public static void IntroScroll_WhitespaceLabel_HidesTheRuleLine(Node host)
+	{
+		var card = Card(host);
+		var scroll = card.Scroll!;
+		foreach (string blank in new[] { "", "   ", "\t \n" })
+		{
+			card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", blank, null);
+			Assert.True(!scroll.GetNode<Control>("TextCol/Rule").Visible && !scroll.GetNode<Control>("TextCol/RuleLine").Visible, $"'{blank}': a blank label draws no red rule line (YOK-211)");
+		}
+		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "  Armour on every special ", null);
+		Assert.Equal("Armour on every special", scroll.RuleText, "a padded label is trimmed");
+		Assert.True(scroll.GetNode<Control>("TextCol/RuleLine").Visible, "and its rule line shows");
+		card.QueueFree();
+	}
+
+	[Test]
 	public static void IntroScroll_ShippedTwists_FitTheirScroll(Node host)
 	{
 		var card = Card(host);

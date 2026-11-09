@@ -67,46 +67,98 @@ public class RunMapView : IMapView
 	static string? TwistLine(MapNodeData n) =>
 		n.Elder && Fight.FightScene.Twists.ForNode(n) is { } t && TwistCopy.Label(t, TwistCopy.Story, YokaiName(n)) is { Placeholder: false } line ? "Twist: " + line.Text : null;
 
-	/// <summary>The profiles the habit line reads: <c>data/profiles/</c>, loaded once; a test may set its own.</summary>
+	/// <summary>
+	/// The profiles the habit line reads: <c>data/profiles/</c>, loaded once (null when they cannot be read; YOK-211: that
+	/// result is kept too, never re-read on each call). A test may set its own; setting null means "no profile data".
+	/// </summary>
 	public static BehaviourProfile[]? Profiles
 	{
-		get => _profiles ??= LoadProfiles();
-		set => _profiles = value;
+		get
+		{
+			if (!_profilesLoaded) { _profiles = LoadProfiles(); _profilesLoaded = true; }
+			return _profiles;
+		}
+		set { _profiles = value; _profilesLoaded = true; }
 	}
 
 	static BehaviourProfile[]? _profiles;
+	static bool _profilesLoaded;
+
+	/// <summary>YOK-211: how many times <see cref="Profiles"/> has read data/profiles/ (tests check it is once).</summary>
+	public static int ProfileLoads { get; private set; }
+
+	/// <summary>Drops the cached profiles; the next <see cref="Profiles"/> read loads data/profiles/ again.</summary>
+	public static void ReloadProfiles() { _profiles = null; _profilesLoaded = false; }
+
+	/// <summary>
+	/// E23 debug (YOK-211): the temperament the fight's debug menu holds (<see cref="RunSession.DebugTemperament"/>), read on
+	/// each habit line so the map shows the habit the fight will use. Null (or returning null) = each node's own roll.
+	/// </summary>
+	public Func<string?>? DebugTemperament { get; init; }
 
 	static BehaviourProfile[]? LoadProfiles()
 	{
+		ProfileLoads++;
 		try { return BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")); }
 		catch (Exception e) when (e is System.IO.IOException or FormatException or System.Text.Json.JsonException) { return null; }
 	}
 
 	/// <summary>
-	/// YOK-109: the habit of the profile this node's opponent fights with. Same pick as the fight (<see cref="NodeProfiles"/>,
-	/// <see cref="NodeTemperament"/>, the run's seed), first sentence of the profile's own description. Null for a stop with no
-	/// fight, the boss (its habit is not shown ahead), or no profile data.
+	/// YOK-109: the habit of the profile this node's opponent fights with. YOK-211: the fight's own pick
+	/// (<see cref="NodeProfiles.Pick(NodeContext, BehaviourProfile[], BehaviourProfile[], uint, string?)"/>: plays-as yokai,
+	/// named profile, E23 debug temperament, the run's seeded roll), first sentence of the profile's own description. Null for
+	/// a node whose type has no fight (node-type data, <see cref="INodeType.Fight"/>), the boss (its habit is not shown ahead),
+	/// or no profile data. No TEST FIXTURE profiles here: a yokai with none in data/profiles/ shows no habit.
 	/// </summary>
 	string? HabitLine(MapNodeData n)
 	{
-		if (_scenes is null || Profiles is not { } all || n.Type is NodeTypeRegistry.Merchant or NodeTypeRegistry.Dojo or NodeTypeRegistry.Boss) return null;
+		if (_scenes is null || Profiles is not { } all || _map.Graph.TypeOf(n) is not { Fight: true } || n.Type == NodeTypeRegistry.Boss) return null;
 		NodeContext ctx;
 		try { ctx = _scenes.Resolve(n).Context; }
 		catch (FormatException) { return null; }
-		var own = NodeProfiles.Of(ctx.MovesAndProfilesOf, all, Array.Empty<BehaviourProfile>());
-		try { own = NodeProfiles.WithNamed(n.Id, own, ctx.Profile, all); }
+		NodePick pick;
+		try { pick = NodeProfiles.Pick(ctx, all, Array.Empty<BehaviourProfile>(), _seed, DebugTemperament?.Invoke()); }
 		catch (InvalidOperationException) { return null; }
-		int i = own.Length == 0 ? -1 : NodeTemperament.Pick(own, ctx, _seed);
-		return i < 0 ? null : HabitSentence(own[i].Habit.Description);
+		return pick.Profile is { } p ? HabitSentence(p.Habit.Description) : null;
 	}
 
-	/// <summary>The habit part of a profile's description (its first sentence; the rest says how to beat it). Empty = null.</summary>
+	/// <summary>Words that end in a full stop without ending the sentence (compared lower-case, without the stop).</summary>
+	static readonly HashSet<string> Abbreviations = new(StringComparer.Ordinal) { "e.g", "i.e", "etc", "vs", "approx", "cf", "lv", "mr", "mrs", "ms", "dr", "st" };
+
+	/// <summary>
+	/// The habit part of a profile's description (its first sentence; the rest says how to beat it). Empty = null.
+	/// YOK-211: a sentence ends at '.', '!' or '?' (any closing quote or bracket kept) followed by a space and a word that
+	/// is not lower-case; not at an ellipsis or a common abbreviation ("e.g.", "Lv."). With no such end the whole text is the habit.
+	/// </summary>
 	public static string? HabitSentence(string description)
 	{
 		string d = description.Trim();
 		if (d.Length == 0) return null;
-		int end = d.IndexOf(". ", StringComparison.Ordinal);
-		return end < 0 ? d : d[..(end + 1)];
+		for (int i = 0; i < d.Length; i++)
+		{
+			char c = d[i];
+			if (c is not ('.' or '!' or '?')) continue;
+			int end = i + 1;
+			while (end < d.Length && d[end] is '.' or '!' or '?') end++; // "?!" or "..." is one mark
+			if (c == '.' && end - i > 1) { i = end - 1; continue; } // an ellipsis does not end the sentence
+			while (end < d.Length && d[end] is '"' or '\'' or ')' or ']' or '”' or '’') end++;
+			if (end < d.Length && !char.IsWhiteSpace(d[end])) { i = end - 1; continue; } // "1.5", "e.g" mid-word
+			if (end == d.Length) return d;
+			if (c == '.' && Abbreviations.Contains(WordBefore(d, i).ToLowerInvariant())) continue;
+			int next = end;
+			while (next < d.Length && char.IsWhiteSpace(d[next])) next++;
+			if (char.IsLower(d[next])) continue; // a quoted "Ha!" mid-sentence: the next word is not a new sentence
+			return d[..end];
+		}
+		return d;
+	}
+
+	/// <summary>The word that ends just before index <paramref name="dot"/> (letters and inner dots, so "e.g" for "e.g.").</summary>
+	static string WordBefore(string d, int dot)
+	{
+		int start = dot;
+		while (start > 0 && (char.IsLetter(d[start - 1]) || d[start - 1] == '.')) start--;
+		return d[start..dot];
 	}
 
 	public bool Select(string nodeId) => _map.Select(nodeId).Ok;

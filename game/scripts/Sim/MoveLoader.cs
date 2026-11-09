@@ -78,6 +78,7 @@ public static class MoveLoader
 			if (move.Recovery <= move.BreakWindow)
 				throw new FormatException($"{id}: a throw's recovery ({move.Recovery}) must outlast its break window ({move.BreakWindow})");
 		}
+		move = MoveData.ReadCommandGrab(move, fd); // YOK-225: properties.throw = a command grab; its hitboxes become throwboxes
 		foreach (var t in move.Throwboxes)
 			if (!move.IsActive(t.First) || !move.IsActive(t.Last))
 				throw new FormatException($"{id}: throwbox frames {t.First}-{t.Last} outside the active window");
@@ -86,6 +87,7 @@ public static class MoveLoader
 		move = MoveData.ReadSpecialProperties(move, fd); // YOK-21: projectile, invuln, cancel windows
 		move = MoveData.ReadModifierProperties(move, fd); // YOK-103: armour, counterhit/projectile immunity, pull, heal...
 		move = MoveData.CheckPendingProperties(move, fd); // YOK-220: vocabulary no fight code reads yet (shape only)
+		move = MoveData.ReadMirage(move, fd); // YOK-224: properties.teleport and properties.decoy
 
 		if (move.Projectile != null && move.Damage > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))
 			throw new FormatException($"{id}: a damaging projectile needs hitstun and blockstun");

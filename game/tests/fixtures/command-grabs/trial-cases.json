@@ -1,0 +1,10 @@
+{
+  "about": "YOK-225 (R7): shared trial cases for a command grab. Each case is game/tests/fixtures/trials/test-spirit-wave-trial.json with special test-river-grab and goal.steps replaced by 'steps'. A command grab (a special with properties.throw) is a throw: it meets throw steps only. C#: CommandGrabTests.TrialCases_LoaderAndValidatorAgree (TrialData.MoveProblems on the kit); Python: tools/tests/test_validate_data.py CommandGrabTrialTest.",
+  "cases": [
+    { "name": "throw-step-names-the-command-grab", "accept": true, "steps": [ { "event": "throw", "move": "test-river-grab" } ] },
+    { "name": "hit-step-names-the-command-grab", "accept": false, "steps": [ { "event": "hit", "move": "test-river-grab" } ] },
+    { "name": "combo-step-names-the-command-grab", "accept": false, "steps": [ { "event": "combo", "count": 2, "move": "test-river-grab" } ] },
+    { "name": "throw-step-names-a-strike", "accept": false, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "throw", "move": "test-rising-talisman" } ] },
+    { "name": "throw-then-hit-with-a-strike", "accept": true, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "hit", "move": "test-rising-talisman" } ] }
+  ]
+}
