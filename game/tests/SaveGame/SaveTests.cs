@@ -178,6 +178,26 @@ public static class SaveTests
 	}
 
 	[Test]
+	public static void Store_CancelRules_RoundTrip_OlderFilesHoldNone_ABadListDropsTheRun()
+	{
+		// YOK-186, X1/X2: version 8 writes the held rule ids, only when there is one.
+		var held = Sample with { Run = Sample.Run! with { CancelRules = new[] { "fox-step", "oni-chain" } } };
+		string text = SaveStore.Serialize(held);
+		Assert.True(text.Contains("\"cancel_rules\": [") && text.Contains("\"version\": 8"), "written, at version 8: " + text);
+		SaveLoad back = SaveStore.Parse(text);
+		Assert.Equal(SaveLoadStatus.Loaded, back.Status, string.Join("; ", back.Problems));
+		Assert.True(back.Data.Run!.CancelRules.SequenceEqual(new[] { "fox-step", "oni-chain" }), "read back in order");
+		Assert.Equal(text, SaveStore.Serialize(back.Data), "same bytes");
+
+		string none = SaveStore.Serialize(Sample);
+		Assert.True(!none.Contains("cancel_rules"), "a run holding none writes no field");
+		Assert.True(SaveStore.Parse(none).Data.Run!.CancelRules.Count == 0, "missing (version 7 and older) = none held");
+
+		SaveLoad bad = SaveStore.Parse(text.Replace("\"fox-step\"", "4"));
+		Assert.True(bad.Data.Run == null && bad.Problems.Any(p => p.Contains("cancel_rules")), "a list that is not ids drops the run with a reason");
+	}
+
+	[Test]
 	public static void Store_ABrokenRun_IsDroppedAlone()
 	{
 		string good = SaveStore.Serialize(Sample);
@@ -516,7 +536,7 @@ public static class SaveTests
 	[Test]
 	public static void Store_CarryOver_SavedAtTopLevel_OlderFilesCarryNothing_BadValuesAreReported()
 	{
-		Assert.Equal(7, SaveStore.CurrentVersion, "M3 raised the format to 6 (5 is YOK-106's elder flags); YOK-99 then to 7");
+		Assert.Equal(8, SaveStore.CurrentVersion, "M3 raised the format to 6 (5 is YOK-106's elder flags); YOK-99 then to 7, YOK-186 to 8");
 		var data = SaveData.Empty.WithStory("intro").WithCarryOver("foxfire");
 		string text = SaveStore.Serialize(data);
 		Assert.True(text.Contains("\"carry_over\": \"foxfire\""), "written: " + text);
@@ -1042,7 +1062,7 @@ public static class SaveTests
 	[Test]
 	public static void ElderMet_IsStoryProgress_OnItsOwnFlag_VersionFiveReadsOlderFiles_M4()
 	{
-		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4); YOK-97 then 6, YOK-99 7");
+		Assert.Equal(8, SaveStore.CurrentVersion, "YOK-106 raised the format to 5 (after YOK-128's 4); YOK-97 then 6, YOK-99 7, YOK-186 8");
 		SaveData d = Sample.WithElderMet("elder-oni").WithElderMet("elder-kappa").WithElderMet("elder-oni").WithElderMet(" ");
 		Assert.True(d.Story.EldersMet.SequenceEqual(new[] { "elder-kappa", "elder-oni" }), "a set: once each, ordinal order, blank ignored");
 		Assert.True(d.Story.HasMetElder("elder-oni") && !d.Story.HasMetElder("nine-tailed-kitsune"), "has met");
@@ -1442,7 +1462,7 @@ public static class SaveTests
 		string mid = SaveStore.Serialize(SaveData.Empty.WithRun(RunSave.Capture(s, "default-map.json")));
 		Assert.Equal(entry, mid, "a mid-trial capture is the entry save byte for byte: M5, Continue restarts the node");
 		Assert.True(!mid.Contains("\"dojo\"") && !mid.Contains("trial"), "no dojo or trial field (the node id r7-dojo is the walk)");
-		Assert.Equal(7, SaveStore.CurrentVersion, "YOK-98 adds no saved state, so no version bump (7 = YOK-99, the last bump)");
+		Assert.Equal(8, SaveStore.CurrentVersion, "YOK-98 adds no saved state, so no version bump (7 = YOK-99; 8 = YOK-186's cancel rules)");
 	}
 
 	// ---- YOK-99, Y5: Tanuki wins across runs (version 7) ----

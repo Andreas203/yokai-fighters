@@ -189,9 +189,9 @@ public partial class FightScene : Node3D
 	/// </summary>
 	public static RunState? Run { get; set; }
 
-	/// <summary>YOK-47: specials + modifiers for the reward draft, from data/ with TEST FIXTURE fallback (YOK-56: starters = Ryo's kit).</summary>
+	/// <summary>YOK-47: specials + modifiers (+ cancel rules, YOK-186) for the reward draft, from data/ with TEST FIXTURE fallback (YOK-56: starters = Ryo's kit).</summary>
 	public static AbilityPool LoadAbilityPool() =>
-		AbilityPool.Load(Sources, ContentPaths.Data("modifiers"));
+		AbilityPool.Load(Sources, ContentPaths.Data("modifiers"), ContentPaths.Data("cancels"));
 
 	/// <summary>YOK-23: a player's scheme (0 = P1). Only parsing changes (K3); safe mid-fight, kept across resets.</summary>
 	public ControlScheme SchemeOf(int player) => Match.Fighters[player].Input.Scheme;
@@ -267,6 +267,7 @@ public partial class FightScene : Node3D
 
 	private void SetUpHitSounds()
 	{
+		if (SetUpDataHitCues()) return; // YOK-93: data/sound/ cue tables replace the placeholder hit pack (no double sound)
 		var clips = new List<AudioStreamWav>(HitClipPaths.Length);
 		foreach (string path in HitClipPaths)
 		{
@@ -296,6 +297,7 @@ public partial class FightScene : Node3D
 
 	private void AttachHitSounds(Match match)
 	{
+		if (DataCues != null) return; // YOK-93: the cue tables play through HitCues instead
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
 		_hitMatch = match;
 		_hitMatch.Hit += OnHit;

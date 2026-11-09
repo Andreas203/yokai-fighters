@@ -11,6 +11,11 @@ namespace YokaiFighters.Ui;
 public partial class RewardCard : Control
 {
 	public static readonly Color Indigo = new(0.2f, 0.25f, 0.5f);
+	/// <summary>
+	/// YOK-186: the crest and tag of a rare card (A9). PROVISIONAL: not one of V1's four named palette colours, so the
+	/// designer must confirm it. Dark enough for the cream tag text (about 5:1).
+	/// </summary>
+	public static readonly Color RareGold = Color.FromHtml("7A5C12");
 
 	/// <summary>Body size when the frame-data box is hidden / shown (the card grows to fit it).</summary>
 	[Export] public float BodyHeight { get; set; } = 640f;
@@ -57,18 +62,19 @@ public partial class RewardCard : Control
 	{
 		_crest.Glyph = TextCuts.Badge(c.Name);
 		_fallback.Glyph = _crest.Glyph;
-		// Modifier cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
-		_illustration.Texture = c.Kind == CardKind.Modifier ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);
+		// Modifier and cancel-rule cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
+		_illustration.Texture = c.Kind is CardKind.Modifier or CardKind.CancelRule ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);
 		_showPips = c.Kind == CardKind.Upgrade && c.ToLevel == 3; // Lv 3 evolution: base icon plus level pips
 		_pips.Level = c.ToLevel; _pips.Max = 3;
 		ApplyArtVisibility(); // a rebind while frame data is on must not bring art or pips back over the frame box
-		_crest.Fill = c.Kind switch { CardKind.Modifier => Color.FromHtml("2D3A5E"), CardKind.Upgrade => Color.FromHtml("34483B"), _ => Color.FromHtml("B5332B") };
+		// YOK-186, A9: a rare card (cancel rule, or a second special) wears gold; there was no rare style before.
+		_crest.Fill = c.Rare ? RareGold : c.Kind switch { CardKind.Modifier => Color.FromHtml("2D3A5E"), CardKind.Upgrade => Color.FromHtml("34483B"), _ => Color.FromHtml("B5332B") };
 		_fallback.Fill = _crest.Fill;
 		_tagPanel.SelfModulate = _crest.Fill;
 		_name.Text = c.Name;
 		_source.Text = c.Source;
 		_tag.Text = c.Tag;
-		_tagPanel.ThemeTypeVariation = c.Kind switch { CardKind.NewMove => "TagNew", CardKind.Upgrade => "TagUpgrade", _ => "TagModifier" };
+		_tagPanel.ThemeTypeVariation = c.Kind switch { CardKind.NewMove or CardKind.CancelRule => "TagNew", CardKind.Upgrade => "TagUpgrade", _ => "TagModifier" };
 		_plain.Text = c.Plain;
 		_prompt.Visible = c.Kind == CardKind.Modifier;
 		_prompt.Text = c.TargetPrompt ?? "Pick a special";

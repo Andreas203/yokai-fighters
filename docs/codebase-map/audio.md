@@ -1,7 +1,10 @@
-# Audio: music
+# Audio: music and hit sounds
 
-`game/scripts/Audio/`. Sound is sourced, never generated (AM1, AM5). Buses `Master`, `Music`, `Effects` are in `game/default_bus_layout.tres` (names in `Ui/Menus/MenuSettings.cs`). Frame-timed hit sound hooks are `HitCue` / `IHitCueSink` in [fight.md](fight.md). Index: [README.md](README.md).
+`game/scripts/Audio/`. Sound is sourced, never generated (AM1, AM5). Buses `Master`, `Music`, `Effects` are in `game/default_bus_layout.tres` (names in `Ui/Menus/MenuSettings.cs`). Frame-timed hit sounds (V6): the scene raises a `HitCue` per impact (`HitSparks.cs`, [fight.md](fight.md)); the files below turn the cue tables in `data/sound/` into samples. Presentation only: the sim, AI, replays and harness never read them. Index: [README.md](README.md).
 
 | File | What it is and its public surface |
 |---|---|
 | `Audio/MusicPlayer.cs` | Autoload `MusicPlayer` (`project.godot`), so scene changes never restart it: one pausable `AudioStreamPlayer` on the `Music` bus. `Instance`, `PlayMenuMusic()`, `PlayBattleMusic()` (no restart when the track is already playing; loops the whole 60 s track). Tracks `MenuTrackPath`, `BattleTrackPath` under `res://sound/`. Called by `GameFlow`, `GameFlow.Practice` and `FightScene`. |
+| `Audio/HitCueLibrary.cs` | YOK-93, kind `sound_cue`, pure C#: `HitCueLibrary` (`Parse/LoadFile/LoadDirectory`; id = file name; absent/empty folder = `Empty`; `FormatException` names file and field; one rule per case; `CoversEveryHit` default required), `HasCues`, `RuleFor(cue)` (tier move 2 > source 1 > default 0, then `Narrowing` = level/strength/outcome named, then first), `Resolve(cue)` → `HitSound` (`StartTick` = impact tick + offset), `Pick(count, tick, attacker, salt)` (FNV). `HitCueWhen` (`move` also matches the special id), `HitCueRule`, `HitCueTable`. Tests `HitSoundCueTests`. |
+| `Audio/DataHitCueSink.cs` | `DataHitCueSink : IHitCueSink`, pure C#: offset 0 plays in `Play`, later ones wait for `Advance(tick)` (the scene calls it after every sim step); a tick going back or `Clear()` drops the waiting ones; `MaxPending` 16. Plays through `IHitSoundOut`. |
+| `Audio/HitSoundPool.cs` | Node `HitSoundPool : IHitSoundOut`: `Size` 6 pausable `AudioStreamPlayer`s on `MenuSettings.SfxBus`, used in turn; samples cached, a missing one warned once and skipped. |

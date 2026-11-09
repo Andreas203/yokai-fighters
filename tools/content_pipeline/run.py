@@ -13,9 +13,10 @@ Usage (from anywhere):
     python tools/content_pipeline/run.py critic-test              # feed the critic deliberately broken drafts
     python tools/content_pipeline/run.py notes                    # which agent loads which notes
     python tools/content_pipeline/run.py generate --replay        # rebuild a recorded run without calling a model
+    python tools/content_pipeline/run.py install --run NAME       # put a run's passed modifier cards into data/modifiers/
 
 Every run writes runs/<name>/trace.json and trace.md (notes loaded, lines cited,
-drafts, critic issues, final text) plus llm-calls.json for --replay.
+drafts, critic issues, final text, tokens and cost per step) plus llm-calls.json for --replay.
 Standard library only; live runs need the `claude` CLI, logged in.
 """
 from __future__ import annotations
@@ -40,6 +41,7 @@ AGENTS = ROOT / ".claude" / "agents"
 RUNS = HERE / "runs"
 VALIDATOR = ROOT / "tools" / "validate_data.py"
 FIXTURES = HERE / "seeded_faults.json"
+MODIFIERS = ROOT / "data" / "modifiers"
 
 
 def load_agents() -> dict:
@@ -175,6 +177,16 @@ def render_trace(meta: dict, results: list[dict], validation: dict | None) -> st
         caught = sum(len(x["code_issues"]) + len(x["critic_issues"]) for x in r["rounds"])
         result = "corrected, then passed" if r["corrected"] else ("passed first time" if r["status"] == "passed" else "needs a human")
         lines.append(f"| {r['label']} | `{r['writer']}` | {len(r['rounds'])} | {caught} | {result} |")
+    cost = meta.get("cost")
+    if cost and cost["total"]["calls"]:
+        lines += ["", "## Cost of this run", "",
+                  "Tokens and USD as `claude -p` reported them for each live call (`total_cost_usd`, API list price).", "",
+                  "| Step | Calls | Input | Cache write | Cache read | Output | USD |", "|---|---|---|---|---|---|---|"]
+        for name, row in [*cost["by_step"].items(), ("**Total**", cost["total"])]:
+            lines.append(f"| {name} | {row['calls']} | {row['input_tokens']:,} | {row['cache_creation_input_tokens']:,} | "
+                         f"{row['cache_read_input_tokens']:,} | {row['output_tokens']:,} | ${row['cost_usd']:.4f} |")
+        if cost["calls_without_usage"]:
+            lines += ["", f"{cost['calls_without_usage']} recorded call(s) predate cost recording and are not counted."]
     if validation and validation.get("ran"):
         lines += ["", f"Schema check (`tools/validate_data.py`) on {validation['files']} story cards: "
                       f"{'all valid' if validation['ok'] else 'ERRORS'}.", "", "```", validation["report"], "```"]
@@ -247,7 +259,7 @@ def cmd_generate(args, agents, move_names):
         if recorded:
             skipped, validation, kept = validation.get("reason", ""), recorded, True
     meta = {"run": args.run, "command": args.command, "writer_model": args.writer_model,
-            "critic_model": args.critic_model, "agents": agent_summary(agents)}
+            "critic_model": args.critic_model, "agents": agent_summary(agents), "cost": llm.cost_summary()}
     (run_dir / "trace.json").write_text(json.dumps({"meta": meta, "validation": validation, "results": results},
                                                    indent=2, ensure_ascii=False), encoding="utf-8")
     (run_dir / "trace.md").write_text(render_trace(meta, results, validation), encoding="utf-8")
@@ -261,8 +273,59 @@ def cmd_generate(args, agents, move_names):
               f"{validation['files']} story cards, {'all valid' if validation['ok'] else 'ERRORS'}")
     elif validation.get("ran"):
         print(f"Schema check on {validation['files']} story cards: {'all valid' if validation['ok'] else 'ERRORS'}")
+    total = meta["cost"]["total"]
+    if total["calls"]:
+        print(f"Cost: ${total['cost_usd']:.4f} over {total['calls']} call(s) "
+              f"({total['input_tokens'] + total['cache_creation_input_tokens'] + total['cache_read_input_tokens']:,} tokens in, "
+              f"{total['output_tokens']:,} out)")
     print(f"Trace: {run_dir / 'trace.md'}")
     return 0 if passed == len(results) and validation.get("ok", True) else 1
+
+
+def cmd_install(args) -> int:
+    """Put a run's passed modifier cards into the game's own files, data/modifiers/<id>.json.
+
+    The game reads card.plain and card.frames from those files at start-up, so nothing else
+    changes: the reward screen shows the new text the next time the game (or an export) runs.
+    Story cards are not installed: wake-up variants by yokai have no slot the game reads yet, and
+    the elder intro cards in data/story are voiced by the elder (S5), which a narrator card would replace.
+    """
+    run_dir = RUNS / args.run
+    trace_path = run_dir / "trace.json"
+    if not trace_path.exists():
+        raise SystemExit(f"No run at {run_dir}. Run generate first.")
+    results = json.loads(trace_path.read_text(encoding="utf-8"))["results"]
+    installed, skipped = [], []
+    for r in results:
+        if r["type"] != "modifier-card":
+            skipped.append((r["id"], "story card: no slot the game reads (see install's docstring)"))
+            continue
+        if r["status"] != "passed":
+            skipped.append((r["id"], "did not pass the critic loop"))
+            continue
+        target = MODIFIERS / f"{r['id'].removesuffix('-card')}.json"
+        if not target.exists():
+            skipped.append((r["id"], f"no game file {target.name}"))
+            continue
+        data = json.loads(target.read_text(encoding="utf-8"))
+        before = dict(data.get("card", {}))
+        data["card"] = {"plain": r["final"]["card"]["plain"], "frames": r["final"]["card"]["frames"]}
+        provenance = f"Card text from tools/content_pipeline run {args.run} (movesmith, checked by rules-lawyer)."
+        notes = data.get("notes", "")
+        data["notes"] = provenance if not notes else (notes if provenance in notes else f"{notes} {provenance}")
+        target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        installed.append(target)
+        print(f"  {target.relative_to(ROOT).as_posix()}")
+        print(f"    was: {before.get('plain', '')}")
+        print(f"    now: {data['card']['plain']}")
+    for item_id, why in skipped:
+        print(f"  skipped {item_id}: {why}")
+    if not installed:
+        return 1
+    proc = subprocess.run([sys.executable, str(VALIDATOR), *map(str, installed)], capture_output=True, text=True, encoding="utf-8")
+    print(proc.stdout.strip()[-800:] or proc.stderr.strip()[-800:])
+    print(f"{len(installed)} modifier card(s) installed into data/modifiers/; the game loads them as they are.")
+    return proc.returncode
 
 
 def cmd_notes(agents):
@@ -288,7 +351,11 @@ def main() -> int:
         p.add_argument("--max-rounds", type=int, default=3, help="drafts per piece, including the first")
         p.add_argument("--replay", action="store_true", help="use the run's recorded model calls; call nothing")
     sub.add_parser("notes")
+    p = sub.add_parser("install")
+    p.add_argument("--run", required=True, help="run folder name under runs/")
     args = parser.parse_args()
+    if args.command == "install":
+        return cmd_install(args)
 
     agents = load_agents()
     if args.command == "notes":

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace YokaiFighters.Sim;
 
@@ -217,14 +218,46 @@ public sealed class RunSession
 		if (IsOver) throw new InvalidOperationException("the run is over");
 		if (Draft is not null) throw new InvalidOperationException($"node '{node.NodeId}' is already won");
 		if (_paid) return null; // R3, R8: already counted (a draft-less node: a node with a draft threw above)
+		// PROVISIONAL R8 amount (below), looked up before anything changes, so nothing here can leave a half-paid win.
+		int r8Fallback = node.Elder && node.Coins == 0 ? R8FallbackCoins(Map.Graph, Scenes) : 0;
 		Run.AfterDuel(healthLeft, node.Binds);
 		_paid = true;
 		CoinsWon = node.Coins;
 		Run.AddCoins(node.Coins); // R8, the amount from the node-scene table
 		if (node.Binds && Map.Graph.Next(node.NodeId).Count > 0)
-			Draft = RewardDraft.Build(Run, Pool, node.DraftYokai, Seed + (uint)Step, node.Elder); // YOK-178: the yokai beaten, not the body (A7, A8)
+			Draft = RewardDraft.Build(Run, Pool, node.DraftYokai, Seed + (uint)Step, node.Elder, // YOK-178: the yokai beaten, not the body (A7, A8)
+				elderId: node.Elder ? node.BindingName : null); // YOK-186: the elder's own id, which its cancel rule's offered_by names (X4)
+		// R8: an elder whose node pays no coins pays a rare ability instead. PROVISIONAL (YOK-186, designer's open
+		// question, not in rules.md): when its offer holds no rare card at all, it pays what the other elders pay
+		// (the row-5 elder's 50 in the data), so the reward is never empty.
+		if (r8Fallback > 0 && Draft?.Offer.Cards.Any(c => c.Rare) != true)
+		{
+			CoinsWon = r8Fallback;
+			Run.AddCoins(r8Fallback);
+		}
 		return Draft;
 	}
+
+	/// <summary>
+	/// PROVISIONAL (YOK-186, see <see cref="WinFight"/>): what an elder that pays no coins (R8: the row-8 elder) pays when
+	/// its offer holds no rare: the most coins any elder node of <paramref name="graph"/> pays (the row-5 elder's 50), read
+	/// from the node-scene table; 0 when no elder pays coins. The one source for the payout and the map's reward line.
+	/// An elder node the table can't place (<see cref="FormatException"/>) is skipped: it never throws for another node.
+	/// </summary>
+	public static int R8FallbackCoins(MapGraph graph, INodeSceneResolver scenes)
+	{
+		int most = 0;
+		foreach (var n in graph.Nodes)
+		{
+			if (!n.Elder) continue;
+			try { most = Math.Max(most, scenes.Resolve(n).Context.Coins); }
+			catch (FormatException) { } // that node's own lookup refuses it where it is used
+		}
+		return most;
+	}
+
+	/// <summary>As <see cref="R8FallbackCoins(MapGraph, INodeSceneResolver)"/> for this session's map and node table.</summary>
+	public int R8FallbackCoins() => R8FallbackCoins(Map.Graph, Scenes);
 
 	/// <summary>The entered node is done: its routes open, or the run is won if it has none. Refused while its offer is unpicked.</summary>
 	public MapResult CompleteNode()

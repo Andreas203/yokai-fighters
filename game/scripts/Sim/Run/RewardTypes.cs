@@ -11,6 +11,8 @@ public enum CardKind
 	Upgrade,
 	/// <summary>A modifier attached to one owned special (A2: one per special).</summary>
 	Modifier,
+	/// <summary>YOK-186: a cancel rule Ryo holds for the rest of the run (X1, X2; rare, from an elder only, A9). No target.</summary>
+	CancelRule,
 }
 
 /// <summary>
@@ -23,8 +25,8 @@ public sealed record CardTarget(SpecialSlot Slot, string SpecialId, string Speci
 /// A reward card as the reward screen (YOK-52) shows it. A12: <see cref="Plain"/> first, <see cref="Frames"/>
 /// behind the frame-data toggle. <see cref="Targets"/>: where the card can go; when there is more than one,
 /// the screen asks the player and passes the chosen slot to <see cref="IRewardDraft.Pick"/>.
-/// Badge = "NEW" | "UPGRADE" | "MODIFIER"; AbilityId = the special/modifier id from data; Name = its display
-/// name; Source = "kitsune" | "oni" | "kappa" | "ryo".
+/// Badge = "NEW" | "UPGRADE" | "MODIFIER" | "CANCEL"; AbilityId = the special/modifier/cancel-rule id from data; Name = its
+/// display name; Source = "kitsune" | "oni" | "kappa" | "ryo". A cancel-rule card has no <see cref="Targets"/>.
 /// </summary>
 public sealed record CardView(
 	int Index,
@@ -38,10 +40,19 @@ public sealed record CardView(
 	IReadOnlyList<CardTarget> Targets)
 {
 	public bool NeedsTarget => Targets.Count > 1;
+	/// <summary>YOK-186, A9: a rare card (a cancel rule, or a yokai's second special), offered only by an elder.</summary>
+	public bool Rare { get; init; }
 }
 
 /// <summary>The three cards after a duel (A7), from the yokai beaten.</summary>
-public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards);
+public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards)
+{
+	/// <summary>
+	/// YOK-218 (X2): true when the beaten elder has an available cancel rule Ryo does not hold, but no card offers it
+	/// because Ryo already holds <see cref="Fighter.MaxCancelRules"/>. The reward screen says so where the card would be.
+	/// </summary>
+	public bool CancelRuleHeldOut { get; init; }
+}
 
 /// <summary>Outcome of <see cref="IRewardDraft.Pick"/>. On failure nothing in the run changed.</summary>
 public sealed record PickResult(bool Ok, string Error, CardView? Card, SpecialSlot Slot, int Level)

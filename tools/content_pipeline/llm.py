@@ -8,6 +8,10 @@ output knows about the game, it got from the retrieved vault chunks.
 Every call is stored in the run folder (llm-calls.json) keyed by a hash of the
 model and prompts. `--replay` reads that file instead of calling a model, which
 makes a finished run reproducible on a machine with no login.
+
+Each live call also keeps what the CLI reported for it: token usage and
+`total_cost_usd` (the API list price of the call, whatever plan pays for it).
+`cost_summary()` adds them up by role and model for the trace.
 """
 from __future__ import annotations
 
@@ -43,13 +47,32 @@ class LLM:
                 f"--replay: no recorded {role} call for this prompt (key {key}). "
                 "The vault or the prompts changed since the run was recorded; run live instead."
             )
-        response = self._call_cli(model, system, user)
+        response, usage = self._call_cli(model, system, user)
         self.live_calls += 1
-        self.calls[key] = {"role": role, "model": model, "system": system, "user": user, "response": response}
+        self.calls[key] = {"role": role, "model": model, "system": system, "user": user, "response": response,
+                           **usage}
         self.cache_path.write_text(json.dumps(self.calls, indent=2, ensure_ascii=False), encoding="utf-8")
         return response
 
-    def _call_cli(self, model: str, system: str, user: str) -> str:
+    def cost_summary(self) -> dict:
+        """Tokens and USD by role and model, over every recorded call of this run that has usage."""
+        rows: dict[str, dict] = {}
+        total = {"calls": 0, "input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
+                 "output_tokens": 0, "cost_usd": 0.0}
+        unpriced = 0
+        for call in self.calls.values():
+            if "cost_usd" not in call:
+                unpriced += 1
+                continue
+            row = rows.setdefault(f"{call['role']} ({call['model']})", {k: 0 for k in total} | {"cost_usd": 0.0})
+            for bucket in (row, total):
+                bucket["calls"] += 1
+                for k in USAGE_KEYS:
+                    bucket[k] += call["usage"].get(k, 0)
+                bucket["cost_usd"] += call["cost_usd"]
+        return {"by_step": rows, "total": total, "calls_without_usage": unpriced}
+
+    def _call_cli(self, model: str, system: str, user: str) -> tuple[str, dict]:
         exe = shutil.which("claude")
         if not exe:
             raise SystemExit("The 'claude' CLI is not on PATH. Install Claude Code and log in, or use --replay.")
@@ -68,11 +91,25 @@ class LLM:
             try:
                 envelope = json.loads(proc.stdout)
                 if not envelope.get("is_error") and envelope.get("result"):
-                    return envelope["result"]
+                    return envelope["result"], _usage(envelope)
                 last_error = str(envelope.get("result") or envelope)[:500]
             except json.JSONDecodeError:
                 last_error = (proc.stderr or proc.stdout)[:500]
         raise SystemExit(f"Model call failed twice: {last_error}")
+
+
+USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
+
+
+def _usage(envelope: dict) -> dict:
+    """What the CLI reported for one call: tokens, list-price cost, the exact model and the time it took."""
+    usage = envelope.get("usage") or {}
+    return {
+        "usage": {k: int(usage.get(k) or 0) for k in USAGE_KEYS},
+        "cost_usd": float(envelope.get("total_cost_usd") or 0.0),
+        "model_ids": sorted((envelope.get("modelUsage") or {}).keys()),
+        "duration_ms": envelope.get("duration_ms"),
+    }
 
 
 def parse_json(text: str) -> dict:

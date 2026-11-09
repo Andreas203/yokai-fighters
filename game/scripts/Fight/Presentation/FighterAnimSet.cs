@@ -210,7 +210,11 @@ public sealed class FighterAnimSet
 		},
 	};
 
-	/// <summary>YOK-131: the Kappa's body on the Kitsune's shared clips (see <see cref="Oni"/>). He keeps them until he has his own kit. Known: feet sink 3-8 cm.</summary>
+	/// <summary>
+	/// YOK-131: the Kappa's body on the Kitsune's shared pose clips (idle, walk, block, hit, jump; see <see cref="Oni"/>).
+	/// YOK-228: his own moves (data/moves/kappa-*.json) name their own clip files (data/clips/kappa-*.json, GREYBOX reuse of
+	/// Kitsune and Ryo takes, route A on YOK-219), which the Kitsune's overrides never touch. Known: feet sink 3-8 cm.
+	/// </summary>
 	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn");
 
 	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene) => new()
@@ -236,14 +240,14 @@ public sealed class FighterAnimSet
 	};
 
 	/// <summary>
-	/// The body a fight shows for P2: the node's yokai when it has a body of its own (an Oni or Kappa node fought by the
-	/// Kitsune stand-in kit shows the Oni or Kappa), else the fighter's. Presentation only; the sim never reads it.
+	/// The body a fight shows for P2: the node's yokai when it has a body of its own (an Oni or Kappa node, whose fighter in
+	/// node-scenes.json is the Kitsune fallback, shows the Oni or Kappa), else the fighter's. Presentation only; the sim never reads it.
 	/// </summary>
 	public static FighterAnimSet ForNode(string fighter, string? yokai) =>
 		yokai != null && HasBody(yokai) ? For(yokai) : For(fighter);
 
 	private static readonly HashSet<string> StandInBodies = new() { "oni", "elder-oni", "kappa", "elder-kappa" };
 
-	/// <summary>True for a yokai whose node runs a stand-in kit but shows a body of its own (Oni, Kappa and their elders).</summary>
+	/// <summary>True for a yokai whose node names a stand-in fighter but shows a body of its own (Oni, Kappa and their elders).</summary>
 	public static bool HasBody(string yokai) => StandInBodies.Contains(yokai);
 }

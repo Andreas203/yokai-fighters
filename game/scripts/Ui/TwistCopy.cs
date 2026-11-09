@@ -4,7 +4,7 @@ using YokaiFighters.Story;
 
 namespace YokaiFighters.Ui;
 
-/// <summary>One line of twist text as the UI shows it. <see cref="Placeholder"/> = the data had no text yet, this is a stand-in.</summary>
+/// <summary>One line of twist text as the UI shows it. <see cref="Placeholder"/> = the story data has no card for it: <see cref="Text"/> is empty and the caller shows nothing (no invented wording).</summary>
 public readonly record struct TwistLine(string Text, bool Placeholder);
 
 /// <summary>
@@ -14,34 +14,34 @@ public readonly record struct TwistLine(string Text, bool Placeholder);
 /// (<c>twist.elder-oni-armour</c> is looked up as the card id <c>twist.elder-oni-armour</c> first, then as
 /// <c>twist-elder-oni-armour</c>, because card ids are kebab-case), then the card <c>&lt;twist-id&gt;-label</c> (what habit-writer's YOK-138
 /// ships: the schema has no label-text field, so that card names the key in its trigger). When the id is null or no such card exists the line
-/// is a stand-in marked <see cref="PlaceholderMark"/>, so the copy drops in with no code change. Pure: no Godot.
+/// is <see cref="Missing"/> (empty, <see cref="TwistLine.Placeholder"/> set): the screens show nothing rather than a stand-in, and the
+/// data-completeness test fails instead. Pure: no Godot.
 /// </summary>
 public static class TwistCopy
 {
-	public const string PlaceholderMark = "[PLACEHOLDER] ";
-
-	/// <summary>Stand-in wording for each sim effect, shown only until the real text exists. Draft from the YOK-101 mockup, not approved copy.</summary>
-	public static string StandIn(TwistEffect effect) => effect switch
-	{
-		TwistEffect.ReflectRepeatedSpecial => "Specials used twice in a row are reflected.",
-		TwistEffect.SpecialArmour => "Its specials have armour.",
-		TwistEffect.UnbreakableThrows => "Its throws can't be broken.",
-		_ => "This elder fights with a twist.",
-	};
+	/// <summary>No story card for this line: empty text, flagged. The UI shows nothing for it.</summary>
+	public static readonly TwistLine Missing = new("", true);
 
 	/// <summary>The HUD reminder / map detail line.</summary>
 	public static TwistLine Label(ElderTwist t, StoryLibrary? story, string? yokaiName = null) =>
-		Resolve(t, story, t.LabelKey, yokaiName) ?? Resolve(t, story, t.Id + "-label", yokaiName) ?? Stand(t);
+		Resolve(t, story, t.LabelKey, yokaiName) ?? Resolve(t, story, t.Id + "-label", yokaiName) ?? Missing;
 
 	/// <summary>The intro card text (shown on entering the elder's node).</summary>
 	public static TwistLine Intro(ElderTwist t, StoryLibrary? story, string? yokaiName = null) =>
-		Resolve(t, story, t.IntroCard, yokaiName) ?? Stand(t);
+		Resolve(t, story, t.IntroCard, yokaiName) ?? Missing;
 
 	/// <summary>The first-meeting callout text.</summary>
 	public static TwistLine Callout(ElderTwist t, StoryLibrary? story, string? yokaiName = null) =>
-		Resolve(t, story, t.CalloutCard, yokaiName) ?? Stand(t);
+		Resolve(t, story, t.CalloutCard, yokaiName) ?? Missing;
 
-	static TwistLine Stand(ElderTwist t) => new(PlaceholderMark + StandIn(t.Effect), true);
+	/// <summary>The intro card's speaker ("Nine-Tailed Kitsune", "Elder Oni"): the elder's name for the scroll title, or null when the card is missing or names nobody.</summary>
+	public static string? IntroSpeaker(ElderTwist t, StoryLibrary? story)
+	{
+		if (story == null || string.IsNullOrWhiteSpace(t.IntroCard)) return null;
+		foreach (string key in new[] { t.IntroCard, t.IntroCard.Replace('.', '-') })
+			if (story.Has(key) && story[key].Speaker is { Length: > 0 } who && !who.Equals("Narrator", StringComparison.OrdinalIgnoreCase)) return who;
+		return null;
+	}
 
 	static TwistLine? Resolve(ElderTwist t, StoryLibrary? story, string? id, string? yokaiName)
 	{
