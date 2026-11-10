@@ -263,3 +263,6 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
   - **Water:** murky swamp green.
   - **Unchanged:** the stage id (`riverbank`) and the `opponent_stages` mapping.
   - **Spend:** 4 Astra takes; no Tripo.
+
+## Designer decisions 2026-11-10
+- **Tea house seasons run down to the sill (designer: "the background seasons look a bit cut at the bottom"):** each season painting had a blank paper strip under its ink ground line (rows 458-566 of 566). The shader now shifts the paintings down, unscaled, so the hills meet the screens' bottom edge, and repeats the flat sky row at the top. Presentation only; no new art, no spend; branch `YOK-tea-house-season-crop`.

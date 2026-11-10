@@ -280,6 +280,7 @@ public static class StageSetTests
 			Vector4 Shader() => mat.GetShaderParameter("weights").AsVector4();
 			Assert.True(seasons.Textures.All(t => t is not null), "the four season paintings are checked in");
 			Assert.True(mat.GetShaderParameter("panel_rect").AsVector4().IsEqualApprox(TeaHouseStage.PanelRectUv), "the shader's panel box is the stage's");
+			Assert.True(Mathf.IsEqualApprox(mat.GetShaderParameter("painting_bottom_v").AsSingle(), TeaHouseStage.PaintingBottomV), "the shader's painting bottom is the stage's");
 			for (int i = 0; i < 4; i++)
 				Assert.True(ReferenceEquals(mat.GetShaderParameter($"season_{i}").AsGodotObject(), seasons.Textures[i]), $"the shader has the {TeaHouseStage.Seasons[i]} painting");
 			Mix(W(1, 1, 1, 1), mat.GetShaderParameter("present").AsVector4(), "all four paintings present");
@@ -305,6 +306,30 @@ public static class StageSetTests
 			Mix(W(0, 0, 0, 1), Shader(), "below 25%: winter, straight from spring");
 		}
 		finally { scene.QueueFree(); }
+	}
+
+	[Test]
+	public static void TeaHouse_SeasonPaintings_RunDownToTheSill_NoBlankPaperStrip(Node runner)
+	{
+		foreach (string season in TeaHouseStage.Seasons)
+		{
+			var img = Image.LoadFromFile(ProjectSettings.GlobalizePath($"{TeaHouseStage.DefaultDir}seasons/{season}.png"));
+			int w = img.GetWidth(), h = img.GetHeight();
+			int bottom = (int)(TeaHouseStage.PaintingBottomV * h) - 1; // the last painting row the screens show
+			Assert.True(Mathf.IsEqualApprox((float)w / h, TeaHouseStage.PanelRectUv.Z * 1280f / (TeaHouseStage.PanelRectUv.W * 720f), 0.01f),
+				$"{season}: the painting has the screens' aspect, so the shift is unscaled");
+			bool Ink(Color c) => c.R8 + c.G8 + c.B8 < 210;
+			int InkCount(int y) => Enumerable.Range(0, w).Count(x => Ink(img.GetPixel(x, y)));
+			int inkLine = Enumerable.Range(0, h).Last(y => InkCount(y) * 10 > w * 6); // the ground line under the hills
+			Assert.True(inkLine > bottom, $"{season}: the ground ink line (row {inkLine}) sits below the sill (last shown row {bottom})");
+			Color paper = img.GetPixel(w / 2, h - 1);
+			bool Paper(Color c) => Math.Abs(c.R8 - paper.R8) + Math.Abs(c.G8 - paper.G8) + Math.Abs(c.B8 - paper.B8) < 12;
+			int shownPaper = Enumerable.Range(0, w).Count(x => Paper(img.GetPixel(x, bottom)));
+			Assert.True(shownPaper * 20 < w, $"{season}: the screens' bottom row is landscape, not the blank paper strip ({shownPaper} of {w} px paper)");
+			Color sky = img.GetPixel(w - 1, 0);
+			Assert.True(Enumerable.Range(0, w).All(x => { Color c = img.GetPixel(x, 0); return Math.Abs(c.R8 - sky.R8) + Math.Abs(c.G8 - sky.G8) + Math.Abs(c.B8 - sky.B8) < 12; }),
+				$"{season}: row 0 is flat sky, so repeating it above the painting leaves no seam");
+		}
 	}
 
 	[Test]
