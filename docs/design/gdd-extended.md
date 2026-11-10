@@ -75,6 +75,8 @@ A rural Japanese province at the end of autumn, folded into an illusion by the T
 - Stages: one per yokai. A bamboo grove at dusk (Kitsune), a snowbound mountain shrine gate (Oni), a riverbank of floating lanterns (Kappa), and the Tanuki's tea house, whose paper screens flicker between seasons.
 - Music: shamisen, shakuhachi and taiko, layered so intensity rises row by row. The Tanuki's theme borrows the merchant's cheerful melody and slowly detunes it.
 
+> **Amended by** [AM21](gdd-amendments.md#am21) the Kappa's stage is a night swamp without lanterns. Where it disagrees with this section, the amendment wins.
+
 ### 2.2 Characters
 
 | Character | Role | Voice and motive |

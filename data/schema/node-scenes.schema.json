@@ -82,6 +82,12 @@
         }
       }
     },
+    "opponent_stages": {
+      "description": "YOK-150, presentation only: the stage each yokai fights on, by opponent id (the map node's yokai). Looked up after 'nodes' and before 'types': the node's own stage, then its yokai's, then the yokai it plays as (an elder fights on its yokai's stage: elder-oni plays as oni), then the type's, then default_stage. Kept apart from 'opponents', which is fight data.",
+      "type": "object",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/stage" }
+    },
     "notes": { "$ref": "common.schema.json#/$defs/notes" }
   },
   "$defs": {
@@ -93,7 +99,7 @@
       "additionalProperties": false,
       "properties": {
         "scene": { "$ref": "#/$defs/scene" },
-        "stage": { "description": "YOK-144, presentation only: the stage the fight shows; nodes win over types, then default_stage.", "$ref": "#/$defs/stage" },
+        "stage": { "description": "YOK-144, presentation only: the stage the fight shows; nodes win over opponent_stages (YOK-150), then types, then default_stage.", "$ref": "#/$defs/stage" },
         "opponent": { "description": "Stand-in yokai for a node that names none (merchant, dojo until their behaviour is built).", "$ref": "common.schema.json#/$defs/id" },
         "tier": { "description": "Y4 row; a key of 'tiers'.", "$ref": "common.schema.json#/$defs/id" },
         "profile": { "description": "Behaviour profile id for the opponent; without it the fighter's first profile plays.", "$ref": "common.schema.json#/$defs/id" },

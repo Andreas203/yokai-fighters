@@ -80,8 +80,8 @@ public partial class DevJumpPage : VBoxContainer
 		elderRow.AddChild(_twistLine = DevMenu.PageLabel("", 18, "TwistLine"));
 		grid.AddChild(elderRow);
 		_focus.Add(_elder);
-		_stage = Options(grid, "Stage", new[] { ("Bamboo grove", true), ("Placeholder stage", true), ("Level presets (" + DevJump.NotBuiltYet + ": data/presets)", false) });
-		_stage.ItemSelected += i => Fight = Fight with { Stage = (DevStage)(int)i };
+		_stage = Options(grid, "Stage", new[] { ("The node's own stage", true), ("Placeholder stage", true), ("Bamboo grove", true), ("Snowbound shrine gate", true), ("Night swamp (riverbank)", true), ("Tea house", true), ("Level presets (" + DevJump.NotBuiltYet + ": data/presets)", false) });
+		_stage.ItemSelected += i => { if (i <= (int)DevStage.TeaHouse) Fight = Fight with { Stage = (DevStage)(int)i }; };
 		_scheme = Options(grid, "Control scheme", new[] { ("Kihon", true), ("Kata", true) });
 		_scheme.ItemSelected += i => Fight = Fight with { Scheme = i == 1 ? ControlScheme.Kata : ControlScheme.Kihon };
 		var specials = _pool.Specials.ToArray();

@@ -47,7 +47,7 @@ Reference images: none yet.
 
 ## Kappa
 
-The grappler of the lantern riverbank. Formal, stubborn and polite, it walks straight into throw range. Its hit sparks are kappa teal.
+The grappler of the night swamp. Formal, stubborn and polite, it walks straight into throw range. Its hit sparks are kappa teal.
 
 Folklore reference: kappa are river spirits that love sumo and cucumbers and carry water in a dish on their heads; bow to one and it bows back, spilling the water.
 

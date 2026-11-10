@@ -1,0 +1,175 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/FightStage.cs" id="1_stage"]
+[ext_resource type="Script" path="res://scripts/Fight/Presentation/ToonLook.cs" id="2_toon"]
+[ext_resource type="Material" path="res://materials/toon.tres" id="3_toonmat"]
+[ext_resource type="Material" path="res://materials/ink_outline.tres" id="4_ink"]
+[ext_resource type="Texture2D" path="res://assets/generated/stage/riverbank/backdrop.png" id="5_back"]
+[ext_resource type="Shader" path="res://shaders/stage_floor.gdshader" id="6_floor"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/riverbank/reeds.glb" id="7_reeds"]
+[ext_resource type="PackedScene" path="res://assets/generated/stage/riverbank/mooring-post.glb" id="8_post"]
+[ext_resource type="Shader" path="res://shaders/stage_water.gdshader" id="10_water"]
+[ext_resource type="Shader" path="res://shaders/backdrop_far.gdshader" id="11_far"]
+
+[sub_resource type="Environment" id="Environment_env"]
+background_mode = 1
+background_color = Color(0.1059, 0.1294, 0.1451, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.3451, 0.3922, 0.4549, 1)
+ambient_light_energy = 0.5
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.1137, 0.1529, 0.1765, 1)
+fog_density = 0.3
+fog_depth_curve = 1.2
+fog_depth_begin = 20.0
+fog_depth_end = 70.0
+
+[sub_resource type="ShaderMaterial" id="Material_back"]
+render_priority = 0
+shader = ExtResource("11_far")
+shader_parameter/tex = ExtResource("5_back")
+shader_parameter/art_rect = Vector4(0, 0, 1, 0.8501594)
+shader_parameter/sky = 0.0
+shader_parameter/water_v = 0.8246546
+shader_parameter/water_tint = Color(0.1686, 0.2549, 0.251, 1)
+shader_parameter/water_tint_amount = 0.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_back"]
+size = Vector2(102.4, 44.9497)
+
+[sub_resource type="ShaderMaterial" id="Material_floor"]
+render_priority = 0
+shader = ExtResource("6_floor")
+shader_parameter/pattern = 0
+shader_parameter/color_a = Color(0.4314, 0.3373, 0.2667, 1)
+shader_parameter/color_b = Color(0.3608, 0.2784, 0.2235, 1)
+shader_parameter/patch_scale = 0.35
+shader_parameter/patch_amount = 0.4
+shader_parameter/back_edge_z = -6.6
+shader_parameter/edge_wave = 0.25
+shader_parameter/edge_rim = 0.6
+
+[sub_resource type="ShaderMaterial" id="Material_water"]
+render_priority = 0
+shader = ExtResource("10_water")
+shader_parameter/near_color = Color(0.1059, 0.1569, 0.1216, 1)
+shader_parameter/far_color = Color(0.1686, 0.2549, 0.251, 1)
+shader_parameter/teal = Color(0.2431, 0.498, 0.5255, 1)
+shader_parameter/near_z = -9.0
+shader_parameter/far_z = -100.0
+shader_parameter/ripple_mix = 0.22
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_water"]
+material = SubResource("Material_water")
+size = Vector2(110, 94.5)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+material = SubResource("Material_floor")
+size = Vector2(40, 15)
+
+[node name="Stage" type="Node3D"]
+script = ExtResource("1_stage")
+Kind = "riverbank"
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.57357645, 0.33317915, -0.7483326, 0, 0.9135454, 0.40673664, 0.81915206, -0.23329456, 0.5239881, 0, 0, 0)
+light_color = Color(0.7373, 0.7686, 0.8706, 1)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.49999997, -0.4967318, 0.70940655, 0, 0.81915206, 0.57357645, -0.86602545, -0.2867882, 0.409576, 0, 0, 0)
+light_color = Color(0.9098, 0.6275, 0.4392, 1)
+light_energy = 0.38
+
+[node name="Backdrop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 21.3473, -100.0)
+material_override = SubResource("Material_back")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_back")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, -53.25)
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_water")
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Reeds0" type="Node3D" parent="Props"]
+transform = Transform3D(2.36354, 0, 0.416756, 0, 2.4, 0, -0.416756, 0, 2.36354, -12, 0, -4)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds0/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Reeds1" type="Node3D" parent="Props"]
+transform = Transform3D(-1.79981, 0, 2.14492, 0, 2.8, 0, -2.14492, 0, -1.79981, -15, 0, -6)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds1/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Reeds2" type="Node3D" parent="Props"]
+transform = Transform3D(-0.752444, 0, -2.06732, 0, 2.2, 0, 2.06732, 0, -0.752444, 12.5, 0, -3.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds2/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Reeds3" type="Node3D" parent="Props"]
+transform = Transform3D(1.3, 0, 2.25167, 0, 2.6, 0, -2.25167, 0, 1.3, 15.5, 0, -6.5)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds3/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Reeds4" type="Node3D" parent="Props"]
+transform = Transform3D(-1.69145, 0, -0.615636, 0, 1.8, 0, 0.615636, 0, -1.69145, -11.6, 0, -6.2)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds4/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Reeds5" type="Node3D" parent="Props"]
+transform = Transform3D(1.30228, 0, -1.09274, 0, 1.7, 0, 1.09274, 0, 1.30228, 11.4, 0, -6.4)
+
+[node name="Pivot" type="Node3D" parent="Props/Reeds5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Reeds5/Pivot" instance=ExtResource("7_reeds")]
+
+[node name="Post0" type="Node3D" parent="Props"]
+transform = Transform3D(1.44889, 0, 0.388229, 0, 1.5, 0, -0.388229, 0, 1.44889, -11.2, 0, -5.6)
+
+[node name="Pivot" type="Node3D" parent="Props/Post0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Post0/Pivot" instance=ExtResource("8_post")]
+
+[node name="Post1" type="Node3D" parent="Props"]
+transform = Transform3D(0.995858, 0, -0.835624, 0, 1.3, 0, 0.835624, 0, 0.995858, 11.6, 0, -6)
+
+[node name="Pivot" type="Node3D" parent="Props/Post1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Props/Post1/Pivot" instance=ExtResource("8_post")]
+
+[node name="PropToon" type="Node" parent="."]
+script = ExtResource("2_toon")
+Toon = ExtResource("3_toonmat")
+Outline = ExtResource("4_ink")
+OutlineMetres = 0.02
+Target = NodePath("../Props")

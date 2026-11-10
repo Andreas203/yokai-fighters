@@ -1,0 +1,9 @@
+Stylised toon-shaded game art, flat cel colour in 2-3 tone steps, clean confident ink-brush outline of even weight, muted ukiyo-e colour palette, matte surfaces, soft even lighting with no cast shadows, no photographic or painterly texture, no gloss, no baked ambient occlusion, simple readable shapes. Match the two attached reference images (accepted stage backdrops for the same game) in outline weight, flatness and level of detail; take nothing else from them.
+
+Wide 16:9 landscape stage backdrop for the Kappa's stage in Yokai Fighters: a still, overgrown Japanese marsh swamp at deep indigo night, at the end of autumn. Full-bleed to all four edges with no border, frame, vignette or letterbox.
+
+Composition, which matters most: this painting is the FAR view only, seen from a low eye level just above the water. The far waterline is low in the frame, a straight level line at about 80 percent of the image height from the top. Below that line is only a thin band of flat, still, dark swamp water with nothing in it, running edge to edge to the bottom of the image. Everything else sits above the waterline: the sky, the far treeline, and the swamp plants and trees standing at the far edge of the water and along the left and right edges.
+
+Sky: flat deep indigo #2D3A5E with a darker flat band of ink #1D1B21 at the very top; no moon or sun disc, no stars brighter than rice paper #F1E8D4 dots.
+Water: murky swamp water in flat pine #34483B and dark water teal #3E7F86 stepping down to indigo, with a few thin faint ripple strokes; no reflections, gloss or sparkle.
+Plants: dense reeds and rushes in pine #34483B and dry brown #6E5A48, drawn as simple flat blade shapes, along the far bank and the edges.

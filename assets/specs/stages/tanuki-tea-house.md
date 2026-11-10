@@ -2,6 +2,8 @@
 
 Ticket: YOK-152. Status: **APPROVED first pass, S1-S10, 60 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S10, 60 credits. Seasons change on beats, round start only (option B); the wiring is a gameplay follow-up, not asset-smith's; art cost is unchanged. Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/stages/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (Tripo for the meshes possible; would need re-costing).
 
+**2026-11-09 generator switch (designer): the Meshy approval above never ran and is replaced.** Backdrop: the style loop's Astra take 2, picked by the designer (no new spend). Props: Tripo H3.1 text-to-model, `smart_low_poly=true`, 30 credits each, take cap 1, the spec prompts below adapted to text-to-model. No ground/water strips generated: floors are Godot flat-colour materials. See Takes.
+
 Gameplay is a flat plane (F4). E1: stage 3,840 units (19.2 m) wide; camera shows 1,060 to about 1,900 units. The Tanuki fights as Ryo with Ryo's model (T0), so the stage must hold two Ryo-shaped silhouettes (indigo coats): keep the back wall warm and light so indigo reads against it.
 
 Stage mood: a warm lamplit tea house interior, wooden beams, tatami floor, a row of tall paper screens along the back wall whose scenery changes between the four seasons. Cheerful and slightly too welcoming (the first-loss card: "the paper screens fold shut").
@@ -102,5 +104,25 @@ Other open points:
 2. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet. Ledger: approved 60, spent 0, balance not checked.
+Take 1, 2026-11-09 (designer approved the switch, the backdrop pick, 210 Tripo credits across the three stages and 4 Astra takes for the seasons).
 
+| Job | Source | Task id | Credits |
+|---|---|---|---|
+| S1 backdrop | Astra take 2 of the style loop, `tools/style_agent/runs/visual/images/visual-3-spec-form-take2.png` | (Codex) | 0 new |
+| S2 spring | Astra (`codex exec`, gpt-6-astra), riverbank backdrop attached as the style reference | Codex image exec-027cf623 | 1 take |
+| S3-S5 summer, autumn, winter | Astra, spring attached as the layout reference, run in parallel | exec-91435bf4, exec-5c7c0025, exec-1e6533a1 | 3 takes |
+| S6/S7 tea table | Tripo H3.1 text-to-model, smart_low_poly, face_limit 3000 | e2ca1594-d050-4f51-bccf-692a7a099bc8 | 30 |
+| S8/S9 hanging lantern | Tripo H3.1, face_limit 1500 | 8584ec0f-7ced-4632-a38f-b02533e48c92 | 30 |
+| S10 tatami strip | not made: tatami is painted in the backdrop; the floor plane is a flat straw material with seams in Godot | - | 0 |
+
+Total 60 Tripo credits and 4 Astra takes. Outputs in `game/assets/generated/stage/tea-house/`: `backdrop.png`, `panel-mask.png`, `seasons/{spring,summer,autumn,winter}.png`, `tea-table.glb`, `hanging-lantern.glb`, `*-ref.png`.
+
+**Season screens, as built:** the picked backdrop has eight narrow screens, not five, so each season is ONE wide landscape across the whole screen wall instead of a 2:3 panel image repeated per screen (same cost). `panel-mask.png` (made by script from the backdrop: white where the screens' paper is) covers backdrop pixels x 148-1132, y 182-438 (3.84:1). Each season was generated at 2172x724 and cropped identically (y 70-636) to 2172x566. A shader mixes it over the backdrop by the mask, so the screen frames stay drawn.
+
+## Acceptance
+- S1 backdrop: **PASS (designer pick)**. 1280x720, full-bleed. Dark beams, four hanging lanterns, eight blank screens (a pale pink gradient, covered by the seasons), tatami painted in the lower third with no objects. v1 docked the tatami seams (S4, 9/10); guide v2 counts floor structure as calm.
+- S2-S5 seasons: **PASS**. One cherry/maple-shaped tree in the left third, low horizon. Horizon rows measured at 532, 531, 530 and 531 px, so they line up within 2 px (the "within a few pixels" criterion). Each reads by its dominant colour: pink, green with teal sky, persimmon and red with a gold sky, blue-grey with snow. No text or figures.
+- Tea table: **PASS with WARN**. 3,470 tris against 3,000 (+16%). Teapot, two cups, a plate of round sweets; no kettle-tanuki.
+- Hanging lantern: **PASS with WARN**. 2,518 tris against 1,500 (+68%).
+- Tripo props come normalised to a 1-unit box with the origin at the centre: re-pivot to the base and scale in Godot. Triangle counts run over target because `smart_low_poly` treats `face_limit` loosely; for background props that's no performance issue (WARN, not a retake). A Blender decimate by script is the free fix if wanted.
+- Licence: unconfirmed (AM5, YOK-115).

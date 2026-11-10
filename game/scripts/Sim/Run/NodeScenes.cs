@@ -27,7 +27,7 @@ public sealed record NodeContext(
 	public int Coins { get; init; }
 	/// <summary>YOK-94: how the opponent's kit is built, from the opponent's <c>kit</c> in the table; null = the fighter's own files (<c>Kit.Load</c>); <see cref="TanukiKit.KitId"/> = Ryo's kit + the locked copy (T0).</summary>
 	public string? Kit { get; init; }
-	/// <summary>YOK-144: the stage scene (<c>res://scenes/stage/*.tscn</c>) the fight shows, from the table's <c>stage</c>; null = the fight scene's default (the bamboo grove). Presentation only: the sim never reads it.</summary>
+	/// <summary>YOK-144: the stage scene (<c>res://scenes/stage/*.tscn</c>) the fight shows, from the table's <c>stage</c> (YOK-150: or its <c>opponent_stages</c>); null = the fight scene's default (the bamboo grove). Presentation only: the sim never reads it.</summary>
 	public string? Stage { get; init; }
 	/// <summary>YOK-156, Y4: percent of its move damage this node's opponent deals, from the tier's <c>damage_dealt_pct</c> (the apprentice: 50); 100 when the tier names none.</summary>
 	public int DamageDealtPct { get; init; } = SimConfig.FullDamagePct;
@@ -76,7 +76,8 @@ public interface INodeSceneResolver
 /// <item>plays as (YOK-174, whose move files and profiles): <c>opponents[yokai].plays_as</c> → the yokai when it has no fighter → the fighter;</item>
 /// <item>profile: <c>nodes[id]</c> → <c>opponents[yokai]</c>; binds: <c>nodes[id]</c> → <c>types[type]</c> → false;</item>
 /// <item>coins (R8): <c>nodes[id]</c> → <c>rows[row].types[type]</c> → <c>types[type]</c> → 0;</item>
-/// <item>stage (YOK-144, presentation only): <c>nodes[id]</c> → <c>types[type]</c> → <c>default_stage</c> → null (the fight scene's own default).</item>
+/// <item>stage (YOK-144, presentation only): <c>nodes[id]</c> → (YOK-150) <c>opponent_stages[yokai]</c> → <c>opponent_stages[plays as]</c>
+/// (an elder fights on its yokai's stage) → <c>types[type]</c> → <c>default_stage</c> → null (the fight scene's own default).</item>
 /// </list>
 /// So a new scene for a type or one node, a yokai getting its own kit, or a different stand-in is a data edit.
 /// </summary>
@@ -104,6 +105,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 	readonly Dictionary<string, int> _damagePct = new(); // YOK-156, Y4: tier → damage_dealt_pct
 	readonly Dictionary<string, int> _jumpPunishPct = new(); // YOK-165, Y4: tier → jump_punish_pct
 	readonly Dictionary<(int Row, string Type), int> _rowCoins = new(); // R8: what a row pays instead of its type's amount
+	readonly Dictionary<string, string> _opponentStages = new(); // YOK-150: yokai id → stage scene
 
 	public string DefaultScene { get; }
 	public string FallbackFighter { get; }
@@ -166,6 +168,22 @@ public sealed class NodeSceneTable : INodeSceneResolver
 		{
 			DefaultStage = StagePath(Text(o, "default_stage", "the table"), "default_stage"),
 		};
+		// YOK-150: a stage per yokai, apart from its fight data. A key must be a yokai the table knows (Code Critic: a typo
+		// such as "onii" would otherwise fall back to the grove unnoticed), refused like an unknown tier.
+		var known = new HashSet<string>(table._opponents.Keys) { fallback };
+		foreach (var e in table._opponents.Values)
+		{
+			if (e.PlaysAs is { } p) known.Add(p);
+			if (e.Fighter is { } f) known.Add(f);
+		}
+		foreach (var (name, node) in Section(o, "opponent_stages"))
+		{
+			if (!known.Contains(name))
+				throw new FormatException($"node scenes: opponent_stages.{name}: '{name}' is not a yokai the table knows (an 'opponents' id, a 'plays_as', a 'fighter' or the fallback_fighter)");
+			if (node is not JsonValue sv || !sv.TryGetValue(out string? stage) || string.IsNullOrEmpty(stage))
+				throw new FormatException($"node scenes: opponent_stages.{name} must be a stage scene path");
+			table._opponentStages[name] = StagePath(stage, $"opponent_stages.{name}")!;
+		}
 		foreach (var (name, pct) in damagePct) table._damagePct[name] = pct;
 		foreach (var (name, pct) in jumpPunishPct) table._jumpPunishPct[name] = pct;
 		foreach (var (where, e) in table._types.Select(p => ($"type '{p.Key}'", p.Value))
@@ -210,19 +228,23 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			?? throw new FormatException($"node '{node.Id}': no Y4 tier for type '{node.Type}' in the node-scene table");
 		string scene = node.PayloadString("scene") ?? byNode?.Scene ?? byType?.Scene ?? DefaultScene;
 
+		string playsAs = foe?.PlaysAs ?? (foe?.Fighter is null && yokai is not null ? yokai : fighter); // YOK-174
 		var ctx = new NodeContext(node.Id, node.Type, node.Row, node.Yokai, node.Elder, fighter,
 			byNode?.Profile ?? foe?.Profile, tier, _tiers[tier], byNode?.Binds ?? byType?.Binds ?? false, standIn,
 			node.Payload, notes)
 		{
 			Kit = foe?.Kit,
-			PlaysAs = foe?.PlaysAs ?? (foe?.Fighter is null && yokai is not null ? yokai : fighter), // YOK-174
+			PlaysAs = playsAs,
 			DamageDealtPct = _damagePct.TryGetValue(tier, out int pct) ? pct : SimConfig.FullDamagePct,
 			JumpPunishPct = _jumpPunishPct.TryGetValue(tier, out int jump) ? jump : null,
-			Stage = byNode?.Stage ?? byType?.Stage ?? DefaultStage,
+			Stage = byNode?.Stage ?? OpponentStage(yokai) ?? OpponentStage(playsAs) ?? byType?.Stage ?? DefaultStage,
 			Coins = byNode?.Coins ?? (_rowCoins.TryGetValue((node.Row, node.Type), out int rowCoins) ? rowCoins : byType?.Coins ?? 0),
 		};
 		return new NodeScene(scene, ctx);
 	}
+
+	/// <summary>YOK-150: the stage <c>opponent_stages</c> names for <paramref name="yokai"/>, if any.</summary>
+	string? OpponentStage(string? yokai) => yokai is not null && _opponentStages.TryGetValue(yokai, out var s) ? s : null;
 
 	static Dictionary<string, Entry> Entries(JsonObject root, string section)
 	{
@@ -243,7 +265,7 @@ public sealed class NodeSceneTable : INodeSceneResolver
 			if (map[name].PlaysAs is not null && (section != "opponents" || map[name].Fighter is not null)) // YOK-174
 				throw new FormatException($"node scenes: {where}.plays_as is only for an opponent with no 'fighter' of its own");
 			if (map[name].Stage is not null && section == "opponents")
-				throw new FormatException($"node scenes: {where}.stage: a stage belongs to a node or a node type, not an opponent");
+				throw new FormatException($"node scenes: {where}.stage: a stage belongs to a node or a node type, not an opponent entry (a yokai's stage goes in 'opponent_stages')");
 			if (map[name].Kit is not null && (section != "opponents" || map[name].Fighter is null))
 				throw new FormatException($"node scenes: {where}.kit is only for an opponent that names its 'fighter'");
 			if (map[name].Kit is { } kit && kit != TanukiKit.KitId) throw new FormatException($"node scenes: {where}.kit '{kit}' is not a kit this build knows ('{TanukiKit.KitId}')");

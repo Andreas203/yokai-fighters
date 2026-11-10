@@ -116,6 +116,40 @@ class Prompts(unittest.TestCase):
         self.assertTrue(all(r["source"] for r in RULES))
         self.assertEqual(PALETTE["indigo"], "#2D3A5E")
 
+    def test_v2_is_the_default_and_stops_marking_down_the_designer_picks(self):
+        # Designer, 2026-11-09: the take 2s were picked over the v1 Evaluator's favourites; v2 must not dock what they have.
+        from visual_guide import RUBRIC, RUBRIC_V2, RULES, RULES_V1, RULES_V2, render_guide
+        self.assertIs(RULES, RULES_V2)
+        self.assertIs(RUBRIC, RUBRIC_V2)
+        v1, v2 = {r["id"]: r for r in RULES_V1}, {r["id"]: r for r in RULES_V2}
+        self.assertEqual(set(v2) - set(v1), {"S5"})
+        self.assertEqual({k for k in v1 if v1[k] != v2[k]}, {"L2", "L4", "S4"})
+        self.assertIn("Never deduct for more detail or crisper line than the grove", v2["L4"]["rule"])
+        self.assertIn("reflection on water", v2["L2"]["rule"])
+        self.assertIn("tatami", v2["S4"]["rule"])
+        self.assertIn("centre-right", v2["S5"]["rule"])
+        self.assertTrue(all("2026-11-09" in v2[k]["source"] for k in ("L2", "L4", "S4", "S5")))
+        self.assertNotIn("more detail or gradient than the reference", RUBRIC_V2)
+        self.assertEqual(render_guide(), render_guide("v2"))
+        self.assertIn("S5.", render_guide())
+        self.assertNotIn("S5.", render_guide("v1"))
+
+    def test_v1_prompts_are_what_the_recorded_runs_saw(self):
+        if Image is None:
+            self.skipTest("Pillow is not installed")
+        from visual_agents import EVALUATOR_SYSTEM, evaluator_prompt, evaluator_system, refiner_prompt
+        from visual_cases import SLOTS
+        from visual_guide import RUBRIC_V1, RUBRIC_V2
+        m = {"width": 1, "height": 1, "aspect": 1, "border_px": {}, "dominant_colours": [], "on_palette_share": 0,
+             "flatness": 0, "lower_third_edge": 0, "upper_edge": 0, "neon_share": 0, "pure_white_share": 0}
+        slot = SLOTS["kappa-riverbank"]
+        self.assertIs(evaluator_system("v1"), EVALUATOR_SYSTEM)
+        self.assertIn("2x2 grid", evaluator_system())
+        self.assertIn(RUBRIC_V1, evaluator_prompt(slot, m, "v1"))
+        self.assertIn(RUBRIC_V2, evaluator_prompt(slot, m))
+        self.assertNotIn("S5.", refiner_prompt(slot, "s", 9, "r", m, keep=False, guide="v1"))
+        self.assertIn("S5.", refiner_prompt(slot, "s", 9, "r", m))
+
 
 @unittest.skipIf(Image is None, "Pillow is not installed")
 class Budget(unittest.TestCase):
@@ -130,6 +164,17 @@ class Budget(unittest.TestCase):
         from visual_agents import Astra
         with self.assertRaises(RuntimeError):
             Astra(Path(tempfile.mkdtemp()), replay=False, budget=9).render("not recorded", "x")
+
+    def test_v2_reference_is_the_accepted_set_and_v1_the_grove(self):
+        from visual_agents import reference_image
+        from visual_guide import ACCEPTED_SET
+        run = Path(tempfile.mkdtemp())
+        self.assertEqual(reference_image(run, "v1").name, "reference-bamboo-grove.png")
+        grid = reference_image(run)
+        self.assertEqual(grid.name, "reference-accepted-set.png")
+        self.assertEqual(Image.open(grid).size, (1280, 720))
+        self.assertEqual(len(ACCEPTED_SET), 4)
+        self.assertTrue(ACCEPTED_SET[0].endswith("bamboo-grove/backdrop.png"))
 
     def test_replay_never_renders(self):
         from visual_agents import Astra

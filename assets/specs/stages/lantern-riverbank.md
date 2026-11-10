@@ -2,6 +2,10 @@
 
 Ticket: YOK-151. Status: **APPROVED first pass, S1-S9, 69 credits.** Approved by the designer 2026-10-20 (recorded on the Linear ticket): S1-S9, 69 credits. Bank lanterns stay an open question; spec default kept (lanterns on the water only). Generator: Meshy for everything. **Not yet run: the Meshy MCP tools were not available in the session that was asked to run it, so no balance check was made and no credits were spent.** Take cap 3 per asset; running total across YOK-150/151/152 must not exceed 195. Method: `assets/specs/stages/bamboo-grove-dusk.md`, style block `assets/specs/style.md`. Generator: Meshy MCP, as the grove (a Tripo run for the meshes is possible if the designer prefers; it would need re-costing).
 
+**2026-11-09 generator switch (designer): the Meshy approval above never ran and is replaced.** Backdrop: the style loop's Astra take 2, picked by the designer (no new spend). Props: Tripo H3.1 text-to-model, `smart_low_poly=true`, 30 credits each, take cap 1, the spec prompts below adapted to text-to-model. No ground/water strips generated: floors are Godot flat-colour materials. See Takes.
+
+**2026-11-09 swamp retake (designer: "have it resemble a swamp more without the lanterns"):** the stage becomes Kappa's night swamp. Four new Astra backdrop takes were made from a swamp brief, and the designer picked take 4. All the floating lanterns, painted and 3D, are gone, and the water is murky swamp green. The lantern prompts and the lantern acceptance lines below are history. The S4/S5 lantern mesh is no longer used.
+
 Gameplay is a flat plane (F4): the fighters stand on the bank, the river and its lanterns are the band behind them. E1: stage 3,840 units (19.2 m) wide, camera shows 1,060 to about 1,900 units.
 
 Stage mood: a calm river at deep indigo night, paper lanterns drifting on the water and a few on the bank, reeds in the foreground edge. Warm persimmon points against cool indigo, with Kappa's teal in the water.
@@ -73,5 +77,39 @@ Backdrop on a quad well behind the fight plane (crop the letterbox). Water strip
 3. Generator: Meshy as the grove (costed above), or Tripo for the meshes?
 
 ## Takes
-None yet. Ledger: approved 69, spent 0, balance not checked.
+Take 1, 2026-11-09 (designer approved the switch, the backdrop pick and 210 Tripo credits across the three stages).
 
+| Job | Source | Task id | Credits |
+|---|---|---|---|
+| S1 backdrop | Astra take 2 of the style loop, `tools/style_agent/runs/visual/images/visual-2-palette-lore-take2.png` | (Codex) | 0 new |
+| S2/S3 reeds | Tripo H3.1 text-to-model, smart_low_poly, face_limit 3000 (prompt matched to the backdrop's pale plumes) | 229a0388-9354-4a48-aabb-19fb37ca8c8b | 30 |
+| S4/S5 floating lantern | Tripo H3.1, face_limit 1500 | b3ebd5d7-1f33-48c8-ab15-b2dd75abc519 | 30 |
+| S6/S7 mooring post | Tripo H3.1, face_limit 1500 | d6f2be10-8ab5-4741-954d-c17056606c0a | 30 |
+| S8 bank strip, S9 water strip | not made: flat-colour bank material and water plane in Godot | - | 0 |
+
+Total 90 Tripo credits. Outputs in `game/assets/generated/stage/riverbank/`: `backdrop.png`, `reeds.glb`, `floating-lantern.glb`, `mooring-post.glb`, `*-ref.png`.
+
+Take 2, 2026-11-09: swamp retake (designer asked for retakes; 4 Astra takes, same batch size as the season screens).
+
+| Job | Source | Session id | Cost |
+|---|---|---|---|
+| S1 backdrop, swamp take 1: dead moss trees, mist | Astra (gpt-6-astra via `codex exec`), refs: grove crop + shrine take 2 | 01a1c171-771c-7ae0-8709-f8d4da1e14c5 | 1 take |
+| take 2: weeping willows, lotus | same | 01a1c171-8a08-7ce2-a682-5f514eddd034 | 1 take |
+| take 3: open marsh, dead trunks | same | 01a1c171-771f-7d62-a177-5af8448a0e96 | 1 take |
+| **take 4: root trees, mossy logs, mist (picked)** | same | 01a1c171-771c-74f1-91cd-20f424ddce31 | 1 take |
+
+Prompts, the shared base and negative blocks, all four takes and the contact sheet are in `tools/style_agent/runs/kappa-swamp/`. The brief composes the painting as a far view only, with a level waterline at about 80% of the height and nothing below it but flat water. That way the game can use the painting nearly whole, at a sharp scale, instead of the old top third. Codex does not report Astra's credit cost.
+
+## Acceptance
+- S1 swamp backdrop (take 4): **PASS (designer pick)**.
+  - 1672x941, full-bleed, no lanterns or light sources.
+  - Twisted root trees with hanging moss frame both edges; a far treeline, flat mist bands, and mossy logs and a stump on the far bank.
+  - Level waterline at about row 776 (v 0.825). Below it is flat swamp water, about #2B4140, with faint ripple dashes.
+  - A few red autumn leaves (persimmon family) on the edge trees.
+  - Installed as `game/assets/generated/stage/riverbank/backdrop.png`.
+- S1 backdrop, first pass (superseded by the swamp retake): **PASS (designer pick)**. 1280x720, full-bleed. Round paper lanterns on teal water (#3E7F86), reeds framing both edges, indigo night hills; flat bank earth in the lower third. The lanterns have a soft graded glow and flat reflections, no halo; guide v2 L2 allows that, v1 docked it (8/10).
+- Reeds: **PASS with WARN**. 3,743 tris against 3,000 (+25%).
+- Floating lantern: **PASS with WARN**. 2,022 tris against 1,500 (+35%). Has a small top handle; the paper is pale, so it gets the flat persimmon emissive fill in the scene. Re-pivot to the waterline.
+- Mooring post: **PASS with WARN**. 2,475 tris against 1,500 (+65%).
+- Tripo props come normalised to a 1-unit box with the origin at the centre: re-pivot to the base and scale in Godot. Triangle counts run over target because `smart_low_poly` treats `face_limit` loosely; for background props that's no performance issue (WARN, not a retake). A Blender decimate by script is the free fix if wanted.
+- Licence: unconfirmed (AM5, YOK-115).

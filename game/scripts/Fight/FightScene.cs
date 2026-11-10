@@ -429,6 +429,7 @@ public partial class FightScene : Node3D
 		}
 		RenderModels(); // YOK-53
 		RenderTutorial(); // YOK-92
+		PresentStage(); // YOK-150: the stage's clock (bobbing lanterns, the tea house's seasons)
 
 		// YOK-129: the dynamic camera (eased per sim tick in StepSim); the rig carries position and pitch.
 		if (!ReferenceEquals(_camMatch, Match) || !Cam.Ready) StepCamera(); // a new or reset match renders before its first tick

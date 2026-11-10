@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/generated/stage/shrine-gate/snow-lantern.glb" id="1_lant"]
+
+[node name="SnowLantern" type="Node3D"]
+
+[node name="Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Model" parent="Pivot" instance=ExtResource("1_lant")]
+
+[node name="Light" type="OmniLight3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.35)
+light_color = Color(1, 0.62, 0.36, 1)
+light_energy = 1.6
+light_specular = 0.0
+omni_range = 3.0

@@ -1,0 +1,16 @@
+{
+  "kind": "run_map",
+  "id": "kitsune-then-oni",
+  "schema_version": 1,
+  "name": "TEST FIXTURE: a Kitsune duel, then an Oni duel",
+  "status": "final",
+  "rules": ["R2"],
+  "nodes": [
+    {"id": "fx-kitsune", "row": 1, "type": "duel", "yokai": "kitsune", "label": "Kitsune"},
+    {"id": "fx-oni", "row": 2, "type": "duel", "yokai": "oni", "label": "Oni"}
+  ],
+  "routes": [
+    {"from": "fx-kitsune", "to": "fx-oni"}
+  ],
+  "notes": "TEST FIXTURE (YOK-150): a self-walked run whose second node wants another stage (StageSetTests)."
+}
