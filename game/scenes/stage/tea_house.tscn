@@ -25,7 +25,7 @@ shader = ExtResource("9_season")
 shader_parameter/backdrop = ExtResource("5_back")
 shader_parameter/panel_mask = ExtResource("10_mask")
 shader_parameter/panel_rect = Vector4(0.115625, 0.25277779, 0.76875, 0.35555556)
-shader_parameter/painting_bottom_v = 0.8038869
+shader_parameter/painting_bottom_v = 0.8021201
 
 [sub_resource type="QuadMesh" id="QuadMesh_back"]
 size = Vector2(36.0, 20.25)

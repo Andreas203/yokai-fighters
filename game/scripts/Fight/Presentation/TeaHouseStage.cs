@@ -46,10 +46,10 @@ public static class TeaHouseStage
 
 	/// <summary>
 	/// The season paintings' row (v, down) that sits on the screens' bottom edge. Each painting's landscape ends in an ink
-	/// ground line at rows 458-463 of 566, with blank paper below it, which read as the view cut off at the bottom
-	/// (designer 2026-11-10). So each painting is shifted down, unscaled, until row 455 meets the sill: the hills run down
+	/// ground line from row 456 (winter, autumn) to 463 of 566, with blank paper below it, which read as the view cut off at the bottom
+	/// (designer 2026-11-10). So each painting is shifted down, unscaled, until row 454 meets the sill (two rows clear of the ink, for bilinear sampling): the hills run down
 	/// to the frame and the paper strip and its ink line are never shown. The top of the screens repeats row 0, which is
 	/// the paintings' flat sky.
 	/// </summary>
-	public const float PaintingBottomV = 455f / 566f;
+	public const float PaintingBottomV = 454f / 566f;
 }
