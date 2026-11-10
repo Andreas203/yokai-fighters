@@ -55,9 +55,6 @@ public static class MapPolishBreakerProbes
 		foreach (var n in v.Nodes) sb.Append($"{n.Id}:{s.RectOf(n.Id)}:{s.SpriteRectOf(n.Id)}:{MapNodeBox.Grown(s.RectOf(n.Id), s.SpriteRectOf(n.Id).Size.Y)};");
 		foreach (var kv in s.RoutePaths.OrderBy(k => k.Key.From + k.Key.To)) sb.Append($"{kv.Key}:{string.Join(",", kv.Value)};");
 		foreach (var l in s.Landmarks.Plan) sb.Append($"{l.Kind}|{l.Rect}|{l.Route}|{l.OnPath};");
-		var m = s.Mist;
-		sb.Append($"mist {m.From} {m.BankStart} {m.Right} {m.Ramp} {m.Visible};");
-		for (float x = -200; x < s.Board.Size.X + 400; x += 37f) sb.Append(m.Density(x).ToString("R")).Append(',');
 		foreach (var l in s.Routes.MistLines) sb.Append($"{l.A}{l.B}{string.Join(",", l.Path)};");
 		return sb.ToString();
 	}
@@ -138,42 +135,16 @@ public static class MapPolishBreakerProbes
 		Assert.True(f.Count == 0, f.Count + " routes off paper; first: " + string.Join(" || ", f.Take(4)));
 	}
 
-	// Mist math: Density in [0,1], monotonic non-decreasing, finite, for odd BankStart/Ramp/Right values.
+	// AM19: the sketches depend on the last drawn node only, never on the pan.
 	[Test]
-	public static void MistDensityStaysFiniteBoundedAndMonotonic()
-	{
-		var f = new List<string>();
-		foreach (var (from, bank, ramp, right) in new[] { (0f, 0f, 420f, 0f), (100f, 50f, 420f, 90f), (100f, 5000f, 420f, 300f), (0f, 10f, -50f, 100f), (0f, 10f, 0f, 100f), (300f, 300f, 60f, 300f), (-100f, -400f, 1e9f, 1000f) })
-		{
-			var m = new MapMist { From = from, BankStart = bank, Ramp = ramp, Right = right };
-			float last = -1f;
-			for (float x = -2000f; x < 8000f; x += 7f)
-			{
-				float d = m.Density(x);
-				if (float.IsNaN(d) || float.IsInfinity(d) || d < 0f || d > 1f) f.Add($"({from},{bank},{ramp},{right}) x={x}: {d}");
-				if (d + 1e-6f < last) { f.Add($"({from},{bank},{ramp},{right}) x={x}: not monotonic {last}->{d}"); break; }
-				last = d;
-			}
-			if (m.BankStart < m.From) f.Add($"BankStart {m.BankStart} before From {m.From}");
-			if (m.Density(m.BankStart - 1f) != 0f) f.Add($"mist before BankStart ({from},{bank}) is not open paper");
-			m.Free();
-		}
-		Assert.True(f.Count == 0, string.Join(" || ", f.Take(5)));
-	}
-
-	// AM19: the mist depends on the last drawn node only, never on the pan.
-	[Test]
-	public static void MistIsIndependentOfPanning(Node host)
+	public static void SketchesAreIndependentOfPanning(Node host)
 	{
 		var v = Random(7, 9, 4);
 		var s = Make(host, v, new Vector2(1280, 720));
 		string before = Fingerprint(s, v);
-		float bank = s.Mist.BankStart;
 		Assert.True(s.MaxScroll > 0f, "the board scrolls in this fixture");
 		s.PanTo(s.MaxScroll); s.SnapScroll();
-		Assert.Equal(before, Fingerprint(s, v), "panning moves no mist, box or route");
-		Assert.Equal(bank, s.Mist.BankStart, "BankStart is board space");
-		Assert.True(s.Mist.BankStart >= s.Mist.From, "BankStart is not before From");
+		Assert.Equal(before, Fingerprint(s, v), "panning moves no sketch, box or route");
 		s.GetParent().QueueFree();
 	}
 

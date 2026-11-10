@@ -10,7 +10,7 @@ namespace YokaiFighters.Tests;
 /// <summary>
 /// YOK-238: the map v2 rebuild (designer decisions 2026-11-09). Nodes are illustrated objects with a name tag (look per type, yokai and elder, the
 /// Tanuki never drawn), laid out at staggered heights by a deterministic hash, with landmarks that never sit on a node; the routes wind; the
-/// real routes ahead are sketched in mist with no node control anywhere past the reveal (AM19); the paper is the title scroll.
+/// real routes ahead are sketched on bare paper with no node control anywhere past the reveal (AM19); the paper is the title scroll.
 /// </summary>
 public static class MapV2Tests
 {
@@ -375,7 +375,7 @@ public static class MapV2Tests
 			int step = 0;
 			while (true)
 			{
-				// everything the screen draws now: the brushed routes and the mist sketches
+				// everything the screen draws now: the brushed routes and the sketches
 				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Concat(s.Routes.MistLines.Select((m, i) => ($"mist{i}", m.Path))).ToList();
 				AssertNoCrossing(drawn, $"{size} step {step}");
 				AssertSmooth(drawn.Where(d => d.Item2.Length > 1).ToList(), $"{size} step {step} (drawn and mist)");
@@ -480,10 +480,7 @@ public static class MapV2Tests
 		var s = Make(host, new SessionMapView(sess));
 		var all = sess.Map.Graph.Routes.Count;
 		Assert.Equal(all, s.Routes.MistLines.Count, "at the start every route of the map is ahead and is sketched, boss included");
-		Assert.True(s.Mist.Active && s.Mist.Visible, "with mist");
-		Assert.Equal(0, s.Mist.GetChildCount(), "the mist is only a drawing: no control in it");
 		Assert.Equal("r1-apprentice", string.Join(",", s.Nodes.Select(n => n.NodeId)), "and still only the first node is a control");
-		Assert.True(s.Mist.From >= s.RectOf("r1-apprentice").End.X - 1f, "the mist starts at the last drawn node");
 
 		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
 		s.SetView(new SessionMapView(sess));
@@ -519,7 +516,6 @@ public static class MapV2Tests
 		while (sess.Map.Graph.Node(sess.Reachable()[0]).Type != "boss") Walk(sess, sess.Reachable()[0]);
 		var s = Make(host, new SessionMapView(sess));
 		Assert.Equal(0, s.Routes.MistLines.Count, "nothing is ahead of the boss");
-		Assert.True(!s.Mist.Active, "so no mist");
 		s.GetParent().QueueFree();
 	}
 
@@ -749,19 +745,41 @@ public static class MapV2Tests
 		Assert.True(real >= 20, $"enough real routes were measured ({real})");
 	}
 
-	/// <summary>R2: the cloud bank starts past the last drawn node (open paper between), reaches past the paper's end, and is denser at the right than where it starts.</summary>
+	/// <summary>YOK-245: no mist or cloud node exists on the screen, at the start or at the boss.</summary>
 	[Test]
-	public static void CloudBankStartsPastOpenPaperAndFillsTheEnd(Node host)
+	public static void MapScreenHasNoMistOrCloudNode(Node host)
 	{
-		var sess = Start();
-		var s = Make(host, new SessionMapView(sess));
-		float end = s.Routes.MistLines.SelectMany(l => l.Path).Max(p => p.X);
-		Assert.True(s.Mist.From >= s.RectOf("r1-apprentice").End.X, "starts past the last drawn node");
-		Assert.True(s.Mist.BankStart > s.Mist.From + 300f, "the sketches run over open paper before the clouds begin");
-		Assert.True(s.Mist.Right >= Mathf.Max(end, s.Board.Size.X + MapScroll.PaperLeft), "ends past the far end of the last sketch and of the paper");
-		Assert.True(s.Mist.Density(s.Mist.Right) > s.Mist.Density(s.Mist.BankStart + 40f) && s.Mist.Density(s.Mist.BankStart + 40f) > 0f && s.Mist.Density(s.Mist.From) == 0f, "denser at the right than at its start");
-		Assert.True(s.Mist.Density(s.Mist.Right) >= 0.99f, "full body by the paper's end");
+		var s = Make(host, new SessionMapView(Start()));
+		Assert.True(s.FindChild("Mist", true, false) == null, "no Mist node");
+		bool Cloudy(Node n) => n.Name.ToString().ToLowerInvariant().Contains("mist") || n.Name.ToString().ToLowerInvariant().Contains("cloud") || (n.GetScript().Obj is Script sc && sc.ResourcePath.ToLowerInvariant().Contains("mist"));
+		bool any = false; void Walk(Node n) { if (Cloudy(n)) any = true; foreach (var c in n.GetChildren()) Walk(c); }
+		Walk(s);
+		Assert.True(!any, "no node or script named mist or cloud");
 		s.GetParent().QueueFree();
+	}
+
+	/// <summary>YOK-245: a sketch's ink falls smoothly to nothing before the paper's end, never rising again to the right.</summary>
+	[Test]
+	public static void SketchInkReachesZeroBeforeThePaperEndAndNeverRises(Node host)
+	{
+		foreach (var size in new[] { P1080, P720 })
+		{
+			var s = Make(host, new SessionMapView(Start()), size);
+			float from = s.RectOf("r1-apprentice").End.X, col = s.Board.Size.X / 8f;
+			float start = from + 0.8f * col, end = Mathf.Max(start + 240f, Mathf.Min(from + 2.2f * col, s.Board.Size.X - 20f));
+			Assert.True(end < s.Board.Size.X, $"{size}: the fade ends on the board");
+			Assert.True(MapRoutes.SketchAlpha(end, start, end - start) <= 0.01f, "nothing is left at the fade's end");
+			Assert.True(MapRoutes.SketchAlpha(from, start, end - start) >= MapRoutes.SketchMaxAlpha - 0.001f, "full ink next to the last node");
+			float last = 1f;
+			for (float x = 0; x < s.Board.Size.X + 200f; x += 5f)
+			{
+				float a = MapRoutes.SketchAlpha(x, start, end - start);
+				Assert.True(a <= last + 1e-6f, $"{size}: ink rises at x={x}");
+				last = a;
+			}
+			Assert.True(s.Routes.MistLines.Count > 0, "and the sketches exist");
+			s.GetParent().QueueFree();
+		}
 	}
 
 	/// <summary>The scroll draws its roller columns 1.5x the texture's own width: the very slices <see cref="MapScroll"/> draws from.</summary>

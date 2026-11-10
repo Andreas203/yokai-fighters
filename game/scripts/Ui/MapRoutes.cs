@@ -11,7 +11,7 @@ public enum RouteKind { Idle, Open, Walked }
 /// Draws the map's routes as brush strokes on the scroll (YOK-109, designer 2026-10-25). The walked route is a bold persimmon stroke, an open
 /// route (the choice ahead) a fainter sumi one, an idle one fainter still; all are tapered at both ends with a ragged edge, bristle streaks
 /// and dry gaps, drawn in code from deterministic noise, no texture. Lines come from <see cref="MapScreen"/>; this knows no map rules.
-/// YOK-238 (map v2): strokes wind along the centre lines of <see cref="MapRouteGeometry"/> (routes only join and split, never cross), and <see cref="SetMistLines"/> adds the
+/// YOK-238 (map v2): strokes wind along the centre lines of <see cref="MapRouteGeometry"/> (routes only join and split, never cross), and <see cref="SetMistLines"/> (the sketches of the routes ahead) adds the
 /// real routes still ahead as thin dashed sketches that fade out along x (AM19); they are not <see cref="Lines"/> and carry no kind.
 /// <see cref="Paint"/> makes chosen strokes paint in from their start over a short time (presentation only, <see cref="FinishPainting"/>
 /// ends it at once; nothing reads it back).
@@ -28,7 +28,7 @@ public partial class MapRoutes : Control
 	/// <summary>AM19: the routes still ahead, drawn as faint dashed sketches (end points in the same coordinates as <see cref="Lines"/>).</summary>
 	public IReadOnlyList<(Vector2 A, Vector2 B, Vector2[] Path)> MistLines => _mist;
 
-	/// <summary>AM19: sketch these routes; the ink fades from full at x = <paramref name="fadeFrom"/> to nearly nothing <paramref name="fadeSpan"/> px further on.</summary>
+	/// <summary>AM19: sketch these routes; the ink fades from full at x = <paramref name="fadeFrom"/> to nothing <paramref name="fadeSpan"/> px further on.</summary>
 	public void SetMistLines(IEnumerable<(Vector2 A, Vector2 B, Vector2[] Path)> lines, float fadeFrom, float fadeSpan = 1500f)
 	{
 		_mist.Clear(); _mist.AddRange(lines);
@@ -166,9 +166,18 @@ public partial class MapRoutes : Control
 	}
 
 	/// <summary>
-	/// AM19: one route ahead as a thin dashed pencil-and-ink line that grows fainter the further right it runs, so it trails into the mist.
+	/// AM19: one route ahead as a thin dashed pencil-and-ink line that grows fainter the further right it runs, so it fades out on bare paper (no hard edge).
 	/// Dashes and drift depend on the x position only, so routes that share a trunk draw one and the same dashed line.
 	/// </summary>
+	public const float SketchMaxAlpha = 0.6f;
+
+	/// <summary>The ink of a sketch at board x: full from the left up to <paramref name="fadeFrom"/>, then a smooth fall to 0 at fadeFrom + <paramref name="span"/> and 0 beyond. Monotonic non-increasing in x; a function of x only.</summary>
+	public static float SketchAlpha(float x, float fadeFrom, float span)
+	{
+		float t = Mathf.Clamp((x - fadeFrom) / Mathf.Max(1f, span), 0f, 1f);
+		return SketchMaxAlpha * (1f - t * t * (3f - 2f * t));
+	}
+
 	void DrawSketch(Vector2[] path)
 	{
 		var p = Resample(path, out _); var n = Normals(p);
@@ -176,8 +185,8 @@ public partial class MapRoutes : Control
 		{
 			float mx = (p[i].X + p[i + 1].X) * 0.5f;
 			if (((mx % 26f) + 26f) % 26f > 15f) continue;
-			float fade = Mathf.Clamp((p[i].X - _mistFrom) / _mistSpan, 0f, 1f);
-			float alpha = Mathf.Lerp(0.62f, 0.3f, fade);
+			float alpha = SketchAlpha(p[i].X, _mistFrom, _mistSpan);
+			if (alpha < 0.02f) continue;
 			var o = n[i] * (Smooth(41, p[i].X / 6f, 6f) - 0.5f) * 2.2f;
 			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, alpha), 2.4f, true);
 		}
