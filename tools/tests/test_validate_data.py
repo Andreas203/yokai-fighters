@@ -95,6 +95,31 @@ class ValidateDataTest(unittest.TestCase):
                     wrong.append(f"{c['name']}: validator {'accepted' if not lines else 'refused'}\n{out}")
         self.assertEqual(wrong, [], "\n".join(wrong))
 
+    def test_teleport_frame_and_active_null(self):
+        """YOK-224: Fox Mirage is 18/—/10 with a teleport (active null, no projectile), and the teleport frame must
+        fall inside the move, as MoveData.ReadMirage says. Both the file check and the built-move check say so."""
+        import json
+        import tempfile
+        doc = json.loads((ROOT / "game" / "tests" / "fixtures" / "specials" / "test-rising-talisman.json").read_text(encoding="utf-8"))
+        fd = doc["levels"]["1"]["frame_data"]
+        fd.update({"startup": 18, "active": None, "recovery": 10, "hitboxes": [],
+                   "hurtboxes": [{"frames": [1, 28], "rect": {"x": -45, "y": 0, "w": 90, "h": 320}}],
+                   "properties": {"teleport": {"to": "behind_opponent", "frame": 18}}})
+        with tempfile.TemporaryDirectory() as tmp:
+            def check(frame):
+                fd["properties"]["teleport"]["frame"] = frame
+                doc["id"] = f"test-mirage-{frame}"
+                f = Path(tmp) / f"{doc['id']}.json"
+                f.write_text(json.dumps(doc), encoding="utf-8")
+                return [l for l in run(f)[1].splitlines()[:-1] if "clip: clip '" not in l]
+            self.assertEqual(check(18), [], "active null with a teleport is a valid move")
+            self.assertEqual(check(28), [], "the last frame is inside the move")
+            past = check(40)
+            self.assertTrue(any("teleport" in l and "40" in l for l in past), f"frame 40 on a 28-frame move: {past}")
+        self.assertEqual(validate_data.built_move_errors(fd | {"properties": {"teleport": {"to": "behind_opponent", "frame": 29}}}),
+                         ["properties.teleport.frame 29 is past the move's last frame (28)"])
+        self.assertEqual(validate_data.built_move_errors(fd | {"properties": {"teleport": {"to": "behind_opponent", "frame": 28}}}), [])
+
     def test_forward_travel_needs_whole_units_and_active_frames(self):
         """YOK-221: per build, as MoveData.ReadTravel: a level or EX that takes the active frames away can't keep its travel."""
         def errs(active, travel):
@@ -977,6 +1002,52 @@ class LevelPresetTest(unittest.TestCase):
             code, out = run(g)
             self.assertEqual(code, 1, out)
             self.assertIn("files in data/presets/ must be kind 'level_preset'", out)
+
+
+GRAB_FIXTURE = ROOT / "game" / "tests" / "fixtures" / "command-grabs" / "test-river-grab.json"
+GRAB_TRIAL_CASES = ROOT / "game" / "tests" / "fixtures" / "command-grabs" / "trial-cases.json"
+
+
+class CommandGrabTest(unittest.TestCase):
+    """YOK-225 (R7, C4): a special with properties.throw is a command grab: a throw for trials, and MoveLoader's
+    refusals. The build cases are modifier-gate/cases.json special_cases (cg-*); the trial cases are shared with C#."""
+
+    def test_trial_cases_match_the_loader(self):
+        import json
+        import tempfile
+        cases = json.loads(GRAB_TRIAL_CASES.read_text(encoding="utf-8"))["cases"]
+        self.assertGreaterEqual(len(cases), 4)
+        wrong = []
+        talisman = ROOT / "game" / "tests" / "fixtures" / "specials" / "test-rising-talisman.json"
+        for c in cases:
+            with tempfile.TemporaryDirectory() as tmp:
+                doc = json.loads(FIXTURE_TRIAL.read_text(encoding="utf-8"))
+                doc["special"] = "test-river-grab"
+                doc["goal"]["steps"] = c["steps"]
+                p = Path(tmp) / "test-spirit-wave-trial.json"
+                p.write_text(json.dumps(doc), encoding="utf-8")
+                out = io.StringIO()
+                validate_data.validate([str(p), str(GRAB_FIXTURE), str(talisman)], out=out)
+                text = [l for l in out.getvalue().splitlines() if "test-spirit-wave-trial.json:" in l]
+                if (not text) != c["accept"]:
+                    wrong.append(f"{c['name']}: validator {'accepted' if not text else 'refused'}\n{out.getvalue()}")
+        self.assertEqual(wrong, [], "\n".join(wrong))
+
+    def test_a_normal_or_throw_cannot_carry_properties_throw(self):
+        for kind in ("normal", "throw"):
+            fd = {"startup": 5, "active": 2, "recovery": 20, "damage": 50,
+                  "properties": {"throw": {"range": 120, "breakable": True}}}
+            self.assertTrue(any("is for a special" in m for m in validate_data.built_move_errors(fd, kind)), kind)
+        self.assertFalse(any("is for a special" in m for m in validate_data.built_move_errors(
+            {"startup": 6, "active": 2, "recovery": 30, "damage": 130,
+             "hitboxes": [{"frames": [7, 8], "rect": {"x": 20, "y": 150, "w": 110, "h": 120}}],
+             "properties": {"throw": {"range": 130, "breakable": True}}})), "a special may")
+
+    def test_command_grab_fixture_is_a_throw_for_trials(self):
+        import json
+        self.assertTrue(validate_data.is_command_grab(json.loads(GRAB_FIXTURE.read_text(encoding="utf-8"))))
+        talisman = ROOT / "game" / "tests" / "fixtures" / "specials" / "test-rising-talisman.json"
+        self.assertFalse(validate_data.is_command_grab(json.loads(talisman.read_text(encoding="utf-8"))))
 
 
 def json_source(path):

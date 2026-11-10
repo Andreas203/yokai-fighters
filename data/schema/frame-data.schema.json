@@ -11,7 +11,7 @@
     "active": {
       "type": ["integer", "null"],
       "minimum": 1,
-      "description": "null = '—' in rules.md: the body never hits; the projectile carries the hit (needs properties.projectile)."
+      "description": "null = '—' in rules.md: the body never hits; the projectile carries the hit (needs properties.projectile), or the move only teleports (properties.teleport, YOK-224: Fox Mirage 18/—/10)."
     },
     "recovery": { "type": "integer", "minimum": 0 },
     "damage": { "type": "integer", "minimum": 0 },
@@ -115,14 +115,14 @@
         "low": { "type": "boolean", "description": "Must be blocked crouching (C3)." },
         "aftershock_delay": { "type": "integer", "minimum": 1, "description": "YOK-136 (Oni Quake Lv 3 Aftershock, A5): frames after the move's first active frame that a second quake replays the move's hitboxes, anchored where the first struck. Needs the move's own hitboxes; one connect, with the move's numbers." },
         "throw": {
-          "description": "Generic throw (C4): grab clip + standard knockdown, never paired animation.",
+          "description": "Generic throw (C4) fired by a special's input (YOK-225, a command grab): grab clip + standard knockdown, never paired animation. It resolves as the LP+LK throw does and counts as a throw for trials (R7) and successful_throws cancels (X4). Specials only; not with aftershock_delay; the recovery must outlast break_window (E12).",
           "type": "object",
           "required": ["range", "breakable"],
           "additionalProperties": false,
           "properties": {
-            "range": { "type": "integer", "minimum": 1, "description": "YOK-220: an effect target (Whirlpool Grab: mul_pct 150). Loads; no fight code reads properties.throw yet." },
-            "breakable": { "type": "boolean" },
-            "break_window": { "type": "integer", "minimum": 1 }
+            "range": { "type": "integer", "minimum": 1, "description": "YOK-225: on a special, makes it a command grab (River Grab): its hitboxes place the grab, which reaches from each box's x to range units in front of the thrower; they never strike, so no hitstun is needed. An effect target (Whirlpool Grab: mul_pct 150). Must reach past every hitbox's x." },
+            "breakable": { "type": "boolean", "description": "false: the defender's LP+LK press does not break it (a clash still does)." },
+            "break_window": { "type": "integer", "minimum": 1, "description": "Frames the defender has to break it; omitted = 7 (C4)." }
           }
         },
         "anti_air": { "type": "boolean" },
@@ -130,7 +130,7 @@
         "launch": { "type": "boolean" },
         "wall_bounce": { "type": "boolean", "description": "YOK-220 (Crushing Charge, Iron-Club Charge Lv 3): the hit bounces the opponent off the wall. Loads; no fight code reads it yet." },
         "multi_hit": { "$ref": "common.schema.json#/$defs/multiHit" },
-        "decoy": { "type": "integer", "minimum": 1, "description": "YOK-220 (Mirage Feint, Fox Mirage Lv 3): hits the decoy absorbs. Loads; no fight code reads it yet." },
+        "decoy": { "type": "integer", "minimum": 1, "description": "YOK-220 (Mirage Feint, Fox Mirage Lv 3): hits the decoy absorbs. YOK-224: a teleport leaves it at the origin (MoveData.ReadMirage, Match.Mirage); a move without a teleport leaves none." },
         "passes_projectiles": { "type": "boolean" },
         "absorbs_hits": { "type": "integer", "minimum": 0 },
         "teleport": {

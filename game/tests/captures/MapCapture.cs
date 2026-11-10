@@ -37,6 +37,17 @@ public partial class MapCapture : Node
 			GetTree().Quit();
 			return;
 		}
+		if (OS.GetCmdlineUserArgs().Contains("row3=1")) // YOK-240: a row of three drawn, a dojo and a merchant among them (art and ring overflow the boxes)
+		{
+			var v = new StubMapView();
+			v.Add("a", 1, "duel", "Apprentice"); v.Add("b0", 2, "dojo", null); v.Add("b1", 2, "merchant", null); v.Add("b2", 2, "duel", "Oni");
+			foreach (var b in new[] { "b0", "b1", "b2" }) v.Route("a", b);
+			v.Open("a"); v.Select("a"); v.Complete();
+			screen.SetView(v);
+			await Snap(dir + $"/map_row3{suffix}.png");
+			GetTree().Quit();
+			return;
+		}
 		string md = ContentPaths.Data("map");
 		var session = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
 		screen.SetView(new SessionMapView(session));

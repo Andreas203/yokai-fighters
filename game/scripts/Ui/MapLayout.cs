@@ -43,6 +43,14 @@ public readonly record struct MapNodeShape(float Aspect, float Scale, int ExtraL
 public static class MapNodeBox
 {
 	public static float Pad(float s) => 0.14f * s;
+	/// <summary>The largest <c>SpriteScale</c> a node's art is drawn at (YOK-240); <see cref="MapNode"/> clamps to it, so the room reserved below is enough for every type.</summary>
+	public const float MaxArtScale = 1.3f;
+	/// <summary>How far a node's drawn art and ring can reach above its box (a 1.3x building with its foot on the sprite rect's foot, plus the ring's clearance): reserved for every node, whatever it is.</summary>
+	public static float OverflowTop(float s) => (MaxArtScale - 1f) * s - 0.28f * Pad(s) + 2f;
+	/// <summary>How far the ring can reach past the box's sides.</summary>
+	public static float OverflowSide(float s) => 0.08f * s;
+	/// <summary>The box grown by the art's and ring's overflow (what the layout keeps on the paper and the landmarks keep clear of); <paramref name="s"/> is the node's sprite height.</summary>
+	public static Rect2 Grown(Rect2 box, float s) => new(box.Position - new Vector2(OverflowSide(s), OverflowTop(s)), box.Size + new Vector2(2f * OverflowSide(s), OverflowTop(s)));
 	public static float LineHeight(float s) => Mathf.Clamp(s * 0.2f, 20f, 34f);
 	/// <summary>Where the tag's top edge is, from the box top: it overlaps the sprite's lowest tenth.</summary>
 	public static float TagTop(float s) => Pad(s) + 0.9f * s;
@@ -77,6 +85,8 @@ public static class MapLayout
 	/// the node size must not hint at how many nodes a later row holds. A row with more nodes than this shrinks its own nodes only.
 	/// </summary>
 	public const int TypicalRow = 3;
+	/// <summary>Tag lines a lone node's box reserves beyond the name (the boss's two).</summary>
+	public const int LoneExtraLines = 2;
 	/// <summary>The standard sprite height as a share of the board's height.</summary>
 	public const float SpriteShare = 0.225f;
 
@@ -123,21 +133,26 @@ public static class MapLayout
 				var v = row[j];
 				uint h = Hash(v.Id);
 				var shape = shapeOf(v);
+				// a lone node (the first row, the boss) has the column to itself: its box keeps room for a tag of three lines (the boss's name and two more), whoever waits there (AM19: by row size, never by type)
+				if (n == 1) shape = shape with { ExtraLines = Math.Max(shape.ExtraLines, LoneExtraLines) };
 				float s = s0 * shape.Scale;
 				var size = MapNodeBox.Size(s, shape);
 				// a crowded row shrinks its own nodes only; a lone node may use the column's whole height (the boss's two tag lines make it taller)
 				float maxH = n == 1 ? usable * 0.98f : cell * 0.96f;
-				if (size.Y > maxH) // the tag text has a floor, so solve for the sprite height that fits
+				if (size.Y + MapNodeBox.OverflowTop(s) > maxH) // (the art and ring that rise above the box count: they must not poke into the next node) the tag text has a floor, so solve for the sprite height that fits
 				{
 					float lo = 4f, hi = s;
-					for (int it = 0; it < 16; it++) { float mid = (lo + hi) / 2f; if (MapNodeBox.Size(mid, shape).Y > maxH) hi = mid; else lo = mid; }
+					for (int it = 0; it < 16; it++) { float mid = (lo + hi) / 2f; if (MapNodeBox.Size(mid, shape).Y + MapNodeBox.OverflowTop(mid) > maxH) hi = mid; else lo = mid; }
 					s = lo; size = MapNodeBox.Size(s, shape);
 				}
-				float slack = Mathf.Max(0f, cell - size.Y) / 2f;
-				float cy = y0 + (j + 0.5f) * cell + slack * (2f * Unit(h, 2) - 1f) * 0.9f;
+				// the box AND the art and ring rising above it must stay inside this node's own cell, so the grown boxes of a column never overlap:
+				// the nudge is taken from the room left after the overflow, and the box sits under it (by the node's size alone, never its type)
+				float ov = MapNodeBox.OverflowTop(s);
+				float slack = Mathf.Max(0f, cell - size.Y - ov) / 2f;
+				float cy = y0 + (j + 0.5f) * cell + slack * (2f * Unit(h, 2) - 1f) * 0.9f + ov / 2f;
 				float lean = n > 1 ? (j % 2 == 0 ? -1f : 1f) * 0.03f + (Unit(h, 3) - 0.5f) * 0.02f : (Unit(h, 3) - 0.5f) * 0.08f;
 				float cx = (c + 0.5f) * colW + lean * colW;
-				var pos = new Vector2(Mathf.Clamp(cx - size.X / 2f, 0f, Mathf.Max(0f, board.X - size.X)), Mathf.Clamp(cy - size.Y / 2f, 0f, Mathf.Max(0f, board.Y - reserve - size.Y)));
+				var pos = new Vector2(Mathf.Clamp(cx - size.X / 2f, 0f, Mathf.Max(0f, board.X - size.X)), Mathf.Max(MapNodeBox.OverflowTop(s), Mathf.Min(cy - size.Y / 2f, Mathf.Max(0f, board.Y - reserve - size.Y))));
 				rects[v.Id] = new Rect2(pos, size);
 				var sp = MapNodeBox.Sprite(size, s, shape);
 				sprites[v.Id] = new Rect2(pos + sp.Position, sp.Size);

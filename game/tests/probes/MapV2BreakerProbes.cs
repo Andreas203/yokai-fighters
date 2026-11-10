@@ -221,12 +221,11 @@ public static class MapV2BreakerProbes
 		}
 	}
 
-	// T6 [AM20]: a locked copy target puts nothing about the copy on the map.
+	// T6 [AM20]: the map shows nothing about the copy target (the view no longer carries one).
 	[Test]
-	public static void LockedCopyTargetLeavesNoCopyTextOnTheMap(Node host)
+	public static void MapShowsNoCopyText(Node host)
 	{
 		var v = StubMapView.Grid(4, 2);
-		v.CopyLocked = true;
 		var s = Make(host, v);
 		var all = string.Join(" | ", Texts(s)).ToUpperInvariant();
 		Assert.True(!all.Contains("COPY TARGET") && !all.Contains("LOCKED COPY") && !all.Contains("COPYING"), "copy text on the map: " + all);
