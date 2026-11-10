@@ -94,7 +94,7 @@ public static class MapScreenProbes
 		Assert.Equal(h, map.StateHash(), "hash unchanged by refusals");
 		Assert.Equal(snap.Current, map.Snapshot().Current, "current unchanged");
 		Assert.True(view.Detail("nope") == null, "detail of an unknown node is null, no throw");
-		var before = view.Status; _ = view.Nodes; _ = view.CopyTarget;
+		var before = view.Status; _ = view.Nodes;
 		Assert.Equal(h, map.StateHash(), "reads do not change the hash");
 	}
 

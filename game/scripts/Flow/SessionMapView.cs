@@ -24,9 +24,6 @@ public sealed class SessionMapView : IMapView
 	public IReadOnlyList<MapNodeView> Nodes => _map.Nodes;
 	public IReadOnlyList<MapRouteView> Routes => _map.Routes;
 	public MapStatusView? Status => _map.Status;
-	/// <summary>T1, T6: live target (T2-T4, <c>CopyRule.Target</c>) until the Tanuki's node is entered, then the locked copy. Read-only.</summary>
-	public CopyTarget? CopyTarget => _session.CopyLocked ? _session.LockedCopy : _map.CopyTarget;
-	public bool CopyLocked => _session.CopyLocked;
 	public object? RunKey => _session;
 	public MapNodeDetail? Detail(string nodeId) => _map.Detail(nodeId);
 	public IReadOnlyList<MapTwistLegendEntry> TwistLegend => _map.TwistLegend;

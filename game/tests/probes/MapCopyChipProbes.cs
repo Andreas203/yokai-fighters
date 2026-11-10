@@ -48,11 +48,9 @@ public static class MapCopyChipProbes
 
 	sealed class StubView : IMapView
 	{
-		public CopyTarget? Target; public bool Locked; public object? Key;
+		public object? Key;
 		public IReadOnlyList<MapNodeView> Nodes { get; } = new List<MapNodeView>();
 		public IReadOnlyList<MapRouteView> Routes { get; } = new List<MapRouteView>();
-		public CopyTarget? CopyTarget => Target;
-		public bool CopyLocked => Locked;
 		public object? RunKey => Key;
 		public bool Select(string nodeId) => false;
 	}
@@ -106,14 +104,13 @@ public static class MapCopyChipProbes
 		screen.GetParent().QueueFree();
 	}
 
-	// A view that carries a copy target does not make the screen show it: the view API may still hold the target, the screen ignores it.
+	// The view API no longer carries a copy target (YOK-240), so a new run key (a new run on the same screen) still shows no chip.
 	[Test]
-	public static void AViewThatCarriesATargetDoesNotMakeTheChipAppear(Node host)
+	public static void ANewRunKeyShowsNoChip(Node host)
 	{
-		var s = NewSession();
-		var view = new StubView { Target = CopyRule.Target(s.Run), Locked = true, Key = new object() };
+		var view = new StubView { Key = new object() };
 		var screen = Show(host, view);
-		AssertNoChip(screen, "a stub view with a locked target");
+		AssertNoChip(screen, "a fresh view");
 		view.Key = new object();
 		screen.SetView(view);
 		AssertNoChip(screen, "a second run key");

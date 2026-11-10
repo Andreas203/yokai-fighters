@@ -269,7 +269,7 @@ public partial class MapScreen : Control
 		Board.Position = new Vector2(boardX, boardTop); Board.Size = new Vector2(cols * colW, boardH);
 		_layout = MapLayout.Compute(nodes, Board.Size, ShapeOf);
 		_paths = MapRouteGeometry.Compute(nodes, View.Routes, _layout, Board.Size.Y);
-		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Values, _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
+		var plan = MapLandmarkPlan.Compute(Board.Size, _layout.Rects.Select(kv => MapNodeBox.Grown(kv.Value, _layout.Sprites[kv.Key].Size.Y)), _paths.Values.ToList(), MapNodeBox.LineHeight(Board.Size.Y * MapLayout.SpriteShare));
 		Landmarks.SetPlan(plan, Board.Position);
 		LandmarksFront.Position = Vector2.Zero; LandmarksFront.Size = Board.Size;
 		LandmarksFront.SetPlan(plan, Vector2.Zero);
@@ -497,10 +497,12 @@ public partial class MapScreen : Control
 	{
 		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => MistEnds(r.From, r.To, state)).ToList();
 		float from = shown.Count == 0 ? 0f : shown.Max(n => _layout.Rects[n.Id].End.X);
-		Routes.SetMistLines(ahead, from, Mathf.Max(600f, Board.Size.X - from));
+		// the clouds begin about a column and a half past the last drawn node: the sketches run clear over open paper until they reach them
+		float bank = from + 1.45f * _layout.ColumnWidth;
+		Routes.SetMistLines(ahead, bank - 200f, 700f);
 		bool any = ahead.Count > 0 || all.Any(n => n.State == MapNodeState.Locked);
 		Mist.Visible = any;
-		Mist.From = from + 10f; Mist.Right = any ? Board.Size.X + MapScroll.PaperLeft + 60f : from;
+		Mist.From = from + 10f; Mist.BankStart = bank; Mist.Right = any ? Board.Size.X + MapScroll.PaperLeft + 60f : from;
 	}
 
 	/// <summary>Step the cursor through the reachable nodes (wraps). Does nothing when none are reachable or a pick already went through.</summary>

@@ -80,7 +80,7 @@ public static class MapLandmarkPlan
 				var kind = Cycle[(next + tryKind) % Cycle.Length];
 				// never the same kind twice within a screen width, and a limited number of small items per screen
 				uint h = MapLayout.Hash("lm" + ri + ":" + (int)kind);
-				for (int attempt = 0; attempt < 40 && !placed; attempt++)
+				for (int attempt = 0; attempt < MaxAttempts && !placed; attempt++)
 				{
 					float f = 0.12f + 0.76f * MapLayout.Unit(h, 5 + attempt);
 					var lm = Place(kind, path, f, ri, h, attempt, paths, boxes, taken, bounds);
@@ -97,6 +97,11 @@ public static class MapLandmarkPlan
 		}
 		return result;
 	}
+
+	/// <summary>How many places along a route one kind is tried at before the next kind is (a winding route has fewer level stretches for a bridge).</summary>
+	const int MaxAttempts = 120;
+	/// <summary>The most a route may bend (degrees over 40 px either side) where a footbridge stands.</summary>
+	const float BridgeBend = 17f, ToriiBend = 22f;
 
 	static float Length(Vector2[] p) { float l = 0; for (int i = 0; i + 1 < p.Length; i++) l += p[i].DistanceTo(p[i + 1]); return l; }
 
@@ -176,7 +181,7 @@ public static class MapLandmarkPlan
 		if (onPath)
 		{
 			// a fairly straight stretch: the bridge on a level one, the torii on a gently sloping one, so the route crosses the line between its posts
-			if (Bend(path, i, 5) > 9f) return null;
+			if (Bend(path, i, 5) > (kind == MapLandmarkKind.Bridge ? BridgeBend : ToriiBend)) return null; // the winding routes have few dead-straight stretches: a bridge sits on the gentle top of a swing
 			if (kind == MapLandmarkKind.Bridge ? slope > 0.2f : slope > 0.30f) return null;
 			float level = kind == MapLandmarkKind.Bridge ? BridgeDeck : ToriiCrossing;
 			rect = new Rect2(p.X - wd / 2f, p.Y - level * ht, wd, ht);

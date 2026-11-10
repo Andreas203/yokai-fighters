@@ -13,8 +13,8 @@ namespace YokaiFighters.Ui;
 /// (<c>RunMap.Select</c>); the run flow owns <c>Complete</c> and what the node does.
 /// State: the node Ryo is on (entered, or just completed) is Current; other completed nodes Visited; <c>Reachable()</c> Reachable;
 /// an unchosen node in a row Ryo has left (row at or below the Current node's) PassedOver (YOK-108); the rest Locked.
-/// YOK-108: with a <see cref="RunState"/> the view also gives the status panel's numbers and the T6 copy target (read-only,
-/// <see cref="CopyRule.Target"/>); with an <see cref="INodeSceneResolver"/> it words each node's reward line from the same
+/// YOK-108: with a <see cref="RunState"/> the view also gives the status panel's numbers (the map shows no copy target,
+/// AM20, YOK-240); with an <see cref="INodeSceneResolver"/> it words each node's reward line from the same
 /// table the run flow uses (<c>NodeContext.Coins</c>, <c>Binds</c>), so no reward number is typed here.
 /// </summary>
 public class RunMapView : IMapView
@@ -53,9 +53,6 @@ public class RunMapView : IMapView
 
 	public MapStatusView? Status => _run is null ? null
 		: new(_run.Health, RunState.MaxHealth, _run.Coins, _map.Visited.Count(id => _playRows.Contains(_map.Graph.Node(id).Row)), _playRows.Count) { LastPlayRow = _playRows.Count == 0 ? 0 : _playRows.Max() };
-
-	public virtual CopyTarget? CopyTarget => _run is null ? null : CopyRule.Target(_run);
-	public virtual bool CopyLocked => false;
 
 	public MapNodeDetail? Detail(string nodeId) => _map.Graph.Has(nodeId) ? new MapNodeDetail(RewardLine(_map.Graph.Node(nodeId)), TwistLine(_map.Graph.Node(nodeId)), HabitLine(_map.Graph.Node(nodeId))) : null;
 

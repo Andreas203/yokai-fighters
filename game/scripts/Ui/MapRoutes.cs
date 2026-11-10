@@ -177,7 +177,7 @@ public partial class MapRoutes : Control
 			float mx = (p[i].X + p[i + 1].X) * 0.5f;
 			if (((mx % 26f) + 26f) % 26f > 15f) continue;
 			float fade = Mathf.Clamp((p[i].X - _mistFrom) / _mistSpan, 0f, 1f);
-			float alpha = Mathf.Lerp(0.62f, 0.16f, fade);
+			float alpha = Mathf.Lerp(0.62f, 0.3f, fade);
 			var o = n[i] * (Smooth(41, p[i].X / 6f, 6f) - 0.5f) * 2.2f;
 			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, alpha), 2.4f, true);
 		}
