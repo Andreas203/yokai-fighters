@@ -32,7 +32,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM19** 2026-11-09 (designer, YOK-109, PR #273): the real routes ahead, to the Tanuki, show as sketched lines under mist; their nodes, names and icons stay hidden until their turn (R2, amends AM18). Presentation only.
 - **AM20** 2026-11-09 (designer, YOK-238): the map no longer shows the copy-target talisman; outside fights only the rest-stop forecast names the target, its level and expected cost (T6, amends AM6 and AM18). The copy rule itself is unchanged.
 - **AM21** 2026-11-09 (designer, YOK-151, PR #277): the Kappa's stage is a night swamp without lanterns, painted or 3D (V9). The stage id `riverbank` and its file names stay.
-- **AM22** 2026-11-10 (designer, YOK-245): the map has no mist or clouds; the real routes ahead show as faint sketches that fade out on bare paper, still with no node, name or icon (R2, amends AM19).
+- **AM22** 2026-11-10 (designer, YOK-245): the map has no mist or clouds; the real routes ahead show as faint dotted sketches on bare paper all the way to the Tanuki, still with no node, name or icon (R2, amends AM19).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
@@ -267,3 +267,6 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 
 ## Designer decisions 2026-11-10
 - 2026-11-10 YOK-245 map clouds removed (designer, after playing PR #276: "the clouds on the map look weird, I'd rather we remove them"): no mist on the map; the sketches fade out on bare paper (AM22).
+
+## Designer decisions 2026-11-11
+- 2026-11-11 YOK-245 sketches run to the end (designer, after playing PR #279: "continue the dotted lines fully until the end"): the dotted sketches of the routes ahead no longer fade; they run at one strength to the Tanuki's node (AM22 updated before merge).
