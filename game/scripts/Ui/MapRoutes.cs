@@ -23,19 +23,13 @@ public partial class MapRoutes : Control
 	float _paintSeconds = 0.6f;
 	readonly List<(Vector2 A, Vector2 B, Vector2[] Path)> _sketch = new();
 	readonly Dictionary<(Vector2, Vector2), Vector2[]> _paths = new();
-	float _sketchFrom, _sketchSpan = 1500f;
 	public IReadOnlyList<(Vector2 A, Vector2 B, RouteKind Kind)> Lines => _lines;
 	/// <summary>AM19: the routes still ahead, drawn as faint dashed sketches (end points in the same coordinates as <see cref="Lines"/>).</summary>
 	public IReadOnlyList<(Vector2 A, Vector2 B, Vector2[] Path)> Sketches => _sketch;
-	/// <summary>Where the sketches' ink starts to fade (board x) and over how far it falls to nothing, as the screen set them.</summary>
-	public float FadeFrom => _sketchFrom;
-	public float FadeSpan => _sketchSpan;
-
-	/// <summary>AM19: sketch these routes; the ink fades from full at x = <paramref name="fadeFrom"/> to nothing <paramref name="fadeSpan"/> px further on.</summary>
-	public void SetSketches(IEnumerable<(Vector2 A, Vector2 B, Vector2[] Path)> lines, float fadeFrom, float fadeSpan = 1500f)
+	/// <summary>AM19: sketch these routes, each at one constant faint ink from its start to its end.</summary>
+	public void SetSketches(IEnumerable<(Vector2 A, Vector2 B, Vector2[] Path)> lines)
 	{
 		_sketch.Clear(); _sketch.AddRange(lines);
-		_sketchFrom = fadeFrom; _sketchSpan = Mathf.Max(1f, fadeSpan);
 		QueueRedraw();
 	}
 	/// <summary>True while any stroke is still painting in.</summary>
@@ -168,19 +162,13 @@ public partial class MapRoutes : Control
 		return o;
 	}
 
+	/// <summary>The ink of every sketch, the same along its whole length.</summary>
+	public const float SketchInk = 0.6f;
+
 	/// <summary>
-	/// AM19: one route ahead as a thin dashed pencil-and-ink line that grows fainter the further right it runs, so it fades out on bare paper (no hard edge).
+	/// AM19: one route ahead as a thin dashed pencil-and-ink line at constant faint strength, to the end of the route.
 	/// Dashes and drift depend on the x position only, so routes that share a trunk draw one and the same dashed line.
 	/// </summary>
-	public const float SketchMaxAlpha = 0.6f;
-
-	/// <summary>The ink of a sketch at board x: full from the left up to <paramref name="fadeFrom"/>, then a smooth fall to 0 at fadeFrom + <paramref name="span"/> and 0 beyond. Monotonic non-increasing in x; a function of x only.</summary>
-	public static float SketchAlpha(float x, float fadeFrom, float span)
-	{
-		float t = Mathf.Clamp((x - fadeFrom) / Mathf.Max(1f, span), 0f, 1f);
-		return SketchMaxAlpha * (1f - t * t * (3f - 2f * t));
-	}
-
 	void DrawSketch(Vector2[] path)
 	{
 		var p = Resample(path, out _); var n = Normals(p);
@@ -188,10 +176,8 @@ public partial class MapRoutes : Control
 		{
 			float mx = (p[i].X + p[i + 1].X) * 0.5f;
 			if (((mx % 26f) + 26f) % 26f > 15f) continue;
-			float alpha = SketchAlpha(p[i].X, _sketchFrom, _sketchSpan);
-			if (alpha < 0.02f) continue;
 			var o = n[i] * (Smooth(41, p[i].X / 6f, 6f) - 0.5f) * 2.2f;
-			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, alpha), 2.4f, true);
+			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, SketchInk), 2.4f, true);
 		}
 	}
 

@@ -447,7 +447,7 @@ public partial class MapScreen : Control
 		_routeKinds = kinds;
 		Routes.SetLines(lines, linePaths);
 		Routes.Paint(paint);
-		UpdateSketches(shown, state);
+		UpdateSketches(state);
 		var onPaper = _paths.Keys.Select((k, i) => (k, i)).Where(x => state.TryGetValue(x.k.From, out var fs) && state.TryGetValue(x.k.To, out var ts) && fs != MapNodeState.PassedOver && ts != MapNodeState.PassedOver).Select(x => x.i).ToList();
 		bool animateScenery = !fresh; Landmarks.SetRoutes(onPaper, animateScenery); LandmarksFront.SetRoutes(onPaper, animateScenery);
 
@@ -489,18 +489,13 @@ public partial class MapScreen : Control
 
 	/// <summary>
 	/// AM19: the real routes still ahead (a route whose far end is not drawn and not on a row Ryo has left), through every row not yet revealed to the Tanuki,
-	/// as dashed sketches on bare paper. They start fading under a column past the last drawn node and are gone (<see cref="MapRoutes.SketchAlpha"/> = 0)
-	/// by 20 px before the board's end (<see cref="MapRoutes.FadeFrom"/> / <see cref="MapRoutes.FadeSpan"/>). Only the last drawn node and the route shapes decide this: no node, name, type or seal is drawn there.
+	/// as dashed sketches on bare paper at constant faint ink, every one to the end of its route (the Tanuki's included). Only the route shapes decide this:
+	/// no node, name, type or seal is drawn there.
 	/// </summary>
-	void UpdateSketches(IReadOnlyList<MapNodeView> shown, Dictionary<string, MapNodeState> state)
+	void UpdateSketches(Dictionary<string, MapNodeState> state)
 	{
 		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => SketchEnds(r.From, r.To, state)).ToList();
-		float from = shown.Count == 0 ? 0f : shown.Max(n => _layout.Rects[n.Id].End.X);
-		// the fade ends on the board (the paper's end less a margin) however late Ryo is: the span shortens instead, down to 60 px
-		float end = Mathf.Min(from + 2.2f * _layout.ColumnWidth, Board.Size.X - 20f);
-		float start = Mathf.Min(from + 0.8f * _layout.ColumnWidth, end - 60f);
-		if (!float.IsFinite(start) || !float.IsFinite(end)) { start = 0f; end = 60f; }
-		Routes.SetSketches(ahead, start, end - start);
+		Routes.SetSketches(ahead);
 	}
 
 	/// <summary>Step the cursor through the reachable nodes (wraps). Does nothing when none are reachable or a pick already went through.</summary>

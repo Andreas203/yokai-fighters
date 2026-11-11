@@ -758,28 +758,28 @@ public static class MapV2Tests
 		s.GetParent().QueueFree();
 	}
 
-	/// <summary>YOK-245: the ink of a sketch, as the screen set its fade, falls smoothly to nothing on the board and never rises to the right; at the start and with Ryo late in the run.</summary>
+	/// <summary>YOK-245: every sketch is drawn at one ink along its whole route, to its end, the route into the Tanuki's node included; at both sizes and late in the run.</summary>
 	[Test]
-	public static void SketchInkReachesZeroOnTheBoardAndNeverRises(Node host)
+	public static void EverySketchRunsToItsEndAtOneConstantInk(Node host)
 	{
+		Assert.True(MapRoutes.SketchInk > 0.3f && MapRoutes.SketchInk <= 0.7f, "a faint but clear ink");
 		foreach (var size in new[] { P1080, P720 })
-			foreach (int walked in new[] { 0, 6, 7 })
+			foreach (int walked in new[] { 0, 3, 6 })
 			{
 				var sess = Start();
 				for (int i = 0; i < walked; i++) Walk(sess, sess.Reachable()[0]);
 				var s = Make(host, new SessionMapView(sess), size);
-				float w = s.Board.Size.X, f = s.Routes.FadeFrom, span = s.Routes.FadeSpan;
 				string tag = $"{size}, {walked} rows walked";
-				Assert.True(f + span <= w - 19f, $"{tag}: the fade ends on the board ({f + span} of {w})");
-				Assert.True(MapRoutes.SketchAlpha(f + span, f, span) <= 0.001f && MapRoutes.SketchAlpha(w, f, span) == 0f, $"{tag}: nothing is left at the fade's end or the board's");
-				Assert.True(MapRoutes.SketchAlpha(f - 1f, f, span) >= MapRoutes.SketchMaxAlpha - 0.001f, $"{tag}: full ink before the fade");
-				float last = 1f;
-				for (float x = 0; x < w + 200f; x += 5f)
+				var boss = sess.Map.Graph.Nodes.First(n => n.Type == "boss");
+				var intoBoss = sess.Map.Graph.Routes.Where(r => r.To == boss.Id).ToList();
+				Assert.True(intoBoss.Count > 0, "the map has routes into the Tanuki's node");
+				foreach (var r in intoBoss)
 				{
-					float a = MapRoutes.SketchAlpha(x, f, span);
-					Assert.True(!float.IsNaN(a) && a <= last + 1e-6f, $"{tag}: ink rises or is NaN at x={x}");
-					last = a;
+					var l = s.Routes.Sketches.Where(x => x.B.DistanceTo(s.SpriteRectOf(boss.Id).GetCenter()) < 0.5f).ToList();
+					Assert.True(l.Count >= intoBoss.Count || walked >= 6, $"{tag}: the routes into the Tanuki are sketched");
+					Assert.True(l.All(x => x.Path[^1].DistanceTo(x.B) < 0.5f), $"{tag}: a sketch runs to its route's end");
 				}
+				Assert.True(s.Routes.Sketches.All(x => x.Path.Length > 1), $"{tag}: every sketch has a path");
 				s.GetParent().QueueFree();
 			}
 	}
