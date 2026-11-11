@@ -376,9 +376,9 @@ public static class MapV2Tests
 			while (true)
 			{
 				// everything the screen draws now: the brushed routes and the sketches
-				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Concat(s.Routes.MistLines.Select((m, i) => ($"mist{i}", m.Path))).ToList();
+				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Concat(s.Routes.Sketches.Select((m, i) => ($"sketch{i}", m.Path))).ToList();
 				AssertNoCrossing(drawn, $"{size} step {step}");
-				AssertSmooth(drawn.Where(d => d.Item2.Length > 1).ToList(), $"{size} step {step} (drawn and mist)");
+				AssertSmooth(drawn.Where(d => d.Item2.Length > 1).ToList(), $"{size} step {step} (drawn and sketches)");
 				AssertTrunks(s.RoutePaths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), 55f, $"{size} step {step}");
 				AssertNoCrossing(s.RoutePaths.Select(kv => (kv.Key.From + ">" + kv.Key.To, kv.Value)).ToList(), $"{size} step {step} (all routes)");
 				Assert.True(s.RoutePaths.All(kv => kv.Value.SequenceEqual(baseline[kv.Key])), $"{size} step {step}: no route moved when nodes were revealed");
@@ -474,12 +474,12 @@ public static class MapV2Tests
 	}
 
 	[Test]
-	public static void MistSketchesTheRealRoutesAheadAndDrawsNoNode(Node host)
+	public static void SketchesTheRealRoutesAheadAndDrawNoNode(Node host)
 	{
 		var sess = Start();
 		var s = Make(host, new SessionMapView(sess));
 		var all = sess.Map.Graph.Routes.Count;
-		Assert.Equal(all, s.Routes.MistLines.Count, "at the start every route of the map is ahead and is sketched, boss included");
+		Assert.Equal(all, s.Routes.Sketches.Count, "at the start every route of the map is listed as ahead and sketched, boss included (the fade hides the far rows)");
 		Assert.Equal("r1-apprentice", string.Join(",", s.Nodes.Select(n => n.NodeId)), "and still only the first node is a control");
 
 		Walk(sess, "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant");
@@ -488,18 +488,18 @@ public static class MapV2Tests
 		var state = view.Nodes.ToDictionary(n => n.Id, n => n.State);
 		int ahead = view.Routes.Count(r => state[r.To] == MapNodeState.Locked && state[r.From] != MapNodeState.PassedOver);
 		Assert.Equal(14, ahead, "(the rows 5-6, 6-7, 7-8 and 8-boss routes)");
-		Assert.Equal(ahead, s.Routes.MistLines.Count, "only routes whose far end is not drawn are sketched: not the brushed ones, not those of rows Ryo left");
+		Assert.Equal(ahead, s.Routes.Sketches.Count, "only routes whose far end is not drawn are sketched: not the brushed ones, not those of rows Ryo left");
 		var revealed = state.Where(kv => MapReveal.IsRevealed(kv.Value)).Select(kv => kv.Key).ToHashSet();
 		Assert.True(s.Nodes.All(n => revealed.Contains(n.NodeId)), "no control for any node not revealed");
 		foreach (var r in view.Routes.Where(r => state[r.To] == MapNodeState.Locked && state[r.From] != MapNodeState.PassedOver))
 		{
 			var c = s.SpriteRectOf(r.To).GetCenter();
-			Assert.True(s.Routes.MistLines.Any(l => l.B.DistanceTo(c) < 0.5f), $"the sketch of {r.From} -> {r.To} runs through where {r.To} will stand");
+			Assert.True(s.Routes.Sketches.Any(l => l.B.DistanceTo(c) < 0.5f), $"the sketch of {r.From} -> {r.To} runs through where {r.To} will stand");
 		}
-		Assert.True(s.Routes.MistLines.All(l => l.A.X < l.B.X), "sketches run forward too");
+		Assert.True(s.Routes.Sketches.All(l => l.A.X < l.B.X), "sketches run forward too");
 		var text = string.Join("\n", AllText(s)).ToLowerInvariant();
 		foreach (var hidden in new[] { "tanuki", "kitsune", "dojo", "boss", "elder kappa" })
-			Assert.True(!text.Contains(hidden), $"no text names '{hidden}' while its row is in the mist");
+			Assert.True(!text.Contains(hidden), $"no text names '{hidden}' while its row is still ahead");
 		s.GetParent().QueueFree();
 	}
 
@@ -510,12 +510,12 @@ public static class MapV2Tests
 	}
 
 	[Test]
-	public static void NoMistOnceTheBossIsTheChoice(Node host)
+	public static void NoSketchOnceTheBossIsTheChoice(Node host)
 	{
 		var sess = Start();
 		while (sess.Map.Graph.Node(sess.Reachable()[0]).Type != "boss") Walk(sess, sess.Reachable()[0]);
 		var s = Make(host, new SessionMapView(sess));
-		Assert.Equal(0, s.Routes.MistLines.Count, "nothing is ahead of the boss");
+		Assert.Equal(0, s.Routes.Sketches.Count, "nothing is ahead of the boss");
 		s.GetParent().QueueFree();
 	}
 
@@ -566,14 +566,14 @@ public static class MapV2Tests
 			var s = Make(host, view);
 			string p = string.Join(";", s.RoutePaths.OrderBy(k => k.Key.ToString()).Select(k => string.Join(",", k.Value)));
 			string l = string.Join(";", s.Landmarks.Plan.Select(x => $"{x.Kind}{x.Rect}{x.Route}"));
-			string m = string.Join(";", s.Routes.MistLines.Select(x => string.Join(",", x.Path)));
+			string m = string.Join(";", s.Routes.Sketches.Select(x => string.Join(",", x.Path)));
 			string r = string.Join(";", Enumerable.Range(0, 7).Select(i => i < 1 ? "" : "").Concat(new[] { "b0", "b1", "b2", "c0", "c1", "c2" }.Select(id => s.RectOf(id).ToString())));
 			if (p0 == null) { p0 = p; l0 = l; m0 = m; r0 = r; }
 			else
 			{
 				Assert.True(p == p0, "the type or yokai of a hidden node moved a route centre line");
 				Assert.True(l == l0, "... or the landmarks");
-				Assert.True(m == m0, "... or a mist sketch");
+				Assert.True(m == m0, "... or a sketch");
 				Assert.True(r == r0, "... or a node box");
 			}
 			s.GetParent().QueueFree();
@@ -758,28 +758,30 @@ public static class MapV2Tests
 		s.GetParent().QueueFree();
 	}
 
-	/// <summary>YOK-245: a sketch's ink falls smoothly to nothing before the paper's end, never rising again to the right.</summary>
+	/// <summary>YOK-245: the ink of a sketch, as the screen set its fade, falls smoothly to nothing on the board and never rises to the right; at the start and with Ryo late in the run.</summary>
 	[Test]
-	public static void SketchInkReachesZeroBeforeThePaperEndAndNeverRises(Node host)
+	public static void SketchInkReachesZeroOnTheBoardAndNeverRises(Node host)
 	{
 		foreach (var size in new[] { P1080, P720 })
-		{
-			var s = Make(host, new SessionMapView(Start()), size);
-			float from = s.RectOf("r1-apprentice").End.X, col = s.Board.Size.X / 8f;
-			float start = from + 0.8f * col, end = Mathf.Max(start + 240f, Mathf.Min(from + 2.2f * col, s.Board.Size.X - 20f));
-			Assert.True(end < s.Board.Size.X, $"{size}: the fade ends on the board");
-			Assert.True(MapRoutes.SketchAlpha(end, start, end - start) <= 0.01f, "nothing is left at the fade's end");
-			Assert.True(MapRoutes.SketchAlpha(from, start, end - start) >= MapRoutes.SketchMaxAlpha - 0.001f, "full ink next to the last node");
-			float last = 1f;
-			for (float x = 0; x < s.Board.Size.X + 200f; x += 5f)
+			foreach (int walked in new[] { 0, 6, 7 })
 			{
-				float a = MapRoutes.SketchAlpha(x, start, end - start);
-				Assert.True(a <= last + 1e-6f, $"{size}: ink rises at x={x}");
-				last = a;
+				var sess = Start();
+				for (int i = 0; i < walked; i++) Walk(sess, sess.Reachable()[0]);
+				var s = Make(host, new SessionMapView(sess), size);
+				float w = s.Board.Size.X, f = s.Routes.FadeFrom, span = s.Routes.FadeSpan;
+				string tag = $"{size}, {walked} rows walked";
+				Assert.True(f + span <= w - 19f, $"{tag}: the fade ends on the board ({f + span} of {w})");
+				Assert.True(MapRoutes.SketchAlpha(f + span, f, span) <= 0.001f && MapRoutes.SketchAlpha(w, f, span) == 0f, $"{tag}: nothing is left at the fade's end or the board's");
+				Assert.True(MapRoutes.SketchAlpha(f - 1f, f, span) >= MapRoutes.SketchMaxAlpha - 0.001f, $"{tag}: full ink before the fade");
+				float last = 1f;
+				for (float x = 0; x < w + 200f; x += 5f)
+				{
+					float a = MapRoutes.SketchAlpha(x, f, span);
+					Assert.True(!float.IsNaN(a) && a <= last + 1e-6f, $"{tag}: ink rises or is NaN at x={x}");
+					last = a;
+				}
+				s.GetParent().QueueFree();
 			}
-			Assert.True(s.Routes.MistLines.Count > 0, "and the sketches exist");
-			s.GetParent().QueueFree();
-		}
 	}
 
 	/// <summary>The scroll draws its roller columns 1.5x the texture's own width: the very slices <see cref="MapScroll"/> draws from.</summary>

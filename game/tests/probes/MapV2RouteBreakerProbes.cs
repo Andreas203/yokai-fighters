@@ -222,7 +222,7 @@ public static class MapV2RouteBreakerProbes
 		Assert.True(err!.Contains("skips a row"), "the rejection must name the problem 'skips a row', got: " + err);
 	}
 
-	// ---- screen: every reveal state of a walk, drawn strokes plus mist sketches ----------------------------------------------------------------
+	// ---- screen: every reveal state of a walk, drawn strokes plus sketches ----------------------------------------------------------------
 
 	static MapScreen Make(Node host, IMapView view, Vector2? size = null)
 	{
@@ -250,7 +250,7 @@ public static class MapV2RouteBreakerProbes
 	static Vector2[] DrawnPath(MapScreen s, (Vector2 A, Vector2 B, RouteKind Kind) line) =>
 		s.RoutePaths.Values.FirstOrDefault(p => p[0].DistanceTo(line.A) < 0.5f && p[^1].DistanceTo(line.B) < 0.5f) ?? System.Array.Empty<Vector2>();
 
-	// Designer rule: no crossing for drawn strokes and mist sketches alike, at every reveal state; reveal never moves a route or the scenery.
+	// Designer rule: no crossing for drawn strokes and sketches alike, at every reveal state; reveal never moves a route or the scenery.
 	[Test]
 	public static void WalkNeverCrossesAndNothingMovesOrPopsIn(Node host)
 	{
@@ -263,7 +263,7 @@ public static class MapV2RouteBreakerProbes
 			while (true)
 			{
 				var drawn = s.Routes.Lines.Select((l, i) => ($"line{i}", DrawnPath(s, l))).Where(d => d.Item2.Length > 1)
-					.Concat(s.Routes.MistLines.Select((m, i) => ($"mist{i}", m.Path))).ToList();
+					.Concat(s.Routes.Sketches.Select((m, i) => ($"sketch{i}", m.Path))).ToList();
 				var f = CrossFailures(drawn, $"seed {seed} {size} step {step}");
 				Assert.True(f.Count == 0, string.Join(" || ", f.Take(3)));
 				Assert.True(PathSig(s.RoutePaths) == paths0, $"seed {seed} step {step}: a route moved when nodes were revealed");
@@ -296,19 +296,19 @@ public static class MapV2RouteBreakerProbes
 			v.Open("a");
 			return v;
 		}
-		string? basePaths = null, basePlan = null, baseMist = null, baseLines = null;
+		string? basePaths = null, basePlan = null, baseSketch = null, baseLines = null;
 		var leaks = new List<string>();
 		foreach (var (type, yokai, elder) in new[] { ("duel", "Plain", false), ("elder", "Elder Oni", true), ("merchant", (string?)null, false), ("boss", "The Tanuki", false), ("kihon", "Kihon", false) })
 		{
 			var s = Make(host, Make1(type, yokai, elder));
-			string p = PathSig(s.RoutePaths), l = Sig(s.Landmarks.Plan), m = string.Join(";", s.Routes.MistLines.Select(x => $"{x.A}{x.B}{string.Join(",", x.Path)}"));
+			string p = PathSig(s.RoutePaths), l = Sig(s.Landmarks.Plan), m = string.Join(";", s.Routes.Sketches.Select(x => $"{x.A}{x.B}{string.Join(",", x.Path)}"));
 			string ln = string.Join(";", s.Routes.Lines.Select(x => $"{x.A}{x.B}{x.Kind}"));
-			if (basePaths == null) { basePaths = p; basePlan = l; baseMist = m; baseLines = ln; }
+			if (basePaths == null) { basePaths = p; basePlan = l; baseSketch = m; baseLines = ln; }
 			else
 			{
 				if (p != basePaths) leaks.Add($"'{type}' changes the route centre lines");
 				if (l != basePlan) leaks.Add($"'{type}' changes the landmarks");
-				if (m != baseMist) leaks.Add($"'{type}' changes the mist sketches");
+				if (m != baseSketch) leaks.Add($"'{type}' changes the sketches");
 				if (ln != baseLines) leaks.Add($"'{type}' changes the drawn strokes");
 			}
 			s.GetParent().QueueFree();

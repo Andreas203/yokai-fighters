@@ -478,7 +478,7 @@ public partial class MapScreen : Control
 	/// AM19: the ends of a sketched route. A node that is not drawn is only a point on the path (the stroke runs through where it would stand), so the
 	/// sketch is one continuous road with junctions and no gap, box or mark at a hidden node.
 	/// </summary>
-	(Vector2 A, Vector2 B, Vector2[] Path) MistEnds(string from, string to, Dictionary<string, MapNodeState> state)
+	(Vector2 A, Vector2 B, Vector2[] Path) SketchEnds(string from, string to, Dictionary<string, MapNodeState> state)
 	{
 		var (a, b) = RouteEnds(from, to);
 		var path = new List<Vector2>(_paths.TryGetValue((from, to), out var p) ? p : new[] { a, b });
@@ -490,15 +490,17 @@ public partial class MapScreen : Control
 	/// <summary>
 	/// AM19: the real routes still ahead (a route whose far end is not drawn and not on a row Ryo has left), through every row not yet revealed to the Tanuki,
 	/// as dashed sketches on bare paper. They start fading under a column past the last drawn node and are gone (<see cref="MapRoutes.SketchAlpha"/> = 0)
-	/// before the paper's end. Only the last drawn node and the route shapes decide this: no node, name, type or seal is drawn there.
+	/// by 20 px before the board's end (<see cref="MapRoutes.FadeFrom"/> / <see cref="MapRoutes.FadeSpan"/>). Only the last drawn node and the route shapes decide this: no node, name, type or seal is drawn there.
 	/// </summary>
 	void UpdateSketches(IReadOnlyList<MapNodeView> shown, Dictionary<string, MapNodeState> state)
 	{
-		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => MistEnds(r.From, r.To, state)).ToList();
+		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => SketchEnds(r.From, r.To, state)).ToList();
 		float from = shown.Count == 0 ? 0f : shown.Max(n => _layout.Rects[n.Id].End.X);
-		float start = from + 0.8f * _layout.ColumnWidth;
-		float end = Mathf.Max(start + 240f, Mathf.Min(from + 2.2f * _layout.ColumnWidth, Board.Size.X - 20f));
-		Routes.SetMistLines(ahead, start, end - start);
+		// the fade ends on the board (the paper's end less a margin) however late Ryo is: the span shortens instead, down to 60 px
+		float end = Mathf.Min(from + 2.2f * _layout.ColumnWidth, Board.Size.X - 20f);
+		float start = Mathf.Min(from + 0.8f * _layout.ColumnWidth, end - 60f);
+		if (!float.IsFinite(start) || !float.IsFinite(end)) { start = 0f; end = 60f; }
+		Routes.SetSketches(ahead, start, end - start);
 	}
 
 	/// <summary>Step the cursor through the reachable nodes (wraps). Does nothing when none are reachable or a pick already went through.</summary>

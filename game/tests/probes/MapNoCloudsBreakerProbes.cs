@@ -6,7 +6,7 @@ using YokaiFighters.Ui;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>YOK-245 breaker probes: sketches replace the mist (AM19, AM22, R2).</summary>
+/// <summary>YOK-245 breaker probes: sketches replace the old cloud bank (AM19, AM22, R2).</summary>
 public static class MapNoCloudsBreakerProbes
 {
 	static readonly Vector2[] Sizes = { new(1920, 1080), new(1280, 720), new(1280, 1024), new(2560, 1080), new(1000, 1000) };
@@ -24,8 +24,8 @@ public static class MapNoCloudsBreakerProbes
 	static (float from, float span) Fade(MapScreen s)
 	{
 		var t = typeof(MapRoutes);
-		var f = (float)t.GetField("_mistFrom", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(s.Routes)!;
-		var sp = (float)t.GetField("_mistSpan", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(s.Routes)!;
+		var f = (float)t.GetField("_sketchFrom", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(s.Routes)!;
+		var sp = (float)t.GetField("_sketchSpan", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(s.Routes)!;
 		return (f, sp);
 	}
 
@@ -60,7 +60,7 @@ public static class MapNoCloudsBreakerProbes
 		var sb = new System.Text.StringBuilder();
 		var (f, sp) = Fade(s);
 		sb.Append($"{f}/{sp};");
-		foreach (var l in s.Routes.MistLines) sb.Append($"{l.A}{l.B}{string.Join(",", l.Path)};");
+		foreach (var l in s.Routes.Sketches) sb.Append($"{l.A}{l.B}{string.Join(",", l.Path)};");
 		for (float x = -100; x < s.Board.Size.X + 300; x += 23f) sb.Append(MapRoutes.SketchAlpha(x, f, sp).ToString("R")).Append(',');
 		foreach (var n in v.Nodes) sb.Append($"{n.Id}:{s.RectOf(n.Id)};");
 		foreach (var kv in s.RoutePaths.OrderBy(k => k.Key.From + k.Key.To)) sb.Append($"{kv.Key}:{string.Join(",", kv.Value)};");
@@ -124,13 +124,13 @@ public static class MapNoCloudsBreakerProbes
 				if (MapRoutes.SketchAlpha(W, f, sp) >= Skip) bad.Add($"{tag}: alpha at paper end {MapRoutes.SketchAlpha(W, f, sp)} (from {f}, span {sp}, W {W})");
 				float visX = f; for (float x = f; x < f + sp + 5f; x += 1f) if (MapRoutes.SketchAlpha(x, f, sp) >= Skip) visX = x;
 				var reach = v.Nodes.Where(n => n.State == MapNodeState.Reachable).Select(n => n.Id).ToHashSet();
-				foreach (var l in s.Routes.MistLines.Where(q => q.A.X <= f))
+				foreach (var l in s.Routes.Sketches.Where(q => q.A.X <= f))
 				{
 					float minX = l.Path.Length > 0 ? l.Path.Min(p => p.X) : l.A.X, maxX = l.Path.Length > 0 ? l.Path.Max(p => p.X) : l.B.X;
 					float vis = System.Math.Min(maxX, visX) - minX;
 					if (vis < 26f) bad.Add($"{tag}: sketch {l.A}->{l.B} visible span {vis}");
 				}
-				if (steps < rows - 1 && s.Routes.MistLines.Count == 0 && v.Routes.Any(r => reach.Contains(r.From))) bad.Add($"{tag}: no sketches although routes leave reachable nodes");
+				if (steps < rows - 1 && s.Routes.Sketches.Count == 0 && v.Routes.Any(r => reach.Contains(r.From))) bad.Add($"{tag}: no sketches although routes leave reachable nodes");
 				s.GetParent().QueueFree();
 			}
 		Assert.True(bad.Count == 0, bad.Count + ": " + string.Join(" || ", bad.Take(6)));

@@ -11,7 +11,7 @@ public enum RouteKind { Idle, Open, Walked }
 /// Draws the map's routes as brush strokes on the scroll (YOK-109, designer 2026-10-25). The walked route is a bold persimmon stroke, an open
 /// route (the choice ahead) a fainter sumi one, an idle one fainter still; all are tapered at both ends with a ragged edge, bristle streaks
 /// and dry gaps, drawn in code from deterministic noise, no texture. Lines come from <see cref="MapScreen"/>; this knows no map rules.
-/// YOK-238 (map v2): strokes wind along the centre lines of <see cref="MapRouteGeometry"/> (routes only join and split, never cross), and <see cref="SetMistLines"/> (the sketches of the routes ahead) adds the
+/// YOK-238 (map v2): strokes wind along the centre lines of <see cref="MapRouteGeometry"/> (routes only join and split, never cross), and <see cref="SetSketches"/> (the sketches of the routes ahead) adds the
 /// real routes still ahead as thin dashed sketches that fade out along x (AM19); they are not <see cref="Lines"/> and carry no kind.
 /// <see cref="Paint"/> makes chosen strokes paint in from their start over a short time (presentation only, <see cref="FinishPainting"/>
 /// ends it at once; nothing reads it back).
@@ -21,18 +21,21 @@ public partial class MapRoutes : Control
 	readonly List<(Vector2 A, Vector2 B, RouteKind Kind)> _lines = new();
 	readonly Dictionary<(Vector2, Vector2), float> _progress = new(); // 0..1 while a stroke paints in; absent = fully painted
 	float _paintSeconds = 0.6f;
-	readonly List<(Vector2 A, Vector2 B, Vector2[] Path)> _mist = new();
+	readonly List<(Vector2 A, Vector2 B, Vector2[] Path)> _sketch = new();
 	readonly Dictionary<(Vector2, Vector2), Vector2[]> _paths = new();
-	float _mistFrom, _mistSpan = 1500f;
+	float _sketchFrom, _sketchSpan = 1500f;
 	public IReadOnlyList<(Vector2 A, Vector2 B, RouteKind Kind)> Lines => _lines;
 	/// <summary>AM19: the routes still ahead, drawn as faint dashed sketches (end points in the same coordinates as <see cref="Lines"/>).</summary>
-	public IReadOnlyList<(Vector2 A, Vector2 B, Vector2[] Path)> MistLines => _mist;
+	public IReadOnlyList<(Vector2 A, Vector2 B, Vector2[] Path)> Sketches => _sketch;
+	/// <summary>Where the sketches' ink starts to fade (board x) and over how far it falls to nothing, as the screen set them.</summary>
+	public float FadeFrom => _sketchFrom;
+	public float FadeSpan => _sketchSpan;
 
 	/// <summary>AM19: sketch these routes; the ink fades from full at x = <paramref name="fadeFrom"/> to nothing <paramref name="fadeSpan"/> px further on.</summary>
-	public void SetMistLines(IEnumerable<(Vector2 A, Vector2 B, Vector2[] Path)> lines, float fadeFrom, float fadeSpan = 1500f)
+	public void SetSketches(IEnumerable<(Vector2 A, Vector2 B, Vector2[] Path)> lines, float fadeFrom, float fadeSpan = 1500f)
 	{
-		_mist.Clear(); _mist.AddRange(lines);
-		_mistFrom = fadeFrom; _mistSpan = Mathf.Max(100f, fadeSpan);
+		_sketch.Clear(); _sketch.AddRange(lines);
+		_sketchFrom = fadeFrom; _sketchSpan = Mathf.Max(1f, fadeSpan);
 		QueueRedraw();
 	}
 	/// <summary>True while any stroke is still painting in.</summary>
@@ -77,7 +80,7 @@ public partial class MapRoutes : Control
 
 	public override void _Draw()
 	{
-		foreach (var (a, b, path) in _mist) DrawSketch(path.Length > 1 ? path : Path(a, b, 72, out _));
+		foreach (var (a, b, path) in _sketch) DrawSketch(path.Length > 1 ? path : Path(a, b, 72, out _));
 		foreach (var kind in new[] { RouteKind.Idle, RouteKind.Open, RouteKind.Walked }) // bold ink over faint ink, never the other way round
 			foreach (var (a, b, k) in _lines)
 				if (k == kind) DrawBrushStroke(_paths.TryGetValue((a, b), out var pts) ? pts : Path(a, b, 48, out _), Style(k), _progress.TryGetValue((a, b), out float p) ? Ease(p) : 1f);
@@ -185,7 +188,7 @@ public partial class MapRoutes : Control
 		{
 			float mx = (p[i].X + p[i + 1].X) * 0.5f;
 			if (((mx % 26f) + 26f) % 26f > 15f) continue;
-			float alpha = SketchAlpha(p[i].X, _mistFrom, _mistSpan);
+			float alpha = SketchAlpha(p[i].X, _sketchFrom, _sketchSpan);
 			if (alpha < 0.02f) continue;
 			var o = n[i] * (Smooth(41, p[i].X / 6f, 6f) - 0.5f) * 2.2f;
 			DrawLine(p[i] + o, p[i + 1] + o, new Color(0.25f, 0.23f, 0.24f, alpha), 2.4f, true);

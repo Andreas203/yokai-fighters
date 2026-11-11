@@ -5,7 +5,7 @@ using YokaiFighters.Ui;
 
 namespace YokaiFighters.Tests;
 
-/// <summary>YOK-240 breaker probes: polish of the map v2 screen (grown boxes, larger meander, lone-row tag, cumulus mist, IMapView members).</summary>
+/// <summary>YOK-240 breaker probes: polish of the map v2 screen (grown boxes, larger meander, lone-row tag, cumulus bank (since removed), IMapView members).</summary>
 public static class MapPolishBreakerProbes
 {
 	static readonly Vector2[] Sizes = { new(1920, 1080), new(1280, 720), new(1280, 1024), new(2560, 1080), new(1000, 1000) };
@@ -55,11 +55,11 @@ public static class MapPolishBreakerProbes
 		foreach (var n in v.Nodes) sb.Append($"{n.Id}:{s.RectOf(n.Id)}:{s.SpriteRectOf(n.Id)}:{MapNodeBox.Grown(s.RectOf(n.Id), s.SpriteRectOf(n.Id).Size.Y)};");
 		foreach (var kv in s.RoutePaths.OrderBy(k => k.Key.From + k.Key.To)) sb.Append($"{kv.Key}:{string.Join(",", kv.Value)};");
 		foreach (var l in s.Landmarks.Plan) sb.Append($"{l.Kind}|{l.Rect}|{l.Route}|{l.OnPath};");
-		foreach (var l in s.Routes.MistLines) sb.Append($"{l.A}{l.B}{string.Join(",", l.Path)};");
+		foreach (var l in s.Routes.Sketches) sb.Append($"{l.A}{l.B}{string.Join(",", l.Path)};");
 		return sb.ToString();
 	}
 
-	// R2 [AM19]: swapping type, yokai, elder status or twist of every hidden node changes no box, grown box, route, mist value or landmark.
+	// R2 [AM19]: swapping type, yokai, elder status or twist of every hidden node changes no box, grown box, route, sketch or landmark.
 	[Test]
 	public static void HiddenSwapLeaksNothingAcrossSeedsAndSizes(Node host)
 	{
@@ -81,7 +81,7 @@ public static class MapPolishBreakerProbes
 					s.GetParent().QueueFree();
 				}
 			}
-		Assert.True(leaks.Count == 0, "hidden swap changes layout/mist/landmarks: " + string.Join("; ", leaks.Take(6)));
+		Assert.True(leaks.Count == 0, "hidden swap changes layout/sketches/landmarks: " + string.Join("; ", leaks.Take(6)));
 	}
 
 	// Ticket item 1: nothing off the paper, grown boxes never overlap each other, landmarks keep clear of grown boxes, at extreme aspect ratios.
