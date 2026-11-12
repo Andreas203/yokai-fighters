@@ -42,6 +42,18 @@ public static class TallestFighterCameraTests
 		Fuzz(CameraConfig.Default.ForBodies("ryo", "oni"));
 	}
 
+	/// <summary>AM23: the Tanuki's true form tops 1.9 m by his ears, so his fight takes the tall framing; it must hold the same way.</summary>
+	[Test]
+	public static void TanukiTrueFormFraming_TopUnderTheHud_FeetOnScreen_EveryZoomCornerAndJump()
+	{
+		var d = CameraConfig.Default;
+		var f = d.ForBodies("ryo", "tanuki");
+		Assert.Equal(d.TallBodyTopMeters["tanuki"], f.ModelTopMeters, "framed for the true form");
+		Assert.True(f with { ModelTopMeters = d.ModelTopMeters, FeetClearPx = d.FeetClearPx } == d, "only the model top and the feet line change");
+		Sweep(f);
+		Fuzz(f);
+	}
+
 	/// <summary>The feet floor never engages for Ryo vs the Kitsune: their feet stay above <see cref="CameraConfig.FeetClearPx"/> everywhere, so the default framing is untouched.</summary>
 	[Test]
 	public static void DefaultFraming_FeetFloorNeverEngages()

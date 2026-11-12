@@ -98,6 +98,7 @@ public sealed partial class Match
 		f.Meter = 0;
 		SetState(f, FighterState.Burst, Config.BurstFrames - 1);
 		f.JumpDir = 0;
+		f.Launched = false; // YOK-226: a burst out of a juggle lands on its feet
 		f.Guarding = false;
 		f.Crouching = false;
 

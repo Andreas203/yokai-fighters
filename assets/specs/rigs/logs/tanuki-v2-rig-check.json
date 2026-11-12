@@ -1,0 +1,319 @@
+{
+ "tool": "tools/blender/rig_check.py",
+ "blender": "4.1.1",
+ "rig": "tripo-out/tanuki-v2/work/tanuki-v2-repaired.glb",
+ "skeleton_file": "assets/specs/rigs/skeleton.md",
+ "bone_map": null,
+ "thresholds": {
+  "max_influences": 4,
+  "influence_epsilon": 0.0001,
+  "weight_sum_tolerance": 0.01,
+  "cross_side_min_x_m": 0.06,
+  "cross_side_blend_weight": 0.2,
+  "rest_arm_max_deg": 20.0,
+  "rest_leg_max_deg": 15.0,
+  "rest_bind_max_offset_m": 0.001,
+  "up_max_deg": 15.0,
+  "height_tolerance": 0.05,
+  "origin_max_ground_m": 0.01,
+  "origin_max_xy_m": 0.08,
+  "edge_stretch_warn": 1.8,
+  "edge_stretch_fail": 3.0,
+  "edge_squash_fail": 0.25,
+  "edge_fail_max_frac": 0.002,
+  "collapse_mean_fail": 0.75,
+  "collapse_p5_fail": 0.4,
+  "collapse_min_verts": 30,
+  "arm_leg_bleed_min_weight": 0.1
+ },
+ "armature": "Armature",
+ "meshes": [
+  "tanuki"
+ ],
+ "skeleton": {
+  "skeleton": "skeleton.md",
+  "rig_bones": 25,
+  "shared_bones": 25,
+  "missing": [],
+  "wrong_parent": [],
+  "extra_bones": [],
+  "skin_order_wrong": [],
+  "status": "PASS"
+ },
+ "rest_pose": {
+  "left_arm_deg": 20.14,
+  "right_arm_deg": 19.07,
+  "left_leg_deg": 6.4,
+  "right_leg_deg": 8.23,
+  "rest_vs_bind_max_offset_m": 0.0,
+  "status": "FAIL"
+ },
+ "scale": {
+  "height_m": 1.75,
+  "want_height_m": 1.75,
+  "armature_object_scale": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "status": "PASS"
+ },
+ "up_axis": {
+  "hips_to_head_vs_up_deg": 3.95,
+  "facing": "gltf+Z",
+  "status": "PASS"
+ },
+ "origin": {
+  "min_z_m": -0.0,
+  "feet_centre_xy_m": [
+   0.0,
+   -0.0
+  ],
+  "status": "PASS"
+ },
+ "weights": {
+  "meshes": {
+   "tanuki": {
+    "verts": 11855,
+    "max_influences_found": 4,
+    "over_max_influences": 0,
+    "unnormalised": 0,
+    "unweighted": 0,
+    "cross_side": 3,
+    "cross_side_blend_info": 15,
+    "arm_leg_bleed": 774,
+    "arm_leg_bleed_sample": [
+     {
+      "vert": 7,
+      "z_m": 0.884,
+      "arm_w": 0.225,
+      "leg_w": 0.526
+     },
+     {
+      "vert": 8,
+      "z_m": 0.884,
+      "arm_w": 0.225,
+      "leg_w": 0.526
+     },
+     {
+      "vert": 9,
+      "z_m": 0.919,
+      "arm_w": 0.336,
+      "leg_w": 0.299
+     },
+     {
+      "vert": 10,
+      "z_m": 0.883,
+      "arm_w": 0.264,
+      "leg_w": 0.39
+     },
+     {
+      "vert": 22,
+      "z_m": 0.851,
+      "arm_w": 0.212,
+      "leg_w": 0.469
+     },
+     {
+      "vert": 23,
+      "z_m": 0.851,
+      "arm_w": 0.212,
+      "leg_w": 0.469
+     },
+     {
+      "vert": 45,
+      "z_m": 0.911,
+      "arm_w": 0.284,
+      "leg_w": 0.443
+     },
+     {
+      "vert": 55,
+      "z_m": 0.986,
+      "arm_w": 0.584,
+      "leg_w": 0.114
+     },
+     {
+      "vert": 66,
+      "z_m": 0.817,
+      "arm_w": 0.125,
+      "leg_w": 0.723
+     },
+     {
+      "vert": 91,
+      "z_m": 0.989,
+      "arm_w": 0.515,
+      "leg_w": 0.132
+     }
+    ],
+    "cross_side_sample": [
+     {
+      "vert": 3835,
+      "x_m": 0.06,
+      "left_w": 0.0,
+      "right_w": 0.002
+     },
+     {
+      "vert": 3902,
+      "x_m": 0.063,
+      "left_w": 0.0,
+      "right_w": 0.002
+     },
+     {
+      "vert": 3936,
+      "x_m": 0.061,
+      "left_w": 0.0,
+      "right_w": 0.001
+     }
+    ],
+    "over_max_sample": [],
+    "unnormalised_sample": []
+   }
+  },
+  "status": "FAIL"
+ },
+ "rest_stills": [
+  "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\rest_front.png",
+  "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\rest_side.png"
+ ],
+ "poses": {
+  "high_kick": {
+   "status": "FAIL",
+   "edge_ratio_max": 19.563,
+   "edge_ratio_min": 0.095,
+   "edges_over_warn": 1008,
+   "edges_total": 31583,
+   "edges_failing": 265,
+   "failing_edges_by_bone": {
+    "(mixed)": 233,
+    "Hips": 228,
+    "RightUpLeg": 32,
+    "RightArm": 18,
+    "RightShoulder": 9,
+    "LeftUpLeg": 8,
+    "Spine": 2
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": [
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\high_kick_front.png",
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\high_kick_side.png"
+   ]
+  },
+  "deep_crouch": {
+   "status": "FAIL",
+   "edge_ratio_max": 15.663,
+   "edge_ratio_min": 0.047,
+   "edges_over_warn": 1533,
+   "edges_total": 31583,
+   "edges_failing": 504,
+   "failing_edges_by_bone": {
+    "Hips": 410,
+    "(mixed)": 353,
+    "LeftUpLeg": 112,
+    "RightUpLeg": 46,
+    "LeftShoulder": 17,
+    "RightArm": 17,
+    "RightLeg": 16,
+    "Spine": 12
+   },
+   "collapsed_bones": {
+    "LeftUpLeg": {
+     "mean_ratio": 0.735,
+     "p5_ratio": 0.354
+    },
+    "RightLeg": {
+     "mean_ratio": 0.75,
+     "p5_ratio": 0.458
+    },
+    "Spine": {
+     "mean_ratio": 0.636,
+     "p5_ratio": 0.474
+    }
+   },
+   "missing_pose_bones": [],
+   "stills": [
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\deep_crouch_front.png",
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\deep_crouch_side.png"
+   ]
+  },
+  "arm_raise": {
+   "status": "WARN",
+   "edge_ratio_max": 6.203,
+   "edge_ratio_min": 0.178,
+   "edges_over_warn": 182,
+   "edges_total": 31583,
+   "edges_failing": 37,
+   "failing_edges_by_bone": {
+    "(mixed)": 28,
+    "RightArm": 21,
+    "LeftArm": 8,
+    "RightUpLeg": 8,
+    "LeftUpLeg": 4,
+    "RightShoulder": 3,
+    "LeftShoulder": 2
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": [
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\arm_raise_front.png",
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\arm_raise_side.png"
+   ]
+  },
+  "torso_twist": {
+   "status": "WARN",
+   "edge_ratio_max": 6.638,
+   "edge_ratio_min": 0.135,
+   "edges_over_warn": 234,
+   "edges_total": 31583,
+   "edges_failing": 36,
+   "failing_edges_by_bone": {
+    "(mixed)": 42,
+    "RightUpLeg": 8,
+    "RightArm": 6,
+    "LeftUpLeg": 6,
+    "Spine": 6,
+    "RightShoulder": 2,
+    "Hips": 2
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": [
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\torso_twist_front.png",
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\torso_twist_side.png"
+   ]
+  },
+  "grab": {
+   "status": "WARN",
+   "edge_ratio_max": 5.396,
+   "edge_ratio_min": 0.112,
+   "edges_over_warn": 100,
+   "edges_total": 31583,
+   "edges_failing": 15,
+   "failing_edges_by_bone": {
+    "(mixed)": 16,
+    "RightShoulder": 6,
+    "RightArm": 4,
+    "LeftShoulder": 4
+   },
+   "collapsed_bones": {},
+   "missing_pose_bones": [],
+   "stills": [
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\grab_front.png",
+    "C:\\Users\\Andreas\\projects\\yokai-fighters\\tripo-out\\tanuki-v2\\work\\check-final\\grab_side.png"
+   ]
+  }
+ },
+ "summary": {
+  "skeleton": "PASS",
+  "rest_pose": "FAIL",
+  "scale": "PASS",
+  "up_axis": "PASS",
+  "origin": "PASS",
+  "weights": "FAIL",
+  "pose:high_kick": "FAIL",
+  "pose:deep_crouch": "FAIL",
+  "pose:arm_raise": "WARN",
+  "pose:torso_twist": "WARN",
+  "pose:grab": "WARN"
+ },
+ "overall": "FAIL"
+}

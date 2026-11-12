@@ -1,0 +1,88 @@
+{
+  "kind": "clip",
+  "source": "meshy-library",
+  "status": "proposed",
+  "clip": "Right_Uppercut_from_Guard",
+  "trim_start": 28,
+  "trim_end": 61,
+  "file": "assets/generated/clips/ryo-heavy.glb",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "id": "ryo-oni-quake",
+  "frames_total": 56,
+  "retime": [
+    {
+      "frames": [
+        1,
+        4
+      ],
+      "ticks": [
+        28,
+        28
+      ],
+      "note": "guard held 4 frames, the start of the charged tell"
+    },
+    {
+      "frames": [
+        4,
+        24
+      ],
+      "ticks": [
+        28,
+        38
+      ],
+      "note": "slow wind-up at 0.5x"
+    },
+    {
+      "frames": [
+        24,
+        27
+      ],
+      "ticks": [
+        38,
+        38
+      ],
+      "note": "pose held 4 frames (24-27), the overhead tell"
+    },
+    {
+      "frames": [
+        27,
+        28
+      ],
+      "ticks": [
+        38,
+        39
+      ],
+      "note": "the blow falls at 1x into the first active frame"
+    },
+    {
+      "frames": [
+        28,
+        32
+      ],
+      "ticks": [
+        39,
+        41
+      ],
+      "note": "strike pose at 0.5x through the 4 active frames (28-31)"
+    },
+    {
+      "frames": [
+        32,
+        56
+      ],
+      "ticks": [
+        41,
+        61
+      ],
+      "note": "recovery at 0.83x, 24 frames"
+    }
+  ],
+  "hit_start": 28,
+  "hit_end": 31,
+  "retarget_notes": "Same take and rig as ryo-heavy-punch (Ryo rig GO, YOK-31): retarget PASS in the gate, no clipping, max 12.7 deg per tick at 1x. The curve is slower than 1x over most of the move, so joint rate only falls, but the 0.5x and held poses are NOT re-measured: no job run.",
+  "notes": "GREYBOX reuse of ryo-heavy-punch, replace when a take of its own lands. Route A (designer, YOK-219). Ryo-rig twin of oni-quake (T0: the Tanuki casts Oni Quake on Ryo's model): 56 frames, hit 28-31, matching 27/4/25 (AM24). The 34-frame uppercut is stretched to 56 with a 4-frame hold, a 0.5x wind-up and a second 4-frame hold, so the blow lands on frame 28 instead of 11 (untimed). It is an uppercut, not an overhead slam: the slam is oni-quake's club clip, which has no Ryo-rig retarget. Presentation needs ClipOverrides[\"oni-quake\"] = \"ryo-oni-quake\" in FighterAnimSet.RyoBody (code, reported not changed). No job run; 0 credits."
+}

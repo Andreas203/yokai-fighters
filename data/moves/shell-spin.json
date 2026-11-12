@@ -1,0 +1,155 @@
+{
+  "kind": "special",
+  "id": "shell-spin",
+  "name": "Shell Spin",
+  "status": "proposed",
+  "source": "kappa",
+  "starter": false,
+  "rarity": "rare",
+  "locked": true,
+  "clip": "kappa-shell-spin",
+  "rules": [
+    "A11",
+    "A12",
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "C5",
+    "E16",
+    "E17",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "T0",
+    "V8",
+    "X4"
+  ],
+  "input": {
+    "kata": {
+      "slot": "D",
+      "motion": "22"
+    },
+    "kihon": {
+      "slot": "D",
+      "direction": "down"
+    }
+  },
+  "card": {
+    "plain": "Spin in your shell: projectiles pass through you while it lasts.",
+    "frames": "10 / 18 / 20 frames, 80 damage, projectile-invulnerable while spinning"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "damage",
+        "op": "mul_pct",
+        "value": 130
+      },
+      {
+        "target": "properties.knockdown",
+        "op": "set",
+        "value": true
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 10,
+        "active": 18,
+        "recovery": 20,
+        "damage": 80,
+        "hitstun": 24,
+        "blockstun": 18,
+        "strength": "medium",
+        "hitboxes": [
+          {
+            "frames": [
+              11,
+              28
+            ],
+            "rect": {
+              "x": -70,
+              "y": 40,
+              "w": 230,
+              "h": 240
+            }
+          }
+        ],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              48
+            ],
+            "rect": {
+              "x": -65,
+              "y": 0,
+              "w": 130,
+              "h": 310
+            }
+          }
+        ],
+        "properties": {
+          "invuln": [
+            {
+              "frames": [
+                11,
+                28
+              ],
+              "against": "projectile"
+            }
+          ]
+        }
+      },
+      "preset": "shell-spin-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -4
+      },
+      "card": {
+        "plain": "Lv 1 → Lv 2: Shell Spin recovers 4 frames faster, so a blocked spin costs less.",
+        "frames": "Lv 1 → Lv 2: recovery -4 (10 / 18 / 16 frames), 80 damage, projectile-invulnerable while spinning"
+      },
+      "preset": "shell-spin-lv2",
+      "notes": "Proposed (open question, A4). Changes how you fight: an 18-frame active window means the Kappa spins into blocked strings; 16 recovery frames makes a blocked or whiffed spin much less of a free punish, so it can be used as a read through a fireball and then followed up. Data only: the last 4 frames of the eased-out recovery are cut from the clip. Alternatives if the designer prefers: active -4 (shorter spin, less cover against projectiles) or startup -2 (the clip would need a new curve, F2). Overlap to decide: Brute Recovery already takes 4 recovery frames off on block."
+    },
+    "3": {
+      "evolution": {
+        "id": "torrent-spin",
+        "name": "Torrent Spin",
+        "status": "proposed",
+        "preset": "torrent-spin",
+        "changes": [
+          {
+            "target": "properties.forward_travel",
+            "op": "set",
+            "value": 180
+          },
+          {
+            "target": "properties.multi_hit",
+            "op": "set",
+            "value": {
+              "hits": 3,
+              "interval": 6
+            }
+          }
+        ],
+        "card": {
+          "plain": "The spin surges forward on a torrent of water and hits several times.",
+          "frames": "10 / 18 / 16 frames, 80 damage x 3 hits, travels forward 180 units"
+        }
+      }
+    }
+  },
+  "notes": "Clip kappa-shell-spin (GREYBOX heavy-swing stand-in: kappa-heavy-punch's Right_Uppercut_from_Guard retimed to 48 frames, 0.5x through the active frames, hit 11-28; route A on YOK-219, decision 4): 10/18/20 = the rules.md row exactly, no deviation, so no amendment. The stand-in reads as a slow uppercut, not a spin: the real take is clip_needs S07 and needs its own measure. Invulnerable to projectiles on the active frames 11-28 (properties.invuln against projectile); strikes and throws still hit it, since the table says only 'spins through projectiles'. Hitbox is a wide body-height box around the shell, x -70 to 160, y 40-280, so it also catches a cross-up; estimated for the Kappa (310 units tall), not re-placed from the posed rig. Damage 80 = table; hitstun 24, blockstun 18, strength medium are placeholders. One connect at Lv 1. Slot D (22 / down) for the Kappa's rare, as Fox Mirage and Oni Quake: a proposal, rules.md names no slot. Locked (A11, the diamond). EX (C5, E16) first pass, my proposal: +30% damage and a knockdown, as Oni Quake. Lv 3 Torrent Spin = rules table, travels forward and multi-hit: forward_travel 180 (10 units per tick over the active frames, stops at the push box, YOK-221) and multi_hit 3 hits 6 frames apart, 80 damage each (240 total if all connect). BALANCE FLAG for the designer and sparring-partner: three full hits is 3x Lv 1's damage for a Lv 3 move; if that is too much, the one-line fix is a damage mul_pct 60 effect in the same evolution. multi_hit and forward_travel are both read by the fight code (multi_hit since YOK-226, Match.Reaction.cs). Lv 3 keeps the Lv 2 step (E17). Undertow: River Grab -> Shell Spin is the GDD example; a cancel's target needs no window on this move. Presets shell-spin-lv1, shell-spin-lv2 and torrent-spin are named, files are Asset Smith's."
+}

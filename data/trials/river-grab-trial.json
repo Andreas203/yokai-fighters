@@ -1,0 +1,38 @@
+{
+  "kind": "trial",
+  "id": "river-grab-trial",
+  "status": "proposed",
+  "special": "river-grab",
+  "prompt": "Walk up to the dummy and seize it with River Grab: a grab can't be blocked.",
+  "attempts": 3,
+  "setup": {
+    "distance": 400,
+    "attempt_frames": 600,
+    "dummy": {
+      "action": "idle"
+    }
+  },
+  "goal": {
+    "steps": [
+      {
+        "event": "throw",
+        "move": "river-grab",
+        "dummy_state": "grounded",
+        "distance": {
+          "max": 180
+        }
+      }
+    ]
+  },
+  "rules": [
+    "R7",
+    "K1",
+    "K2",
+    "K3",
+    "F3",
+    "C4",
+    "E12",
+    "T0"
+  ],
+  "notes": "Teaches the command grab (C4): a throw step, since River Grab counts as a throw (R7, X4). The dummy stands idle and never breaks, so the land follows the grab 8 ticks later. Distance 400 means the player must walk in; the grab reaches 160 units from the Kappa's origin, so a grab connecting at 180 or less is inside the box with slack. Kihon: back + Special, slot C. The first attempt may whiff (30 recovery frames); there are 3 attempts. Harness to confirm."
+}

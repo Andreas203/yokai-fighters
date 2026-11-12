@@ -33,6 +33,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM24** 2026-11-01 route, written 2026-11-09 (YOK-219, YOK-227): Iron-Club Charge is 12/6/14 (was 16/6/24) and Oni Quake 27/4/25 (was 22/5/26), because F2 keeps each greybox clip's timing as truth; the exact numbers are movesmith's proposal until the designer confirms them on the YOK-227 PR (specials table).
 - **AM20** 2026-11-09 (designer, YOK-238): the map no longer shows the copy-target talisman; outside fights only the rest-stop forecast names the target, its level and expected cost (T6, amends AM6 and AM18). The copy rule itself is unchanged.
 - **AM21** 2026-11-09 (designer, YOK-151, PR #277): the Kappa's stage is a night swamp without lanterns, painted or 3D (V9). The stage id `riverbank` and its file names stay.
+- **AM23** 2026-11-11 (designer: "go back to the previous models but keep the tanuki", "previous = the non Tripo ones"): the Kitsune, Oni and Kappa v2 Tripo bodies are rejected and the game keeps their Meshy bodies (the v2 files stay on branch YOK-ryo-guard-tripo); the Tanuki fights in his Tripo true form on Ryo's clips by default, behind the dev switch "Tanuki true form" (T0 amended). Focus moves to abilities.
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).

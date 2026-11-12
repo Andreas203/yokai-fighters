@@ -40,6 +40,16 @@
       "weight": 45
     },
     {
+      "when": "at_close_range",
+      "do": "special:river-grab",
+      "weight": 25
+    },
+    {
+      "when": "projectile_on_screen",
+      "do": "special:shell-spin",
+      "weight": 40
+    },
+    {
       "when": "opponent_attacking",
       "do": "block",
       "weight": 30
@@ -58,5 +68,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Anti-air (YOK-165): answers opponent_jumping with the generic throw (C4), the single attacking answer so jump_punish_pct sets the rate; it catches the jumper in landing frames (E19). Swap to a Kappa rising normal when one lands. Kappa aggressive (Y2): walks straight into throw range. Its throw is the generic throw (C4); data/moves has no kappa-* normals or clips yet, so it has no strikes of its own. Add pokes when they land."
+  "notes": "Anti-air (YOK-165): answers opponent_jumping with the generic throw (C4), the single attacking answer so jump_punish_pct sets the rate; it catches the jumper in landing frames (E19). Swap to a Kappa rising normal when one lands. Kappa aggressive (Y2): walks straight into throw range. Its throw is the generic throw (C4); data/moves has no kappa-* normals or clips yet, so it has no strikes of its own. Add pokes when they land. YOK-234: River Grab at close range, weight 25 beside the generic throw 45 (160-unit command grab, breakable); Shell Spin (projectile-invulnerable) on projectile_on_screen, weight 40, only in the Elder Kappa fight because the rare is in the elder loadout (A9); absent move is skipped. Habit and tell_cover unchanged."
 }

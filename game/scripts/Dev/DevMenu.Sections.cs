@@ -60,6 +60,11 @@ public partial class DevMenu
 		tripo.AddThemeFontSizeOverride("font_size", 20);
 		tripo.Toggled += on => FighterAnimSet.TripoRyo = on;
 		page.AddChild(tripo);
+		// AM23: the Tanuki's true form, or Ryo's body as before (T0); the next fight built uses the choice.
+		var tanuki = new CheckButton { Name = "TripoTanuki", Text = "Tanuki true form (AM23; off: Ryo's body; next fight)", ButtonPressed = FighterAnimSet.TripoTanuki };
+		tanuki.AddThemeFontSizeOverride("font_size", 20);
+		tanuki.Toggled += on => FighterAnimSet.TripoTanuki = on;
+		page.AddChild(tanuki);
 		return page;
 	}
 

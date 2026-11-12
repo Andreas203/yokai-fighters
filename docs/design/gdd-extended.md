@@ -339,7 +339,7 @@ Across runs, each Tanuki win, up to three, makes yokai react 1 frame faster and 
 
 ### 5.3 The Tanuki
 
-> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it, [AM23](gdd-amendments.md#am23) his true-form body. Where they disagree with this section, the amendments win.
 
 The Tanuki fights with Ryo's normals and starters plus one copied special. The copy rule is never cut and is built in week 2.
 

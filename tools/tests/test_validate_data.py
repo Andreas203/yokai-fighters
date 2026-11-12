@@ -1027,7 +1027,9 @@ class CommandGrabTest(unittest.TestCase):
                 p = Path(tmp) / "test-spirit-wave-trial.json"
                 p.write_text(json.dumps(doc), encoding="utf-8")
                 out = io.StringIO()
-                validate_data.validate([str(p), str(GRAB_FIXTURE), str(talisman)], out=out)
+                fx = ROOT / "game" / "tests" / "fixtures"  # YOK-226: the kit's throw and a normal, for the cast cases
+                validate_data.validate([str(p), str(GRAB_FIXTURE), str(talisman), str(fx / "throws" / "test-ryo-throw.json"),
+                                        str(fx / "ryo-normals" / "test-ryo-light-punch.json")], out=out)
                 text = [l for l in out.getvalue().splitlines() if "test-spirit-wave-trial.json:" in l]
                 if (not text) != c["accept"]:
                     wrong.append(f"{c['name']}: validator {'accepted' if not text else 'refused'}\n{out.getvalue()}")

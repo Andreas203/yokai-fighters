@@ -727,7 +727,8 @@ def built_move_errors(fd: dict, kind: str = "special") -> list[str]:
     out.extend(travel_errors(fd))  # YOK-221: MoveData.ReadTravel
     if "throw_break" in props and props["throw_break"] != "startup":
         out.append('properties.throw_break must be "startup"')
-    # YOK-220: MoveData.CheckPendingProperties, the vocabulary no fight code reads yet (shape only). forward_travel
+    # YOK-226: MoveData.ReadReaction (was YOK-220's CheckPendingProperties, shape only): launch, wall_bounce, multi_hit
+    # now play (Match.Reaction.cs); launch's shape is the schema's boolean. forward_travel
     # left it for YOK-221's travel_errors above (MoveData.ReadTravel), decoy for YOK-224's check below (ReadMirage).
     if "wall_bounce" in props and not isinstance(props["wall_bounce"], bool):
         out.append("properties.wall_bounce must be true or false")
@@ -1062,7 +1063,14 @@ def check_trial(doc: dict, move_kinds: dict[str, str] | None = None) -> list[tup
             if st.get("counter") is True:
                 errs.append((f"goal.steps.{i}.counter", "a counterhit needs a dummy with action 'attack' (C7: the dummy must be in a move)"))
         mk = (move_kinds or {}).get(st.get("move")) if isinstance(st.get("move"), str) else None
-        if mk == "throw" and st.get("event") != "throw":
+        if mk == "command_grab":
+            mk = "throw" if st.get("event") != "cast" else "special"  # a command grab: a throw (R7) and a special
+        if st.get("event") == "cast":
+            # YOK-226: a cast step watches a special start (Match.SpecialStarted); a normal or the generic throw never
+            # raises one. TrialData.MoveProblems makes the same check.
+            if mk is not None and mk != "special":
+                errs.append((f"goal.steps.{i}.move", f"'{st['move']}' is not a special; a cast step names a special"))
+        elif mk == "throw" and st.get("event") != "throw":
             errs.append((f"goal.steps.{i}.move", f"'{st['move']}' is a throw; throws only meet a throw step"))
         elif mk is not None and mk != "throw" and st.get("event") == "throw":
             errs.append((f"goal.steps.{i}.move", f"'{st['move']}' is not a throw"))
@@ -1332,7 +1340,9 @@ def validate(paths: list[str], out=sys.stdout) -> int:
     move_sources: set[str] = set()  # YOK-93: what a hit cue's source can be (HitSparks.Identify reads the move's source)
     for d in move_docs + list(docs.values()) + list(specials.values()):
         if isinstance(d, dict) and d.get("kind") in ("special", "normal", "throw") and isinstance(d.get("id"), str):
-            move_kinds[d["id"]] = "throw" if is_command_grab(d) else d["kind"]  # YOK-225: a command grab is a throw (R7)
+            # YOK-225: a command grab is a throw for trial steps (R7); YOK-226: kept apart as "command_grab", since it is also
+            # a special a cast step may name.
+            move_kinds[d["id"]] = "command_grab" if is_command_grab(d) else d["kind"]
             if isinstance(d.get("source"), str):
                 move_sources.add(d["source"])
 

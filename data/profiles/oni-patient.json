@@ -41,6 +41,11 @@
     },
     {
       "when": "opponent_whiffed",
+      "do": "special:iron-club-charge",
+      "weight": 40
+    },
+    {
+      "when": "opponent_whiffed",
       "do": "dash_forward",
       "weight": 20
     },
@@ -62,6 +67,11 @@
     {
       "when": "at_close_range",
       "do": "throw",
+      "weight": 12
+    },
+    {
+      "when": "at_close_range",
+      "do": "special:oni-quake",
       "weight": 12
     },
     {
@@ -88,5 +98,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. Anti-air (YOK-165) kept: opponent_jumping answers oni-medium-punch 40 plus block 20; the medium punch is the single attacking answer to a jump. Iron-Club Charge not wired (no special in data/moves)."
+  "notes": "Oni patient (Y2): walks in, punishes whiffs; habit 70% unchanged. YOK-174 strikes: oni-medium-kick as a spacing poke at mid range (15f startup, 6 active), oni-light-punch and oni-medium-punch at close range, whiff punish oni-heavy-kick (11f startup, 90 damage) on opponent_whiffed and oni-heavy-punch on opponent_in_recovery, raw dash approaches cut to a 20 weight. Throw cut from 20 to 12. Anti-air (YOK-165) kept: opponent_jumping answers oni-medium-punch 40 plus block 20; the medium punch is the single attacking answer to a jump. YOK-234: Iron-Club Charge (12f startup, 1-hit armour) joins the whiff punish at weight 40 beside oni-heavy-kick 60 and dash 20, per Y2; Elder Oni (loadout carries the rare, A9) adds Oni Quake at close range, weight 12; a fighter without the move skips the entry. Habit and tell_cover unchanged."
 }

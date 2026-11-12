@@ -21,18 +21,20 @@ public static class TripoRyoTests
 		Assert.True(FighterAnimSet.TripoRyo, "this branch fights the Tripo Ryo");
 		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.Ryo), "Ryo = the Tripo set");
 		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.For("ryo")), "P1's body");
-		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "T0: the Tanuki fights with Ryo's body");
-		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.For("tanuki")), "T0: the Tanuki kit too");
+		Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "AM23: the Tanuki fights in his true form");
+		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo.ClipRoot, FighterAnimSet.TanukiTripo.ClipRoot), "AM23: on Ryo's Tripo clips (T0)");
 		Assert.Equal(TripoRoot, FighterAnimSet.RyoTripo.ClipRoot, "Ryo's clip root");
 		Assert.True(FighterAnimSet.RyoTripo.ModelPath.EndsWith("ryo-tripo-rigged.glb"), "Tripo model");
 		try
 		{
 			FighterAnimSet.TripoRyo = false;
 			Assert.True(ReferenceEquals(FighterAnimSet.RyoMeshy, FighterAnimSet.Ryo), "flipped: the Meshy Ryo");
-			Assert.True(ReferenceEquals(FighterAnimSet.RyoMeshy, FighterAnimSet.ForNode("tanuki", "tanuki")), "flipped: the Tanuki follows");
+			Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "flipped: the Tanuki keeps his true form");
+			FighterAnimSet.TripoTanuki = false;
+			Assert.True(ReferenceEquals(FighterAnimSet.RyoMeshy, FighterAnimSet.ForNode("tanuki", "tanuki")), "true form off: the Tanuki follows Ryo's body");
 			Assert.True(FighterAnimSet.RyoMeshy.ClipRoot is null, "the Meshy Ryo plays the catalog's files");
 		}
-		finally { FighterAnimSet.TripoRyo = true; }
+		finally { FighterAnimSet.TripoRyo = true; FighterAnimSet.TripoTanuki = true; }
 		foreach (var set in new[] { FighterAnimSet.Kitsune, FighterAnimSet.Oni, FighterAnimSet.Kappa })
 			Assert.True(set.ClipRoot is null, $"{set.Fighter} stays on the Meshy skeleton");
 	}

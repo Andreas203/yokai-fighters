@@ -67,6 +67,7 @@ public sealed record CameraConfig
 	public IReadOnlyDictionary<string, float> TallBodyTopMeters { get; init; } = new Dictionary<string, float>
 	{
 		["oni"] = 3.15f, // measured 3.124 m: the club tip at the top of his heavy kick swing (ryo-heavy-kick); the HP slam is under it
+		["tanuki"] = 1.95f, // AM23 true form: measured 1.919 m (ears, ryo-walk-fwd); Ryo's body when TripoTanuki is off fits 1.9 anyway
 	};
 
 	/// <summary>The top the camera frames one body for: <see cref="ModelTopMeters"/>, or more for a tall body.</summary>

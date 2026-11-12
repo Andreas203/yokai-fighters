@@ -11,6 +11,7 @@ namespace YokaiFighters.Ai;
 public sealed class AiLoadout
 {
 	private readonly Dictionary<string, (FighterInput Input, int Frames)> _moves = new();
+	private readonly HashSet<string> _heldBack = new(); // YOK-226
 	/// <summary>YOK-57: specials with an EX version: the EX slot request and its meter cost (ex.meter_cost).</summary>
 	private readonly Dictionary<string, (FighterInput Input, int Cost)> _ex = new();
 	/// <summary>YOK-165: every move id in the kit (normals, air normals, throw, plain specials) → total frames, so the AI can
@@ -38,9 +39,12 @@ public sealed class AiLoadout
 	/// </summary>
 	public FighterInput ThrowRequest => ThrowSlot < 0 ? FighterInput.None : FighterInput.Attack(ThrowSlot);
 
-	public static AiLoadout From(Fighter f)
+	/// <param name="heldBack">YOK-226: special ids this fighter's yokai owns but this node holds back
+	/// (<c>NodeFight.HeldBack</c>, A9): <see cref="Missing"/> does not report them; <see cref="CanDo"/> still skips them.</param>
+	public static AiLoadout From(Fighter f, IEnumerable<string>? heldBack = null)
 	{
 		var l = new AiLoadout();
+		if (heldBack != null) foreach (string id in heldBack) l._heldBack.Add("special:" + id);
 		for (int i = 0; i < f.Moves.Length; i++)
 		{
 			var m = f.Moves[i];
@@ -111,12 +115,14 @@ public sealed class AiLoadout
 	public IReadOnlyList<string> Missing(BehaviourProfile p)
 	{
 		var missing = new List<string>();
-		foreach (var a in p.Behaviours.Select(b => b.Do).Prepend(p.Habit.Do))
+		// YOK-226: a held-back rare is exempt only in a behaviour (skipped before the draw), never as the habit (Y2: a
+		// fired habit always comes out).
+		foreach (var (a, isHabit) in p.Behaviours.Select(b => (b.Do, false)).Prepend((p.Habit.Do, true)))
 		{
 			bool ok = a.Kind switch
 			{
 				ActionKind.Normal => _moves.ContainsKey(a.ToString()),
-				ActionKind.Special => a.MoveId == BehaviourProfile.CopiedSpecial || _moves.ContainsKey(a.ToString()),
+				ActionKind.Special => a.MoveId == BehaviourProfile.CopiedSpecial || _moves.ContainsKey(a.ToString()) || !isHabit && _heldBack.Contains(a.ToString()),
 				ActionKind.Throw => ThrowButtons != InputBits.None,
 				_ => true,
 			};

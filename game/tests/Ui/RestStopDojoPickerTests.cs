@@ -55,7 +55,11 @@ public static class RestStopDojoPickerTests
 		Assert.True(m.Offers.All(o => o.Slot != top), "a top-level special is skipped");
 		Assert.Equal(all.Count - 1, m.Offers.Count, "only that one dropped");
 		var one = DojoTrialTests.AtDojo(500);
-		one.Trials = new[] { one.Trials[0] };
+		// YOK-226: built on purpose, not from whichever trial sorts first in data/trials (fox-mirage-trial now does, and Ryo
+		// may not own Fox Mirage): keep only the trial of one offered special, so every other owned special has none.
+		var before = RestStopScreenModel.Create(one)!.Offers;
+		Assert.True(before.Count > 1, $"setup: several specials with a trial ({before.Count})");
+		one.Trials = new[] { before[0].Trial };
 		var m1 = RestStopScreenModel.Create(one)!;
 		Assert.Equal(1, m1.Offers.Count, "specials with no trial are skipped");
 		Assert.True(!m1.CanSelect && !m1.SelectTrial(1), "one offer: nothing to select");
@@ -116,7 +120,7 @@ public static class RestStopDojoPickerTests
 		int hits = 0;
 		for (int i = 0; i < m.Offers.Count; i++)
 		{
-			if (m.TrialOffer!.Slot == target) { hits++; Assert.Equal(m.Forecast.Level + 1, m.CopyRaisedTo(), "Lv 1 to 2 raises the copy"); }
+			if (m.TrialOffer!.Slot == target) { hits++; Assert.Equal(m.Forecast.Level < CopyRule.HighestUnevolvedLevel ? m.Forecast.Level + 1 : (int?)null, m.CopyRaisedTo(), "Lv 1 to 2 raises the copy; a Lv 2 target is not raised (T4)"); } // YOK-226: the real pool's draws can leave the target at Lv 2
 			else Assert.True(m.CopyRaisedTo() is null, "another special: no line");
 			m.SelectTrial(1);
 		}

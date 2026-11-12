@@ -1,0 +1,168 @@
+{
+ "tool": "tools/blender/repair_weights.py",
+ "fighter": "tanuki-tripo",
+ "input": "tripo-out/tanuki-v2/work/tanuki-v2-canon.glb",
+ "output": "tripo-out/tanuki-v2/work/tanuki-v2-repaired.glb",
+ "input_sha256": "7e4fb64ac117cd5793677a032d364a9750ad865e0de3ce8ed4e8c29cebaf6583",
+ "params": {
+  "region_bottom_m": 0.1,
+  "region_top_m": 0.13,
+  "smooth_pre_iters": 0,
+  "smooth_lambda": 0.5,
+  "side_band_m": 0.05,
+  "falloff_front_lo_m": 0.0,
+  "falloff_front_hi_m": 0.08,
+  "falloff_back_lo_m": 0.03,
+  "falloff_back_hi_m": 0.12,
+  "prop_bind": 0,
+  "prop_light_min": 0.55,
+  "prop_light_max_chroma": 0.25,
+  "prop_z_lo_m": -0.03,
+  "prop_min_verts": 20,
+  "prop_rings": 6,
+  "min_weight": 0.01,
+  "max_influences": 4,
+  "torso_fix": 0,
+  "side_on": 0,
+  "falloff_on": 0,
+  "legstrip_all": 0,
+  "pure_on": 0,
+  "pure_y0_m": 0.08,
+  "pure_y1_m": 0.14,
+  "pure_x0_m": 0.4,
+  "pure_x1_m": 0.46,
+  "pure_zbot0_m": 0.7,
+  "pure_zbot1_m": 0.78,
+  "pure_ztop_band_m": 0.05,
+  "pure_ztop_m": 1.25,
+  "pure_xflat_m": 0.2,
+  "pure_zslope": 1.8,
+  "band_smooth_iters": 0,
+  "band_z0_m": 0.0,
+  "band_z1_m": 0.0,
+  "band_x_m": 9.0,
+  "knee_iters": 0,
+  "knee_band_m": 0.1,
+  "knee_radius_m": 0.0,
+  "knee_fade_m": 0.06,
+  "shin_clean_m": 0.0,
+  "shin_blend_m": 0.04,
+  "crotch_x_m": 0.0,
+  "knee_split": 0,
+  "cross_clean_x_m": 0.0,
+  "head_clean_z0_m": 0.0,
+  "head_clean_z1_m": 0.0,
+  "head_clean_x_m": 0.16,
+  "head_clean_y_m": -9.0,
+  "panel_x_m": 0.0,
+  "panel_y_m": 0.0,
+  "panel_z0_m": 0.0,
+  "panel_z1_m": 0.0,
+  "tail_y0_m": 0.4,
+  "tail_y1_m": 0.6,
+  "tail_z0_m": 0.1,
+  "tail_z1_m": 1.0,
+  "tail_hips_w": 1.0
+ },
+ "frame": {
+  "hips_z": 0.5516,
+  "upleg_z": 0.5512,
+  "leg_z": 0.2102,
+  "mid_x": 0.0275
+ },
+ "region_verts": 3070,
+ "steps": [
+  {
+   "step": "smooth1",
+   "verts_changed": 25,
+   "net_weight_by_bone": {
+    "Hips": 0.0,
+    "LeftUpLeg": 0.0,
+    "RightUpLeg": -0.0,
+    "RightLeg": -0.0,
+    "RightFoot": 0.0,
+    "Spine": 0.0,
+    "Spine1": 0.0,
+    "LeftShoulder": 0.0,
+    "LeftArm": 0.0,
+    "Head": 0.0,
+    "RightShoulder": 0.0
+   }
+  },
+  {
+   "step": "side",
+   "verts_changed": 0,
+   "net_weight_by_bone": {}
+  },
+  {
+   "step": "falloff",
+   "verts_changed": 0,
+   "net_weight_by_bone": {}
+  },
+  {
+   "step": "props",
+   "verts_changed": 0,
+   "net_weight_by_bone": {}
+  },
+  {
+   "step": "xside",
+   "verts_changed": 1533,
+   "net_weight_by_bone": {
+    "Hips": 552.19,
+    "LeftUpLeg": -154.5,
+    "LeftLeg": -0.0,
+    "RightUpLeg": -229.15,
+    "RightLeg": -1.48,
+    "Spine": -138.84,
+    "Spine1": -28.21
+   }
+  },
+  {
+   "step": "tidy",
+   "verts_changed": 550,
+   "net_weight_by_bone": {
+    "Hips": 1.64,
+    "LeftUpLeg": 0.92,
+    "LeftLeg": 0.0,
+    "LeftToeBase": 0.01,
+    "RightUpLeg": 0.76,
+    "RightLeg": 0.01,
+    "Spine": 0.08,
+    "RightArm": 0.0
+   }
+  },
+  {
+   "step": "total",
+   "verts_changed": 1875,
+   "net_weight_by_bone": {
+    "Hips": 553.41,
+    "LeftUpLeg": -154.03,
+    "LeftLeg": -0.16,
+    "LeftToeBase": -0.14,
+    "RightUpLeg": -228.82,
+    "RightLeg": -1.59,
+    "Spine": -139.76,
+    "Spine1": -28.74,
+    "LeftShoulder": -0.02,
+    "RightShoulder": -0.07,
+    "RightArm": -0.08
+   }
+  }
+ ],
+ "seam_weight_mismatch_before": 0.0029,
+ "props": {
+  "patches": [
+   501,
+   20
+  ],
+  "rigid_verts": 0,
+  "blend_verts": 0
+ },
+ "tail_verts": {
+  "rigid": 756,
+  "blend": 773
+ },
+ "verts_touched": 3917,
+ "seam_weight_mismatch_after": 0.0029,
+ "output_sha256": "753c2f4512b2d7347304eed92faed32e258f72cca15600453fb5ce0a75508608"
+}

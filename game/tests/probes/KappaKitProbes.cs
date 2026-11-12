@@ -447,11 +447,17 @@ public static class KappaKitProbes
 		Assert.True(seen.Contains("kappa-throw"), "he threw: " + string.Join(",", seen));
 		foreach (string id in seen)
 		{
-			Assert.True(id.StartsWith("kappa-"), "started a move that is not the Kappa's: " + id);
-			Assert.True(FightScene.MoveClips.TryGetValue(id, out var clip) && clip == id, $"{id} names its own clip");
-			Assert.Equal(id, FighterAnimSet.Kappa.MoveClip(id), id + " has no Kitsune override on the Kappa body");
+			// YOK-226: river-grab is a real Kappa special without the kappa- prefix; a Kappa-source special is the Kappa's too.
+			Assert.True(id.StartsWith("kappa-") || KappaSpecialMoveIds().Contains(id), "started a move that is not the Kappa's: " + id);
+			// YOK-226: a special's move id (river-grab) differs from its Kappa clip name (kappa-river-grab); it still names its own Kappa clip.
+			string want = id.StartsWith("kappa-") ? id : "kappa-" + id;
+			Assert.True(FightScene.MoveClips.TryGetValue(id, out var clip) && clip == want, $"{id} names its own clip ({want})");
+			Assert.Equal(want, FighterAnimSet.Kappa.MoveClip(want), want + " has no Kitsune override on the Kappa body");
 		}
 	}
+
+	static HashSet<string> KappaSpecialMoveIds() => SpecialLoader.LoadDirectory(ContentPaths.Data("moves"))
+		.Where(s => s.Source == "kappa").Select(s => s.Id).ToHashSet();
 
 	// F2/F6: a Kappa clip file agrees with its move: same length, hit window = the move's active frames.
 	[Test]

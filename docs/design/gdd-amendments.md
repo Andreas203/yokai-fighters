@@ -27,6 +27,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
+| [AM23](#am23) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
 | [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
 
 ### Adding an amendment
@@ -486,6 +487,24 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | rules.md V9 | "lantern riverbank (Kappa)" | "night swamp without lanterns (Kappa) [AM21]" |
 
 <a id="am24"></a>
+
+## AM23 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
+
+**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM23 because AM20 to AM22 were taken on other branches.)
+
+**Decision.** In the boss fight the Tanuki shows his own true form instead of Ryo's model. He still runs Ryo's clips, Ryo's normals, starters and the copied special, with Ryo's hitboxes and frame data. Only the model on screen changes; the sim does not read it.
+
+**Why.** The designer prefers the true form on screen for the boss.
+
+**What does not change.** The copy rule T1–T6, the kit (Ryo's normals and starters plus one copy), no new animation, hitboxes and frame data. The dev menu switch "Tanuki true form" can still show Ryo's body for comparison.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §5.3 The Tanuki | "The Tanuki fights with Ryo's normals and starters plus one copied special" (in Ryo's body, per AM4/T0) | Same kit, shown in the Tanuki's true-form body. |
+| GDD short, the Tanuki | As above | As above. |
+| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM23]" |
 
 ## AM24 — Iron-Club Charge and Oni Quake take the timing of their greybox clips (2026-11-09)
 

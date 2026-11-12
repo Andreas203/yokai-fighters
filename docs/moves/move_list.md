@@ -43,8 +43,8 @@ Modifiers (14) and cancel rules (3) are data-only and need no clips (A10). Fox S
 | Fox Mirage (locked) | Kitsune, rare | 18/-/10 | 0 | S04 | Mirage Feint (E04, reuses S04) | No |
 | Iron-Club Charge | Oni, common | 12/6/14 (AM24) | 110 | S05 | Crushing Charge (E05, reuses S05) | No |
 | Oni Quake (locked) | Oni, rare | 27/4/25 (AM24) | 90, hits low | S06 | Aftershock (E06, reuses S06) | No |
-| River Grab | Kappa, common | 6/2/30 | 130 | T01 (reuses generic grab) | Whirlpool Grab (E07, reuses T01) | No |
-| Shell Spin (locked) | Kappa, rare | 10/18/20 | 80 | S07 | Torrent Spin (E08, reuses S07) | No |
+| River Grab | Kappa, common | 6/2/30 | 130 | T01 (reuses generic grab; GREYBOX clip `kappa-river-grab` at about 0.8x) | Whirlpool Grab (E07, reuses T01) | No |
+| Shell Spin (locked) | Kappa, rare | 10/18/20 | 80 | S07 (GREYBOX clip `kappa-shell-spin`, heavy-punch stand-in) | Torrent Spin (E08, reuses S07) | No |
 
 Source fidelity [A8]: each special belongs only to its source yokai (or Ryo). The EX version of any special reuses the base clip with a preset [A10 spirit; no new animation].
 

@@ -398,7 +398,10 @@ public sealed class ProfileAi
 		{
 			var b = Profile.Behaviours[i];
 			bool holds = Holds(b.When, range, o);
-			w[i] = BehaviourProfile.IsEvent(b.When) || !holds ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Aggression : 150 - Aggression) / 100);
+			// YOK-226: a move action this kit can't do (a rare held back off an elder node, special:copied off the Tanuki) is
+			// skipped before the draw, so its weight never turns into spacing.
+			bool cannot = b.Do.Kind is ActionKind.Normal or ActionKind.Special or ActionKind.Throw && !_kit.CanDo(b.Do);
+			w[i] = BehaviourProfile.IsEvent(b.When) || !holds || cannot ? 0 : Math.Max(1, b.Weight * (b.Do.Offensive ? 50 + Aggression : 150 - Aggression) / 100);
 			total += w[i];
 		}
 		int roll = _rng.Next(total);
