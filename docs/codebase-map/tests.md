@@ -24,6 +24,7 @@ dotnet build
 | `tests/ai_harness.tscn` | `AiHarnessMain.cs` | `-- [--profile id] [--p1 thrower\|jumper\|random\|idle] [--reaction N] [--seed N] [--ticks N] [--sweep] [--trace]` → `harness/results/ai/` (git-ignored). |
 | `tests/replay.tscn` | `ReplayMain.cs` | `-- --replay <file.yfr\|folder\|user://replays>`: OK/FAIL per file, exit 0/1. |
 | `tests/captures/*_capture.tscn` | `*Capture.cs` | Windowed screenshot tools (hud, overlay, model, stage, oni_kappa, copy_hud, twist, flow, map, menu, kit, start, reward, elder_reward (YOK-186: rare cancel-rule and rare-special cards), held_cancel (YOK-218: pause and move list holding 0, 1, 2 rules; reward cap notice), rest_stop, shop, practice, dev, title_continue, hitbox, vfx (YOK-242: projectiles in flight, cast/release/impact, the default effects → `vfx/`)) → `docs/screenshots/current/` (stage: `-- out=<dir> [opponent=oni|kappa|tanuki] [shots=a,b] [health=p] [--stage=<name>]`). |
+| `tests/captures/guard_capture.tscn` | `GuardCapture.cs` | Finish build: Ryo and the Tanuki in the proximity guard and low blockstun → `assets/specs/clips/stills/guard/` (`-- out=<dir>`). |
 | `tests/bone_probe.tscn` | `BoneProbe.cs` | Prints a rig's bones (`-- out=<f> meshy`). |
 
 ## Fixtures (`tests/fixtures/`)
