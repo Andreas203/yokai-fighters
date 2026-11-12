@@ -109,18 +109,18 @@ public sealed class FighterAnimSet
 	/// <summary>
 	/// YOK-146 SWITCH: which Ryo body fights. True = the Tripo Ryo on the Option A shared skeleton (metre bones, his
 	/// stopgap clips in <c>clips/ryo-tripo/</c>); false = the old Meshy Ryo (cm bones, <c>clips/ryo/</c>), for comparison.
-	/// The Tanuki true form (AM23) runs Ryo's Tripo clips whichever Ryo fights. Read when a fight builds its models (the dev menu flips it).
+	/// The Tanuki true form (AM25) runs Ryo's Tripo clips whichever Ryo fights. Read when a fight builds its models (the dev menu flips it).
 	/// </summary>
 	public static bool TripoRyo { get; set; } = true;
 
 	/// <summary>
-	/// AM23 SWITCH: the Tanuki boss fight shows his true form (<see cref="TanukiTripo"/>) instead of Ryo's body. On by
+	/// AM25 SWITCH: the Tanuki boss fight shows his true form (<see cref="TanukiTripo"/>) instead of Ryo's body. On by
 	/// default: the designer kept the true form on 2026-11-11; he still runs Ryo's clips and moves (T0), and the sim still
 	/// treats him as Ryo's body. Off shows Ryo's body, as before. Read when a fight builds its models (the dev menu flips it).
 	/// </summary>
 	public static bool TripoTanuki { get; set; } = true;
 
-	/// <summary>The Tanuki's body for the next fight: his true form (<see cref="TripoTanuki"/>, AM23) or <see cref="Ryo"/>'s body.</summary>
+	/// <summary>The Tanuki's body for the next fight: his true form (<see cref="TripoTanuki"/>, AM25) or <see cref="Ryo"/>'s body.</summary>
 	public static FighterAnimSet Tanuki => TripoTanuki ? TanukiTripo : Ryo;
 
 	/// <summary>Ryo's body for the next fight: <see cref="RyoTripo"/> or <see cref="RyoMeshy"/> by <see cref="TripoRyo"/>.</summary>
@@ -153,7 +153,7 @@ public sealed class FighterAnimSet
 		"res://assets/generated/characters/ryo/ryo-rigged.glb", "res://scenes/fighters/ryo.tscn", null);
 
 	/// <summary>
-	/// AM23: the Tanuki's true form (assets/specs/rigs/tanuki.md v2b): 1.75 m, rigid tail on the hips, on the Tripo shared
+	/// AM25: the Tanuki's true form (assets/specs/rigs/tanuki.md v2b): 1.75 m, rigid tail on the hips, on the Tripo shared
 	/// skeleton, playing Ryo's Tripo clips with Ryo's own overrides (he runs Ryo's moves and the copied special, T0). His
 	/// hips follow his own rig (FighterModel.HipScale). Fighter id "tanuki"; the camera frames him like any other fighter.
 	/// </summary>
@@ -351,7 +351,7 @@ public sealed class FighterAnimSet
 	public static FighterAnimSet For(string fighter) => fighter switch
 	{
 		"kitsune" => Kitsune,
-		"tanuki" => Tanuki, // his true form (AM23) unless TripoTanuki is off
+		"tanuki" => Tanuki, // his true form (AM25) unless TripoTanuki is off
 		"oni" or "elder-oni" => Oni,
 		"kappa" or "elder-kappa" => Kappa,
 		_ => Ryo,

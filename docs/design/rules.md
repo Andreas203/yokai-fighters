@@ -174,7 +174,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## T — The Tanuki copy rule (never cut)
 
-- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM23, designer 2026-11-11; was Ryo's model]. The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
+- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25, designer 2026-11-11; was Ryo's model]. The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
 - **T1** Lock point: when Ryo enters the Tanuki's node.
 - **T2** Target: highest-level special currently in a slot, throws included. Sold/replaced moves don't count.
 - **T3** Ties: most recently levelled, then lower slot.

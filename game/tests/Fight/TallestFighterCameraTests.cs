@@ -42,7 +42,7 @@ public static class TallestFighterCameraTests
 		Fuzz(CameraConfig.Default.ForBodies("ryo", "oni"));
 	}
 
-	/// <summary>AM23: the Tanuki's true form tops 1.9 m by his ears, so his fight takes the tall framing; it must hold the same way.</summary>
+	/// <summary>AM25: the Tanuki's true form tops 1.9 m by his ears, so his fight takes the tall framing; it must hold the same way.</summary>
 	[Test]
 	public static void TanukiTrueFormFraming_TopUnderTheHud_FeetOnScreen_EveryZoomCornerAndJump()
 	{

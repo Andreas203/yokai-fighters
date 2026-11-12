@@ -28,7 +28,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
 | [AM22](#am22) | 2026-11-10 | The routes ahead show as sketches on bare paper; no mist | R2 | YOK-245 |
-| [AM23](#am23) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
+| [AM25](#am25) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
 | [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
 
 ### Adding an amendment
@@ -509,11 +509,11 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD short §1.2 Core loop | (as amended by AM19) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
 | rules.md R2 | "...the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." | "...the real routes ahead show only as faint sketched lines on bare paper, with no node, name or icon [AM19, AM22]." |
 
-<a id="am23"></a>
+<a id="am25"></a>
 
-## AM23 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
+## AM25 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
 
-**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM23 because AM20 to AM22 were taken on other branches.)
+**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM25 because AM20 to AM24 were taken: AM23 is the ElevenLabs sound amendment and AM24 the Oni timings.)
 
 **Decision.** In the boss fight the Tanuki shows his own true form instead of Ryo's model. He still runs Ryo's clips, Ryo's normals, starters and the copied special, with Ryo's hitboxes and frame data. Only the model on screen changes; the sim does not read it.
 
@@ -527,7 +527,7 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 |---|---|---|
 | GDD extended §5.3 The Tanuki | "The Tanuki fights with Ryo's normals and starters plus one copied special" (in Ryo's body, per AM4/T0) | Same kit, shown in the Tanuki's true-form body. |
 | GDD short, the Tanuki | As above | As above. |
-| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM23]" |
+| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25]" |
 
 <a id="am24"></a>
 

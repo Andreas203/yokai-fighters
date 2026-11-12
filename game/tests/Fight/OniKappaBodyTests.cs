@@ -23,7 +23,7 @@ public static class OniKappaBodyTests
 		Assert.Equal(FighterAnimSet.Kappa, FighterAnimSet.ForNode("kitsune", "elder-kappa"), "the Elder Kappa shows the Kappa");
 		Assert.Equal(FighterAnimSet.Kitsune, FighterAnimSet.ForNode("kitsune", "kitsune"), "a Kitsune duel is unchanged");
 		Assert.Equal(FighterAnimSet.Kitsune, FighterAnimSet.ForNode("kitsune", null), "a node with no yokai shows its fighter");
-		Assert.Equal(FighterAnimSet.Tanuki, FighterAnimSet.ForNode("tanuki", "tanuki"), "the Tanuki shows his own body (AM23 true form; Ryo's when switched off)");
+		Assert.Equal(FighterAnimSet.Tanuki, FighterAnimSet.ForNode("tanuki", "tanuki"), "the Tanuki shows his own body (AM25 true form; Ryo's when switched off)");
 		foreach (var id in new[] { "ryo", "kitsune", "tanuki" })
 			Assert.True(!FighterAnimSet.HasBody(id), $"{id}: not a stand-in body");
 		Assert.Equal("ryo-generic-throw", FighterAnimSet.Oni.FallbackThrowClip, "the Oni falls back to Ryo's throw");

@@ -21,8 +21,8 @@ public static class TripoRyoTests
 		Assert.True(FighterAnimSet.TripoRyo, "this branch fights the Tripo Ryo");
 		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.Ryo), "Ryo = the Tripo set");
 		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.For("ryo")), "P1's body");
-		Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "AM23: the Tanuki fights in his true form");
-		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo.ClipRoot, FighterAnimSet.TanukiTripo.ClipRoot), "AM23: on Ryo's Tripo clips (T0)");
+		Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "AM25: the Tanuki fights in his true form");
+		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo.ClipRoot, FighterAnimSet.TanukiTripo.ClipRoot), "AM25: on Ryo's Tripo clips (T0)");
 		Assert.Equal(TripoRoot, FighterAnimSet.RyoTripo.ClipRoot, "Ryo's clip root");
 		Assert.True(FighterAnimSet.RyoTripo.ModelPath.EndsWith("ryo-tripo-rigged.glb"), "Tripo model");
 		try

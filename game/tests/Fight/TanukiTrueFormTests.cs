@@ -6,7 +6,7 @@ using YokaiFighters.Fight;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// AM23: the Tanuki boss fight shows his true form (Tripo, shared skeleton, assets/specs/rigs/tanuki.md v2b) on Ryo's
+/// AM25: the Tanuki boss fight shows his true form (Tripo, shared skeleton, assets/specs/rigs/tanuki.md v2b) on Ryo's
 /// Tripo clips, behind a switch that is on by default. Off, he fights in Ryo's body as before (T0). Presentation only:
 /// the sim never reads the body.
 /// </summary>
@@ -17,7 +17,7 @@ public static class TanukiTrueFormTests
 	[Test]
 	public static void Switch_IsOnByDefault_AndOffGivesRyosBody()
 	{
-		Assert.True(FighterAnimSet.TripoTanuki, "the true form is on by default (AM23)");
+		Assert.True(FighterAnimSet.TripoTanuki, "the true form is on by default (AM25)");
 		Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.For("tanuki")), "the Tanuki kit shows the true form");
 		Assert.True(ReferenceEquals(FighterAnimSet.TanukiTripo, FighterAnimSet.ForNode("tanuki", "tanuki")), "the boss node too");
 		Assert.True(ReferenceEquals(FighterAnimSet.RyoTripo, FighterAnimSet.For("ryo")), "Ryo keeps his body");
@@ -57,7 +57,7 @@ public static class TanukiTrueFormTests
 		Assert.True(k > 0.3f && k < 1f, $"hip scale from his own rig ({k:0.000}): shorter legs than Ryo's");
 		var (top, clip, _, _, _, _) = ModelExtentTests.MeasureTop(model);
 		float framed = CameraConfig.Default.TopFor(set.Fighter);
-		GD.Print($"AM23 tanuki: hip scale {k:0.000}, top {top:0.000} m ({clip}); framed {framed:0.000}");
+		GD.Print($"AM25 tanuki: hip scale {k:0.000}, top {top:0.000} m ({clip}); framed {framed:0.000}");
 		Assert.True(top <= framed, $"highest point {top:0.000} m ({clip}) > framed top {framed:0.000}");
 		model.QueueFree();
 	}
