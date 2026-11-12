@@ -172,7 +172,7 @@ public sealed class FighterAnimSet
 			[PoseKind.WalkFwd] = "kitsune-walk-guard-fwd",
 			[PoseKind.WalkBack] = "kitsune-walk-guard-back",
 			[PoseKind.Dash] = "kitsune-walk-guard-fwd",
-			[PoseKind.DashBack] = "ryo-dash-back", // borrowed: no Kitsune back-dash take yet
+			[PoseKind.DashBack] = "kitsune-dash-back", // YOK-246: her own retarget of the Meshy 14 Step_Back (was Ryo's clip)
 			[PoseKind.Jump] = "kitsune-jump",
 			[PoseKind.JumpBack] = "kitsune-jump",
 			[PoseKind.Crouch] = "kitsune-crouch",
@@ -222,16 +222,16 @@ public sealed class FighterAnimSet
 			[PoseKind.WalkFwd] = "oni-walk-fwd",
 			[PoseKind.WalkBack] = "oni-walk-fwd", // played reversed (ReversedPoses)
 			[PoseKind.Dash] = "oni-walk-fwd",
-			[PoseKind.DashBack] = "ryo-dash-back", // borrowed: not in the Oni kit
+			[PoseKind.DashBack] = "oni-dash-back", // YOK-246: retargeted onto the Oni, club-checked
 			[PoseKind.Jump] = "kitsune-jump", // borrowed: the Oni kit has no jump
 			[PoseKind.JumpBack] = "kitsune-jump",
-			[PoseKind.Crouch] = "ryo-crouch",
-			[PoseKind.BlockHigh] = "ryo-block-high",
+			[PoseKind.Crouch] = "oni-crouch",
+			[PoseKind.BlockHigh] = "oni-block-high",
 			[PoseKind.BlockLow] = "oni-block-low",
 			[PoseKind.HitHigh] = "oni-hit-high",
 			[PoseKind.HitLow] = "oni-hit-low",
 			[PoseKind.Knockdown] = "ryo-knockdown",
-			[PoseKind.GetUp] = "ryo-get-up",
+			[PoseKind.GetUp] = "oni-get-up",
 			[PoseKind.Thrown] = "oni-hit-high",
 			[PoseKind.Landing] = "kitsune-jump",
 			[PoseKind.Burst] = "kitsune-foxfire", // borrowed: no Oni cast take
@@ -245,9 +245,31 @@ public sealed class FighterAnimSet
 	/// YOK-228: his own moves (data/moves/kappa-*.json) name their own clip files (data/clips/kappa-*.json, GREYBOX reuse of
 	/// Kitsune and Ryo takes, route A on YOK-219), which the Kitsune's overrides never touch. Known: feet sink 3-8 cm.
 	/// </summary>
-	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn");
+	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn",
+		new Dictionary<PoseKind, string>
+		{
+			// YOK-246: the Kappa's own pose clips (data/clips/kappa-*.json, retargeted onto his skeleton and measured), no longer the Kitsune's.
+			[PoseKind.Idle] = "kappa-idle",
+			[PoseKind.WalkFwd] = "kappa-walk-guard-fwd",
+			[PoseKind.WalkBack] = "kappa-walk-guard-back",
+			[PoseKind.Dash] = "kappa-walk-guard-fwd",
+			[PoseKind.DashBack] = "kappa-dash-back",
+			[PoseKind.Crouch] = "kappa-crouch",
+			[PoseKind.BlockHigh] = "kappa-block-high",
+			[PoseKind.BlockLow] = "kappa-block-low",
+			[PoseKind.GetUp] = "kappa-get-up",
+		});
 
-	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene) => new()
+	private static IReadOnlyDictionary<PoseKind, string> Merge(IReadOnlyDictionary<PoseKind, string> from, Dictionary<PoseKind, string>? own)
+	{
+		if (own is null) return from;
+		var all = new Dictionary<PoseKind, string>();
+		foreach (var kv in from) all[kv.Key] = kv.Value;
+		foreach (var kv in own) all[kv.Key] = kv.Value;
+		return all;
+	}
+
+	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene, Dictionary<PoseKind, string>? own = null) => new()
 	{
 		Fighter = fighter,
 		ModelPath = model,
@@ -258,7 +280,7 @@ public sealed class FighterAnimSet
 		AirClips = from.AirClips,
 		FallbackThrowClip = from.FallbackThrowClip,
 		ClipOverrides = from.ClipOverrides,
-		Clips = from.Clips,
+		Clips = Merge(from.Clips, own),
 	};
 
 	public static FighterAnimSet For(string fighter) => fighter switch
