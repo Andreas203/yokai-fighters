@@ -1,12 +1,12 @@
 Data are loaded, start creating Blender stuff
 glTF import finished in 0.12s
 Data are loaded, start creating Blender stuff
-glTF import finished in 0.15s
-13:41:12 | INFO: Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.1\4.1\python\lib\site-packages\extern_draco.dll
-13:41:12 | INFO: Starting glTF 2.0 export
-13:41:12 | INFO: Extracting primitive: clip_proxy
-13:41:12 | INFO: Primitives created: 1
-13:41:13 | INFO: Finished glTF 2.0 export in 0.17436003684997559 s
+glTF import finished in 0.16s
+13:49:53 | INFO: Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.1\4.1\python\lib\site-packages\extern_draco.dll
+13:49:54 | INFO: Starting glTF 2.0 export
+13:49:54 | INFO: Extracting primitive: clip_proxy
+13:49:54 | INFO: Primitives created: 1
+13:49:54 | INFO: Finished glTF 2.0 export in 0.1786515712738037 s
 
 retarget_bvh: {"tool": "tools/blender/retarget_bvh.py", "mode": "clip", "source": "tmp-finish\\ryo-shell-spin\\clean.glb", "rig": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb", "out": "game/assets/generated/clips/ryo-tripo/ryo-shell-spin.glb", "source_frames": [0, 232], "out_frames": [0, 232], "rest_align": true, "in_place": true, "proxy_mesh": true, "hip_ratio": 1.70611, "map": {"Hips": "mixamorig:Hips", "Spine": "mixamorig:Spine", "Spine1": "mixamorig:Spine1", "Spine2": "mixamorig:Spine2", "Neck": "mixamorig:Neck", "Head": "mixamorig:Head", "LeftShoulder": "mixamorig:LeftShoulder", "LeftArm": "mixamorig:LeftArm", "LeftForeArm": "mixamorig:LeftForeArm", "LeftHand": "mixamorig:LeftHand", "LeftUpLeg": "mixamorig:LeftUpLeg", "LeftLeg": "mixamorig:LeftLeg", "LeftFoot": "mixamorig:LeftFoot", "LeftToeBase": "mixamorig:LeftToeBase", "RightShoulder": "mixamorig:RightShoulder", "RightArm": "mixamorig:RightArm", "RightForeArm": "mixamorig:RightForeArm", "RightHand": "mixamorig:RightHand", "RightUpLeg": "mixamorig:RightUpLeg", "RightLeg": "mixamorig:RightLeg", "RightFoot": "mixamorig:RightFoot", "RightToeBase": "mixamorig:RightToeBase"}, "unmapped_target_bones": ["HeadTop_End", "LeftToe_End", "RightToe_End"]}
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)

@@ -185,10 +185,13 @@ public static class ClipRetimeTests
 	/// </summary>
 	static ClipCatalog QuakeTableTimingFixture(ClipInfo quake)
 	{
-		// 22/5/26 = 53 frames: startup snaps to the overhead peak (2x), holds 4 frames (the tell), the slam falls
-		// at 16/11x, 5 active frames at 1x, recovery eases out at 16/26x.
-		const string curve = "[{\"frames\":[1,9],\"ticks\":[0,16]},{\"frames\":[9,12],\"ticks\":[16,16]},{\"frames\":[12,23],\"ticks\":[16,32]},"
-			+ "{\"frames\":[23,27],\"ticks\":[32,36]},{\"frames\":[27,53],\"ticks\":[36,52]}]";
+		// 22/5/26 = 53 frames on the take's own strike and ends (YOK-246: the Tripo take's trim is mid-file, so the ticks come
+		// from the real curve): startup snaps into the strike within 2x, 5 active frames over the strike segment, recovery
+		// eases out to the last trimmed tick.
+		var segs = quake.Retime!;
+		int strike = segs[0].LastTick, strikeEnd = segs[1].LastTick, first = Math.Max(quake.TrimStart, strike - 40);
+		string curve = $"[{{\"frames\":[1,23],\"ticks\":[{first},{strike}]}},{{\"frames\":[23,28],\"ticks\":[{strike},{strikeEnd}]}},"
+			+ $"{{\"frames\":[28,53],\"ticks\":[{strikeEnd},{quake.TrimEnd}]}}]";
 		string dir = Path.Combine(Path.GetTempPath(), "yf-quake-table-" + Environment.ProcessId);
 		Directory.CreateDirectory(dir);
 		try

@@ -1,31 +1,31 @@
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
 Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_as_7qpqk\front.png'
-Time: 00:00.53 (Saving: 00:00.09)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_rzuzcbkq\front.png'
+Time: 00:00.54 (Saving: 00:00.10)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_0i4cattb\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_mwbatgcy\side.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_hgajppnk\front.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_toalxgyk\front.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip__i6p3vf6\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_xftzibd5\side.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_yc6y2lka\front.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_et4zrl47\front.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_xbj6pfai\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ey7at2zg\side.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_imfeqpd8\front.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_owonoa7s\front.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_wy9f89wb\side.png'
-Time: 00:00.04 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ylsbzejz\side.png'
+Time: 00:00.05 (Saving: 00:00.01)
 
 Data are loaded, start creating Blender stuff
-glTF import finished in 0.13s
+glTF import finished in 0.14s
 measure_clip: ryo-river-grab PASS frames=1173 slide=0.09 cm/f accel=8.9 deg/f^2 reversals=15
 measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-river-grab\measure\ryo-river-grab.report.json
 TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

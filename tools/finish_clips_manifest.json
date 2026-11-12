@@ -380,7 +380,43 @@
     "active": 1,
     "total": 28
    },
-   "movement": true
+   "movement": true,
+   "retime_override": [
+    {
+     "frames": [
+      1,
+      19
+     ],
+     "ticks": [
+      26,
+      58
+     ],
+     "note": "startup: the flip leaves the floor (1.8x)"
+    },
+    {
+     "frames": [
+      19,
+      20
+     ],
+     "ticks": [
+      58,
+      60
+     ],
+     "note": "vanish frame"
+    },
+    {
+     "frames": [
+      20,
+      28
+     ],
+     "ticks": [
+      60,
+      72
+     ],
+     "note": "recovery eases out, ends inverted-to-landing before the upright stand (top bone under the 1.9 framing)"
+    }
+   ],
+   "nohit": true
   },
   {
    "id": "ryo-fox-mirage",
@@ -395,7 +431,43 @@
     "active": 1,
     "total": 28
    },
-   "movement": true
+   "movement": true,
+   "retime_override": [
+    {
+     "frames": [
+      1,
+      19
+     ],
+     "ticks": [
+      26,
+      58
+     ],
+     "note": "startup: the flip leaves the floor (1.8x)"
+    },
+    {
+     "frames": [
+      19,
+      20
+     ],
+     "ticks": [
+      58,
+      60
+     ],
+     "note": "vanish frame"
+    },
+    {
+     "frames": [
+      20,
+      28
+     ],
+     "ticks": [
+      60,
+      72
+     ],
+     "note": "recovery eases out, ends inverted-to-landing before the upright stand (top bone under the 1.9 framing)"
+    }
+   ],
+   "nohit": true
   },
   {
    "id": "ryo-river-grab",

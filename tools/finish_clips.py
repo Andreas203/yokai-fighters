@@ -36,6 +36,7 @@ RIGS = {
     "kappa": "assets/generated/characters/kappa/kappa-rigged.glb",
     "ryo": "assets/generated/characters/ryo/ryo-tripo-rigged.glb",
 }
+RYO_MESHY_RIG = "assets/generated/characters/ryo/ryo-rigged.glb"  # catalog convention: a Ryo twin's data/clips file is the Meshy-skeleton file in clips/ryo/, the Tripo Ryo plays clips/ryo-tripo/ by file name
 CLIP_DIR = {"kitsune": "kitsune", "oni": "oni", "kappa": "kappa", "ryo": "ryo-tripo"}
 PROPS = {  # prop_clearance.py arguments: prop GLB, its prep_prop log, grip radius
     "shell": ("assets/generated/characters/kappa/shell.glb", "assets/specs/rigs/logs/kappa-shell-fit.json", "0.0"),
@@ -135,13 +136,18 @@ def main():
                    "--rig", "game/" + RIGS[body], "--out", "game/" + dest, "--log", "tmp-finish/%s/retarget.json" % cid]
             rc, _ = run(cmd, cid + ".retarget.log", a.dry_run)
             row["retarget"] = "ok" if rc == 0 else "FAIL"
+            if body == "ryo":
+                meshy_dest = "assets/generated/clips/ryo/%s.glb" % cid
+                cmd2 = cmd[:cmd.index("--rig")] + ["--rig", "game/" + RYO_MESHY_RIG, "--out", "game/" + meshy_dest, "--log", "tmp-finish/%s/retarget-meshy.json" % cid]
+                rc2, _ = run(cmd2, cid + ".retarget-meshy.log", a.dry_run)
+                row["retarget"] += " + meshy %s" % ("ok" if rc2 == 0 else "FAIL")
         # data template
         template = {}
         if e.get("copy_from"):
             template = json.load(open(os.path.join(ROOT, "data/clips", e["copy_from"] + ".json"), encoding="utf8"))
         data_path = os.path.join(ROOT, "data/clips", cid + ".json")
         base = dict(template)
-        base.update({"kind": "clip", "id": cid, "status": "proposed", "file": dest, "hit_start": template.get("hit_start"),
+        base.update({"kind": "clip", "id": cid, "status": "proposed", "file": ("assets/generated/clips/ryo/%s.glb" % cid) if body == "ryo" else dest, "hit_start": template.get("hit_start"),
                      "hit_end": template.get("hit_end"), "rules": ["F2", "F5", "F6"]})
         base.setdefault("source", e.get("source", "tripo-library"))
         base["source"] = e.get("source", "tripo-library" if not e.get("copy_from") else "meshy-library")
@@ -188,9 +194,12 @@ def main():
             elif e.get("target") and rep:
                 n = rep.get("frames_total", 1) - 1
                 T, segs, flags, (t0, t1) = build_retime(rep, e["target"], n)
+                if e.get("retime_override"):  # chosen window (e.g. the Fox Mirage's flip, away from the upright stand that tops the camera framing)
+                    segs = e["retime_override"]
+                    t0, t1 = segs[0]["ticks"][0], segs[-1]["ticks"][1]
                 S, A = e["target"]["startup"], e["target"]["active"]
                 base.update({"trim_start": t0, "trim_end": t1, "frames_total": T, "retime": segs,
-                             "hit_start": S + 1, "hit_end": S + A})
+                             "hit_start": None if e.get("nohit") else S + 1, "hit_end": None if e.get("nohit") else S + A})
                 base.pop("speed_scale", None)
                 row["notes"] += flags
                 # judge the used window only: feet and jitter over trim_start..trim_end

@@ -1,31 +1,31 @@
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
 Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_l1n2w3ug\front.png'
-Time: 00:00.52 (Saving: 00:00.09)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_odsfzbjz\front.png'
+Time: 00:00.62 (Saving: 00:00.11)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_gnehtbyj\side.png'
-Time: 00:00.03 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ob3o_q55\front.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_o5n2cmkd\side.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_vwtt7b9w\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_gmos6q2j\front.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ej9hvsiv\front.png'
-Time: 00:00.03 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_hsh143xf\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_hvwib28y\side.png'
-Time: 00:00.03 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_5b8tg6bj\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_u_pv0szp\front.png'
-Time: 00:00.03 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_2rovbrgi\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_0_8xoow6\side.png'
-Time: 00:00.03 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_v1zk7wnw\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_tb31f_ma\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
 
 Data are loaded, start creating Blender stuff
 glTF import finished in 0.03s
-measure_clip: kitsune-fox-mirage-win PASS frames=55 slide=1.17 cm/f accel=6.9 deg/f^2 reversals=4
+measure_clip: kitsune-fox-mirage-win PASS frames=47 slide=0.66 cm/f accel=1.1 deg/f^2 reversals=0
 measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\kitsune-fox-mirage\win\kitsune-fox-mirage-win.report.json
 TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
