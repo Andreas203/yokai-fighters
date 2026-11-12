@@ -83,16 +83,16 @@ public static class MapV2BreakerProbes
 		s.GetParent().QueueFree();
 	}
 
-	// AM19: mist lines = exactly the routes whose far end is hidden; none once the boss is the next choice.
+	// AM19: sketches = exactly the routes whose far end is hidden; none once the boss is the next choice.
 	[Test]
-	public static void MistLinesOnlyForHiddenFarEndsAndNoneAtTheBoss(Node host)
+	public static void SketchesOnlyForHiddenFarEndsAndNoneAtTheBoss(Node host)
 	{
 		var v = StubMapView.Grid(4, 2); // rows: 1 / 2 / 2 / boss
 		var s = Make(host, v);
 		for (int i = 0; i < 3; i++)
 		{
 			int expected = v.Routes.Count(r => v.Nodes.First(n => n.Id == r.To).State == MapNodeState.Locked);
-			Assert.Equal(expected, s.Routes.MistLines.Count, "step " + i + ": mist lines vs routes into hidden nodes");
+			Assert.Equal(expected, s.Routes.Sketches.Count, "step " + i + ": sketches vs routes into hidden nodes");
 			var next = v.Nodes.FirstOrDefault(n => n.State == MapNodeState.Reachable);
 			if (next == null) break;
 			v.Select(next.Id); v.Complete(); s.Refresh(); s.FinishPresentation();
@@ -232,9 +232,9 @@ public static class MapV2BreakerProbes
 		s.GetParent().QueueFree();
 	}
 
-	// AM19: with a real run walked to the row before the boss, the boss is the next choice and no mist line remains (rows left are PassedOver).
+	// AM19: with a real run walked to the row before the boss, the boss is the next choice and no sketch remains (rows left are PassedOver).
 	[Test]
-	public static void RealRunNoMistOnceBossIsNextChoice(Node host)
+	public static void RealRunNoSketchOnceBossIsNextChoice(Node host)
 	{
 		string md = ContentPaths.Data("map");
 		var sess = RunSession.Start(YokaiFighters.Fight.FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
@@ -255,7 +255,7 @@ public static class MapV2BreakerProbes
 			view = new SessionMapView(sess);
 		}
 		Assert.True(view.Nodes.Any(n => n.Type == "boss" && n.State == MapNodeState.Reachable), "setup: boss reachable");
-		Assert.Equal(0, s.Routes.MistLines.Count, "the boss is the next choice: no mist lines");
+		Assert.Equal(0, s.Routes.Sketches.Count, "the boss is the next choice: no sketches");
 		s.GetParent().QueueFree();
 	}
 }

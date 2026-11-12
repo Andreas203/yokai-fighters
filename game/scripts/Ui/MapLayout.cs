@@ -20,12 +20,12 @@ public sealed record MapLayoutResult(IReadOnlyDictionary<string, Rect2> Rects, V
 /// <summary>
 /// YOK-109 (designer, 2026-10-25): which nodes the map draws. A view filter over <see cref="MapNodeView.State"/>, not a change to the route
 /// graph: the nodes Ryo has cleared, the one he is on and the ones he can pick now. Later nodes (the Tanuki's too) and rows he has left
-/// without taking a node are not drawn at all, so they show no name, icon or twist seal. AM19: their routes still show, as sketches in mist.
+/// without taking a node are not drawn at all, so they show no name, icon or twist seal. AM19: their routes still show, as faint sketches on bare paper.
 /// </summary>
 public static class MapReveal
 {
 	public static bool IsRevealed(MapNodeState s) => s is MapNodeState.Visited or MapNodeState.Current or MapNodeState.Reachable;
-	/// <summary>AM19: a route that is still ahead (its far end is not drawn and not a row Ryo has left): drawn as a sketch in the mist.</summary>
+	/// <summary>AM19: a route that is still ahead (its far end is not drawn and not a row Ryo has left): drawn as a sketch.</summary>
 	public static bool IsAhead(MapNodeState from, MapNodeState to) => to == MapNodeState.Locked && from != MapNodeState.PassedOver;
 }
 

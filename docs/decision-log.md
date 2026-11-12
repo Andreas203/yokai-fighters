@@ -33,6 +33,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM24** 2026-11-01 route, written 2026-11-09 (YOK-219, YOK-227): Iron-Club Charge is 12/6/14 (was 16/6/24) and Oni Quake 27/4/25 (was 22/5/26), because F2 keeps each greybox clip's timing as truth; the exact numbers are movesmith's proposal until the designer confirms them on the YOK-227 PR (specials table).
 - **AM20** 2026-11-09 (designer, YOK-238): the map no longer shows the copy-target talisman; outside fights only the rest-stop forecast names the target, its level and expected cost (T6, amends AM6 and AM18). The copy rule itself is unchanged.
 - **AM21** 2026-11-09 (designer, YOK-151, PR #277): the Kappa's stage is a night swamp without lanterns, painted or 3D (V9). The stage id `riverbank` and its file names stay.
+- **AM22** 2026-11-10 (designer, YOK-245): the map has no mist or clouds; the real routes ahead show as faint dotted sketches on bare paper all the way to the Tanuki, still with no node, name or icon (R2, amends AM19).
 - **AM23** 2026-11-11 (designer: "go back to the previous models but keep the tanuki", "previous = the non Tripo ones"): the Kitsune, Oni and Kappa v2 Tripo bodies are rejected and the game keeps their Meshy bodies (the v2 files stay on branch YOK-ryo-guard-tripo); the Tanuki fights in his Tripo true form on Ryo's clips by default, behind the dev switch "Tanuki true form" (T0 amended). Focus moves to abilities.
 
 ## Rules and tuning
@@ -265,3 +266,14 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
   - **Water:** murky swamp green.
   - **Unchanged:** the stage id (`riverbank`) and the `opponent_stages` mapping.
   - **Spend:** 4 Astra takes; no Tripo.
+
+## Designer decisions 2026-11-10
+- 2026-11-10 YOK-245 map clouds removed (designer, after playing PR #276: "the clouds on the map look weird, I'd rather we remove them"): no mist on the map; the sketches fade out on bare paper (AM22).
+
+## Designer decisions 2026-11-11
+- 2026-11-11 YOK-245 sketches run to the end (designer, after playing PR #279: "continue the dotted lines fully until the end"): the dotted sketches of the routes ahead no longer fade; they run at one strength to the Tanuki's node (AM22 updated before merge).
+- 2026-11-11 Abilities (designer: "focus on abilities now. Create all abilities now and specials"): all 8 specials, 8 evolutions, 14 modifiers and 3 cancel rules built on YOK-226-all-specials; rare specials only in elder fights (proposed, to confirm).
+
+## Designer decisions 2026-11-12
+- 2026-11-12 Models locked (designer: "lets lock in the models as is, any changes from now on will be using these model"): Tripo Ryo, Meshy Kitsune, Oni and Kappa, and the Tripo Tanuki true form (AM23). No new meshes or rigs. Every fighter goes through an Astra visual check for feet placement and mesh clipping while animating.
+- 2026-11-12 Deadline (designer): a playable game by 17:00 today, with complete movesets and no greybox clips. Only essential Linear tickets stay open; balance (Sparring Partner) runs last, once everything else is in.

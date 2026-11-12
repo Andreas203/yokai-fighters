@@ -25,7 +25,7 @@ namespace YokaiFighters.Ui;
 /// of rows Ryo has left disappear (fade out, nothing left behind).
 /// YOK-238 (map v2, designer 2026-11-09): the paper is the title screen's plain handscroll; nodes are illustrated objects with a torn name tag at
 /// staggered heights (<see cref="MapLayout"/>), joined by winding brush strokes, among scattered landmarks (<see cref="MapLandmarkPlan"/>). AM19: the
-/// real routes ahead show as dashed sketches trailing into mist (<see cref="MapMist"/>), never a node. AM20: no copy-target chip. Map v2 review (YOK-238, designer 2026-11-09): no row headings, no row count. A newly shown node inks in and its route paints out from Ryo: presentation
+/// real routes ahead show as dashed sketches fading out on bare paper, never a node. AM20: no copy-target chip. Map v2 review (YOK-238, designer 2026-11-09): no row headings, no row count. A newly shown node inks in and its route paints out from Ryo: presentation
 /// only, ended at once by any key or click (<see cref="FinishPresentation"/>); nothing in the flow waits for it.
 /// </summary>
 public partial class MapScreen : Control
@@ -53,8 +53,6 @@ public partial class MapScreen : Control
 	public MapLandmarks LandmarksFront => UiFind.Get<MapLandmarks>(this, "LandmarksFront");
 	/// <summary>YOK-238: the centre line of every route of the map (board coordinates), keyed (from, to); routes only join and split, never cross.</summary>
 	public IReadOnlyDictionary<(string From, string To), Vector2[]> RoutePaths => _paths;
-	/// <summary>YOK-238 (AM19): the mist past the choosable row.</summary>
-	public MapMist Mist => UiFind.Get<MapMist>(this, "Mist");
 
 	/// <summary>The node whose detail panel shows: the cursor, else the node Ryo is on.</summary>
 	public string? FocusId => CursorId ?? View?.Nodes.FirstOrDefault(n => n.State == MapNodeState.Current)?.Id;
@@ -449,7 +447,7 @@ public partial class MapScreen : Control
 		_routeKinds = kinds;
 		Routes.SetLines(lines, linePaths);
 		Routes.Paint(paint);
-		UpdateMist(all, shown, state);
+		UpdateSketches(state);
 		var onPaper = _paths.Keys.Select((k, i) => (k, i)).Where(x => state.TryGetValue(x.k.From, out var fs) && state.TryGetValue(x.k.To, out var ts) && fs != MapNodeState.PassedOver && ts != MapNodeState.PassedOver).Select(x => x.i).ToList();
 		bool animateScenery = !fresh; Landmarks.SetRoutes(onPaper, animateScenery); LandmarksFront.SetRoutes(onPaper, animateScenery);
 
@@ -480,7 +478,7 @@ public partial class MapScreen : Control
 	/// AM19: the ends of a sketched route. A node that is not drawn is only a point on the path (the stroke runs through where it would stand), so the
 	/// sketch is one continuous road with junctions and no gap, box or mark at a hidden node.
 	/// </summary>
-	(Vector2 A, Vector2 B, Vector2[] Path) MistEnds(string from, string to, Dictionary<string, MapNodeState> state)
+	(Vector2 A, Vector2 B, Vector2[] Path) SketchEnds(string from, string to, Dictionary<string, MapNodeState> state)
 	{
 		var (a, b) = RouteEnds(from, to);
 		var path = new List<Vector2>(_paths.TryGetValue((from, to), out var p) ? p : new[] { a, b });
@@ -491,18 +489,13 @@ public partial class MapScreen : Control
 
 	/// <summary>
 	/// AM19: the real routes still ahead (a route whose far end is not drawn and not on a row Ryo has left), through every row not yet revealed to the Tanuki,
-	/// as dashed sketches under a bank of mist that starts just right of the last drawn node. Only lines and soft shapes: no node, name, type or seal is drawn there.
+	/// as dashed sketches on bare paper at constant faint ink, every one to the end of its route (the Tanuki's included). Only the route shapes decide this:
+	/// no node, name, type or seal is drawn there.
 	/// </summary>
-	void UpdateMist(IReadOnlyList<MapNodeView> all, IReadOnlyList<MapNodeView> shown, Dictionary<string, MapNodeState> state)
+	void UpdateSketches(Dictionary<string, MapNodeState> state)
 	{
-		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => MistEnds(r.From, r.To, state)).ToList();
-		float from = shown.Count == 0 ? 0f : shown.Max(n => _layout.Rects[n.Id].End.X);
-		// the clouds begin about a column and a half past the last drawn node: the sketches run clear over open paper until they reach them
-		float bank = from + 1.45f * _layout.ColumnWidth;
-		Routes.SetMistLines(ahead, bank - 200f, 700f);
-		bool any = ahead.Count > 0 || all.Any(n => n.State == MapNodeState.Locked);
-		Mist.Visible = any;
-		Mist.From = from + 10f; Mist.BankStart = bank; Mist.Right = any ? Board.Size.X + MapScroll.PaperLeft + 60f : from;
+		var ahead = View!.Routes.Where(r => state.ContainsKey(r.From) && state.ContainsKey(r.To) && MapReveal.IsAhead(state[r.From], state[r.To])).Select(r => SketchEnds(r.From, r.To, state)).ToList();
+		Routes.SetSketches(ahead);
 	}
 
 	/// <summary>Step the cursor through the reachable nodes (wraps). Does nothing when none are reachable or a pick already went through.</summary>
