@@ -4,7 +4,7 @@
   "name": "Oni light punch",
   "status": "proposed",
   "source": "oni",
-  "clip": "ryo-light-punch",
+  "clip": "oni-light-punch",
   "rules": [
     "C8",
     "E1",

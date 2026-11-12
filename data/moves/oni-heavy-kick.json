@@ -4,7 +4,7 @@
   "name": "Oni heavy kick",
   "status": "proposed",
   "source": "oni",
-  "clip": "ryo-heavy-kick",
+  "clip": "oni-heavy-kick",
   "rules": [
     "C8",
     "E1",

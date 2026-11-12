@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "oni-heavy-kick",
+  "status": "proposed",
+  "file": "assets/generated/clips/oni/oni-heavy-kick.glb",
+  "hit_start": 12,
+  "hit_end": 15,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:chop",
+  "frames_total": 38,
+  "retarget_notes": "Tripo take chop retargeted onto oni by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.30 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only oni-heavy-kick.",
+  "trim_start": 172,
+  "trim_end": 246,
+  "retime": [
+    {
+      "frames": [
+        1,
+        12
+      ],
+      "ticks": [
+        172,
+        194
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        12,
+        16
+      ],
+      "ticks": [
+        194,
+        202
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        16,
+        38
+      ],
+      "ticks": [
+        202,
+        246
+      ],
+      "note": "recovery eases out"
+    }
+  ]
+}

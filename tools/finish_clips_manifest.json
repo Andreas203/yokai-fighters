@@ -139,6 +139,418 @@
    "movement": true,
    "source": "meshy-library",
    "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb"
+  },
+  {
+   "id": "kappa-light-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_01.glb",
+   "preset": "box_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_01",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-medium-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_02.glb",
+   "preset": "box_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_02",
+   "target": {
+    "startup": 6,
+    "active": 3,
+    "total": 21
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-heavy-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_03.glb",
+   "preset": "box_03",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_03",
+   "target": {
+    "startup": 10,
+    "active": 4,
+    "total": 34
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-light-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_01.glb",
+   "preset": "front_kick_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_01",
+   "target": {
+    "startup": 5,
+    "active": 2,
+    "total": 16
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-medium-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_02.glb",
+   "preset": "front_kick_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_02",
+   "target": {
+    "startup": 7,
+    "active": 3,
+    "total": 24
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-heavy-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_02.glb",
+   "preset": "front_kick_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_02",
+   "target": {
+    "startup": 11,
+    "active": 4,
+    "total": 38
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-throw",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hug.glb",
+   "preset": "hug",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hug",
+   "target": {
+    "startup": 5,
+    "active": 7,
+    "total": 30
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-river-grab",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/lift_heavy.glb",
+   "preset": "lift_heavy",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:lift_heavy",
+   "target": {
+    "startup": 6,
+    "active": 2,
+    "total": 38
+   },
+   "prop": "shell",
+   "movement": true
+  },
+  {
+   "id": "kappa-shell-spin",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/turn.glb",
+   "preset": "turn",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:turn",
+   "target": {
+    "startup": 10,
+    "active": 18,
+    "total": 48
+   },
+   "prop": "shell",
+   "movement": true
+  },
+  {
+   "id": "oni-light-punch",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   },
+   "prop": "club"
+  },
+  {
+   "id": "oni-heavy-kick",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 11,
+    "active": 4,
+    "total": 38
+   },
+   "prop": "club"
+  },
+  {
+   "id": "oni-throw",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hug.glb",
+   "preset": "hug",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hug",
+   "target": {
+    "startup": 5,
+    "active": 7,
+    "total": 30
+   },
+   "prop": "club"
+  },
+  {
+   "id": "oni-quake",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 27,
+    "active": 4,
+    "total": 56
+   },
+   "prop": "club"
+  },
+  {
+   "id": "oni-iron-club-charge",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 12,
+    "active": 6,
+    "total": 32
+   },
+   "prop": "club",
+   "movement": true
+  },
+  {
+   "id": "kitsune-light-punch",
+   "body": "kitsune",
+   "src": "../assets/specs/clips/raw-tripo/box_01.glb",
+   "preset": "box_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_01",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   }
+  },
+  {
+   "id": "kitsune-fox-mirage",
+   "body": "kitsune",
+   "src": "../assets/specs/clips/raw-tripo/flip.glb",
+   "preset": "flip",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:flip",
+   "target": {
+    "startup": 18,
+    "active": 1,
+    "total": 28
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-fox-mirage",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/flip.glb",
+   "preset": "flip",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:flip",
+   "target": {
+    "startup": 18,
+    "active": 1,
+    "total": 28
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-river-grab",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/lift_heavy.glb",
+   "preset": "lift_heavy",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:lift_heavy",
+   "target": {
+    "startup": 6,
+    "active": 2,
+    "total": 38
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-shell-spin",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/turn.glb",
+   "preset": "turn",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:turn",
+   "target": {
+    "startup": 10,
+    "active": 18,
+    "total": 48
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-oni-quake",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 27,
+    "active": 4,
+    "total": 56
+   }
+  },
+  {
+   "id": "ryo-iron-club-charge",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 12,
+    "active": 6,
+    "total": 32
+   },
+   "movement": true
+  },
+  {
+   "id": "kappa-hit-high",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_head.glb",
+   "preset": "hit_to_head",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_head",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 33
+  },
+  {
+   "id": "kappa-hit-low",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_stomach.glb",
+   "preset": "hit_to_stomach",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_stomach",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 37
+  },
+  {
+   "id": "kappa-knockdown",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/defeat_02.glb",
+   "preset": "defeat_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:defeat_02",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 49
+  },
+  {
+   "id": "kappa-jump",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/jump.glb",
+   "preset": "jump",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:jump",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 49
+  },
+  {
+   "id": "oni-hit-high",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_head.glb",
+   "preset": "hit_to_head",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_head",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 33
+  },
+  {
+   "id": "oni-hit-low",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_stomach.glb",
+   "preset": "hit_to_stomach",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_stomach",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 33
+  },
+  {
+   "id": "oni-knockdown",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/defeat_02.glb",
+   "preset": "defeat_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:defeat_02",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 49
+  },
+  {
+   "id": "oni-jump",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/jump.glb",
+   "preset": "jump",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:jump",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 49
   }
  ]
 }

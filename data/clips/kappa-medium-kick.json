@@ -2,32 +2,54 @@
   "kind": "clip",
   "id": "kappa-medium-kick",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "209 Boxing_Guard_Right_Straight_Kick",
-  "frames_total": 24,
-  "trim_start": 31,
-  "trim_end": 59,
-  "retime": [
-    {
-      "frames": [
-        1,
-        24
-      ],
-      "ticks": [
-        31,
-        59
-      ],
-      "note": "one segment at 1.22x: the reused clip's own constant speed, so every frame lands on the same raw tick as kitsune-medium-kick"
-    }
-  ],
-  "file": "assets/generated/clips/kitsune/kitsune-mk.glb",
+  "file": "assets/generated/clips/kappa/kappa-medium-kick.glb",
   "hit_start": 8,
   "hit_end": 10,
-  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). Source clip's own retarget result: WARN. Straight front kick, in place: root travel 14 cm, planted left foot 0.4 cm. The foot rises to 107 cm (a head-high kick, not a mid kick) and the hakama is dragged into a tube around the leg on frames 13-25 (stills), stretching hakama edges to 12.1x; no poke-through. Sleeves swing out (11.9x, the accepted-heavy class). Tail proxy clear.",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "GREYBOX reuse of kitsune-medium-kick, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (31-59), 24 frames, hit frames 8-10; retime curve is one segment at 1.22x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
+  "source": "tripo-library",
+  "clip": "preset:biped:front_kick_02",
+  "frames_total": 24,
+  "retarget_notes": "Tripo take front_kick_02 retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (WARN, slide 1.94 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-medium-kick.",
+  "trim_start": 13,
+  "trim_end": 59,
+  "retime": [
+    {
+      "frames": [
+        1,
+        8
+      ],
+      "ticks": [
+        13,
+        27
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        8,
+        11
+      ],
+      "ticks": [
+        27,
+        33
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        11,
+        24
+      ],
+      "ticks": [
+        33,
+        59
+      ],
+      "note": "recovery eases out"
+    }
+  ]
 }

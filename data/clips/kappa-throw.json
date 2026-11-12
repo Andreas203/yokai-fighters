@@ -2,32 +2,54 @@
   "kind": "clip",
   "id": "kappa-throw",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "259 Step_Forward_and_Push",
-  "frames_total": 30,
-  "trim_start": 30,
-  "trim_end": 59,
-  "retime": [
-    {
-      "frames": [
-        1,
-        30
-      ],
-      "ticks": [
-        30,
-        59
-      ],
-      "note": "one segment at 1x: the reused clip's own constant speed"
-    }
-  ],
-  "file": "assets/generated/clips/kitsune/kitsune-throw.glb",
+  "file": "assets/generated/clips/kappa/kappa-throw.glb",
   "hit_start": 6,
   "hit_end": 12,
-  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). The throw WAS measured on the Kappa in the retarget gate: push lands at 0.91 m (an opponent's belly), toe joint +1.9 cm after the leg re-pose, shell clean (retarget_gate.md). Source clip's own result: WARN. Designer-accepted shove (YOK-31): palms reach 44 cm forward by raw 35 and 48 cm at raw 42, then press forward; clip carries a 28 cm hip advance in the window (a data advance must replace it: if stripped the left planted foot slides 30 cm). Sleeves 7.4x (lighter than the heavy), hakama clean. Raw 284 ticks, only the head 31 are used.",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "GREYBOX reuse of kitsune-throw, replace when the take lands. Route A (designer, YOK-219, 2026-11-01). Same raw take (Meshy preset 259 Step_Forward_and_Push, trim 30-59), 30 frames, hit frames 6-12; one retime segment at 1x, no holds. Generic grab only (C4): the defender plays the standard knockdown, never a paired animation. River Grab (YOK-229) is a separate special and will name its own clip. No job run; 0 credits."
+  "source": "tripo-library",
+  "clip": "preset:biped:hug",
+  "frames_total": 30,
+  "retarget_notes": "Tripo take hug retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.89 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-throw.",
+  "trim_start": 21,
+  "trim_end": 79,
+  "retime": [
+    {
+      "frames": [
+        1,
+        6
+      ],
+      "ticks": [
+        21,
+        31
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        6,
+        13
+      ],
+      "ticks": [
+        31,
+        45
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        13,
+        30
+      ],
+      "ticks": [
+        45,
+        79
+      ],
+      "note": "recovery eases out"
+    }
+  ]
 }

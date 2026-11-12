@@ -2,32 +2,54 @@
   "kind": "clip",
   "id": "kappa-heavy-kick",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "High_Kick",
-  "frames_total": 38,
-  "trim_start": 46,
-  "trim_end": 93,
-  "retime": [
-    {
-      "frames": [
-        1,
-        38
-      ],
-      "ticks": [
-        46,
-        93
-      ],
-      "note": "one segment at 1.27x: the reused clip's own constant speed, so every frame lands on the same raw tick as kitsune-heavy-kick"
-    }
-  ],
-  "file": "assets/generated/clips/kitsune/kitsune-hk.glb",
+  "file": "assets/generated/clips/kappa/kappa-heavy-kick.glb",
   "hit_start": 12,
   "hit_end": 15,
-  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). Source clip's own retarget result: Kitsune rig 01a10e47-91f6-709b-bd34-8884f8cbabbb. WARN: same head-high kick. The hakama is drawn into a tube around the kicking leg at raw 62-72 (stills) with sleeve/hakama stretch up to 13.6x (limit 14, accepted heavy punch 9.6x at its hit); no inversion or poke-through; tail proxy clear of the leg (-6 cm proxy clearance reads as the hakama, stills clean). Left foot slides 35 cm if the hip travel (about 45 cm) is stripped, so replay it from move data.",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "GREYBOX reuse of kitsune-heavy-kick, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (46-93), 38 frames, hit frames 12-15; retime curve is one segment at 1.27x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
+  "source": "tripo-library",
+  "clip": "preset:biped:front_kick_02",
+  "frames_total": 38,
+  "retarget_notes": "Tripo take front_kick_02 retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (WARN, slide 1.94 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-heavy-kick.",
+  "trim_start": 4,
+  "trim_end": 78,
+  "retime": [
+    {
+      "frames": [
+        1,
+        12
+      ],
+      "ticks": [
+        4,
+        26
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        12,
+        16
+      ],
+      "ticks": [
+        26,
+        34
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        16,
+        38
+      ],
+      "ticks": [
+        34,
+        78
+      ],
+      "note": "recovery eases out"
+    }
+  ]
 }

@@ -1,0 +1,33 @@
+{
+  "kind": "clip",
+  "id": "kappa-hit-high",
+  "status": "proposed",
+  "file": "assets/generated/clips/kappa/kappa-hit-high.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:hit_to_head",
+  "frames_total": 33,
+  "retarget_notes": "Tripo take hit_to_head retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.45 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-hit-high.",
+  "trim_start": 0,
+  "trim_end": 64,
+  "retime": [
+    {
+      "frames": [
+        1,
+        33
+      ],
+      "ticks": [
+        0,
+        64
+      ],
+      "note": "one segment at 2.00x from the take's start"
+    }
+  ]
+}

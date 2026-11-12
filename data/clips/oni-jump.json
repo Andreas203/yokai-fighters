@@ -1,0 +1,33 @@
+{
+  "kind": "clip",
+  "id": "oni-jump",
+  "status": "proposed",
+  "file": "assets/generated/clips/oni/oni-jump.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:jump",
+  "frames_total": 49,
+  "retarget_notes": "Tripo take jump retargeted onto oni by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (WARN, slide 1.45 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only oni-jump.",
+  "trim_start": 0,
+  "trim_end": 96,
+  "retime": [
+    {
+      "frames": [
+        1,
+        49
+      ],
+      "ticks": [
+        0,
+        96
+      ],
+      "note": "one segment at 2.00x from the take's start"
+    }
+  ]
+}

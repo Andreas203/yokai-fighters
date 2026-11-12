@@ -1,0 +1,14 @@
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.14s
+clean_clip: WARNING root bone mixamorig:Hips has a parent (Root); stripping its location anyway
+13:41:35 | INFO: Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.1\4.1\python\lib\site-packages\extern_draco.dll
+13:41:35 | INFO: Starting glTF 2.0 export
+13:41:35 | INFO: Extracting primitive: ryo
+13:41:36 | INFO: Primitives created: 1
+13:41:36 | INFO: Finished glTF 2.0 export in 0.6705813407897949 s
+
+clean_clip: 397 frames at 60 fps from raw ticks 0-396 -> C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-iron-club-charge\clean.glb
+clean_clip: log C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-iron-club-charge\clean.clean.json
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

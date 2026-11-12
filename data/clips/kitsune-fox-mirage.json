@@ -2,32 +2,54 @@
   "kind": "clip",
   "id": "kitsune-fox-mirage",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "136 mage_soell_cast_7",
-  "frames_total": 28,
-  "trim_start": 31,
-  "trim_end": 85,
-  "retime": [
-    {
-      "frames": [
-        1,
-        28
-      ],
-      "ticks": [
-        31,
-        85
-      ],
-      "note": "one segment at 2x (54 raw ticks over 27 frame steps): the top of the 0.5x-2x limit, no holds. Teleport frame 18 shows the hand at full extension."
-    }
-  ],
-  "file": "assets/generated/clips/kitsune/kitsune-foxfire.glb",
-  "hit_start": null,
-  "hit_end": null,
-  "retarget_notes": "Same take and rig as kitsune-foxfire (WARN, see that clip): forearm-raise cast, right hand rises from the chest to 50 cm forward at raw 64 (release visible from raw 53) and holds to raw 100. Only raw 31-85 are used, so the hand is still fully extended on the last frame: the last 4-6 ticks need a data blend to idle (the cut is not a pose the next state starts from). Hips advance about 20 cm and the right foot shuffles over this window; the move's own position change is the teleport in data, so the clip's root drift is stripped. Sleeve stretch at the release is the lowest of the Kitsune hit takes (6.1x); cuffs flare forward. NOT re-measured at 2x: no job run.",
+  "file": "assets/generated/clips/kitsune/kitsune-fox-mirage.glb",
+  "hit_start": 19,
+  "hit_end": 19,
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "GREYBOX reuse of kitsune-foxfire (Meshy preset 136 mage_soell_cast_7), replace when a take of its own lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take, trim raw 31-85 of kitsune-foxfire's 31-103 (55 ticks), 28 frames (18/-/10), one retime segment at 2x (inside 0.5x-2x, no holds). The producer's suggestion of kitsune-foxfire at 1.75x was checked: that clip is already 1.5x of raw (73 ticks for 49 frames), so 49 -> 28 frames is 2.6x of raw, past the F2 limit of 2x; a shorter trim at 2x gives the same 28 frames inside it. Frame 18 = raw 65 (hand at full extension, raw 64): the teleport lands on that frame, with the smoke VFX hiding the cut; frames 19-28 hold the extended hand (the hold runs raw 64-100). Why this clip: it is the only Kitsune take that keeps both feet planted and reads as a spell (the fox's own magic); the vanish itself is VFX and move data (clip_needs.md flag 1). The jump take (kitsune-jump, 49 frames, 1.75x would fit) leaves the floor and lands on frame 22, which fights the grounded teleport. Ryo's body plays ryo-fox-mirage (same frames), T0. Mirage Feint's decoy is a frozen idle copy, not a clip. No clip, rig or generation job was run; 0 credits. Own take is an animator option."
+  "source": "tripo-library",
+  "clip": "preset:biped:flip",
+  "frames_total": 28,
+  "retarget_notes": "Tripo take flip retargeted onto kitsune by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 1.17 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kitsune-fox-mirage.",
+  "trim_start": 128,
+  "trim_end": 182,
+  "retime": [
+    {
+      "frames": [
+        1,
+        19
+      ],
+      "ticks": [
+        128,
+        164
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        19,
+        20
+      ],
+      "ticks": [
+        164,
+        166
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        20,
+        28
+      ],
+      "ticks": [
+        166,
+        182
+      ],
+      "note": "recovery eases out"
+    }
+  ]
 }

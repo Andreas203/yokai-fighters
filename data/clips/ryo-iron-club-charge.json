@@ -1,18 +1,22 @@
 {
   "kind": "clip",
-  "source": "meshy-library",
+  "id": "ryo-iron-club-charge",
   "status": "proposed",
-  "clip": "Right_Uppercut_from_Guard",
-  "trim_start": 28,
-  "trim_end": 61,
-  "file": "assets/generated/clips/ryo-heavy.glb",
+  "file": "assets/generated/clips/ryo-tripo/ryo-iron-club-charge.glb",
+  "hit_start": 13,
+  "hit_end": 18,
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "id": "ryo-iron-club-charge",
+  "source": "tripo-library",
+  "clip": "preset:biped:slash",
   "frames_total": 32,
+  "retarget_notes": "Tripo take slash retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.25 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-iron-club-charge.",
+  "trim_start": 168,
+  "trim_end": 230,
   "retime": [
     {
       "frames": [
@@ -20,10 +24,10 @@
         13
       ],
       "ticks": [
-        28,
-        38
+        168,
+        192
       ],
-      "note": "guard and wind-up at 0.83x, 12 startup frames"
+      "note": "startup snaps into the strike"
     },
     {
       "frames": [
@@ -31,10 +35,10 @@
         19
       ],
       "ticks": [
-        38,
-        41
+        192,
+        204
       ],
-      "note": "strike pose at 0.5x through the 6 active frames (13-18)"
+      "note": "strike pose through the active frames"
     },
     {
       "frames": [
@@ -42,14 +46,10 @@
         32
       ],
       "ticks": [
-        41,
-        61
+        204,
+        230
       ],
-      "note": "recovery at 1.54x, 14 frames incl. the boundary frame"
+      "note": "recovery eases out"
     }
-  ],
-  "hit_start": 13,
-  "hit_end": 18,
-  "retarget_notes": "Same take and rig as ryo-heavy-punch (Ryo rig GO, YOK-31): retarget PASS in the gate, no clipping, max 12.7 deg per tick at 1x. The curve is slower than 1x over most of the move, so joint rate only falls, but the 0.5x and held poses are NOT re-measured: no job run.",
-  "notes": "GREYBOX reuse of ryo-heavy-punch, replace when a take of its own lands. Route A (designer, YOK-219). Ryo-rig twin of oni-iron-club-charge (T0: the Tanuki casts Iron-Club Charge on Ryo's model): 32 frames, hit 13-18, matching 12/6/14 (AM24). Ryo's uppercut contact is raw tick 38, which the curve puts on frame 13, the first active frame (untimed, the heavy punch lands it on frame 11). It is not a charge: the rush distance is move data (forward_travel 240). Presentation needs ClipOverrides[\"oni-iron-club-charge\"] = \"ryo-iron-club-charge\" in FighterAnimSet.RyoBody (code, reported not changed). No job run; 0 credits."
+  ]
 }
