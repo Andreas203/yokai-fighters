@@ -3,13 +3,13 @@
   "id": "dojo-master-line",
   "status": "proposed",
   "trigger": "Row 7 rest stop, dojo: Master Sōen greets Ryo before rest or trial",
-  "text": "\"Rest, or practise the move you trust most, Ryo,\" Master Sōen says, refilling a cup she does not drink. \"The bend ahead has a debt waiting.\"",
+  "text": "\"Rest, or practise the move you trust most, Ryo,\" the dojo master says, refilling a cup she does not drink. \"The bend ahead has a debt waiting.\"",
   "placeholders": [],
-  "speaker": "Master Sōen",
+  "speaker": "Dojo master",
   "rules": [
     "S1",
     "S2",
     "R7"
   ],
-  "notes": "Dojo master is Master Sōen (intro-soen.json; astra brief open question 3 if the designer decides otherwise). Patient, wry; echoes 'name the debt' without paying off the ending."
+  "notes": "Unnamed dojo master, no identity claim (Sōen appears only on the intro card). Patient, wry."
 }

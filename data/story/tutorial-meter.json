@@ -3,7 +3,7 @@
   "id": "tutorial-meter",
   "status": "proposed",
   "trigger": "First fight of the first run, guided apprentice duel (Y6): Meter lesson",
-  "text": "Land hits and block hits to fill a bar of meter.",
+  "text": "Land hits to fill a bar of meter. Taking a hit feeds it a little too.",
   "placeholders": [],
   "speaker": "Prompt",
   "rules": [
@@ -12,5 +12,5 @@
     "Y6",
     "C5"
   ],
-  "notes": "C5: a bar is 100; hits landed and blocked both feed meter."
+  "notes": "E14/C5: the attacker gets +6 on a hit landed and +3 when it is blocked; the defender gets +3 per hit taken. Blocking earns the blocker no meter."
 }

@@ -3,8 +3,10 @@
   "id": "tutorial-throw",
   "status": "proposed",
   "trigger": "First fight of the first run, guided apprentice duel (Y6): Throw lesson",
-  "text": "Step in close and press both throw buttons together.",
-  "placeholders": [],
+  "text": "Step in close and press {throw_keys} together.",
+  "placeholders": [
+    "throw_keys"
+  ],
   "speaker": "Prompt",
   "rules": [
     "S1",
@@ -12,5 +14,5 @@
     "Y6",
     "C4"
   ],
-  "notes": "Prompt for the C4 generic throw."
+  "notes": "Prompt for the C4 generic throw. {throw_keys} is filled per control scheme; fallback plain text: \"both throw buttons\"."
 }
