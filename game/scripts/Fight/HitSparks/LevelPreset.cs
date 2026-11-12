@@ -89,6 +89,17 @@ public sealed class LevelPresetLibrary
 	public LevelPreset? For(string? special, int level) =>
 		special != null && _byLevel.TryGetValue((special, level), out var p) ? p : null;
 
+	/// <summary>
+	/// YOK-242 (V8): the look a special wears at this level for its VFX: its own preset, else the nearest lower level's
+	/// (a special that names no Lv 2 preset keeps its Lv 1 look at Lv 2), else null.
+	/// </summary>
+	public LevelPreset? Resolve(string? special, int level)
+	{
+		for (int l = Math.Min(level, 3); l >= 1; l--)
+			if (For(special, l) is { } p) return p;
+		return null;
+	}
+
 	public static LevelPresetLibrary LoadDirectory(string dir)
 	{
 		if (!Directory.Exists(dir)) return Empty;

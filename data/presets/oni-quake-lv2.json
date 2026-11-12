@@ -13,5 +13,11 @@
   "spark": {
     "colour": "#B5332B"
   },
-  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 2 colour shift: Wood mid #7A5535 (style.md palette). Spark stays oni red #B5332B so the hit still reads as its source (V5). Default spark image."
+  "release": {
+    "look": "dust"
+  },
+  "impact": {
+    "look": "dust"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 2 colour shift: Wood mid #7A5535 (style.md palette). Spark stays oni red #B5332B so the hit still reads as its source (V5). Default spark image. YOK-242 (proposed): ground wave in the Lv 2 colour."
 }

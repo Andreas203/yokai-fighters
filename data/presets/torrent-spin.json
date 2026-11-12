@@ -14,5 +14,12 @@
     "colour": "#3E7F86",
     "scale_pct": 130
   },
-  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 3 evolution: Indigo #2D3A5E (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5), 30% larger."
+  "cast": {
+    "look": "ring",
+    "scale_pct": 130
+  },
+  "impact": {
+    "look": "ink_splash"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 3 evolution: Indigo #2D3A5E (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5), 30% larger. YOK-242 (proposed): spin ring 30% larger while it travels; a splash per hit of the multi-hit."
 }

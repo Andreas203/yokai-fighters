@@ -110,9 +110,189 @@ public static class SpecialVfxTests
 	{
 		var style = SpecialVfxStyle.ProjectileStyle(LevelPresetLibrary.Parse(WavePreset), "ryo");
 		Assert.Equal("res://vfx/projectiles/w.png", VfxArt.Pick(style, _ => true), "the preset's image first");
-		Assert.Equal("res://vfx/projectiles/ink_wave.png", VfxArt.Pick(style, p => p.EndsWith("ink_wave.png")), "else the default for the look");
-		Assert.Equal("res://vfx/effects/dust.png", VfxArt.DefaultPath(VfxLook.Dust), "effects have their own folder");
+		Assert.Equal("res://assets/generated/vfx/projectiles/proj-ink-wave.png", VfxArt.Pick(style, p => p.EndsWith("proj-ink-wave.png")), "else the YOK-243 slot for the look");
 		Assert.Equal("procedural:ink_wave", VfxArt.Pick(style, _ => false), "else procedural");
+	}
+
+	[Test]
+	public static void ArtSlots_AreTheYok243FileNames()
+	{
+		// assets/specs/vfx/finish-vfx-textures.md: the eight files the asset-smith delivers, under game/assets/generated/vfx/.
+		var want = new Dictionary<VfxLook, string>
+		{
+			[VfxLook.InkWave] = "res://assets/generated/vfx/projectiles/proj-ink-wave.png",
+			[VfxLook.FoxFlame] = "res://assets/generated/vfx/projectiles/proj-fox-flame.png",
+			[VfxLook.Seal] = "res://assets/generated/vfx/effects/fx-seal-burst.png",
+			[VfxLook.Afterimage] = "res://assets/generated/vfx/effects/fx-afterimage.png",
+			[VfxLook.Trail] = "res://assets/generated/vfx/effects/fx-speed-trail.png",
+			[VfxLook.Dust] = "res://assets/generated/vfx/effects/fx-ground-wave.png",
+			[VfxLook.Grab] = "res://assets/generated/vfx/effects/fx-water-swirl.png",
+			[VfxLook.Ring] = "res://assets/generated/vfx/effects/fx-spin-ring.png",
+		};
+		foreach (var (look, path) in want) Assert.Equal(path, VfxArt.DefaultPath(look), $"{look} slot");
+		foreach (var look in new[] { VfxLook.Orb, VfxLook.InkSplash, VfxLook.FlameBurst })
+			Assert.True(VfxArt.DefaultPath(look) is null, $"{look} is procedural only");
+		Assert.True(VfxLayer.Contain(100f, 100f, 2f) == (100f, 50f), "a 2:1 image fits a square box by height");
+		Assert.True(VfxLayer.Contain(100f, 100f, 0.5f) == (50f, 100f), "a 1:2 image fits by width");
+		Assert.True(Mathf.Abs(VfxLayer.FrameAspect(1024, 256, 1) - 4f) < 1e-6f && Mathf.Abs(VfxLayer.FrameAspect(1024, 256, 4) - 1f) < 1e-6f, "a flipbook frame's aspect");
+	}
+
+	// --- every special in data/moves (YOK-226) ------------------------------------------------------------------------
+
+	static SpecialData[] DataSpecials() => SpecialLoader.LoadDirectory(ContentPaths.Data("moves"));
+
+	/// <summary>The eight specials this build ships (YOK-226): each, and its evolution, must be dressed by data.</summary>
+	static readonly string[] Shipped = { "spirit-wave", "rising-talisman", "foxfire", "fox-mirage", "iron-club-charge", "oni-quake", "river-grab", "shell-spin" };
+
+	/// <summary>The YOK-21 placeholder box's albedo, (0.6, 0.9, 1).</summary>
+	const uint Yok21Cyan = 0x99E6FF;
+
+	[Test]
+	public static void EverySpecial_AtEveryLevel_ResolvesAPresetDrivenVfx()
+	{
+		var lib = LevelPresetLibrary.LoadDirectory(ContentPaths.Data("presets"));
+		var specials = DataSpecials();
+		foreach (string id in Shipped) Assert.True(specials.Any(s => s.Id == id), $"{id} is in data/moves");
+		foreach (var data in specials)
+		{
+			Assert.True(data.MaxLevel == 3, $"{data.Id} has Lv 2 and its evolution");
+			VfxStyle[]? lv1 = null;
+			for (int level = 1; level <= data.MaxLevel; level++)
+			{
+				var preset = lib.Resolve(data.Id, level);
+				Assert.True(preset != null, $"{data.Id} Lv {level}: a level preset dresses it (V8)");
+				var move = new EquippedSpecial(data, level).Move;
+				var looks = new[]
+				{
+					SpecialVfxStyle.EffectStyle(VfxMoment.Cast, move, preset, data.Source),
+					SpecialVfxStyle.EffectStyle(VfxMoment.Release, move, preset, data.Source),
+					SpecialVfxStyle.EffectStyle(VfxMoment.Impact, move, preset, data.Source),
+					SpecialVfxStyle.ProjectileStyle(preset, data.Source),
+				};
+				Assert.True(looks.Take(3).Any(l => l.Look != VfxLook.None), $"{data.Id} Lv {level}: at least one effect shows");
+				if (move.Projectile != null)
+					Assert.True(looks[3].Look != VfxLook.Orb, $"{data.Id} Lv {level}: its projectile has a preset look, not the bare orb");
+				foreach (var l in looks)
+				{
+					Assert.True(l.Colour != Yok21Cyan && l.Core != Yok21Cyan, $"{data.Id} Lv {level}: never the YOK-21 cyan");
+					string src = VfxArt.Pick(l, _ => false);
+					Assert.Equal("procedural:" + VfxLooks.Name(l.Look), src, $"{data.Id} Lv {level}: with no texture yet it draws the tinted shape");
+				}
+				if (level == 1) lv1 = looks;
+				else if (level == 3)
+					Assert.True(!looks.SequenceEqual(lv1!), $"{data.Id} evolution: its look differs from Lv 1 (V8, A5)");
+			}
+		}
+	}
+
+	[Test]
+	public static void NoCyanPlaceholderPath_RemainsInTheFightCode()
+	{
+		var dir = ProjectSettings.GlobalizePath("res://scripts");
+		foreach (var f in System.IO.Directory.GetFiles(dir, "*.cs", System.IO.SearchOption.AllDirectories))
+		{
+			string text = System.IO.File.ReadAllText(f);
+			Assert.True(!text.Contains("new Color(0.6f, 0.9f, 1f)") && !text.Contains("new Color(0.4f, 0.8f, 1f)") && !text.Contains("$\"Projectile{"),
+				$"{System.IO.Path.GetFileName(f)}: no YOK-21 cyan projectile box");
+		}
+		Assert.True(typeof(FightScene).GetField("_projectiles", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) is null, "FightScene keeps no box pool");
+	}
+
+	/// <summary>P1 holds one data special at a level in slot A; P2 stands <paramref name="gap"/> units away.</summary>
+	static Match WithSpecial(SpecialData data, int level, int gap = 300)
+	{
+		var n = Normals();
+		var m = new Match(null, n, n);
+		foreach (var f in m.Fighters) FightScene.EquipStarters(f, Starters());
+		m.P1.Equip(SpecialSlot.A, data, level);
+		m.P1.X = -gap / 2 * S;
+		m.P2.X = gap / 2 * S;
+		return m;
+	}
+
+	[Test]
+	public static void Aftershock_ShowsASecondGroundWave()
+	{
+		var lib = LevelPresetLibrary.LoadDirectory(ContentPaths.Data("presets"));
+		var quake = DataSpecials().Single(s => s.Id == "oni-quake");
+		var m = WithSpecial(quake, 3, 1000);
+		Assert.True(m.P1.Specials[(int)SpecialSlot.A]!.Move.AftershockDelay > 0, "Lv 3 Aftershock has a second quake");
+		var fx = new SpecialFx(lib);
+		fx.Attach(m);
+		var dustTicks = new List<int>();
+		for (int t = 1; t <= 120; t++)
+		{
+			m.Step(t == 1 ? FighterInput.Special(SpecialSlot.A) : Idle, Idle);
+			fx.Observe(m);
+			foreach (var f in fx.Visible(m)) if (f.Age == 0 && f.Effect.Style.Look == VfxLook.Dust) dustTicks.Add(m.Tick);
+		}
+		fx.Detach();
+		Assert.True(dustTicks.Distinct().Count() >= 2, $"the slam and the aftershock each raise a ground wave (ticks {string.Join(",", dustTicks)})");
+	}
+
+	[Test]
+	public static void MirageFeint_DecoyIsDrawnWhileTheSimKeepsIt()
+	{
+		var lib = LevelPresetLibrary.LoadDirectory(ContentPaths.Data("presets"));
+		var mirage = DataSpecials().Single(s => s.Id == "fox-mirage");
+		var m = WithSpecial(mirage, 3);
+		var fx = new SpecialFx(lib);
+		fx.Attach(m);
+		bool sawDecoy = false;
+		for (int t = 1; t <= 90; t++)
+		{
+			m.Step(t == 1 ? FighterInput.Special(SpecialSlot.A) : Idle, Idle);
+			fx.Observe(m);
+			var on = fx.Visible(m).Where(f => f.Effect.Anchor == VfxAnchor.Decoy).ToList();
+			if (m.DecoyOf(0) is { } d)
+			{
+				Assert.True(on.Count == 1, $"t{t}: one afterimage on the decoy");
+				Assert.Equal(d.X, on[0].CentreX, $"t{t}: standing on the decoy");
+				Assert.Equal(VfxLook.Afterimage, on[0].Effect.Style.Look, "the decoy is an afterimage");
+				sawDecoy = true;
+			}
+			else Assert.True(on.Count == 0, $"t{t}: no decoy, no decoy afterimage");
+		}
+		fx.Detach();
+		Assert.True(sawDecoy, "Mirage Feint left a decoy");
+	}
+
+	[Test]
+	public static void EverySpecial_EffectsWatching_KeepTheStateHash()
+	{
+		// F3: VFX is presentation only. Each data special at Lv 1 and Lv 3, fired on a schedule: identical hashes with
+		// and without the effects listening, and a second watched run draws the same frames.
+		var lib = LevelPresetLibrary.LoadDirectory(ContentPaths.Data("presets"));
+		foreach (var data in DataSpecials())
+			foreach (int level in new[] { 1, 3 })
+			{
+				static FighterInput P1(int t) => t % 61 == 1 ? FighterInput.Special(SpecialSlot.A) : Idle;
+				static FighterInput P2(int t) => t % 47 == 9 ? FighterInput.Special(SpecialSlot.A) : Idle;
+				var bare = WithSpecial(data, level, 260);
+				var hashes = new List<ulong>();
+				for (int t = 1; t <= 200; t++) { bare.Step(P1(t), P2(t)); hashes.Add(bare.StateHash()); }
+				var drawn = new List<string>[2];
+				int shown = 0;
+				for (int run = 0; run < 2; run++)
+				{
+					var m = WithSpecial(data, level, 260);
+					var fx = new SpecialFx(lib);
+					fx.Attach(m);
+					drawn[run] = new List<string>();
+					for (int t = 1; t <= 200; t++)
+					{
+						m.Step(P1(t), P2(t));
+						fx.Observe(m);
+						var vis = fx.Visible(m);
+						shown += vis.Count(f => f.Effect.Special == data.Id);
+						Assert.Equal(hashes[t - 1], m.StateHash(), $"{data.Id} Lv {level} t{t}: state hash unchanged");
+						drawn[run].Add(string.Join(";", vis.Select(f => $"{f.Effect.Style.Look}@{f.CentreX},{f.CentreY} a{f.Age}")));
+					}
+					fx.Detach();
+				}
+				Assert.True(shown > 0, $"{data.Id} Lv {level}: its effects showed");
+				Assert.True(drawn[0].SequenceEqual(drawn[1]), $"{data.Id} Lv {level}: a replay draws the same effects");
+			}
 	}
 
 	// --- the hook for every special --------------------------------------------------------------------------------

@@ -14,5 +14,9 @@
     "colour": "#3E7F86",
     "scale_pct": 130
   },
-  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 3 evolution: Snow shade #A9B4C8 (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5), 30% larger."
+  "impact": {
+    "look": "grab",
+    "scale_pct": 140
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 3 evolution: Snow shade #A9B4C8 (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5), 30% larger. YOK-242 (proposed): whirlpool 40% larger with the longer reach."
 }

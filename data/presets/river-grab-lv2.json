@@ -13,5 +13,8 @@
   "spark": {
     "colour": "#3E7F86"
   },
-  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 2 colour shift: Pine #34483B (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5). Default spark image."
+  "impact": {
+    "look": "grab"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 2 colour shift: Pine #34483B (style.md palette). Spark stays kappa teal #3E7F86 so the hit still reads as its source (V5). Default spark image. YOK-242 (proposed): water whirl in the Lv 2 colour."
 }

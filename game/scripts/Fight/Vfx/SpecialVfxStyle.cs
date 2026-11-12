@@ -6,8 +6,11 @@ namespace YokaiFighters.Fight;
 /// <summary>When an effect fires (YOK-242): the special starts, it releases (projectile spawn, else first active frame), or it connects.</summary>
 public enum VfxMoment : byte { Cast, Release, Impact }
 
-/// <summary>Where an effect stays: a fixed point on the fight plane, or riding on its owner while the same use of the move plays.</summary>
-public enum VfxAnchor : byte { Point, Owner }
+/// <summary>
+/// Where an effect stays: a fixed point on the fight plane, riding on its owner while the same use of the move plays,
+/// or standing on its owner's Mirage Feint decoy (<see cref="Match.DecoyOf"/>) for as long as the sim keeps it.
+/// </summary>
+public enum VfxAnchor : byte { Point, Owner, Decoy }
 
 /// <summary>
 /// YOK-242: the resolved look of one projectile or effect: shape, colours 0xRRGGBB (fill and core), size in percent of
@@ -34,6 +37,8 @@ public static class SpecialVfxStyle
 	public const int FadeFrames = 6;
 	/// <summary>The hand splash on a projectile's release is this much of the look's size, so it never hides the projectile.</summary>
 	public const int ReleaseSplashPct = 70;
+	/// <summary>Life of a decoy's afterimage: an upper bound only; it goes when the sim's decoy goes.</summary>
+	public const int DecoyFrames = 60 * 60;
 
 	/// <summary>
 	/// How far the drawn projectile reaches past its data hitbox, in percent of the box (width, height): the box keeps

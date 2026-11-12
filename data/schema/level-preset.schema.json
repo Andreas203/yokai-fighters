@@ -45,7 +45,7 @@
         "colour": { "$ref": "#/$defs/hex", "description": "Fill colour; left out = the preset's colour." },
         "core": { "$ref": "#/$defs/hex", "description": "Inner colour of the two-tone look; left out = rice paper #F1E8D4." },
         "scale_pct": { "type": "integer", "minimum": 25, "maximum": 400, "description": "Size against the look's default over the hitbox (100 = unchanged)." },
-        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = game/vfx/projectiles/<look>.png when it exists, else the procedural shader." },
+        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = the look's YOK-243 slot under game/assets/generated/vfx/projectiles/ (ink_wave: proj-ink-wave.png, fox_flame: proj-fox-flame.png) when it exists, else the procedural shader." },
         "sheet_columns": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Frames side by side in the image, looped at 4 ticks a frame; 1 = a still image." },
         "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true). false = the image's own colours." }
       }
@@ -66,7 +66,7 @@
         "core": { "$ref": "#/$defs/hex", "description": "Inner colour of the two-tone look; left out = rice paper #F1E8D4." },
         "scale_pct": { "type": "integer", "minimum": 25, "maximum": 400, "description": "Size against the look's default (100 = unchanged)." },
         "frames": { "type": "integer", "minimum": 2, "maximum": 120, "description": "Ticks the effect shows (60 per second, F3); left out = the look's default (trail and ring: while the move plays)." },
-        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = game/vfx/effects/<look>.png when it exists, else the procedural shader." },
+        "texture": { "$ref": "#/$defs/texture", "description": "Image relative to game/. Left out = the look's YOK-243 slot under game/assets/generated/vfx/effects/ (seal: fx-seal-burst.png, afterimage: fx-afterimage.png, trail: fx-speed-trail.png, dust: fx-ground-wave.png, grab: fx-water-swirl.png, ring: fx-spin-ring.png) when it exists, else the procedural shader." },
         "sheet_columns": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Frames side by side in the image, played once over the effect's life; 1 = a still image." },
         "tint": { "type": "boolean", "description": "Multiply the image by the colour (default true). false = the image's own colours." }
       }

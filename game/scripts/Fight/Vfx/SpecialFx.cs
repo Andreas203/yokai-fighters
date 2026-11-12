@@ -63,6 +63,8 @@ public sealed class SpecialFx
 		match.Impact += OnImpact;
 		match.ProjectileChanged += OnProjectile;
 		match.Throw += OnThrow;
+		match.AftershockChanged += OnAftershock;
+		match.DecoyChanged += OnDecoy;
 		Follow(match);
 	}
 
@@ -73,6 +75,8 @@ public sealed class SpecialFx
 			m.Impact -= OnImpact;
 			m.ProjectileChanged -= OnProjectile;
 			m.Throw -= OnThrow;
+			m.AftershockChanged -= OnAftershock;
+			m.DecoyChanged -= OnDecoy;
 		}
 		Attached = null;
 	}
@@ -131,7 +135,7 @@ public sealed class SpecialFx
 			_projectileY[(p.Owner, p.Move.Id)] = (y0 + y1) / 2;
 			if (!_seenProjectiles.Add(p.Serial)) continue;
 			if (Find(match, p.Owner, p.Move.Id) is not { } found) continue;
-			var preset = Presets.For(found.Eq.Data.Id, found.Eq.Level);
+			var preset = Presets.Resolve(found.Eq.Data.Id, found.Eq.Level);
 			var style = SpecialVfxStyle.EffectStyle(VfxMoment.Release, p.Move, preset, found.Eq.Data.Source);
 			int tail = p.Dir >= 0 ? x0 : x1; // the trailing edge on the spawn tick = where it left the hand
 			AddPoint(match, VfxMoment.Release, p.Owner, p.Move, preset, style, tail, (y0 + y1) / 2, p.Dir, found.Eq.Data.Id);
@@ -145,7 +149,8 @@ public sealed class SpecialFx
 		_lastTick = match.Tick;
 		int tick = match.Tick;
 		var shown = new List<VfxEffectFrame>(_fx.Count);
-		_fx.RemoveAll(e => tick - e.SpawnTick >= e.Frames || (e.Anchor == VfxAnchor.Owner && !StillPlaying(match, e)));
+		_fx.RemoveAll(e => tick - e.SpawnTick >= e.Frames || (e.Anchor == VfxAnchor.Owner && !StillPlaying(match, e))
+			|| (e.Anchor == VfxAnchor.Decoy && match.DecoyOf(e.Owner) is null));
 		foreach (var e in _fx)
 		{
 			int age = tick - e.SpawnTick;
@@ -156,6 +161,11 @@ public sealed class SpecialFx
 				Fighter f = match.Fighters[e.Owner];
 				cx = f.X + e.X * e.Dir;
 				cy = f.Y + e.Y;
+			}
+			else if (e.Anchor == VfxAnchor.Decoy && match.DecoyOf(e.Owner) is { } d)
+			{
+				cx = d.X + e.X * d.Facing;
+				cy = e.Y;
 			}
 			int fromEnd = e.Frames - age;
 			int alpha = fromEnd > SpecialVfxStyle.FadeFrames ? 100 : 100 * fromEnd / (SpecialVfxStyle.FadeFrames + 1);
@@ -172,7 +182,7 @@ public sealed class SpecialFx
 		foreach (var p in match.Projectiles)
 		{
 			var (source, special, level) = HitSparks.Identify(match, p.Owner, p.Move.Id);
-			var style = SpecialVfxStyle.ProjectileStyle(presets.For(special, level), source);
+			var style = SpecialVfxStyle.ProjectileStyle(presets.Resolve(special, level), source);
 			var box = p.WorldBox();
 			var (x0, y0, x1, y1) = SpecialVfxStyle.ProjectileQuad(box, p.Dir, style);
 			int cols = Math.Max(1, style.SheetColumns);
@@ -188,7 +198,7 @@ public sealed class SpecialFx
 		Follow(m);
 		Sync(m.Tick);
 		if (Find(m, e.Attacker, e.MoveId) is not { } found || found.Move.IsGrab) return; // a grab's whirl comes from Throw
-		var preset = Presets.For(found.Eq.Data.Id, found.Eq.Level);
+		var preset = Presets.Resolve(found.Eq.Data.Id, found.Eq.Level);
 		var style = SpecialVfxStyle.EffectStyle(VfxMoment.Impact, found.Move, preset, found.Eq.Data.Source);
 		Fighter att = m.Fighters[e.Attacker];
 		int dir = e.At.X != att.X ? Math.Sign(e.At.X - att.X) : att.Facing;
@@ -201,7 +211,7 @@ public sealed class SpecialFx
 		Follow(m);
 		Sync(m.Tick);
 		if (Find(m, e.Owner, e.MoveId) is not { } found) return;
-		var preset = Presets.For(found.Eq.Data.Id, found.Eq.Level);
+		var preset = Presets.Resolve(found.Eq.Data.Id, found.Eq.Level);
 		var style = SpecialVfxStyle.EffectStyle(VfxMoment.Impact, found.Move, preset, found.Eq.Data.Source);
 		int y = _projectileY.TryGetValue((e.Owner, e.MoveId), out int py) ? py : m.Fighters[e.Owner].Y + 200 * SimConfig.Scale;
 		AddPoint(m, VfxMoment.Impact, e.Owner, found.Move, preset, style, e.X, y, m.Fighters[e.Owner].Facing, found.Eq.Data.Id);
@@ -213,11 +223,70 @@ public sealed class SpecialFx
 		Follow(m);
 		Sync(m.Tick);
 		if (Find(m, e.Attacker, e.MoveId) is not { } found) return; // generic throws (C4) are not specials: no effect
-		var preset = Presets.For(found.Eq.Data.Id, found.Eq.Level);
+		var preset = Presets.Resolve(found.Eq.Data.Id, found.Eq.Level);
 		var style = SpecialVfxStyle.EffectStyle(VfxMoment.Impact, found.Move, preset, found.Eq.Data.Source);
 		Fighter a = m.Fighters[e.Attacker], d = m.Fighters[1 - e.Attacker];
 		var shape = SpecialVfxStyle.ShapeOf(style.Look);
 		AddPoint(m, VfxMoment.Impact, e.Attacker, found.Move, preset, style, (a.X + d.X) / 2, d.Y + shape.OffY * SimConfig.Scale, a.Facing, found.Eq.Data.Id);
+	}
+
+	/// <summary>
+	/// Aftershock (YOK-136): the second quake shows the special's release effect (Oni Quake: the ground wave) where the
+	/// sim's aftershock stands, on the tick it goes live.
+	/// </summary>
+	private void OnAftershock(Match m, AftershockEvent e)
+	{
+		if (e.Kind != AftershockEventKind.Quake) return;
+		Follow(m);
+		Sync(m.Tick);
+		if (Find(m, e.Owner, e.MoveId) is not { } found) return;
+		var preset = Presets.Resolve(found.Eq.Data.Id, found.Eq.Level);
+		var style = SpecialVfxStyle.EffectStyle(VfxMoment.Release, found.Move, preset, found.Eq.Data.Source);
+		if (style.Look == VfxLook.None) style = style with { Look = VfxLook.Dust };
+		int dir = m.Fighters[e.Owner].Facing;
+		foreach (var a in m.Aftershocks) if (a.Owner == e.Owner && a.Move.Id == e.MoveId) dir = a.Dir;
+		var shape = SpecialVfxStyle.ShapeOf(style.Look);
+		AddPoint(m, VfxMoment.Release, e.Owner, found.Move, preset, style, e.X + shape.OffX * SimConfig.Scale * dir, shape.OffY * SimConfig.Scale, dir, found.Eq.Data.Id);
+	}
+
+	/// <summary>
+	/// Mirage Feint (YOK-224): the decoy the sim leaves is drawn as the special's cast look (the afterimage) standing on
+	/// it until the sim removes it; a hit it absorbs gets the special's impact effect; when it vanishes it fades out.
+	/// </summary>
+	private void OnDecoy(Match m, DecoyEvent e)
+	{
+		Follow(m);
+		Sync(m.Tick);
+		Fighter f = m.Fighters[e.Owner];
+		var move = f.ActiveBase ?? f.CurrentMove;
+		var eq = f.ActiveSpecial != SpecialSlot.None ? f.Specials[(int)f.ActiveSpecial] : null;
+		if (eq is null && move != null && Find(m, e.Owner, move.Id) is { } hit) eq = hit.Eq;
+		if (eq is null) foreach (var s in f.Specials) if (s?.Move.Decoy > 0) eq = s;
+		if (eq is null) return;
+		move = eq.Move;
+		var preset = Presets.Resolve(eq.Data.Id, eq.Level);
+		var cast = SpecialVfxStyle.EffectStyle(VfxMoment.Cast, move, preset, eq.Data.Source);
+		if (cast.Look is VfxLook.None or VfxLook.Seal) cast = cast with { Look = VfxLook.Afterimage };
+		var shape = SpecialVfxStyle.ShapeOf(cast.Look);
+		int s0 = SimConfig.Scale;
+		int w = shape.W * s0 * cast.ScalePct / 100, h = shape.H * s0 * cast.ScalePct / 100;
+		var d = m.DecoyOf(e.Owner);
+		int facing = d?.Facing ?? f.Facing;
+		switch (e.Kind)
+		{
+			case DecoyEventKind.Spawn:
+				_fx.RemoveAll(x => x.Anchor == VfxAnchor.Decoy && x.Owner == e.Owner); // one decoy per fighter (a new one replaces the old)
+				Spawn(new VfxEffect(m.Tick, VfxMoment.Cast, e.Owner, f.MoveSerial, VfxAnchor.Decoy, 0, shape.OffY * s0, w, h, facing, SpecialVfxStyle.DecoyFrames, cast, eq.Data.Id));
+				break;
+			case DecoyEventKind.Absorbed:
+				var impact = SpecialVfxStyle.EffectStyle(VfxMoment.Impact, move, preset, eq.Data.Source);
+				AddPoint(m, VfxMoment.Impact, e.Owner, move, preset, impact, e.X, shape.OffY * s0, facing, eq.Data.Id);
+				break;
+			case DecoyEventKind.Vanished:
+				_fx.RemoveAll(x => x.Anchor == VfxAnchor.Decoy && x.Owner == e.Owner);
+				Spawn(new VfxEffect(m.Tick, VfxMoment.Cast, e.Owner, f.MoveSerial, VfxAnchor.Point, e.X, shape.OffY * s0, w, h, facing, SpecialVfxStyle.FadeFrames + 1, cast, eq.Data.Id));
+				break;
+		}
 	}
 
 	// --- helpers ----------------------------------------------------------------------------------------------------
@@ -225,7 +294,7 @@ public sealed class SpecialFx
 	/// <summary>A cast or a body release: placed from the owner by the look's offsets, or riding on the owner.</summary>
 	private void Fire(Match m, VfxMoment moment, int owner, int serial, MoveData move, EquippedSpecial eq, int x, int y, int facing)
 	{
-		var preset = Presets.For(eq.Data.Id, eq.Level);
+		var preset = Presets.Resolve(eq.Data.Id, eq.Level);
 		var style = SpecialVfxStyle.EffectStyle(moment, move, preset, eq.Data.Source);
 		if (style.Look == VfxLook.None) return;
 		var shape = SpecialVfxStyle.ShapeOf(style.Look);
