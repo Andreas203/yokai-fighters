@@ -67,7 +67,7 @@ public partial class FightScene
 		{
 			var story = LoadStory();
 			string id = WinCardFor(Seen);
-			if (story.Has(id))
+			if (story.Has(id) && Session?.Ended is { AtTanuki: true }) // S3: a win card only for a run won at the Tanuki
 			{
 				var c = story[id];
 				CompleteScreen.SetText(c.FillTitle(yokai: OpponentName), c.FillText(yokai: OpponentName));

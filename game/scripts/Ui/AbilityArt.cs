@@ -33,6 +33,10 @@ public static class AbilityArt
 	public static string FilePath(string id) => $"res://assets/generated/ui/ability-icon-{id}.png";
 
 	static readonly Dictionary<string, Texture2D> _files = new();
+	static readonly HashSet<string> _missing = new();
+
+	/// <summary>Forgets every loaded and missing icon file, so art added while the game runs is found (dev/tests).</summary>
+	public static void ClearFileCache() { _files.Clear(); _missing.Clear(); }
 	static Dictionary<string, string>? _evolutions;
 
 	/// <summary>An evolution shows its special's icon: evolution id to special id, read once from data/moves/.</summary>
@@ -75,8 +79,10 @@ public static class AbilityArt
 	{
 		if (id.Length > 80 || !System.Text.RegularExpressions.Regex.IsMatch(id, @"^[a-z0-9][a-z0-9_-]*$")) return null; // data ids only: never a path
 		if (_files.TryGetValue(id, out var cached)) return cached;
+		if (_missing.Contains(id)) return null;
 		var t = UiTextures.Load(FilePath(id)) ?? (SpecialOf(id) is var sp && sp != id ? UiTextures.Load(FilePath(sp)) : null);
-		if (t != null) _files[id] = t; // a missing file is looked for again next time: art can arrive while the game runs
+		if (t != null) _files[id] = t;
+		else _missing.Add(id); // misses are cached too (no disk check per frame); ClearFileCache() looks again
 		return t;
 	}
 

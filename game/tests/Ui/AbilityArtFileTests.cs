@@ -15,11 +15,12 @@ public static class AbilityArtFileTests
 		var img = Image.CreateEmpty(8, 8, false, Image.Format.Rgba8);
 		img.Fill(Colors.Red);
 		img.SavePng(disk);
+		AbilityArt.ClearFileCache(); // misses are cached; a dropped file is found after a cache clear (a fresh launch)
 		try
 		{
 			Assert.True(AbilityArt.Has(id) && AbilityArt.ForId(id) != AbilityArt.Fallback, "the dropped file shows");
 		}
-		finally { System.IO.File.Delete(disk); }
+		finally { System.IO.File.Delete(disk); AbilityArt.ClearFileCache(); }
 	}
 
 	[Test]

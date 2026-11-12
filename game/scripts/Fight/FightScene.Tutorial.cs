@@ -43,7 +43,12 @@ public partial class FightScene
 		Tutorial = null;
 		Coach = null;
 		if (!IsGuided(TutorialAllowed, Node)) { RenderTutorial(); return; }
-		TutorialPrompts.Library ??= LoadStory();
+		try { TutorialPrompts.Library ??= LoadStory(); }
+		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
+			or System.Collections.Generic.KeyNotFoundException or System.InvalidOperationException)
+		{
+			GD.PushWarning($"tutorial prompts unavailable (bad story file): {e.Message}"); // a bad card must not crash the guided fight
+		}
 		SetTutorialKeyNames();
 		Tutorial = new ApprenticeTutorial(Match, TutorialOptions, 0);
 		Tutorial.Completed += t => TutorialFinished?.Invoke(t);
