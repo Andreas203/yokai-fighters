@@ -43,4 +43,13 @@ public static class TeaHouseStage
 	/// (x, y, width, height; v down). Each season painting (one wide image of the same aspect) covers exactly this box.
 	/// </summary>
 	public static readonly Vector4 PanelRectUv = new(148f / 1280f, 182f / 720f, 984f / 1280f, 256f / 720f);
+
+	/// <summary>
+	/// The season paintings' row (v, down) that sits on the screens' bottom edge. Each painting's landscape ends in an ink
+	/// ground line from row 456 (winter, autumn) to 463 of 566, with blank paper below it, which read as the view cut off at the bottom
+	/// (designer 2026-11-10). So each painting is shifted down, unscaled, until row 454 meets the sill (two rows clear of the ink, for bilinear sampling): the hills run down
+	/// to the frame and the paper strip and its ink line are never shown. The top of the screens repeats row 0, which is
+	/// the paintings' flat sky.
+	/// </summary>
+	public const float PaintingBottomV = 454f / 566f;
 }

@@ -28,8 +28,9 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
 | [AM22](#am22) | 2026-11-10 | The routes ahead show as sketches on bare paper; no mist | R2 | YOK-245 |
-| [AM25](#am25) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
+| [AM23](#am23) | 2026-11-09 | Sound and music may be generated with ElevenLabs | F6 | YOK-54 |
 | [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
+| [AM25](#am25) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -509,25 +510,27 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD short §1.2 Core loop | (as amended by AM19) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
 | rules.md R2 | "...the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." | "...the real routes ahead show only as faint sketched lines on bare paper, with no node, name or icon [AM19, AM22]." |
 
-<a id="am25"></a>
+<a id="am23"></a>
 
-## AM25 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
+## AM23 — Sound and music may be generated with ElevenLabs (2026-11-09)
 
-**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM25 because AM20 to AM24 were taken: AM23 is the ElevenLabs sound amendment and AM24 the Oni timings.)
+**Status.** Decided by the designer on 2026-11-09 (YOK-54): "connect to elevenlabs and get some theme appropriate music/battle music and sound effects, if no agent exists for this create one".
 
-**Decision.** In the boss fight the Tanuki shows his own true form instead of Ryo's model. He still runs Ryo's clips, Ryo's normals, starters and the copied special, with Ryo's hitboxes and frame data. Only the model on screen changes; the sim does not read it.
+**Decision.** Sound effects and music may be **generated with ElevenLabs** (its sound-effects and Eleven Music APIs) as well as bought as packs, the designer's choice per job. A new crew agent, **Sound Smith** (`sound-smith`), writes the generation specs, runs approved jobs through `tools/elevenlabs/el.py` and checks the takes. Sound Scout keeps shortlisting packs for what a prompt cannot make. The rules for every generator still hold: the designer approves each job list and its credit cap, an agent never spends past that cap, three takes per sound and then a substitute, and the spend is recorded in the decision log.
 
-**Why.** The designer prefers the true form on screen for the boss.
+**Why.** The only shortlisted pack set that fit the $20 sound cap left gaps (no Ryo or Kitsune sting, no merchant melody, no stems), and the game has shipped with two placeholder tracks since 2026-10-20. Generation covers every V6 and V9 need with one tone across stages.
 
-**What does not change.** The copy rule T1–T6, the kit (Ryo's normals and starters plus one copy), no new animation, hitboxes and frame data. The dev menu switch "Tanuki true form" can still show Ryo's body for comparison.
+**What does not change.** V6 (thud plus yokai sting on the impact frame), V9 (the instruments, intensity rising by row, the Tanuki detuning the merchant's melody) and the animator's frame-timed cue tables in `data/sound/`. The AM1 licence clause applies to ElevenLabs as to every generator: output for the shipped game comes from a paid plan that clears commercial use.
 
 ### Sections replaced
 
 | Where | Was | Now |
 |---|---|---|
-| GDD extended §5.3 The Tanuki | "The Tanuki fights with Ryo's normals and starters plus one copied special" (in Ryo's body, per AM4/T0) | Same kit, shown in the Tanuki's true-form body. |
-| GDD short, the Tanuki | As above | As above. |
-| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25]" |
+| AM1, "Decision" and pipeline | "Sound effects and music are still sourced from packs." / "Sound and music: sourced packs, shortlisted by the crew, bought by the designer." | Sound and music are generated with ElevenLabs or bought as packs, the designer's choice per job. |
+| GDD extended §9 Agents table | (as amended by AM1) Sound Scout: "Shortlists sound and music packs." | Adds **Sound Smith**: "Writes ElevenLabs sound and music specs, runs approved jobs and checks the takes." — *Every hit, every row and every menu sounds like the same world.* Sound Scout stays for packs. |
+| GDD extended §10.1 Engine, assets | (as amended by AM1) "sound and music are bought" | "sound and music are generated with ElevenLabs or bought". |
+| GDD short §2 agents and technical lines | (as amended by AM1) sound is sourced | Sound is generated with ElevenLabs or bought; Sound Smith generates it. |
+| rules.md F6 | "Sound and music: bought packs." | "Sound and music: ElevenLabs generation (Sound Smith) or bought packs (Sound Scout), the designer's choice per job [AM23]." |
 
 <a id="am24"></a>
 
@@ -548,3 +551,23 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended specials table, Iron-Club Charge | "16 / 6 / 24" | "12 / 6 / 14" |
 | GDD extended specials table, Oni Quake | "22 / 5 / 26" | "27 / 4 / 25" |
 | rules.md specials table (A) | "16/6/24" and "22/5/26" | "12/6/14 [AM24]" and "27/4/25 [AM24]" |
+
+<a id="am25"></a>
+
+## AM25 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
+
+**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM25 because AM20 to AM24 were taken: AM23 is the ElevenLabs sound amendment and AM24 the Oni timings.)
+
+**Decision.** In the boss fight the Tanuki shows his own true form instead of Ryo's model. He still runs Ryo's clips, Ryo's normals, starters and the copied special, with Ryo's hitboxes and frame data. Only the model on screen changes; the sim does not read it.
+
+**Why.** The designer prefers the true form on screen for the boss.
+
+**What does not change.** The copy rule T1–T6, the kit (Ryo's normals and starters plus one copy), no new animation, hitboxes and frame data. The dev menu switch "Tanuki true form" can still show Ryo's body for comparison.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §5.3 The Tanuki | "The Tanuki fights with Ryo's normals and starters plus one copied special" (in Ryo's body, per AM4/T0) | Same kit, shown in the Tanuki's true-form body. |
+| GDD short, the Tanuki | As above | As above. |
+| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25]" |

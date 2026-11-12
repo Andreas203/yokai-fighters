@@ -13,7 +13,7 @@ You run **first** in the content pipeline (F2): you spec the clip, the designer 
 - `docs/design/rules.md` — F (especially F2, F3, F5, F6), V2, V6, C4, T0, A5, A10, G4, E15.
 - `docs/design/gdd-amendments.md` — AM1 and AM5.
 - `docs/moves/clip_needs.md` — what each move's clip must show and its rough length.
-- `assets/specs/rigs/` (passed rigs and the shared skeleton's bone map) and `assets/shortlists/sound-*.md` plus the bought sound inventory (ask the Producer for its location if not in the repo).
+- `assets/specs/rigs/` (passed rigs and the shared skeleton's bone map) `assets/specs/sound/` (sound-smith's accepted takes) and `assets/shortlists/sound-*.md` plus the bought sound inventory (ask the Producer for its location if not in the repo).
 - The Linear ticket (`YOK-<n>`) you were given.
 
 ## Clip specs (before any take)
@@ -52,7 +52,7 @@ Where the clip's timing reads slow or soft, give it a retiming curve: segments m
 Write `data/clips/<move-id>.json` to `data/schema/clip.schema.json`: `source`, `clip`, `frames_total`, `hit_start`, `hit_end`, `retarget_notes`, plus trim, speed and file.
 
 ## Sound cues (V6)
-Each hit layers an impact thud with a short yokai sting from the bought sound packs, timed to the clip's impact frame as retimed. Write cue tables `data/sound/<id>.json` (no subfolders) to `data/schema/sound-cue.schema.json`: a table holds any rules, each picking by move, source, level, strength or outcome (move beats source beats default) and naming `thud` and `sting` samples under `game/sound/`, `volume_db` and `offset_ticks` counted from the impact tick (0 = on it). The tables together need a default rule, or the game refuses them and plays the placeholder pack. Whooshes on startup and the binding ink-stroke have no cue format yet: flag them for the Producer. Missing sounds go back to `sound-scout` via the Producer.
+Each hit layers an impact thud with a short yokai sting from the accepted sound-smith takes (`game/sound/sfx/`) or the bought packs, timed to the clip's impact frame as retimed. Write cue tables `data/sound/<id>.json` (no subfolders) to `data/schema/sound-cue.schema.json`: a table holds any rules, each picking by move, source, level, strength or outcome (move beats source beats default) and naming `thud` and `sting` samples under `game/sound/`, `volume_db` and `offset_ticks` counted from the impact tick (0 = on it). The tables together need a default rule, or the game refuses them and plays the placeholder pack. Whooshes on startup and the binding ink-stroke have no cue format yet: flag them for the Producer. Missing sounds go back to `sound-scout` via the Producer.
 
 ## Output
 List the files written, the takes waiting for designer approval, the cost spent, retiming curves waiting on the engine, and any moves that need a substitute clip. Budget: ~6,000 in / 2,000 out per spec or measure batch; ~5,000 / 2,000 per cue batch.
