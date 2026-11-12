@@ -1,0 +1,50 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "game/assets/generated/clips/ryo-tripo/ryo-grab-2.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\ryo-tripo\\ryo-grab-2.glb",
+ "output_sha256": "6efd5535e6cf92cd703e20e312772765a4232d8b41f94b2d85d0ffad8a9a22f1",
+ "ticks": [
+  2,
+  284
+ ],
+ "start": 30,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "until": null,
+ "runs": {
+  "Left": [
+   [
+    30,
+    264
+   ]
+  ],
+  "Right": [
+   [
+    2,
+    28
+   ],
+   [
+    60,
+    284
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 239,
+   "max_correction_cm": 78.51,
+   "unreachable_ticks": 0
+  },
+  "Right": {
+   "locked_ticks": 256,
+   "max_correction_cm": 69.11,
+   "unreachable_ticks": 0
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}
