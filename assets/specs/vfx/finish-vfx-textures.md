@@ -1,6 +1,6 @@
 # Finish-VFX textures (YOK-243)
 
-Status: proposed, waiting for the designer's approval of the batch. Rules: V1, V5, V8, A5, F6, G3. Colour-only presets for the five new specials are already in `data/presets/` (YOK-233), so every texture below is an upgrade, never a dependency (G3: colour-only stays the fallback).
+Status: approved 2026-11-12, run and accepted. Rules: V1, V5, V8, A5, F6, G3. Colour-only presets for the five new specials are already in `data/presets/` (YOK-233), so every texture below is an upgrade, never a dependency (G3: colour-only stays the fallback).
 
 ## Design rule: one white texture, tinted by the preset
 
@@ -58,7 +58,7 @@ The wrapper asks for exactly one image saved to `game/assets/generated/vfx/<fold
 
 ## Takes
 
-None run yet.
+2026-11-12, designer-approved (10 takes cap). 8 takes, 0 retakes, run in parallel via `codex exec -m gpt-6-astra -s workspace-write`; Codex does not report credits (unrecorded). Raw takes kept as `*-raw.png`; luminance-to-alpha conversion as above. All 8 saved at the spec sizes.
 
 ## Acceptance (checked on import)
 
@@ -66,3 +66,7 @@ None run yet.
 - Look (V1): reads white-on-clear at 720p fighting distance, flat shapes, no glow or noise; tinted by each of its presets' colours it still reads (Ink and Wood dark are the darkest tints: check against the stage backdrops).
 - Licence: Astra output terms on the designer's plan allow commercial use (flag if unknown).
 - Verdict per file: ACCEPT or RETAKE with the prompt change.
+
+## Acceptance result (2026-11-12)
+
+All 8 ACCEPT. Alpha: background 59-83% fully clear, 0.7-3.1% of pixels in the 10-240 band (limit 25%), core 15-39%. Look: flat white ink shapes with tapered brush edges, no glow or noise. Notes: `fx-ground-wave` is a thin low band (reads as a flat dust arc; scale it wide, about 3:1); the `fx-seal-burst` stroke mark is an abstract S-curve, not a letter; `fx-afterimage` is a standing figure with fox ears and a bushy tail, as asked. Licence: Astra terms on the designer's plan unconfirmed in the repo (flag, as in the icon spec).
