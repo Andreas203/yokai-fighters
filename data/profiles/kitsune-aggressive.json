@@ -16,7 +16,7 @@
   },
   "tell_cover_pct": 0,
   "behaviours": [
-    { "when": "at_mid_range", "do": "special:foxfire", "weight": 40 },
+    { "when": "at_mid_range", "do": "special:foxfire", "weight": 20 },
     { "when": "at_mid_range", "do": "walk_forward", "weight": 30 },
     { "when": "at_full_screen", "do": "dash_forward", "weight": 40 },
     { "when": "at_close_range", "do": "normal:kitsune-medium-kick", "weight": 30 },

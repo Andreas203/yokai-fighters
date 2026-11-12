@@ -22,7 +22,7 @@
     { "when": "at_close_range", "do": "dash_back", "weight": 50 },
     { "when": "at_close_range", "do": "special:fox-mirage", "weight": 20 },
     { "when": "at_close_range", "do": "normal:kitsune-light-punch", "weight": 15 },
-    { "when": "projectile_on_screen", "do": "block", "weight": 60 },
+    { "when": "projectile_on_screen", "do": "block", "weight": 30 },
     { "when": "opponent_attacking", "do": "block", "weight": 70 },
     { "when": "neutral", "do": "walk_back", "weight": 20 }
   ],

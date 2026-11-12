@@ -101,3 +101,21 @@ Each one changes one weight in one profile file. The profile files are owned by 
 ## 4. Balance gate (G3: modifiers 14 → 8)
 
 No data to support either choice. Neither bot picked a modifier (reward order is upgrade first), and modifier drafting showed no outcome effect on 10-21 (MOD vs NC, paired). The harness cannot inform this cut. It stays the designer's call.
+
+## Re-run after the three changes (16:00, main session)
+
+Designer chose all three. Rules Lawyer PASS. Same seeds, 200 runs each, in `harness/results/whole-run/finish-2026-11-12-tuned/`.
+
+| | Newcomer before → after | Skilled before → after |
+|---|---|---|
+| Reach Tanuki | 0 → 0 | 3 → 6 |
+| Beat Tanuki | 0 → 0 | 0 → 0 |
+| Row-2 wins | 28% → 36% | 67% → 79% |
+| kitsune-aggressive | 4% → 17% | 29% → 46% |
+| kitsune-patient | 0% → 3% | 33% → 46% |
+| oni-aggressive | 6% → 25% | 24% → 35% |
+| oni-patient (untouched) | 27% → 25% | 53% → 52% |
+| kappa-aggressive (untouched) | 32% → 31% | 74% → 75% |
+| kappa-patient (untouched) | 94% → 89% | 97% → 97% |
+
+The acceptance line (newcomer row-2 above 28%) holds. The untouched profiles move by at most 5 points. They now meet different runs at different health, so this is sampling, not a change to them. R5 still fails.
