@@ -230,7 +230,7 @@ public static class BotIdleGuardTests
 		// on his own normals, throw and push width (data/moves/kappa-*.json, data/fighters/kappa.json); seeds 1 and 3 unchanged.
 		// YOK-226: seed 2 re-pinned (was f74356e37f6dce83); seeds 1 and 3 unchanged (held-back rares are skipped before the draw). The yokai nodes now fight with
 		// their own specials (YOK-227/231/226 data, YOK-234 profiles), rares only at elder nodes (NodeFight.OpponentKit).
-		var want = new[] { "201847ea51c823ea", "dd44092ad8be791c", "e6080dde358a775a" };
+		var want = new[] { "201847ea51c823ea", "dd44092ad8be791c", "beaed75ea2131793" } /* run 3 meets a Kitsune or Oni: YOK-185 tuning 2026-11-12, was e6080dde358a775a */;
 		using var doc = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(batch));
 		var runs = doc.RootElement.GetProperty("runs");
 		var got = Enumerable.Range(0, want.Length).Select(i => runs[i].GetProperty("session_hash").GetString()).ToArray();
@@ -245,7 +245,7 @@ public static class BotIdleGuardTests
 		using var docOn = System.Text.Json.JsonDocument.Parse(HarnessReport.ToJson(on));
 		var runsOn = docOn.RootElement.GetProperty("runs");
 		// YOK-228: seed 2 re-pinned (was c5a8b3d97602d4e5), the Kappa run as above.
-		var wantOn = new[] { "154d762679e8fa9e", "52486ba2e21b75f0", "3eead3f9f53bac43" }; // YOK-226: run 2 re-pinned (was 896456518ab6e186), as above
+		var wantOn = new[] { "154d762679e8fa9e", "52486ba2e21b75f0", "9a80b1abfd6ddc89" }; // YOK-185 tuning 2026-11-12: run 3 re-pinned (was 3eead3f9f53bac43). YOK-226: run 2 re-pinned (was 896456518ab6e186), as above
 		var gotOn = Enumerable.Range(0, wantOn.Length).Select(i => runsOn[i].GetProperty("session_hash").GetString()).ToArray();
 		Assert.Equal(string.Join(" ", wantOn), string.Join(" ", gotOn), "runs seed 1-3 with YOK-177 standing habits");
 	}
