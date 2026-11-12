@@ -36,6 +36,7 @@ RIGS = {
     "kappa": "assets/generated/characters/kappa/kappa-rigged.glb",
     "ryo": "assets/generated/characters/ryo/ryo-tripo-rigged.glb",
 }
+RYO_MESHY_RIG = "assets/generated/characters/ryo/ryo-rigged.glb"  # catalog convention: a Ryo twin's data/clips file is the Meshy-skeleton file in clips/ryo/, the Tripo Ryo plays clips/ryo-tripo/ by file name
 CLIP_DIR = {"kitsune": "kitsune", "oni": "oni", "kappa": "kappa", "ryo": "ryo-tripo"}
 PROPS = {  # prop_clearance.py arguments: prop GLB, its prep_prop log, grip radius
     "shell": ("assets/generated/characters/kappa/shell.glb", "assets/specs/rigs/logs/kappa-shell-fit.json", "0.0"),
@@ -62,35 +63,32 @@ def run(cmd, log, dry):
     return p.returncode, p.stdout + p.stderr
 
 
-def build_retime(report, target, trim_n):
-    """Segments mapping game frames onto cleaned ticks 0..trim_n so startup snaps, the hit holds and recovery eases out.
-    Each segment plays within 0.5x-2x, a held tick shows at most 4 frames; returns (frames_total, retime, flags)."""
+def build_retime(report, target, n):
+    """Retime curve (F2, AM5) from the measured strike, in ticks of the cleaned take (tick = frame - 1, 60 per second).
+    The active segment is centred on the strike peak, startup snaps (up to 2x) into it, recovery eases out (up to 2x).
+    Returns (frames_total, retime, flags, (first_tick, last_tick))."""
     S, A, T = target["startup"], target["active"], target["total"]
     h = report.get("hit", {}).get("suggested") or {}
-    h0, h1 = (h["hit_start"] - 1, h["hit_end"] - 1) if h.get("hit_start") else (None, None)  # cleaned clip at 1x: tick = frame - 1
     flags = []
-    if h0 is None or h1 is None:
-        return T, [{"frames": [1, T], "ticks": [0, trim_n], "note": "one segment, hit window not measured"}], ["no hit window"]
-    h1 = max(h1, h0)
-    clamp = lambda dt, df: max(df // 2 if df % 2 == 0 else (df + 1) // 2, min(2 * df, dt))  # ticks within 0.5x-2x of df frames
-    segs, f, t = [], 1, 0
-    sf = S + 1
-    t2 = t + clamp(h0 - t, sf - f)
-    segs.append({"frames": [f, sf], "ticks": [t, t2], "note": "startup snaps"})
-    if abs(t2 - h0) > 1:
-        flags.append("startup reaches tick %d, hit at %d" % (t2, h0))
-    f, t = sf, t2
-    af = f + max(A, 1)
-    dt_active = min(max(h1 - h0, 0), 2 * (af - f))
-    segs.append({"frames": [f, af], "ticks": [t, t + dt_active], "note": "strike pose through the active frames"})
-    f, t = af, t + dt_active
-    rec = T - f
-    dt_rec = clamp(trim_n - t, rec) if rec > 0 else 0
-    if rec > 0:
-        segs.append({"frames": [f, T], "ticks": [t, t + dt_rec], "note": "recovery eases out"})
-    if t + dt_rec < trim_n - 1:
-        flags.append("clip tail beyond tick %d unused" % (t + dt_rec))
-    return T, segs, flags
+    if not h.get("peak_frame"):
+        return T, [{"frames": [1, T], "ticks": [0, n], "note": "one segment, strike not measured"}], ["no strike measured"], (0, n)
+    p = h["peak_frame"] - 1
+    L = h["hit_end"] - h["hit_start"] + 1
+    W = max((A + 1) // 2, min(2 * A, L))
+    a0 = max(0, p - W // 2)
+    a1 = a0 + W
+    s0 = max(0, a0 - 2 * S)
+    if a0 - s0 < (S + 1) // 2:
+        flags.append("strike at tick %d leaves only %d startup ticks" % (a0, a0 - s0))
+    R = T - (S + A + 1)  # frames in the recovery segment
+    r = min(n - a1, 2 * R) if R > 0 else 0
+    if R > 0 and r < (R + 1) // 2:
+        flags.append("only %d ticks after the strike for %d recovery frames" % (r, R))
+    segs = [{"frames": [1, S + 1], "ticks": [s0, a0], "note": "startup snaps into the strike"},
+            {"frames": [S + 1, S + A + 1], "ticks": [a0, a1], "note": "strike pose through the active frames"}]
+    if R > 0:
+        segs.append({"frames": [S + A + 1, T], "ticks": [a1, a1 + r], "note": "recovery eases out"})
+    return T, segs, flags, (s0, segs[-1]["ticks"][1])
 
 
 def main():
@@ -107,6 +105,8 @@ def main():
     rows = []
     for e in entries:
         if a.only and e["id"] not in a.only:
+            continue
+        if e.get("rejected") and not a.only:  # failed the in-game QA (assets/specs/clips/finish-pipeline-summary.md); rebuilt only on request
             continue
         cid, body = e["id"], e["body"]
         row = {"id": cid, "body": body, "clean": "-", "retarget": "-", "verdict": "-", "slide": "-", "frames": "-", "hit": "-", "prop": "-", "notes": []}
@@ -138,13 +138,18 @@ def main():
                    "--rig", "game/" + RIGS[body], "--out", "game/" + dest, "--log", "tmp-finish/%s/retarget.json" % cid]
             rc, _ = run(cmd, cid + ".retarget.log", a.dry_run)
             row["retarget"] = "ok" if rc == 0 else "FAIL"
+            if body == "ryo":
+                meshy_dest = "assets/generated/clips/ryo/%s.glb" % cid
+                cmd2 = cmd[:cmd.index("--rig")] + ["--rig", "game/" + RYO_MESHY_RIG, "--out", "game/" + meshy_dest, "--log", "tmp-finish/%s/retarget-meshy.json" % cid]
+                rc2, _ = run(cmd2, cid + ".retarget-meshy.log", a.dry_run)
+                row["retarget"] += " + meshy %s" % ("ok" if rc2 == 0 else "FAIL")
         # data template
         template = {}
         if e.get("copy_from"):
             template = json.load(open(os.path.join(ROOT, "data/clips", e["copy_from"] + ".json"), encoding="utf8"))
         data_path = os.path.join(ROOT, "data/clips", cid + ".json")
         base = dict(template)
-        base.update({"kind": "clip", "id": cid, "status": "proposed", "file": dest, "hit_start": template.get("hit_start"),
+        base.update({"kind": "clip", "id": cid, "status": "proposed", "file": ("assets/generated/clips/ryo/%s.glb" % cid) if body == "ryo" else dest, "hit_start": template.get("hit_start"),
                      "hit_end": template.get("hit_end"), "rules": ["F2", "F5", "F6"]})
         base.setdefault("source", e.get("source", "tripo-library"))
         base["source"] = e.get("source", "tripo-library" if not e.get("copy_from") else "meshy-library")
@@ -177,12 +182,46 @@ def main():
             else:
                 row["verdict"] = "FAIL" if not a.dry_run else "-"
         if "data" in steps and not a.dry_run:
-            if e.get("target") and rep:  # a take: build the retime from the measured hit window
+            if e.get("pose_frames") and rep:  # a pose clip: the take from its start over the pose's frame count, at most 2x (the tail is cut)
                 n = rep.get("frames_total", 1) - 1
-                T, segs, flags = build_retime(rep, e["target"], n)
-                base.update({"trim_start": 0, "trim_end": n, "frames_total": T, "retime": segs})
+                F = e["pose_frames"]
+                sp = min(2.0, n / (F - 1))
+                t1 = min(n, int(round(sp * (F - 1))))
+                base.update({"trim_start": 0, "trim_end": t1, "frames_total": F, "hit_start": None, "hit_end": None,
+                             "retime": [{"frames": [1, F], "ticks": [0, t1], "note": "one segment at %.2fx from the take's start" % (t1 / (F - 1))}]})
+                base.pop("speed_scale", None)
+                row["frames"] = "%d (trim 0-%d of %d)" % (F, t1, n)
+                if t1 / (F - 1) < 0.5:
+                    row["notes"].append("pose speed %.2fx below 0.5x" % (t1 / (F - 1)))
+            elif e.get("target") and rep:
+                n = rep.get("frames_total", 1) - 1
+                T, segs, flags, (t0, t1) = build_retime(rep, e["target"], n)
+                if e.get("retime_override"):  # chosen window (e.g. the Fox Mirage's flip, away from the upright stand that tops the camera framing)
+                    segs = e["retime_override"]
+                    t0, t1 = segs[0]["ticks"][0], segs[-1]["ticks"][1]
+                S, A = e["target"]["startup"], e["target"]["active"]
+                base.update({"trim_start": t0, "trim_end": t1, "frames_total": T, "retime": segs,
+                             "hit_start": None if e.get("nohit") else S + 1, "hit_end": None if e.get("nohit") else S + A})
                 base.pop("speed_scale", None)
                 row["notes"] += flags
+                # judge the used window only: feet and jitter over trim_start..trim_end
+                wd = {k: v for k, v in base.items() if k != "retime"}
+                wd.update({"hit_start": None, "hit_end": None})
+                json.dump(wd, open(os.path.join(ROOT, "tmp-finish", cid, "windata.json"), "w", encoding="utf8"), indent=1)
+                cmd = [blender, "-b", "--python", "tools/blender/measure_clip.py", "--", "--clip", "game/" + dest, "--data",
+                       "tmp-finish/%s/windata.json" % cid, "--id", cid + "-win", "--out", "tmp-finish/%s/win" % cid]
+                if e.get("movement"):
+                    cmd.append("--movement-clip")
+                rc2, _ = run(cmd, cid + ".window.log", False)
+                rp2 = os.path.join(ROOT, "tmp-finish", cid, "win", cid + "-win.report.json")
+                if rc2 == 0 and os.path.exists(rp2):
+                    w = json.load(open(rp2, encoding="utf8"))
+                    row["verdict"] = w.get("verdict", {}).get("state", "?")
+                    slides = [f.get("worst_run_mean_cm_per_frame", 0) for f in w.get("planted_feet", {}).get("feet", {}).values()]
+                    row["slide"] = "%.2f" % max(slides) if slides else "-"
+                    row["frames"] = "%d (trim %d-%d)" % (T, t0, t1)
+                    row["hit"] = "%d-%d" % (S + 1, S + A)
+                    row["notes"].append("jitter %s" % w.get("joint_jitter", {}).get("max_accel"))
             elif rep and not e.get("copy_from"):
                 base["frames_total"] = rep.get("frames_total", base["frames_total"])
             base["retarget_notes"] = "Tripo take %s retargeted onto %s by retarget_bvh.py --src-skeleton %s; measured by tools/finish_clips.py (%s, slide %s cm/frame)." % (

@@ -162,13 +162,16 @@ public sealed class FighterAnimSet
 		"res://assets/generated/clips/ryo-tripo/", "tanuki",
 		// Fix D: his belly and rigid tail on Ryo's thin lying clips (hip scale 0.638) sank 56 cm (knockdown f25) and
 		// 42 cm (get-up f13); finish-qa.md has the before and after.
-		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift });
+		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift },
+		// YOK-246: the composed down guard (ryo-block-low) floated him 5.7 cm; metres of hips lowered on that clip.
+		new Dictionary<string, float> { ["ryo-block-low"] = -0.03f });
 
 
 	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot, string fighter = "ryo",
-		IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null) => new()
+		IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null, IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
 		Fighter = fighter,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
 		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,
@@ -223,6 +226,9 @@ public sealed class FighterAnimSet
 		BurstFrame = 10,
 		AirClips = SharedAir,
 		FallbackThrowClip = "kitsune-throw",
+		// YOK-246: the Tripo takes are upright (the Meshy guard clips are crouched), so her feet floated 15 cm (light punch) and
+		// 8 cm (Fox Mirage) in the fight pose (rig_qa); metres of hips lowered per clip, the median float of each take.
+		ClipHipOffsetY = new Dictionary<string, float> { ["kitsune-light-punch"] = -0.147f, ["kitsune-fox-mirage"] = -0.05f },
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "kitsune-idle",
@@ -320,6 +326,8 @@ public sealed class FighterAnimSet
 			[PoseKind.GetUp] = "kappa-get-up",
 		},
 		hipOffset: 0.03f, // Fix B: feet sank about 3 cm (idle 2.8 median); finish-qa.md
+		// YOK-246: his three accepted Tripo takes are upright (floated 14-20 cm at the Fix B offset): the median float per clip.
+		clipHipOffsetY: new Dictionary<string, float> { ["kappa-light-punch"] = -0.131f, ["kappa-heavy-punch"] = -0.163f, ["kappa-light-kick"] = -0.108f },
 		lyingLift: new Dictionary<PoseKind, HipLift[]> { [PoseKind.GetUp] = KappaGetUpLift }); // Fix D: legs 25 cm under the floor at get-up f13
 
 	private static IReadOnlyDictionary<PoseKind, string> Merge(IReadOnlyDictionary<PoseKind, string> from, Dictionary<PoseKind, string>? own)
@@ -332,10 +340,12 @@ public sealed class FighterAnimSet
 	}
 
 	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene, Dictionary<PoseKind, string>? own = null,
-		float hipOffset = 0f, IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null) => new()
+		float hipOffset = 0f, IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null,
+		IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
 		Fighter = fighter,
 		HipOffsetY = hipOffset,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
 		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,

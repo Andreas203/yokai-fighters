@@ -2,11 +2,21 @@
   "kind": "clip",
   "id": "ryo-river-grab",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "Step_Forward_and_Push",
+  "file": "assets/generated/clips/ryo/ryo-river-grab.glb",
+  "hit_start": 7,
+  "hit_end": 8,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:lift_heavy",
   "frames_total": 38,
-  "trim_start": 30,
-  "trim_end": 59,
+  "retarget_notes": "Tripo take lift_heavy retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.38 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-river-grab.",
+  "trim_start": 1128,
+  "trim_end": 1172,
   "retime": [
     {
       "frames": [
@@ -14,10 +24,10 @@
         7
       ],
       "ticks": [
-        30,
-        35
+        1128,
+        1140
       ],
-      "note": "reach, 0.83x: the palms are at full reach on frame 7, the first active frame"
+      "note": "startup snaps into the strike"
     },
     {
       "frames": [
@@ -25,10 +35,10 @@
         9
       ],
       "ticks": [
-        35,
-        37
+        1140,
+        1144
       ],
-      "note": "the grab connects, 1x through the 2 active frames"
+      "note": "strike pose through the active frames"
     },
     {
       "frames": [
@@ -36,20 +46,10 @@
         38
       ],
       "ticks": [
-        37,
-        59
+        1144,
+        1172
       ],
-      "note": "pull and recovery at 0.76x, 30 recovery frames"
+      "note": "recovery eases out"
     }
-  ],
-  "file": "assets/generated/clips/ryo-grab-2.glb",
-  "hit_start": 7,
-  "hit_end": 8,
-  "retarget_notes": "Same take and rig as ryo-generic-throw (Ryo rig GO, YOK-31; gate FAIL as a grab, accepted as a shove substitute by the designer, F5). No clipping, no jitter at 1x (max 6.3 deg per tick); slower than 1x here, so joint rate only falls. Not re-measured: no job run.",
-  "rules": [
-    "F2",
-    "F5",
-    "F6"
-  ],
-  "notes": "GREYBOX reuse of ryo-generic-throw, replace when a take of its own lands. Route A (designer, YOK-219). Frame-for-frame twin of kappa-river-grab (T0: the Tanuki casts River Grab on Ryo's model with Ryo's clips): same trim 30-59, same three-segment curve, 38 frames, hit frames 7-8. Presentation needs ClipOverrides[\"kappa-river-grab\"] = \"ryo-river-grab\" in FighterAnimSet.RyoBody (code, reported not changed). No job run; 0 credits."
+  ]
 }

@@ -4,9 +4,9 @@
   "status": "final",
   "source": "meshy-library",
   "clip": "Block10",
-  "frames_total": 35,
+  "frames_total": 22,
   "trim_start": 0,
-  "trim_end": 34,
+  "trim_end": 21,
   "speed_scale": 1,
   "file": "assets/generated/clips/ryo/ryo-block-low.glb",
   "hit_start": null,
@@ -17,5 +17,5 @@
     "F5",
     "F6"
   ],
-  "notes": "Meshy preset 146 Block10 on task 01a1100b-aa32-77b6-9211-30179c1e069f, file ryo-block-low.glb. Raw trim: ticks 0-34 at 1x (60 ticks per second). Verdict PASS. Raw 35 ticks (0.57 s). Drops into a crouched guard by raw 34; play once and hold the final pose. Hips drop 16 cm, drift 9 cm sideways. No hit window."
+  "notes": "Meshy preset 146 Block10 on task 01a1100b-aa32-77b6-9211-30179c1e069f, file ryo-block-low.glb. Raw trim: ticks 0-21 at 1x (60 ticks per second). Verdict PASS. Raw 35 ticks (0.57 s). Drops into a crouched guard by raw 34; play once and hold the final pose. Hips drop 16 cm, drift 9 cm sideways. No hit window. YOK-246: foot_lock.py on the planted feet (start 0, same keys and frame count); trimmed to ticks 0-21 so the held pose stops before the Tanuki's tail goes through the thigh (frames 19-35); Ryo +4 cm and the Tanuki +3.5 cm hips (ClipHipOffsetY)."
 }

@@ -2,11 +2,21 @@
   "kind": "clip",
   "id": "ryo-shell-spin",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "Right_Uppercut_from_Guard",
+  "file": "assets/generated/clips/ryo/ryo-shell-spin.glb",
+  "hit_start": 11,
+  "hit_end": 28,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:turn",
   "frames_total": 48,
-  "trim_start": 28,
-  "trim_end": 61,
+  "retarget_notes": "Tripo take turn retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.90 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-shell-spin.",
+  "trim_start": 72,
+  "trim_end": 149,
   "retime": [
     {
       "frames": [
@@ -14,10 +24,10 @@
         11
       ],
       "ticks": [
-        28,
-        38
+        72,
+        92
       ],
-      "note": "guard and wind-up at 1x, 10 startup frames"
+      "note": "startup snaps into the strike"
     },
     {
       "frames": [
@@ -25,10 +35,10 @@
         29
       ],
       "ticks": [
-        38,
-        47
+        92,
+        111
       ],
-      "note": "the strike pose played at 0.5x through the 18 active frames (GREYBOX: stands in for the spin)"
+      "note": "strike pose through the active frames"
     },
     {
       "frames": [
@@ -36,20 +46,10 @@
         48
       ],
       "ticks": [
-        47,
-        61
+        111,
+        149
       ],
-      "note": "recovery at 0.74x, 20 frames"
+      "note": "recovery eases out"
     }
-  ],
-  "file": "assets/generated/clips/ryo-heavy.glb",
-  "hit_start": 11,
-  "hit_end": 28,
-  "retarget_notes": "Same take and rig as ryo-heavy-punch (Ryo rig GO, YOK-31): retarget PASS in the gate, no clipping, max 12.7 deg per tick at 1x; slower here, so joint rate only falls. Not re-measured at 0.5x: no job run.",
-  "rules": [
-    "F2",
-    "F5",
-    "F6"
-  ],
-  "notes": "GREYBOX reuse of ryo-heavy-punch, replace when a take of its own lands. Route A (designer, YOK-219). Frame-for-frame twin of kappa-shell-spin (T0: the Tanuki casts Shell Spin on Ryo's model with Ryo's clips): same trim 28-61, same three-segment curve, 48 frames, hit frames 11-28. Presentation needs ClipOverrides[\"kappa-shell-spin\"] = \"ryo-shell-spin\" in FighterAnimSet.RyoBody (code, reported not changed). No job run; 0 credits."
+  ]
 }
