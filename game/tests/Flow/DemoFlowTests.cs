@@ -88,6 +88,25 @@ public static class DemoFlowTests
 		Assert.True(s.Recorder != null && s.Recorder.Recording.Header.RunHash == s.DemoRun.StateHash().ToString("x16"), "recording carries the run");
 	});
 
+	/// <summary>Designer 2026-11-12: with the binding line off (the game's default for now) a win goes straight to the reward cards.</summary>
+	[Test]
+	public static void Win_BindingLineOff_GoesStraightToTheRewards(Node runner)
+	{
+		try
+		{
+			FightScene.ShowBindingLine = false;
+			WithScene(runner, s =>
+			{
+				WinDuel(s, taken: 3);
+				Assert.Equal(DemoStage.Reward, s.Stage, "straight to the rewards");
+				Assert.True(!s.BindingCard.Showing, "no binding card");
+				Assert.True(s.Rewards.Showing, "reward screen shown");
+				Assert.Equal(750, s.DemoRun.Health, "R3 still applied: 700 left + 50");
+			});
+		}
+		finally { FightScene.ShowBindingLine = true; }
+	}
+
 	[Test]
 	public static void Win_BindingRewardRematch_ForEachCardKind(Node runner)
 	{

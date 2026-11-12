@@ -37,6 +37,9 @@ public partial class TestRunner : Node
 	{
 		int pass = 0, fail = 0;
 		Type? last = null;
+		// Designer 2026-11-12: the game hides the binding line for now; the suite keeps testing the S3 line path with it on
+		// (BindingLineSwitchTests covers the off default).
+		YokaiFighters.Fight.FightScene.ShowBindingLine = true;
 		// YOK-129: optional "-- only=<text>" runs just the tests whose Class.Method contains it (iteration aid; CI runs all).
 		string? only = OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("only="))?[5..];
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())

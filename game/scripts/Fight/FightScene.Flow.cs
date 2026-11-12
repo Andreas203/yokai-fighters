@@ -312,6 +312,10 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 		_menuHeld = down;
 	}
 
+	/// <summary>Designer 2026-11-12: Ryo's after-fight binding line ("Forgive me, {yokai}...", S3) is off for now; a won duel goes
+	/// straight to the reward cards. True brings the line back. Presentation only.</summary>
+	public static bool ShowBindingLine { get; set; } = false;
+
 	/// <summary>After each sim step: route once when a duel ends.</summary>
 	private void CheckDuelOver()
 	{
@@ -331,6 +335,7 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 		var offer = session.Draft ?? session.WinFight(Match.P1.Health);
 		if (offer is null) { FinishNode(); return; }
 		Draft = new DraftRewardSource(offer, DemoRun);
+		if (!ShowBindingLine) { Stage = DemoStage.Binding; ShowRewards(); return; } // designer 2026-11-12: no binding line for now
 		string line;
 		try { line = Draft.BindingLine(Story.StoryLibrary.DisplayName(Node?.BindingName ?? Opponent)); } // YOK-178: the yokai bound, not the body
 		catch (Exception e) when (e is System.IO.IOException or FormatException or System.Text.Json.JsonException
