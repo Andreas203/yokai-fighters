@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip__d0jqm9x\front.png'
+Time: 00:00.60 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_z1a_b7ia\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_lshdbimm\front.png'
+Time: 00:00.06 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_zeqehazs\side.png'
+Time: 00:00.06 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_k7u1umty\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_92uji_kt\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_4ip8qfrn\front.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_doib1rcw\side.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.03s
+measure_clip: kappa-idle PASS frames=222 slide=0.20 cm/f accel=2.5 deg/f^2 reversals=0
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\kappa-idle\measure\kappa-idle.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

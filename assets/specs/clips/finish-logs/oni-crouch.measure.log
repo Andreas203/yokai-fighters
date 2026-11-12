@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ygmp5cdj\front.png'
+Time: 00:00.78 (Saving: 00:00.13)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_bqoxy_05\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_t3hto_d7\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_twl51ish\side.png'
+Time: 00:00.06 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_pbf9fijn\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_y41ef945\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_daag8q5n\front.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_z1o22kei\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.04s
+measure_clip: oni-crouch PASS frames=30 slide=0.04 cm/f accel=0.4 deg/f^2 reversals=0
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-crouch\measure\oni-crouch.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

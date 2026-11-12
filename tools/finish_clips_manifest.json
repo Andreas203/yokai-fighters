@@ -1,0 +1,144 @@
+{
+ "_note": "Free pose fallbacks first (no Tripo v1.0 preset); preset takes are appended below after approval.",
+ "entries": [
+  {
+   "id": "kappa-idle",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-idle-guard.glb",
+   "copy_from": "kitsune-idle",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-idle-guard.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-walk-guard-fwd",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-walk-guard-fwd.glb",
+   "copy_from": "kitsune-walk-guard-fwd",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-walk-guard-fwd.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-walk-guard-back",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-walk-guard-back.glb",
+   "copy_from": "kitsune-walk-guard-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-walk-guard-back.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-crouch",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-crouch.glb",
+   "copy_from": "kitsune-crouch",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-crouch.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-block-high",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-high.glb",
+   "copy_from": "kitsune-block-high",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-high.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-block-low",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-low.glb",
+   "copy_from": "kitsune-block-low",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-low.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-dash-back",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-get-up",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-get-up.glb",
+   "copy_from": "kitsune-get-up",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-get-up.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "oni-crouch",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-crouch.glb",
+   "copy_from": "kitsune-crouch",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-crouch.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-block-high",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-high.glb",
+   "copy_from": "kitsune-block-high",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-high.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-block-low",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-low.glb",
+   "copy_from": "kitsune-block-low",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-low.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-dash-back",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-get-up",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-get-up.glb",
+   "copy_from": "kitsune-get-up",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-get-up.glb",
+   "prop": "club"
+  },
+  {
+   "id": "kitsune-dash-back",
+   "body": "kitsune",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb"
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_hd7zjtof\front.png'
+Time: 00:00.70 (Saving: 00:00.11)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_qytznfaa\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_zdrk7aey\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_lz7or602\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_alg95hc0\front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_it8o3iga\side.png'
+Time: 00:00.07 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_15x2p5z5\front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_5kwbr429\side.png'
+Time: 00:00.07 (Saving: 00:00.03)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.01s
+measure_clip: kappa-dash-back PASS frames=19 slide=2.11 cm/f accel=10.3 deg/f^2 reversals=12
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\kappa-dash-back\measure\kappa-dash-back.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

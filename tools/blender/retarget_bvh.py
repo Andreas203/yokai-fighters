@@ -100,7 +100,11 @@ def main():
         bpy.ops.import_scene.gltf(filepath=os.path.abspath(clip))
         sr = [o for o in bpy.data.objects if o.type == "ARMATURE" and o not in tg_objs][0]
         snames = cc.bone_lookup(sr)
-        cmap = TRIPO_CLIP_MAP if arg("--src-skeleton", "meshy") == "tripo" else MESHY_CLIP_MAP
+        cmap = MESHY_CLIP_MAP
+        if arg("--src-skeleton", "meshy") == "tripo":  # Tripo clip: onto a Meshy rig (reversed chain map) or a Tripo rig (identity)
+            cmap = TRIPO_CLIP_MAP if "Spine02" in tnames else dict({"Hips": "Hips", "Spine": "Spine", "Spine1": "Spine1",
+                                                                  "Spine2": "Spine2", "Neck": "Neck", "Head": "Head"},
+                                                                 **{n: n for n in LIMBS})
         bmap = {tnames[t]: snames[s] for t, s in cmap.items() if t in tnames and s in snames}
     else:
         bpy.ops.import_anim.bvh(filepath=os.path.abspath(bvh), axis_forward="-Z", axis_up="Y", global_scale=0.01,

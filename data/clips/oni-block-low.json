@@ -3,19 +3,19 @@
   "id": "oni-block-low",
   "status": "proposed",
   "source": "meshy-library",
-  "clip": "CrouchLookAroundBow",
-  "frames_total": 1,
-  "trim_start": 100,
-  "trim_end": 100,
+  "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-low.glb",
+  "frames_total": 35,
+  "trim_start": 0,
+  "trim_end": 34,
   "speed_scale": 1,
-  "file": "assets/generated/clips/ryo/ryo-crouch.glb",
+  "file": "assets/generated/clips/oni/oni-block-low.glb",
   "hit_start": null,
   "hit_end": null,
-  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. The shared Ryo crouch hold, club-clean (0 poses over 2 cm; the club check on the shared clips, oni-club-clips.md). Designer approved 2026-10-16: no new take; the Oni block low is the held crouch.",
+  "retarget_notes": "Tripo take ryo-block-low.glb retargeted onto oni by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.47 cm/frame).",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "Meshy preset 258 CrouchLookAroundBow, file ryo-crouch.glb, one hold frame (raw 100) as ryo-crouch; the 6-tick down and up are a data blend. Reads as a crouch, not a guarded block. No credits."
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only oni-block-low."
 }
