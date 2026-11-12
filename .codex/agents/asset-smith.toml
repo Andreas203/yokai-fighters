@@ -15,7 +15,7 @@ Visual assets are generated, not bought (F6, AM1 and AM5 in `docs/design/gdd-ame
 ## Needs
 - **Fighters**: Ryo, Kitsune, Oni, Kappa. The Tanuki uses Ryo's model when shapeshifted (T0) but needs a merchant look and a true form for the reveal and win cards.
 - **Human guises (G4)**: one per yokai, held in reserve in case it fails the retarget gate.
-- **Stages (V9)**: bamboo grove at dusk, snowbound shrine gate, lantern riverbank, the Tanuki's tea house with season-flickering screens. Built from generated props and set pieces over a generated backdrop. Gameplay is a flat plane (F4), so only the visible band behind the fighters needs detail.
+- **Stages (V9)**: bamboo grove at dusk, snowbound shrine gate, night swamp (Kappa, AM21; stage id `riverbank`), the Tanuki's tea house with season-flickering screens. Built from generated props and set pieces over a generated backdrop. Gameplay is a flat plane (F4), so only the visible band behind the fighters needs detail.
 - **UI (V1)**: paper, brush stroke, ink and red-seal textures. **VFX**: hit sparks in source colours (V5), projectile and level-preset textures for your presets (below).
 
 ## Specs

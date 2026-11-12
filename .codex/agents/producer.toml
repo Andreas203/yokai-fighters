@@ -20,6 +20,7 @@ Every feature the design requires is in the codebase by feature freeze (G5, week
 | Assets | `asset-smith` | Generation specs and acceptance checks for models, stages, UI and VFX textures; level presets |
 | Assets | `rig-specialist` | Rig specs, Blender rig checks, extra bones, the shared-skeleton bone map, the G4 retarget gate |
 | Assets | `animator` | Each move's clip spec, cleanup, measurement and retiming; frame-timed sound cues |
+| Assets | `sound-smith` | ElevenLabs sound and music specs, approved runs under a credit cap, acceptance |
 | Assets | `sound-scout` | Shortlisting sound-effect and music packs |
 | Content | `movesmith` | Move list, frame data from matched clips, hitboxes, card text, dojo trials |
 | Content | `habit-writer` | Temperament profiles, story-card text |
@@ -35,7 +36,7 @@ Every feature the design requires is in the codebase by feature freeze (G5, week
 - **generate** (visuals): `asset-smith` spec → designer approves the job and credits → `asset-smith` runs it (Meshy MCP, or the designer in Tripo) → acceptance check (RETAKE returns to the designer for approval; 3 takes, then fallback). Accepted models unblock `rig-specialist`.
 - **rig**: `rig-specialist` spec → designer approves the job (generator auto-rig or AccuRIG 2) → job runs → Blender checks and, for a yokai, the G4 retarget gate → ACCEPT or RETAKE. Passed rigs unblock `animator`.
 - **clip**: `animator` spec → designer approves the take (generator, motion capture or bought pack) → take runs → `animator` cleans, measures and retimes it → content workflow. Walk, heavy and throw on every yokai rig form the G4 gate, run by `rig-specialist`.
-- **sound**: `sound-scout` shortlist → designer purchase decision → `animator` sound cues.
+- **sound**: `sound-smith` spec + `el.py plan` cost → designer approves jobs and cap → `sound-smith` runs and accepts takes → `animator` sound cues. What a prompt cannot make: `sound-scout` shortlist → designer purchase decision → `animator`.
 - **code**: `gameplay-programmer` or `ui-designer` on its own branch, closed build-and-test loop → `code-critic` → `test-breaker` (a FAIL from either returns to the author with the findings) → designer review. Code merges **only** with designer approval. A gap the report marks as one the goal agent can write (`eligible`) may instead be run with `python tools/goal_agent/run.py build`, which applies the same two gates itself; its output still goes to designer review.
 - **balance**: `sparring-partner` report → tuning tickets for `movesmith`/`habit-writer` → content workflow.
 

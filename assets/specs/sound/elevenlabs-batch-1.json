@@ -1,0 +1,406 @@
+{
+  "spec": "assets/specs/sound/elevenlabs-batch-1.md",
+  "log": "assets/specs/sound/logs/elevenlabs-runs.jsonl",
+  "defaults": {
+    "sfx": {
+      "model_id": "eleven_text_to_sound_v2",
+      "prompt_influence": 0.5,
+      "loop": false
+    },
+    "music": {
+      "model_id": "music_v2_5",
+      "force_instrumental": true
+    }
+  },
+  "jobs": [
+    {
+      "id": "hit-light",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/hit_light",
+      "duration_seconds": 0.5,
+      "prompt_influence": 0.6,
+      "text": "A short, deep, punchy thud of a fist landing on a body for a fighting game: a soft low-end bump with a little cloth slap on top. Clean, dry, with headroom, not distorted. No reverb, no voice."
+    },
+    {
+      "id": "hit-medium",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/hit_medium",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A solid, deep thud of a kick landing on a body for a fighting game: a round, heavy low-end punch with a short cloth snap. Clean, dry, with headroom, not distorted. No voice."
+    },
+    {
+      "id": "hit-heavy",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/hit_heavy",
+      "duration_seconds": 0.7,
+      "prompt_influence": 0.7,
+      "text": "A brutal, close-up impact of a heavy punch smashing into a body for a fighting game: a sharp cracking smack on the attack, then a dense, solid, meaty low punch, tight and dry, over in a moment. Not a drum, no boom, no hollow ring or resonance, no reverb tail. Clean, with headroom, not distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-a",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_a",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "Punchy fighting-game heavy punch hit: a hard, tight thwack of a fist on a body with a solid low-mid punch. Short, dry, close-miked. Mixed with headroom, peaks well below full scale, not clipped or distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-b",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_b",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A heavy, meaty body blow: a dense leather-and-flesh smack with a deep chest thump. Short, dry, close-miked. Mixed with headroom, peaks well below full scale, not clipped or distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-c",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_c",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "Martial arts heavy strike sound effect: a sharp whip-like crack on contact, followed by a short, deep thump. Short, dry, close-miked. Mixed with headroom, peaks well below full scale, not clipped or distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-d",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_d",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A powerful kick slamming into a fighter's torso: a crunchy, solid smack with a short low-end punch and a quick burst of air. Short, dry, close-miked. Mixed with headroom, peaks well below full scale, not clipped or distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-e",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_e",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A powerful boxing punch landing on a heavy leather punching bag, recorded close: a fat, full-bodied, fleshy thump with a short leather smack. Warm and punchy, not thin, not tinny, no ringing. Short and dry. Mixed with headroom, not distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-f",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_f",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A heavy fighting-game punch: a thick, chesty body thump, like a fist driving into a sandbag, with a soft cloth smack. Warm, full and solid. Not thin, no metallic ring, no rumble. Short and dry. Mixed with headroom, not distorted. No voice."
+    },
+    {
+      "id": "hit-heavy-g",
+      "kind": "sfx",
+      "group": "V6 thud, heavy variant",
+      "out": "game/sound/sfx/hits/hit_heavy_g",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.6,
+      "text": "A heavy kung-fu movie punch sound effect: a fat, punchy, meaty whump with a quick fabric snap. Full-bodied and warm, not tinny, not hollow. Short and dry. Mixed with headroom, not distorted. No voice."
+    },
+    {
+      "id": "hit-block",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/block",
+      "duration_seconds": 0.5,
+      "prompt_influence": 0.6,
+      "text": "A strike blocked by a raised forearm: a clear, audible, muffled low thud with a dull wooden knock. Short, dry, clean, not distorted."
+    },
+    {
+      "id": "throw",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/throw",
+      "duration_seconds": 1.0,
+      "text": "A judo-style throw: a quick rustle of a cloth grab, then a heavy body slam onto a wooden dojo floor."
+    },
+    {
+      "id": "knockdown",
+      "kind": "sfx",
+      "group": "V6 thud",
+      "out": "game/sound/sfx/hits/knockdown",
+      "duration_seconds": 1.2,
+      "text": "A fighter falls hard onto packed earth: a heavy thud, then a short slide of cloth over gravel."
+    },
+    {
+      "id": "binding",
+      "kind": "sfx",
+      "group": "V4 binding",
+      "out": "game/sound/sfx/hits/binding",
+      "duration_seconds": 2.0,
+      "text": "A calligraphy brush sweeps one fast ink stroke across paper, then a paper talisman folds shut with a soft magical chime and a wooden seal-stamp thud. Gentle, not scary."
+    },
+    {
+      "id": "sting-ryo",
+      "kind": "sfx",
+      "group": "V6 sting",
+      "out": "game/sound/sfx/stings/ryo",
+      "duration_seconds": 0.6,
+      "text": "Short crisp sting: a sheet of washi paper snapping taut, with a tiny shimmering ink-splash sparkle."
+    },
+    {
+      "id": "sting-kitsune",
+      "kind": "sfx",
+      "group": "V6 sting",
+      "out": "game/sound/sfx/stings/kitsune",
+      "duration_seconds": 0.7,
+      "text": "Short mystical sting: tiny Shinto shrine bells jingling with a soft puff of fire. Bright and playful."
+    },
+    {
+      "id": "sting-oni",
+      "kind": "sfx",
+      "group": "V6 sting",
+      "out": "game/sound/sfx/stings/oni",
+      "duration_seconds": 0.7,
+      "text": "Short heavy sting: an iron club clanking against stone, with a low rumbling growl. Strong, not monstrous."
+    },
+    {
+      "id": "sting-kappa",
+      "kind": "sfx",
+      "group": "V6 sting",
+      "out": "game/sound/sfx/stings/kappa",
+      "duration_seconds": 0.7,
+      "text": "Short sting: a bright water splash and a hollow knock on a tortoise shell."
+    },
+    {
+      "id": "sting-tanuki",
+      "kind": "sfx",
+      "group": "V6 sting",
+      "out": "game/sound/sfx/stings/tanuki",
+      "duration_seconds": 0.7,
+      "text": "Short playful sting: a puff of leaves from a magical transformation, with a detuned wobbling woodblock. Mischievous and cheerful."
+    },
+    {
+      "id": "whoosh-light",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/whoosh_light",
+      "duration_seconds": 0.5,
+      "text": "A quick swish of a fast punch through the air with a cloth sleeve flutter."
+    },
+    {
+      "id": "whoosh-heavy",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/whoosh_heavy",
+      "duration_seconds": 0.7,
+      "text": "A heavy swing through the air: a deep, wide whoosh of a big kick with flapping cloth."
+    },
+    {
+      "id": "spirit-wave",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/spirit_wave",
+      "duration_seconds": 1.2,
+      "text": "A paper talisman flung forward bursts into a rushing wave of spirit wind: airy, bright, with a faint chime as it flies away."
+    },
+    {
+      "id": "rising-talisman",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/rising_talisman",
+      "duration_seconds": 1.0,
+      "text": "An upward rising whoosh of spinning paper charms with a bright magical shimmer."
+    },
+    {
+      "id": "foxfire",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/foxfire",
+      "duration_seconds": 1.5,
+      "text": "Foxfire ignites: a soft whoomp of ghostly spirit flame, then a gentle flickering crackle. Ethereal and warm."
+    },
+    {
+      "id": "ground-pound",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/ground_pound",
+      "duration_seconds": 1.2,
+      "text": "A huge fist slams into snowy ground: a deep earth boom with scattering snow and small stones."
+    },
+    {
+      "id": "teleport",
+      "kind": "sfx",
+      "group": "moves",
+      "out": "game/sound/sfx/moves/teleport",
+      "duration_seconds": 0.8,
+      "text": "A quick magical vanish: a puff of smoke and swirling leaves with a soft whoosh."
+    },
+    {
+      "id": "ui-card",
+      "kind": "sfx",
+      "group": "UI",
+      "out": "game/sound/sfx/ui/card",
+      "duration_seconds": 0.5,
+      "text": "A soft rice-paper card being flipped over and slid across a wooden table."
+    },
+    {
+      "id": "ui-brush",
+      "kind": "sfx",
+      "group": "UI",
+      "out": "game/sound/sfx/ui/brush",
+      "duration_seconds": 0.6,
+      "text": "A single quick calligraphy brush stroke on paper."
+    },
+    {
+      "id": "ui-seal",
+      "kind": "sfx",
+      "group": "UI",
+      "out": "game/sound/sfx/ui/seal",
+      "duration_seconds": 0.5,
+      "text": "A wooden hanko seal stamp pressed firmly onto paper: a satisfying soft thunk."
+    },
+    {
+      "id": "ui-move",
+      "kind": "sfx",
+      "group": "UI",
+      "out": "game/sound/sfx/ui/move",
+      "duration_seconds": 0.5,
+      "prompt_influence": 0.7,
+      "text": "A very soft, short tap of a small wooden block. A gentle menu tick."
+    },
+    {
+      "id": "ui-confirm",
+      "kind": "sfx",
+      "group": "UI",
+      "out": "game/sound/sfx/ui/confirm",
+      "duration_seconds": 0.6,
+      "prompt_influence": 0.7,
+      "text": "One clear, bright clack of Japanese wooden clappers."
+    },
+    {
+      "id": "round-start",
+      "kind": "sfx",
+      "group": "round",
+      "out": "game/sound/sfx/round/start",
+      "duration_seconds": 1.5,
+      "text": "One big taiko drum hit with a sharp wooden clapper clack on top, announcing the start of a duel."
+    },
+    {
+      "id": "round-end",
+      "kind": "sfx",
+      "group": "round",
+      "out": "game/sound/sfx/round/end",
+      "duration_seconds": 2.5,
+      "text": "A deep Buddhist temple bell struck once and left to ring out. Solemn and calm, not scary."
+    },
+    {
+      "id": "amb-grove",
+      "kind": "sfx",
+      "group": "ambience",
+      "out": "game/sound/sfx/ambience/bamboo_grove",
+      "duration_seconds": 20,
+      "loop": true,
+      "prompt_influence": 0.4,
+      "text": "Bamboo grove at dusk: wind moving through tall bamboo, stalks knocking softly together, distant evening cicadas. Calm, steady, no music."
+    },
+    {
+      "id": "amb-shrine",
+      "kind": "sfx",
+      "group": "ambience",
+      "out": "game/sound/sfx/ambience/snow_shrine",
+      "duration_seconds": 20,
+      "loop": true,
+      "prompt_influence": 0.4,
+      "text": "A snowbound mountain shrine gate at night: soft cold wind, snow falling, the faint creak of old wood. Very calm, no music."
+    },
+    {
+      "id": "amb-river",
+      "kind": "sfx",
+      "group": "ambience",
+      "out": "game/sound/sfx/ambience/lantern_river",
+      "duration_seconds": 20,
+      "loop": true,
+      "prompt_influence": 0.4,
+      "text": "A calm river at night: gently flowing water, small waves lapping the bank, frogs in the distance. Peaceful, no music."
+    },
+    {
+      "id": "amb-teahouse",
+      "kind": "sfx",
+      "group": "ambience",
+      "out": "game/sound/sfx/ambience/tea_house",
+      "duration_seconds": 20,
+      "loop": true,
+      "prompt_influence": 0.4,
+      "text": "Inside a quiet traditional Japanese tea house: an iron kettle simmering softly, paper screens rustling, a distant wind chime. Calm, no music."
+    },
+    {
+      "id": "music-title",
+      "kind": "music",
+      "group": "V9 music",
+      "out": "game/sound/music/title",
+      "music_length_ms": 60000,
+      "prompt": "Calm, mysterious instrumental for a video game title screen. A solo shakuhachi flute melody over sparse koto plucks and a soft low drone, at dusk. Japanese folklore mood: mischievous with a melancholy edge, never horror. Slow, about 70 BPM. Even energy from start to end, no fade-out, so it can loop."
+    },
+    {
+      "id": "music-battle-grove",
+      "kind": "music",
+      "group": "V9 music, row 1",
+      "out": "game/sound/music/battle_grove",
+      "music_length_ms": 90000,
+      "prompt": "Instrumental fighting-game battle theme, traditional Japanese instruments with a modern drive. A driving shamisen riff, a shakuhachi lead melody and a light taiko and shime-daiko groove, about 128 BPM. Bright, playful and determined: a duel with a fox spirit in a bamboo grove at dusk. Moderate intensity. Steady energy throughout, no intro build and no fade-out, so it loops."
+    },
+    {
+      "id": "music-battle-shrine",
+      "kind": "music",
+      "group": "V9 music, row 2",
+      "out": "game/sound/music/battle_shrine",
+      "music_length_ms": 90000,
+      "prompt": "Instrumental fighting-game battle theme, traditional Japanese instruments with a modern drive. A heavy taiko ensemble with booming odaiko, hard shamisen riffs and a proud shakuhachi melody, about 140 BPM. Strong and stubborn: a duel with a guardian oni at a snowbound mountain shrine gate. Higher intensity than a first-stage theme. Steady energy throughout, no fade-out, so it loops."
+    },
+    {
+      "id": "music-battle-swamp",
+      "kind": "music",
+      "group": "V9 music, Kappa stage (AM21)",
+      "out": "game/sound/music/battle_swamp",
+      "music_length_ms": 90000,
+      "prompt": "Instrumental fighting-game battle theme, traditional Japanese instruments with a modern drive. Rolling, rapid taiko patterns, murky low shamisen riffs, a breathy shakuhachi and dripping, watery koto plucks, about 148 BPM. Dark, damp and relentless but never horror: a duel with a kappa in a still, overgrown swamp at night, with mist and moss over murky green water and no lights. High intensity. Steady energy throughout, no fade-out, so it loops."
+    },
+    {
+      "id": "music-merchant",
+      "kind": "music",
+      "group": "V9 music, merchant",
+      "out": "game/sound/music/merchant",
+      "music_length_ms": 45000,
+      "prompt": "Cheerful, bouncy instrumental shop theme for a video game: a catchy plucked shamisen folk melody with hand percussion and woodblock, about 110 BPM. A friendly travelling merchant on a mountain road, light and warm. Simple, memorable melody repeated. No fade-out, so it loops."
+    },
+    {
+      "id": "music-tanuki-spring",
+      "kind": "music",
+      "group": "V9 music, Tanuki tea house, by health beat",
+      "out": "game/sound/music/tanuki_spring",
+      "music_length_ms": 60000,
+      "prompt": "Instrumental final-boss battle theme for a fighting game, part of a four-season suite: every part is in D minor at 150 BPM so the parts can cross-fade. A cheerful plucked shamisen folk melody, like a travelling merchant's shop tune, over a taiko ensemble. Mischievous and uncanny but still pleasant, never evil or horror: a shape-shifting tanuki in a tea house whose paper screens flicker between seasons. Spring part: light and playful, soft koto and shakuhachi colour like falling cherry blossom, the shamisen tune only slightly out of tune now and then. The gentlest intensity of the suite, but already a boss fight. Steady energy throughout, no fade-out, so it loops."
+    },
+    {
+      "id": "music-tanuki-summer",
+      "kind": "music",
+      "group": "V9 music, Tanuki tea house, by health beat",
+      "out": "game/sound/music/tanuki_summer",
+      "music_length_ms": 60000,
+      "prompt": "Instrumental final-boss battle theme for a fighting game, part of a four-season suite: every part is in D minor at 150 BPM so the parts can cross-fade. A cheerful plucked shamisen folk melody, like a travelling merchant's shop tune, over a taiko ensemble. Mischievous and uncanny but still pleasant, never evil or horror: a shape-shifting tanuki in a tea house whose paper screens flicker between seasons. Summer part: hotter and busier, a shimmering, buzzing texture and quicker taiko patterns, the shamisen tune bending noticeably flat and sharp. More intense than the spring part. Steady energy throughout, no fade-out, so it loops."
+    },
+    {
+      "id": "music-tanuki-autumn",
+      "kind": "music",
+      "group": "V9 music, Tanuki tea house, by health beat",
+      "out": "game/sound/music/tanuki_autumn",
+      "music_length_ms": 60000,
+      "prompt": "Instrumental final-boss battle theme for a fighting game, part of a four-season suite: every part is in D minor at 150 BPM so the parts can cross-fade. A cheerful plucked shamisen folk melody, like a travelling merchant's shop tune, over a taiko ensemble. Mischievous and uncanny but still pleasant, never evil or horror: a shape-shifting tanuki in a tea house whose paper screens flicker between seasons. Autumn part: wistful and heavier, deep odaiko hits and a mournful shakuhachi counter-line, the shamisen tune warping and sliding clearly out of tune. More intense than the summer part. Steady energy throughout, no fade-out, so it loops."
+    },
+    {
+      "id": "music-tanuki-winter",
+      "kind": "music",
+      "group": "V9 music, Tanuki tea house, by health beat",
+      "out": "game/sound/music/tanuki_winter",
+      "music_length_ms": 60000,
+      "prompt": "Instrumental final-boss battle theme for a fighting game, part of a four-season suite: every part is in D minor at 150 BPM so the parts can cross-fade. A cheerful plucked shamisen folk melody, like a travelling merchant's shop tune, over a taiko ensemble. Mischievous and uncanny but still pleasant, never evil or horror: a shape-shifting tanuki in a tea house whose paper screens flicker between seasons. Winter part: cold, sparse bells over pounding full taiko, the shamisen tune detuned and warped almost beyond recognition, the climax. The highest intensity of the game. Steady energy throughout, no fade-out, so it loops."
+    }
+  ]
+}
