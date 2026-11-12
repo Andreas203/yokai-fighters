@@ -221,6 +221,83 @@ public static class ModelPresentationTests
 		Assert.Equal(PoseKind.Idle, p.Sample.Kind, "no walk cycle in place against the corner");
 	}
 
+	/// <summary>
+	/// Finish-build proximity guard (designer playtest: "he just stands there"): holding back (C3) while the opponent's
+	/// move is in startup or active shows the block pose before any hit lands, high standing and low crouching, blended
+	/// in with HitBlend; once the move is in recovery the walk-back or crouch comes back. Holding nothing shows no guard.
+	/// </summary>
+	[Test]
+	public static void Presenter_HoldingBackWhileTheOpponentAttacks_ShowsTheGuardPose()
+	{
+		foreach (bool low in new[] { false, true })
+		{
+			var m = FightScene.NewMatch();
+			var p = Presenter(0);
+			var back = new FighterInput(low ? InputBits.Left | InputBits.Down : InputBits.Left);
+			var guard = low ? PoseKind.BlockLow : PoseKind.BlockHigh;
+			p.Observe(m, 0);
+			m.Step(back, FighterInput.None); p.Observe(m, 0);
+			Assert.Equal(low ? PoseKind.Crouch : PoseKind.WalkBack, p.Sample.Kind, $"low={low}: no attack, no guard pose");
+			int hp = Slot(m.P2, "kitsune-heavy-punch");
+			m.Step(back, FighterInput.Attack(hp)); p.Observe(m, 0);
+			Assert.True(m.P2.State == FighterState.Attack && m.P2.MoveFrame <= m.P2.CurrentMove!.Startup, "the Kitsune is in startup");
+			Assert.True(m.P1.Guarding && m.P1.Crouching == low, $"low={low}: the sim has P1 guarding");
+			Assert.Equal(guard, p.Sample.Kind, $"low={low}: guard pose in the opponent's startup");
+			Assert.Equal(low ? "ryo-block-low" : "ryo-block-high", p.Sample.Clip, $"low={low}: the block clip");
+			Assert.Equal(1, p.Sample.Frame, $"low={low}: the clip starts at frame 1");
+			Assert.True(p.Sample.Blending && p.Sample.Weight == 1f / FighterPresenter.HitBlend, $"low={low}: blended in over HitBlend");
+			int frame = p.Sample.Frame;
+			while (m.P2.State == FighterState.Attack && m.P2.MoveFrame < m.P2.CurrentMove!.LastActive && m.P1.State == FighterState.Idle)
+			{
+				m.Step(back, FighterInput.None); p.Observe(m, 0);
+				Assert.Equal(guard, p.Sample.Kind, $"low={low}, opponent frame {m.P2.MoveFrame}: guard held");
+				Assert.True(p.Sample.Frame >= frame, "the guard clip plays forward and holds");
+				frame = p.Sample.Frame;
+			}
+			for (int t = 0; t < 120 && m.P2.State != FighterState.Idle; t++) { m.Step(back, FighterInput.None); p.Observe(m, 0); }
+			m.Step(back, FighterInput.None); p.Observe(m, 0);
+			Assert.True(p.Sample.Kind is not (PoseKind.BlockHigh or PoseKind.BlockLow), $"low={low}: no guard pose once the opponent is idle ({p.Sample.Kind})");
+
+			// Holding nothing while the opponent attacks: no guard.
+			var m2 = FightScene.NewMatch();
+			var q = Presenter(0);
+			q.Observe(m2, 0);
+			m2.Step(FighterInput.None, FighterInput.Attack(hp)); q.Observe(m2, 0);
+			Assert.Equal(PoseKind.Idle, q.Sample.Kind, "not holding back: idle, not a guard");
+		}
+	}
+
+	/// <summary>
+	/// The sim clears Crouching on the blocked tick, so a crouching block showed the standing guard through the whole
+	/// hitstop. A block held down-back stays the low guard from the guard pose through every blockstun tick.
+	/// </summary>
+	[Test]
+	public static void Presenter_CrouchingBlock_StaysLowThroughHitstopAndBlockstun()
+	{
+		var m = FightScene.NewMatch();
+		var p = Presenter(0);
+		p.Observe(m, 0);
+		for (int t = 0; t < 40; t++) { m.Step(new FighterInput(InputBits.Right), new FighterInput(InputBits.Left)); p.Observe(m, 0); }
+		for (int t = 0; t < 30; t++) { m.Step(FighterInput.None, FighterInput.None); p.Observe(m, 0); }
+		var downBack = new FighterInput(InputBits.Left | InputBits.Down);
+		int hp = Slot(m.P2, "kitsune-heavy-punch");
+		m.Step(downBack, FighterInput.Attack(hp)); p.Observe(m, 0);
+		int blockTicks = 0;
+		for (int t = 0; t < 90; t++)
+		{
+			m.Step(downBack, FighterInput.None); p.Observe(m, 0);
+			if (m.P1.State == FighterState.Blockstun)
+			{
+				blockTicks++;
+				Assert.Equal(PoseKind.BlockLow, p.Sample.Kind, $"tick {t}: crouching blockstun shows the low guard (sim crouching {m.P1.Crouching})");
+			}
+			else if (blockTicks > 0) break;
+			else if (m.P2.State == FighterState.Attack && m.P2.MoveFrame <= m.P2.CurrentMove!.LastActive)
+				Assert.Equal(PoseKind.BlockLow, p.Sample.Kind, $"tick {t}: proximity low guard");
+		}
+		Assert.True(blockTicks > 5, $"the heavy punch was blocked ({blockTicks} blockstun ticks)");
+	}
+
 	[Test]
 	public static void Presenter_NewMatchInstanceStartsFresh()
 	{
