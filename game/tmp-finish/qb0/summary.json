@@ -1,0 +1,3607 @@
+[
+ {
+  "body": "tanuki",
+  "clip": "ryo-shell-spin",
+  "uses": "move:shell-spin",
+  "frames": 48,
+  "hit": [
+   11,
+   28
+  ],
+  "picks": {
+   "start": 1,
+   "active": 11,
+   "recovery": 38,
+   "worst": 9
+  },
+  "sink_cm": 8.7,
+  "sink_f": 10,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   105.5,
+   106.9
+  ],
+  "drift_cm": [
+   65.0,
+   70.2
+  ],
+  "slip_max_cm": 9.37,
+  "slip_f": 11,
+  "inter": {
+   "R.forearm>spine": {
+    "frames": 48,
+    "depth": 18.5,
+    "worst_f": 41,
+    "verts": 28
+   },
+   "R.upleg>tail": {
+    "frames": 48,
+    "depth": 17.2,
+    "worst_f": 7,
+    "verts": 68
+   },
+   "R.hand>spine": {
+    "frames": 38,
+    "depth": 18.6,
+    "worst_f": 9,
+    "verts": 33
+   },
+   "R.hand>tail": {
+    "frames": 2,
+    "depth": 12,
+    "worst_f": 1,
+    "verts": 14
+   },
+   "R.forearm>spine1": {
+    "frames": 47,
+    "depth": 12,
+    "worst_f": 29,
+    "verts": 15
+   },
+   "R.hand>spine1": {
+    "frames": 41,
+    "depth": 12,
+    "worst_f": 14,
+    "verts": 29
+   },
+   "L.upleg>R.hand": {
+    "frames": 4,
+    "depth": 4.9,
+    "worst_f": 37,
+    "verts": 5
+   },
+   "R.hand>L.upleg": {
+    "frames": 5,
+    "depth": 7.1,
+    "worst_f": 45,
+    "verts": 4
+   }
+  },
+  "score": 166.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-oni-quake",
+  "uses": "move:oni-quake",
+  "frames": 56,
+  "hit": [
+   28,
+   31
+  ],
+  "picks": {
+   "start": 1,
+   "active": 28,
+   "recovery": 44,
+   "worst": 40
+  },
+  "sink_cm": 17.6,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   10.5,
+   7.8
+  ],
+  "drift_cm": [
+   5.1,
+   7.5
+  ],
+  "slip_max_cm": 0.91,
+  "slip_f": 28,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 26,
+    "depth": 16.3,
+    "worst_f": 1,
+    "verts": 69
+   },
+   "R.hand>L.shoulder": {
+    "frames": 36,
+    "depth": 9,
+    "worst_f": 23,
+    "verts": 41
+   },
+   "L.upleg>L.arm": {
+    "frames": 56,
+    "depth": 7.5,
+    "worst_f": 41,
+    "verts": 17
+   },
+   "R.forearm>spine1": {
+    "frames": 56,
+    "depth": 12.7,
+    "worst_f": 29,
+    "verts": 26
+   },
+   "L.shoulder>R.hand": {
+    "frames": 2,
+    "depth": 4.6,
+    "worst_f": 1,
+    "verts": 6
+   },
+   "R.forearm>spine2": {
+    "frames": 27,
+    "depth": 3.8,
+    "worst_f": 4,
+    "verts": 4
+   },
+   "R.hand>spine2": {
+    "frames": 2,
+    "depth": 2.7,
+    "worst_f": 25,
+    "verts": 4
+   },
+   "R.hand>spine1": {
+    "frames": 31,
+    "depth": 10.8,
+    "worst_f": 34,
+    "verts": 16
+   },
+   "R.hand>spine": {
+    "frames": 24,
+    "depth": 14.6,
+    "worst_f": 37,
+    "verts": 21
+   },
+   "R.hand>L.upleg": {
+    "frames": 28,
+    "depth": 10.4,
+    "worst_f": 38,
+    "verts": 21
+   },
+   "R.forearm>spine": {
+    "frames": 28,
+    "depth": 14.6,
+    "worst_f": 36,
+    "verts": 19
+   },
+   "L.arm>L.upleg": {
+    "frames": 22,
+    "depth": 8.3,
+    "worst_f": 37,
+    "verts": 14
+   },
+   "L.upleg>R.hand": {
+    "frames": 1,
+    "depth": 2.4,
+    "worst_f": 54,
+    "verts": 3
+   }
+  },
+  "score": 147.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-iron-club-charge",
+  "uses": "move:iron-club-charge",
+  "frames": 32,
+  "hit": [
+   13,
+   18
+  ],
+  "picks": {
+   "start": 1,
+   "active": 13,
+   "recovery": 25,
+   "worst": 26
+  },
+  "sink_cm": 16.3,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   8.0,
+   4.6
+  ],
+  "drift_cm": [
+   4.4,
+   4.6
+  ],
+  "slip_max_cm": 0.91,
+  "slip_f": 14,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 12,
+    "depth": 14,
+    "worst_f": 1,
+    "verts": 39
+   },
+   "R.hand>L.shoulder": {
+    "frames": 15,
+    "depth": 9,
+    "worst_f": 9,
+    "verts": 41
+   },
+   "L.upleg>L.arm": {
+    "frames": 32,
+    "depth": 7.5,
+    "worst_f": 27,
+    "verts": 17
+   },
+   "R.forearm>spine1": {
+    "frames": 32,
+    "depth": 12.7,
+    "worst_f": 15,
+    "verts": 26
+   },
+   "R.forearm>spine2": {
+    "frames": 15,
+    "depth": 3.4,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "R.hand>spine2": {
+    "frames": 2,
+    "depth": 2.7,
+    "worst_f": 11,
+    "verts": 4
+   },
+   "R.hand>spine1": {
+    "frames": 21,
+    "depth": 10.8,
+    "worst_f": 20,
+    "verts": 16
+   },
+   "R.hand>spine": {
+    "frames": 18,
+    "depth": 14.6,
+    "worst_f": 23,
+    "verts": 21
+   },
+   "R.hand>L.upleg": {
+    "frames": 18,
+    "depth": 10.4,
+    "worst_f": 24,
+    "verts": 21
+   },
+   "R.forearm>spine": {
+    "frames": 18,
+    "depth": 14.6,
+    "worst_f": 22,
+    "verts": 19
+   },
+   "L.arm>L.upleg": {
+    "frames": 16,
+    "depth": 8.3,
+    "worst_f": 23,
+    "verts": 14
+   }
+  },
+  "score": 138.0,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-jump-kick",
+  "uses": "move:ryo-air-kick",
+  "frames": 25,
+  "hit": [
+   7,
+   16
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 21,
+   "worst": 1
+  },
+  "sink_cm": 28.6,
+  "sink_f": 17,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   32.2
+  ],
+  "drift_cm": [
+   0.0,
+   23.0
+  ],
+  "slip_max_cm": 3.2,
+  "slip_f": 9,
+  "inter": {
+   "head>R.arm": {
+    "frames": 14,
+    "depth": 8.1,
+    "worst_f": 6,
+    "verts": 36
+   },
+   "R.upleg>tail": {
+    "frames": 3,
+    "depth": 13.6,
+    "worst_f": 1,
+    "verts": 14
+   },
+   "R.toebase>tail": {
+    "frames": 1,
+    "depth": 10.3,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "R.arm>head": {
+    "frames": 11,
+    "depth": 9.7,
+    "worst_f": 1,
+    "verts": 6
+   },
+   "R.toebase>hips": {
+    "frames": 3,
+    "depth": 4.5,
+    "worst_f": 3,
+    "verts": 11
+   },
+   "head>R.forearm": {
+    "frames": 12,
+    "depth": 7.2,
+    "worst_f": 5,
+    "verts": 16
+   },
+   "head>R.hand": {
+    "frames": 8,
+    "depth": 5.1,
+    "worst_f": 13,
+    "verts": 7
+   },
+   "R.hand>head": {
+    "frames": 6,
+    "depth": 14.4,
+    "worst_f": 16,
+    "verts": 34
+   }
+  },
+  "score": 133.1,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-jump-punch",
+  "uses": "move:ryo-air-punch",
+  "frames": 25,
+  "hit": [
+   7,
+   16
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 21,
+   "worst": 1
+  },
+  "sink_cm": 28.6,
+  "sink_f": 17,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   32.2
+  ],
+  "drift_cm": [
+   0.0,
+   23.0
+  ],
+  "slip_max_cm": 3.2,
+  "slip_f": 9,
+  "inter": {
+   "head>R.arm": {
+    "frames": 14,
+    "depth": 8.1,
+    "worst_f": 6,
+    "verts": 36
+   },
+   "R.upleg>tail": {
+    "frames": 3,
+    "depth": 13.6,
+    "worst_f": 1,
+    "verts": 14
+   },
+   "R.toebase>tail": {
+    "frames": 1,
+    "depth": 10.3,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "R.arm>head": {
+    "frames": 11,
+    "depth": 9.7,
+    "worst_f": 1,
+    "verts": 6
+   },
+   "R.toebase>hips": {
+    "frames": 3,
+    "depth": 4.5,
+    "worst_f": 3,
+    "verts": 11
+   },
+   "head>R.forearm": {
+    "frames": 12,
+    "depth": 7.2,
+    "worst_f": 5,
+    "verts": 16
+   },
+   "head>R.hand": {
+    "frames": 8,
+    "depth": 5.1,
+    "worst_f": 13,
+    "verts": 7
+   },
+   "R.hand>head": {
+    "frames": 6,
+    "depth": 14.4,
+    "worst_f": 16,
+    "verts": 34
+   }
+  },
+  "score": 133.1,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-hit-high",
+  "uses": "pose:HitHigh pose:Thrown",
+  "frames": 18,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 9,
+   "recovery": 13,
+   "worst": 2
+  },
+  "sink_cm": 9.5,
+  "sink_f": 7,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   1.2,
+   36.3
+  ],
+  "drift_cm": [
+   1.2,
+   29.2
+  ],
+  "slip_max_cm": 6.22,
+  "slip_f": 5,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 7,
+    "depth": 14.9,
+    "worst_f": 1,
+    "verts": 30
+   },
+   "L.upleg>tail": {
+    "frames": 3,
+    "depth": 12,
+    "worst_f": 1,
+    "verts": 19
+   },
+   "R.forearm>R.shoulder": {
+    "frames": 13,
+    "depth": 7.7,
+    "worst_f": 17,
+    "verts": 8
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 7,
+    "depth": 7.3,
+    "worst_f": 18,
+    "verts": 8
+   },
+   "L.forearm>spine1": {
+    "frames": 2,
+    "depth": 7.7,
+    "worst_f": 2,
+    "verts": 5
+   },
+   "R.hand>spine1": {
+    "frames": 4,
+    "depth": 12.4,
+    "worst_f": 6,
+    "verts": 28
+   },
+   "R.hand>spine2": {
+    "frames": 3,
+    "depth": 3.6,
+    "worst_f": 6,
+    "verts": 3
+   },
+   "R.forearm>spine1": {
+    "frames": 4,
+    "depth": 9.9,
+    "worst_f": 7,
+    "verts": 11
+   },
+   "head>L.hand": {
+    "frames": 3,
+    "depth": 4.8,
+    "worst_f": 16,
+    "verts": 4
+   },
+   "L.shoulder>L.forearm": {
+    "frames": 2,
+    "depth": 4.8,
+    "worst_f": 17,
+    "verts": 3
+   },
+   "head>R.hand": {
+    "frames": 2,
+    "depth": 4,
+    "worst_f": 17,
+    "verts": 3
+   }
+  },
+  "score": 113.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-fox-mirage",
+  "uses": "move:fox-mirage",
+  "frames": 28,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 14,
+   "recovery": 21,
+   "worst": 6
+  },
+  "sink_cm": 8.9,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   2.0,
+   24.6
+  ],
+  "drift_cm": [
+   0.5,
+   24.1
+  ],
+  "slip_max_cm": 1.52,
+  "slip_f": 20,
+  "inter": {
+   "L.hand>L.upleg": {
+    "frames": 1,
+    "depth": 8.4,
+    "worst_f": 1,
+    "verts": 11
+   },
+   "R.hand>spine": {
+    "frames": 7,
+    "depth": 18.2,
+    "worst_f": 2,
+    "verts": 68
+   },
+   "R.upleg>tail": {
+    "frames": 28,
+    "depth": 10.7,
+    "worst_f": 16,
+    "verts": 4
+   },
+   "R.forearm>spine": {
+    "frames": 6,
+    "depth": 11.8,
+    "worst_f": 6,
+    "verts": 7
+   },
+   "spine>R.hand": {
+    "frames": 2,
+    "depth": 5.3,
+    "worst_f": 6,
+    "verts": 10
+   },
+   "R.hand>spine1": {
+    "frames": 3,
+    "depth": 7.8,
+    "worst_f": 8,
+    "verts": 5
+   },
+   "R.forearm>spine1": {
+    "frames": 4,
+    "depth": 7.2,
+    "worst_f": 8,
+    "verts": 8
+   },
+   "R.forearm>R.shoulder": {
+    "frames": 4,
+    "depth": 6.2,
+    "worst_f": 11,
+    "verts": 3
+   },
+   "head>R.hand": {
+    "frames": 16,
+    "depth": 5.5,
+    "worst_f": 17,
+    "verts": 9
+   },
+   "head>R.forearm": {
+    "frames": 8,
+    "depth": 7.2,
+    "worst_f": 27,
+    "verts": 16
+   },
+   "R.hand>head": {
+    "frames": 6,
+    "depth": 9.5,
+    "worst_f": 26,
+    "verts": 11
+   },
+   "R.forearm>head": {
+    "frames": 1,
+    "depth": 8.5,
+    "worst_f": 28,
+    "verts": 5
+   }
+  },
+  "score": 111.0,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-jump",
+  "uses": "pose:Jump pose:Landing",
+  "frames": 53,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 27,
+   "recovery": 39,
+   "worst": 4
+  },
+  "sink_cm": 4.6,
+  "sink_f": 6,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   11.0,
+   32.3
+  ],
+  "drift_cm": [
+   7.0,
+   18.2
+  ],
+  "slip_max_cm": 2.21,
+  "slip_f": 7,
+  "inter": {
+   "head>L.arm": {
+    "frames": 10,
+    "depth": 8.4,
+    "worst_f": 4,
+    "verts": 40
+   },
+   "L.arm>head": {
+    "frames": 28,
+    "depth": 17.4,
+    "worst_f": 1,
+    "verts": 37
+   },
+   "R.arm>head": {
+    "frames": 15,
+    "depth": 13.9,
+    "worst_f": 2,
+    "verts": 31
+   },
+   "head>R.arm": {
+    "frames": 28,
+    "depth": 8.5,
+    "worst_f": 11,
+    "verts": 23
+   },
+   "L.forearm>head": {
+    "frames": 5,
+    "depth": 15.4,
+    "worst_f": 2,
+    "verts": 13
+   },
+   "head>L.forearm": {
+    "frames": 4,
+    "depth": 5.7,
+    "worst_f": 5,
+    "verts": 6
+   },
+   "R.upleg>tail": {
+    "frames": 15,
+    "depth": 13.3,
+    "worst_f": 44,
+    "verts": 19
+   },
+   "R.leg>R.toebase": {
+    "frames": 5,
+    "depth": 4,
+    "worst_f": 53,
+    "verts": 4
+   },
+   "L.upleg>tail": {
+    "frames": 2,
+    "depth": 11.5,
+    "worst_f": 53,
+    "verts": 4
+   }
+  },
+  "score": 107.6,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-shell-spin",
+  "uses": "move:shell-spin",
+  "frames": 48,
+  "hit": [
+   11,
+   28
+  ],
+  "picks": {
+   "start": 1,
+   "active": 11,
+   "recovery": 38,
+   "worst": 11
+  },
+  "sink_cm": 0.0,
+  "sink_f": 10,
+  "float_cm": 6.2,
+  "float_f": 27,
+  "float_frames": 41,
+  "slip_total_cm": [
+   0,
+   0
+  ],
+  "drift_cm": [
+   10.8,
+   0.0
+  ],
+  "slip_max_cm": 0,
+  "slip_f": 1,
+  "inter": {
+   "hips>R.hand": {
+    "frames": 10,
+    "depth": 3.2,
+    "worst_f": 11,
+    "verts": 13
+   },
+   "R.upleg>L.upleg": {
+    "frames": 23,
+    "depth": 9.2,
+    "worst_f": 12,
+    "verts": 17
+   },
+   "R.hand>spine": {
+    "frames": 15,
+    "depth": 7.3,
+    "worst_f": 11,
+    "verts": 15
+   },
+   "R.hand>hips": {
+    "frames": 6,
+    "depth": 4.6,
+    "worst_f": 11,
+    "verts": 5
+   },
+   "L.upleg>R.upleg": {
+    "frames": 38,
+    "depth": 10.9,
+    "worst_f": 17,
+    "verts": 16
+   },
+   "R.hand>spine1": {
+    "frames": 12,
+    "depth": 7,
+    "worst_f": 11,
+    "verts": 5
+   },
+   "R.upleg>L.leg": {
+    "frames": 2,
+    "depth": 4.5,
+    "worst_f": 10,
+    "verts": 7
+   },
+   "R.forearm>spine": {
+    "frames": 6,
+    "depth": 5.7,
+    "worst_f": 11,
+    "verts": 4
+   },
+   "R.foot>L.foot": {
+    "frames": 1,
+    "depth": 4.2,
+    "worst_f": 10,
+    "verts": 7
+   },
+   "L.foot>R.foot": {
+    "frames": 1,
+    "depth": 3.9,
+    "worst_f": 10,
+    "verts": 7
+   },
+   "R.leg>L.leg": {
+    "frames": 10,
+    "depth": 5.6,
+    "worst_f": 14,
+    "verts": 10
+   },
+   "L.foot>R.toebase": {
+    "frames": 1,
+    "depth": 3.2,
+    "worst_f": 11,
+    "verts": 8
+   },
+   "L.leg>R.leg": {
+    "frames": 10,
+    "depth": 6,
+    "worst_f": 16,
+    "verts": 17
+   },
+   "R.toebase>L.foot": {
+    "frames": 1,
+    "depth": 4.1,
+    "worst_f": 11,
+    "verts": 7
+   },
+   "L.toebase>R.foot": {
+    "frames": 1,
+    "depth": 3.2,
+    "worst_f": 11,
+    "verts": 4
+   },
+   "L.leg>R.upleg": {
+    "frames": 18,
+    "depth": 10.6,
+    "worst_f": 28,
+    "verts": 12
+   },
+   "L.foot>R.leg": {
+    "frames": 3,
+    "depth": 5.7,
+    "worst_f": 19,
+    "verts": 16
+   },
+   "R.leg>L.foot": {
+    "frames": 2,
+    "depth": 3.3,
+    "worst_f": 18,
+    "verts": 6
+   },
+   "L.hand>L.upleg": {
+    "frames": 9,
+    "depth": 7.3,
+    "worst_f": 34,
+    "verts": 15
+   },
+   "L.upleg>L.hand": {
+    "frames": 4,
+    "depth": 3.2,
+    "worst_f": 37,
+    "verts": 4
+   }
+  },
+  "score": 97.2,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-river-grab",
+  "uses": "move:river-grab",
+  "frames": 38,
+  "hit": [
+   7,
+   8
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 23,
+   "worst": 28
+  },
+  "sink_cm": 14.1,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   17.3,
+   4.3
+  ],
+  "drift_cm": [
+   13.7,
+   3.8
+  ],
+  "slip_max_cm": 1.59,
+  "slip_f": 4,
+  "inter": {
+   "R.hand>spine": {
+    "frames": 38,
+    "depth": 18.7,
+    "worst_f": 11,
+    "verts": 98
+   },
+   "R.forearm>spine": {
+    "frames": 38,
+    "depth": 12.2,
+    "worst_f": 38,
+    "verts": 16
+   },
+   "R.hand>tail": {
+    "frames": 33,
+    "depth": 17.2,
+    "worst_f": 38,
+    "verts": 47
+   },
+   "R.upleg>tail": {
+    "frames": 19,
+    "depth": 10.9,
+    "worst_f": 24,
+    "verts": 9
+   }
+  },
+  "score": 92.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-get-up",
+  "uses": "pose:GetUp",
+  "frames": 33,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 17,
+   "recovery": 24,
+   "worst": 20
+  },
+  "sink_cm": 7.8,
+  "sink_f": 2,
+  "float_cm": 3.6,
+  "float_f": 6,
+  "float_frames": 4,
+  "slip_total_cm": [
+   18.6,
+   54.9
+  ],
+  "drift_cm": [
+   12.6,
+   35.6
+  ],
+  "slip_max_cm": 19.73,
+  "slip_f": 20,
+  "inter": {
+   "R.leg>L.upleg": {
+    "frames": 1,
+    "depth": 4.9,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "L.leg>L.arm": {
+    "frames": 1,
+    "depth": 4.6,
+    "worst_f": 16,
+    "verts": 3
+   },
+   "R.upleg>R.arm": {
+    "frames": 5,
+    "depth": 7,
+    "worst_f": 18,
+    "verts": 9
+   },
+   "R.arm>R.upleg": {
+    "frames": 5,
+    "depth": 10.5,
+    "worst_f": 18,
+    "verts": 42
+   },
+   "R.upleg>spine1": {
+    "frames": 4,
+    "depth": 7.4,
+    "worst_f": 17,
+    "verts": 7
+   },
+   "R.leg>R.arm": {
+    "frames": 2,
+    "depth": 4.9,
+    "worst_f": 18,
+    "verts": 5
+   },
+   "R.forearm>R.leg": {
+    "frames": 1,
+    "depth": 4.3,
+    "worst_f": 19,
+    "verts": 5
+   },
+   "L.upleg>L.arm": {
+    "frames": 4,
+    "depth": 5.6,
+    "worst_f": 20,
+    "verts": 6
+   },
+   "L.upleg>spine1": {
+    "frames": 4,
+    "depth": 7.6,
+    "worst_f": 21,
+    "verts": 20
+   },
+   "L.leg>L.forearm": {
+    "frames": 1,
+    "depth": 5.6,
+    "worst_f": 22,
+    "verts": 5
+   },
+   "L.upleg>L.forearm": {
+    "frames": 1,
+    "depth": 4.4,
+    "worst_f": 25,
+    "verts": 4
+   }
+  },
+  "score": 92.0,
+  "air": false,
+  "lying": true,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-foxfire-cast",
+  "uses": "move:foxfire",
+  "frames": 49,
+  "hit": [
+   16,
+   19
+  ],
+  "picks": {
+   "start": 1,
+   "active": 16,
+   "recovery": 34,
+   "worst": 15
+  },
+  "sink_cm": 1.9,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   49.9,
+   71.8
+  ],
+  "drift_cm": [
+   29.9,
+   48.1
+  ],
+  "slip_max_cm": 6.82,
+  "slip_f": 9,
+  "inter": {
+   "head>R.hand": {
+    "frames": 3,
+    "depth": 5.2,
+    "worst_f": 9,
+    "verts": 13
+   },
+   "L.hand>spine1": {
+    "frames": 24,
+    "depth": 11.6,
+    "worst_f": 15,
+    "verts": 28
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 1,
+    "depth": 4.9,
+    "worst_f": 13,
+    "verts": 3
+   },
+   "L.forearm>spine1": {
+    "frames": 4,
+    "depth": 7.3,
+    "worst_f": 14,
+    "verts": 4
+   },
+   "L.upleg>tail": {
+    "frames": 31,
+    "depth": 16.6,
+    "worst_f": 25,
+    "verts": 62
+   },
+   "R.arm>head": {
+    "frames": 4,
+    "depth": 8.5,
+    "worst_f": 24,
+    "verts": 3
+   }
+  },
+  "score": 86.8,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-knockdown",
+  "uses": "pose:Knockdown pose:Ko",
+  "frames": 41,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 21,
+   "recovery": 30,
+   "worst": 15
+  },
+  "sink_cm": 2.2,
+  "sink_f": 1,
+  "float_cm": 65.8,
+  "float_f": 13,
+  "float_frames": 22,
+  "slip_total_cm": [
+   13.8,
+   0
+  ],
+  "drift_cm": [
+   11.3,
+   0.0
+  ],
+  "slip_max_cm": 3.12,
+  "slip_f": 6,
+  "inter": {
+   "L.upleg>spine1": {
+    "frames": 1,
+    "depth": 4.9,
+    "worst_f": 26,
+    "verts": 3
+   },
+   "R.upleg>spine1": {
+    "frames": 5,
+    "depth": 8.2,
+    "worst_f": 30,
+    "verts": 7
+   }
+  },
+  "score": 86.2,
+  "air": false,
+  "lying": true,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-heavy-kick",
+  "uses": "move:ryo-heavy-kick",
+  "frames": 38,
+  "hit": [
+   12,
+   15
+  ],
+  "picks": {
+   "start": 1,
+   "active": 12,
+   "recovery": 27,
+   "worst": 16
+  },
+  "sink_cm": 11.8,
+  "sink_f": 9,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   48.9,
+   0
+  ],
+  "drift_cm": [
+   32.8,
+   0.0
+  ],
+  "slip_max_cm": 3.73,
+  "slip_f": 9,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 16,
+    "depth": 14.5,
+    "worst_f": 1,
+    "verts": 25
+   },
+   "head>L.hand": {
+    "frames": 7,
+    "depth": 4.9,
+    "worst_f": 18,
+    "verts": 7
+   },
+   "head>L.forearm": {
+    "frames": 4,
+    "depth": 6.2,
+    "worst_f": 16,
+    "verts": 7
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 2,
+    "depth": 4.9,
+    "worst_f": 38,
+    "verts": 4
+   }
+  },
+  "score": 78.9,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-oni-quake",
+  "uses": "move:oni-quake",
+  "frames": 56,
+  "hit": [
+   28,
+   31
+  ],
+  "picks": {
+   "start": 1,
+   "active": 28,
+   "recovery": 44,
+   "worst": 3
+  },
+  "sink_cm": 1.4,
+  "sink_f": 1,
+  "float_cm": 3.0,
+  "float_f": 56,
+  "float_frames": 26,
+  "slip_total_cm": [
+   6.5,
+   0
+  ],
+  "drift_cm": [
+   6.4,
+   0.0
+  ],
+  "slip_max_cm": 0.73,
+  "slip_f": 25,
+  "inter": {
+   "R.forearm>L.shoulder": {
+    "frames": 15,
+    "depth": 5.1,
+    "worst_f": 21,
+    "verts": 13
+   },
+   "R.hand>L.arm": {
+    "frames": 56,
+    "depth": 7.4,
+    "worst_f": 29,
+    "verts": 41
+   },
+   "L.upleg>R.upleg": {
+    "frames": 26,
+    "depth": 8.5,
+    "worst_f": 1,
+    "verts": 11
+   },
+   "L.arm>R.hand": {
+    "frames": 28,
+    "depth": 3.5,
+    "worst_f": 25,
+    "verts": 4
+   },
+   "L.arm>L.upleg": {
+    "frames": 23,
+    "depth": 9.5,
+    "worst_f": 2,
+    "verts": 17
+   },
+   "L.upleg>L.forearm": {
+    "frames": 10,
+    "depth": 4.9,
+    "worst_f": 11,
+    "verts": 3
+   },
+   "R.upleg>L.upleg": {
+    "frames": 27,
+    "depth": 9.3,
+    "worst_f": 1,
+    "verts": 8
+   },
+   "L.arm>R.forearm": {
+    "frames": 3,
+    "depth": 3.6,
+    "worst_f": 2,
+    "verts": 4
+   },
+   "L.upleg>L.arm": {
+    "frames": 10,
+    "depth": 6.3,
+    "worst_f": 3,
+    "verts": 3
+   },
+   "R.forearm>L.arm": {
+    "frames": 23,
+    "depth": 7.4,
+    "worst_f": 25,
+    "verts": 9
+   },
+   "R.forearm>spine": {
+    "frames": 13,
+    "depth": 6.7,
+    "worst_f": 39,
+    "verts": 8
+   },
+   "R.forearm>spine1": {
+    "frames": 20,
+    "depth": 6.4,
+    "worst_f": 43,
+    "verts": 11
+   }
+  },
+  "score": 76.9,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-spirit-wave-cast",
+  "uses": "pose:Burst move:spirit-wave",
+  "frames": 44,
+  "hit": [
+   14,
+   14
+  ],
+  "picks": {
+   "start": 1,
+   "active": 14,
+   "recovery": 29,
+   "worst": 3
+  },
+  "sink_cm": 3.5,
+  "sink_f": 39,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   7.4,
+   41.0
+  ],
+  "drift_cm": [
+   10.3,
+   28.6
+  ],
+  "slip_max_cm": 2.2,
+  "slip_f": 8,
+  "inter": {
+   "head>R.arm": {
+    "frames": 8,
+    "depth": 8.8,
+    "worst_f": 5,
+    "verts": 24
+   },
+   "head>R.forearm": {
+    "frames": 6,
+    "depth": 6.9,
+    "worst_f": 2,
+    "verts": 14
+   },
+   "R.arm>head": {
+    "frames": 3,
+    "depth": 10.4,
+    "worst_f": 1,
+    "verts": 6
+   },
+   "head>R.hand": {
+    "frames": 8,
+    "depth": 4.6,
+    "worst_f": 3,
+    "verts": 10
+   },
+   "L.upleg>tail": {
+    "frames": 29,
+    "depth": 15.2,
+    "worst_f": 41,
+    "verts": 18
+   },
+   "R.leg>R.toebase": {
+    "frames": 3,
+    "depth": 2.8,
+    "worst_f": 25,
+    "verts": 3
+   }
+  },
+  "score": 74.6,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-block-low",
+  "uses": "pose:BlockLow",
+  "frames": 35,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 18,
+   "recovery": 26,
+   "worst": 33
+  },
+  "sink_cm": 2.2,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   9.9,
+   33.8
+  ],
+  "drift_cm": [
+   9.7,
+   26.1
+  ],
+  "slip_max_cm": 2.37,
+  "slip_f": 13,
+  "inter": {
+   "R.forearm>R.shoulder": {
+    "frames": 5,
+    "depth": 5.5,
+    "worst_f": 17,
+    "verts": 4
+   },
+   "L.upleg>tail": {
+    "frames": 18,
+    "depth": 15.2,
+    "worst_f": 34,
+    "verts": 25
+   },
+   "R.leg>R.toebase": {
+    "frames": 14,
+    "depth": 3.8,
+    "worst_f": 28,
+    "verts": 6
+   },
+   "R.toebase>R.leg": {
+    "frames": 13,
+    "depth": 6.1,
+    "worst_f": 35,
+    "verts": 5
+   },
+   "head>R.arm": {
+    "frames": 11,
+    "depth": 9.1,
+    "worst_f": 35,
+    "verts": 26
+   },
+   "head>R.forearm": {
+    "frames": 8,
+    "depth": 5.6,
+    "worst_f": 33,
+    "verts": 11
+   }
+  },
+  "score": 66.6,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-get-up",
+  "uses": "pose:GetUp",
+  "frames": 33,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 17,
+   "recovery": 24,
+   "worst": 1
+  },
+  "sink_cm": 0.0,
+  "sink_f": 15,
+  "float_cm": 4.0,
+  "float_f": 26,
+  "float_frames": 8,
+  "slip_total_cm": [
+   0.4,
+   0.9
+  ],
+  "drift_cm": [
+   0.5,
+   1.8
+  ],
+  "slip_max_cm": 0.88,
+  "slip_f": 33,
+  "inter": {
+   "R.leg>tail": {
+    "frames": 4,
+    "depth": 15.8,
+    "worst_f": 1,
+    "verts": 47
+   },
+   "L.upleg>tail": {
+    "frames": 1,
+    "depth": 11.1,
+    "worst_f": 1,
+    "verts": 7
+   },
+   "R.toebase>hips": {
+    "frames": 3,
+    "depth": 5.2,
+    "worst_f": 1,
+    "verts": 10
+   },
+   "R.toebase>tail": {
+    "frames": 2,
+    "depth": 12.8,
+    "worst_f": 1,
+    "verts": 20
+   },
+   "R.upleg>tail": {
+    "frames": 22,
+    "depth": 20.1,
+    "worst_f": 14,
+    "verts": 29
+   },
+   "R.upleg>R.toebase": {
+    "frames": 4,
+    "depth": 4,
+    "worst_f": 3,
+    "verts": 5
+   },
+   "R.upleg>R.foot": {
+    "frames": 2,
+    "depth": 3.1,
+    "worst_f": 4,
+    "verts": 3
+   },
+   "R.leg>hips": {
+    "frames": 7,
+    "depth": 4.5,
+    "worst_f": 13,
+    "verts": 3
+   },
+   "head>L.arm": {
+    "frames": 7,
+    "depth": 7.9,
+    "worst_f": 20,
+    "verts": 4
+   },
+   "L.arm>head": {
+    "frames": 3,
+    "depth": 9.3,
+    "worst_f": 20,
+    "verts": 7
+   }
+  },
+  "score": 61.5,
+  "air": false,
+  "lying": true,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-jump-back",
+  "uses": "pose:JumpBack",
+  "frames": 41,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 21,
+   "recovery": 30,
+   "worst": 16
+  },
+  "sink_cm": 7.3,
+  "sink_f": 22,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   44.6,
+   48.0
+  ],
+  "drift_cm": [
+   41.2,
+   27.5
+  ],
+  "slip_max_cm": 8.14,
+  "slip_f": 37,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 4,
+    "depth": 11.6,
+    "worst_f": 17,
+    "verts": 4
+   },
+   "L.leg>L.toebase": {
+    "frames": 3,
+    "depth": 3,
+    "worst_f": 31,
+    "verts": 4
+   }
+  },
+  "score": 59.7,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-iron-club-charge",
+  "uses": "move:iron-club-charge",
+  "frames": 32,
+  "hit": [
+   13,
+   18
+  ],
+  "picks": {
+   "start": 1,
+   "active": 13,
+   "recovery": 25,
+   "worst": 8
+  },
+  "sink_cm": 1.1,
+  "sink_f": 5,
+  "float_cm": 2.6,
+  "float_f": 32,
+  "float_frames": 16,
+  "slip_total_cm": [
+   3.7,
+   0
+  ],
+  "drift_cm": [
+   4.8,
+   0.0
+  ],
+  "slip_max_cm": 0.73,
+  "slip_f": 11,
+  "inter": {
+   "R.hand>L.arm": {
+    "frames": 32,
+    "depth": 7.4,
+    "worst_f": 15,
+    "verts": 41
+   },
+   "L.upleg>R.upleg": {
+    "frames": 12,
+    "depth": 7.2,
+    "worst_f": 5,
+    "verts": 10
+   },
+   "L.upleg>L.forearm": {
+    "frames": 2,
+    "depth": 4.5,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "L.arm>L.upleg": {
+    "frames": 9,
+    "depth": 6,
+    "worst_f": 1,
+    "verts": 6
+   },
+   "R.forearm>L.arm": {
+    "frames": 12,
+    "depth": 7.4,
+    "worst_f": 11,
+    "verts": 9
+   },
+   "R.upleg>L.upleg": {
+    "frames": 13,
+    "depth": 8.6,
+    "worst_f": 6,
+    "verts": 6
+   },
+   "R.forearm>L.shoulder": {
+    "frames": 11,
+    "depth": 5.1,
+    "worst_f": 7,
+    "verts": 13
+   },
+   "L.upleg>L.arm": {
+    "frames": 5,
+    "depth": 4.7,
+    "worst_f": 4,
+    "verts": 3
+   },
+   "L.arm>R.hand": {
+    "frames": 16,
+    "depth": 3.5,
+    "worst_f": 11,
+    "verts": 4
+   },
+   "R.forearm>spine": {
+    "frames": 13,
+    "depth": 6.7,
+    "worst_f": 25,
+    "verts": 8
+   },
+   "R.forearm>spine1": {
+    "frames": 11,
+    "depth": 6.4,
+    "worst_f": 29,
+    "verts": 11
+   }
+  },
+  "score": 59.4,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-walk-guard-fwd",
+  "uses": "pose:WalkFwd pose:Dash",
+  "frames": 104,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 52,
+   "recovery": 78,
+   "worst": 16
+  },
+  "sink_cm": 6.8,
+  "sink_f": 10,
+  "float_cm": 2.1,
+  "float_f": 46,
+  "float_frames": 2,
+  "slip_total_cm": [
+   92.5,
+   65.2
+  ],
+  "drift_cm": [
+   33.2,
+   24.2
+  ],
+  "slip_max_cm": 3.55,
+  "slip_f": 92,
+  "inter": {
+   "L.hand>spine": {
+    "frames": 104,
+    "depth": 13.9,
+    "worst_f": 24,
+    "verts": 34
+   },
+   "L.hand>spine1": {
+    "frames": 55,
+    "depth": 9.1,
+    "worst_f": 12,
+    "verts": 10
+   },
+   "L.forearm>spine": {
+    "frames": 100,
+    "depth": 12.2,
+    "worst_f": 31,
+    "verts": 10
+   },
+   "spine>L.hand": {
+    "frames": 95,
+    "depth": 5.1,
+    "worst_f": 6,
+    "verts": 11
+   },
+   "L.forearm>spine1": {
+    "frames": 63,
+    "depth": 7.8,
+    "worst_f": 11,
+    "verts": 5
+   }
+  },
+  "score": 58.7,
+  "air": false,
+  "lying": false,
+  "walk": true
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-medium-punch",
+  "uses": "move:ryo-medium-punch",
+  "frames": 21,
+  "hit": [
+   7,
+   9
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 15,
+   "worst": 11
+  },
+  "sink_cm": 3.2,
+  "sink_f": 21,
+  "float_cm": 2.3,
+  "float_f": 2,
+  "float_frames": 2,
+  "slip_total_cm": [
+   27.7,
+   28.1
+  ],
+  "drift_cm": [
+   20.7,
+   14.5
+  ],
+  "slip_max_cm": 4.14,
+  "slip_f": 7,
+  "inter": {
+   "R.upleg>tail": {
+    "frames": 18,
+    "depth": 16.3,
+    "worst_f": 9,
+    "verts": 45
+   },
+   "L.upleg>tail": {
+    "frames": 17,
+    "depth": 19.2,
+    "worst_f": 13,
+    "verts": 79
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 7,
+    "depth": 5.6,
+    "worst_f": 21,
+    "verts": 3
+   }
+  },
+  "score": 56.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-hit-low",
+  "uses": "pose:HitLow",
+  "frames": 17,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 9,
+   "recovery": 12,
+   "worst": 8
+  },
+  "sink_cm": 6.0,
+  "sink_f": 11,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   30.6,
+   20.4
+  ],
+  "drift_cm": [
+   8.2,
+   18.7
+  ],
+  "slip_max_cm": 10.88,
+  "slip_f": 4,
+  "inter": {
+   "head>R.hand": {
+    "frames": 8,
+    "depth": 5.5,
+    "worst_f": 2,
+    "verts": 11
+   },
+   "R.forearm>R.shoulder": {
+    "frames": 8,
+    "depth": 8.9,
+    "worst_f": 8,
+    "verts": 9
+   },
+   "R.hand>R.shoulder": {
+    "frames": 2,
+    "depth": 5.4,
+    "worst_f": 8,
+    "verts": 3
+   },
+   "L.upleg>tail": {
+    "frames": 5,
+    "depth": 11.5,
+    "worst_f": 14,
+    "verts": 7
+   },
+   "R.hand>head": {
+    "frames": 1,
+    "depth": 8.5,
+    "worst_f": 17,
+    "verts": 3
+   }
+  },
+  "score": 54.0,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-walk-guard-back",
+  "uses": "pose:WalkBack",
+  "frames": 104,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 52,
+   "recovery": 78,
+   "worst": 35
+  },
+  "sink_cm": 6.2,
+  "sink_f": 35,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   58.6,
+   97.5
+  ],
+  "drift_cm": [
+   42.8,
+   42.7
+  ],
+  "slip_max_cm": 3.03,
+  "slip_f": 25,
+  "inter": {
+   "spine>L.hand": {
+    "frames": 104,
+    "depth": 5.2,
+    "worst_f": 86,
+    "verts": 15
+   },
+   "L.hand>spine": {
+    "frames": 104,
+    "depth": 13.1,
+    "worst_f": 22,
+    "verts": 29
+   },
+   "L.forearm>spine": {
+    "frames": 104,
+    "depth": 12.1,
+    "worst_f": 14,
+    "verts": 10
+   },
+   "spine>L.forearm": {
+    "frames": 11,
+    "depth": 4,
+    "worst_f": 19,
+    "verts": 3
+   },
+   "L.hand>spine1": {
+    "frames": 17,
+    "depth": 7.5,
+    "worst_f": 34,
+    "verts": 5
+   },
+   "L.forearm>spine1": {
+    "frames": 27,
+    "depth": 7.9,
+    "worst_f": 35,
+    "verts": 5
+   }
+  },
+  "score": 53.8,
+  "air": false,
+  "lying": false,
+  "walk": true
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-dash-back",
+  "uses": "pose:DashBack",
+  "frames": 19,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 10,
+   "recovery": 14,
+   "worst": 14
+  },
+  "sink_cm": 3.5,
+  "sink_f": 5,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   35.1,
+   32.3
+  ],
+  "drift_cm": [
+   20.3,
+   14.3
+  ],
+  "slip_max_cm": 5.36,
+  "slip_f": 17,
+  "inter": {
+   "R.hand>head": {
+    "frames": 19,
+    "depth": 12.6,
+    "worst_f": 16,
+    "verts": 23
+   },
+   "R.forearm>R.shoulder": {
+    "frames": 19,
+    "depth": 7.2,
+    "worst_f": 17,
+    "verts": 7
+   },
+   "head>R.hand": {
+    "frames": 19,
+    "depth": 5.7,
+    "worst_f": 8,
+    "verts": 16
+   },
+   "head>L.hand": {
+    "frames": 4,
+    "depth": 3.6,
+    "worst_f": 15,
+    "verts": 6
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 2,
+    "depth": 4.2,
+    "worst_f": 14,
+    "verts": 4
+   }
+  },
+  "score": 52.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-river-grab",
+  "uses": "move:river-grab",
+  "frames": 38,
+  "hit": [
+   7,
+   8
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 23,
+   "worst": 25
+  },
+  "sink_cm": 1.8,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   16.8,
+   0
+  ],
+  "drift_cm": [
+   14.0,
+   0.0
+  ],
+  "slip_max_cm": 1.87,
+  "slip_f": 3,
+  "inter": {
+   "L.leg>R.upleg": {
+    "frames": 21,
+    "depth": 11.1,
+    "worst_f": 19,
+    "verts": 7
+   },
+   "R.hand>hips": {
+    "frames": 28,
+    "depth": 6.7,
+    "worst_f": 25,
+    "verts": 10
+   },
+   "R.upleg>L.upleg": {
+    "frames": 24,
+    "depth": 6,
+    "worst_f": 20,
+    "verts": 5
+   },
+   "L.upleg>R.upleg": {
+    "frames": 24,
+    "depth": 11.2,
+    "worst_f": 25,
+    "verts": 11
+   },
+   "hips>R.forearm": {
+    "frames": 20,
+    "depth": 3.5,
+    "worst_f": 26,
+    "verts": 7
+   },
+   "hips>R.hand": {
+    "frames": 20,
+    "depth": 3.4,
+    "worst_f": 23,
+    "verts": 5
+   }
+  },
+  "score": 51.2,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-heavy-punch",
+  "uses": "move:ryo-heavy-punch",
+  "frames": 34,
+  "hit": [
+   11,
+   14
+  ],
+  "picks": {
+   "start": 1,
+   "active": 11,
+   "recovery": 24,
+   "worst": 11
+  },
+  "sink_cm": 6.7,
+  "sink_f": 17,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   25.2
+  ],
+  "drift_cm": [
+   0.0,
+   10.5
+  ],
+  "slip_max_cm": 1.93,
+  "slip_f": 4,
+  "inter": {
+   "head>L.forearm": {
+    "frames": 2,
+    "depth": 5.1,
+    "worst_f": 4,
+    "verts": 5
+   },
+   "head>L.hand": {
+    "frames": 10,
+    "depth": 4.8,
+    "worst_f": 8,
+    "verts": 9
+   },
+   "R.upleg>tail": {
+    "frames": 18,
+    "depth": 10.7,
+    "worst_f": 19,
+    "verts": 9
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 10,
+    "depth": 7.9,
+    "worst_f": 11,
+    "verts": 9
+   }
+  },
+  "score": 45.9,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-knockdown",
+  "uses": "pose:Knockdown pose:Ko",
+  "frames": 41,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 21,
+   "recovery": 30,
+   "worst": 21
+  },
+  "sink_cm": 0.4,
+  "sink_f": 1,
+  "float_cm": 2.9,
+  "float_f": 5,
+  "float_frames": 11,
+  "slip_total_cm": [
+   3.3,
+   0
+  ],
+  "drift_cm": [
+   3.2,
+   0.0
+  ],
+  "slip_max_cm": 1.9,
+  "slip_f": 2,
+  "inter": {
+   "R.leg>R.toebase": {
+    "frames": 1,
+    "depth": 2.5,
+    "worst_f": 1,
+    "verts": 3
+   },
+   "R.upleg>tail": {
+    "frames": 15,
+    "depth": 15,
+    "worst_f": 6,
+    "verts": 22
+   },
+   "R.leg>hips": {
+    "frames": 2,
+    "depth": 4.9,
+    "worst_f": 7,
+    "verts": 4
+   },
+   "L.upleg>tail": {
+    "frames": 14,
+    "depth": 16.7,
+    "worst_f": 24,
+    "verts": 10
+   },
+   "R.arm>head": {
+    "frames": 3,
+    "depth": 11.2,
+    "worst_f": 21,
+    "verts": 9
+   },
+   "L.arm>head": {
+    "frames": 2,
+    "depth": 9.8,
+    "worst_f": 26,
+    "verts": 11
+   }
+  },
+  "score": 45.8,
+  "air": false,
+  "lying": true,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-medium-kick",
+  "uses": "move:ryo-medium-kick",
+  "frames": 24,
+  "hit": [
+   8,
+   10
+  ],
+  "picks": {
+   "start": 1,
+   "active": 8,
+   "recovery": 17,
+   "worst": 8
+  },
+  "sink_cm": 7.0,
+  "sink_f": 12,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   14.8,
+   0
+  ],
+  "drift_cm": [
+   6.4,
+   0.0
+  ],
+  "slip_max_cm": 2.32,
+  "slip_f": 2,
+  "inter": {
+   "R.upleg>R.hand": {
+    "frames": 4,
+    "depth": 4.4,
+    "worst_f": 3,
+    "verts": 7
+   },
+   "L.upleg>tail": {
+    "frames": 19,
+    "depth": 12.9,
+    "worst_f": 9,
+    "verts": 18
+   },
+   "R.hand>tail": {
+    "frames": 2,
+    "depth": 10,
+    "worst_f": 8,
+    "verts": 6
+   },
+   "R.upleg>tail": {
+    "frames": 6,
+    "depth": 10.7,
+    "worst_f": 15,
+    "verts": 4
+   }
+  },
+  "score": 43.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-jump-kick",
+  "uses": "move:ryo-air-kick",
+  "frames": 25,
+  "hit": [
+   7,
+   16
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 21,
+   "worst": 1
+  },
+  "sink_cm": 10.8,
+  "sink_f": 17,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   28.0
+  ],
+  "drift_cm": [
+   0.0,
+   19.3
+  ],
+  "slip_max_cm": 3.77,
+  "slip_f": 22,
+  "inter": {
+   "R.foot>L.upleg": {
+    "frames": 1,
+    "depth": 6.2,
+    "worst_f": 1,
+    "verts": 8
+   },
+   "R.toebase>L.upleg": {
+    "frames": 1,
+    "depth": 6.8,
+    "worst_f": 1,
+    "verts": 3
+   }
+  },
+  "score": 40.2,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-jump-punch",
+  "uses": "move:ryo-air-punch",
+  "frames": 25,
+  "hit": [
+   7,
+   16
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 21,
+   "worst": 1
+  },
+  "sink_cm": 10.8,
+  "sink_f": 17,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   28.0
+  ],
+  "drift_cm": [
+   0.0,
+   19.3
+  ],
+  "slip_max_cm": 3.77,
+  "slip_f": 22,
+  "inter": {
+   "R.foot>L.upleg": {
+    "frames": 1,
+    "depth": 6.2,
+    "worst_f": 1,
+    "verts": 8
+   },
+   "R.toebase>L.upleg": {
+    "frames": 1,
+    "depth": 6.8,
+    "worst_f": 1,
+    "verts": 3
+   }
+  },
+  "score": 40.2,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-spirit-wave-cast",
+  "uses": "pose:Burst move:spirit-wave",
+  "frames": 44,
+  "hit": [
+   14,
+   14
+  ],
+  "picks": {
+   "start": 1,
+   "active": 14,
+   "recovery": 29,
+   "worst": 34
+  },
+  "sink_cm": 1.5,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   26.1,
+   16.2
+  ],
+  "drift_cm": [
+   11.8,
+   19.0
+  ],
+  "slip_max_cm": 4.2,
+  "slip_f": 6,
+  "inter": {
+   "L.upleg>R.upleg": {
+    "frames": 20,
+    "depth": 10.8,
+    "worst_f": 33,
+    "verts": 14
+   },
+   "R.upleg>L.upleg": {
+    "frames": 16,
+    "depth": 9.8,
+    "worst_f": 43,
+    "verts": 26
+   }
+  },
+  "score": 39.6,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-light-punch",
+  "uses": "pose:Attack move:ryo-light-punch",
+  "frames": 13,
+  "hit": [
+   5,
+   6
+  ],
+  "picks": {
+   "start": 1,
+   "active": 5,
+   "recovery": 10,
+   "worst": 7
+  },
+  "sink_cm": 2.0,
+  "sink_f": 9,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   14.1,
+   8.4
+  ],
+  "drift_cm": [
+   11.0,
+   9.8
+  ],
+  "slip_max_cm": 3.26,
+  "slip_f": 2,
+  "inter": {
+   "R.arm>head": {
+    "frames": 11,
+    "depth": 11.7,
+    "worst_f": 8,
+    "verts": 11
+   },
+   "head>R.arm": {
+    "frames": 10,
+    "depth": 8.9,
+    "worst_f": 5,
+    "verts": 17
+   },
+   "head>L.hand": {
+    "frames": 10,
+    "depth": 5,
+    "worst_f": 7,
+    "verts": 11
+   }
+  },
+  "score": 37.5,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-dash-back",
+  "uses": "pose:DashBack",
+  "frames": 19,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 10,
+   "recovery": 14,
+   "worst": 5
+  },
+  "sink_cm": 3.5,
+  "sink_f": 5,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   63.4,
+   49.8
+  ],
+  "drift_cm": [
+   32.7,
+   30.8
+  ],
+  "slip_max_cm": 9.83,
+  "slip_f": 5,
+  "inter": {},
+  "score": 36.8,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-rising-talisman-strike",
+  "uses": "move:rising-talisman",
+  "frames": 41,
+  "hit": [
+   6,
+   13
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 27,
+   "worst": 8
+  },
+  "sink_cm": 0.8,
+  "sink_f": 6,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   22.1,
+   24.9
+  ],
+  "drift_cm": [
+   11.2,
+   11.6
+  ],
+  "slip_max_cm": 1.52,
+  "slip_f": 4,
+  "inter": {
+   "head>R.hand": {
+    "frames": 41,
+    "depth": 5.7,
+    "worst_f": 10,
+    "verts": 13
+   },
+   "R.hand>head": {
+    "frames": 35,
+    "depth": 16,
+    "worst_f": 8,
+    "verts": 41
+   },
+   "R.forearm>R.shoulder": {
+    "frames": 32,
+    "depth": 5.8,
+    "worst_f": 4,
+    "verts": 6
+   }
+  },
+  "score": 35.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-light-kick",
+  "uses": "move:ryo-light-kick",
+  "frames": 16,
+  "hit": [
+   6,
+   7
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 12,
+   "worst": 3
+  },
+  "sink_cm": 5.0,
+  "sink_f": 16,
+  "float_cm": 2.4,
+  "float_f": 4,
+  "float_frames": 1,
+  "slip_total_cm": [
+   13.4,
+   28.0
+  ],
+  "drift_cm": [
+   6.4,
+   22.8
+  ],
+  "slip_max_cm": 14.51,
+  "slip_f": 3,
+  "inter": {
+   "head>L.hand": {
+    "frames": 5,
+    "depth": 4.6,
+    "worst_f": 9,
+    "verts": 16
+   }
+  },
+  "score": 34.4,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-foxfire-cast",
+  "uses": "move:foxfire",
+  "frames": 49,
+  "hit": [
+   16,
+   19
+  ],
+  "picks": {
+   "start": 1,
+   "active": 16,
+   "recovery": 34,
+   "worst": 5
+  },
+  "sink_cm": 2.7,
+  "sink_f": 38,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   4.9,
+   41.9
+  ],
+  "drift_cm": [
+   0.9,
+   29.1
+  ],
+  "slip_max_cm": 5.41,
+  "slip_f": 5,
+  "inter": {},
+  "score": 31.6,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-jump-back",
+  "uses": "pose:JumpBack",
+  "frames": 41,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 21,
+   "recovery": 30,
+   "worst": 18
+  },
+  "sink_cm": 1.3,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   0,
+   17.2
+  ],
+  "drift_cm": [
+   5.1,
+   16.9
+  ],
+  "slip_max_cm": 9.26,
+  "slip_f": 3,
+  "inter": {
+   "R.upleg>spine1": {
+    "frames": 11,
+    "depth": 8.6,
+    "worst_f": 20,
+    "verts": 7
+   },
+   "R.upleg>R.arm": {
+    "frames": 4,
+    "depth": 6.8,
+    "worst_f": 26,
+    "verts": 5
+   }
+  },
+  "score": 28.4,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-generic-throw",
+  "uses": "move:ryo-generic-throw",
+  "frames": 30,
+  "hit": [
+   6,
+   12
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 21,
+   "worst": 2
+  },
+  "sink_cm": 2.2,
+  "sink_f": 26,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   15.3,
+   10.7
+  ],
+  "drift_cm": [
+   13.3,
+   26.7
+  ],
+  "slip_max_cm": 2.35,
+  "slip_f": 2,
+  "inter": {},
+  "score": 28.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-heavy-kick",
+  "uses": "move:ryo-heavy-kick",
+  "frames": 38,
+  "hit": [
+   12,
+   15
+  ],
+  "picks": {
+   "start": 1,
+   "active": 12,
+   "recovery": 27,
+   "worst": 9
+  },
+  "sink_cm": 4.9,
+  "sink_f": 9,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   29.0,
+   0
+  ],
+  "drift_cm": [
+   18.4,
+   0.0
+  ],
+  "slip_max_cm": 2.6,
+  "slip_f": 12,
+  "inter": {},
+  "score": 25.2,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-block-low",
+  "uses": "pose:BlockLow",
+  "frames": 35,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 18,
+   "recovery": 26,
+   "worst": 35
+  },
+  "sink_cm": 4.4,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   14.7,
+   9.4
+  ],
+  "drift_cm": [
+   12.9,
+   4.9
+  ],
+  "slip_max_cm": 1.4,
+  "slip_f": 12,
+  "inter": {
+   "R.arm>L.arm": {
+    "frames": 11,
+    "depth": 5.9,
+    "worst_f": 35,
+    "verts": 10
+   }
+  },
+  "score": 24.6,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-jump",
+  "uses": "pose:Jump pose:Landing",
+  "frames": 53,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 27,
+   "recovery": 39,
+   "worst": 25
+  },
+  "sink_cm": 4.8,
+  "sink_f": 6,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   21.3,
+   15.3
+  ],
+  "drift_cm": [
+   11.5,
+   17.3
+  ],
+  "slip_max_cm": 2.89,
+  "slip_f": 7,
+  "inter": {},
+  "score": 23.8,
+  "air": true,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-hit-low",
+  "uses": "pose:HitLow",
+  "frames": 17,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 9,
+   "recovery": 12,
+   "worst": 4
+  },
+  "sink_cm": 3.3,
+  "sink_f": 1,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   42.5,
+   19.4
+  ],
+  "drift_cm": [
+   20.1,
+   16.3
+  ],
+  "slip_max_cm": 12.53,
+  "slip_f": 4,
+  "inter": {},
+  "score": 23.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-block-high",
+  "uses": "pose:BlockHigh",
+  "frames": 11,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 8,
+   "worst": 11
+  },
+  "sink_cm": 2.5,
+  "sink_f": 11,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   2.9,
+   7.5
+  ],
+  "drift_cm": [
+   1.7,
+   7.5
+  ],
+  "slip_max_cm": 0.95,
+  "slip_f": 3,
+  "inter": {
+   "head>L.hand": {
+    "frames": 11,
+    "depth": 5.2,
+    "worst_f": 2,
+    "verts": 5
+   },
+   "L.forearm>L.shoulder": {
+    "frames": 3,
+    "depth": 4.8,
+    "worst_f": 4,
+    "verts": 3
+   },
+   "R.upleg>tail": {
+    "frames": 7,
+    "depth": 10.3,
+    "worst_f": 9,
+    "verts": 4
+   },
+   "head>R.hand": {
+    "frames": 1,
+    "depth": 4.4,
+    "worst_f": 11,
+    "verts": 3
+   }
+  },
+  "score": 19.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-rising-talisman-strike",
+  "uses": "move:rising-talisman",
+  "frames": 41,
+  "hit": [
+   6,
+   13
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 27,
+   "worst": 5
+  },
+  "sink_cm": 0.9,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   26.2,
+   40.1
+  ],
+  "drift_cm": [
+   8.8,
+   18.3
+  ],
+  "slip_max_cm": 1.51,
+  "slip_f": 8,
+  "inter": {},
+  "score": 17.0,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-hit-high",
+  "uses": "pose:HitHigh pose:Thrown",
+  "frames": 18,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 9,
+   "recovery": 13,
+   "worst": 5
+  },
+  "sink_cm": 3.1,
+  "sink_f": 3,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   4.1,
+   1.6
+  ],
+  "drift_cm": [
+   12.9,
+   0.4
+  ],
+  "slip_max_cm": 3.51,
+  "slip_f": 5,
+  "inter": {},
+  "score": 16.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-heavy-punch",
+  "uses": "move:ryo-heavy-punch",
+  "frames": 34,
+  "hit": [
+   11,
+   14
+  ],
+  "picks": {
+   "start": 1,
+   "active": 11,
+   "recovery": 24,
+   "worst": 17
+  },
+  "sink_cm": 4.4,
+  "sink_f": 19,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   11.7,
+   15.3
+  ],
+  "drift_cm": [
+   6.2,
+   3.8
+  ],
+  "slip_max_cm": 2.46,
+  "slip_f": 3,
+  "inter": {},
+  "score": 11.9,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-medium-kick",
+  "uses": "move:ryo-medium-kick",
+  "frames": 24,
+  "hit": [
+   8,
+   10
+  ],
+  "picks": {
+   "start": 1,
+   "active": 8,
+   "recovery": 17,
+   "worst": 13
+  },
+  "sink_cm": 3.2,
+  "sink_f": 20,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   3.9,
+   0
+  ],
+  "drift_cm": [
+   1.4,
+   0.0
+  ],
+  "slip_max_cm": 0.96,
+  "slip_f": 2,
+  "inter": {
+   "R.hand>spine": {
+    "frames": 1,
+    "depth": 5,
+    "worst_f": 6,
+    "verts": 3
+   },
+   "L.hand>R.leg": {
+    "frames": 3,
+    "depth": 4.2,
+    "worst_f": 13,
+    "verts": 9
+   },
+   "R.leg>L.hand": {
+    "frames": 3,
+    "depth": 3.1,
+    "worst_f": 13,
+    "verts": 3
+   },
+   "R.upleg>L.upleg": {
+    "frames": 2,
+    "depth": 4.5,
+    "worst_f": 17,
+    "verts": 3
+   }
+  },
+  "score": 11.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-light-punch",
+  "uses": "pose:Attack move:ryo-light-punch",
+  "frames": 13,
+  "hit": [
+   5,
+   6
+  ],
+  "picks": {
+   "start": 1,
+   "active": 5,
+   "recovery": 10,
+   "worst": 13
+  },
+  "sink_cm": 3.2,
+  "sink_f": 13,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   6.4,
+   2.7
+  ],
+  "drift_cm": [
+   4.2,
+   7.9
+  ],
+  "slip_max_cm": 1.47,
+  "slip_f": 2,
+  "inter": {},
+  "score": 11.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-medium-punch",
+  "uses": "move:ryo-medium-punch",
+  "frames": 21,
+  "hit": [
+   7,
+   9
+  ],
+  "picks": {
+   "start": 1,
+   "active": 7,
+   "recovery": 15,
+   "worst": 13
+  },
+  "sink_cm": 1.3,
+  "sink_f": 8,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   10.8,
+   0
+  ],
+  "drift_cm": [
+   6.5,
+   0.0
+  ],
+  "slip_max_cm": 1.45,
+  "slip_f": 3,
+  "inter": {
+   "L.upleg>R.upleg": {
+    "frames": 6,
+    "depth": 8.1,
+    "worst_f": 11,
+    "verts": 3
+   },
+   "R.upleg>L.upleg": {
+    "frames": 4,
+    "depth": 5.5,
+    "worst_f": 13,
+    "verts": 3
+   }
+  },
+  "score": 11.1,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-block-high",
+  "uses": "pose:BlockHigh",
+  "frames": 11,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 8,
+   "worst": 3
+  },
+  "sink_cm": 3.2,
+  "sink_f": 6,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   7.5,
+   6.3
+  ],
+  "drift_cm": [
+   7.2,
+   5.8
+  ],
+  "slip_max_cm": 1.19,
+  "slip_f": 2,
+  "inter": {},
+  "score": 10.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-generic-throw",
+  "uses": "move:ryo-generic-throw",
+  "frames": 30,
+  "hit": [
+   6,
+   12
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 21,
+   "worst": 27
+  },
+  "sink_cm": 1.9,
+  "sink_f": 30,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   4.4,
+   0
+  ],
+  "drift_cm": [
+   1.8,
+   3.2
+  ],
+  "slip_max_cm": 0.28,
+  "slip_f": 28,
+  "inter": {
+   "L.foot>R.foot": {
+    "frames": 3,
+    "depth": 4.9,
+    "worst_f": 27,
+    "verts": 6
+   },
+   "R.foot>L.foot": {
+    "frames": 1,
+    "depth": 4.6,
+    "worst_f": 27,
+    "verts": 8
+   },
+   "R.foot>L.toebase": {
+    "frames": 3,
+    "depth": 3.6,
+    "worst_f": 28,
+    "verts": 3
+   },
+   "L.toebase>R.foot": {
+    "frames": 1,
+    "depth": 2.5,
+    "worst_f": 29,
+    "verts": 4
+   }
+  },
+  "score": 9.2,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-idle-guard",
+  "uses": "pose:Idle",
+  "frames": 222,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 111,
+   "recovery": 166,
+   "worst": 203
+  },
+  "sink_cm": 2.0,
+  "sink_f": 203,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   76.8,
+   75.2
+  ],
+  "drift_cm": [
+   7.1,
+   7.2
+  ],
+  "slip_max_cm": 0.68,
+  "slip_f": 144,
+  "inter": {},
+  "score": 8.2,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-walk-guard-back",
+  "uses": "pose:WalkBack",
+  "frames": 104,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 52,
+   "recovery": 78,
+   "worst": 25
+  },
+  "sink_cm": 3.2,
+  "sink_f": 88,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   78.6,
+   96.1
+  ],
+  "drift_cm": [
+   70.4,
+   68.2
+  ],
+  "slip_max_cm": 4.99,
+  "slip_f": 25,
+  "inter": {},
+  "score": 6.4,
+  "air": false,
+  "lying": false,
+  "walk": true
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-crouch",
+  "uses": "pose:Crouch",
+  "frames": 1,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 1,
+   "recovery": 1,
+   "worst": 1
+  },
+  "sink_cm": 0.0,
+  "sink_f": 1,
+  "float_cm": 6.3,
+  "float_f": 1,
+  "float_frames": 1,
+  "slip_total_cm": [
+   0,
+   0
+  ],
+  "drift_cm": [
+   0.0,
+   0.0
+  ],
+  "slip_max_cm": 0,
+  "slip_f": 1,
+  "inter": {},
+  "score": 6.3,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-fox-mirage",
+  "uses": "move:fox-mirage",
+  "frames": 28,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 14,
+   "recovery": 21,
+   "worst": 28
+  },
+  "sink_cm": 0.0,
+  "sink_f": 1,
+  "float_cm": 4.7,
+  "float_f": 28,
+  "float_frames": 28,
+  "slip_total_cm": [
+   0,
+   0
+  ],
+  "drift_cm": [
+   0.0,
+   0.0
+  ],
+  "slip_max_cm": 0,
+  "slip_f": 1,
+  "inter": {},
+  "score": 4.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-light-kick",
+  "uses": "move:ryo-light-kick",
+  "frames": 16,
+  "hit": [
+   6,
+   7
+  ],
+  "picks": {
+   "start": 1,
+   "active": 6,
+   "recovery": 12,
+   "worst": 2
+  },
+  "sink_cm": 0.7,
+  "sink_f": 9,
+  "float_cm": 0.0,
+  "float_f": null,
+  "float_frames": 0,
+  "slip_total_cm": [
+   12.7,
+   0
+  ],
+  "drift_cm": [
+   6.3,
+   0.0
+  ],
+  "slip_max_cm": 6.39,
+  "slip_f": 2,
+  "inter": {},
+  "score": 4.7,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-walk-guard-fwd",
+  "uses": "pose:WalkFwd pose:Dash",
+  "frames": 104,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 52,
+   "recovery": 78,
+   "worst": 96
+  },
+  "sink_cm": 0.0,
+  "sink_f": 6,
+  "float_cm": 4.1,
+  "float_f": 96,
+  "float_frames": 94,
+  "slip_total_cm": [
+   0,
+   0
+  ],
+  "drift_cm": [
+   0.0,
+   0.0
+  ],
+  "slip_max_cm": 0,
+  "slip_f": 1,
+  "inter": {},
+  "score": 4.1,
+  "air": false,
+  "lying": false,
+  "walk": true
+ },
+ {
+  "body": "tanuki",
+  "clip": "ryo-idle-guard",
+  "uses": "pose:Idle",
+  "frames": 222,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 111,
+   "recovery": 166,
+   "worst": 187
+  },
+  "sink_cm": 1.3,
+  "sink_f": 205,
+  "float_cm": 2.3,
+  "float_f": 187,
+  "float_frames": 14,
+  "slip_total_cm": [
+   36.1,
+   0
+  ],
+  "drift_cm": [
+   3.4,
+   0.0
+  ],
+  "slip_max_cm": 0.4,
+  "slip_f": 167,
+  "inter": {},
+  "score": 2.9,
+  "air": false,
+  "lying": false,
+  "walk": false
+ },
+ {
+  "body": "ryo",
+  "clip": "ryo-crouch",
+  "uses": "pose:Crouch",
+  "frames": 1,
+  "hit": [],
+  "picks": {
+   "start": 1,
+   "active": 1,
+   "recovery": 1,
+   "worst": 1
+  },
+  "sink_cm": 0.0,
+  "sink_f": 1,
+  "float_cm": 2.1,
+  "float_f": 1,
+  "float_frames": 1,
+  "slip_total_cm": [
+   0,
+   0
+  ],
+  "drift_cm": [
+   0.0,
+   0.0
+  ],
+  "slip_max_cm": 0,
+  "slip_f": 1,
+  "inter": {},
+  "score": 0.0,
+  "air": false,
+  "lying": false,
+  "walk": false
+ }
+]

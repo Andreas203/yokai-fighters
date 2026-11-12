@@ -162,13 +162,16 @@ public sealed class FighterAnimSet
 		"res://assets/generated/clips/ryo-tripo/", "tanuki",
 		// Fix D: his belly and rigid tail on Ryo's thin lying clips (hip scale 0.638) sank 56 cm (knockdown f25) and
 		// 42 cm (get-up f13); finish-qa.md has the before and after.
-		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift });
+		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift },
+		// YOK-246: the composed down guard (ryo-block-low) floated him 5.7 cm; metres of hips lowered on that clip.
+		new Dictionary<string, float> { ["ryo-block-low"] = -0.03f });
 
 
 	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot, string fighter = "ryo",
-		IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null) => new()
+		IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null, IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
 		Fighter = fighter,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
 		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,
