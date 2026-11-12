@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_fc09y78b\front.png'
+Time: 00:00.59 (Saving: 00:00.11)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_tfx_tvrf\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_q20i7vp3\front.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_46tgu30f\side.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_7o26tynr\front.png'
+Time: 00:00.06 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_qwdo_xpw\side.png'
+Time: 00:00.05 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_k7v8jyws\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_as_poisz\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.04s
+measure_clip: oni-heavy-kick PASS frames=397 slide=0.25 cm/f accel=11.1 deg/f^2 reversals=8
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-heavy-kick\measure\oni-heavy-kick.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

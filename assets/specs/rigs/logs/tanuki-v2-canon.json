@@ -1,0 +1,355 @@
+{
+ "tool": "tools/blender/canon_tripo_rig.py",
+ "blender": "4.1.1",
+ "in": "tripo-out/tanuki-v2/rig/tripo-out/tanuki-v2-rig-21ae46c0/model.glb",
+ "out": "tripo-out/tanuki-v2/work/tanuki-v2-canon.glb",
+ "input_faults": {
+  "joint_nodes_with_trs": 65,
+  "note": "joint nodes carry TRS (rig v1.0); the frame fit still runs"
+ },
+ "v1_fixes": {
+  "drop_root": {
+   "Root": "Hips"
+  },
+  "root_weighted_influences": 0,
+  "face_z_yaw_deg": 270,
+  "added_leaves": {
+   "HeadTop_End": {
+    "parent": "Head",
+    "head_gltf_m": [
+     0.0015,
+     1.75,
+     0.0065
+    ]
+   },
+   "LeftToe_End": {
+    "parent": "LeftToeBase",
+    "head_gltf_m": [
+     0.3224,
+     0.0408,
+     0.2639
+    ]
+   },
+   "RightToe_End": {
+    "parent": "RightToeBase",
+    "head_gltf_m": [
+     -0.3219,
+     0.0408,
+     0.2683
+    ]
+   }
+  }
+ },
+ "frame_fit": {
+  "trusted_bind_max_dev": 2.6107451129973593e-06,
+  "R_skel_to_mesh": [
+   [
+    1,
+    0,
+    0
+   ],
+   [
+    0,
+    1,
+    0
+   ],
+   [
+    0,
+    0,
+    1
+   ]
+  ],
+  "t_m": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "s": 1.0,
+  "mean_clipped_dist_m": -1.0,
+  "runner_up_rotation_dist_m": -1.0,
+  "per_bone_median_dist_m": {}
+ },
+ "source_height_m": 0.6,
+ "height_m": 1.75,
+ "scale_factor": 2.916667,
+ "shift_before_scale_m": [
+  -0.0016,
+  0.0,
+  -0.02727
+ ],
+ "bones_in": 23,
+ "bones_out": 25,
+ "bones_out_names": [
+  "Hips",
+  "LeftUpLeg",
+  "LeftLeg",
+  "LeftFoot",
+  "LeftToeBase",
+  "LeftToe_End",
+  "RightUpLeg",
+  "RightLeg",
+  "RightFoot",
+  "RightToeBase",
+  "RightToe_End",
+  "Spine",
+  "Spine1",
+  "Spine2",
+  "LeftShoulder",
+  "LeftArm",
+  "LeftForeArm",
+  "LeftHand",
+  "Neck",
+  "Head",
+  "HeadTop_End",
+  "RightShoulder",
+  "RightArm",
+  "RightForeArm",
+  "RightHand"
+ ],
+ "fingers": {
+  "removed": [],
+  "verts_with_finger_weight": 0,
+  "rule": "finger weight added to the same-side Hand bone, then renormalised (E15 mitts)"
+ },
+ "weights": {
+  "max_influences": 4,
+  "unweighted": 0,
+  "renormalised_max_change": 0.0
+ },
+ "rest_vs_bind_max_offset_m": 0.0,
+ "frames_from": {
+  "ref": "game/assets/generated/characters/ryo/ryo-tripo-rigged.glb",
+  "swing_bones": [
+   "LeftUpLeg",
+   "LeftLeg",
+   "RightUpLeg",
+   "RightLeg"
+  ],
+  "rule": "world rest rotation = reference's (swing bones: plus the swing onto their own direction)",
+  "per_bone": {
+   "Hips": {
+    "vs_own_frame_deg": 5.2,
+    "axis_off_deg": 3.97
+   },
+   "LeftUpLeg": {
+    "vs_own_frame_deg": 89.8,
+    "axis_off_deg": 0.0
+   },
+   "LeftLeg": {
+    "vs_own_frame_deg": 96.4,
+    "axis_off_deg": 0.0
+   },
+   "LeftFoot": {
+    "vs_own_frame_deg": 43.7,
+    "axis_off_deg": 32.28
+   },
+   "LeftToeBase": {
+    "vs_own_frame_deg": 12.4,
+    "axis_off_deg": 10.06
+   },
+   "LeftToe_End": {
+    "vs_own_frame_deg": 12.4
+   },
+   "RightUpLeg": {
+    "vs_own_frame_deg": 90.0,
+    "axis_off_deg": 0.0
+   },
+   "RightLeg": {
+    "vs_own_frame_deg": 95.5,
+    "axis_off_deg": 0.0
+   },
+   "RightFoot": {
+    "vs_own_frame_deg": 59.6,
+    "axis_off_deg": 30.52
+   },
+   "RightToeBase": {
+    "vs_own_frame_deg": 12.3,
+    "axis_off_deg": 8.73
+   },
+   "RightToe_End": {
+    "vs_own_frame_deg": 12.3
+   },
+   "Spine": {
+    "vs_own_frame_deg": 86.4,
+    "axis_off_deg": 2.23
+   },
+   "Spine1": {
+    "vs_own_frame_deg": 82.4,
+    "axis_off_deg": 4.85
+   },
+   "Spine2": {
+    "vs_own_frame_deg": 77.8,
+    "axis_off_deg": 9.28
+   },
+   "LeftShoulder": {
+    "vs_own_frame_deg": 3.6,
+    "axis_off_deg": 3.62
+   },
+   "LeftArm": {
+    "vs_own_frame_deg": 176.3,
+    "axis_off_deg": 17.04
+   },
+   "LeftForeArm": {
+    "vs_own_frame_deg": 178.1,
+    "axis_off_deg": 22.71
+   },
+   "LeftHand": {
+    "vs_own_frame_deg": 179.9
+   },
+   "Neck": {
+    "vs_own_frame_deg": 98.6,
+    "axis_off_deg": 13.0
+   },
+   "Head": {
+    "vs_own_frame_deg": 98.6,
+    "axis_off_deg": 9.07
+   },
+   "HeadTop_End": {
+    "vs_own_frame_deg": 98.6
+   },
+   "RightShoulder": {
+    "vs_own_frame_deg": 3.6,
+    "axis_off_deg": 3.63
+   },
+   "RightArm": {
+    "vs_own_frame_deg": 28.1,
+    "axis_off_deg": 26.29
+   },
+   "RightForeArm": {
+    "vs_own_frame_deg": 176.8,
+    "axis_off_deg": 10.73
+   },
+   "RightHand": {
+    "vs_own_frame_deg": 67.3
+   }
+  }
+ },
+ "fist": null,
+ "joint_heads_gltf_m": {
+  "Hips": [
+   0.0275,
+   0.5516,
+   0.0449
+  ],
+  "LeftUpLeg": [
+   0.3129,
+   0.5988,
+   0.0081
+  ],
+  "LeftLeg": [
+   0.297,
+   0.2102,
+   0.037
+  ],
+  "LeftFoot": [
+   0.2569,
+   0.0532,
+   -0.0167
+  ],
+  "LeftToeBase": [
+   0.279,
+   0.0408,
+   0.078
+  ],
+  "LeftToe_End": [
+   0.3224,
+   0.0408,
+   0.2639
+  ],
+  "RightUpLeg": [
+   -0.2579,
+   0.5037,
+   0.0818
+  ],
+  "RightLeg": [
+   -0.2579,
+   0.2102,
+   0.0811
+  ],
+  "RightFoot": [
+   -0.2569,
+   0.0532,
+   0.0167
+  ],
+  "RightToeBase": [
+   -0.277,
+   0.0408,
+   0.0947
+  ],
+  "RightToe_End": [
+   -0.3219,
+   0.0408,
+   0.2683
+  ],
+  "Spine": [
+   0.023,
+   0.6686,
+   0.0383
+  ],
+  "Spine1": [
+   0.0165,
+   0.8347,
+   0.0288
+  ],
+  "Spine2": [
+   0.0101,
+   1.0008,
+   0.0193
+  ],
+  "LeftShoulder": [
+   0.004,
+   1.1667,
+   0.0098
+  ],
+  "LeftArm": [
+   0.3457,
+   1.1666,
+   0.0019
+  ],
+  "LeftForeArm": [
+   0.5403,
+   1.119,
+   0.0564
+  ],
+  "LeftHand": [
+   0.6714,
+   1.0952,
+   0.0977
+  ],
+  "Neck": [
+   0.0037,
+   1.1667,
+   0.0098
+  ],
+  "Head": [
+   0.0015,
+   1.2232,
+   0.0065
+  ],
+  "HeadTop_End": [
+   0.0015,
+   1.75,
+   0.0065
+  ],
+  "RightShoulder": [
+   0.0033,
+   1.1667,
+   0.0098
+  ],
+  "RightArm": [
+   -0.3383,
+   1.1666,
+   0.0178
+  ],
+  "RightForeArm": [
+   -0.5012,
+   1.119,
+   0.0943
+  ],
+  "RightHand": [
+   -0.6482,
+   1.0952,
+   0.0977
+  ]
+ }
+}

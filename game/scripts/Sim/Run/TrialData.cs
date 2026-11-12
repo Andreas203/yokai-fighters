@@ -32,6 +32,12 @@ public enum TrialEvent
 	Throw,
 	/// <summary>The player blocks the dummy's hits (<see cref="Match.Hit"/> from the dummy, Blocked true). Needs an attacking dummy.</summary>
 	Block,
+	/// <summary>
+	/// YOK-226: the player starts the named special (<see cref="Match.SpecialStarted"/>; an EX upgrade of the same use
+	/// does not count again), sampled on that tick. For a special that never hits (Fox Mirage's teleport, 0 damage).
+	/// Needs <c>move</c>; a command grab counts here too.
+	/// </summary>
+	Cast,
 }
 
 /// <summary>The dummy's state when a step is sampled (<see cref="TrialStep.Sample"/>). Any = not checked.</summary>
@@ -130,12 +136,19 @@ public sealed class TrialData
 	public IReadOnlyList<string> MoveProblems(IEnumerable<MoveData> kit)
 	{
 		var grab = new Dictionary<string, bool>(StringComparer.Ordinal);
-		foreach (var m in kit) grab[m.Id] = m.IsGrab; // YOK-225: a command grab is a throw here too (R7)
-		return MoveProblems(id => grab.TryGetValue(id, out bool g) ? g : null);
+		var special = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var m in kit)
+		{
+			grab[m.Id] = m.IsGrab; // YOK-225: a command grab is a throw here too (R7)
+			if (!m.IsNormal && !m.IsThrow) special.Add(m.Id); // YOK-226: a special (a command grab included), for cast steps
+		}
+		return MoveProblems(id => grab.TryGetValue(id, out bool g) ? g : null, special.Contains);
 	}
 
 	/// <summary>As <see cref="MoveProblems(IEnumerable{MoveData})"/>, with the kit given as a lookup.</summary>
-	public IReadOnlyList<string> MoveProblems(Func<string, bool?> isThrow)
+	/// <param name="isSpecial">YOK-226: whether a known move is a special; a cast step needs one (only a special start raises
+	/// Match.SpecialStarted). Null = not checked.</param>
+	public IReadOnlyList<string> MoveProblems(Func<string, bool?> isThrow, Func<string, bool>? isSpecial = null)
 	{
 		var problems = new List<string>();
 		for (int i = 0; i < Steps.Count; i++)
@@ -144,7 +157,9 @@ public sealed class TrialData
 			if (st.Move is null) continue;
 			bool? t = isThrow(st.Move);
 			if (t is null) problems.Add($"{Id}: goal.steps.{i}.move: unknown move '{st.Move}'");
-			else if (t == true && st.Event != TrialEvent.Throw)
+			else if (st.Event == TrialEvent.Cast && isSpecial is not null && !isSpecial(st.Move))
+				problems.Add($"{Id}: goal.steps.{i}.move: '{st.Move}' is not a special; a cast step names a special (YOK-226)");
+			else if (t == true && st.Event is not (TrialEvent.Throw or TrialEvent.Cast)) // YOK-226: a command grab is cast too
 				problems.Add($"{Id}: goal.steps.{i}.move: '{st.Move}' is a throw; throws only meet a throw step");
 			else if (t == false && st.Event == TrialEvent.Throw)
 				problems.Add($"{Id}: goal.steps.{i}.move: '{st.Move}' is not a throw");
@@ -291,6 +306,7 @@ public static class TrialLoader
 		var ev = e switch
 		{
 			"hit" => TrialEvent.Hit, "combo" => TrialEvent.Combo, "throw" => TrialEvent.Throw, "block" => TrialEvent.Block,
+			"cast" => TrialEvent.Cast, // YOK-226
 			_ => throw new FormatException($"{id}: {at}event: unknown event '{e}'"),
 		};
 		void Forbid(string key, string why) { if (o.ContainsKey(key)) throw new FormatException($"{id}: {at}{key}: {why}"); }
@@ -332,6 +348,10 @@ public static class TrialLoader
 			case TrialEvent.Block:
 				Forbid("move", "not for block"); Forbid("dummy_state", "not for block");
 				Forbid("distance", "not for block"); Forbid("counter", "not for block");
+				break;
+			case TrialEvent.Cast:
+				if (move is null) throw new FormatException($"{id}: {at}move: a cast step names the special it watches");
+				Forbid("counter", "not for cast");
 				break;
 			case TrialEvent.Throw:
 				Forbid("counter", "a throw is never a counterhit"); Forbid("count", "not for throw");

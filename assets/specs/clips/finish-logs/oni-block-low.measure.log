@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_vpzp_doc\front.png'
+Time: 00:00.60 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_tbee_8c4\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_n5r713bu\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_w9chitgb\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ekr7gjd_\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_jgguklx4\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_pefsfsvs\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_3yt4cagl\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.01s
+measure_clip: oni-block-low PASS frames=35 slide=0.47 cm/f accel=3.6 deg/f^2 reversals=0
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-block-low\measure\oni-block-low.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

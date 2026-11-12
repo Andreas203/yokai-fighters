@@ -107,7 +107,7 @@ public partial class FightScene
 			var profile = Profiles[_profileIndex % Profiles.Length];
 			var pressure = Pressure;
 			int reaction = pressure.ReactionFrames(Node?.ReactionFrames ?? profile.ReactionFrames); // Y4: the node's row, Y5: minus Tanuki wins
-			var loadout = AiLoadout.From(Match.P2);
+			var loadout = AiLoadout.From(Match.P2, NodeFight.HeldBack(Sources, Node, Opponent)); // YOK-226: rares held back off elder nodes
 			// YOK-174: on the real content a named move the kit lacks is an error, not a silent skip. TEST FIXTURE kits
 			// (Sources.FixturesOnly, MovesDir empty) never match the real profiles' move ids, so they are not checked.
 			string? why = _nodeProfileError;

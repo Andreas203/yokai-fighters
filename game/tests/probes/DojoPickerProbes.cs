@@ -67,7 +67,10 @@ public static class DojoPickerProbes
 	public static void LandedTrial_OnTheOnlyOffer_CardStillShowsTheTakenTrial()
 	{
 		var s = DojoTrialTests.AtDojo(500);
-		s.Trials = new[] { s.Trials[0] };
+		// YOK-226: built on purpose (s.Trials[0] is now fox-mirage-trial, for a special Ryo may not own): keep the trial of one offered special.
+		var offered = RestStopScreenModel.Create(s)!.Offers;
+		Assert.True(offered.Count > 0, "setup: a special with a trial is offered");
+		s.Trials = new[] { offered[0].Trial };
 		var m = RestStopScreenModel.Create(s)!;
 		Assert.Equal(1, m.Offers.Count, "single offer");
 		var slot = m.TrialOffer!.Slot;

@@ -471,6 +471,8 @@ public static class AbilityLoaderEffectsProbes
 		{
 			var a = mods[i]; var b = mods[(i + 5) % mods.Length];
 			if (!fx.Any(a.AppliesTo) || !fx.Any(b.AppliesTo)) continue;
+			// YOK-226: RandomFight needs a second special for b (sumo-stance fits only the one a already took): skip such a pair.
+			if (!fx.Any(s => b.AppliesTo(s) && s.Id != fx.First(a.AppliesTo).Id)) continue;
 			ulong h1 = RandomFight(7 + i, a, b), h2 = RandomFight(7 + i, a, b);
 			Assert.Equal(h1, h2, $"{a.Id}+{b.Id}: same seed, same hashes");
 			ulong h3 = RandomFight(1000 + i, a, b);

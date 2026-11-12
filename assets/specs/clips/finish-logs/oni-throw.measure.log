@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_khduat8t\front.png'
+Time: 00:00.55 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_vrzwqqkn\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_sc9pfzsf\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_93e0_b15\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_n6_k11kv\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_55t_ys95\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_g12s6axb\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_y1_h85ha\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.04s
+measure_clip: oni-throw PASS frames=337 slide=0.96 cm/f accel=7.4 deg/f^2 reversals=12
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-throw\measure\oni-throw.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

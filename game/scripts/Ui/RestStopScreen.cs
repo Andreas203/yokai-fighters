@@ -308,38 +308,52 @@ public partial class RestStopScreen : Control, INodeScene
 	public static bool NameFits(Font font, string text, float width, float height) =>
 		font.GetMultilineStringSize(text, HorizontalAlignment.Left, width, NameFontSize(font, text, width, height), 2).Y <= height;
 
+	/// <summary>Story ids of the stop's line: the dojo master's, and the merchant's row-4 card (also shown at row 7: S3 has no other).</summary>
+	public const string DojoLineId = "dojo-master-line", MerchantLineId = "merchant-row4";
+
 	private string DefaultLine(RestStopScreenModel m)
 	{
-		if (m.Kind == RestStopKind.Dojo) return "Dojo master's line (habit-writer: not written yet).";
-		if (m.Row != 4) return "Merchant's line for this stop (habit-writer: S3 schedules only row 4's).";
 		try
 		{
 			var story = Fight.FightScene.LoadStory();
-			if (story.Has("merchant-row4")) return story["merchant-row4"].FillText(move: m.Forecast?.Name ?? "special");
+			if (m.Kind == RestStopKind.Dojo) return story.Has(DojoLineId) ? story[DojoLineId].FillText() : "";
+			if (story.Has(MerchantLineId)) return story[MerchantLineId].FillText(move: m.Forecast?.Name ?? "special");
 		}
-		catch (Exception e) when (e is System.IO.IOException or FormatException) { GD.PushWarning($"RestStopScreen: no merchant line: {e.Message}"); }
-		return "Merchant's line (habit-writer).";
+		catch (Exception e) when (e is System.IO.IOException or FormatException or InvalidOperationException or System.Text.Json.JsonException)
+		{ GD.PushWarning($"RestStopScreen: no line: {e.Message}"); }
+		return "";
 	}
 
 	/// <summary>Head-and-shoulders crop of the shop's merchant plate (432x768): hat top to mid-chest, the 410:360 shape of the portrait box.</summary>
 	internal static readonly Rect2 MerchantBust = new(0, 92, 432, 379);
 
-	/// <summary>The merchant shows his Astra plate (YOK-159); the dojo master keeps the labelled placeholder until art exists.</summary>
+	/// <summary>The dojo master's plate (a generated file); the merchant's is the shop's crop.</summary>
+	public const string DojoPortraitPath = "res://assets/generated/ui/dojo-master-portrait.png";
+
+	/// <summary>The merchant shows his plate (YOK-159) and the dojo master hers; until the dojo file exists a red seal on paper stands in, never a dashed box.</summary>
 	private void BindPortrait(bool dojo)
 	{
 		var art = GetNode<TextureRect>("Portrait/Art");
-		art.Texture = dojo ? null : new AtlasTexture { Atlas = ShopArt.Portrait, Region = MerchantBust };
-		art.Visible = !dojo;
-		var label = L("Portrait/PortraitLabel");
-		label.Text = "dojo master (art to come)";
-		label.Visible = dojo;
-		if (GetNodeOrNull<RestStopScreenDecor>("Decor") is { } decor) decor.PortraitFilled = !dojo;
+		var dojoTex = dojo ? UiTextures.Load(DojoPortraitPath) : null;
+		art.Texture = dojo ? dojoTex ?? UiTextures.Load("res://assets/generated/ui/red-seal.png") : new AtlasTexture { Atlas = ShopArt.Portrait, Region = MerchantBust };
+		art.StretchMode = dojo && dojoTex is null ? TextureRect.StretchModeEnum.KeepAspectCentered : TextureRect.StretchModeEnum.KeepAspectCovered;
+		art.Visible = true;
+		L("Portrait/PortraitLabel").Visible = false; // no caption: the art speaks (the old "art to come" box is gone)
+		if (GetNodeOrNull<RestStopScreenDecor>("Decor") is { } decor) decor.PortraitFilled = true;
+	}
+
+	private static void SetGlyph(Control icon, GlyphKind kind)
+	{
+		if (icon.GetNodeOrNull<Label>("Glyph") is { } l) l.Visible = false;
+		var g = icon.GetNodeOrNull<TalismanGlyph>("Drawn");
+		if (g is null) { g = new TalismanGlyph { Name = "Drawn" }; icon.AddChild(g); g.SetAnchorsPreset(Control.LayoutPreset.FullRect); }
+		g.Kind = kind;
 	}
 
 	private void BindFree(RestStopScreenModel m, bool dojo)
 	{
 		var card = "FreeCard/Box/";
-		L(card + "Top/Icon/Glyph").Text = dojo ? "R" : "+";
+		SetGlyph(FreeCard.GetNode<Control>("Box/Top/Icon"), dojo ? GlyphKind.Rest : GlyphKind.Heal);
 		L(card + "Top/Titles/Title").Text = dojo ? "Rest" : "Free heal";
 		L(card + "Top/Titles/Sub").Text = dojo ? "Quiet night in the dojo" : "Merchant's gift · costs nothing";
 		Tag(FreeCard.GetNode<Control>("Box/Top/Tag"), dojo ? "REST" : "FREE");
@@ -370,7 +384,7 @@ public partial class RestStopScreen : Control, INodeScene
 	private void BindSecond(RestStopScreenModel m, bool dojo)
 	{
 		var card = "SecondCard/Box/";
-		L(card + "Top/Icon/Glyph").Text = dojo ? "T" : "¥";
+		SetGlyph(SecondCard.GetNode<Control>("Box/Top/Icon"), dojo ? GlyphKind.Trial : GlyphKind.Shop);
 		L(card + "Top/Titles/Title").Text = dojo ? "Training trial" : "Browse the shop";
 		L(card + "Top/Titles/Sub").Text = dojo ? "A drill for one special" : "Spend coins instead";
 		Tag(SecondCard.GetNode<Control>("Box/Top/Tag"), dojo ? "TRIAL" : "SHOP");

@@ -628,7 +628,8 @@ public static class ElderCancelRuleBreakerProbes
 		node["input"]!["kata"]!["slot"] = "D"; node["input"]!["kihon"]!["slot"] = "D";
 		var rare = SpecialLoader.Parse(node.ToJsonString(), "test-oni-rare");
 		var full = Pool();
-		var pool = new AbilityPool(full.Specials.Append(rare), full.Modifiers, full.Notes, full.CancelRules);
+		// YOK-226: the common Iron-Club Charge is an Oni special now; leave it out so the injected rare is the elder's only new special, as this probe assumes.
+		var pool = new AbilityPool(full.Specials.Where(x => !(x.Source == "oni" && !x.Starter && x.Rarity == "common")).Append(rare), full.Modifiers, full.Notes, full.CancelRules);
 		for (uint seed = 1; seed <= 20; seed++)
 		{
 			// A duel (not an elder) of the Oni never offers it (A9).
@@ -692,7 +693,8 @@ public static class ElderCancelRuleBreakerProbes
 		node["input"]!["kata"]!["slot"] = "D"; node["input"]!["kihon"]!["slot"] = "D";
 		var rare = SpecialLoader.Parse(node.ToJsonString(), "test-oni-rare");
 		var full = Pool();
-		var pool = new AbilityPool(full.Specials.Append(rare), full.Modifiers, full.Notes, full.CancelRules);
+		// YOK-226: the common Iron-Club Charge is an Oni special now; leave it out so the injected rare is the elder's only new special, as this probe assumes.
+		var pool = new AbilityPool(full.Specials.Where(x => !(x.Source == "oni" && !x.Starter && x.Rarity == "common")).Append(rare), full.Modifiers, full.Notes, full.CancelRules);
 		uint seed = 0;
 		for (uint x = 1; x < 64 && seed == 0; x++)
 		{

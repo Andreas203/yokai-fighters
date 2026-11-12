@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_d6d825ox\front.png'
+Time: 00:00.56 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_d1cx1178\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_i4a305fi\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_d9af7bu5\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_mct461fx\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_u13_5j3r\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ba1cxkwu\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_n8h3z1k0\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.01s
+measure_clip: oni-dash-back PASS frames=19 slide=3.51 cm/f accel=10.3 deg/f^2 reversals=12
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-dash-back\measure\oni-dash-back.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

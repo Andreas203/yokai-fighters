@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_6xeelp51\front.png'
+Time: 00:00.52 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_kg1hrbla\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_srw5w4rs\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ih034ovu\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_elnnfcqa\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_tr3z1vst\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_moo85oux\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_mb93nphg\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.02s
+measure_clip: oni-hit-high PASS frames=113 slide=0.73 cm/f accel=6.7 deg/f^2 reversals=1
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\oni-hit-high\measure\oni-hit-high.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

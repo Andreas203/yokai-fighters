@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "kappa-idle",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "free pose fallback (no Tripo v1.0 preset): ryo-idle-guard.glb",
+  "frames_total": 222,
+  "trim_start": 0,
+  "trim_end": 221,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/kappa/kappa-idle.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Tripo take ryo-idle-guard.glb retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.20 cm/frame).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-idle."
+}

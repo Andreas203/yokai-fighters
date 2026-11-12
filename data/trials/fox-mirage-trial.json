@@ -1,0 +1,41 @@
+{
+  "kind": "trial",
+  "id": "fox-mirage-trial",
+  "status": "proposed",
+  "special": "fox-mirage",
+  "prompt": "Vanish with Fox Mirage from across the dojo, then land a hit on the dummy from behind.",
+  "attempts": 3,
+  "setup": {
+    "distance": 500,
+    "attempt_frames": 600,
+    "dummy": {
+      "action": "idle"
+    }
+  },
+  "goal": {
+    "steps": [
+      {
+        "event": "cast",
+        "move": "fox-mirage",
+        "distance": {
+          "min": 300
+        }
+      },
+      {
+        "event": "hit",
+        "distance": {
+          "max": 260
+        }
+      }
+    ]
+  },
+  "rules": [
+    "R7",
+    "K1",
+    "K2",
+    "K3",
+    "F3",
+    "T0"
+  ],
+  "notes": "Teaches Fox Mirage as a way to get behind the opponent. The move never hits (0 damage), so step 1 is a cast event (met when the special starts, an EX counts once) sampled at 300 or more units, and step 2 accepts any Kihon normal at 260 or less, which the teleport makes easy: it lands just behind the dummy. The dummy never attacks, so it is completable on the first try. Kihon: down + Special, slot D. Harness to confirm."
+}

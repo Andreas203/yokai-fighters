@@ -1,0 +1,149 @@
+{
+  "kind": "special",
+  "id": "river-grab",
+  "name": "River Grab",
+  "status": "proposed",
+  "source": "kappa",
+  "starter": false,
+  "rarity": "common",
+  "locked": false,
+  "clip": "kappa-river-grab",
+  "rules": [
+    "A11",
+    "A12",
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "C4",
+    "C5",
+    "E12",
+    "E16",
+    "E17",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "R7",
+    "T0",
+    "V8",
+    "X4"
+  ],
+  "input": {
+    "kata": {
+      "slot": "C",
+      "motion": "214"
+    },
+    "kihon": {
+      "slot": "C",
+      "direction": "back"
+    }
+  },
+  "card": {
+    "plain": "Lunge and seize a standing foe; a grab can't be blocked.",
+    "frames": "6 / 2 / 30 frames, 130 damage, grab reaches 160 units, breakable in 7 frames"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "damage",
+        "op": "mul_pct",
+        "value": 130
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 6,
+        "active": 2,
+        "recovery": 30,
+        "damage": 130,
+        "hitboxes": [
+          {
+            "frames": [
+              7,
+              8
+            ],
+            "rect": {
+              "x": 20,
+              "y": 135,
+              "w": 140,
+              "h": 105
+            }
+          }
+        ],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              38
+            ],
+            "rect": {
+              "x": -65,
+              "y": 0,
+              "w": 130,
+              "h": 310
+            }
+          }
+        ],
+        "cancel_windows": [
+          {
+            "frames": [
+              9,
+              32
+            ],
+            "on": [
+              "hit"
+            ]
+          }
+        ],
+        "properties": {
+          "throw": {
+            "range": 160,
+            "breakable": true,
+            "break_window": 7
+          }
+        }
+      },
+      "preset": "river-grab-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -6
+      },
+      "card": {
+        "plain": "Lv 1 → Lv 2: you recover 6 frames faster, so a missed grab costs less.",
+        "frames": "Lv 1 → Lv 2: recovery -6 (6 / 2 / 24 frames), 130 damage, grab reaches 160 units"
+      },
+      "preset": "river-grab-lv2",
+      "notes": "Proposed (open question, A4). Changes how you fight: a whiffed command grab is the Kappa's big risk (30 recovery frames in the open), so 24 makes the reach a bait you can afford to throw out, instead of a bet. Recovery still outlasts the 7-frame break window (E12). Data only: the clip tail is cut (the clip's last frames are a blend-out). Rejected: range +20% (it would stack with Whirlpool Grab's +50% and double up on the same axis), damage +10% (damage-only, P1). Overlap to decide: none with Brute Recovery (a grab is never blocked)."
+    },
+    "3": {
+      "evolution": {
+        "id": "whirlpool-grab",
+        "name": "Whirlpool Grab",
+        "status": "proposed",
+        "preset": "whirlpool-grab",
+        "changes": [
+          {
+            "target": "properties.throw.range",
+            "op": "mul_pct",
+            "value": 150
+          }
+        ],
+        "card": {
+          "plain": "A swirl of water reaches out and drags in foes from much farther away.",
+          "frames": "6 / 2 / 24 frames, 130 damage, grab reaches 240 units (+50%)"
+        }
+      }
+    }
+  },
+  "notes": "Clip kappa-river-grab (GREYBOX reuse of the generic throw take, ryo-generic-throw / kappa-throw, Meshy preset 259, trim raw 30-59 at about 0.8x, route A of YOK-219): 6/2/30 = 38 frames = the rules.md row, no deviation. The clip's palm reach starts at raw 35, which the curve puts on frame 7 (the first active frame); Startup 6 is one frame slower than the generic throw's 5 (C4), as the table says. Command grab (YOK-225): properties.throw {range 160, breakable true, break_window 7 = C4}; the hitbox places the grab (near edge x 20, y 135, h 105, frames 7-8) and range is the reach from the origin, so the box spans x 20-160 (the generic Kappa throw reaches 140); the box width is not read, I wrote it as range - x. It never strikes, so no hitstun or blockstun. Counts as a throw (C4, R7): the trial uses a throw step, and Undertow (X4) may cancel out of the landed grab: cancel_windows frames 9-32 on hit (a held grab can't be cancelled, the sim refuses it, so the window only opens once the foe is down; at Lv 2 the move is 32 frames, so the window ends on the last frame). Recovery 30 outlasts the break window 7 (E12). Damage 130 = table. Slot C (214 / back) for a Kappa common, as Foxfire and Iron-Club Charge: a proposal, rules.md names no slot. EX (C5, E16) first pass, my proposal: +30% damage (169), as the Oni's specials; LP+LK stays the throw and wins (E12). Lv 3 Whirlpool Grab = rules table: +50% range (throw.range mul_pct 150: 160 -> 240); it keeps the Lv 2 step (E17). T0: the Tanuki casts it on Ryo's body with ryo-river-grab, the same frames; presentation needs ClipOverrides[\"kappa-river-grab\"] = \"ryo-river-grab\" in FighterAnimSet.RyoBody (code, reported not changed). Forward step of the throw clip is not encoded (same open item as the generic throws, E15). Box estimates, not re-placed from the posed rig. Presets river-grab-lv1, river-grab-lv2, whirlpool-grab are named, files are Asset Smith's."
+}

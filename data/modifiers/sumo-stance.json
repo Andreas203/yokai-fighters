@@ -1,0 +1,60 @@
+{
+  "kind": "modifier",
+  "id": "sumo-stance",
+  "name": "Sumo Stance",
+  "status": "proposed",
+  "source": "kappa",
+  "rarity": "common",
+  "locked": true,
+  "rules": [
+    "A10",
+    "A11",
+    "A12",
+    "A2",
+    "A8",
+    "A9",
+    "K3"
+  ],
+  "applies_to": {
+    "requires": [],
+    "excludes": [
+      "projectile"
+    ]
+  },
+  "charge": {
+    "button": "special_trigger",
+    "window_ticks": {
+      "min": 6,
+      "max": 30,
+      "status": "proposed"
+    },
+    "step_ticks": 8,
+    "grace_ticks": 0,
+    "release": "dash_then_move",
+    "hold_pose_clip": "ryo-crouch",
+    "dash": {
+      "duration": "startup",
+      "units_per_tick_by_step": [
+        6,
+        10,
+        14,
+        18
+      ],
+      "cap_units_per_tick": 18,
+      "status": "proposed"
+    }
+  },
+  "effects": [
+    {
+      "target": "properties.forward_travel",
+      "op": "set",
+      "value": "charge_dash",
+      "when": "charge_released"
+    }
+  ],
+  "card": {
+    "plain": "Hold the special's button before it fires: the longer you hold, the faster you dash in, up to a top speed.",
+    "frames": "Hold 6-30 ticks; dash 6 / 10 / 14 / 18 units per tick through startup (top speed 18)"
+  },
+  "notes": "AM11 (decided 2026-10-20): holding gives a faster dash and nothing is added to damage; no new animation (A10), the hold plays an existing clip (ryo-crouch, as the engine test fixture does; there is no Kappa crouch clip, presentation only). Engine: YOK-171 (ChargeSpec). window_ticks min 6 / max 30 (a release below 6 starts the special with no dash, reaching 30 starts it at once); step_ticks 8 (step = held / 8, so a hold of 6-7 ticks is step 0, 8-15 step 1, 16-23 step 2, 24-30 step 3); dash speeds 6 / 10 / 14 / 18 gameplay units per tick through the special's startup frames, capped at 18. Integers only (F3). Every number is a first pass, marked proposed: the rules give none. A dash of 18 per tick over River Grab's 6 startup frames is 108 units, over Shell Spin's 10 frames 180. Applies to any special except a projectile. Locked (A11, the diamond). OPEN with the designer: YOK-210 (the hold behaviour built in PR #244) and what the Tanuki does when it copies a charged special (T4, rules.md open questions). Same data in Kata and Kihon (K3). Effect from the rules.md modifiers table and AM11."
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "level_preset",
+  "id": "mirage-feint",
+  "special": "fox-mirage",
+  "level": 3,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#FBF6EC",
+  "spark": {
+    "colour": "#F2A23A",
+    "scale_pct": 130
+  },
+  "cast": {
+    "look": "afterimage",
+    "scale_pct": 110
+  },
+  "impact": {
+    "look": "ink_splash"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 3 evolution: Fur white #FBF6EC (style.md palette). Spark stays foxfire orange #F2A23A so the hit still reads as its source (V5), 30% larger. YOK-242 (proposed): the afterimage stands on the decoy until the sim removes it (white, 10% larger); a hit it absorbs splashes."
+}

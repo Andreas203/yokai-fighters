@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "ryo-river-grab",
+  "status": "proposed",
+  "file": "assets/generated/clips/ryo/ryo-river-grab.glb",
+  "hit_start": 7,
+  "hit_end": 8,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:lift_heavy",
+  "frames_total": 38,
+  "retarget_notes": "Tripo take lift_heavy retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.38 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-river-grab.",
+  "trim_start": 1128,
+  "trim_end": 1172,
+  "retime": [
+    {
+      "frames": [
+        1,
+        7
+      ],
+      "ticks": [
+        1128,
+        1140
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        7,
+        9
+      ],
+      "ticks": [
+        1140,
+        1144
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        9,
+        38
+      ],
+      "ticks": [
+        1144,
+        1172
+      ],
+      "note": "recovery eases out"
+    }
+  ]
+}

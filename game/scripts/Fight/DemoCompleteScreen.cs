@@ -43,5 +43,11 @@ public partial class DemoCompleteScreen : Control
 		Visible = false;
 	}
 
+	/// <summary>The fighter fought last: its plate in the panel's mask slot, the seal while it has no art.</summary>
+	public void SetPortrait(string fighterId)
+	{
+		if (GetNodeOrNull<TextureRect>("Panel/Mask") is { } mask) mask.Texture = FightHud.PortraitTexture(fighterId);
+	}
+
 	public new void Show() { Visible = true; Restart.GrabFocus(); }
 }

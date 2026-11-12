@@ -90,6 +90,7 @@ public sealed partial class Fighter
 		DashFrame = 0;
 		DashDir = 0;
 		WalkDir = 0;
+		Launched = false; // YOK-226
 		ResetSpecialState(); // YOK-21 (equipped specials and held cancel rules are run state and stay)
 	}
 
@@ -115,7 +116,7 @@ public sealed partial class Fighter
 		h = Fnv.Mix(h, DashDir);
 		h = Fnv.Mix(h, (int)Input.Pending.Kind);
 		if (PushWidth != 0) h = Fnv.Mix(h, PushWidth); // YOK-136: only when set, so fights without one hash as before
-		return HashSpecialState(h);
+		return HashSpecialState(HashReaction(h));
 	}
 }
 

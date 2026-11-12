@@ -72,7 +72,7 @@ public static class PerYokaiProfileTests
 		var ground = oni.Moves.Where(m => m.IsNormal && !m.Air).Select(m => m.Id).ToArray();
 		Assert.Equal(5, ground.Length, "the Oni's five data normals: " + string.Join(",", ground));
 		Assert.True(ground.All(id => id.StartsWith("oni-")), "only Oni ground normals: " + string.Join(",", ground));
-		Assert.Equal(0, oni.Specials.Length, "the Oni has no special in data, and never the Kitsune's Foxfire");
+		Assert.True(oni.Specials.All(s => s.Source == "oni"), "the Oni has only his own specials, never the Kitsune's Foxfire (YOK-226: his specials are in data now)");
 		Assert.True(oni.Moves.Count(m => m.IsThrow) == 1 && oni.Moves.First(m => m.IsThrow).Id == kitsune.Moves.First(m => m.IsThrow).Id, "throw: the body's (C4)");
 		Assert.Equal(150, FighterData.Load(Sources.FightersDir, "oni").PushWidth ?? 0, "data/fighters/oni.json push width");
 
@@ -80,7 +80,7 @@ public static class PerYokaiProfileTests
 		var kappaGround = kappa.Moves.Where(m => m.IsNormal && !m.Air).Select(m => m.Id).ToArray();
 		Assert.Equal(6, kappaGround.Length, "the Kappa's six data normals: " + string.Join(",", kappaGround));
 		Assert.True(kappaGround.All(id => id.StartsWith("kappa-")), "only Kappa ground normals: " + string.Join(",", kappaGround));
-		Assert.Equal(0, kappa.Specials.Length, "the Kappa has no special in data, and never the Kitsune's Foxfire");
+		Assert.True(kappa.Specials.All(s => s.Source == "kappa"), "the Kappa has only his own specials, never the Kitsune's Foxfire (YOK-226: his specials are in data now)");
 		Assert.True(kappa.Moves.Count(m => m.IsThrow) == 1 && kappa.Moves.First(m => m.IsThrow).Id == "kappa-throw", "throw: the Kappa's own (C4, YOK-228)");
 		// No Kappa air normal in data yet: the body's stand in (the Kitsune's, today Ryo's TEST FIXTURE air punch and kick).
 		var kappaAir = kappa.Moves.Where(m => m.IsNormal && m.Air).Select(m => m.Id).ToArray();

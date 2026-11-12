@@ -11,7 +11,7 @@ public static class AbilityIconScreensProbes
 	static TargetCard Target(Node host) { var t = GD.Load<PackedScene>("res://scenes/ui/target_card.tscn").Instantiate<TargetCard>(); host.AddChild(t); return t; }
 	static MoveSlotCard Slot(Node host) { var s = GD.Load<PackedScene>("res://scenes/ui/move_slot_card.tscn").Instantiate<MoveSlotCard>(); host.AddChild(s); return s; }
 	static CardView Up(int to, string id = "foxfire") => new(CardKind.Upgrade, id, "N", "s", "p", "f", "UPGRADE", null, to);
-	static CardView Mod() => new(CardKind.Modifier, "foxfire", "M", "s", "p", "f", "MODIFIER");
+	static CardView Mod() => new(CardKind.Modifier, "zz-no-icon-file", "M", "s", "p", "f", "MODIFIER");
 	static SlotRow Row(string slot, bool empty, string id, string name = "Foxfire") => new(slot, empty, name, 1, 3, "k", "k", "p", "f", MoveId: id);
 
 	// YOK-81: pips are for a Lv 3 upgrade only; rebinding the same node to a modifier must clear them.

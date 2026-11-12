@@ -48,7 +48,7 @@ public static class TallCameraProbes
 			}
 	}
 
-	// AM10: only the Oni (3.15 m) is tall; argument order must not matter.
+	// AM10: only the Oni (3.23 m, YOK-finish-qa: hips raised 8 cm) is tall; argument order must not matter.
 	[Test]
 	public static void ForBodies_OrderUnknownIdsAndOniVsOni()
 	{
@@ -58,7 +58,7 @@ public static class TallCameraProbes
 		Assert.True(ReferenceEquals(d, d.ForBodies("elder-oni-xyz", "")), "unknown ids stay default");
 		Assert.True(ReferenceEquals(d, d.ForBodies("ONI", "Kitsune")), "ids are lowercase body ids; unknown case stays default");
 		Assert.True(ReferenceEquals(a, a.ForBodies("oni", "ryo")), "re-framing a tall config for the Oni returns it unchanged");
-		Assert.Equal(3.15f, a.ModelTopMeters, "tall top");
+		Assert.Equal(3.23f, a.ModelTopMeters, "tall top");
 		Assert.Equal(1040f, a.FeetClearPx, "tall feet line");
 		Assert.True(ReferenceEquals(d, d.ForBodies("kappa", "kappa")), "kappa vs kappa is default");
 	}

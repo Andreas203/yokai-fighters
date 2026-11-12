@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "ryo-iron-club-charge",
+  "status": "proposed",
+  "file": "assets/generated/clips/ryo/ryo-iron-club-charge.glb",
+  "hit_start": 13,
+  "hit_end": 18,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:slash",
+  "frames_total": 32,
+  "retarget_notes": "Tripo take slash retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.25 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-iron-club-charge.",
+  "trim_start": 168,
+  "trim_end": 230,
+  "retime": [
+    {
+      "frames": [
+        1,
+        13
+      ],
+      "ticks": [
+        168,
+        192
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        13,
+        19
+      ],
+      "ticks": [
+        192,
+        204
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        19,
+        32
+      ],
+      "ticks": [
+        204,
+        230
+      ],
+      "note": "recovery eases out"
+    }
+  ]
+}

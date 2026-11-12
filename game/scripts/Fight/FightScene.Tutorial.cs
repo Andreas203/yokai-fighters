@@ -43,6 +43,13 @@ public partial class FightScene
 		Tutorial = null;
 		Coach = null;
 		if (!IsGuided(TutorialAllowed, Node)) { RenderTutorial(); return; }
+		try { TutorialPrompts.Library ??= LoadStory(); }
+		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
+			or System.Collections.Generic.KeyNotFoundException or System.InvalidOperationException)
+		{
+			GD.PushWarning($"tutorial prompts unavailable (bad story file): {e.Message}"); // a bad card must not crash the guided fight
+		}
+		SetTutorialKeyNames();
 		Tutorial = new ApprenticeTutorial(Match, TutorialOptions, 0);
 		Tutorial.Completed += t => TutorialFinished?.Invoke(t);
 		Coach = new TutorialCoach(Match.P2, 1, Match.Config, TutorialOptions, Node?.ReactionFrames ?? 30); // Y4: apprentice 30f
@@ -69,6 +76,30 @@ public partial class FightScene
 		if (skipped) Recorder?.OnTutorialSkip(); // YOK-92: the skip changes P2's coach from the next step, so the replay needs it
 		RenderTutorial();
 		return skipped;
+	}
+
+	/// <summary>
+	/// Y6: the prompts name the real controls. A connected pad gets its button labels (<see cref="StartScreen.PadLabel"/>) and
+	/// "Select" for the skip button; else the keyboard bindings (<see cref="InputDevices.P1Keys"/>). Same sources as the
+	/// control-select outline (<see cref="StartScreen.Rows(ControlScheme)"/>).
+	/// </summary>
+	public static void SetTutorialKeyNames(bool? pad = null)
+	{
+		bool usePad = pad ?? Input.GetConnectedJoypads().Count > 0;
+		var (t, b) = TutorialKeyNames(usePad);
+		TutorialPrompts.Keys = new System.Collections.Generic.Dictionary<string, string> { ["throw_keys"] = t, ["burst_keys"] = b };
+		TutorialPrompts.SkipKey = usePad ? "Select" : null;
+	}
+
+	/// <summary>The throw chord and burst chord as text, for the pad or the keyboard.</summary>
+	public static (string Throw, string Burst) TutorialKeyNames(bool pad)
+	{
+		if (pad)
+			return ($"{StartScreen.PadLabel(InputBits.LightPunch)}+{StartScreen.PadLabel(InputBits.LightKick)}",
+				$"{StartScreen.PadLabel(InputBits.LightPunch)}+{StartScreen.PadLabel(InputBits.MediumPunch)}+{StartScreen.PadLabel(InputBits.HeavyPunch)}");
+		var k = InputDevices.P1Keys;
+		return ($"{StartScreen.KeyLabel(k.LP)}+{StartScreen.KeyLabel(k.LK)}",
+			$"{StartScreen.KeyLabel(k.LP)}+{StartScreen.KeyLabel(k.MP)}+{StartScreen.KeyLabel(k.HP)}");
 	}
 
 	private void PollTutorialKeys()

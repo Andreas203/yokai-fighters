@@ -24,7 +24,7 @@ use_external_skeleton = true
 external_skeleton = NodePath("../Model/Armature/Skeleton3D")
 
 [node name="ClubPivot" type="Node3D" parent="Mirror/Yaw/Club" unique_id=1290598854]
-transform = Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, 2.943158, 13.373433, 3.974909)
+transform = Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, -1.086842, 14.213433, 6.804909)
 
 [node name="ClubMesh" type="Node3D" parent="Mirror/Yaw/Club/ClubPivot" unique_id=1630097023 instance=ExtResource("3_prop")]
 

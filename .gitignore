@@ -6,3 +6,7 @@ build/
 .mcp.json
 .codex/config.toml
 .pytest_cache/
+
+# YOK-trailer: raw Movie Maker captures (huge)
+trailer/raw/
+trailer/scout/

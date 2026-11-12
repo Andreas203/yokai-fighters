@@ -5,6 +5,13 @@
     { "name": "hit-step-names-the-command-grab", "accept": false, "steps": [ { "event": "hit", "move": "test-river-grab" } ] },
     { "name": "combo-step-names-the-command-grab", "accept": false, "steps": [ { "event": "combo", "count": 2, "move": "test-river-grab" } ] },
     { "name": "throw-step-names-a-strike", "accept": false, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "throw", "move": "test-rising-talisman" } ] },
-    { "name": "throw-then-hit-with-a-strike", "accept": true, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "hit", "move": "test-rising-talisman" } ] }
+    { "name": "throw-then-hit-with-a-strike", "accept": true, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "hit", "move": "test-rising-talisman" } ] },
+    { "name": "cast-step-names-the-command-grab", "accept": true, "steps": [ { "event": "cast", "move": "test-river-grab" } ] },
+    { "name": "cast-then-hit-with-a-strike", "accept": true, "steps": [ { "event": "cast", "move": "test-river-grab" }, { "event": "hit", "move": "test-rising-talisman" } ] },
+    { "name": "cast-step-without-a-move", "accept": false, "steps": [ { "event": "throw", "move": "test-river-grab" }, { "event": "cast" } ] },
+    { "name": "cast-step-with-counter", "accept": false, "steps": [ { "event": "cast", "move": "test-river-grab", "counter": true } ] },
+    { "name": "cast-step-names-the-generic-throw", "accept": false, "steps": [ { "event": "cast", "move": "test-river-grab" }, { "event": "cast", "move": "test-ryo-throw" } ] },
+    { "name": "cast-step-names-a-normal", "accept": false, "steps": [ { "event": "cast", "move": "test-river-grab" }, { "event": "cast", "move": "test-ryo-light-punch" } ] },
+    { "name": "cast-step-names-a-strike-special", "accept": true, "steps": [ { "event": "cast", "move": "test-river-grab" }, { "event": "cast", "move": "test-rising-talisman" } ] }
   ]
 }

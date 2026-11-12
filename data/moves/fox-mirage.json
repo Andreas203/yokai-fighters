@@ -1,0 +1,121 @@
+{
+  "kind": "special",
+  "id": "fox-mirage",
+  "name": "Fox Mirage",
+  "status": "proposed",
+  "source": "kitsune",
+  "starter": false,
+  "rarity": "rare",
+  "locked": true,
+  "clip": "kitsune-fox-mirage",
+  "rules": [
+    "A1",
+    "A3",
+    "A4",
+    "A5",
+    "A8",
+    "A9",
+    "A11",
+    "A12",
+    "C5",
+    "E12",
+    "E16",
+    "F2",
+    "F3",
+    "K1",
+    "K2",
+    "K3",
+    "T0",
+    "T4",
+    "V8"
+  ],
+  "input": {
+    "kata": {
+      "slot": "D",
+      "motion": "22"
+    },
+    "kihon": {
+      "slot": "D",
+      "direction": "down"
+    }
+  },
+  "card": {
+    "plain": "Vanish in a puff of smoke and step out behind your opponent.",
+    "frames": "18 / — / 10 frames, no damage, teleports behind the opponent"
+  },
+  "ex": {
+    "meter_cost": 100,
+    "changes": [
+      {
+        "target": "recovery",
+        "op": "add",
+        "value": -2
+      }
+    ]
+  },
+  "levels": {
+    "1": {
+      "frame_data": {
+        "startup": 18,
+        "active": null,
+        "recovery": 10,
+        "damage": 0,
+        "hitboxes": [],
+        "hurtboxes": [
+          {
+            "frames": [
+              1,
+              28
+            ],
+            "rect": {
+              "x": -30,
+              "y": 5,
+              "w": 80,
+              "h": 315
+            }
+          }
+        ],
+        "properties": {
+          "teleport": {
+            "to": "behind_opponent",
+            "frame": 18
+          }
+        }
+      },
+      "preset": "fox-mirage-lv1"
+    },
+    "2": {
+      "status": "proposed",
+      "tuning": {
+        "target": "recovery",
+        "op": "add",
+        "value": -4
+      },
+      "card": {
+        "plain": "Lv 1 → Lv 2: you recover 4 frames faster after stepping out.",
+        "frames": "Lv 1 → Lv 2: recovery -4 (18 / — / 6 frames), no damage, teleports behind the opponent"
+      },
+      "notes": "Proposed (open question, A4). Changes how you fight: 6 recovery frames behind the opponent is enough to start a light punch (startup 4) before they turn into a block, so the teleport becomes an opener, not just an escape. Data only, no clip change (F2): the clip's last 4 frames are cut (the clip tail is a blend-out). Alternative if the designer prefers: recovery -3, since the move is only 10 frames and -4 is 40% of it. Startup can't be tuned: teleport.frame is not an effect target."
+    },
+    "3": {
+      "evolution": {
+        "id": "mirage-feint",
+        "name": "Mirage Feint",
+        "status": "final",
+        "preset": "mirage-feint",
+        "changes": [
+          {
+            "target": "properties.decoy",
+            "op": "set",
+            "value": 1
+          }
+        ],
+        "card": {
+          "plain": "A fox image stays where you vanished and takes one hit for you.",
+          "frames": "18 / — / 6 frames, decoy absorbs 1 hit, teleports behind the opponent"
+        }
+      }
+    }
+  },
+  "notes": "ONE file serves both fighters: source kitsune (A8), slot D (the Kitsune's other special, Foxfire, is slot C) so Ryo can draft it and the Tanuki can copy it (T0, slot kept on Ryo's side); data identical for either caster (K3); Kihon is slot D + down. Rarity rare + locked from the A11 table (rare = each yokai's second special, A9, offered only by elders). Frames 18/-/10 = rules.md table, no deviation: clip kitsune-fox-mirage is 28 frames (GREYBOX reuse of kitsune-foxfire, raw 31-85 at 2x, route A of YOK-219; clip comparison in its notes); ryo-fox-mirage is the same on Ryo's rig. Active is null: the move never hits; properties.teleport (YOK-224) puts the fighter just behind the opponent on frame 18 (the last startup frame) and turns them round; the 10 recovery frames follow on the far side. Not an invulnerability (E12 reading in Match.Mirage): the fighter is hurtable the whole move. Body hurtbox frames 1-28 = kitsune-foxfire's rigged-pose box (x -30, y 5, w 80, h 315), the same body and the same pose family; the extended hand is not added (sleeves not added, as Foxfire); estimated for this clip, not re-measured from the 2x frames: proposed. No hitbox, damage 0, so no hitstun, blockstun or strength. EX (C5/E16, proposed): costs 1 bar, recovery -2 (Lv 1: 18/-/8, Lv 2: 18/-/4); data-only, my own proposal as the rules list no EX effect for it. Kept small on purpose: Brute Recovery (-4 recovery on block) on a Lv 2 EX Fox Mirage must stay at 0 or more (validate_data), so Lv 2 + EX is the floor of 4. Mirage Feint (Lv 3, A5): sets properties.decoy to 1; the decoy is a frozen idle copy left at the origin (E04, no clip). Lv 3 keeps the Lv 2 step (E17). Presets fox-mirage-lv1 and mirage-feint are named, files are Asset Smith's."
+}

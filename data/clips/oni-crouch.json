@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "oni-crouch",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "free pose fallback (no Tripo v1.0 preset): ryo-crouch.glb",
+  "frames_total": 30,
+  "trim_start": 108,
+  "trim_end": 137,
+  "speed_scale": 1,
+  "file": "assets/generated/clips/oni/oni-crouch.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Tripo take ryo-crouch.glb retargeted onto oni by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.04 cm/frame).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only oni-crouch."
+}

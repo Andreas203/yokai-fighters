@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "ryo-oni-quake",
+  "status": "proposed",
+  "file": "assets/generated/clips/ryo/ryo-oni-quake.glb",
+  "hit_start": 28,
+  "hit_end": 31,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:chop",
+  "frames_total": 56,
+  "retarget_notes": "Tripo take chop retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.16 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-oni-quake.",
+  "trim_start": 140,
+  "trim_end": 250,
+  "retime": [
+    {
+      "frames": [
+        1,
+        28
+      ],
+      "ticks": [
+        140,
+        194
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        28,
+        32
+      ],
+      "ticks": [
+        194,
+        202
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        32,
+        56
+      ],
+      "ticks": [
+        202,
+        250
+      ],
+      "note": "recovery eases out"
+    }
+  ]
+}

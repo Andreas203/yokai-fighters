@@ -86,13 +86,14 @@ public static class TripoRyoProbes
 		finally { FighterAnimSet.TripoRyo = true; }
 	}
 
-	// Tanuki (T0 = Ryo's kit) plus any copied special: every move clip it can be asked for plays on Tripo.
+	// Tanuki (T0 = Ryo's kit, AM25 true-form body on Ryo's Tripo clips) plus any copied special: every move clip it can be asked for plays on Tripo.
 	// Other fighters' normals (kitsune-, oni-) are not in Ryo's or the Tanuki's kit and are skipped.
 	[Test]
 	public static void TanukiAndRyo_EveryKitAndSpecialMoveClip_PlaysOnTheTripoSet(Node runner)
 	{
 		var set = FighterAnimSet.For("tanuki");
-		Assert.True(ReferenceEquals(set, FighterAnimSet.RyoTripo), "tanuki body is the Tripo Ryo");
+		Assert.True(ReferenceEquals(set, FighterAnimSet.TanukiTripo), "tanuki body is his true form (AM25)");
+		Assert.Equal(FighterAnimSet.RyoTripo.ClipRoot, set.ClipRoot, "on Ryo's Tripo clips (T0)");
 		var missing = new List<string>();
 		foreach (var (moveId, clip) in FightScene.MoveClips)
 		{

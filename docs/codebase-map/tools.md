@@ -28,7 +28,7 @@ Their tests are in `tools/tests/` (`test_*.py`, with the fixtures `merge_fixture
 |---|---|
 | `tools/measure_clip_proxies.py`, `tools/strip_clip.py` | Clip mesh proxies for the retarget gate (F2, G4; numpy: edge stretch, tail fan, arm-in-torso; the per-take gate is `tools/blender/measure_clip.py`) and an animation-only copy of a clip GLB. |
 | `tools/stage/recolor_props.py` | YOK-150/151: recolours two Tripo stage props' extracted textures toward the palette (pine needles to #34483B, reeds to dry olive); their materials in `game/materials/stage/` are swapped in by each glb's import settings. numpy + Pillow. |
-| `tools/blender/` | Headless Blender scripts (rig-specialist, animator): rig checks, weight repair, clip cleanup and measurement, retargeting, texture tools. |
+| `tools/blender/` | Headless Blender scripts (rig-specialist, animator): rig checks, weight repair, clip cleanup and measurement, retargeting, texture tools. `fist_morph.py` (plain numpy) adds the `fist` morph target to the open-hand Tripo Ryo (E15, AM26); `fist_morph_check.py` and `rig_identity_check.py --morph` check it. |
 | `tools/ui/`, `tools/fonts/`, `tools/art/` | UI plate import/repair, font line-height trim, turnaround split. |
 
 ## Agents

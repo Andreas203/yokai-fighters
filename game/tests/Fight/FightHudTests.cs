@@ -64,7 +64,8 @@ public static class FightHudTests
     Assert.True(text.Text.StartsWith(Story.StoryLibrary.DisplayName(id).ToUpperInvariant()), "name follows opponent");
     Assert.True(text.GetThemeFont("font").GetStringSize(text.Text, fontSize: text.GetThemeFontSize("font_size")).X <= text.Size.X, "long name and health fit");
     var portrait = Find<TextureRect>(hud, "P2Portrait");
-    Assert.Equal(id.Contains("kitsune"), portrait.Visible, "missing art never shows the wrong opponent or reveals the boss");
+    string pp = FightHud.PortraitPath(id);
+    Assert.Equal(pp.Length > 0 && UiTextures.Exists(pp), portrait.Visible, "a portrait shows exactly when its file exists; never the wrong opponent, never the boss");
     if (portrait.Visible) Assert.Equal(FightHud.PortraitPath(id), portrait.Texture.ResourcePath, "per-opponent lookup");
    }
   }

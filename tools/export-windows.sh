@@ -16,8 +16,10 @@ mkdir -p "$OUT"
 "$GODOT" --headless --path "$REPO/game" --export-release "Windows Desktop" ../build/windows/YokaiFighters.exe
 
 mkdir -p "$OUT/data" "$OUT/fixtures"
-for d in cancels clips map modifiers moves profiles story; do cp -r "$REPO/data/$d" "$OUT/data/$d"; done
-if [ -d "$REPO/data/presets" ]; then cp -r "$REPO/data/presets" "$OUT/data/presets"; fi  # YOK-198: level presets (V8), once asset-smith adds them
+# Every content folder the game reads at runtime (YOK-248: trials, twists and fighters were missing); not schema, harness or samples.
+for d in cancels clips fighters map modifiers moves presets profiles sound story trials twists; do
+  if [ -d "$REPO/data/$d" ]; then cp -r "$REPO/data/$d" "$OUT/data/$d"; fi
+done
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
 if command -v powershell.exe >/dev/null; then

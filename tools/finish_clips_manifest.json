@@ -1,0 +1,655 @@
+{
+ "_note": "Free pose fallbacks first (no Tripo v1.0 preset); preset takes are appended below after approval.",
+ "entries": [
+  {
+   "id": "kappa-idle",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-idle-guard.glb",
+   "copy_from": "kitsune-idle",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-idle-guard.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-walk-guard-fwd",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-walk-guard-fwd.glb",
+   "copy_from": "kitsune-walk-guard-fwd",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-walk-guard-fwd.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-walk-guard-back",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-walk-guard-back.glb",
+   "copy_from": "kitsune-walk-guard-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-walk-guard-back.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-crouch",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-crouch.glb",
+   "copy_from": "kitsune-crouch",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-crouch.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-block-high",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-high.glb",
+   "copy_from": "kitsune-block-high",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-high.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-block-low",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-low.glb",
+   "copy_from": "kitsune-block-low",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-low.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-dash-back",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-get-up",
+   "body": "kappa",
+   "src": "assets/generated/clips/ryo-tripo/ryo-get-up.glb",
+   "copy_from": "kitsune-get-up",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-get-up.glb",
+   "prop": "shell"
+  },
+  {
+   "id": "oni-crouch",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-crouch.glb",
+   "copy_from": "kitsune-crouch",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-crouch.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-block-high",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-high.glb",
+   "copy_from": "kitsune-block-high",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-high.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-block-low",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-block-low.glb",
+   "copy_from": "kitsune-block-low",
+   "movement": false,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-block-low.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-dash-back",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb",
+   "prop": "club"
+  },
+  {
+   "id": "oni-get-up",
+   "body": "oni",
+   "src": "assets/generated/clips/ryo-tripo/ryo-get-up.glb",
+   "copy_from": "kitsune-get-up",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-get-up.glb",
+   "prop": "club"
+  },
+  {
+   "id": "kitsune-dash-back",
+   "body": "kitsune",
+   "src": "assets/generated/clips/ryo-tripo/ryo-dash-back.glb",
+   "copy_from": "ryo-dash-back",
+   "movement": true,
+   "source": "meshy-library",
+   "clip": "free pose fallback (no Tripo v1.0 preset): ryo-dash-back.glb"
+  },
+  {
+   "id": "kappa-light-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_01.glb",
+   "preset": "box_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_01",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-medium-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_02.glb",
+   "preset": "box_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_02",
+   "target": {
+    "startup": 6,
+    "active": 3,
+    "total": 21
+   },
+   "prop": "shell",
+   "rejected": "hand into head 13.7 cm, planted-foot slide 18 cm"
+  },
+  {
+   "id": "kappa-heavy-punch",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/box_03.glb",
+   "preset": "box_03",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_03",
+   "target": {
+    "startup": 10,
+    "active": 4,
+    "total": 34
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-light-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_01.glb",
+   "preset": "front_kick_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_01",
+   "target": {
+    "startup": 5,
+    "active": 2,
+    "total": 16
+   },
+   "prop": "shell"
+  },
+  {
+   "id": "kappa-medium-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_02.glb",
+   "preset": "front_kick_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_02",
+   "target": {
+    "startup": 7,
+    "active": 3,
+    "total": 24
+   },
+   "prop": "shell",
+   "rejected": "arm into shell 15.7 cm, hand into spine 13.6 cm"
+  },
+  {
+   "id": "kappa-heavy-kick",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/front_kick_02.glb",
+   "preset": "front_kick_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:front_kick_02",
+   "target": {
+    "startup": 11,
+    "active": 4,
+    "total": 38
+   },
+   "prop": "shell",
+   "rejected": "arm into shell 17.5 cm, hand into tail 17.1 cm"
+  },
+  {
+   "id": "kappa-throw",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hug.glb",
+   "preset": "hug",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hug",
+   "target": {
+    "startup": 5,
+    "active": 7,
+    "total": 30
+   },
+   "prop": "shell",
+   "rejected": "forearm into spine 13.6 cm for all 30 frames"
+  },
+  {
+   "id": "kappa-river-grab",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/lift_heavy.glb",
+   "preset": "lift_heavy",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:lift_heavy",
+   "target": {
+    "startup": 6,
+    "active": 2,
+    "total": 38
+   },
+   "prop": "shell",
+   "movement": true,
+   "rejected": "hand into tail 16.5 cm, hand into spine 13.8 cm"
+  },
+  {
+   "id": "kappa-shell-spin",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/turn.glb",
+   "preset": "turn",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:turn",
+   "target": {
+    "startup": 10,
+    "active": 18,
+    "total": 48
+   },
+   "prop": "shell",
+   "movement": true,
+   "rejected": "arm into shell 17.2 cm, hand into tail 13.8 cm"
+  },
+  {
+   "id": "oni-light-punch",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   },
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm"
+  },
+  {
+   "id": "oni-heavy-kick",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 11,
+    "active": 4,
+    "total": 38
+   },
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm"
+  },
+  {
+   "id": "oni-throw",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hug.glb",
+   "preset": "hug",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hug",
+   "target": {
+    "startup": 5,
+    "active": 7,
+    "total": 30
+   },
+   "prop": "club",
+   "rejected": "forearm into spine 12.3 cm, floats 6.6 cm"
+  },
+  {
+   "id": "oni-quake",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 27,
+    "active": 4,
+    "total": 56
+   },
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm, sinks 10 cm"
+  },
+  {
+   "id": "oni-iron-club-charge",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 12,
+    "active": 6,
+    "total": 32
+   },
+   "prop": "club",
+   "movement": true,
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm, sinks 7 cm"
+  },
+  {
+   "id": "kitsune-light-punch",
+   "body": "kitsune",
+   "src": "../assets/specs/clips/raw-tripo/box_01.glb",
+   "preset": "box_01",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:box_01",
+   "target": {
+    "startup": 4,
+    "active": 2,
+    "total": 13
+   }
+  },
+  {
+   "id": "kitsune-fox-mirage",
+   "body": "kitsune",
+   "src": "../assets/specs/clips/raw-tripo/flip.glb",
+   "preset": "flip",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:flip",
+   "target": {
+    "startup": 18,
+    "active": 1,
+    "total": 28
+   },
+   "movement": true,
+   "retime_override": [
+    {
+     "frames": [
+      1,
+      19
+     ],
+     "ticks": [
+      0,
+      32
+     ],
+     "note": "startup: the flip leaves the floor (1.8x)"
+    },
+    {
+     "frames": [
+      19,
+      20
+     ],
+     "ticks": [
+      32,
+      34
+     ],
+     "note": "vanish frame"
+    },
+    {
+     "frames": [
+      20,
+      28
+     ],
+     "ticks": [
+      34,
+      46
+     ],
+     "note": "recovery eases out, before the upright stand (top bone under the 1.9 framing)"
+    }
+   ],
+   "nohit": true,
+   "trim": [
+    26,
+    72
+   ]
+  },
+  {
+   "id": "ryo-fox-mirage",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/flip.glb",
+   "preset": "flip",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:flip",
+   "target": {
+    "startup": 18,
+    "active": 1,
+    "total": 28
+   },
+   "movement": true,
+   "retime_override": [
+    {
+     "frames": [
+      1,
+      19
+     ],
+     "ticks": [
+      0,
+      32
+     ],
+     "note": "startup: the flip leaves the floor (1.8x)"
+    },
+    {
+     "frames": [
+      19,
+      20
+     ],
+     "ticks": [
+      32,
+      34
+     ],
+     "note": "vanish frame"
+    },
+    {
+     "frames": [
+      20,
+      28
+     ],
+     "ticks": [
+      34,
+      46
+     ],
+     "note": "recovery eases out, before the upright stand (top bone under the 1.9 framing)"
+    }
+   ],
+   "nohit": true,
+   "trim": [
+    26,
+    72
+   ]
+  },
+  {
+   "id": "ryo-river-grab",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/lift_heavy.glb",
+   "preset": "lift_heavy",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:lift_heavy",
+   "target": {
+    "startup": 6,
+    "active": 2,
+    "total": 38
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-shell-spin",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/turn.glb",
+   "preset": "turn",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:turn",
+   "target": {
+    "startup": 10,
+    "active": 18,
+    "total": 48
+   },
+   "movement": true
+  },
+  {
+   "id": "ryo-oni-quake",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/chop.glb",
+   "preset": "chop",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:chop",
+   "target": {
+    "startup": 27,
+    "active": 4,
+    "total": 56
+   }
+  },
+  {
+   "id": "ryo-iron-club-charge",
+   "body": "ryo",
+   "src": "../assets/specs/clips/raw-tripo/slash.glb",
+   "preset": "slash",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:slash",
+   "target": {
+    "startup": 12,
+    "active": 6,
+    "total": 32
+   },
+   "movement": true
+  },
+  {
+   "id": "kappa-hit-high",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_head.glb",
+   "preset": "hit_to_head",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_head",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 33,
+   "rejected": "hand into spine 13.3 cm, tail 13 cm"
+  },
+  {
+   "id": "kappa-hit-low",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_stomach.glb",
+   "preset": "hit_to_stomach",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_stomach",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 37,
+   "rejected": "forearm into tail 15.7 cm, hand into head 13.6 cm"
+  },
+  {
+   "id": "kappa-knockdown",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/defeat_02.glb",
+   "preset": "defeat_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:defeat_02",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 49,
+   "rejected": "arm into shell 15.2 cm for all 49 frames; hips held at standing height"
+  },
+  {
+   "id": "kappa-jump",
+   "body": "kappa",
+   "src": "../assets/specs/clips/raw-tripo/jump.glb",
+   "preset": "jump",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:jump",
+   "prop": "shell",
+   "movement": true,
+   "pose_frames": 49,
+   "rejected": "forearm into shell 13.9 cm, hand into spine 13.8 cm"
+  },
+  {
+   "id": "oni-hit-high",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_head.glb",
+   "preset": "hit_to_head",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_head",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 33,
+   "rejected": "floats 32 cm, club into spine 17.5 cm"
+  },
+  {
+   "id": "oni-hit-low",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/hit_to_stomach.glb",
+   "preset": "hit_to_stomach",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:hit_to_stomach",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 33,
+   "rejected": "floats 32 cm, forearm into spine 16 cm"
+  },
+  {
+   "id": "oni-knockdown",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/defeat_02.glb",
+   "preset": "defeat_02",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:defeat_02",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 49,
+   "rejected": "hand into thigh 10.7 cm, hips into club 8.4 cm"
+  },
+  {
+   "id": "oni-jump",
+   "body": "oni",
+   "src": "../assets/specs/clips/raw-tripo/jump.glb",
+   "preset": "jump",
+   "clean": true,
+   "source": "tripo-library",
+   "clip": "preset:biped:jump",
+   "prop": "club",
+   "movement": true,
+   "pose_frames": 49,
+   "rejected": "club into spine 17.5 cm, hand into spine 17.6 cm"
+  }
+ ]
+}

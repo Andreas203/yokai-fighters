@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/fighters/BaseFighter.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://w7emnpamca76" path="res://assets/generated/characters/tanuki/tanuki-v2-rigged.glb" id="2_v2"]
+
+[node name="Tanuki" instance=ExtResource("1_base")]
+Fighter = "tanuki"
+
+[node name="Model" type="Node3D" parent="Mirror/Yaw" unique_id=1426066068 instance=ExtResource("2_v2")]

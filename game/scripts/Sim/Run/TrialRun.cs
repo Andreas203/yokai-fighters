@@ -37,7 +37,8 @@ public sealed class TrialRun
 	public event Action<TrialRun, bool>? AttemptEnded;
 
 	int _lastAirTick = int.MinValue / 2;
-	int _count;            // hits/blocks counted toward the current step
+	int _count;            // hits/blocks/casts counted toward the current step
+	int _castSerial = -1;  // YOK-226: P1's MoveSerial of the last cast counted (an EX upgrade is the same use)
 	bool _comboMoveSeen;   // a combo step's named move landed inside the combo
 	(bool Airborne, int SinceAir, int Units)? _grab; // the player's grab tick, for a throw step
 	readonly Queue<int> _dummyQueue = new();
@@ -55,6 +56,7 @@ public sealed class TrialRun
 		foreach (var m in match.P1.Moves) if (m.IsThrow) _p1Throws.Add(m.Id);
 		match.Hit += OnHit;
 		match.Throw += OnThrow;
+		match.SpecialStarted += OnCast; // YOK-226
 		Begin();
 	}
 
@@ -69,6 +71,7 @@ public sealed class TrialRun
 		_count = 0;
 		_comboMoveSeen = false;
 		_grab = null;
+		_castSerial = -1; // Match.Reset restarts MoveSerial
 		_dummyQueue.Clear();
 	}
 
@@ -172,6 +175,16 @@ public sealed class TrialRun
 				if (_count >= step.Count && _comboMoveSeen && (!step.Counter || e.Counter) && Met(step, s)) Advance();
 				break;
 		}
+	}
+
+	/// <summary>YOK-226: a cast step counts the player's starts of its special, sampled on the start tick.</summary>
+	void OnCast(Match m, SpecialEvent e)
+	{
+		if (AttemptOver || e.Fighter != 0 || Current is not { Event: TrialEvent.Cast } step || step.Move != e.MoveId) return;
+		if (Match.P1.MoveSerial == _castSerial) return;
+		_castSerial = Match.P1.MoveSerial;
+		if (!Met(step, Sample(AttemptTick))) return;
+		if (++_count >= Math.Max(1, step.Count)) Advance();
 	}
 
 	void CheckComboHeld()

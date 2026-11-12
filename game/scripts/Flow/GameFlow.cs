@@ -461,6 +461,12 @@ public partial class GameFlow : Node
 	/// YOK-92, Y6: the guided apprentice fight is played once. Its story flag is set when its lessons finish or its
 	/// duel ends (won or lost); a quit mid-fight leaves it unset, so the next run is guided again.
 	/// </summary>
+	public void MarkStorySeen(string flag)
+	{
+		if (Session is null || Session == _unsavedSession || Saved.Story.Has(flag)) return; // a dev jump's run never writes the save (YOK-99)
+		Write(Saved.WithStory(flag));
+	}
+
 	public void MarkTutorialSeen()
 	{
 		if (Saved.Story.Has(StoryProgress.ApprenticeTutorial)) return;
@@ -628,6 +634,8 @@ public partial class GameFlow : Node
 			fight.PlayerScheme = Router.Scheme; // carried into every duel of the run
 			fight.TanukiWins = Saved.TanukiWins; // YOK-99, Y5: the pressure of earlier runs
 			fight.TutorialAllowed = !Saved.Story.Has(StoryProgress.ApprenticeTutorial); // YOK-92, Y6: first run only
+			fight.StoryHas = id => Saved.Story.Has(id); // S3/M4: the intro, reveal and win cards show by the save's flags
+			fight.StoryShown += MarkStorySeen;
 			fight.FirstLossPending = FirstLossPending; // YOK-216, S3: the first-loss card on this save's first loss only
 			fight.TutorialFinished += _ => MarkTutorialSeen();
 			fight.TitleRequested += () => Router.ReturnToTitle();

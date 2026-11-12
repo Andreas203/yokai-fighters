@@ -101,7 +101,7 @@ Difficulty curve. Reactions tighten through the run (apprentice 30 frames, yokai
 
 ### 2.5 The Tanuki
 
-> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it, [AM25](gdd-amendments.md#am25) his true-form body. Where they disagree with this section, the amendments win.
 
 The Tanuki is a boss with its own fixed moveset, drawn from tanuki folklore. It mixes every archetype's tricks, so no single habit or build beats it, and it fights with the boss's 15-frame reactions.
 

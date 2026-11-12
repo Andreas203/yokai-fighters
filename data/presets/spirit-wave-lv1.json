@@ -10,5 +10,12 @@
     "A5"
   ],
   "colour": "#1D1B21",
-  "notes": "Colour-only (YOK-213). Lv 1 base: Ink #1D1B21 (style.md palette; V5 Ryo ink black). Default spark image. No Lv 2 preset: the special names none at Lv 2."
+  "projectile": {
+    "look": "ink_wave",
+    "core": "#F1E8D4"
+  },
+  "cast": {
+    "look": "seal"
+  },
+  "notes": "Colour-only (YOK-213). Lv 1 base: Ink #1D1B21 (style.md palette; V5 Ryo ink black). Default spark image. No Lv 2 preset: the special names none at Lv 2. YOK-242 (proposed): flies as an ink spirit wave with a rice-paper ofuda riding the crest; cast = talisman seal; release and impact = the wave's ink splash (default)."
 }

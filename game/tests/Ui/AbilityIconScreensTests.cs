@@ -33,11 +33,13 @@ public static class AbilityIconScreensTests
 	}
 
 	[Test]
-	public static void ModifierCardUsesFallbackEvenWithMappedId(Node host)
+	public static void ModifierCardUsesItsOwnIconOrTheFallback(Node host)
 	{
 		var c = NewCard(host);
 		c.Bind(new CardView(CardKind.Modifier, "foxfire", "Fox's Patience", "Kitsune - modifier", "p", "f", "MODIFIER"));
-		Assert.True(Art(c) == AbilityArt.Fallback, "modifier gets the generic diamond");
+		Assert.True(Art(c) == AbilityArt.ForId("foxfire"), "a modifier shows the icon for its id (the generic swirl while it has no file)");
+		c.Bind(new CardView(CardKind.Modifier, "zz-no-icon-file", "Fox's Patience", "Kitsune - modifier", "p", "f", "MODIFIER"));
+		Assert.True(Art(c) == AbilityArt.Fallback, "no file: the generic swirl");
 		Assert.True(!UiFind.Get<Control>(c, "Pips").Visible, "no pips on a modifier");
 		c.Free();
 	}

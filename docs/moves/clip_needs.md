@@ -59,10 +59,10 @@ Yokai normals clip IDs: Kitsune D (N01-N06), Oni and Kappa use N01-N06 not for t
 | S02 | Rising Talisman | R | Rising uppercut or upward talisman slap, airborne feet-off-ground late | 41 (5/8/28) | D | Low. Common uppercut |
 | S03 | Foxfire | K (also Ryo when drafted, and Tanuki copy) | Two-hand flick or cast releasing a slow flame | 49 (15/4/30) | D | Low-medium. Any one-handed cast/throw |
 | S04 | Fox Mirage | K | Vanish and re-appear behind the opponent | 28 (18/-/10) | - | **YES.** See flag 1 |
-| S05 | Iron-Club Charge | O | Lunging forward charge, shoulder or club lead | 46 (16/6/24) | - | **YES.** See flag 2 |
-| S06 | Oni Quake | O | Overhead two-hand ground slam, hits low | 53 (22/5/26) | - | Medium. See flag 3 |
-| S07 | Shell Spin | B | In-place spinning body with long active window | 48 (10/18/20) | - | **YES.** See flag 4 |
-| (T01) | River Grab | B | Reuses T01 grab clip | 38 (6/2/30) | - | Low (reuse) but see flag 5 |
+| S05 | Iron-Club Charge | O | Lunging forward charge, shoulder or club lead | 46 (16/6/24; AM24: the greybox clip is 32, 12/6/14) | - | **YES.** See flag 2 |
+| S06 | Oni Quake | O | Overhead two-hand ground slam, hits low | 53 (22/5/26; AM24: the measured clip is 56, 27/4/25) | - | Medium. See flag 3 |
+| S07 | Shell Spin | B | In-place spinning body with long active window | 48 (10/18/20; greybox `kappa-shell-spin` / `ryo-shell-spin` = heavy punch at 1x, 0.5x, 0.74x) | - | **YES.** See flag 4 |
+| (T01) | River Grab | B | Reuses T01 grab clip | 38 (6/2/30; greybox `kappa-river-grab` / `ryo-river-grab` = T01 at about 0.8x) | - | Low (reuse) but see flag 5 |
 
 ## 5. Lv 3 evolutions (all data-only, A5/A10)
 
@@ -94,7 +94,7 @@ Fights as Ryo with Ryo's model and clips [T0]; the copied special reuses its exi
 1. **Fox Mirage (S04), teleport.** Library presets rarely have a vanish/re-appear clip. Fallback: any short crouch-to-stand or backstep clip played with a smoke/fade VFX, with the teleport itself in move data. Mechanics (18 startup, 10 recovery, behind opponent) unchanged. Evolution decoy is a model copy, not a clip.
 2. **Iron-Club Charge (S05), forward charge with 1-hit armour.** A true shoulder-charge is uncommon. Fallback: a forward lunge or running tackle; else R04 dash start + heavy-punch strike pose (N03 held). Armour is data.
 3. **Oni Quake (S06), ground pound.** Overhead slams are common presets but rarely with a hits-low read. Fallback: any two-hand overhead smash; "low" is a data hitbox property [C3].
-4. **Shell Spin (S07), 18-frame active spin.** Needs a sustained in-place spin and it is the highest retarget-clipping risk (shell). Fallback: whirlwind / tornado-kick loop, trimmed to length. If the shell clips badly, Kappa uses its folklore human guise [G4].
+4. **Shell Spin (S07), 18-frame active spin.** Needs a sustained in-place spin and it is the highest retarget-clipping risk (shell). Fallback: whirlwind / tornado-kick loop, trimmed to length. If the shell clips badly, Kappa uses its folklore human guise [G4]. YOK-230 greybox: the Kappa's measured heavy punch stands in (`kappa-shell-spin`, Ryo twin `ryo-shell-spin`) until this take lands.
 5. **River Grab and generic grab (T01), fast reach.** Needs a 5-6 frame reach to the grab; many grab clips have a slow wind-up. Fallback: a short lunging arm grab; if the clip's startup is slower, Movesmith keeps the clip's truth and flags the delta to the designer (the rules.md C4 startup 5 may change).
 6. **Burst (R16), Throw break (T02).** Not in the original scope list; they have no specific clips. Fallbacks as given above, VFX only.
 7. **Knockdown (R11) onto back for Kappa (shell) and Kitsune (tails).** Prefer a lying-on-front or side-collapse variant if retargeting clips the shell/tails.

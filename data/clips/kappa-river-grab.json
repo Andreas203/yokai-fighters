@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "kappa-river-grab",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "259 Step_Forward_and_Push",
+  "frames_total": 38,
+  "trim_start": 30,
+  "trim_end": 59,
+  "retime": [
+    {
+      "frames": [
+        1,
+        7
+      ],
+      "ticks": [
+        30,
+        35
+      ],
+      "note": "reach, 0.83x: the palms are at full reach on frame 7, the first active frame"
+    },
+    {
+      "frames": [
+        7,
+        9
+      ],
+      "ticks": [
+        35,
+        37
+      ],
+      "note": "the grab connects, 1x through the 2 active frames"
+    },
+    {
+      "frames": [
+        9,
+        38
+      ],
+      "ticks": [
+        37,
+        59
+      ],
+      "note": "pull and recovery at 0.76x, 30 recovery frames"
+    }
+  ],
+  "file": "assets/generated/clips/kitsune/kitsune-throw.glb",
+  "hit_start": 7,
+  "hit_end": 8,
+  "retarget_notes": "Same take, file and Kappa result as kappa-throw (rig kappa-rigged.glb, retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md): the throw WAS measured on the Kappa, push lands at 0.91 m, shell clean. The 0.76-0.83x curve is NOT re-measured on the Kappa: no job run. The clip carries a 28 cm hip advance that a data step must replace (E15); not encoded (same open item as the generic throws).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of ryo-generic-throw (Meshy preset 259 Step_Forward_and_Push, trim raw 30-59), replace when a take of its own lands. Route A (designer, YOK-219, 2026-11-01). River Grab 6/2/30 = 38 frames: the 30-frame throw clip at about 0.8x (29 raw ticks over 37 steps = 0.78x overall), in three segments inside 0.5x-2x with no holds. The palm reach (raw 35) lands on frame 7, the first active frame, so startup 6 / active 2 (frames 7-8) / recovery 30 follow the clip. Generic grab only (C4): the defender plays the standard knockdown, never a paired animation. Ryo's body plays ryo-river-grab (T0). No job run; 0 credits."
+}

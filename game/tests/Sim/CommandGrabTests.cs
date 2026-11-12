@@ -344,7 +344,9 @@ public static class CommandGrabTests
 			var doc = JsonNode.Parse(File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "trials", "test-spirit-wave-trial.json")))!.AsObject();
 			doc["special"] = "test-river-grab";
 			doc["goal"]!["steps"] = c!["steps"]!.DeepClone();
-			var problems = TrialLoader.Parse(doc.ToJsonString()).MoveProblems(kit);
+			IReadOnlyList<string> problems;
+			try { problems = TrialLoader.Parse(doc.ToJsonString()).MoveProblems(kit); }
+			catch (FormatException e) { problems = new[] { e.Message }; } // YOK-226: a cast step without a move fails to load
 			if ((problems.Count == 0) != c["accept"]!.GetValue<bool>())
 				wrong.Add($"{c["name"]}: {(problems.Count == 0 ? "accepted" : string.Join("; ", problems))}");
 		}

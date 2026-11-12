@@ -40,6 +40,11 @@
       "weight": 20
     },
     {
+      "when": "at_mid_range",
+      "do": "special:iron-club-charge",
+      "weight": 10
+    },
+    {
       "when": "at_close_range",
       "do": "normal:oni-heavy-punch",
       "weight": 30
@@ -58,6 +63,11 @@
       "when": "at_close_range",
       "do": "throw",
       "weight": 15
+    },
+    {
+      "when": "at_close_range",
+      "do": "special:oni-quake",
+      "weight": 12
     },
     {
       "when": "opponent_blocking",
@@ -83,5 +93,5 @@
     "P6",
     "E22"
   ],
-  "notes": "Oni aggressive (Y2): dashes in constantly; habit 70% unchanged. YOK-174 strikes: heavy club (oni-heavy-punch 16f startup, readable tell) at close range, medium punch and light punch as the fast pressure, medium kick as a mid-range poke after the dash-in, medium punch against a blocking opponent as a frame trap (8f, recovery 7). Throw cut from 35 to 15 so strikes dominate. Single attacking answer to opponent_jumping stays oni-medium-punch (YOK-165). Iron-Club Charge not wired (no special in data/moves). Kappa untouched."
+  "notes": "Oni aggressive (Y2): dashes in constantly; habit 70% unchanged. YOK-174 strikes: heavy club (oni-heavy-punch 16f startup, readable tell) at close range, medium punch and light punch as the fast pressure, medium kick as a mid-range poke after the dash-in, medium punch against a blocking opponent as a frame trap (8f, recovery 7). Throw cut from 35 to 15 so strikes dominate. Single attacking answer to opponent_jumping stays oni-medium-punch (YOK-165). YOK-234: Iron-Club Charge as a mid-range closer (weight 20, cut to 10 by YOK-185 on 2026-11-12 so it is less of his damage, 240-unit charge, 12f startup tell); Elder Oni (rare in loadout, A9) adds Oni Quake at close range, weight 12; absent move is skipped. Habit and tell_cover unchanged. Kappa untouched."
 }

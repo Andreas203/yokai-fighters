@@ -983,6 +983,32 @@ class LevelPresetTest(unittest.TestCase):
             code, out = run(self._write(tmp, self._doc(spark={"textures": {"hit": real}})))
             self.assertEqual(code, 0, out)
 
+    def test_vfx_blocks(self):
+        """YOK-242: projectile / cast / release / impact blocks, refused where LevelPresetLibrary refuses them."""
+        import tempfile
+        good = dict(projectile={"look": "ink_wave", "core": "#F1E8D4", "scale_pct": 160},
+                    cast={"look": "seal"}, release={"look": "none"}, impact={"look": "dust", "frames": 30})
+        cases = [
+            (dict(projectile={"look": "seal"}), "projectile.look"),
+            (dict(cast={"look": "fox_flame"}), "cast.look"),
+            (dict(projectile={"frames": 10}), "Additional properties"),
+            (dict(impact={"glow": 1}), "Additional properties"),
+            (dict(release={"scale_pct": 10}), "release.scale_pct"),
+            (dict(cast={"frames": 1}), "cast.frames"),
+            (dict(impact={"core": "#12345"}), "impact.core"),
+            (dict(projectile={"colour": "#102030\n"}), "projectile.colour: '#102030\\n' is not a #RRGGBB colour"),
+            (dict(projectile={"texture": "vfx/projectiles/missing.png"}), "projectile.texture: game/vfx/projectiles/missing.png does not exist"),
+            (dict(cast={"texture": "res://x.png"}), "cast.texture"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            code, out = run(self._write(tmp, self._doc(**good)))
+            self.assertEqual(code, 0, out)
+            for change, needle in cases:
+                with self.subTest(change=change):
+                    code, out = run(self._write(tmp, self._doc(**change)))
+                    self.assertEqual(code, 1, out)
+                    self.assertIn(needle, out)
+
     def test_one_preset_per_special_and_level(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
@@ -1027,7 +1053,9 @@ class CommandGrabTest(unittest.TestCase):
                 p = Path(tmp) / "test-spirit-wave-trial.json"
                 p.write_text(json.dumps(doc), encoding="utf-8")
                 out = io.StringIO()
-                validate_data.validate([str(p), str(GRAB_FIXTURE), str(talisman)], out=out)
+                fx = ROOT / "game" / "tests" / "fixtures"  # YOK-226: the kit's throw and a normal, for the cast cases
+                validate_data.validate([str(p), str(GRAB_FIXTURE), str(talisman), str(fx / "throws" / "test-ryo-throw.json"),
+                                        str(fx / "ryo-normals" / "test-ryo-light-punch.json")], out=out)
                 text = [l for l in out.getvalue().splitlines() if "test-spirit-wave-trial.json:" in l]
                 if (not text) != c["accept"]:
                     wrong.append(f"{c['name']}: validator {'accepted' if not text else 'refused'}\n{out.getvalue()}")

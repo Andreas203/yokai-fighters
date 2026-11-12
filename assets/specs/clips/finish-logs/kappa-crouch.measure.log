@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_iz1jwsu6\front.png'
+Time: 00:00.64 (Saving: 00:00.11)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_jrqn3pc8\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_mys58b7d\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_rfbk1976\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_nnbju2ix\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_i_h5g235\side.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_p29pmx6e\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_tlpge_92\side.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.04s
+measure_clip: kappa-crouch PASS frames=30 slide=0.03 cm/f accel=0.4 deg/f^2 reversals=0
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\kappa-crouch\measure\kappa-crouch.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

@@ -58,6 +58,7 @@ public static class HipScaleTests
 			foreach (var (id, info) in Cat.Clips)
 			{
 				if (ModelExtentTests.OnOniRig(info.ResPath)) continue; // the Oni's own takes: hips 112.8 by design
+				if (info.ResPath.Contains("/clips/kappa/")) continue; // YOK-246: retargets onto the Kappa's rig carry his hip height by design
 				if (set.ClipPath(info) is null) continue; // YOK-146: not on this body's skeleton (a Meshy clip on the Tripo Ryo)
 				float k = model!.HipScaleFor(info);
 				Assert.Equal(1f, k, $"{set.Fighter} on {id}: hip scale {k:0.0000} is exactly 1 (unchanged)");

@@ -122,6 +122,7 @@ Stills, raw take 1: `assets/specs/rigs/stills/oni-raw-{rest,high-kick,deep-crouc
 ```
 Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, -19.435675, -56.202465, 80.396095, 2.943158, 13.373433, 3.974909)
 ```
+(Origin since YOK-finish-club: `-1.086842, 14.213433, 6.804909`, see "Grip moved to the palm" below.)
 - The grip sits at the hand centre: the mean of the 583 verts weighted mostly to `RightHand`.
 - At rest, the club is upright in the world.
 - Do not recompute the transform on the scaled file. It lives in bone space, so the 1.1 on `Armature` scales the club with him.
@@ -130,6 +131,8 @@ Transform3D(-19.636593, 82.52919, 52.946537, -96.107491, -5.496515, -27.076351, 
 
 **Clearance.** `tools/blender/prop_clearance.py --ignore-radius 0.12` ran the five stress poses plus arms-down. **0 club verts inside the body in every pose.** Stills: `assets/specs/rigs/stills/oni-club-{rest-front,arms-down-side,high-kick-side,grab-front,deep-crouch-front,torso-twist-front}.png`.
 - The hand is an open mitt with no finger bones (E15), so the handle passes through open fingers rather than a fist. This reads as holding at 720p, and it is the accepted rig limit.
+
+**Grip moved to the palm (YOK-finish-club, 2026-11-12).** The designer saw the club "look weird" in the finish build. Cause: the grip was the mean of the 583 hand verts, so the handle ran through the middle of the 6 cm thick mitt and poked out in front of the open fingers, visible from the fight camera in every pose (worst in walk, heavy punch and block high). The angle was right (handle in the palm plane, 106 degrees off the hand bone, i.e. along the knuckle line) and it is rigid on `RightHand`, so nothing bent. Fix: `ClubPivot` origin moved 5 cm (bone units) along the palm normal to the palm side, plus 0.8 along the fingers: `(2.943158, 13.373433, 3.974909)` to `(-1.086842, 14.213433, 6.804909)`; rotation unchanged. The handle now sits against the palm with the fingers over it from the camera side. Measured by `game/tests/captures/ClubGripCapture.cs` (palm normal = the thinnest principal axis of the hand verts, `(0.807, -0.169, -0.566)` in bone space; the palm side is the minus side, which faces down in the T-pose). Before / after stills: `stills/oni/club-grip/{before,after}/<pose>__{body,hand-cam,hand-side}.png`. The fingers stay open (no finger bones, mesh locked): that is still the rig limit.
 
 ## Attachment bones
 - Club on `RightHand`.

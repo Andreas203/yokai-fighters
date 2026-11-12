@@ -1,0 +1,53 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "C:/Users/Andreas/projects/wf-qa/game/assets/generated/clips/kitsune/kitsune-foxfire.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\kitsune\\kitsune-foxfire.glb",
+ "output_sha256": "b78be86d0d1b1a5cff0943dac9e8bbcaefc09dc27aa8b595f7211298e5653871",
+ "ticks": [
+  2,
+  162
+ ],
+ "start": 31,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "runs": {
+  "Left": [
+   [
+    31,
+    162
+   ]
+  ],
+  "Right": [
+   [
+    2,
+    30
+   ],
+   [
+    45,
+    110
+   ],
+   [
+    123,
+    162
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 132,
+   "max_correction_cm": 32.83,
+   "unreachable_ticks": 38
+  },
+  "Right": {
+   "locked_ticks": 143,
+   "max_correction_cm": 15.25,
+   "unreachable_ticks": 0
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}

@@ -78,6 +78,7 @@ public static class AiGuardTests
 	public static void LegacyOpponent_PlaysTheOldHashes()
 	{
 		// The first run of main's batch before YOK-165 (BotIdleGuardTests pins it too; YOK-174 re-pinned it from 1144460045766550), bot idle guard 0.
+		// YOK-226: both unchanged once a held-back rare is skipped before the draw (ProfileAi.Neutral).
 		foreach (var p in BehaviourProfile.LoadDirectory(ContentPaths.Data("profiles")))
 			Assert.True(p.GuardPct is null or 0, $"{p.Id}: no shipped profile opts in to the guard (else LegacyOpponent is not legacy)");
 		var content = LegacyOpponent(HarnessContent.Load(ContentPaths.DataDir, ContentPaths.FixturesDir));

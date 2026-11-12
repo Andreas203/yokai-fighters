@@ -1,0 +1,31 @@
+{
+  "kind": "trial",
+  "id": "iron-club-charge-trial",
+  "status": "proposed",
+  "special": "iron-club-charge",
+  "prompt": "Charge the dummy with Iron-Club Charge from across the dojo: the rush closes the gap for you.",
+  "attempts": 3,
+  "setup": {
+    "distance": 360,
+    "attempt_frames": 600,
+    "dummy": {
+      "action": "idle"
+    }
+  },
+  "goal": {
+    "steps": [
+      {
+        "event": "hit",
+        "move": "iron-club-charge"
+      }
+    ]
+  },
+  "rules": [
+    "R7",
+    "K1",
+    "K2",
+    "K3",
+    "F3"
+  ],
+  "notes": "Teaches that the charge covers distance by itself (forward_travel 240, YOK-221). Distance 360: the Oni's box reaches 230 ahead and the push boxes meet at about 135, so the rush must carry the fighter about 135-225 units and connects inside the 240 of travel. The dummy never attacks, so it is completable on the first try. Kihon: back + Special, slot C. Harness to confirm."
+}

@@ -188,7 +188,7 @@ public static class RunHarness
 		var (profiles, pi) = content.PickForNode(node, session.Seed);
 		if (profiles.Length == 0) throw new InvalidOperationException($"no behaviour profile for '{node.MovesAndProfilesOf}'");
 		uint step = (uint)session.Step;
-		var loadout = AiLoadout.From(m.P2);
+		var loadout = AiLoadout.From(m.P2, NodeFight.HeldBack(content.Sources, node, node.Fighter)); // YOK-226: rares held back off elder nodes
 		if (loadout.Missing(profiles[pi]) is { Count: > 0 } missing) // YOK-174: never skip a named move silently
 			throw new InvalidOperationException($"node '{node.NodeId}': profile '{profiles[pi].Id}' names {string.Join(", ", missing)}, which {node.MovesAndProfilesOf} on {node.Fighter}'s kit does not have");
 		var ai = new ProfileAi(profiles[pi], 1, loadout, Mix(runSeed, 0xA1000000u + step), node.ReactionFrames,

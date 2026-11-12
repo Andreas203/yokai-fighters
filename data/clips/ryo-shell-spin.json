@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "ryo-shell-spin",
+  "status": "proposed",
+  "file": "assets/generated/clips/ryo/ryo-shell-spin.glb",
+  "hit_start": 11,
+  "hit_end": 28,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:turn",
+  "frames_total": 48,
+  "retarget_notes": "Tripo take turn retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.90 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-shell-spin.",
+  "trim_start": 72,
+  "trim_end": 149,
+  "retime": [
+    {
+      "frames": [
+        1,
+        11
+      ],
+      "ticks": [
+        72,
+        92
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        11,
+        29
+      ],
+      "ticks": [
+        92,
+        111
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        29,
+        48
+      ],
+      "ticks": [
+        111,
+        149
+      ],
+      "note": "recovery eases out"
+    }
+  ]
+}

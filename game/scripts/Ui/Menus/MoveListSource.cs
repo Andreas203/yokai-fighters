@@ -53,7 +53,7 @@ public static class MoveListSource
 	public static readonly int[] GroupBreaksAfter = { 6, 12 };
 	public const string AirPunchId = "ryo-air-punch", AirKickId = "ryo-air-kick";
 
-	// PLACEHOLDER COPY (designer / movesmith to replace): A12 wants plain language first; normals have no card text in data yet.
+	// Plain-language lines for the basic moves (A12: plain language first); normals have no card text in data, so these are the copy.
 	private static readonly Dictionary<string, string> PlainCopy = new()
 	{
 		["walk"] = "Step toward or away from the foe.",

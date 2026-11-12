@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "kappa-shell-spin",
+  "status": "proposed",
+  "source": "meshy-library",
+  "clip": "194 Right_Uppercut_from_Guard",
+  "frames_total": 48,
+  "trim_start": 28,
+  "trim_end": 61,
+  "retime": [
+    {
+      "frames": [
+        1,
+        11
+      ],
+      "ticks": [
+        28,
+        38
+      ],
+      "note": "guard and wind-up at 1x, 10 startup frames"
+    },
+    {
+      "frames": [
+        11,
+        29
+      ],
+      "ticks": [
+        38,
+        47
+      ],
+      "note": "the strike pose played at 0.5x through the 18 active frames (GREYBOX: stands in for the spin)"
+    },
+    {
+      "frames": [
+        29,
+        48
+      ],
+      "ticks": [
+        47,
+        61
+      ],
+      "note": "recovery at 0.74x, 20 frames"
+    }
+  ],
+  "file": "assets/generated/clips/kitsune-heavy.glb",
+  "hit_start": 11,
+  "hit_end": 28,
+  "retarget_notes": "Same take, file and Kappa notes as kappa-heavy-punch (rig kappa-rigged.glb; the heavy WAS measured on the Kappa in the retarget gate: GO with a feet WARN; open on YOK-134: toe joints 3.2 cm under rest contact at the deepest tick). The slower curve is NOT re-measured and the shell clearance at 0.5x is not checked: no job run. Hips twist is large (yaw -43 deg), the nearest thing to a spin the take has.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of kappa-heavy-punch (Meshy preset 194 Right_Uppercut_from_Guard, trim raw 28-61), replace when a Kappa spin take lands (clip_needs S07). Route A (designer, YOK-219; decision 4: a heavy-swing stand-in until a Kappa clip job runs). Shell Spin 10/18/20 = 48 frames = the rules.md row, no deviation: the 34-frame heavy punch is retimed in three segments, 1x for the 10 startup frames, 0.5x (the slowest allowed) across the 18 active frames, 0.74x for the 20 recovery frames; no holds. Contact is raw 38 (frame 11, the first active frame, as in kappa-heavy-punch); frames 11-28 show raw 38-47 of the take. It reads as a long slow uppercut, not a spin: the spin is the real take's job. Ryo's body plays ryo-shell-spin (T0). No job run; 0 credits."
+}

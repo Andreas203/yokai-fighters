@@ -1,0 +1,31 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_t3bkvw5i\front.png'
+Time: 00:00.54 (Saving: 00:00.10)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip__kyjpa9u\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_qka3w2qc\front.png'
+Time: 00:00.04 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_8xngf58s\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_4h60dae4\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_chsvwvfy\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_0m6dx46q\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ogcsjw8x\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.02s
+measure_clip: kappa-light-kick WARN frames=153 slide=1.29 cm/f accel=12.1 deg/f^2 reversals=10
+measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\kappa-light-kick\measure\kappa-light-kick.report.json
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
