@@ -2,54 +2,32 @@
   "kind": "clip",
   "id": "kappa-medium-punch",
   "status": "proposed",
-  "file": "assets/generated/clips/kappa/kappa-medium-punch.glb",
+  "source": "meshy-library",
+  "clip": "210 Boxing_Guard_Prep_Straight_Punch",
+  "frames_total": 21,
+  "trim_start": 105,
+  "trim_end": 130,
+  "retime": [
+    {
+      "frames": [
+        1,
+        21
+      ],
+      "ticks": [
+        105,
+        130
+      ],
+      "note": "one segment at 1.25x: the reused clip's own constant speed, so every frame lands on the same raw tick as kitsune-medium-punch"
+    }
+  ],
+  "file": "assets/generated/clips/kitsune/kitsune-mp.glb",
   "hit_start": 7,
   "hit_end": 9,
+  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). Source clip's own retarget result: WARN. Cross punch with a hip turn: right hand 7 to 55 cm forward, peak raw 116, speed 4.3 m/s. Root travel 6 cm, planted feet 3.2/2.1 cm. The sleeve extends as a long flared panel at full reach (7.7x vs the accepted heavy 9.6x at its hit) and the guard frames fold the sleeves over the face; stills show a flare, no inversion. Hakama clean; tail proxy clear.",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "source": "tripo-library",
-  "clip": "preset:biped:box_02",
-  "frames_total": 21,
-  "retarget_notes": "Tripo take box_02 retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (WARN, slide 1.25 cm/frame).",
-  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-medium-punch.",
-  "trim_start": 79,
-  "trim_end": 119,
-  "retime": [
-    {
-      "frames": [
-        1,
-        7
-      ],
-      "ticks": [
-        79,
-        91
-      ],
-      "note": "startup snaps into the strike"
-    },
-    {
-      "frames": [
-        7,
-        10
-      ],
-      "ticks": [
-        91,
-        97
-      ],
-      "note": "strike pose through the active frames"
-    },
-    {
-      "frames": [
-        10,
-        21
-      ],
-      "ticks": [
-        97,
-        119
-      ],
-      "note": "recovery eases out"
-    }
-  ]
+  "notes": "GREYBOX reuse of kitsune-medium-punch, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (105-130), 21 frames, hit frames 7-9; retime curve is one segment at 1.25x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
 }

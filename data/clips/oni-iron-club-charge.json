@@ -2,21 +2,11 @@
   "kind": "clip",
   "id": "oni-iron-club-charge",
   "status": "proposed",
-  "file": "assets/generated/clips/oni/oni-iron-club-charge.glb",
-  "hit_start": 13,
-  "hit_end": 18,
-  "rules": [
-    "F2",
-    "F5",
-    "F6"
-  ],
-  "source": "tripo-library",
-  "clip": "preset:biped:slash",
+  "source": "meshy-library",
+  "clip": "Rifle_Charge_inplace",
   "frames_total": 32,
-  "retarget_notes": "Tripo take slash retargeted onto oni by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.26 cm/frame).",
-  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only oni-iron-club-charge.",
-  "trim_start": 168,
-  "trim_end": 230,
+  "trim_start": 0,
+  "trim_end": 13,
   "retime": [
     {
       "frames": [
@@ -24,32 +14,64 @@
         13
       ],
       "ticks": [
-        168,
-        192
+        0,
+        6
       ],
-      "note": "startup snaps into the strike"
+      "note": "lean and drive at 0.5x: the first half of the stride, 12 startup frames"
     },
     {
       "frames": [
         13,
-        19
+        16
       ],
       "ticks": [
-        192,
-        204
+        6,
+        6
       ],
-      "note": "strike pose through the active frames"
+      "note": "stride pose held 4 frames at the start of the active window (GREYBOX strike pose: the take has none)"
     },
     {
       "frames": [
-        19,
+        16,
+        28
+      ],
+      "ticks": [
+        6,
+        12
+      ],
+      "note": "the stride finishes at 0.5x through the rest of the active frames and into recovery"
+    },
+    {
+      "frames": [
+        28,
+        30
+      ],
+      "ticks": [
+        12,
+        13
+      ],
+      "note": "last step at 0.5x"
+    },
+    {
+      "frames": [
+        30,
         32
       ],
       "ticks": [
-        204,
-        230
+        13,
+        13
       ],
-      "note": "recovery eases out"
+      "note": "last pose held 3 frames as the recovery settle; the take cannot loop"
     }
-  ]
+  ],
+  "file": "assets/generated/clips/oni/oni-charge-club.glb",
+  "hit_start": 13,
+  "hit_end": 18,
+  "retarget_notes": "Oni rig oni-rigged.glb (2.2 m), Meshy rig task 01a144ad-b98d-7520-8376-c776c414a476. WARN: only the clean window of the take is kept. The raw 33-tick stride cycle puts the club into the shoulder and chest at ticks 14-19 (up to 32 cm); raw ticks 20-33 are clean (0 vertices inside the body on all 14 poses, club lowest point 1.19 m). It cannot loop: it is a 14-frame half stride, played once or held at the last pose.",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "Meshy preset 654 Rifle_Charge_inplace on task 01a14549-1b6d-74b5-b5e4-74abde45ab3d (one take), raw take game/assets/generated/characters/oni/takes/oni-charge-654.glb (33 ticks). Cleaned with clean_clip.py: trim raw ticks 20-33 (file tick 0 = raw 20), strip-root horizontal, no smoothing. The run's feet travel about 9 cm per tick as measured on the treadmill: the rush distance and speed are move data, so there is no foot slide to judge. Max joint acceleration 20.4 deg per frame squared (left toe, frame 3), just over the 20 warn level. The move's window is movesmith's: at 14 frames it needs a hold of the last pose (at most 4 frames) or a slower curve (0.5x gives 28 frames). YOK-227 (route A, YOK-219): GREYBOX reuse of the 14-frame clean window of this take (raw 20-33), replace when a real take lands. Retimed to 32 frames: ticks 0-13 at 0.5x (26 steps) plus a 4-frame hold at tick 6 and a 3-frame hold at tick 13, every segment inside 0.5x-2x and every hold at most 4 frames. Window 12 startup / 6 active (13-18) / 14 recovery. The take has no strike moment, so hit_start 13 and hit_end 18 are the move's active window, not a visible contact; the animator re-measures stills at ticks 6 and 13 and the club clearance on the held poses (the clean window already clears on every tick). Not a new take: 0 credits."
 }

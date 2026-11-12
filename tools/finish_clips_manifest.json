@@ -168,7 +168,8 @@
     "active": 3,
     "total": 21
    },
-   "prop": "shell"
+   "prop": "shell",
+   "rejected": "hand into head 13.7 cm, planted-foot slide 18 cm"
   },
   {
    "id": "kappa-heavy-punch",
@@ -213,7 +214,8 @@
     "active": 3,
     "total": 24
    },
-   "prop": "shell"
+   "prop": "shell",
+   "rejected": "arm into shell 15.7 cm, hand into spine 13.6 cm"
   },
   {
    "id": "kappa-heavy-kick",
@@ -228,7 +230,8 @@
     "active": 4,
     "total": 38
    },
-   "prop": "shell"
+   "prop": "shell",
+   "rejected": "arm into shell 17.5 cm, hand into tail 17.1 cm"
   },
   {
    "id": "kappa-throw",
@@ -243,7 +246,8 @@
     "active": 7,
     "total": 30
    },
-   "prop": "shell"
+   "prop": "shell",
+   "rejected": "forearm into spine 13.6 cm for all 30 frames"
   },
   {
    "id": "kappa-river-grab",
@@ -259,7 +263,8 @@
     "total": 38
    },
    "prop": "shell",
-   "movement": true
+   "movement": true,
+   "rejected": "hand into tail 16.5 cm, hand into spine 13.8 cm"
   },
   {
    "id": "kappa-shell-spin",
@@ -275,7 +280,8 @@
     "total": 48
    },
    "prop": "shell",
-   "movement": true
+   "movement": true,
+   "rejected": "arm into shell 17.2 cm, hand into tail 13.8 cm"
   },
   {
    "id": "oni-light-punch",
@@ -290,7 +296,8 @@
     "active": 2,
     "total": 13
    },
-   "prop": "club"
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm"
   },
   {
    "id": "oni-heavy-kick",
@@ -305,7 +312,8 @@
     "active": 4,
     "total": 38
    },
-   "prop": "club"
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm"
   },
   {
    "id": "oni-throw",
@@ -320,7 +328,8 @@
     "active": 7,
     "total": 30
    },
-   "prop": "club"
+   "prop": "club",
+   "rejected": "forearm into spine 12.3 cm, floats 6.6 cm"
   },
   {
    "id": "oni-quake",
@@ -335,7 +344,8 @@
     "active": 4,
     "total": 56
    },
-   "prop": "club"
+   "prop": "club",
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm, sinks 10 cm"
   },
   {
    "id": "oni-iron-club-charge",
@@ -351,7 +361,8 @@
     "total": 32
    },
    "prop": "club",
-   "movement": true
+   "movement": true,
+   "rejected": "forearm into spine 17.8 cm, club into hips 16.7 cm, sinks 7 cm"
   },
   {
    "id": "kitsune-light-punch",
@@ -546,7 +557,8 @@
    "clip": "preset:biped:hit_to_head",
    "prop": "shell",
    "movement": true,
-   "pose_frames": 33
+   "pose_frames": 33,
+   "rejected": "hand into spine 13.3 cm, tail 13 cm"
   },
   {
    "id": "kappa-hit-low",
@@ -558,7 +570,8 @@
    "clip": "preset:biped:hit_to_stomach",
    "prop": "shell",
    "movement": true,
-   "pose_frames": 37
+   "pose_frames": 37,
+   "rejected": "forearm into tail 15.7 cm, hand into head 13.6 cm"
   },
   {
    "id": "kappa-knockdown",
@@ -570,7 +583,8 @@
    "clip": "preset:biped:defeat_02",
    "prop": "shell",
    "movement": true,
-   "pose_frames": 49
+   "pose_frames": 49,
+   "rejected": "arm into shell 15.2 cm for all 49 frames; hips held at standing height"
   },
   {
    "id": "kappa-jump",
@@ -582,7 +596,8 @@
    "clip": "preset:biped:jump",
    "prop": "shell",
    "movement": true,
-   "pose_frames": 49
+   "pose_frames": 49,
+   "rejected": "forearm into shell 13.9 cm, hand into spine 13.8 cm"
   },
   {
    "id": "oni-hit-high",
@@ -594,7 +609,8 @@
    "clip": "preset:biped:hit_to_head",
    "prop": "club",
    "movement": true,
-   "pose_frames": 33
+   "pose_frames": 33,
+   "rejected": "floats 32 cm, club into spine 17.5 cm"
   },
   {
    "id": "oni-hit-low",
@@ -606,7 +622,8 @@
    "clip": "preset:biped:hit_to_stomach",
    "prop": "club",
    "movement": true,
-   "pose_frames": 33
+   "pose_frames": 33,
+   "rejected": "floats 32 cm, forearm into spine 16 cm"
   },
   {
    "id": "oni-knockdown",
@@ -618,7 +635,8 @@
    "clip": "preset:biped:defeat_02",
    "prop": "club",
    "movement": true,
-   "pose_frames": 49
+   "pose_frames": 49,
+   "rejected": "hand into thigh 10.7 cm, hips into club 8.4 cm"
   },
   {
    "id": "oni-jump",
@@ -630,7 +648,8 @@
    "clip": "preset:biped:jump",
    "prop": "club",
    "movement": true,
-   "pose_frames": 49
+   "pose_frames": 49,
+   "rejected": "club into spine 17.5 cm, hand into spine 17.6 cm"
   }
  ]
 }

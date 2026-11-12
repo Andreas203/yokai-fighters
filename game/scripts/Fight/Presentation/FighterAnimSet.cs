@@ -104,7 +104,7 @@ public sealed class FighterAnimSet
 	/// <summary>YOK-146: true when this body has the clip on its own skeleton (see <see cref="ClipPath"/>).</summary>
 	public bool CanPlay(ClipInfo? info) => info != null && ClipPath(info) != null;
 
-	private static readonly HashSet<string> SharedAir = new() { "ryo-jump", "ryo-jump-back", "kitsune-jump", "ryo-jump-kick", "ryo-jump-punch", "kappa-jump", "oni-jump" };
+	private static readonly HashSet<string> SharedAir = new() { "ryo-jump", "ryo-jump-back", "kitsune-jump", "ryo-jump-kick", "ryo-jump-punch" };
 
 	/// <summary>
 	/// YOK-146 SWITCH: which Ryo body fights. True = the Tripo Ryo on the Option A shared skeleton (metre bones, his
@@ -223,6 +223,9 @@ public sealed class FighterAnimSet
 		BurstFrame = 10,
 		AirClips = SharedAir,
 		FallbackThrowClip = "kitsune-throw",
+		// YOK-246: the Tripo takes are upright (the Meshy guard clips are crouched), so her feet floated 15 cm (light punch) and
+		// 8 cm (Fox Mirage) in the fight pose (rig_qa); metres of hips lowered per clip, the median float of each take.
+		ClipHipOffsetY = new Dictionary<string, float> { ["kitsune-light-punch"] = -0.147f, ["kitsune-fox-mirage"] = -0.05f },
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "kitsune-idle",
@@ -269,12 +272,12 @@ public sealed class FighterAnimSet
 		ReversedPoses = new HashSet<PoseKind> { PoseKind.WalkBack },
 		ClipOverrides = new Dictionary<string, string>
 		{
-			["kitsune-light-punch"] = "oni-light-punch", // YOK-246: Tripo slash on his own skeleton
+			["kitsune-light-punch"] = "ryo-light-punch",
 			["kitsune-medium-punch"] = "oni-medium-punch",
 			["kitsune-medium-kick"] = "oni-medium-kick",
 			["kitsune-heavy-punch"] = "oni-heavy-punch",
-			["kitsune-heavy-kick"] = "oni-heavy-kick",
-			["kitsune-throw"] = "oni-throw",
+			["kitsune-heavy-kick"] = "ryo-heavy-kick",
+			["kitsune-throw"] = "ryo-generic-throw",
 		},
 		Clips = new Dictionary<PoseKind, string>
 		{
@@ -283,20 +286,20 @@ public sealed class FighterAnimSet
 			[PoseKind.WalkBack] = "oni-walk-fwd", // played reversed (ReversedPoses)
 			[PoseKind.Dash] = "oni-walk-fwd",
 			[PoseKind.DashBack] = "oni-dash-back", // YOK-246: retargeted onto the Oni, club-checked
-			[PoseKind.Jump] = "oni-jump", // YOK-246: Tripo jump on his own skeleton
-			[PoseKind.JumpBack] = "oni-jump",
+			[PoseKind.Jump] = "kitsune-jump", // borrowed: the Oni kit has no jump
+			[PoseKind.JumpBack] = "kitsune-jump",
 			[PoseKind.Crouch] = "ryo-crouch", // YOK-247: oni-crouch put the club through his thigh (8-13 cm); kept the old clip
 			[PoseKind.BlockHigh] = "ryo-block-high", // YOK-247: oni-block-high put the club through his head (13.6 cm); kept the old clip
 			[PoseKind.BlockLow] = "oni-block-low",
 			[PoseKind.HitHigh] = "oni-hit-high",
 			[PoseKind.HitLow] = "oni-hit-low",
-			[PoseKind.Knockdown] = "oni-knockdown",
+			[PoseKind.Knockdown] = "ryo-knockdown",
 			[PoseKind.GetUp] = "oni-get-up",
 			[PoseKind.Thrown] = "oni-hit-high",
-			[PoseKind.Landing] = "oni-jump",
+			[PoseKind.Landing] = "kitsune-jump",
 			[PoseKind.Burst] = "kitsune-foxfire", // borrowed: no Oni cast take
-			[PoseKind.Ko] = "oni-knockdown",
-			[PoseKind.Attack] = "oni-light-punch",
+			[PoseKind.Ko] = "ryo-knockdown",
+			[PoseKind.Attack] = "ryo-light-punch",
 		},
 	};
 
@@ -318,18 +321,10 @@ public sealed class FighterAnimSet
 			[PoseKind.BlockHigh] = "kappa-block-high",
 			[PoseKind.BlockLow] = "kappa-block-low",
 			[PoseKind.GetUp] = "kappa-get-up",
-			// YOK-246: Tripo takes on his own skeleton (hit, fall, jump) instead of the Kitsune's Meshy clips.
-			[PoseKind.HitHigh] = "kappa-hit-high",
-			[PoseKind.HitLow] = "kappa-hit-low",
-			[PoseKind.Thrown] = "kappa-hit-high",
-			[PoseKind.Knockdown] = "kappa-knockdown",
-			[PoseKind.Ko] = "kappa-knockdown",
-			[PoseKind.Jump] = "kappa-jump",
-			[PoseKind.JumpBack] = "kappa-jump",
-			[PoseKind.Landing] = "kappa-jump",
-			[PoseKind.Attack] = "kappa-light-punch",
 		},
 		hipOffset: 0.03f, // Fix B: feet sank about 3 cm (idle 2.8 median); finish-qa.md
+		// YOK-246: his three accepted Tripo takes are upright (floated 14-20 cm at the Fix B offset): the median float per clip.
+		clipHipOffsetY: new Dictionary<string, float> { ["kappa-light-punch"] = -0.131f, ["kappa-heavy-punch"] = -0.163f, ["kappa-light-kick"] = -0.108f },
 		lyingLift: new Dictionary<PoseKind, HipLift[]> { [PoseKind.GetUp] = KappaGetUpLift }); // Fix D: legs 25 cm under the floor at get-up f13
 
 	private static IReadOnlyDictionary<PoseKind, string> Merge(IReadOnlyDictionary<PoseKind, string> from, Dictionary<PoseKind, string>? own)
@@ -342,10 +337,12 @@ public sealed class FighterAnimSet
 	}
 
 	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene, Dictionary<PoseKind, string>? own = null,
-		float hipOffset = 0f, IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null) => new()
+		float hipOffset = 0f, IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null,
+		IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
 		Fighter = fighter,
 		HipOffsetY = hipOffset,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
 		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,

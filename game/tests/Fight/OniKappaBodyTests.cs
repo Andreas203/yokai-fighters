@@ -73,16 +73,16 @@ public static class OniKappaBodyTests
 		{
 			(PoseKind.Idle, "oni-idle"), (PoseKind.WalkFwd, "oni-walk-fwd"), (PoseKind.WalkBack, "oni-walk-fwd"),
 			(PoseKind.HitHigh, "oni-hit-high"), (PoseKind.HitLow, "oni-hit-low"), (PoseKind.BlockLow, "oni-block-low"),
-			(PoseKind.BlockHigh, "ryo-block-high"), (PoseKind.Crouch, "ryo-crouch"), (PoseKind.Knockdown, "oni-knockdown"),
-			(PoseKind.GetUp, "oni-get-up"), (PoseKind.Jump, "oni-jump"),
+			(PoseKind.BlockHigh, "ryo-block-high"), (PoseKind.Crouch, "ryo-crouch"), (PoseKind.Knockdown, "ryo-knockdown"),
+			(PoseKind.GetUp, "oni-get-up"),
 		})
 			Assert.Equal(clip, oni.ClipFor(k), $"oni {k}");
 		Assert.True(oni.ReversedPoses.Contains(PoseKind.WalkBack), "oni walk back is the forward walk reversed");
 		foreach (var (kit, clip) in new[]
 		{
-			("kitsune-light-punch", "oni-light-punch"), ("kitsune-medium-punch", "oni-medium-punch"),
+			("kitsune-light-punch", "ryo-light-punch"), ("kitsune-medium-punch", "oni-medium-punch"),
 			("kitsune-medium-kick", "oni-medium-kick"), ("kitsune-heavy-punch", "oni-heavy-punch"),
-			("kitsune-heavy-kick", "oni-heavy-kick"), ("kitsune-throw", "oni-throw"),
+			("kitsune-heavy-kick", "ryo-heavy-kick"), ("kitsune-throw", "ryo-generic-throw"),
 		})
 		{
 			Assert.Equal(clip, oni.MoveClip(kit), $"oni plays {kit} as {clip}");

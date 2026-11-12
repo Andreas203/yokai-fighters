@@ -2,21 +2,11 @@
   "kind": "clip",
   "id": "kappa-river-grab",
   "status": "proposed",
-  "file": "assets/generated/clips/kappa/kappa-river-grab.glb",
-  "hit_start": 7,
-  "hit_end": 8,
-  "rules": [
-    "F2",
-    "F5",
-    "F6"
-  ],
-  "source": "tripo-library",
-  "clip": "preset:biped:lift_heavy",
+  "source": "meshy-library",
+  "clip": "259 Step_Forward_and_Push",
   "frames_total": 38,
-  "retarget_notes": "Tripo take lift_heavy retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.28 cm/frame).",
-  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-river-grab.",
-  "trim_start": 1133,
-  "trim_end": 1172,
+  "trim_start": 30,
+  "trim_end": 59,
   "retime": [
     {
       "frames": [
@@ -24,10 +14,10 @@
         7
       ],
       "ticks": [
-        1133,
-        1145
+        30,
+        35
       ],
-      "note": "startup snaps into the strike"
+      "note": "reach, 0.83x: the palms are at full reach on frame 7, the first active frame"
     },
     {
       "frames": [
@@ -35,10 +25,10 @@
         9
       ],
       "ticks": [
-        1145,
-        1149
+        35,
+        37
       ],
-      "note": "strike pose through the active frames"
+      "note": "the grab connects, 1x through the 2 active frames"
     },
     {
       "frames": [
@@ -46,10 +36,20 @@
         38
       ],
       "ticks": [
-        1149,
-        1172
+        37,
+        59
       ],
-      "note": "recovery eases out"
+      "note": "pull and recovery at 0.76x, 30 recovery frames"
     }
-  ]
+  ],
+  "file": "assets/generated/clips/kitsune/kitsune-throw.glb",
+  "hit_start": 7,
+  "hit_end": 8,
+  "retarget_notes": "Same take, file and Kappa result as kappa-throw (rig kappa-rigged.glb, retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md): the throw WAS measured on the Kappa, push lands at 0.91 m, shell clean. The 0.76-0.83x curve is NOT re-measured on the Kappa: no job run. The clip carries a 28 cm hip advance that a data step must replace (E15); not encoded (same open item as the generic throws).",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "notes": "GREYBOX reuse of ryo-generic-throw (Meshy preset 259 Step_Forward_and_Push, trim raw 30-59), replace when a take of its own lands. Route A (designer, YOK-219, 2026-11-01). River Grab 6/2/30 = 38 frames: the 30-frame throw clip at about 0.8x (29 raw ticks over 37 steps = 0.78x overall), in three segments inside 0.5x-2x with no holds. The palm reach (raw 35) lands on frame 7, the first active frame, so startup 6 / active 2 (frames 7-8) / recovery 30 follow the clip. Generic grab only (C4): the defender plays the standard knockdown, never a paired animation. Ryo's body plays ryo-river-grab (T0). No job run; 0 credits."
 }

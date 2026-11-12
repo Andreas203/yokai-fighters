@@ -106,6 +106,8 @@ def main():
     for e in entries:
         if a.only and e["id"] not in a.only:
             continue
+        if e.get("rejected") and not a.only:  # failed the in-game QA (assets/specs/clips/finish-pipeline-summary.md); rebuilt only on request
+            continue
         cid, body = e["id"], e["body"]
         row = {"id": cid, "body": body, "clean": "-", "retarget": "-", "verdict": "-", "slide": "-", "frames": "-", "hit": "-", "prop": "-", "notes": []}
         rows.append(row)
