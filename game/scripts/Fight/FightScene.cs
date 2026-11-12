@@ -268,7 +268,6 @@ public partial class FightScene : Node3D
 	public override void _Ready()
 	{
 		if (GetNodeOrNull(FightEditorPreview.NodeName) is { } preview) { RemoveChild(preview); preview.Free(); } // YOK-144: the editor-only preview never exists at runtime
-		MusicPlayer.Instance?.PlayBattleMusic();
 		SetUpRun(); // YOK-48: a fresh run, the first fight built from it
 		BuildStage();
 		_bodies[0] = BuildFighter("Ryo", new Color(0.85f, 0.85f, 0.95f));
@@ -343,13 +342,43 @@ public partial class FightScene : Node3D
 		_hitMatch.Hit += OnHit;
 	}
 
+	/// <summary>
+	/// YOK-54 (V6, AM23): the accepted ElevenLabs thuds the scene plays while there are no data/sound/ cue tables: light,
+	/// heavy and block. The old nine-sample pack (<see cref="HitClipPaths"/>) plays only if these files are missing.
+	/// </summary>
+	public const string LightHitPath = "res://sound/sfx/hits/hit_light_t2.wav", HeavyHitPath = "res://sound/sfx/hits/hit_heavy_f_t1.wav",
+		BlockHitPath = "res://sound/sfx/hits/block_t2_norm.wav";
+
+	/// <summary>Damage from which a hit gets the heavy thud (Ryo's heavy punch deals 80, his light 30).</summary>
+	public const int HeavyHitDamage = 80;
+
+	/// <summary>YOK-54 (pure): the thud for a hit: block on a blocked hit; heavy on a heavy move, a counter-hit or <see cref="HeavyHitDamage"/>+; else light.</summary>
+	public static string HitSoundFor(HitEvent hit) =>
+		hit.Blocked ? BlockHitPath
+		: hit.MoveId.Contains("heavy") || hit.Counter || hit.Damage >= HeavyHitDamage ? HeavyHitPath
+		: LightHitPath;
+
+	private readonly Dictionary<string, AudioStreamWav?> _hitSounds = new();
+
+	private AudioStreamWav? HitSound(string path)
+	{
+		if (!_hitSounds.TryGetValue(path, out var clip))
+			_hitSounds[path] = clip = ResourceLoader.Exists(path) ? ResourceLoader.Load<AudioStreamWav>(path) : null;
+		return clip;
+	}
+
 	private void OnHit(Match _, HitEvent hit)
 	{
-		if (hit.Blocked || _hitClips.Length == 0) return;
-
+		if (_hitPlayers[0] == null) return;
+		AudioStreamWav? clip = HitSound(HitSoundFor(hit));
+		if (clip == null) // the old pack: unblocked hits only, in turn
+		{
+			if (hit.Blocked || _hitClips.Length == 0) return;
+			clip = _hitClips[_nextHitClip++ % _hitClips.Length];
+		}
 		var player = _hitPlayers[_nextHitPlayer++ % _hitPlayers.Length];
 		player.Stop();
-		player.Stream = _hitClips[_nextHitClip++ % _hitClips.Length];
+		player.Stream = clip;
 		player.Play();
 	}
 

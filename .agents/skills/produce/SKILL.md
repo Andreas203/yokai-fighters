@@ -27,7 +27,7 @@ Every branch and PR title is `YOK-<number>-<brief-name>` for its ticket (e.g. `Y
 
 **clip**: run `animator` to write the clip spec, then list the take and its cost estimate for the designer (credits, pack price or a capture session they record). Once they approve, run the take, then `animator` again to clean, measure and retime it and write `data/clips/`, then continue with the content workflow. Never run a job without the designer's approval, and never hand-key animation.
 
-**sound**: run `sound-scout`, then move the ticket to review — purchases are the designer's call. After purchase, a follow-up ticket goes to `animator` for sound cues.
+**sound**: run `sound-smith` to write the ElevenLabs batch and its `el.py plan` cost, then move the ticket to review — the job list and credit cap are the designer's call. After approval `sound-smith` runs the batch under that cap and records verdicts; accepted hit sounds go to `animator` for sound cues. For packs, run `sound-scout`; purchases are the designer's call.
 
 **code**:
 1. Run `gameplay-programmer` or `ui-designer`. They work on their own branch with a closed build-and-test loop.

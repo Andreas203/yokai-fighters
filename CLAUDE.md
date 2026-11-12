@@ -5,7 +5,7 @@ Single-player 2.5D roguelite fighting game for PC, built in **Godot 4 (.NET) wit
 ## Sources of truth
 - `Yokai_Fighters_GDD_Extended.pdf` — the full design. `Yokai_Fighters_GDD_Short.pdf` is the 5-page summary.
 - `docs/design/gdd-extended.md`, `docs/design/gdd-short.md` — word-for-word Markdown transcriptions of the two PDFs, with page markers; read these instead of extracting the PDF. Diagrams are approximate there, and if a transcription disagrees with its PDF, the PDF wins and the transcription gets fixed.
-- `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated, sound is sourced). An amendment wins over the PDF section it names.
+- `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated; AM23: sound may be generated with ElevenLabs). An amendment wins over the PDF section it names.
 - `docs/design/rules.md` — the written rules distilled from the GDD and its amendments, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF + amendments, they win and rules.md gets fixed.
 - `docs/decision-log.md` — append-only history of decisions (Linear comments, amendments, gates, spend). Load it as memory before planning; append new decisions there. What still waits on the designer is in Linear (designer queue YOK-189, label `decision`), not in the repo.
 - `docs/process/change-tracking.md` — where each kind of change is recorded (amendment, decision line, Linear ticket, PR and `CHANGELOG.md`). Read it before writing any new `.md` file; `tools/check_docs.py` enforces it in CI. The sources above win if it disagrees.
@@ -20,6 +20,7 @@ Development tools only — none of them ship in the game. Defined in `.claude/ag
 | Assets | `asset-smith` | Generation specs and acceptance checks for models, stages, UI and VFX textures; level presets |
 | Assets | `rig-specialist` | Rigs every fighter (generator auto-rig or AccuRIG 2), checks it in Blender, keeps it on the shared skeleton, runs the G4 gate |
 | Assets | `animator` | Specs each move's clip, cleans, measures and retimes the take, then frame-timed sound |
+| Assets | `sound-smith` | ElevenLabs specs, approved runs and acceptance checks for sound effects, ambience and music |
 | Assets | `sound-scout` | Shortlists sound-effect and music packs |
 | Content | `movesmith` | Move list, frame data from matched clips, hitboxes, card text, trials |
 | Content | `habit-writer` | Yokai temperament profiles and all story-card text |
@@ -44,6 +45,7 @@ Animator spec → designer approves take → take (generator, mocap, pack) → B
                                                           │ pass                             │
                                                           ▼                                  │
                                                     Harness checks → data merges        ◄────┘
+Sound Smith spec → designer approves jobs + credit cap → Sound Smith runs (tools/elevenlabs/el.py) → accepts takes → Animator sound cues
 Sound Scout shortlist → designer buys → Animator sound cues
 Gameplay Programmer / UI Designer → own branch, build-and-test loop → Code Critic → Test Breaker → designer review → merge
                                              ▲                              │ fail: back with file, line, rule or probe
@@ -62,6 +64,9 @@ Harness results → Sparring Partner → Producer tickets the tuning
 | `assets/specs/rigs/` | Rig specs, the shared skeleton and its bone map (`skeleton.md`), rig verdicts and stress-pose stills | rig-specialist |
 | `assets/specs/clips/` | Per-move clip specs (source, cleanup, retiming), take verdicts, measured stills (`stills/`); the retarget gate report is rig-specialist's | animator |
 | `assets/shortlists/` | Sound and music pack comparisons | sound-scout |
+| `assets/specs/sound/` | ElevenLabs job batches (`*.json`), their specs and acceptance (`*.md`), the run log (`logs/`) | sound-smith |
+| `game/sound/sfx/`, `game/sound/music/` | Generated sound and music takes | sound-smith |
+| `tools/elevenlabs/` | ElevenLabs CLI (`el.py`: balance, plan, capped run, measure); key from `ELEVENLABS_API_KEY` | sound-smith |
 | `data/clips/`, `data/sound/` | Clip matches, sound cues | animator |
 | `data/presets/` | Level presets | asset-smith |
 | `tools/blender/` | Headless Blender scripts: rig checks, weight repair, cleanup, retargeting, clip measurement | rig-specialist, animator |
@@ -89,6 +94,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.
-- Visuals are generated (Tripo or Meshy; rigs also AccuRIG 2; clips also motion capture or bought packs, cleaned in Blender by script), sound is sourced (AM1, AM5); agents run only jobs the designer has approved, at the approved cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
+- Visuals are generated (Tripo or Meshy; rigs also AccuRIG 2; clips also motion capture or bought packs, cleaned in Blender by script), sound is generated with ElevenLabs or bought (AM1, AM5, AM23); agents run only jobs the designer has approved, at the approved cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
 - Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - Cut order if behind: scope gate (end of week 1) → Kata, then meta-unlocks; balance gate (mid week 3) → modifiers 14→8, then dojo trials, then colour-only presets. The designer makes the call.

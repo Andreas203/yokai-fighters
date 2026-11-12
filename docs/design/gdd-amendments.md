@@ -28,6 +28,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
 | [AM22](#am22) | 2026-11-10 | The routes ahead show as sketches on bare paper; no mist | R2 | YOK-245 |
+| [AM23](#am23) | 2026-11-09 | Sound and music may be generated with ElevenLabs | F6 | YOK-54 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -505,3 +506,25 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended §6.1 The map | (as amended by AM19) | The routes ahead are visible as faint sketches; their nodes are not. |
 | GDD short §1.2 Core loop | (as amended by AM19) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
 | rules.md R2 | "...the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." | "...the real routes ahead show only as faint sketched lines on bare paper, with no node, name or icon [AM19, AM22]." |
+
+<a id="am23"></a>
+
+## AM23 — Sound and music may be generated with ElevenLabs (2026-11-09)
+
+**Status.** Decided by the designer on 2026-11-09 (YOK-54): "connect to elevenlabs and get some theme appropriate music/battle music and sound effects, if no agent exists for this create one".
+
+**Decision.** Sound effects and music may be **generated with ElevenLabs** (its sound-effects and Eleven Music APIs) as well as bought as packs, the designer's choice per job. A new crew agent, **Sound Smith** (`sound-smith`), writes the generation specs, runs approved jobs through `tools/elevenlabs/el.py` and checks the takes. Sound Scout keeps shortlisting packs for what a prompt cannot make. The rules for every generator still hold: the designer approves each job list and its credit cap, an agent never spends past that cap, three takes per sound and then a substitute, and the spend is recorded in the decision log.
+
+**Why.** The only shortlisted pack set that fit the $20 sound cap left gaps (no Ryo or Kitsune sting, no merchant melody, no stems), and the game has shipped with two placeholder tracks since 2026-10-20. Generation covers every V6 and V9 need with one tone across stages.
+
+**What does not change.** V6 (thud plus yokai sting on the impact frame), V9 (the instruments, intensity rising by row, the Tanuki detuning the merchant's melody) and the animator's frame-timed cue tables in `data/sound/`. The AM1 licence clause applies to ElevenLabs as to every generator: output for the shipped game comes from a paid plan that clears commercial use.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM1, "Decision" and pipeline | "Sound effects and music are still sourced from packs." / "Sound and music: sourced packs, shortlisted by the crew, bought by the designer." | Sound and music are generated with ElevenLabs or bought as packs, the designer's choice per job. |
+| GDD extended §9 Agents table | (as amended by AM1) Sound Scout: "Shortlists sound and music packs." | Adds **Sound Smith**: "Writes ElevenLabs sound and music specs, runs approved jobs and checks the takes." — *Every hit, every row and every menu sounds like the same world.* Sound Scout stays for packs. |
+| GDD extended §10.1 Engine, assets | (as amended by AM1) "sound and music are bought" | "sound and music are generated with ElevenLabs or bought". |
+| GDD short §2 agents and technical lines | (as amended by AM1) sound is sourced | Sound is generated with ElevenLabs or bought; Sound Smith generates it. |
+| rules.md F6 | "Sound and music: bought packs." | "Sound and music: ElevenLabs generation (Sound Smith) or bought packs (Sound Scout), the designer's choice per job [AM23]." |

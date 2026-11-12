@@ -106,6 +106,7 @@ public partial class FightScene
 		container.AddChild(stage);
 		StageRoot = stage;
 		StageKind = stage.Kind;
+		Audio.MusicPlayer.Instance?.PlayStageMusic(StageKind); // YOK-54 (V9, AM23): the stage's own track
 	}
 
 	/// <summary>

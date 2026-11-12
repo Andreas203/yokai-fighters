@@ -449,7 +449,7 @@ Practice mode reuses the dojo scene with a training dummy, so it needs no new sc
 
 ## 9. AI architecture
 
-> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith replaces Asset Scout, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator replace Clip Matcher. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith replaces Asset Scout, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator replace Clip Matcher, [AM23](gdd-amendments.md#am20) Sound Smith. Where they disagree with this section, the amendments win.
 
 The AI agents are development tools: an orchestrator leading three teams. None of them run in the shipped game.
 
@@ -488,7 +488,7 @@ Content runs as a pipeline with a gatekeeper: Rules Lawyer returns broken drafts
 
 ### 10.1 Engine, assets and constraints
 
-> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators, rigging and clip sources, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators, rigging and clip sources, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton, [AM23](gdd-amendments.md#am20) generated sound. Where they disagree with this section, the amendments win.
 
 - Engine: Godot 4 (.NET) with C#. All assets are pre-bought and unified by a toon shader.
 - Week 1 go/no-go gate: walk, heavy and throw clips must retarget onto each yokai without clipping tails, shell or club; a yokai that fails uses its folklore human guise.
