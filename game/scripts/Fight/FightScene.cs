@@ -107,6 +107,12 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-187: the yokai (not the body) for the foe's portrait: the node's <see cref="NodeContext.DraftYokai"/>, else <see cref="Opponent"/>.</summary>
 	public string OpponentYokai => YokaiOf(Node, Opponent);
 
+	/// <summary>The id of the portrait plate for the foe: the apprentice has its own, an elder its yokai's, else <see cref="OpponentYokai"/>.</summary>
+	public string OpponentPortrait => PortraitIdFor(Node, Opponent);
+	/// <summary><see cref="OpponentPortrait"/> for a node and body.</summary>
+	public static string PortraitIdFor(NodeContext? node, string opponent) =>
+		FoughtOn(node, opponent) is { Tier: "apprentice" } ? "apprentice" : YokaiOf(node, opponent);
+
 	/// <summary>The node, when <paramref name="opponent"/> is the body it puts up (else the fight is not that node's).</summary>
 	static NodeContext? FoughtOn(NodeContext? node, string opponent) => node is { } n && n.Fighter == opponent ? n : null;
 	/// <summary><see cref="OpponentName"/> for a node and body.</summary>
@@ -192,7 +198,7 @@ public partial class FightScene : Node3D
 			var story = StorySource ?? LoadStory();
 			bool first = ShowsFirstLoss(story, FirstLossPending);
 			var (title, text) = LoseCardFor(story, Node, Opponent, FirstLossPending, CopyMoveOf(Session));
-			_hud.SetLoseText(title, text);
+			_hud.SetLoseText(title, text, PortraitIdFor(Node, Opponent));
 			ShowedFirstLoss = first;
 		}
 		catch (System.Exception e) when (e is System.IO.IOException or System.FormatException or System.Text.Json.JsonException
@@ -277,7 +283,7 @@ public partial class FightScene : Node3D
 		_cameraRig = GetNode<Node3D>("CameraRig"); // YOK-39: scenes/camera_rig.tscn
 		_camera = _cameraRig.FindChild("Camera", true, false) as Camera3D ?? throw new System.InvalidOperationException("camera_rig.tscn: no Camera3D named 'Camera'");
 		_hud = GetNode<FightHud>("Hud"); // YOK-39: scenes/ui/hud.tscn, an instance in fight.tscn
-		_hud.ShowOpponent(OpponentYokai, OpponentName); // YOK-77: the HUD's own _Ready ran before the node set the opponent
+		_hud.ShowOpponent(OpponentPortrait, OpponentName); // YOK-77: the HUD's own _Ready ran before the node set the opponent
 		_hud.TitleRequested += () => LeaveForTitle();
 		_hud.RestartRequested += RestartRun; // YOK-48: Restart = a fresh run from the first fight
 		_hud.View = new MatchHudView(Match, 0); // YOK-20: Ryo's live meter and burst

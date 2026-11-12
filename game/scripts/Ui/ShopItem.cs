@@ -23,7 +23,10 @@ public partial class ShopItem : Control
 	public Label PriceLabel { get; } = new() { Name = "Price" };
 	/// <summary>The talisman's top band text, drawn on the band (SPECIAL or MODIFIER).</summary>
 	public string TypeText { get; private set; } = "";
-	public Label GlyphLabel { get; } = new() { Name = "Glyph" };
+	/// <summary>Kept for the badge text only; never shown (the icon replaced the letter).</summary>
+	public Label GlyphLabel { get; } = new() { Name = "Glyph", Visible = false };
+	/// <summary>The ability's icon on the talisman face (<see cref="AbilityArt.ForId"/>: its file, else the generic swirl).</summary>
+	public TextureRect IconRect { get; } = new() { Name = "Icon", ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered };
 	bool _disabled;
 
 	/// <summary>Bought: rolled up, not offered again, not focusable.</summary>
@@ -47,7 +50,7 @@ public partial class ShopItem : Control
 		bool bought = e.State == ShopCardState.Bought, coins = e.Refusal == ShopRefusal.Coins;
 		Name = (e.Kind == ShopKind.Special ? "Special_" : "Modifier_") + e.Id;
 		MouseFilter = MouseFilterEnum.Stop;
-		foreach (var l in new[] { NameLabel, PriceLabel, GlyphLabel }) { l.MouseFilter = MouseFilterEnum.Ignore; if (l.GetParent() == null) AddChild(l); }
+		foreach (var l in new Control[] { NameLabel, PriceLabel, GlyphLabel, IconRect }) { l.MouseFilter = MouseFilterEnum.Ignore; if (l.GetParent() == null) AddChild(l); }
 		NameLabel.Text = e.Name; NameLabel.HorizontalAlignment = HorizontalAlignment.Center; NameLabel.ClipText = true;
 		var nameFont = NameLabel.GetThemeFont("font");
 		int nameSize = 17;
@@ -63,7 +66,8 @@ public partial class ShopItem : Control
 		GlyphLabel.ThemeTypeVariation = "PaperLabel"; GlyphLabel.HorizontalAlignment = HorizontalAlignment.Center; GlyphLabel.VerticalAlignment = VerticalAlignment.Center;
 		GlyphLabel.AddThemeFontSizeOverride("font_size", 20);
 		GlyphLabel.Size = new Vector2(30, 30); GlyphLabel.ClipText = true;
-		GlyphLabel.Visible = !bought;
+		GlyphLabel.Visible = false;
+		IconRect.Texture = AbilityArt.ForId(e.Id); IconRect.Size = new Vector2(36, 36); IconRect.Visible = !bought;
 		// a refused item is dimmed (its tag says why), a bought one is grey borrowed ink
 		Modulate = bought ? new Color(0.7f, 0.69f, 0.67f) : e.State == ShopCardState.Refused ? new Color(0.72f, 0.7f, 0.68f) : Colors.White;
 		CardDisabled = bought;
@@ -73,7 +77,7 @@ public partial class ShopItem : Control
 	void Place()
 	{
 		float up = Lifted ? Lift : 0;
-		GlyphLabel.Position = new Vector2(Cx - 15, CardTop + 18 - up);
+		IconRect.Position = new Vector2(Cx - 18, CardTop + 15 - up);
 		QueueRedraw();
 	}
 

@@ -19,12 +19,18 @@ public sealed record StoryCardData(string Id, string? Title, string Text, IReadO
 	/// <summary>S4: fill {yokai}/{move} with the run's names. A placeholder the card uses but the caller didn't give throws.</summary>
 	public string FillText(string? yokai = null, string? move = null) => Fill(Text, yokai, move);
 
+	/// <summary>Y6: as <see cref="FillText(string?, string?)"/>, with the control-key tokens ({throw_keys}, {burst_keys}) from <paramref name="keys"/>.</summary>
+	public string FillText(IReadOnlyDictionary<string, string> keys) => Fill(Text, null, null, keys);
+
 	public string? FillTitle(string? yokai = null, string? move = null) => Title is null ? null : Fill(Title, yokai, move);
 
-	string Fill(string s, string? yokai, string? move) => Slot.Replace(s, m => m.Groups[1].Value switch
+	string Fill(string s, string? yokai, string? move, IReadOnlyDictionary<string, string>? keys = null) => Slot.Replace(s, m => m.Groups[1].Value switch
 	{
 		"yokai" when yokai is not null => yokai,
 		"move" when move is not null => move,
+		var k when keys is not null && keys.TryGetValue(k, out var v) => v,
+		"throw_keys" => "both throw buttons", // plain words when no control scheme is known (previews, dev jump)
+		"burst_keys" => "all three punches",
 		var name => throw new InvalidOperationException($"story card '{Id}': no value for {{{name}}}"),
 	});
 }
@@ -132,7 +138,7 @@ public sealed class StoryLibrary : Ui.IStorySource
 		var ph = r.TryGetProperty("placeholders", out var p) && p.ValueKind == JsonValueKind.Array
 			? p.EnumerateArray().Select(e => e.GetString() ?? "").ToArray() : Array.Empty<string>();
 		foreach (var name in ph)
-			if (name is not ("yokai" or "move")) throw new FormatException($"story card '{id}': unknown placeholder '{name}'");
+			if (name is not ("yokai" or "move" or "throw_keys" or "burst_keys")) throw new FormatException($"story card '{id}': unknown placeholder '{name}'");
 		string text = Str("text");
 		var later = ParseLaterLoss(r, id);
 		// YOK-212: the lose screen fills only {yokai}; any other name would load here and then throw at the loss.

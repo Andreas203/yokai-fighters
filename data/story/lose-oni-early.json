@@ -8,6 +8,7 @@
     "yokai"
   ],
   "speaker": "narrator",
+  "later_loss": { "yokai": "oni", "row_min": 1, "row_max": 5 },
   "rules": [
     "S1",
     "S2",
@@ -16,5 +17,5 @@
     "S5",
     "M3"
   ],
-  "notes": "Rows 1-5: no carry-over (M3), so the card says the talismans are blank (Story.md wake-up rule). Oni returns to his post, no gloating or harm (Story.md, S5). Does not mention the merchant. {yokai} = Oni or Elder Oni. Needs a code follow-up to show: the game selects wake-up cards by row band only (lose-early/mid/late); schema and StoryLibrary have no per-yokai variants (see lose-screen notes)."
+  "notes": "Rows 1-5: no carry-over (M3), so the card says the talismans are blank (Story.md wake-up rule). Oni returns to his post, no gloating or harm (Story.md, S5). Does not mention the merchant. {yokai} = Oni or Elder Oni."
 }

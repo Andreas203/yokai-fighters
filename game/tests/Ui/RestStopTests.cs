@@ -316,8 +316,8 @@ public static class RestStopTests
 				}
 				else
 				{
-					Assert.True(!art.Visible && art.Texture == null, "the dojo master has no art yet");
-					Assert.True(L(screen, "Portrait/PortraitLabel").Visible && L(screen, "Portrait/PortraitLabel").Text == "dojo master (art to come)" && !decor.PortraitFilled, "the dojo keeps the labelled placeholder");
+					Assert.True(art.Visible && art.Texture != null, "the dojo master shows her plate (or the seal until the file exists), never an empty box");
+					Assert.True(!L(screen, "Portrait/PortraitLabel").Visible && decor.PortraitFilled, "no 'art to come' caption and no dashed box");
 				}
 			}
 			finally { runner.RemoveChild(screen); screen.Free(); }
@@ -404,6 +404,26 @@ public static class RestStopTests
 	}
 
 	[Test]
+	public static void Scene_DojoLine_IsTheDojoMasterCard_AndOptionIconsAreDrawnGlyphsNotLetters(Node runner) => OnFixtures(() =>
+	{
+		var screen = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
+		screen.BindRun(AtStop("dojo"), ControlScheme.Kihon);
+		runner.AddChild(screen);
+		try
+		{
+			Assert.Equal(FightScene.LoadStory()[RestStopScreen.DojoLineId].FillText(), L(screen, "LineBox/Box/Line").Text, "the dojo master speaks her story card");
+			foreach (string card in new[] { "FreeCard", "SecondCard" })
+			{
+				var icon = screen.GetNode<Control>(card + "/Box/Top/Icon");
+				Assert.True(!icon.GetNode<Label>("Glyph").Visible && icon.GetNode<TalismanGlyph>("Drawn").Visible, card + ": a drawn glyph, no letter in a box");
+			}
+			Assert.True(screen.GetNode<TalismanGlyph>("FreeCard/Box/Top/Icon/Drawn").Kind == GlyphKind.Rest && screen.GetNode<TalismanGlyph>("SecondCard/Box/Top/Icon/Drawn").Kind == GlyphKind.Trial, "dojo: rest and trial marks");
+			Assert.True(screen.GetNode<TextureRect>("Portrait/Art").Texture != null && !L(screen, "Portrait/PortraitLabel").Visible, "the dojo master's plate (or seal), no 'art to come'");
+		}
+		finally { runner.RemoveChild(screen); screen.Free(); }
+	});
+
+	[Test]
 	public static void Scene_Row7MerchantShowsNoRow4StoryLine_AndNoForecastClearsItsLabels(Node runner) => OnFixtures(() =>
 	{
 		var s = AtNode("r7-merchant");
@@ -413,7 +433,7 @@ public static class RestStopTests
 		try
 		{
 			string line = L(screen, "LineBox/Box/Line").Text;
-			Assert.True(!line.Contains("I'd love") && line.Contains("S3"), "row 7 gets a labelled placeholder, not the row-4 card");
+			Assert.True(line.Length > 0 && !line.Contains("S3") && !line.Contains("habit-writer") && line.Contains("I'd love"), "row 7 shows the row-4 merchant card (S3 has no other), no placeholder line");
 		}
 		finally { runner.RemoveChild(screen); screen.Free(); }
 
