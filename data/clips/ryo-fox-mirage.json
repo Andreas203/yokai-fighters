@@ -15,8 +15,8 @@
   "frames_total": 28,
   "retarget_notes": "Tripo take flip retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.72 cm/frame).",
   "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-fox-mirage.",
-  "trim_start": 26,
-  "trim_end": 72,
+  "trim_start": 0,
+  "trim_end": 46,
   "retime": [
     {
       "frames": [
@@ -24,8 +24,8 @@
         19
       ],
       "ticks": [
-        26,
-        58
+        0,
+        32
       ],
       "note": "startup: the flip leaves the floor (1.8x)"
     },
@@ -35,8 +35,8 @@
         20
       ],
       "ticks": [
-        58,
-        60
+        32,
+        34
       ],
       "note": "vanish frame"
     },
@@ -46,10 +46,10 @@
         28
       ],
       "ticks": [
-        60,
-        72
+        34,
+        46
       ],
-      "note": "recovery eases out, ends inverted-to-landing before the upright stand (top bone under the 1.9 framing)"
+      "note": "recovery eases out, before the upright stand (top bone under the 1.9 framing)"
     }
   ]
 }

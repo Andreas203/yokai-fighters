@@ -1,31 +1,31 @@
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
 Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_7j6z8j8a\front.png'
-Time: 00:00.59 (Saving: 00:00.10)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_b9l1a5hf\front.png'
+Time: 00:00.54 (Saving: 00:00.10)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_p87xyzis\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_xwgbrv2h\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_k2cyxdsv\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_007umnp8\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_9fye7xvh\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ks62z94r\side.png'
 Time: 00:00.04 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_linpv9_b\front.png'
-Time: 00:00.04 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_vude59oy\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_zd_697j9\side.png'
-Time: 00:00.05 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_fa0653nz\front.png'
-Time: 00:00.05 (Saving: 00:00.02)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_8m5hpuge\side.png'
-Time: 00:00.05 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_qaaccenn\front.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_visjs2a2\side.png'
-Time: 00:00.04 (Saving: 00:00.01)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_x016v9hx\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
 
 Data are loaded, start creating Blender stuff
-glTF import finished in 0.04s
+glTF import finished in 0.01s
 measure_clip: ryo-fox-mirage-win PASS frames=47 slide=0.72 cm/f accel=1.1 deg/f^2 reversals=0
 measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-fox-mirage\win\ryo-fox-mirage-win.report.json
 TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

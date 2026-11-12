@@ -1,13 +1,13 @@
 Data are loaded, start creating Blender stuff
-glTF import finished in 0.15s
+glTF import finished in 0.13s
 clean_clip: WARNING root bone mixamorig:Hips has a parent (Root); stripping its location anyway
-13:58:08 | INFO: Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.1\4.1\python\lib\site-packages\extern_draco.dll
-13:58:08 | INFO: Starting glTF 2.0 export
-13:58:08 | INFO: Extracting primitive: ryo
-13:58:08 | INFO: Primitives created: 1
-13:58:09 | INFO: Finished glTF 2.0 export in 0.5313479900360107 s
+14:16:55 | INFO: Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 4.1\4.1\python\lib\site-packages\extern_draco.dll
+14:16:56 | INFO: Starting glTF 2.0 export
+14:16:56 | INFO: Extracting primitive: ryo
+14:16:56 | INFO: Primitives created: 1
+14:16:56 | INFO: Finished glTF 2.0 export in 0.2465674877166748 s
 
-clean_clip: 269 frames at 60 fps from raw ticks 0-268 -> C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-fox-mirage\clean.glb
+clean_clip: 47 frames at 60 fps from raw ticks 26-72 -> C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-fox-mirage\clean.glb
 clean_clip: log C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-fox-mirage\clean.clean.json
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
 Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"

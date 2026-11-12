@@ -46,7 +46,19 @@ Batches A and B are phase 1; batch C is half phase 1 (hug, lift_heavy) and half 
 **Timeline once credits are in.** Rig about 2 to 4 min; each batch about 3 to 6 min, so all takes in about 20 min. Then per take: cleanup, reverse-retarget to Kitsune, Oni and Kappa (8 s each, about 70 body-clips in all, scripted in one loop), measure, shell and club check, retime: about 60 to 90 min for the full set, 40 to 60 min for phase 1 alone. Movesmith can rewrite frame data from measured clips about 1.5 to 2 h after the credits arrive. Presets are low in variety, so every body punches and kicks with the same motion; retime and trim vary the feel only.
 
 ## Takes (Tripo)
-None run. Free test only: ryo-lp onto kappa-rigged (scratchpad, not shipped).
+Rig: Tripo API rig of Ryo, task f75576d7-9d49-4927-813e-4c34d6899c48 (25 credits). Four retarget batches (rig v1.0 presets, `--animate-in-place`), 205 credits in all, 160 left:
+| Batch | Task | Presets | Credits |
+|---|---|---|---|
+| a | 2d7e7550-47ce-41f6-8063-c4fcde97c744 | box_01, box_02, box_03, front_kick_01, front_kick_02 | 50 |
+| b | c13aaff5 (ryo-batch-b) | slash, chop, cast_a_spell, flip, turn | 50 |
+| c | 12820944 (ryo-batch-c) | hug, lift_heavy, hit_to_head, hit_to_stomach, defeat_02 | 50 |
+| d | e04e80d5 (ryo-batch-d) | idle, walk, jump | 30 |
+Each batch is ONE model.glb holding all its presets as separate animations. `tools/split_tripo_batch.py` keeps one animation per file (glTF JSON edit only) into `assets/specs/clips/raw-tripo/<preset>.glb` (91 MB, untracked; rebuild from the raw batches under `game/assets/generated/clips/tripo-takes/`). No take was re-run; no retake budget spent.
+
+Known property of every take: `--animate-in-place` strips ALL hips translation including height (hips Y constant), so jump has no lift (the sim draws the arc) and defeat_02 keeps the hips at standing height while the body rotates down (a float risk on the knockdown, see the QA sheets). Presets are upright, Ryo's guard stance is crouched: an upright pose tops Ryo's bone height at 1.99 m (framing limit 1.9), which is why the Fox Mirage window is cut away from the flip's upright stand.
+
+## Cleanup (tools/finish_clips.py, scripted, nothing hand-keyed)
+Per take: `clean_clip.py --strip-root horizontal` (resample to 60 fps, root travel removed; no smoothing, jitter peaks were 1-18 deg/frame^2 against the 40 reject line) -> `retarget_bvh.py --src-skeleton tripo` onto the body's rig (Meshy rig of Kitsune, Oni, Kappa and the Meshy Ryo; the Tripo Ryo twin file is the same take on `ryo-tripo-rigged.glb`) -> `measure_clip.py` over the whole take (strike peak and 85% reach window) -> retime curve built from the measured peak (`build_retime`: the active segment is centred on the strike peak, startup and recovery fit within 0.5x-2x) -> `measure_clip.py` again over the used window only (verdict, planted-foot slide). Manifest: `tools/finish_clips_manifest.json`; per-clip logs `assets/specs/clips/finish-logs/`; verdict table `assets/specs/clips/finish-pipeline-summary.md`. The Blender `prop_clearance.py` check reads 40+ cm on every Kappa clip including the idle that already ships (shell volume vs a pose that is not the rest), so it is not a usable gate; shell, club, sink and float are judged by the in-game `tools/rig_qa` capture instead.
 
 ## Earlier Meshy plan (fallback, superseded)
 
