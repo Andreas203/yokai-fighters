@@ -27,7 +27,7 @@
     "text": { "allOf": [{ "$ref": "#/$defs/noEmoji" }], "type": "string", "minLength": 1, "maxLength": 280, "description": "One or two sentences (S2). Elder-twist intro cards (id ending in -intro) are capped at 260 characters: the hanging scroll shows the quote whole (YOK-109)." },
     "placeholders": {
       "type": "array",
-      "items": { "enum": ["yokai", "move"] },
+      "items": { "enum": ["yokai", "move", "throw_keys", "burst_keys"] },
       "uniqueItems": true,
       "description": "Run names the game fills in (S4): {yokai} = the yokai's display name, {move} = the copy target's move name."
     },
