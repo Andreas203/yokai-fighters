@@ -396,7 +396,7 @@ public static class MapHandscrollBreakerProbes
 		var s = Make(host, new SessionMapView(sess));
 		s.SetView(new StubMapView());
 		s.FinishPresentation();
-		Assert.Equal(0, s.ShownIds.Count + s.LegendTwists.Count + s.Routes.Lines.Count + s.Routes.MistLines.Count, "nothing drawn");
+		Assert.Equal(0, s.ShownIds.Count + s.LegendTwists.Count + s.Routes.Lines.Count + s.Routes.Sketches.Count, "nothing drawn");
 		Assert.Equal(0, s.Board.GetChildren().OfType<MapNode>().Count(n => !n.IsQueuedForDeletion()), "no card left under the board");
 		Assert.True(!UiFind.Get<Control>(s, "Detail").Visible && !UiFind.Get<Control>(s, "Status").Visible, "no detail and no status without a run");
 		Assert.True(s.ScrollOffset >= 0f && s.ScrollOffset <= s.MaxScroll, "scroll in range");
