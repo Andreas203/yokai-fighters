@@ -124,6 +124,11 @@ public static class FoxfireHandTests
 	{
 		var pool = FightScene.LoadAbilityPool();
 		var fox = pool.Special(Fox)!;
+		// AM25: the Tanuki shows his true form by default, which has no fist blend shape; the dev switch puts him
+		// back on Ryo's body, where the copied Foxfire must open the hand as Ryo's does (E15, T0).
+		bool trueForm = FighterAnimSet.TripoTanuki;
+		FighterAnimSet.TripoTanuki = false;
+		try {
 		for (int lv = 2; lv <= Math.Min(3, fox.MaxLevel); lv++) // Lv 1 is never the copy over the starters (T3 keeps the lower slot)
 		{
 			DevRunStates.Source = new FoxRun(lv);
@@ -136,5 +141,6 @@ public static class FoxfireHandTests
 			CheckOpen(Cast(f, 1, fox.Slot, $"Tanuki Lv {lv}"), $"Tanuki Lv {lv}");
 			flow.ReturnToTitle();
 		}
+		} finally { FighterAnimSet.TripoTanuki = trueForm; }
 	});
 }
