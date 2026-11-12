@@ -9,7 +9,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/kit/key_chip_footer.tscn" id="footer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/map_node.tscn" id="node"]
 [ext_resource type="Script" path="res://scripts/Ui/MapLandmarks.cs" id="landmarks"]
-[ext_resource type="Script" path="res://scripts/Ui/MapMist.cs" id="mist"]
 [ext_resource type="Resource" path="res://ui/map_node_styles.tres" id="styles"]
 
 [sub_resource type="StyleBoxFlat" id="paper_panel"]
@@ -156,12 +155,6 @@ script = ExtResource("routes")
 mouse_filter = 2
 script = ExtResource("landmarks")
 Front = true
-
-[node name="Mist" type="Control" parent="ScrollView/Scroll/Board"]
-mouse_filter = 2
-anchor_right = 1.0
-anchor_bottom = 1.0
-script = ExtResource("mist")
 
 [node name="ShadeLeft" type="Control" parent="ScrollView"]
 mouse_filter = 2
