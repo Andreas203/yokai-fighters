@@ -32,6 +32,7 @@
       }
     },
     "file": { "type": "string", "pattern": "^assets/generated/[^\\\\\\s]+\\.glb$", "description": "The take's GLB, relative to game/ (normally assets/generated/clips/<fighter>/<file>.glb)." },
+    "hand": { "enum": ["fist", "open"], "default": "fist", "description": "Ryo's hand pose for this clip on a body with a scripted 'fist' blend shape (E15, AM26): 'fist' (the default when absent) closes the hand, 'open' opens it (the foxfire's open palm). Presentation only, blended over the clip blend; bodies without the blend shape ignore it." },
     "yaw_offset": { "type": "number", "minimum": -180, "maximum": 180, "description": "Degrees the take is turned about the vertical axis relative to the fighter's facing (presentation only). Default 0." },
     "hit_start": { "type": ["integer", "null"], "minimum": 1, "description": "First frame the clip visibly hits or releases a projectile; null for clips that never hit (e.g. a teleport)." },
     "hit_end": { "type": ["integer", "null"], "minimum": 1 },
