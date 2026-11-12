@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Itch Page Text</title>
+<style>
+  :root { --bg: #f4efe6; --fg: #1d1a1c; --muted: #6b6259; --accent: #b8321f; --panel: #fffaf2; --line: #e2d7c4; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1d1a1c; --fg: #f2e6cf; --muted: #b3a690; --accent: #e8683a; --panel: #282327; --line: #3a3236; }
+  }
+  :root[data-theme="dark"] { --bg: #1d1a1c; --fg: #f2e6cf; --muted: #b3a690; --accent: #e8683a; --panel: #282327; --line: #3a3236; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 Georgia, "Noto Serif", serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; font-family: system-ui, sans-serif; font-size: 14px; color: var(--muted); }
+  button { font: 600 15px system-ui, sans-serif; padding: 10px 18px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+  #status { min-height: 1.2em; }
+  #copy-me { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 24px 16px; }
+  h2 { font-size: 1.25em; margin: 1.4em 0 .4em; }
+  ul, ol { padding-left: 1.3em; }
+  li { margin: .25em 0; }
+  .notes { margin-top: 32px; font-family: system-ui, sans-serif; font-size: 14px; color: var(--muted); }
+  .notes h3 { color: var(--fg); font-size: 15px; }
+  code { font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <button id="copy">Copy description</button>
+    <span id="status">Paste it into itch.io: Edit game → Description.</span>
+  </div>
+
+  <div id="copy-me">
+    <p><strong>Bind the yokai. Steal their powers. Beat the trickster who copies you.</strong></p>
+    <p>Yokai Fighters is a single-player 2.5D roguelite fighting game. You are <strong>Ryo</strong>, a stubborn apprentice exorcist who binds yokai instead of destroying them, and apologises to every one he seals.</p>
+
+    <h2>How a run works</h2>
+    <ul>
+      <li><strong>Choose your path.</strong> Cross an 8-row map one node at a time: duels against yokai and elders, plus a merchant and a dojo to rest, shop or train.</li>
+      <li><strong>Win the duel, take a power.</strong> Each yokai you beat offers three of its abilities. Keep one: a new special, an upgrade or a modifier.</li>
+      <li><strong>Your fighter is yours.</strong> Chase the Kitsune and you become a zoner with fox fire. Chase the Kappa and you become a grappler. Chase the Oni and you hit like a falling temple.</li>
+      <li><strong>Every choice costs something.</strong> Slots are limited, health carries between fights, and the routes you skip take their powers with them.</li>
+      <li><strong>Face the Tanuki.</strong> The boss waits at the end of the map. He copies the special you invested in most.</li>
+    </ul>
+
+    <h2>Readable, fair fights</h2>
+    <p>Every yokai telegraphs its attacks and has one habit you can learn and punish. Yokai react only to what is on screen, never to your button presses. The elders each add one twist that breaks a lazy habit.</p>
+
+    <h2>Controls</h2>
+    <p><strong>Keyboard</strong></p>
+    <ul>
+      <li>Move: <strong>W A S D</strong></li>
+      <li>Punches: <strong>U / I / O</strong> (light / medium / heavy)</li>
+      <li>Kicks: <strong>J / K / L</strong> (light / medium / heavy)</li>
+      <li>Special: <strong>Space</strong> (a direction picks the slot)</li>
+      <li>Menus: <strong>arrow keys</strong>, <strong>Enter</strong>, <strong>Esc</strong></li>
+      <li>Frame data on reward cards: <strong>Tab</strong></li>
+    </ul>
+    <p><strong>Gamepad</strong></p>
+    <ul>
+      <li>Move: D-pad or left stick</li>
+      <li>Punches: <strong>X / Y / RB</strong></li>
+      <li>Kicks: <strong>A / B / RT</strong></li>
+      <li>Special: <strong>LB</strong></li>
+    </ul>
+
+    <h2>Install (Windows)</h2>
+    <ol>
+      <li>Download the zip and <strong>extract it</strong>. Don't run the game from inside the archive.</li>
+      <li>Run <strong>YokaiFighters.exe</strong>.</li>
+      <li>If Windows SmartScreen warns you, click <strong>More info → Run anyway</strong>. The game isn't code-signed.</li>
+    </ol>
+
+    <h2>About</h2>
+    <p>A 5-week capstone build. Visuals are generated (3D models from Tripo and Meshy, 2D art from Astra), the sound and music are generated with ElevenLabs, and code is written with AI assistance, all directed and reviewed by the designer.</p>
+  </div>
+
+  <div class="notes">
+    <h3>Not part of the description: page settings</h3>
+    <ul>
+      <li>Genre: Fighting. Release status: In development.</li>
+      <li>Tags: fighting, roguelite, roguelike, 2.5D, yokai, japanese-mythology, singleplayer, anime, martial-arts, boss-battle</li>
+      <li>Theme (Edit theme): background <code>#282327</code>, text <code>#F2E6CF</code>, link <code>#E8683A</code>, button <code>#B8321F</code></li>
+      <li>Cover, banner, background and screenshots: <code>assets/itch/</code></li>
+    </ul>
+  </div>
+</div>
+<script>
+  const btn = document.getElementById('copy'), status = document.getElementById('status'), src = document.getElementById('copy-me');
+  btn.addEventListener('click', async () => {
+    try {
+      const html = src.innerHTML, text = src.innerText;
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+      })]);
+      status.textContent = 'Copied with formatting. Paste it into the itch.io description box.';
+    } catch (e) {
+      const r = document.createRange(); r.selectNodeContents(src);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); status.textContent = 'Copied. Paste it into the itch.io description box.'; }
+      catch { status.textContent = 'Selected. Press Ctrl+C, then paste it into itch.io.'; }
+    }
+  });
+</script>
+</body>
+</html>
