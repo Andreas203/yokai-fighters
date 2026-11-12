@@ -955,6 +955,25 @@ def check_level_preset(doc: dict, specials: dict[str, dict]) -> list[tuple[str, 
         t = textures.get(kind)
         if isinstance(t, str) and not (ROOT / "game" / t).is_file():
             errs.append((f"spark.textures.{kind}", f"game/{t} does not exist"))
+    # YOK-242: the projectile / cast / release / impact blocks (LevelPresetLibrary.Vfx refuses the same).
+    for block in ("projectile", "cast", "release", "impact"):
+        b = doc.get(block)
+        if not isinstance(b, dict):
+            continue
+        for k in ("colour", "core"):
+            v = b.get(k)
+            if isinstance(v, str) and not PRESET_HEX.fullmatch(v):
+                errs.append((f"{block}.{k}", f"{v!r} is not a #RRGGBB colour (matched whole: no trailing newline)"))
+        for k in ("scale_pct", "frames", "sheet_columns"):
+            v = b.get(k)
+            if v is not None and not is_int(v):
+                errs.append((f"{block}.{k}", f"{v!r} must be a whole number (the loader reads integers only)"))
+        t = b.get("texture")
+        if isinstance(t, str):
+            if not PRESET_TEXTURE.fullmatch(t):
+                errs.append((f"{block}.texture", f"{t!r} is not a .png/.webp path relative to game/ (matched whole: no trailing newline)"))
+            elif not (ROOT / "game" / t).is_file():
+                errs.append((f"{block}.texture", f"game/{t} does not exist"))
     return errs
 
 

@@ -1,0 +1,17 @@
+{
+  "kind": "level_preset",
+  "id": "fox-mirage-lv1",
+  "special": "fox-mirage",
+  "level": 1,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#F2A23A",
+  "cast": {
+    "look": "afterimage"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 1 base: Foxfire #F2A23A (style.md palette; V5 foxfire orange). Default spark image. YOK-242 (proposed): cast = the afterimage left where Ryo or the Kitsune vanishes, held until the teleport."
+}

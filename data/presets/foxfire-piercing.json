@@ -14,5 +14,22 @@
     "colour": "#F2A23A",
     "scale_pct": 130
   },
-  "notes": "Colour-only (YOK-213). Lv 3 Piercing Foxfire: Fur white #FBF6EC (style.md palette), a white-hot core. Spark stays Foxfire #F2A23A (V5) and is 30% larger. Texture and trail VFX are on the follow-up list, not generated."
+  "projectile": {
+    "look": "fox_flame",
+    "colour": "#FBF6EC",
+    "core": "#A9B4C8",
+    "scale_pct": 120
+  },
+  "cast": {
+    "look": "flame_burst",
+    "colour": "#FBF6EC",
+    "core": "#A9B4C8",
+    "scale_pct": 120
+  },
+  "release": {
+    "look": "flame_burst",
+    "colour": "#FBF6EC",
+    "core": "#A9B4C8"
+  },
+  "notes": "Colour-only (YOK-213). Lv 3 Piercing Foxfire: Fur white #FBF6EC (style.md palette), a white-hot core. Spark stays Foxfire #F2A23A (V5) and is 30% larger. Texture and trail VFX are on the follow-up list, not generated. YOK-242 (proposed): white-hot flame 20% larger with a Snow shade core: the Piercing evolution reads as hotter than Lv 1-2."
 }

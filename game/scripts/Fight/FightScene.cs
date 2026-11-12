@@ -286,6 +286,7 @@ public partial class FightScene : Node3D
 		SetUpHitSounds();
 		AttachHitSounds(Match);
 		SetUpHitSparks(); // YOK-198: V5/V8 hit sparks and the V6 sound-cue hook
+		SetUpSpecialVfx(); // YOK-242: projectile visuals and special-move effects (V8, A5)
 		SetUpAi(); // YOK-27
 		SetUpTutorial(); // YOK-92: Y6 guided apprentice fight (host-allowed, apprentice node only)
 		StartRecording(); // YOK-49
@@ -302,6 +303,7 @@ public partial class FightScene : Node3D
 	{
 		if (_hitMatch != null) _hitMatch.Hit -= OnHit;
 		DetachHitSparks(); // YOK-198
+		DetachSpecialVfx(); // YOK-242
 		MusicPlayer.Instance?.PlayMenuMusic();
 	}
 
@@ -440,36 +442,9 @@ public partial class FightScene : Node3D
 		_camera.HOffset = hx;
 		_camera.VOffset = vy;
 
-		RenderProjectiles();
+		RenderProjectiles(); // YOK-242: preset-driven projectile visuals and special-move effects
 		RenderHitSparks(); // YOK-198
 		_hud.Refresh(Match);
-	}
-
-	private readonly List<MeshInstance3D> _projectiles = new();
-
-	/// <summary>YOK-21 placeholder: one glowing box per projectile, sized from its data hitbox.</summary>
-	private void RenderProjectiles()
-	{
-		var list = Match.Projectiles;
-		while (_projectiles.Count < list.Count)
-		{
-			var node = new MeshInstance3D
-			{
-				Name = $"Projectile{_projectiles.Count}",
-				Mesh = new BoxMesh { Size = Vector3.One, Material = new StandardMaterial3D { AlbedoColor = new Color(0.6f, 0.9f, 1f), EmissionEnabled = true, Emission = new Color(0.4f, 0.8f, 1f) } },
-			};
-			AddChild(node);
-			_projectiles.Add(node);
-		}
-		for (int k = 0; k < _projectiles.Count; k++)
-		{
-			var node = _projectiles[k];
-			node.Visible = k < list.Count;
-			if (!node.Visible) continue;
-			var (x0, y0, x1, y1) = list[k].WorldBox();
-			node.Position = new Vector3(ToMeters((x0 + x1) / 2), ToMeters((y0 + y1) / 2), 0f);
-			node.Scale = new Vector3(ToMeters(x1 - x0), ToMeters(y1 - y0), 0.3f);
-		}
 	}
 
 	private Node3D BuildFighter(string name, Color color)
