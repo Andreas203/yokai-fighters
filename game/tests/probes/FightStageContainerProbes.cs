@@ -112,8 +112,8 @@ public static class FightStageContainerProbes
 				var p2 = s.GetNode<Node3D>($"{FightScene.FightersName}/P2");
 				Assert.Equal(want.ScenePath, p2.SceneFilePath, $"{opp} elder={elder}: P2 body");
 				Assert.Equal(FighterAnimSet.Ryo.ScenePath, s.GetNode<Node3D>($"{FightScene.FightersName}/P1").SceneFilePath, "P1 is Ryo");
-				// The Oni's club (3.15) and the Tanuki's true form (AM23, 1.95) frame tall; everyone else keeps the default.
-				float top = node.Yokai is "oni" or "elder-oni" ? 3.15f : want == FighterAnimSet.TanukiTripo ? 1.95f : CameraConfig.Default.ModelTopMeters;
+				// The Oni's club (3.23, YOK-finish-qa) and the Tanuki's true form (AM23, 1.95) frame tall; everyone else keeps the default.
+				float top = node.Yokai is "oni" or "elder-oni" ? 3.23f : want == FighterAnimSet.TanukiTripo ? 1.95f : CameraConfig.Default.ModelTopMeters;
 				bool tall = top > CameraConfig.Default.ModelTopMeters;
 				Assert.Equal(top, s.CameraFraming.ModelTopMeters, $"{opp} elder={elder}: framing top");
 				Assert.Equal(tall ? s.CameraFraming.TallFeetClearPx : 0f, s.CameraFraming.FeetClearPx, $"{opp} elder={elder}: feet clear");

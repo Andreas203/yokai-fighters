@@ -1,0 +1,17 @@
+You are checking a fighting-game character's animation for visual defects. The attached image is a contact sheet.
+Each row is one animation clip (clip id on the left). Columns A-H: A/B = start frame, C/D = active (hit) frame,
+E/F = recovery frame, G/H = the worst frame found by a numeric check. A, C, E, G are seen from the fight camera
+(the fighter's side profile); B, D, F, H are seen from the front. Every cell is labelled in its top-left corner
+with its id (row number + column letter, e.g. "3F") and the frame number.
+The thin red horizontal line in each cell is the floor (height 0), drawn on top of the body. The grey band is the floor plane.
+Some clips are airborne by design (jump, jump-kick, jump-punch, the flight part of knockdown): there, feet off the floor are fine.
+Knockdown / get-up: the body lies on the floor; judge whether the lying body sinks through the floor line.
+
+For EVERY labelled cell, judge:
+- feet: "planted" (soles on the red line), "floating" (standing foot visibly above the line), "sinking" (sole or body visibly below the line), "airborne" (by design), or "lying".
+- clip: list any mesh passing through another mesh, e.g. "hand into head", "forearm into torso", "thigh into belly", "club through head", "shell through arm", "tail through leg", "tail through floor". Empty list if none.
+- severity: 0 = clean, 1 = minor (only visible if you look for it), 2 = noticeable in play, 3 = obvious / breaks the pose.
+Answer with JSON only, no prose, in this form:
+{"sheet": "<file name>", "cells": [{"id": "1A", "feet": "planted", "clip": [], "severity": 0, "note": ""}, ...],
+ "rows": [{"row": 1, "clip_id": "<as printed>", "worst_cell": "1G", "verdict": "PASS" or "FIX", "problem": "<short>"}]}
+Be strict but do not invent problems: say 0 when a cell looks clean.

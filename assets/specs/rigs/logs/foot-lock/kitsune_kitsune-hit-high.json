@@ -1,0 +1,49 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "C:/Users/Andreas/projects/wf-qa/game/assets/generated/clips/kitsune/kitsune-hit-high.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\kitsune\\kitsune-hit-high.glb",
+ "output_sha256": "089e226a303326fbe3933f29fe63eaaae0154c14bae011c66f6753b172207612",
+ "ticks": [
+  2,
+  172
+ ],
+ "start": 28,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "runs": {
+  "Left": [
+   [
+    28,
+    41
+   ],
+   [
+    130,
+    172
+   ]
+  ],
+  "Right": [
+   [
+    28,
+    172
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 61,
+   "max_correction_cm": 22.94,
+   "unreachable_ticks": 11
+  },
+  "Right": {
+   "locked_ticks": 145,
+   "max_correction_cm": 32.51,
+   "unreachable_ticks": 0
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}

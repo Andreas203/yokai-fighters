@@ -1,0 +1,482 @@
+{
+"1A": {
+"clip": "kitsune-get-up",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"1B": {
+"clip": "kitsune-get-up",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"1C": {
+"clip": "kitsune-get-up",
+"frame": 17,
+"pick": "active",
+"view": "cam"
+},
+"1D": {
+"clip": "kitsune-get-up",
+"frame": 17,
+"pick": "active",
+"view": "side"
+},
+"1E": {
+"clip": "kitsune-get-up",
+"frame": 24,
+"pick": "recovery",
+"view": "cam"
+},
+"1F": {
+"clip": "kitsune-get-up",
+"frame": 24,
+"pick": "recovery",
+"view": "side"
+},
+"1G": {
+"clip": "kitsune-get-up",
+"frame": 15,
+"pick": "worst",
+"view": "cam"
+},
+"1H": {
+"clip": "kitsune-get-up",
+"frame": 15,
+"pick": "worst",
+"view": "side"
+},
+"2A": {
+"clip": "kitsune-knockdown",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"2B": {
+"clip": "kitsune-knockdown",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"2C": {
+"clip": "kitsune-knockdown",
+"frame": 25,
+"pick": "active",
+"view": "cam"
+},
+"2D": {
+"clip": "kitsune-knockdown",
+"frame": 25,
+"pick": "active",
+"view": "side"
+},
+"2E": {
+"clip": "kitsune-knockdown",
+"frame": 36,
+"pick": "recovery",
+"view": "cam"
+},
+"2F": {
+"clip": "kitsune-knockdown",
+"frame": 36,
+"pick": "recovery",
+"view": "side"
+},
+"2G": {
+"clip": "kitsune-knockdown",
+"frame": 27,
+"pick": "worst",
+"view": "cam"
+},
+"2H": {
+"clip": "kitsune-knockdown",
+"frame": 27,
+"pick": "worst",
+"view": "side"
+},
+"3A": {
+"clip": "kitsune-throw",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"3B": {
+"clip": "kitsune-throw",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"3C": {
+"clip": "kitsune-throw",
+"frame": 6,
+"pick": "active",
+"view": "cam"
+},
+"3D": {
+"clip": "kitsune-throw",
+"frame": 6,
+"pick": "active",
+"view": "side"
+},
+"3E": {
+"clip": "kitsune-throw",
+"frame": 21,
+"pick": "recovery",
+"view": "cam"
+},
+"3F": {
+"clip": "kitsune-throw",
+"frame": 21,
+"pick": "recovery",
+"view": "side"
+},
+"3G": {
+"clip": "kitsune-throw",
+"frame": 25,
+"pick": "worst",
+"view": "cam"
+},
+"3H": {
+"clip": "kitsune-throw",
+"frame": 25,
+"pick": "worst",
+"view": "side"
+},
+"4A": {
+"clip": "kitsune-medium-kick",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"4B": {
+"clip": "kitsune-medium-kick",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"4C": {
+"clip": "kitsune-medium-kick",
+"frame": 8,
+"pick": "active",
+"view": "cam"
+},
+"4D": {
+"clip": "kitsune-medium-kick",
+"frame": 8,
+"pick": "active",
+"view": "side"
+},
+"4E": {
+"clip": "kitsune-medium-kick",
+"frame": 17,
+"pick": "recovery",
+"view": "cam"
+},
+"4F": {
+"clip": "kitsune-medium-kick",
+"frame": 17,
+"pick": "recovery",
+"view": "side"
+},
+"4G": {
+"clip": "kitsune-medium-kick",
+"frame": 15,
+"pick": "worst",
+"view": "cam"
+},
+"4H": {
+"clip": "kitsune-medium-kick",
+"frame": 15,
+"pick": "worst",
+"view": "side"
+},
+"5A": {
+"clip": "kitsune-block-low",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"5B": {
+"clip": "kitsune-block-low",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"5C": {
+"clip": "kitsune-block-low",
+"frame": 18,
+"pick": "active",
+"view": "cam"
+},
+"5D": {
+"clip": "kitsune-block-low",
+"frame": 18,
+"pick": "active",
+"view": "side"
+},
+"5E": {
+"clip": "kitsune-block-low",
+"frame": 26,
+"pick": "recovery",
+"view": "cam"
+},
+"5F": {
+"clip": "kitsune-block-low",
+"frame": 26,
+"pick": "recovery",
+"view": "side"
+},
+"5G": {
+"clip": "kitsune-block-low",
+"frame": 2,
+"pick": "worst",
+"view": "cam"
+},
+"5H": {
+"clip": "kitsune-block-low",
+"frame": 2,
+"pick": "worst",
+"view": "side"
+},
+"6A": {
+"clip": "kitsune-hit-high",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"6B": {
+"clip": "kitsune-hit-high",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"6C": {
+"clip": "kitsune-hit-high",
+"frame": 3,
+"pick": "active",
+"view": "cam"
+},
+"6D": {
+"clip": "kitsune-hit-high",
+"frame": 3,
+"pick": "active",
+"view": "side"
+},
+"6E": {
+"clip": "kitsune-hit-high",
+"frame": 25,
+"pick": "recovery",
+"view": "cam"
+},
+"6F": {
+"clip": "kitsune-hit-high",
+"frame": 25,
+"pick": "recovery",
+"view": "side"
+},
+"6G": {
+"clip": "kitsune-hit-high",
+"frame": 9,
+"pick": "worst",
+"view": "cam"
+},
+"6H": {
+"clip": "kitsune-hit-high",
+"frame": 9,
+"pick": "worst",
+"view": "side"
+},
+"7A": {
+"clip": "ryo-dash-back",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"7B": {
+"clip": "ryo-dash-back",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"7C": {
+"clip": "ryo-dash-back",
+"frame": 10,
+"pick": "active",
+"view": "cam"
+},
+"7D": {
+"clip": "ryo-dash-back",
+"frame": 10,
+"pick": "active",
+"view": "side"
+},
+"7E": {
+"clip": "ryo-dash-back",
+"frame": 14,
+"pick": "recovery",
+"view": "cam"
+},
+"7F": {
+"clip": "ryo-dash-back",
+"frame": 14,
+"pick": "recovery",
+"view": "side"
+},
+"7G": {
+"clip": "ryo-dash-back",
+"frame": 11,
+"pick": "worst",
+"view": "cam"
+},
+"7H": {
+"clip": "ryo-dash-back",
+"frame": 11,
+"pick": "worst",
+"view": "side"
+},
+"8A": {
+"clip": "kitsune-heavy-kick",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"8B": {
+"clip": "kitsune-heavy-kick",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"8C": {
+"clip": "kitsune-heavy-kick",
+"frame": 12,
+"pick": "active",
+"view": "cam"
+},
+"8D": {
+"clip": "kitsune-heavy-kick",
+"frame": 12,
+"pick": "active",
+"view": "side"
+},
+"8E": {
+"clip": "kitsune-heavy-kick",
+"frame": 27,
+"pick": "recovery",
+"view": "cam"
+},
+"8F": {
+"clip": "kitsune-heavy-kick",
+"frame": 27,
+"pick": "recovery",
+"view": "side"
+},
+"8G": {
+"clip": "kitsune-heavy-kick",
+"frame": 16,
+"pick": "worst",
+"view": "cam"
+},
+"8H": {
+"clip": "kitsune-heavy-kick",
+"frame": 16,
+"pick": "worst",
+"view": "side"
+},
+"9A": {
+"clip": "kitsune-heavy-punch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"9B": {
+"clip": "kitsune-heavy-punch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"9C": {
+"clip": "kitsune-heavy-punch",
+"frame": 11,
+"pick": "active",
+"view": "cam"
+},
+"9D": {
+"clip": "kitsune-heavy-punch",
+"frame": 11,
+"pick": "active",
+"view": "side"
+},
+"9E": {
+"clip": "kitsune-heavy-punch",
+"frame": 24,
+"pick": "recovery",
+"view": "cam"
+},
+"9F": {
+"clip": "kitsune-heavy-punch",
+"frame": 24,
+"pick": "recovery",
+"view": "side"
+},
+"9G": {
+"clip": "kitsune-heavy-punch",
+"frame": 1,
+"pick": "worst",
+"view": "cam"
+},
+"9H": {
+"clip": "kitsune-heavy-punch",
+"frame": 1,
+"pick": "worst",
+"view": "side"
+},
+"10A": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"10B": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"10C": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 52,
+"pick": "active",
+"view": "cam"
+},
+"10D": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 52,
+"pick": "active",
+"view": "side"
+},
+"10E": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 78,
+"pick": "recovery",
+"view": "cam"
+},
+"10F": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 78,
+"pick": "recovery",
+"view": "side"
+},
+"10G": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 20,
+"pick": "worst",
+"view": "cam"
+},
+"10H": {
+"clip": "kitsune-walk-guard-fwd",
+"frame": 20,
+"pick": "worst",
+"view": "side"
+}
+}

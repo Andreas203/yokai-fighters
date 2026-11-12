@@ -1,0 +1,45 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "C:/Users/Andreas/projects/wf-qa/game/assets/generated/clips/oni/oni-swing-club.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\oni\\oni-swing-club.glb",
+ "output_sha256": "10f04da2128bdf86b8dd87ad04774cf935f54dc250e99a866b18c3abccb7b689",
+ "ticks": [
+  0,
+  29
+ ],
+ "start": 0,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "runs": {
+  "Left": [
+   [
+    0,
+    29
+   ]
+  ],
+  "Right": [
+   [
+    0,
+    29
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 30,
+   "max_correction_cm": 22.04,
+   "unreachable_ticks": 0
+  },
+  "Right": {
+   "locked_ticks": 30,
+   "max_correction_cm": 9.04,
+   "unreachable_ticks": 7
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}

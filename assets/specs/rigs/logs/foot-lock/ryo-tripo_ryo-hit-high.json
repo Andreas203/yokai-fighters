@@ -1,0 +1,53 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "C:/Users/Andreas/projects/wf-qa/game/assets/generated/clips/ryo-tripo/ryo-hit-high.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\ryo-tripo\\ryo-hit-high.glb",
+ "output_sha256": "906282548d92bc87cc720dbe60a695cc989896bfd65cfb1f09a24fa305d07a9b",
+ "ticks": [
+  2,
+  172
+ ],
+ "start": 28,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "runs": {
+  "Left": [
+   [
+    28,
+    36
+   ],
+   [
+    133,
+    140
+   ],
+   [
+    145,
+    172
+   ]
+  ],
+  "Right": [
+   [
+    28,
+    172
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 53,
+   "max_correction_cm": 10.88,
+   "unreachable_ticks": 4
+  },
+  "Right": {
+   "locked_ticks": 145,
+   "max_correction_cm": 35.19,
+   "unreachable_ticks": 0
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}

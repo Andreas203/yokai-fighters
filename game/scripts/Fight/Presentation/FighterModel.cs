@@ -32,8 +32,8 @@ public partial class FighterModel : Node3D
 
 	/// <summary>Imported clip animations by GLB path, with the clip rig's rest <c>Hips</c> Y in its bone space (0 when unknown), shared by every model in the process.</summary>
 	private static readonly Dictionary<string, (Animation? Anim, float HipRestY)> SourceCache = new();
-	/// <summary>Built (root-motion-stripped) library per fighter id and rig rest hips (a rig with other proportions builds its own).</summary>
-	private static readonly Dictionary<string, AnimationLibrary> LibraryCache = new();
+	/// <summary>Built (root-motion-stripped) library per body table (its hip offsets) and rig rest hips (a rig with other proportions builds its own).</summary>
+	private static readonly Dictionary<(FighterAnimSet Set, string Rig), AnimationLibrary> LibraryCache = new();
 
 	/// <summary>Instances the fighter's scene and sets it up; null when the model or its skeleton can't load (the fight keeps the capsule).</summary>
 	public static FighterModel? Create(FighterAnimSet set, ClipCatalog catalog)
@@ -60,11 +60,13 @@ public partial class FighterModel : Node3D
 		player.Deterministic = true;
 		var hipRest = _hips >= 0 ? skel.GetBoneRest(_hips).Origin : Vector3.Zero;
 		// YOK-146: the clip root is in the key too, so the Meshy and Tripo Ryo never share a library.
-		string key = FormattableString.Invariant($"{set.Fighter}@{hipRest.X:R},{hipRest.Y:R},{hipRest.Z:R}@{set.ClipRoot}");
-		if (!LibraryCache.TryGetValue(key, out var lib))
+		// YOK-finish-qa: the hip offsets are metres, the keys are in the hips' parent space; the factor is in the key too.
+		float keyMeters = MetersPerHipKey(skel, _hips);
+		string key = FormattableString.Invariant($"{set.Fighter}@{hipRest.X:R},{hipRest.Y:R},{hipRest.Z:R}@{set.ClipRoot}@{keyMeters:R}");
+		if (!LibraryCache.TryGetValue((set, key), out var lib))
 		{
-			lib = BuildLibrary(set, catalog, skel, _hips);
-			LibraryCache[key] = lib;
+			lib = BuildLibrary(set, catalog, skel, _hips, keyMeters);
+			LibraryCache[(set, key)] = lib;
 		}
 		if (player.HasAnimationLibrary(LibraryName)) player.RemoveAnimationLibrary(LibraryName);
 		player.AddAnimationLibrary(LibraryName, lib);
@@ -82,9 +84,10 @@ public partial class FighterModel : Node3D
 	/// YOK-146 Tripo body the same-named file in its clip root; a clip it lacks is left out) onto it: rotations kept,
 	/// per-bone translation and scale dropped (bones keep this rig's rest lengths), hips X/Z pinned to rest
 	/// (root motion stripped: movement is move data), hips Y scaled by <see cref="HipScale"/> (YOK-130: a taller or
-	/// shorter rig keeps its feet on the floor) and capped at rest in air clips (the sim draws the arc).
+	/// shorter rig keeps its feet on the floor) and capped at rest in air clips (the sim draws the arc), then raised by
+	/// the body's <see cref="FighterAnimSet.HipOffsetFor"/> and, on its lying clips, its <see cref="FighterAnimSet.LyingHipLift"/>.
 	/// </summary>
-	private static AnimationLibrary BuildLibrary(FighterAnimSet set, ClipCatalog catalog, Skeleton3D skel, int hips)
+	private static AnimationLibrary BuildLibrary(FighterAnimSet set, ClipCatalog catalog, Skeleton3D skel, int hips, float keyMeters)
 	{
 		var lib = new AnimationLibrary();
 		Vector3 rest = hips >= 0 ? skel.GetBoneRest(hips).Origin : Vector3.Zero;
@@ -101,6 +104,8 @@ public partial class FighterModel : Node3D
 			var anim = (Animation)src.Duplicate(true);
 			anim.LoopMode = Animation.LoopModeEnum.None;
 			bool air = set.AirClips.Contains(id);
+			float offset = set.HipOffsetFor(id) / keyMeters;
+			var lift = set.LyingLiftFor(id);
 			for (int t = anim.GetTrackCount() - 1; t >= 0; t--)
 			{
 				var type = anim.TrackGetType(t);
@@ -116,12 +121,50 @@ public partial class FighterModel : Node3D
 					var p = (Vector3)anim.TrackGetKeyValue(t, k);
 					float y = p.Y * hipScale;
 					if (air) y = Mathf.Min(y, rest.Y);
+					y += offset + (lift is null ? 0f : LiftAt(lift, info, anim.TrackGetKeyTime(t, k)) / keyMeters);
 					anim.TrackSetKeyValue(t, k, new Vector3(rest.X, y, rest.Z));
 				}
 			}
 			lib.AddAnimation(id, anim);
 		}
 		return lib;
+	}
+
+	/// <summary>
+	/// YOK-finish-qa: metres of lying lift at clip time <paramref name="time"/>: the curve's game frames placed on the
+	/// clip's time line (<see cref="ClipInfo.TimeAt"/>, through its trim or retime), linear between points, held past the
+	/// ends. Pure arithmetic on the clip data (F3): the same key always gets the same lift.
+	/// </summary>
+	public static float LiftAt(IReadOnlyList<HipLift> curve, ClipInfo clip, double time)
+	{
+		if (curve.Count == 0) return 0f;
+		double t0 = clip.TimeAt(curve[0].Frame);
+		if (time <= t0) return curve[0].Meters;
+		for (int i = 1; i < curve.Count; i++)
+		{
+			double t1 = clip.TimeAt(curve[i].Frame);
+			if (time <= t1)
+			{
+				float w = t1 > t0 ? (float)((time - t0) / (t1 - t0)) : 1f;
+				return Mathf.Lerp(curve[i - 1].Meters, curve[i].Meters, w);
+			}
+			t0 = t1;
+		}
+		return curve[^1].Meters;
+	}
+
+	/// <summary>
+	/// YOK-finish-qa: metres per unit of a <c>Hips</c> Y key, from the node scales between the skeleton and this body's
+	/// root (the Meshy rigs are in centimetres under a 0.01 armature; the Oni adds 1.1) and the hips' parent bone, if any.
+	/// </summary>
+	private float MetersPerHipKey(Skeleton3D skel, int hips)
+	{
+		float m = 1f;
+		for (Node? n = skel; n != null && n != this; n = n.GetParent())
+			if (n is Node3D n3) m *= n3.Transform.Basis.Y.Length();
+		if (hips >= 0 && skel.GetBoneParent(hips) is int parent and >= 0)
+			m *= skel.GetBoneGlobalRest(parent).Basis.Y.Length();
+		return m > 0f && float.IsFinite(m) ? m : 1f;
 	}
 
 	/// <summary>
