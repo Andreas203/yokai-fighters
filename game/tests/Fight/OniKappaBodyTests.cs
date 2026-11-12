@@ -33,7 +33,7 @@ public static class OniKappaBodyTests
 	}
 
 	[Test]
-	public static void OniAndKappa_ModelsLoad_KappaSharesTheKitsuneClips()
+	public static void OniAndKappa_ModelsLoad_KappaPlaysHisOwnPoses()
 	{
 		foreach (var set in new[] { FighterAnimSet.Oni, FighterAnimSet.Kappa })
 		{
@@ -42,7 +42,11 @@ public static class OniKappaBodyTests
 			Assert.True(model != null, $"{set.Fighter}: model scene sets up on the catalog");
 			model!.Free();
 		}
-		Assert.True(ReferenceEquals(FighterAnimSet.Kappa.Clips, FighterAnimSet.Kitsune.Clips), "kappa: the Kitsune's shared clips");
+		// YOK-246: the Kappa's poses are his own retargets now (no longer the Kitsune's table); each plays on his body.
+		foreach (var (k, clip) in FighterAnimSet.Kappa.Clips)
+			Assert.True(FighterAnimSet.Kappa.CanPlay(Cat[clip]), $"kappa {k}: {clip} plays on the Kappa body");
+		foreach (var k in new[] { PoseKind.Idle, PoseKind.WalkFwd, PoseKind.WalkBack, PoseKind.Crouch, PoseKind.BlockHigh, PoseKind.BlockLow, PoseKind.DashBack, PoseKind.GetUp })
+			Assert.True(FighterAnimSet.Kappa.ClipFor(k)!.StartsWith("kappa-"), $"kappa {k}: his own clip ({FighterAnimSet.Kappa.ClipFor(k)})");
 	}
 
 	/// <summary>YOK-228: the Kappa's own moves play their own clip files, catalogued, with no Kitsune override on them.</summary>
@@ -70,7 +74,7 @@ public static class OniKappaBodyTests
 			(PoseKind.Idle, "oni-idle"), (PoseKind.WalkFwd, "oni-walk-fwd"), (PoseKind.WalkBack, "oni-walk-fwd"),
 			(PoseKind.HitHigh, "oni-hit-high"), (PoseKind.HitLow, "oni-hit-low"), (PoseKind.BlockLow, "oni-block-low"),
 			(PoseKind.BlockHigh, "ryo-block-high"), (PoseKind.Crouch, "ryo-crouch"), (PoseKind.Knockdown, "ryo-knockdown"),
-			(PoseKind.GetUp, "ryo-get-up"),
+			(PoseKind.GetUp, "oni-get-up"),
 		})
 			Assert.Equal(clip, oni.ClipFor(k), $"oni {k}");
 		Assert.True(oni.ReversedPoses.Contains(PoseKind.WalkBack), "oni walk back is the forward walk reversed");

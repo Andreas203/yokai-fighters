@@ -225,8 +225,8 @@ public sealed class FighterAnimSet
 			[PoseKind.DashBack] = "oni-dash-back", // YOK-246: retargeted onto the Oni, club-checked
 			[PoseKind.Jump] = "kitsune-jump", // borrowed: the Oni kit has no jump
 			[PoseKind.JumpBack] = "kitsune-jump",
-			[PoseKind.Crouch] = "oni-crouch",
-			[PoseKind.BlockHigh] = "oni-block-high",
+			[PoseKind.Crouch] = "ryo-crouch", // YOK-247: oni-crouch put the club through his thigh (8-13 cm); kept the old clip
+			[PoseKind.BlockHigh] = "ryo-block-high", // YOK-247: oni-block-high put the club through his head (13.6 cm); kept the old clip
 			[PoseKind.BlockLow] = "oni-block-low",
 			[PoseKind.HitHigh] = "oni-hit-high",
 			[PoseKind.HitLow] = "oni-hit-low",
