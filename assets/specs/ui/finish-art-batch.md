@@ -25,3 +25,7 @@ Icons: genuine alpha outside the diamond, bold at 90 px, palette within the list
 | remaining 12 icons | 0 | BLOCKED: Codex hit the account usage limit at 10:29, resets 15:23. Pending: club-momentum, onis-hide, rage-ember, river-pull, slippery-skin, sumo-stance, tricksters-angle, will-o-wisp, fox-step, oni-chain, undertow |
 
 Takes spent: 8 VFX + 3 + 4 + 5 + 6 = 26 (12 icons outstanding; 17 were launched after the 5 specials, 6 produced an image, 11 returned nothing). Retakes used: 0 of 4.
+
+## Update 2026-11-12 15:40
+
+The 11 blocked icons (club-momentum, onis-hide, rage-ember, river-pull, slippery-skin, sumo-stance, tricksters-angle, will-o-wisp, fox-step, oni-chain, undertow) were run after the Codex limit reset: 11 takes, 0 retakes, all ACCEPT (256x256 RGBA, clean alpha, palette and diamond style match the 11 accepted icons; club-momentum and will-o-wisp read as a persimmon fruit, minor). Batch total 37 takes, 0 of 4 retakes. Godot import done, AbilityArt and RewardScreen tests 14/14 each. Sheet: scratchpad icons22.png.
