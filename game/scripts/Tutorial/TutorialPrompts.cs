@@ -43,7 +43,12 @@ public static class TutorialPrompts
 
 	public static string For(TutorialLesson lesson) => Text(IdOf(lesson));
 
-	static string Text(string id) => Library is { } l && l.Has(id) ? l[id].FillText(WithFallbacks(l[id])) : "";
+	static string Text(string id)
+	{
+		if (Library is not { } l || !l.Has(id)) return "";
+		try { return l[id].FillText(WithFallbacks(l[id])); }
+		catch (System.InvalidOperationException) { return ""; } // a card with a slot the tutorial can't fill shows nothing, never crashes the fight
+	}
 
 	// The card's own fallback wording when the scene gave no binding names.
 	static System.Collections.Generic.IReadOnlyDictionary<string, string> WithFallbacks(StoryCardData c)
