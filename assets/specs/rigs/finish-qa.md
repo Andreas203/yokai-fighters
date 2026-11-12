@@ -22,13 +22,13 @@ The other 12 calls failed before reaching the model ("usage limit, try again at 
 
 ## Counts (PASS / FIX)
 
-| Body | Before | After the safe fixes |
-|---|---|---|
-| Ryo (Tripo) | 10 / 20 | 15 / 15 |
-| Tanuki (true form) | 2 / 28 | 2 / 28 |
-| Kitsune | 9 / 11 | 11 / 9 |
-| Oni + club | 0 / 20 | 0 / 20 |
-| Kappa + shell | 1 / 27 | 1 / 27 |
+| Body | Before | After the safe fixes | After Fix B + D in code |
+|---|---|---|---|
+| Ryo (Tripo) | 10 / 20 | 15 / 15 | unchanged (no offset) |
+| Tanuki (true form) | 2 / 28 | 2 / 28 | 2 / 28 (lying sink gone; tail and head hits remain) |
+| Kitsune | 9 / 11 | 11 / 9 | unchanged (no offset) |
+| Oni + club | 0 / 20 | 0 / 20 | 8 / 12 |
+| Kappa + shell | 1 / 27 | 1 / 27 | 1 / 27 (sink gone; arm and belly hits remain) |
 
 Mean planted-foot drift on standing clips, before and after:
 
@@ -40,15 +40,15 @@ Mean planted-foot drift on standing clips, before and after:
 | Kappa | 21.5 cm | 18.1 cm |
 | Tanuki | 21.7 cm | 19.5 cm |
 
-The Oni and Kappa stay FIX almost everywhere for one shared reason: the whole body sinks (Oni median 8 cm, Kappa median 3 cm, see Fix B).
+The Oni and Kappa stayed FIX almost everywhere for one shared reason: the whole body sank (Oni median 8 cm, Kappa median 3 cm). Fix B and the lying part of Fix D are now in code (below).
 
 ## Worst issues and their status
 
 | # | Body | Clip | Problem (after fixes) | Status / fix |
 |---|---|---|---|---|
-| 1 | Tanuki | ryo-knockdown, ryo-get-up | Lying body and big tail sink 42-56 cm through the floor; thigh into tail 15-20 cm | Open. Fix D (Tanuki-only lying clips with hips raised), or Fix E (tail bone, needs approval) |
-| 2 | Kappa | kitsune-get-up (kappa-get-up the same) | Legs sink 25-27 cm below the floor at f13; legs into belly 13-17 cm | Open. Fix D: a Kappa get-up with the hips raised over f8-f20 |
-| 3 | Oni | every clip | Feet sink 7-16 cm on every standing frame (idle 9.5) | Open. Fix B (per-body hip offset, code + camera; tried as a scene offset, see below) |
+| 1 | Tanuki | ryo-knockdown, ryo-get-up | Lying body and big tail sink 42-56 cm through the floor; thigh into tail 15-20 cm | Sink fixed (lying lift curve, code): 56.4 to 0.4 cm, 42.4 to 0.0 cm. Thigh into tail open (E1) |
+| 2 | Kappa | kitsune-get-up (kappa-get-up the same) | Legs sink 25-27 cm below the floor at f13; legs into belly 13-17 cm | Sink fixed (lying lift curve, code): 24.7 to 0.0 cm. Legs into belly open (C/D clip) |
+| 3 | Oni | every clip | Feet sink 7-16 cm on every standing frame (idle 9.5) | Fixed (Fix B, code + camera): idle 9.5 to 1.5 cm, median 10.0 to 2.5 cm. Residual on borrowed jump / heavy kick / walk (C) |
 | 4 | Oni | ryo-get-up, ryo-knockdown | Thigh into belly 17 cm (the belly is wider than the Ryo clip allows) | Open. Fix D (Oni own lying clips; YOK-246 `oni-get-up` measures the same 17-18 cm, so it is not fixed by it) |
 | 5 | Kappa | kitsune-hit-high | Forearm and hand into chest 11.6 cm, sinks 7 cm | Open. Fix C (Kappa-proportion retarget with the arms spread) |
 | 6 | Tanuki | ryo-jump, ryo-jump-kick/punch, ryo-rising-talisman | Arm or hand into the big head 14-17 cm | Open. Fix C or Fix E (head size is the model) |
@@ -77,7 +77,35 @@ Seen on the sheets, not in the numbers (the floor check measures the body only):
 - `BaseFighterProbes.EveryFighterTreeMatchesOriginMain`.
 - `BaseFighterProbes.OniMirroredClubStaysOnRightHandWithBody`.
 
-So it is a code and camera change, not a safe data fix. It is not on this branch.
+So it is a code and camera change, not a safe data fix. It is now in code, below.
+
+## Fix B and Fix D (lying sink), applied in code (gameplay-programmer)
+
+Presentation only: the sim never reads it (F3), no scene, model, clip or frame-data file changes, replays unchanged.
+- `FighterAnimSet.HipOffsetY` (metres, every clip): Oni 0.08, Kappa 0.03; Ryo, Kitsune and Tanuki 0. `ClipHipOffsetY` overrides it per clip where the body's own take already met the floor: Oni `oni-heavy-punch` and `oni-quake` 0.02, `oni-iron-club-charge` 0.05 (at 0.08 they floated 12 cm).
+- `FighterAnimSet.LyingHipLift`: a (game frame, metres) curve per lying pose, linear between points, held past the ends; sized from the per-frame sink of the lowest skinned point plus 0.5 cm, kept within 2 cm above it. Tanuki knockdown and KO (same clip and curve, up to 0.57 m), Tanuki get-up (up to 0.43 m, 0 from f24), Kappa get-up (up to 0.23 m, 0 from f20). The lying body now rests on its lowest point (the tail on the Tanuki), so his feet lift off the floor while he lies.
+- `FighterModel.BuildLibrary` adds both to the scaled `Hips` Y keys, converted from metres by the node scales above the skeleton.
+- Oni camera top `CameraConfig.TallBodyTopMeters["oni"]` 3.15 to 3.23 m: his club tip now measures 3.204 m (ryo-heavy-kick).
+
+Measured with `finish_qa_capture.tscn` (render=0) and `rank.py`, before and after, on the same branch:
+
+| Body | Clips sinking > 4 cm | Clips floating > 4 cm | Median sink | PASS / FIX |
+|---|---|---|---|---|
+| Oni | 20 to 6 | 2 to 4 | 10.0 to 2.5 cm | 0 / 20 to 8 / 12 |
+| Kappa | 20 to 5 | 0 to 7 (worst 6.6, walk-guard-fwd) | 4.7 to 1.7 cm | 1 / 27 to 1 / 27 |
+| Tanuki | 15 to 13 | 1 to 1 | 5.5 to 4.1 cm | 2 / 28 to 2 / 28 |
+
+| Clip | Before | After |
+|---|---|---|
+| oni-idle | sinks 9.5 cm | sinks 1.5 cm |
+| oni-heavy-punch, oni-quake | sink 7.2, float 4.3 cm | sink 5.2, float 6.3 cm |
+| oni ryo-heavy-kick, kitsune-jump, oni-walk-fwd | sink 16.4, 18.5, 14.2 cm | sink 8.4, 10.5, 6.2 cm (walk floats 8.5) |
+| kappa kitsune-idle | sinks 3.1 cm | sinks 0.1 cm |
+| kappa kitsune-get-up | sinks 24.7 cm (f13) | lowest point 0.7 to 4.9 cm above the floor every frame (4.9 on the standing end: the 3 cm body offset) |
+| tanuki ryo-get-up | sinks 42.4 cm (f13) | lowest point 0.1 to 4.0 cm above the floor every frame (4.0 on the standing end, as before) |
+| tanuki ryo-knockdown | sinks 56.4 cm (f25) | lowest point -0.4 to 2.9 cm every frame |
+
+Left for clips (C, D) or the model (E): the Tanuki's standing sink (heavy kick 11.8, hit-high 9.5 cm: other leg lengths on Ryo's clips, no body offset since his idle already stands at 0), the Kappa floats on kicks and walks (the 3 cm offset trades them for the sink), and every intersection row.
 
 ## Fixes proposed (for the designer to route)
 
