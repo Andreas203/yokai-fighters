@@ -1,5 +1,55 @@
 # Finish the greybox clips: take list (spec only, nothing run, 0 credits spent)
 
+**2026-11-12 update: the designer chose Tripo over Meshy and the Meshy MCP is not connected. The Tripo plan in "Re-plan on Tripo (YOK-246)" below is the live one. The Meshy tables after it are kept as the fallback only.**
+
+## Re-plan on Tripo (YOK-246)
+Route: one Tripo API rig of Ryo (rig v1.0, the only rig version with combat presets), Tripo presets on it, then `tools/blender/retarget_bvh.py --clip` onto each body's existing skeleton: `--src-skeleton tripo` for Kitsune, Oni and Kappa (Meshy skeleton), the default for Ryo's own clips and the T0 twins (a Tripo clip needs no retarget on Ryo's Tripo rig). One preset is retargeted to every body that needs the motion, so the unique count stays small. No new mesh and no re-rig of a game body.
+Free preset list: `tripo docs --topic commands/process` (section "Presets for rig v1.0"). Free checks: `tripo balance` (65), `tripo anim check`, `tripo task get`.
+
+**Free test done (cross-skeleton retarget works):** `retarget_bvh.py` only mapped Meshy-to-Tripo. I added `--src-skeleton tripo` (the reversed chain map in `TRIPO_CLIP_MAP`) and retargeted `ryo-tripo/ryo-lp.glb` onto `kappa-rigged.glb`: it ran in 8 s, mapped all 22 limb, spine, neck and head bones, hip ratio 0.787, only `head_end` and `headfront` unmapped. Pose quality, feet and shell clearance are NOT yet measured (needs `measure_clip.py` and `prop_clearance.py` per clip). Also done free: `tools/blender/strip_for_rig.py` made `game/assets/generated/characters/ryo/takes/ryo-upright.glb` (bare standing mesh from the canonical rig, not committed, 4.3 MB), and `tripo anim check` on it returned **riggable: true, biped** (0 credits).
+
+Unique presets (rig v1.0, all `preset:biped:`), 18 of them, and where each plays. Picks are from names; no Tripo preview is available to me, so fit is judged after the first retarget and measure.
+| Preset | Plays as |
+|---|---|
+| idle | idle on all four bodies (Oni and Kappa stop borrowing) |
+| walk | walk fwd, walk back (reversed), dash (2x) on all four |
+| jump | jump, jump back, landing on all four |
+| box_01 / box_02 / box_03 | light / medium / heavy punch (Ryo, Kappa, Kitsune LP); Rising Talisman stays on its own clip |
+| front_kick_01 / front_kick_02 | light kick; medium kick, and heavy kick retimed slower and held (only two kick presets exist) |
+| slash | Oni light and medium punch, medium kick, Iron-Club Charge (and its Ryo twin) |
+| chop | Oni heavy punch and heavy kick; Oni Quake and its Ryo twin (overhead club slam, no ground-slam preset) |
+| cast_a_spell | Foxfire, burst cast on all four, Kitsune Fox Mirage startup |
+| flip | Fox Mirage (Kitsune and Ryo twin): an acrobatic vanish |
+| turn | Shell Spin (Kappa and Ryo twin): the only rotation preset |
+| hug | the generic throw (all four); Ryo, Kitsune, Oni |
+| lift_heavy | River Grab (Kappa and Ryo twin): a seize and lift |
+| hit_to_head | hit high, thrown |
+| hit_to_stomach | hit low |
+| defeat_02 | knockdown and KO |
+Not possible on Tripo presets (v1.0 has none): block high, block low, crouch, dash back, get up, guard walk, an air punch (box_02 would be a ground punch), and a guard idle. Fallback for these: the existing Meshy-library clips already on the Tripo skeleton (`ryo-tripo/`), retargeted onto Kitsune, Oni and Kappa with the new flag (0 credits). That removes the borrowing between bodies but they stay Meshy motion. For true Tripo-or-mocap takes of those, the designer would need to buy ActorCore packs or record mocap (F6).
+
+**Cost.** Rig 25 + 18 presets x 10 = **205 credits. Balance 65, so buy at least 140.** Split to buy less now:
+- Phase 1, moves only (12 presets: box_01-03, front_kick_01-02, slash, chop, cast_a_spell, flip, turn, hug, lift_heavy): 25 + 120 = **145 credits, buy 80**.
+- Phase 2, poses (6 presets: idle, walk, jump, hit_to_head, hit_to_stomach, defeat_02): +60.
+No retake budget is included; one retake of any preset is +10. A rig fault means the 25 is spent again.
+
+**Commands for the designer (paste each with `!`, in order).** The free check and `ryo-upright.glb` are already done. Stop after step 1 if `credits_consumed` is not 25.
+```
+tripo anim rig game/assets/generated/characters/ryo/takes/ryo-upright.glb --model v1.0 --rig-type biped --spec mixamo --out-format glb --name ryo-api-rig -o game/assets/generated/characters/ryo/takes/tripo
+tripo anim retarget @ryo-api-rig --animation preset:biped:box_01 preset:biped:box_02 preset:biped:box_03 preset:biped:front_kick_01 preset:biped:front_kick_02 --out-format glb --animate-in-place --name ryo-batch-a -o game/assets/generated/clips/tripo-takes/a
+tripo anim retarget @ryo-api-rig --animation preset:biped:slash preset:biped:chop preset:biped:cast_a_spell preset:biped:flip preset:biped:turn --out-format glb --animate-in-place --name ryo-batch-b -o game/assets/generated/clips/tripo-takes/b
+tripo anim retarget @ryo-api-rig --animation preset:biped:hug preset:biped:lift_heavy preset:biped:hit_to_head preset:biped:hit_to_stomach preset:biped:defeat_02 --out-format glb --animate-in-place --name ryo-batch-c -o game/assets/generated/clips/tripo-takes/c
+tripo anim retarget @ryo-api-rig --animation preset:biped:idle preset:biped:walk preset:biped:jump --out-format glb --animate-in-place --name ryo-batch-d -o game/assets/generated/clips/tripo-takes/d
+```
+Batches A and B are phase 1; batch C is half phase 1 (hug, lift_heavy) and half phase 2; batch D is phase 2. After each command read `credits_consumed` (rig 25, 10 per animation) and `tripo balance`. If `@ryo-api-rig` does not resolve, use the rig task id from `tripo history`. Each retarget returns the rig plus animation (`export_with_geometry` default true), 5 animations at a time.
+
+**Timeline once credits are in.** Rig about 2 to 4 min; each batch about 3 to 6 min, so all takes in about 20 min. Then per take: cleanup, reverse-retarget to Kitsune, Oni and Kappa (8 s each, about 70 body-clips in all, scripted in one loop), measure, shell and club check, retime: about 60 to 90 min for the full set, 40 to 60 min for phase 1 alone. Movesmith can rewrite frame data from measured clips about 1.5 to 2 h after the credits arrive. Presets are low in variety, so every body punches and kicks with the same motion; retime and trim vary the feel only.
+
+## Takes (Tripo)
+None run. Free test only: ryo-lp onto kappa-rigged (scratchpad, not shipped).
+
+## Earlier Meshy plan (fallback, superseded)
+
 Branch YOK-finish-clips, 2026-11-12. Rules: F2, F3, F5, F6, T0, C4, G4. Author: animator.
 Preset ids and names come from the public Meshy animation library table (docs.meshy.ai/en/api/animation-library, 656 rows, fetched today). **Picks are made from names and category, previews not yet inspected**; every primary has an alternate, and the take cap is 3 per move (F5). Real timing comes from measuring the exported GLB, not from this table.
 
