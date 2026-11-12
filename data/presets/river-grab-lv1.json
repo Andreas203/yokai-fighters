@@ -1,0 +1,14 @@
+{
+  "kind": "level_preset",
+  "id": "river-grab-lv1",
+  "special": "river-grab",
+  "level": 1,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#3E7F86",
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 1 base: Water teal #3E7F86 (style.md palette; V5 kappa teal). Default spark image."
+}
