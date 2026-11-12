@@ -40,14 +40,19 @@ public partial class VfxLayer : Node3D
 			AddChild(q);
 			_pool.Add(q);
 		}
+		GrowAuras(n);
 		for (int k = 0; k < _pool.Count; k++)
 		{
 			var q = _pool[k];
 			q.Visible = k < n;
+			_aura[k].Visible = q.Visible;
 			if (!q.Visible) continue;
 			if (k < projectiles.Count) Apply(q, projectiles[k]);
 			else Apply(q, effects[k - projectiles.Count]);
+			Aura(_aura[k], q, k < projectiles.Count);
 		}
+		DrawLights(projectiles, effects);
+		EnsureGlow();
 		Shown = n;
 	}
 
@@ -103,5 +108,6 @@ public partial class VfxLayer : Node3D
 		m.SetShaderParameter("tint", s.Tint);
 		m.SetShaderParameter("columns", tex != null ? System.Math.Max(1, s.SheetColumns) : 1);
 		m.SetShaderParameter("frame", frame);
+		m.SetShaderParameter("emission", Emission(s.Look, age, life));
 	}
 }

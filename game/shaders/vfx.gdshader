@@ -22,6 +22,7 @@ uniform bool tint = true;
 uniform sampler2D tex : source_color, filter_linear, repeat_disable;
 uniform int columns = 1;
 uniform int frame = 0;
+uniform float emission = 1.0; // YOK-finish-vfx-real: HDR gain on the fill so the stage's glow pass picks it up
 
 
 float ease_out(float t) { return 1.0 - (1.0 - t) * (1.0 - t); }
@@ -189,8 +190,29 @@ void fragment() {
 	if (flip < 0.0) uv.x = 1.0 - uv.x;
 	if (use_tex) {
 		float cols = float(max(columns, 1));
-		vec4 t = texture(tex, vec2((uv.x + float(frame)) / cols, uv.y));
-		ALBEDO = tint ? t.rgb * colour.rgb : t.rgb;
+		// YOK-finish-vfx-real: the image moves like its element, from the sim age only (no TIME): fire flickers and
+		// licks upward, water ripples, the talisman wave shimmers, dust boils. Stronger toward the trailing edge.
+		vec2 d = vec2(0.0);
+		float trailing = 1.0 - uv.x;
+		if (shape == 2 || shape == 5 || shape == 0) {
+			d.x = 0.018 * sin(uv.y * 23.0 + age * 0.9) * (0.4 + trailing);
+			d.y = 0.03 * sin(uv.x * 17.0 - age * 0.7) * trailing + 0.012 * sin(uv.x * 41.0 + age * 1.3);
+		} else if (shape == 8 || shape == 10) {
+			vec2 c = uv - 0.5;
+			float r = length(c);
+			d = c / max(r, 0.001) * 0.014 * sin(r * 40.0 - age * 0.55);
+		} else if (shape == 1) {
+			d.y = 0.02 * sin(uv.x * 14.0 - age * 0.6) * trailing;
+		} else if (shape == 6) {
+			d.y = 0.012 * sin(uv.x * 19.0 + age * 0.4);
+		}
+		vec2 suv = clamp(uv + d, vec2(0.001), vec2(0.999));
+		vec4 t = texture(tex, vec2((suv.x + float(frame)) / cols, suv.y));
+		vec3 base = tint ? t.rgb * colour.rgb : t.rgb;
+		// a hot centre: the brightest texels burn toward the core colour
+		float lum = dot(t.rgb, vec3(0.299, 0.587, 0.114));
+		base = mix(base, core.rgb, smoothstep(0.7, 1.0, lum) * 0.5);
+		ALBEDO = base * emission;
 		ALPHA = t.a * opacity;
 	} else {
 		float hw = aspect * 0.5;
@@ -203,7 +225,7 @@ void fragment() {
 		}
 		float edge = clamp(outer - s.x, 0.0, 1.0);
 		vec3 fill = mix(colour.rgb, core.rgb, s.y);
-		ALBEDO = mix(fill, ink.rgb, edge);
+		ALBEDO = mix(fill * emission, ink.rgb, edge);
 		ALPHA = clamp(max(s.x, edge), 0.0, 1.0) * opacity * (shape == 9 ? 0.7 : 1.0); // the afterimage is a ghost
 	}
 }
