@@ -54,7 +54,7 @@ void fragment() {
 		vec2 d = q - hc;
 		float behind = projectile ? max(0.0, -d.x) : 0.0;
 		vec2 e = vec2(d.x + behind * 0.55, d.y * (1.0 + behind * 0.6));
-		float halo = blob(e, rr * 2.4 * fl);
+		float halo = blob(e, rr * (projectile ? 2.0 : 1.5) * fl); // well inside the quad: the falloff below ends at 0
 		float heart = blob(d, rr * 0.55 * fl);
 		// tongues: noisy ridges streaming behind (projectile) or up (burst)
 		vec2 tq = projectile ? vec2(-d.x, d.y) : vec2(d.y, d.x);
@@ -66,7 +66,7 @@ void fragment() {
 			float on = smoothstep(-0.1, 0.05, tq.x) * (1.0 - smoothstep(0.0, len, tq.x));
 			tongues += on * exp(-pow((tq.y - off) / (0.07 * (1.0 - tq.x / max(len, 0.01)) + 0.01), 2.0));
 		}
-		col += hue * (halo * 0.7 + tongues * 0.7) * fl + hot * heart * 0.7;
+		col += hue * (halo * 0.7 + tongues * 0.7) * fl + hot * heart * 0.35;
 		// embers / sparks: 28 particles on a loop of 24 ticks, offset by a hashed phase
 		for (int k = 0; k < 28; k++) {
 			float fk = float(k);
@@ -79,7 +79,8 @@ void fragment() {
 			float tw = 0.6 + 0.4 * sin(age * 0.9 + fk * 1.7);
 			col += mix(hot, hue, 0.3 + 0.7 * ph) * blob(q - p, s * 1.3) * tw * 2.2;
 		}
-		col += hot * pop * blob(d, 0.6) * 0.8;
+		col += hot * pop * blob(d, 0.45) * 0.5;
+		col *= 0.6; // about 60%: the coloured flame body shows, not a white blob over the fighter
 	} else if (shape == 1) {
 		// SPIRIT WAVE: talisman energy — a glowing crest, a shimmering wake, paper-light motes and streaks trailing
 		vec2 cc = vec2(hw - 0.3, 0.0);
@@ -198,17 +199,23 @@ void fragment() {
 	} else {
 		// AFTERIMAGE (fox mirage): a cold ghost-fire glow over the body and wisps rising off it
 		float body = exp(-pow(q.x / 0.22, 2.0)) * smoothstep(-0.55, -0.3, q.y) * smoothstep(0.55, 0.35, q.y);
-		col += hue * body * 0.7 * fl * fade;
+		col += hue * body * 0.4 * fl * fade;
 		for (int k = 0; k < 20; k++) {
 			float fk = float(k);
 			float ph = fract(h1(fk + 120.0) + age / 26.0);
 			vec2 p = vec2((h1(fk + 121.0) - 0.5) * 0.4 + 0.06 * sin(ph * 8.0 + fk), -0.45 + ph * 1.1);
-			col += mix(hot, hue, ph) * blob(q - p, 0.025 * (1.0 - ph * 0.5)) * (1.0 - ph) * 1.4 * fade;
+			col += mix(hot, hue, ph) * blob(q - p, 0.025 * (1.0 - ph * 0.5)) * (1.0 - ph) * 0.85 * fade;
 		}
 	}
-	// soft edges: nothing reaches the quad border
-	vec2 bu = abs(UV - 0.5) * 2.0;
-	float edge = (1.0 - smoothstep(0.75, 1.0, bu.x)) * (1.0 - smoothstep(0.75, 1.0, bu.y));
-	ALBEDO = col * energy * opacity * edge;
-	ALPHA = 1.0;
+	// soft edges: the gain goes on first, then a radial falloff that is exactly 0 before the quad's inscribed ellipse
+	// (r = 1 at the edge midpoints, more in the corners) times a rectangular mask that is 0 on the border, so no
+	// HDR gain can lift a near-zero edge into a visible rectangle.
+	vec3 lit = clamp(col * energy * opacity, vec3(0.0), vec3(4.0));
+	vec2 c = (UV - 0.5) * 2.0;
+	float radial = 1.0 - smoothstep(0.55, 0.92, length(c));
+	vec2 bu = abs(c);
+	float mask = (1.0 - smoothstep(0.85, 0.98, bu.x)) * (1.0 - smoothstep(0.85, 0.98, bu.y));
+	float fall = clamp(radial * mask, 0.0, 1.0);
+	ALBEDO = lit * fall;
+	ALPHA = clamp(fall, 0.0, 1.0);
 }

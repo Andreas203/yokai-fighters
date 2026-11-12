@@ -72,7 +72,7 @@ public partial class VfxLayer
 	/// <summary>HDR gain on the sprite's fill: fire and spirit energy burn brighter than dust (flicker from the sim age).</summary>
 	public static float Emission(VfxLook look, int age, float life) => look switch
 	{
-		VfxLook.FoxFlame or VfxLook.FlameBurst or VfxLook.Orb => 1.2f + 0.1f * Mathf.Sin(age * 0.9f),
+		VfxLook.FoxFlame or VfxLook.FlameBurst or VfxLook.Orb => 1.0f + 0.08f * Mathf.Sin(age * 0.9f), // the pale sprite would blow out
 		VfxLook.InkWave or VfxLook.Seal => 1.35f,
 		VfxLook.InkSplash => 1.2f + 0.8f * Mathf.Max(0f, 1f - life * 4f),
 		VfxLook.Ring or VfxLook.Grab or VfxLook.Afterimage or VfxLook.Trail => 1.2f,
