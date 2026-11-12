@@ -62,8 +62,8 @@ public partial class RewardCard : Control
 	{
 		_crest.Glyph = TextCuts.Badge(c.Name);
 		_fallback.Glyph = _crest.Glyph;
-		// Modifier and cancel-rule cards carry no ability art of their own: the generic diamond. Otherwise the move id picks it (YOK-79).
-		_illustration.Texture = c.Kind is CardKind.Modifier or CardKind.CancelRule ? AbilityArt.Fallback : AbilityArt.ForId(c.Id);
+		// The id picks the icon (YOK-79): the mapped one, else the id's icon file (evolutions: their special), else the generic swirl.
+		_illustration.Texture = AbilityArt.ForId(c.Id);
 		_showPips = c.Kind == CardKind.Upgrade && c.ToLevel == 3; // Lv 3 evolution: base icon plus level pips
 		_pips.Level = c.ToLevel; _pips.Max = 3;
 		ApplyArtVisibility(); // a rebind while frame data is on must not bring art or pips back over the frame box

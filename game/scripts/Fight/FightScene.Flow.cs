@@ -40,8 +40,6 @@ public partial class FightScene
 	public const string DemoMapFile = "demo-map.json";
 	/// <summary>YOK-150, tests: the map a self-walked run uses (a file in data/map/, or an absolute path); <see cref="DemoMapFile"/> by default.</summary>
 	public static string OwnMapFile { get; set; } = DemoMapFile;
-	/// <summary>Placeholder end card for a won run (the Tanuki fight and its win card are not built).</summary>
-	public const string RunWonTitle = "Run complete", RunWonText = "Placeholder end card: the run's last node is cleared.";
 
 	/// <summary>
 	/// YOK-77: the run this scene plays a node of. Set it before the scene enters the tree with a node already
@@ -184,7 +182,7 @@ public partial class FightScene
 	/// <summary>Fills the demo-complete screen from data/story/demo-complete.json; keeps the placeholder (and warns) if missing or bad.</summary>
 	private void ApplyDemoCompleteCard()
 	{
-		if (!OwnsSession) { CompleteScreen.SetText(RunWonTitle, RunWonText); return; } // a real run: placeholder until the win card exists
+		if (!OwnsSession) return; // a real run: the win card is chosen when it is shown (ShowRunWon)
 		try
 		{
 			var (title, text) = LoadStory().DemoComplete(OpponentName);
@@ -212,6 +210,7 @@ public partial class FightScene
 		TwistCard = GetNodeOrNull<StoryCard>("Flow/TwistCard");
 		if (TwistCard != null) TwistCard.Finished += OnTwistCardDone;
 		ShowTwistIntro();
+		ShowStoryBeat();
 		if (!ExternalDrive) _suppress = HeldBits(); // entered from a menu: the Space/A that pressed Start Game must not fire a Special
 		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
 		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
@@ -248,8 +247,11 @@ public partial class FightScene
 		// E1: the elder's name is the card's speaker (data); the red rule line is the twist's label; the stamp is the map's seal.
 		string title = TwistCopy.IntroSpeaker(twist, TwistCopy.Story) ?? name;
 		string? rule = TwistCopy.Label(twist, TwistCopy.Story, name) is { Placeholder: false } label ? label.Text : null;
-		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E", title, rule, FightHud.PortraitPath(OpponentYokai));
+		TwistCard.Display(line.Text, $"ELDER TWIST · ROW {Node.Row}", twist.Icon, "E", title, rule, PortraitFileOrSeal(OpponentPortrait));
 	}
+
+	/// <summary>The scroll's portrait: the foe's plate when the file exists, else none: the scroll leaves the space out.</summary>
+	static string? PortraitFileOrSeal(string id) => FightHud.PortraitPath(id) is { Length: > 0 } p && UiTextures.Exists(p) ? p : null;
 
 	private void OnTwistCardDone()
 	{
@@ -321,7 +323,7 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 		if (session.IsOver) // debug R replayed a duel of a run that already ended: show the result, the run stays ended
 		{
 			Stage = Match.Winner != 0 ? DemoStage.Lost : DemoStage.Complete;
-			if (Stage == DemoStage.Complete) CompleteScreen.Show();
+			if (Stage == DemoStage.Complete) ShowRunWon();
 			return;
 		}
 		if (Match.Winner != 0) { Stage = DemoStage.Lost; session.LoseFight(); ApplyLoseCard(); return; } // the run ends; the HUD shows the lose screen (double KO counts as a loss); YOK-212: the card for this node's row and yokai
@@ -360,7 +362,7 @@ Profiles[_profileIndex % Profiles.Length].Temperament;
 		Draft = null;
 		var done = Session!.CompleteNode();
 		if (!done.Ok) { GD.PushError($"FightScene: node '{Node.NodeId}' not completed: {done.Error}"); return; }
-		if (Session.Ended is { Won: true }) { Stage = DemoStage.Complete; CompleteScreen.Show(); return; }
+		if (Session.Ended is { Won: true }) { Stage = DemoStage.Complete; ShowRunWon(); return; }
 		if (!OwnsSession) { Stage = DemoStage.Left; return; }
 		BeginNode();
 		Stage = DemoStage.Fighting;

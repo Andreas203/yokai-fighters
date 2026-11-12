@@ -407,7 +407,7 @@ public static class RunFlowTests
 		Win(last, taken: 0);
 		Assert.True(session.Ended is { Won: true, RowReached: 2 } && session.Map.IsFinished, "the run is won on its last node");
 		Assert.True(flow.Router.Current == Screen.Fight && last.Stage == DemoStage.Complete && last.CompleteScreen.Visible, "the end card shows on the node's scene, no map");
-		Assert.True(last.CompleteScreen.TitleText == FightScene.RunWonTitle && !last.BindingCard.Showing && !last.Rewards.Showing, "placeholder end card, no draft after the last node");
+		Assert.True(last.WinCardId == "win-1" && last.CompleteScreen.BodyText == FightScene.LoadStory()["win-1"].FillText(yokai: last.OpponentName) && flow.Saved.Story.Has(SaveGame.StoryProgress.Win1) && !last.BindingCard.Showing && !last.Rewards.Showing, "the win-1 card on the end screen, flag saved, no draft after the last node");
 		Press(last.CompleteScreen.Restart);
 		Assert.True(flow.Router.Current == Screen.Map && !ReferenceEquals(session, flow.Session) && flow.Session!.Map.Visited.Count == 0, "Restart: a new run on the map");
 

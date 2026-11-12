@@ -513,7 +513,7 @@ public partial class ShopScreen : Control
 			}
 			bool t5 = s.Locked && m.HoldsLastSpecial;
 			bool locked = picking ? offered is not { Offered: true } : s.Locked;
-			h.AddChild(Icon(s.Name, Persimmon, 46));
+			h.AddChild(Icon(s.SpecialId, Persimmon, 46));
 			var t = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 			t.AddThemeConstantOverride("separation", -2);
 			var top = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
@@ -640,14 +640,18 @@ public partial class ShopScreen : Control
 		return l;
 	}
 
-	internal static Control Icon(string name, Color fill, int size)
+	/// <summary>The ability's icon (<see cref="AbilityArt.ForId"/>: its file, else the generic swirl) on a paper tile; never a letter in a box.</summary>
+	internal static Control Icon(string abilityId, Color fill, int size)
 	{
 		var panel = new Panel { CustomMinimumSize = new Vector2(size, size), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore, Name = "Icon" };
 		panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = fill, CornerRadiusBottomLeft = 6, CornerRadiusBottomRight = 6, CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6 });
-		var glyph = Lbl(TextCuts.Badge(name), (int)(size * 0.62f), name: "Glyph");
-		glyph.ThemeTypeVariation = "PaperLabel";
-		glyph.SetAnchorsPreset(LayoutPreset.FullRect); glyph.HorizontalAlignment = HorizontalAlignment.Center; glyph.VerticalAlignment = VerticalAlignment.Center;
-		panel.AddChild(glyph);
+		var art = new TextureRect
+		{
+			Name = "Art", Texture = AbilityArt.ForId(abilityId), MouseFilter = MouseFilterEnum.Ignore,
+			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+		};
+		art.SetAnchorsPreset(LayoutPreset.FullRect);
+		panel.AddChild(art);
 		return panel;
 	}
 }

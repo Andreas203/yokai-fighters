@@ -1,0 +1,17 @@
+{
+  "kind": "story_card",
+  "id": "tutorial-cancel",
+  "status": "proposed",
+  "trigger": "First fight of the first run, guided apprentice duel (Y6): Cancel lesson",
+  "text": "Cancel one move into another before it ends.",
+  "placeholders": [],
+  "speaker": "Prompt",
+  "rules": [
+    "S1",
+    "S2",
+    "Y6",
+    "X1",
+    "X3"
+  ],
+  "notes": "The lesson lends a cancel rule (X1-X3); the prompt names the action only."
+}

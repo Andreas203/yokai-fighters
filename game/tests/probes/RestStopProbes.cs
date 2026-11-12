@@ -578,7 +578,7 @@ public static class RestStopProbes
 		var s7 = AtNode("r7-merchant", 500);
 		var b = GD.Load<PackedScene>(Scene).Instantiate<RestStopScreen>();
 		b.BindRun(s7, ControlScheme.Kihon); runner.AddChild(b);
-		try { Assert.True(!b.GetNode<Label>("LineBox/Box/Line").Text.Contains("I'd love"), "row 7 does not show the row-4 card"); }
+		try { Assert.True(b.GetNode<Label>("LineBox/Box/Line").Text.Contains("I'd love"), "row 7 shows the row-4 merchant card (S3 has no other)"); }
 		finally { runner.RemoveChild(b); b.Free(); }
 
 		var d = AtNode("r7-dojo", 500);

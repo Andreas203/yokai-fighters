@@ -162,7 +162,7 @@ public static class YokaiNameBreakerProbes
 			{
 				hud.ShowOpponent(id);
 				string path = FightHud.PortraitPath(id);
-				bool exists = path.Length > 0 && ResourceLoader.Exists(path);
+				bool exists = path.Length > 0 && UiTextures.Exists(path);
 				Assert.Equal(exists, portrait.Visible, "visible for '" + id + "'");
 				if (exists) Assert.True(portrait.Texture != null, "texture for " + id);
 				else Assert.True(portrait.Texture == null, "no stale texture for " + id);

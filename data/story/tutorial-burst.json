@@ -1,0 +1,18 @@
+{
+  "kind": "story_card",
+  "id": "tutorial-burst",
+  "status": "proposed",
+  "trigger": "First fight of the first run, guided apprentice duel (Y6): Burst lesson",
+  "text": "Caught in a combo? Press {burst_keys} at once to burst free.",
+  "placeholders": [
+    "burst_keys"
+  ],
+  "speaker": "Prompt",
+  "rules": [
+    "S1",
+    "S2",
+    "Y6",
+    "C6"
+  ],
+  "notes": "C6: once per fight; costs all meter. {burst_keys} is filled per control scheme; fallback plain text: \"all three punches\"."
+}

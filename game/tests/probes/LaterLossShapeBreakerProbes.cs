@@ -191,8 +191,8 @@ public static class LaterLossShapeBreakerProbes
 		var story = FightScene.LoadStory();
 		foreach (var (opp, elder, name, band) in new[]
 		{
-			("kitsune", false, "Kitsune", "lose-early"), ("oni", false, "Oni", "lose-early"), ("kappa", false, "Kappa", "lose-early"),
-			("kitsune", true, "Nine Tailed Kitsune", "lose-mid"), ("oni", true, "Elder Oni", "lose-mid"), ("kappa", true, "Elder Kappa", "lose-mid"),
+			("kitsune", false, "Kitsune", "lose-early"), ("oni", false, "Oni", "lose-oni-early"), ("kappa", false, "Kappa", "lose-early"),
+			("kitsune", true, "Nine Tailed Kitsune", "lose-mid"), ("oni", true, "Elder Oni", "lose-oni-early"), ("kappa", true, "Elder Kappa", "lose-mid"),
 			("tanuki", false, "Tanuki", "lose-late"), ("tanuki", true, "Tanuki", "lose-late"),
 		})
 		{

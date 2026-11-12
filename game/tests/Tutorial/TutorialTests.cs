@@ -107,7 +107,8 @@ public static class TutorialTests
 		var t = new ApprenticeTutorial(m, Fast);
 		var ended = new System.Collections.Generic.List<(TutorialLesson, LessonOutcome)>();
 		t.LessonEnded += (l, o) => ended.Add((l, o));
-		Assert.True(t.Current == TutorialLesson.Block && t.Prompt.StartsWith(TutorialPrompts.Marker), "opens on blocking with a placeholder prompt");
+		TutorialPrompts.Library = FightScene.LoadStory();
+		Assert.True(t.Current == TutorialLesson.Block && t.Prompt.Length > 0, "opens on blocking with a prompt");
 		Assert.True(t.SkipLesson() && t.Current == TutorialLesson.Throw, "skip moves on");
 		Assert.Equal(LessonOutcome.Skipped, t.Outcome(TutorialLesson.Block), "marked skipped");
 		int completed = 0;
@@ -306,10 +307,12 @@ public static class TutorialTests
 	}
 
 	[Test]
-	public static void Prompts_ArePlaceholders_OnePerLesson()
+	public static void Prompts_ComeFromStoryCards_OnePerLesson()
 	{
+		TutorialPrompts.Library = FightScene.LoadStory();
 		var texts = ApprenticeTutorial.Order.Select(TutorialPrompts.For).ToList();
-		Assert.True(texts.All(s => s.StartsWith(TutorialPrompts.Marker) && s.Length > TutorialPrompts.Marker.Length), "every prompt is marked PLACEHOLDER (habit-writer owns the copy)");
+		Assert.True(texts.All(s => s.Length > 0 && !s.Contains("PLACEHOLDER")), "every prompt comes from its tutorial-* story card, untagged");
+		Assert.True(TutorialPrompts.SkipHint.Length > 0 && !TutorialPrompts.SkipHint.Contains("PLACEHOLDER"), "the skip hint is the tutorial-skip card");
 		Assert.Equal(texts.Count, texts.Distinct().Count(), "one prompt per lesson");
 	}
 
