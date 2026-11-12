@@ -28,7 +28,17 @@ public partial class FighterModel : Node3D
 	public Node3D Mirror { get; private set; } = null!;
 	public FighterAnimSet AnimSet { get; private set; } = null!;
 	private readonly List<Node3D> _tails = new();
+	private readonly List<(MeshInstance3D Mesh, int Shape)> _fists = new();
 	private int _hips = -1;
+
+	/// <summary>E15 (AM26): the blend shape that closes the hand on the open-hand mesh (the Tripo Ryo).</summary>
+	public const string FistShape = "fist";
+
+	/// <summary>True when the body has a <see cref="FistShape"/> blend shape (the Tripo Ryo, and the Tanuki on it).</summary>
+	public bool HasFist => _fists.Count > 0;
+
+	/// <summary>The current <see cref="FistShape"/> weight (1 = fist, 0 = open hand); NaN on a body without one.</summary>
+	public float FistValue => _fists.Count > 0 ? _fists[0].Mesh.GetBlendShapeValue(_fists[0].Shape) : float.NaN;
 
 	/// <summary>Imported clip animations by GLB path, with the clip rig's rest <c>Hips</c> Y in its bone space (0 when unknown), shared by every model in the process.</summary>
 	private static readonly Dictionary<string, (Animation? Anim, float HipRestY)> SourceCache = new();
@@ -76,7 +86,33 @@ public partial class FighterModel : Node3D
 			foreach (Node t in tails.GetChildren())
 				if (t is Node3D t3) _tails.Add(t3);
 		SwayTails(0);
+
+		// E15: Godot drops the glTF default morph weight, so the fist is set here (closed until a clip opens it).
+		_fists.Clear();
+		foreach (Node n in FindChildren("*", "MeshInstance3D", true, false))
+			if (n is MeshInstance3D mi && mi.Mesh != null && mi.FindBlendShapeByName(FistShape) is int idx and >= 0)
+				_fists.Add((mi, idx));
+		SetFist(1f);
 		return true;
+	}
+
+	private void SetFist(float w)
+	{
+		foreach (var (mesh, shape) in _fists) mesh.SetBlendShapeValue(shape, w);
+	}
+
+	/// <summary>
+	/// E15 (AM26): the <see cref="FistShape"/> weight for a sample, from the clips' <c>hand</c> field: the target
+	/// clip's (1 fist, 0 open; an uncatalogued clip is a fist), and while the sample blends, lerped from the source
+	/// clip's by the sample's <see cref="PoseSample.Weight"/>, so the hand opens or closes over the same ticks as the
+	/// pose blend. Pure: the same sample always gives the same weight (F3).
+	/// </summary>
+	public static float FistWeight(PoseSample s, ClipCatalog catalog)
+	{
+		float to = catalog[s.Clip]?.FistWeight ?? 1f;
+		if (!s.Blending) return to;
+		float from = catalog[s.FromClip]?.FistWeight ?? 1f;
+		return from + (to - from) * s.Weight;
 	}
 
 	/// <summary>
@@ -231,6 +267,7 @@ public partial class FighterModel : Node3D
 	{
 		Mirror.Scale = new Vector3(facing, 1f, 1f);
 		SwayTails(worldFrame);
+		if (_fists.Count > 0) SetFist(FistWeight(s, catalog));
 		var to = catalog[s.Clip];
 		if (to is null || !Has(to.Id)) return;
 		if (s.Blending && catalog[s.FromClip] is { } from && Has(from.Id))

@@ -7,7 +7,7 @@ namespace YokaiFighters.Tests;
 
 /// <summary>
 /// YOK-53 windowed screenshot tool (not a test): both rigged fighters mid-move with the YOK-22 hitbox overlay on.
-/// Run: godot --path game res://tests/captures/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=ryo|wake]
+/// Run: godot --path game res://tests/captures/model_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [only=ryo|wake|fist]
 /// </summary>
 public partial class ModelCapture : Node
 {
@@ -27,6 +27,14 @@ public partial class ModelCapture : Node
 			// Knockdown → get-up join, close on the Kitsune: d = world frames since the throw put her down.
 			foreach (int d in new[] { 22, 24, 25, 26, 28, 34, 39, 40, 41, 43, 45, 47, 50, 54, 60, 67, 68 })
 				await Custom($"wake-d{d:00}", sc => Down(sc, d), closeup: 1);
+			GetTree().Quit();
+			return;
+		}
+		if (only == "fist")
+		{
+			// E15 (AM26): Ryo mid light and heavy punch, close on his body, to show the closed fist.
+			await Shot("ryo-light-punch-fist", "ryo-light-punch", null, 0, 5, boxes: false, closeup: 0);
+			await Shot("ryo-heavy-punch-fist", "ryo-heavy-punch", null, 0, 12, boxes: false, closeup: 0);
 			GetTree().Quit();
 			return;
 		}
@@ -122,7 +130,7 @@ public partial class ModelCapture : Node
 			cam.LookAt(who3.GlobalPosition + new Vector3(0f, 0.9f, 0f));
 		}
 		var f1 = scene.Match.P1; var f2 = scene.Match.P2;
-		GD.Print($"{name}: P1 {f1.State} {f1.CurrentMove?.Id} {f1.MoveFrame} pose {scene.PresenterOf(0)?.Sample}; P2 {f2.State} {f2.CurrentMove?.Id} {f2.MoveFrame} pose {scene.PresenterOf(1)?.Sample}");
+		GD.Print($"{name}: P1 {f1.State} {f1.CurrentMove?.Id} {f1.MoveFrame} fist {scene.ModelOf(0)?.FistValue} pose {scene.PresenterOf(0)?.Sample}; P2 {f2.State} {f2.CurrentMove?.Id} {f2.MoveFrame} pose {scene.PresenterOf(1)?.Sample}");
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 		string path = $"{_dir}/{name}.png";

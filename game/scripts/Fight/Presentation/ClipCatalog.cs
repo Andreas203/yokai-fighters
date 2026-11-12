@@ -20,6 +20,13 @@ public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int Trim
 	/// frame 1..FramesTotal, checked by <see cref="ClipCatalog.CheckRetime"/> before a clip gets one.</summary>
 	public IReadOnlyList<RetimeSegment>? Retime { get; init; }
 
+	/// <summary>E15 (AM26): the hand this clip shows on a body with a <c>fist</c> blend shape (the Tripo Ryo and
+	/// the Tanuki on his body); clip field <c>hand</c>, <see cref="ClipHand.Fist"/> when absent.</summary>
+	public ClipHand Hand { get; init; } = ClipHand.Fist;
+
+	/// <summary>The <c>fist</c> blend-shape weight this clip asks for: 1 for a fist, 0 for an open hand.</summary>
+	public float FistWeight => Hand == ClipHand.Open ? 0f : 1f;
+
 	public const double RawTicksPerSecond = 60.0;
 
 	/// <summary>Raw tick shown on game frame <paramref name="frame"/> (clamped to 1..FramesTotal and the trim end).
@@ -45,6 +52,9 @@ public sealed record ClipInfo(string Id, string ResPath, int TrimStart, int Trim
 		? curve[^1].LastFrame
 		: (int)Math.Floor((TrimEnd - TrimStart) / Speed + 1e-9) + 1;
 }
+
+/// <summary>E15 (AM26): closed fist (the default) or open hand, from the clip's <c>hand</c> field.</summary>
+public enum ClipHand { Fist, Open }
 
 /// <summary>YOK-113: one retiming segment: game frames <c>FirstFrame..LastFrame</c> (inclusive) show raw ticks
 /// <c>FirstTick..LastTick</c> linearly; neighbours share their boundary frame and tick.</summary>
@@ -162,10 +172,25 @@ public sealed class ClipCatalog
 			if (rel is null) { cat.Problems.Add($"{id}: GLB not found (fields or notes)"); continue; }
 			var (s, e, speed) = trim.Value;
 			double yaw = Num("yaw_offset", out var yw) ? yw.GetDouble() : 0.0;
-			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total) { YawOffsetDeg = yaw, Retime = retime };
+			// E15 (AM26): "hand" is "fist" (default) or "open"; any other value is listed and read as a fist.
+			var hand = ClipHand.Fist;
+			if (!notesOnly && root.TryGetProperty("hand", out var hd))
+			{
+				if (ParseHand(hd) is { } h) hand = h;
+				else cat.Problems.Add($"{id}: hand must be \"fist\" or \"open\" (read as fist)");
+			}
+			cat._clips[id] = new ClipInfo(id, "res://" + rel, s, e, speed, total) { YawOffsetDeg = yaw, Retime = retime, Hand = hand };
 		}
 		return cat;
 	}
+
+	/// <summary>The clip schema's <c>hand</c> enum: "fist" or "open" (exact, lowercase); null for anything else.</summary>
+	public static ClipHand? ParseHand(JsonElement v) => v.ValueKind != JsonValueKind.String ? null : v.GetString() switch
+	{
+		"fist" => ClipHand.Fist,
+		"open" => ClipHand.Open,
+		_ => null,
+	};
 
 	/// <summary>YOK-113 first-pass limits (F2): a segment plays 0.5x-2x or holds; a held tick shows on at most
 	/// 4 game frames. Kept in step with tools/validate_data.py (RETIME_*).</summary>
