@@ -343,7 +343,7 @@ public partial class FightScene : Node3D
 	}
 
 	/// <summary>
-	/// YOK-54 (V6, AM22): the accepted ElevenLabs thuds the scene plays while there are no data/sound/ cue tables: light,
+	/// YOK-54 (V6, AM23): the accepted ElevenLabs thuds the scene plays while there are no data/sound/ cue tables: light,
 	/// heavy and block. The old nine-sample pack (<see cref="HitClipPaths"/>) plays only if these files are missing.
 	/// </summary>
 	public const string LightHitPath = "res://sound/sfx/hits/hit_light_t2.wav", HeavyHitPath = "res://sound/sfx/hits/hit_heavy_f_t1.wav",

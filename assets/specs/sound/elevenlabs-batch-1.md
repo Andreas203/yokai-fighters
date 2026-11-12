@@ -1,4 +1,4 @@
-# Sound batch 1: ElevenLabs music and sound effects (YOK-54, AM22)
+# Sound batch 1: ElevenLabs music and sound effects (YOK-54, AM23)
 
 Author: sound-smith. Jobs: [`elevenlabs-batch-1.json`](elevenlabs-batch-1.json) holds every prompt, length and output path; run it with `tools/elevenlabs/el.py` (see [`.claude/agents/sound-smith.md`](../../../.claude/agents/sound-smith.md)). Run log: `logs/elevenlabs-runs.jsonl`.
 
@@ -55,7 +55,7 @@ Sampler run 2026-11-09, Starter plan. All takes start on their first sample (ons
 
 ## Licence
 
-Account tier on 2026-11-09: **Starter** (active, 38,200 credits a month, resets 2026-11-20). Third-party summaries say Starter allows commercial use, but not distribution of music to streaming services; self-serve music terms may exclude studio games. The designer confirms ElevenLabs' current terms before release. Commercial use in a shipped game needs a paid plan (AM1 licence clause, kept by AM22).
+Account tier on 2026-11-09: **Starter** (active, 38,200 credits a month, resets 2026-11-20). Third-party summaries say Starter allows commercial use, but not distribution of music to streaming services; self-serve music terms may exclude studio games. The designer confirms ElevenLabs' current terms before release. Commercial use in a shipped game needs a paid plan (AM1 licence clause, kept by AM23).
 
 **Retake 2026-11-09** (designer: "all is good other than the hits, do a retake with more thud sounds"): `hit-light`, `hit-heavy`, `hit-block` t2, 19 credits from the cost header, under a 100-credit cap. `hit-medium`'s prompt got the same change; it is not run yet.
 

@@ -5,7 +5,7 @@ Single-player 2.5D roguelite fighting game for PC, built in **Godot 4 (.NET) wit
 ## Sources of truth
 - `Yokai_Fighters_GDD_Extended.pdf` — the full design. `Yokai_Fighters_GDD_Short.pdf` is the 5-page summary.
 - `docs/design/gdd-extended.md`, `docs/design/gdd-short.md` — word-for-word Markdown transcriptions of the two PDFs, with page markers; read these instead of extracting the PDF. Diagrams are approximate there, and if a transcription disagrees with its PDF, the PDF wins and the transcription gets fixed.
-- `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated; AM22: sound may be generated with ElevenLabs). An amendment wins over the PDF section it names.
+- `docs/design/gdd-amendments.md` — approved changes to the PDF (e.g. AM1: visuals are generated; AM23: sound may be generated with ElevenLabs). An amendment wins over the PDF section it names.
 - `docs/design/rules.md` — the written rules distilled from the GDD and its amendments, with citable IDs (C4, T2, A8…). Every agent works from it; if it disagrees with the PDF + amendments, they win and rules.md gets fixed.
 - `docs/decision-log.md` — append-only history of decisions (Linear comments, amendments, gates, spend). Load it as memory before planning; append new decisions there. What still waits on the designer is in Linear (designer queue YOK-189, label `decision`), not in the repo.
 - `docs/process/change-tracking.md` — where each kind of change is recorded (amendment, decision line, Linear ticket, PR and `CHANGELOG.md`). Read it before writing any new `.md` file; `tools/check_docs.py` enforces it in CI. The sources above win if it disagrees.
@@ -94,6 +94,6 @@ Harness results → Sparring Partner → Producer tickets the tuning
 
 ## Non-negotiables
 - Deterministic 60-tick loop; animation stepped with `AnimationPlayer.Seek()`; hitboxes are 2D rectangles in move data.
-- Visuals are generated (Tripo or Meshy; rigs also AccuRIG 2; clips also motion capture or bought packs, cleaned in Blender by script), sound is generated with ElevenLabs or bought (AM1, AM5, AM22); agents run only jobs the designer has approved, at the approved cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
+- Visuals are generated (Tripo or Meshy; rigs also AccuRIG 2; clips also motion capture or bought packs, cleaned in Blender by script), sound is generated with ElevenLabs or bought (AM1, AM5, AM23); agents run only jobs the designer has approved, at the approved cost. Clip first, then frame data. No hand-keyed animation, no paired throws.
 - Never cut: the copy rule, the merchant, Kihon, the harness, the story cards.
 - Cut order if behind: scope gate (end of week 1) → Kata, then meta-unlocks; balance gate (mid week 3) → modifiers 14→8, then dojo trials, then colour-only presets. The designer makes the call.

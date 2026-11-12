@@ -6,7 +6,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-54 (V9, AM22): each stage's battle track, one for the whole fight (the tea house too: one track, not one per
+/// YOK-54 (V9, AM23): each stage's battle track, one for the whole fight (the tea house too: one track, not one per
 /// season, designer 2026-11-12), and a check that every track the table names is in the project. No audio device is needed.
 /// </summary>
 public static class StageMusicTests

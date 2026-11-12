@@ -32,7 +32,8 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
 - **AM19** 2026-11-09 (designer, YOK-109, PR #273): the real routes ahead, to the Tanuki, show as sketched lines under mist; their nodes, names and icons stay hidden until their turn (R2, amends AM18). Presentation only.
 - **AM20** 2026-11-09 (designer, YOK-238): the map no longer shows the copy-target talisman; outside fights only the rest-stop forecast names the target, its level and expected cost (T6, amends AM6 and AM18). The copy rule itself is unchanged.
 - **AM21** 2026-11-09 (designer, YOK-151, PR #277): the Kappa's stage is a night swamp without lanterns, painted or 3D (V9). The stage id `riverbank` and its file names stay.
-- **AM22** 2026-11-09 (designer, YOK-54): sound and music may be generated with ElevenLabs as well as bought, the designer's choice per job; new agent Sound Smith runs approved jobs through `tools/elevenlabs/el.py` under the approved credit cap (F6, amends AM1).
+- **AM22** 2026-11-10 (designer, YOK-245): the map has no mist or clouds; the real routes ahead show as faint dotted sketches on bare paper all the way to the Tanuki, still with no node, name or icon (R2, amends AM19).
+- **AM23** 2026-11-09 (designer, YOK-54): sound and music may be generated with ElevenLabs as well as bought, the designer's choice per job; new agent Sound Smith runs approved jobs through `tools/elevenlabs/el.py` under the approved credit cap (F6, amends AM1).
 
 ## Rules and tuning
 - 2026-10-06 E1–E24: engine defaults approved by the designer. Max separation is 1,520 units (lowered from 1,600 in YOK-39), then 960 by AM8 (2026-10-16).
@@ -90,7 +91,7 @@ Milestones in Linear: W1 ends 10-10, W2 ends 10-17, W3 ends 10-24, W4–5 end 11
   - **Rig ACCEPT for the test branch (provisional):** deep-crouch volume FAIL from the painted charm and pouch; everything else PASS or WARN. Stopgap clips in `game/assets/generated/clips/ryo-tripo/` (Meshy clips retargeted by script). G4 for the Tripo set stays open until the real clips. 0 credits, no jobs (`assets/specs/rigs/ryo-tripo.md`).
 - 2026-10-25 YOK-109 screen concepts (Astra, `gpt-6-astra` via Codex): one take each for M1 map, H1 HUD copy target, H2 talisman states, E1 elder-twist board, run from the settled brief; no Meshy credits. Saved in `docs/design/screens/`; acceptance notes in `astra-brief-map-hud-twist.md`. Retakes need a new approval.
 - 2026-11-09 YOK-150/151/152 stages, generator switch (designer): the 2026-10-20 Meshy approval (195 credits) never ran (Meshy MCP not connected) and is replaced. Backdrops reuse the style loop's Astra takes, no new spend: the designer picked take 2 of each (`runs/visual/images/visual-1-look-take2.png`, `visual-2-palette-lore-take2.png`, `visual-3-spec-form-take2.png`) over the takes the Evaluator scored highest. Props on Tripo, **210 credits spent of 210 approved**: 7 x H3.1 text-to-model, smart_low_poly, 30 each (pine cluster, snow lantern, reeds, floating lantern, mooring post, tea table, hanging lantern), take cap 1, Tripo balance 315 → 105. Tea house season screens on Astra, **4 takes of 4 approved** (spring, then summer/autumn/winter from spring as the layout reference; Codex reports no cost). No ground or water strips generated: floors are flat-colour materials in Godot. Task ids and acceptance in the three stage specs.
-- 2026-11-09 YOK-54 (designer): ElevenLabs sampler approved at a **1,800-credit cap**, one take each of `hit-light`, `hit-heavy`, `hit-block`, `sting-ryo`, `sting-kitsune`, `foxfire`, `ui-seal`, `music-battle-grove` from `assets/specs/sound/elevenlabs-batch-1.json` (AM22). The other 28 jobs (~9,500 credits estimated) wait for a new approval after the sampler is heard.
+- 2026-11-09 YOK-54 (designer): ElevenLabs sampler approved at a **1,800-credit cap**, one take each of `hit-light`, `hit-heavy`, `hit-block`, `sting-ryo`, `sting-kitsune`, `foxfire`, `ui-seal`, `music-battle-grove` from `assets/specs/sound/elevenlabs-batch-1.json` (AM23). The other 28 jobs (~9,500 credits estimated) wait for a new approval after the sampler is heard.
 - 2026-11-09 YOK-54 (sound-smith): ElevenLabs sampler run on Starter: 8 takes, ~52 credits for the 7 sound effects (from the `character-cost` header) plus the battle-grove track (1,350 estimated, no cost header); 1,421 of the 1,800 cap counted. Hit-light, hit-heavy (clipped) and block (near-silent) measured RETAKE; retakes need a new approval.
 - 2026-11-09 YOK-54 (designer): sampler stings, Foxfire, seal stamp and the bamboo-grove battle theme accepted; the three hits rejected and retaken "with more thud" under a 100-credit cap: 19 credits charged (header). Take 1 of each hit deleted.
 - 2026-11-09 YOK-54 (designer): heavy hit t2 rejected as hollow; t3 run with an impact prompt, cap 50, 7 credits charged (header). Third and last take before a substitute.
@@ -277,3 +278,9 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
   - **Water:** murky swamp green.
   - **Unchanged:** the stage id (`riverbank`) and the `opponent_stages` mapping.
   - **Spend:** 4 Astra takes; no Tripo.
+
+## Designer decisions 2026-11-10
+- 2026-11-10 YOK-245 map clouds removed (designer, after playing PR #276: "the clouds on the map look weird, I'd rather we remove them"): no mist on the map; the sketches fade out on bare paper (AM22).
+
+## Designer decisions 2026-11-11
+- 2026-11-11 YOK-245 sketches run to the end (designer, after playing PR #279: "continue the dotted lines fully until the end"): the dotted sketches of the routes ahead no longer fade; they run at one strength to the Tanuki's node (AM22 updated before merge).

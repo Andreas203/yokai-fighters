@@ -16,7 +16,7 @@ Tone: mischievous folklore with a melancholy edge, never horror. Platform: PC. R
 
 ### 1.2 Core loop
 
-> **Amended by** [AM18](gdd-amendments.md#am18) the map reveals each row only when it is time to choose; [AM19](gdd-amendments.md#am19) the routes ahead show as sketches in mist. Where they disagree with this section, the amendments win.
+> **Amended by** [AM18](gdd-amendments.md#am18) the map reveals each row only when it is time to choose; [AM19](gdd-amendments.md#am19) the routes ahead show as sketches; [AM22](gdd-amendments.md#am22) on bare paper, with no mist. Where they disagree with this section, the amendments win.
 
 The map has 8 rows, and you pick one node per row: 6 duels (including two elders) and 2 rest stops. Win a one-round duel, bind one of three abilities from that yokai, and move on. After row 8, the Tanuki waits.
 
@@ -154,7 +154,7 @@ At each rest stop, a forecast shows the Tanuki's expected cost from the player's
 
 ## 3. AI Architecture
 
-> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator, [AM22](gdd-amendments.md#am20) Sound Smith. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator, [AM23](gdd-amendments.md#am20) Sound Smith. Where they disagree with this section, the amendments win.
 
 The AI agents are development tools: an orchestrator leading three teams. Each is described by what the player sees because of it; section 4.1 gives each one's development role.
 
@@ -178,7 +178,7 @@ How they work together. Clip Matcher picks each clip first, so frame data comes 
 
 ### 4.1 Agent roles
 
-> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator, [AM22](gdd-amendments.md#am20) Sound Smith. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) Asset Smith, [AM5](gdd-amendments.md#am5) Rig Specialist and Animator, [AM23](gdd-amendments.md#am20) Sound Smith. Where they disagree with this section, the amendments win.
 
 | Agent | Development role (one sentence) |
 |---|---|
@@ -208,7 +208,7 @@ How they work together. Clip Matcher picks each clip first, so frame data comes 
 
 ### 4.3 Engine and assets
 
-> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators and rigging, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton, [AM22](gdd-amendments.md#am20) generated sound. Where they disagree with this section, the amendments win.
+> **Amended by** [AM1](gdd-amendments.md#am1) generated visuals, sourced sound, [AM5](gdd-amendments.md#am5) generators and rigging, [AM7](gdd-amendments.md#am7) Astra concept art, [AM16](gdd-amendments.md#am16) the shared skeleton, [AM23](gdd-amendments.md#am20) generated sound. Where they disagree with this section, the amendments win.
 
 Built in Godot 4 (.NET) with C#, in 2.5D: 3D fighters and stages, with all gameplay on a 2D plane under a narrow-FOV camera. Assets are pre-bought and unified by a toon shader. The Tanuki's model and clips come from the purchased packs, like every yokai. All throws are generic: the attacker plays a grab clip and the defender its standard knockdown, so no paired throw animations are needed.
 

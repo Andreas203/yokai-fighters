@@ -4,14 +4,14 @@ namespace YokaiFighters.Audio;
 
 /// <summary>
 /// The single, pause-aware background music player. Registered as an autoload so scene transitions cannot restart it.
-/// YOK-54 (V9, AM22): each stage has its own battle track (<see cref="StageTrack"/>), one for the whole fight; the tea
+/// YOK-54 (V9, AM23): each stage has its own battle track (<see cref="StageTrack"/>), one for the whole fight; the tea
 /// house plays one track throughout, not one per season (designer 2026-11-12). A track that is missing falls back to
 /// <see cref="FallbackBattleTrackPath"/>. Presentation only: the sim never reads it.
 /// </summary>
 public partial class MusicPlayer : Node
 {
 	public const string MenuTrackPath = "res://sound/Dusk_Over_Yokai_Village_2026-10-20T172847.wav";
-	/// <summary>The pre-AM22 battle loop: the fallback when a stage's own track is missing.</summary>
+	/// <summary>The pre-AM23 battle loop: the fallback when a stage's own track is missing.</summary>
 	public const string FallbackBattleTrackPath = "res://sound/Spirit_Duel_Loop_2026-10-20T182218.wav";
 	public const string MusicDir = "res://sound/music/";
 	/// <summary>The bamboo grove's theme, also the battle music before a stage is known.</summary>

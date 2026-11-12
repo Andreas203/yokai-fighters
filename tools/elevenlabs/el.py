@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ElevenLabs sound-effect and music jobs for Yokai Fighters (AM22, sound-smith).
+"""ElevenLabs sound-effect and music jobs for Yokai Fighters (AM23, sound-smith).
 
   python -I tools/elevenlabs/el.py balance                        free: tier, credits used / limit, reset date
   python -I tools/elevenlabs/el.py plan JOBS.json [--only a,b]    free: each job, its estimated credits, the total

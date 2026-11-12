@@ -12,7 +12,7 @@ namespace YokaiFighters.Tests;
 /// at the start, and part-way through the walk (rows 1-4 done, health 840, the first card of each draft taken, row 5 reachable).
 /// YOK-109: the map is a paper scroll panned inside the screen; every capture ends the ink / paint animation and snaps the pan first, so no
 /// frame is half-drawn, and one more capture (map_midrun_walked) is panned 120 px in from the left end to show the walked brush path from its start.
-/// YOK-238: map v2 (paper scroll, illustrated nodes, winding strokes, mist ahead); map_boss shows the end of the walk. The copy-chip captures are gone (AM20).
+/// YOK-238: map v2 (paper scroll, illustrated nodes, winding strokes, faint sketches ahead); map_boss shows the end of the walk. The copy-chip captures are gone (AM20).
 /// Also the standalone way to run the screen for review: it needs no boot flow.
 /// Run: godot --path game res://tests/captures/map_capture.tscn --resolution 1920x1080 -- out=&lt;dir&gt; [suffix=_720p] [stub=12]
 /// </summary>
@@ -68,7 +68,7 @@ public partial class MapCapture : Node
 		screen.PanTo(120); // YOK-109: the same screen near the paper's left end (the first row and the walked brush path from its first stroke; 120 px in keeps the edge chevron and shade off the Merchant card)
 		await Snap(dir + $"/map_midrun_walked{suffix}.png");
 
-		// YOK-238: the end of the walk: row 8 cleared, the tea house (the Tanuki's node, never the Tanuki himself) is the only choice and no mist is left.
+		// YOK-238: the end of the walk: row 8 cleared, the tea house (the Tanuki's node, never the Tanuki himself) is the only choice and no sketch is left.
 		var late = RunSession.Start(FightScene.LoadAbilityPool(), FileMapSource.Default(md).Load(), NodeSceneTable.Default(md), 5);
 		while (late.Map.Graph.Node(late.Reachable()[0]).Type != "boss")
 		{

@@ -1,6 +1,6 @@
 # Audio: music and hit sounds
 
-`game/scripts/Audio/`. Sound is generated with ElevenLabs (`game/sound/sfx/`, `game/sound/music/`, sound-smith) or bought (AM22). Buses `Master`, `Music`, `Effects` are in `game/default_bus_layout.tres` (names in `Ui/Menus/MenuSettings.cs`). Frame-timed hit sounds (V6): the scene raises a `HitCue` per impact (`HitSparks.cs`, [fight.md](fight.md)); the files below turn the cue tables in `data/sound/` into samples. Presentation only: the sim, AI, replays and harness never read them. Index: [README.md](README.md).
+`game/scripts/Audio/`. Sound is generated with ElevenLabs (`game/sound/sfx/`, `game/sound/music/`, sound-smith) or bought (AM23). Buses `Master`, `Music`, `Effects` are in `game/default_bus_layout.tres` (names in `Ui/Menus/MenuSettings.cs`). Frame-timed hit sounds (V6): the scene raises a `HitCue` per impact (`HitSparks.cs`, [fight.md](fight.md)); the files below turn the cue tables in `data/sound/` into samples. Presentation only: the sim, AI, replays and harness never read them. Index: [README.md](README.md).
 
 | File | What it is and its public surface |
 |---|---|

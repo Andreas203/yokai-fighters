@@ -27,7 +27,8 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM19](#am19) | 2026-11-09 | The routes ahead show as sketches in mist | R2 | YOK-109, PR #273 |
 | [AM20](#am20) | 2026-11-09 | The map no longer shows the copy target; the rest-stop forecast names it | T6 | YOK-238 |
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
-| [AM22](#am22) | 2026-11-09 | Sound and music may be generated with ElevenLabs | F6 | YOK-54 |
+| [AM22](#am22) | 2026-11-10 | The routes ahead show as sketches on bare paper; no mist | R2 | YOK-245 |
+| [AM23](#am23) | 2026-11-09 | Sound and music may be generated with ElevenLabs | F6 | YOK-54 |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -487,7 +488,28 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 
 <a id="am22"></a>
 
-## AM22 — Sound and music may be generated with ElevenLabs (2026-11-09)
+## AM22 — The routes ahead show as sketches on bare paper; no mist (2026-11-10)
+
+**Status.** Decided by the designer on 2026-11-10 on YOK-245, after playing the map polish (PR #276): "the clouds on the map look weird, I'd rather we remove them". After playing PR #279 on 2026-11-11: "continue the dotted lines fully until the end".
+
+**Decision.** The map has no mist or clouds. The real routes ahead still show as faint dotted sketches on bare paper, drawn at one strength all the way to the Tanuki's node; they do not fade out. As before, they show no node, yokai, type, twist icon or label.
+
+**Why.** The code-drawn clouds looked out of place on the scroll. The sketches alone already show how the routes ahead branch and join.
+
+**What does not change.** Everything else in AM19 and AM18: only the real routes are sketched, and a row's nodes appear only when it is their turn. The reveal stays presentation only.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| AM19, "Decision" | "...as faint sketched lines under drifting mist. Only the lines show: no node, yokai, type, twist icon or label appears in the mist." | ...as faint dotted sketches on bare paper, all the way to the Tanuki. Only the lines show: no node, yokai, type, twist icon or label. |
+| GDD extended §6.1 The map | (as amended by AM19) | The routes ahead are visible as faint sketches; their nodes are not. |
+| GDD short §1.2 Core loop | (as amended by AM19) | Unchanged, but the routes ahead show as sketches before their nodes are revealed. |
+| rules.md R2 | "...the real routes ahead show only as sketched lines under mist, with no node, name or icon [AM19]." | "...the real routes ahead show only as faint sketched lines on bare paper, with no node, name or icon [AM19, AM22]." |
+
+<a id="am23"></a>
+
+## AM23 — Sound and music may be generated with ElevenLabs (2026-11-09)
 
 **Status.** Decided by the designer on 2026-11-09 (YOK-54): "connect to elevenlabs and get some theme appropriate music/battle music and sound effects, if no agent exists for this create one".
 
@@ -505,4 +527,4 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended §9 Agents table | (as amended by AM1) Sound Scout: "Shortlists sound and music packs." | Adds **Sound Smith**: "Writes ElevenLabs sound and music specs, runs approved jobs and checks the takes." — *Every hit, every row and every menu sounds like the same world.* Sound Scout stays for packs. |
 | GDD extended §10.1 Engine, assets | (as amended by AM1) "sound and music are bought" | "sound and music are generated with ElevenLabs or bought". |
 | GDD short §2 agents and technical lines | (as amended by AM1) sound is sourced | Sound is generated with ElevenLabs or bought; Sound Smith generates it. |
-| rules.md F6 | "Sound and music: bought packs." | "Sound and music: ElevenLabs generation (Sound Smith) or bought packs (Sound Scout), the designer's choice per job [AM22]." |
+| rules.md F6 | "Sound and music: bought packs." | "Sound and music: ElevenLabs generation (Sound Smith) or bought packs (Sound Scout), the designer's choice per job [AM23]." |
