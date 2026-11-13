@@ -18,6 +18,7 @@ Manifest entry (JSON, one object per output clip):
   target        {"startup": S, "active": A, "total": T}  hit moves of a take: the retime curve is built from the measured hit window
   movement      true for walks, dashes, get-ups and hit reactions (slide is reported, not judged)
   prop          "shell" (Kappa) or "club" (Oni), the clearance check to run
+  yaw           degrees, clean_clip.py --yaw: turn the whole take about the vertical axis (a Tripo boxing preset stands ~90 deg off the camera axis)
   source/clip   data/clips "source" (default tripo-library) and "clip" (default preset name)
 """
 import argparse
@@ -127,6 +128,7 @@ def main():
             out = "tmp-finish/%s/clean.glb" % cid
             cmd = [blender, "-b", "--python", "tools/blender/clean_clip.py", "--", "--clip", os.path.join("game", cur),
                    "--out", out, "--strip-root", "horizontal"] + (["--trim", *map(str, e["trim"])] if e.get("trim") else [])
+            cmd += ["--yaw", str(e["yaw"])] if e.get("yaw") else []  # a take that faces off the fight camera's axis
             rc, _ = run(cmd, cid + ".clean.log", a.dry_run)
             row["clean"] = "ok" if rc == 0 else "FAIL"
             cur = "../" + out  # relative to game/

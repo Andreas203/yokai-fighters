@@ -54,8 +54,12 @@ public static class HipOffsetTests
 		foreach (var s in new[] { FighterAnimSet.RyoTripo, FighterAnimSet.RyoMeshy, FighterAnimSet.Kitsune })
 		{
 			Assert.Equal(0f, s.HipOffsetY, $"{s.Fighter}: no body offset");
-			// YOK-246: the Kitsune's two upright Tripo takes carry a per-clip lowering; her other clips and Ryo's stay untouched.
-			Assert.Equal(s == FighterAnimSet.Kitsune ? 2 : 0, s.ClipHipOffsetY.Count, $"{s.Fighter}: clip offsets are only the Tripo takes'");
+			// YOK-246: the Kitsune's two upright Tripo takes carry a per-clip lowering; so does the Tripo Ryo's box_01
+			// Iron-Club Charge (YOK-250). Their other clips and the Meshy Ryo's stay untouched.
+			int expected = s == FighterAnimSet.Kitsune ? 2 : s == FighterAnimSet.RyoTripo ? 1 : 0;
+			Assert.Equal(expected, s.ClipHipOffsetY.Count, $"{s.Fighter}: clip offsets are only the Tripo takes'");
+			if (s == FighterAnimSet.RyoTripo)
+				Assert.True(s.ClipHipOffsetY.ContainsKey("ryo-iron-club-charge"), "ryo: the offset is the charge's");
 			Assert.Equal(0, s.LyingHipLift.Count, $"{s.Fighter}: no lying lift");
 		}
 	}

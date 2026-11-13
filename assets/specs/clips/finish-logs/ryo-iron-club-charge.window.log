@@ -1,31 +1,31 @@
 Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
 Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_zpxqd6gu\front.png'
-Time: 00:00.53 (Saving: 00:00.09)
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_kszivaq5\front.png'
+Time: 00:00.54 (Saving: 00:00.09)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ym2geu8d\side.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_zrsx9ths\front.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_pt1fo6l1\side.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_atf87qcq\front.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_b4gs02sg\side.png'
-Time: 00:00.04 (Saving: 00:00.01)
-
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_0d4_x2t5\front.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_fpcd8q25\side.png'
 Time: 00:00.03 (Saving: 00:00.01)
 
-Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_u4t4lafm\side.png'
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_3ilw653o\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_cicr1v2j\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_xi40dxul\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_ru4ojugh\side.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip__o67xc25\front.png'
+Time: 00:00.03 (Saving: 00:00.01)
+
+Saved: 'C:\Users\Andreas\AppData\Local\Temp\measure_clip_mw4qeneo\side.png'
 Time: 00:00.03 (Saving: 00:00.01)
 
 Data are loaded, start creating Blender stuff
-glTF import finished in 0.04s
-measure_clip: ryo-iron-club-charge-win PASS frames=63 slide=0.25 cm/f accel=3.0 deg/f^2 reversals=0
-measure_clip: report C:\Users\Andreas\projects\wf-clips\tmp-finish\ryo-iron-club-charge\win\ryo-iron-club-charge-win.report.json
+glTF import finished in 0.02s
+measure_clip: ryo-iron-club-charge-win PASS frames=46 slide=1.38 cm/f accel=5.9 deg/f^2 reversals=4
+measure_clip: report C:\Users\Andreas\projects\wspec\tmp-finish\ryo-iron-club-charge\win\ryo-iron-club-charge-win.report.json
 TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

@@ -9,6 +9,10 @@ Run (Blender 4.1.1):
       [--strip-root horizontal|all|none]   # default horizontal: remove the root bone's travel in the ground
                                    #   plane (it stays where the trim starts); `all` also freezes height.
       [--root-bone Hips]
+      [--yaw DEG]                  # turn the whole body about the vertical axis through the root (degrees, counter-
+                                   #   clockwise seen from above, armature space Z up), a constant turn of the root's
+                                   #   rotation channel only: feet, hands and pose keep their relation. Default 0.
+                                   #   For a take that faces off the fight camera's axis (Tripo boxing presets stand ~70 deg off).
       [--smooth-bones PATTERN ...] # fnmatch patterns on bone names, e.g. LeftHand RightHand "*Spine*"; default none
       [--smooth-paths rotation_quaternion location]   # default rotation_quaternion
       [--cutoff 10] [--order 4]    # Butterworth low-pass cutoff in Hz at 60 fps; order is per pass (see below)
@@ -111,7 +115,7 @@ def normalise(q):
 def main():
     args = cc.script_args(TOOL)
     known = {"--clip", "--out", "--trim", "--strip-root", "--root-bone", "--smooth-bones", "--smooth-paths",
-             "--cutoff", "--order", "--hit", "--hit-margin", "--taper", "--blend", "--log"}
+             "--cutoff", "--order", "--hit", "--hit-margin", "--taper", "--blend", "--log", "--yaw"}
     for k in args:
         if k not in known:
             sys.exit("%s: unknown argument %s" % (TOOL, k))
@@ -132,6 +136,7 @@ def main():
     if strip not in ("horizontal", "all", "none"):
         sys.exit("%s: --strip-root must be horizontal, all or none" % TOOL)
     root = one("--root-bone", "Hips")
+    yaw = one("--yaw", 0.0, float)
     cutoff = one("--cutoff", 10.0, float)
     order = one("--order", 4, int)
     margin = one("--hit-margin", 1, int)
@@ -205,6 +210,23 @@ def main():
                     "units": "armature space, cm; Z up, character faces -Y"})
     else:
         ops.append({"op": "strip_root_motion", "mode": "none"})
+
+    # 2b. constant yaw of the whole body (root rotation channel only) -----------------------------------------
+    if yaw:
+        import mathutils
+        if root not in data or "rotation_quaternion" not in data[root]:
+            sys.exit("%s: root bone %s has no rotation channel to yaw" % (TOOL, root))
+        qrest = arm.data.bones[root].matrix_local.to_quaternion()
+        qz = mathutils.Quaternion((0.0, 0.0, 1.0), math.radians(yaw))
+        conj = qrest.inverted() @ qz @ qrest      # the armature-space turn expressed in the bone's rest frame
+        q = data[root]["rotation_quaternion"]
+        out_q = np.empty_like(q)
+        for i in range(len(q)):
+            r = conj @ mathutils.Quaternion(tuple(q[i]))
+            out_q[i] = (r.w, r.x, r.y, r.z)
+        data[root]["rotation_quaternion"] = cc.fix_quat_signs(normalise(out_q))
+        ops.append({"op": "yaw", "bone": root, "degrees": yaw, "axis": "armature +Z through the root",
+                    "note": "constant rotation applied to the root's rotation channel; location untouched (root horizontal travel is stripped, so the pivot is fixed)"})
 
     # 3. Butterworth smoothing -----------------------------------------------------------------------------------
     if patterns:

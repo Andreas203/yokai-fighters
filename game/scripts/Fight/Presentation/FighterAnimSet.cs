@@ -146,7 +146,9 @@ public sealed class FighterAnimSet
 	/// <summary>YOK-146: the Tripo Ryo (assets/specs/rigs/ryo-tripo.md): same clip ids, trims and frame numbers as the Meshy Ryo.</summary>
 	public static readonly FighterAnimSet RyoTripo = RyoBody(
 		"res://assets/generated/characters/ryo/ryo-tripo-rigged.glb", "res://scenes/fighters/ryo-tripo.tscn",
-		"res://assets/generated/clips/ryo-tripo/");
+		"res://assets/generated/clips/ryo-tripo/",
+		// Iron-Club Charge on Tripo box_01 (assets/specs/clips/ryo-iron-club-charge.md): the lunge take floated 18-24 cm.
+		clipHipOffsetY: new Dictionary<string, float> { ["ryo-iron-club-charge"] = -0.21f });
 
 	/// <summary>The Meshy Ryo (YOK-53), kept for comparison until the Tripo set passes G4.</summary>
 	public static readonly FighterAnimSet RyoMeshy = RyoBody(
@@ -164,7 +166,8 @@ public sealed class FighterAnimSet
 		// 42 cm (get-up f13); finish-qa.md has the before and after.
 		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift },
 		// YOK-246: the composed down guard (ryo-block-low) floated him 5.7 cm; metres of hips lowered on that clip.
-		new Dictionary<string, float> { ["ryo-block-low"] = -0.03f });
+		// The box_01 Iron-Club Charge floated him 1.5-10.9 cm (median 6.4); Ryo's -0.21 would sink him 18.9 cm.
+		new Dictionary<string, float> { ["ryo-block-low"] = -0.03f, ["ryo-iron-club-charge"] = -0.064f });
 
 
 	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot, string fighter = "ryo",
