@@ -144,10 +144,10 @@ public static class EvolutionVocabularyBreakerProbes
 	// The baseline has the same modifier id (Fighter.StateHash mixes it) and the same condition, with an effect that changes nothing.
 	const string NoOpEffects = "{\"target\":\"damage\",\"op\":\"add\",\"value\":0,\"when\":\"WHEN\"}";
 
+	// YOK-226: wall_bounce and multi_hit have behaviour now (EvolutionBehaviourTests), so they left this list; decoy
+	// stays (a decoy only exists where a move teleports, YOK-224).
 	const string PendingEffects =
-		"{\"target\":\"wall_bounce\",\"op\":\"set\",\"value\":true,\"when\":\"WHEN\"}," +
-		"{\"target\":\"decoy\",\"op\":\"set\",\"value\":1,\"when\":\"WHEN\"}," +
-		"{\"target\":\"multi_hit\",\"op\":\"set\",\"value\":{\"hits\":3,\"interval\":6},\"when\":\"WHEN\"}";
+		"{\"target\":\"decoy\",\"op\":\"set\",\"value\":1,\"when\":\"WHEN\"}";
 
 	static void TraceEqual(string specialId, string when, int level, bool p2Jabs, int p2x)
 	{

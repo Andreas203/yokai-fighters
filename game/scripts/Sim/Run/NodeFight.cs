@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace YokaiFighters.Sim;
 
@@ -32,9 +34,7 @@ public static class NodeFight
 		}
 		else
 		{
-			// YOK-174: a yokai with no fighter of its own fights with its own move files on the fallback's kit.
-			string playsAs = session?.Node is { } at && at.Fighter == opponent ? at.MovesAndProfilesOf : opponent;
-			var foe = Load(playsAs, opponent, sources, log);
+			var foe = OpponentKit(sources, session?.Node, opponent, log);
 			m = new Match(cfg, ryo.Moves, foe.Moves);
 			foe.Equip(m.P2);
 		}
@@ -42,6 +42,30 @@ public static class NodeFight
 		foreach (var f in m.Fighters) f.Input.Scheme = scheme;
 		run?.ApplyTo(m.P1, cfg); // YOK-47: Ryo's drafted slots, levels, modifiers and carried health
 		return m;
+	}
+
+	/// <summary>
+	/// The opponent's kit at <paramref name="node"/> (not the Tanuki's). YOK-174: a yokai with no fighter of its own fights
+	/// with its own move files on the fallback's kit. YOK-226: a node that is not an elder's drops the rare specials
+	/// (a yokai's second special belongs to its elder, A9; the elder profiles name it, YOK-234). No node (a bare or dev fight) = commons only too: only an elder node carries a rare.
+	/// </summary>
+	public static Kit OpponentKit(KitSources sources, NodeContext? node, string opponent, Action<string>? log = null)
+	{
+		string playsAs = node is { } at && at.Fighter == opponent ? at.MovesAndProfilesOf : opponent;
+		var foe = Load(playsAs, opponent, sources, log);
+		return node is { Elder: true } ? foe : foe.CommonsOnly();
+	}
+
+	/// <summary>
+	/// YOK-226: the special ids <see cref="OpponentKit"/> holds back at <paramref name="node"/> (the yokai's rare specials
+	/// at any node but an elder's). The temperament profiles are shared by the yokai and its elder (YOK-234), so the profile
+	/// check (<c>AiLoadout.Missing</c>) accepts these; at run time <c>AiLoadout.CanDo</c> skips them.
+	/// </summary>
+	public static IReadOnlyList<string> HeldBack(KitSources sources, NodeContext? node, string opponent)
+	{
+		if (node is { Elder: true }) return Array.Empty<string>();
+		string playsAs = node is { } at && at.Fighter == opponent ? node.MovesAndProfilesOf : opponent;
+		return Kit.LoadAs(playsAs, opponent, sources).Specials.Where(s => s.Rarity == "rare").Select(s => s.Id).ToArray();
 	}
 
 	static Kit Load(string fighter, KitSources sources, Action<string>? log) => Load(fighter, fighter, sources, log);

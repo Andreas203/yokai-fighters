@@ -1,0 +1,386 @@
+{
+"1A": {
+"clip": "kappa-light-kick",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"1B": {
+"clip": "kappa-light-kick",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"1C": {
+"clip": "kappa-light-kick",
+"frame": 6,
+"pick": "active",
+"view": "cam"
+},
+"1D": {
+"clip": "kappa-light-kick",
+"frame": 6,
+"pick": "active",
+"view": "side"
+},
+"1E": {
+"clip": "kappa-light-kick",
+"frame": 12,
+"pick": "recovery",
+"view": "cam"
+},
+"1F": {
+"clip": "kappa-light-kick",
+"frame": 12,
+"pick": "recovery",
+"view": "side"
+},
+"1G": {
+"clip": "kappa-light-kick",
+"frame": 8,
+"pick": "worst",
+"view": "cam"
+},
+"1H": {
+"clip": "kappa-light-kick",
+"frame": 8,
+"pick": "worst",
+"view": "side"
+},
+"2A": {
+"clip": "kitsune-idle",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"2B": {
+"clip": "kitsune-idle",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"2C": {
+"clip": "kitsune-idle",
+"frame": 111,
+"pick": "active",
+"view": "cam"
+},
+"2D": {
+"clip": "kitsune-idle",
+"frame": 111,
+"pick": "active",
+"view": "side"
+},
+"2E": {
+"clip": "kitsune-idle",
+"frame": 166,
+"pick": "recovery",
+"view": "cam"
+},
+"2F": {
+"clip": "kitsune-idle",
+"frame": 166,
+"pick": "recovery",
+"view": "side"
+},
+"2G": {
+"clip": "kitsune-idle",
+"frame": 59,
+"pick": "worst",
+"view": "cam"
+},
+"2H": {
+"clip": "kitsune-idle",
+"frame": 59,
+"pick": "worst",
+"view": "side"
+},
+"3A": {
+"clip": "kappa-medium-punch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"3B": {
+"clip": "kappa-medium-punch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"3C": {
+"clip": "kappa-medium-punch",
+"frame": 7,
+"pick": "active",
+"view": "cam"
+},
+"3D": {
+"clip": "kappa-medium-punch",
+"frame": 7,
+"pick": "active",
+"view": "side"
+},
+"3E": {
+"clip": "kappa-medium-punch",
+"frame": 15,
+"pick": "recovery",
+"view": "cam"
+},
+"3F": {
+"clip": "kappa-medium-punch",
+"frame": 15,
+"pick": "recovery",
+"view": "side"
+},
+"3G": {
+"clip": "kappa-medium-punch",
+"frame": 12,
+"pick": "worst",
+"view": "cam"
+},
+"3H": {
+"clip": "kappa-medium-punch",
+"frame": 12,
+"pick": "worst",
+"view": "side"
+},
+"4A": {
+"clip": "kitsune-medium-punch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"4B": {
+"clip": "kitsune-medium-punch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"4C": {
+"clip": "kitsune-medium-punch",
+"frame": 7,
+"pick": "active",
+"view": "cam"
+},
+"4D": {
+"clip": "kitsune-medium-punch",
+"frame": 7,
+"pick": "active",
+"view": "side"
+},
+"4E": {
+"clip": "kitsune-medium-punch",
+"frame": 15,
+"pick": "recovery",
+"view": "cam"
+},
+"4F": {
+"clip": "kitsune-medium-punch",
+"frame": 15,
+"pick": "recovery",
+"view": "side"
+},
+"4G": {
+"clip": "kitsune-medium-punch",
+"frame": 12,
+"pick": "worst",
+"view": "cam"
+},
+"4H": {
+"clip": "kitsune-medium-punch",
+"frame": 12,
+"pick": "worst",
+"view": "side"
+},
+"5A": {
+"clip": "kappa-light-punch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"5B": {
+"clip": "kappa-light-punch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"5C": {
+"clip": "kappa-light-punch",
+"frame": 5,
+"pick": "active",
+"view": "cam"
+},
+"5D": {
+"clip": "kappa-light-punch",
+"frame": 5,
+"pick": "active",
+"view": "side"
+},
+"5E": {
+"clip": "kappa-light-punch",
+"frame": 10,
+"pick": "recovery",
+"view": "cam"
+},
+"5F": {
+"clip": "kappa-light-punch",
+"frame": 10,
+"pick": "recovery",
+"view": "side"
+},
+"5G": {
+"clip": "kappa-light-punch",
+"frame": 9,
+"pick": "worst",
+"view": "cam"
+},
+"5H": {
+"clip": "kappa-light-punch",
+"frame": 9,
+"pick": "worst",
+"view": "side"
+},
+"6A": {
+"clip": "kitsune-light-punch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"6B": {
+"clip": "kitsune-light-punch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"6C": {
+"clip": "kitsune-light-punch",
+"frame": 5,
+"pick": "active",
+"view": "cam"
+},
+"6D": {
+"clip": "kitsune-light-punch",
+"frame": 5,
+"pick": "active",
+"view": "side"
+},
+"6E": {
+"clip": "kitsune-light-punch",
+"frame": 10,
+"pick": "recovery",
+"view": "cam"
+},
+"6F": {
+"clip": "kitsune-light-punch",
+"frame": 10,
+"pick": "recovery",
+"view": "side"
+},
+"6G": {
+"clip": "kitsune-light-punch",
+"frame": 9,
+"pick": "worst",
+"view": "cam"
+},
+"6H": {
+"clip": "kitsune-light-punch",
+"frame": 9,
+"pick": "worst",
+"view": "side"
+},
+"7A": {
+"clip": "kitsune-crouch",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"7B": {
+"clip": "kitsune-crouch",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"7C": {
+"clip": "kitsune-crouch",
+"frame": 15,
+"pick": "active",
+"view": "cam"
+},
+"7D": {
+"clip": "kitsune-crouch",
+"frame": 15,
+"pick": "active",
+"view": "side"
+},
+"7E": {
+"clip": "kitsune-crouch",
+"frame": 22,
+"pick": "recovery",
+"view": "cam"
+},
+"7F": {
+"clip": "kitsune-crouch",
+"frame": 22,
+"pick": "recovery",
+"view": "side"
+},
+"7G": {
+"clip": "kitsune-crouch",
+"frame": 1,
+"pick": "worst",
+"view": "cam"
+},
+"7H": {
+"clip": "kitsune-crouch",
+"frame": 1,
+"pick": "worst",
+"view": "side"
+},
+"8A": {
+"clip": "kitsune-block-high",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"8B": {
+"clip": "kitsune-block-high",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"8C": {
+"clip": "kitsune-block-high",
+"frame": 19,
+"pick": "active",
+"view": "cam"
+},
+"8D": {
+"clip": "kitsune-block-high",
+"frame": 19,
+"pick": "active",
+"view": "side"
+},
+"8E": {
+"clip": "kitsune-block-high",
+"frame": 27,
+"pick": "recovery",
+"view": "cam"
+},
+"8F": {
+"clip": "kitsune-block-high",
+"frame": 27,
+"pick": "recovery",
+"view": "side"
+},
+"8G": {
+"clip": "kitsune-block-high",
+"frame": 37,
+"pick": "worst",
+"view": "cam"
+},
+"8H": {
+"clip": "kitsune-block-high",
+"frame": 37,
+"pick": "worst",
+"view": "side"
+}
+}

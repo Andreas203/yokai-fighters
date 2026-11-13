@@ -19,7 +19,7 @@ only the hips height, FighterModel.BuildLibrary). Target bone names are normalis
 Run (Blender 4.x, headless):
   Blender -b --python tools/blender/retarget_bvh.py -- --bvh <take.bvh> --rig <rig.glb> --out <retargeted.glb> [--fps 30]
   Blender -b --python tools/blender/retarget_bvh.py -- --clip <meshy-clip.glb> --rig <tripo-rig.glb> --out <clip.glb>
-      [--rest-align 0|1] [--in-place 0|1] [--proxy-mesh 0|1] [--log <log.json>]
+      [--src-skeleton meshy|tripo] [--rest-align 0|1] [--in-place 0|1] [--proxy-mesh 0|1] [--log <log.json>]
 BVH mode writes a GLB (rig, mesh and one action at 60 fps scene rate, keys every other frame since a text_to_motion
 take is 30 fps); follow with clean_clip.py. Clip mode keys every source frame at the same frame number and, with
 --proxy-mesh 1 (default for --clip), replaces the rig's mesh by a 25-triangle proxy skinned one triangle per bone:
@@ -45,6 +45,11 @@ MAP = {  # Meshy shared-skeleton target bone: source (BVH) bone
 LIMBS = [s + n for s in ("Left", "Right") for n in ("Shoulder", "Arm", "ForeArm", "Hand", "UpLeg", "Leg", "Foot", "ToeBase")]
 # Meshy clip -> Tripo shared skeleton (skeleton.md "Bone map: Meshy"): target bone: source bone, by chain position.
 MESHY_CLIP_MAP = dict({"Hips": "Hips", "Spine": "Spine02", "Spine1": "Spine01", "Spine2": "Spine", "Neck": "neck",
+                       "Head": "Head"}, **{n: n for n in LIMBS})
+
+
+# Tripo-skeleton clip -> Meshy-skeleton rig (Kitsune, Oni, Kappa): the same chain-position map, reversed.
+TRIPO_CLIP_MAP = dict({"Hips": "Hips", "Spine02": "Spine", "Spine01": "Spine1", "Spine": "Spine2", "neck": "Neck",
                        "Head": "Head"}, **{n: n for n in LIMBS})
 
 
@@ -95,7 +100,12 @@ def main():
         bpy.ops.import_scene.gltf(filepath=os.path.abspath(clip))
         sr = [o for o in bpy.data.objects if o.type == "ARMATURE" and o not in tg_objs][0]
         snames = cc.bone_lookup(sr)
-        bmap = {tnames[t]: snames[s] for t, s in MESHY_CLIP_MAP.items() if t in tnames and s in snames}
+        cmap = MESHY_CLIP_MAP
+        if arg("--src-skeleton", "meshy") == "tripo":  # Tripo clip: onto a Meshy rig (reversed chain map) or a Tripo rig (identity)
+            cmap = TRIPO_CLIP_MAP if "Spine02" in tnames else dict({"Hips": "Hips", "Spine": "Spine", "Spine1": "Spine1",
+                                                                  "Spine2": "Spine2", "Neck": "Neck", "Head": "Head"},
+                                                                 **{n: n for n in LIMBS})
+        bmap = {tnames[t]: snames[s] for t, s in cmap.items() if t in tnames and s in snames}
     else:
         bpy.ops.import_anim.bvh(filepath=os.path.abspath(bvh), axis_forward="-Z", axis_up="Y", global_scale=0.01,
                                 rotate_mode="QUATERNION", update_scene_fps=False, use_fps_scale=False)

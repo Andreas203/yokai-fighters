@@ -63,6 +63,13 @@ public sealed class Kit
 		Fighter = fighter; Moves = moves; Specials = specials; Notes = notes;
 	}
 
+	/// <summary>
+	/// YOK-226 (A9 reading, YOK-234 loadouts): this kit without its rare specials (a yokai's second special), for an
+	/// opponent that is not an elder: rares belong to the elders who offer them. Rarity is the data's, never an id.
+	/// </summary>
+	public Kit CommonsOnly() =>
+		new(Fighter, Moves, Specials.Where(s => s.Rarity != "rare").ToArray(), Notes.ToList()) { Body = Body };
+
 	private enum MoveKind { Ground, Air, Throw, Other }
 
 	private static MoveKind KindOf(MoveData m) =>

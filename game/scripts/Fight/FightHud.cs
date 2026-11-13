@@ -229,7 +229,7 @@ public partial class FightHud : CanvasLayer
 	}
 
 	/// <summary>The lose screen's story card, already filled with the run's names (S4). Null title keeps the current one.</summary>
-	public void SetLoseText(string? title, string text) => _lose.SetText(title, text);
+	public void SetLoseText(string? title, string text, string? portraitId = null) { _lose.SetText(title, text); if (portraitId != null) _lose.SetPortrait(portraitId); }
 
 	public string LoseTitle => _lose?.Title ?? "";
 	public string LoseText => _lose?.Text ?? "";
@@ -239,7 +239,7 @@ public partial class FightHud : CanvasLayer
 		if (!_ready) return; // before _Ready
 		View ??= new MatchHudView(m);
 		_match = m;
-		if (GetParent() is FightScene host) ShowOpponent(host.OpponentYokai, host.OpponentName); else ShowOpponent(FightScene.Opponent);
+		if (GetParent() is FightScene host) ShowOpponent(host.OpponentPortrait, host.OpponentName); else ShowOpponent(FightScene.Opponent);
 		_temperament.Text = GetParent() is FightScene fight ? fight.Temperament.ToUpperInvariant() : "";
 		for (int i = 0; i < 2; i++)
 		{
@@ -286,13 +286,31 @@ public partial class FightHud : CanvasLayer
 		_meterText.Text = $"METER {v.Meter} / {v.MeterMax}";
 	}
 
-	/// <summary>Presentation lookup only. Unknown opponents have no portrait, never another fighter's mask.</summary>
-	public static string PortraitPath(string opponent) => opponent switch
+	/// <summary>Neutral stand-in while a fighter's portrait file does not exist yet: the red seal, never another fighter's face.</summary>
+	public const string SealPath = "res://assets/generated/ui/red-seal.png";
+
+	/// <summary>
+	/// Presentation lookup only: <c>ui/&lt;id&gt;-portrait.png</c> (apprentice, oni, kappa...); an elder uses its yokai's plate
+	/// (<c>elder-oni</c> = oni); the Kitsune keeps the fox mask. The Tanuki has none (no boss reveal in the HUD).
+	/// </summary>
+	public static string PortraitPath(string opponent)
 	{
-		"kitsune" or "nine-tailed-kitsune" => "res://assets/generated/ui/fox-mask.png",
-		"tanuki" => "", // No boss reveal in the HUD.
-		_ => $"res://assets/generated/ui/{opponent}-portrait.png",
-	};
+		const string elder = "elder-";
+		if (opponent.StartsWith(elder, StringComparison.Ordinal)) opponent = opponent[elder.Length..];
+		return opponent switch
+		{
+			"kitsune" or "nine-tailed-kitsune" => "res://assets/generated/ui/fox-mask.png",
+			"tanuki" or "" => "",
+			_ => $"res://assets/generated/ui/{opponent}-portrait.png",
+		};
+	}
+
+	/// <summary>The portrait texture for a fighter id: its plate, else the seal (never null, never a blank box).</summary>
+	public static Texture2D PortraitTexture(string id)
+	{
+		string path = PortraitPath(id);
+		return (path.Length > 0 ? UiTextures.Load(path) : null) ?? UiTextures.Load(SealPath)!;
+	}
 
 	/// <summary>YOK-187: <paramref name="id"/> picks the portrait (the yokai), <paramref name="name"/> the health label ("Elder Oni"); null = <paramref name="id"/>'s own name.</summary>
 	public void ShowOpponent(string id, string? name = null)
@@ -301,8 +319,8 @@ public partial class FightHud : CanvasLayer
 		_opponentId = id;
 		_shownRaw = name;
 		_opponentName = (name ?? Story.StoryLibrary.DisplayName(id)).ToUpperInvariant();
-		string path = PortraitPath(id);
-		_portrait.Texture = path.Length > 0 && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
+		string path = PortraitPath(id); // a fighter whose file is missing leaves the space out (never another face)
+		_portrait.Texture = path.Length > 0 ? UiTextures.Load(path) : null;
 		_portrait.Visible = _portrait.Texture != null;
 	}
 

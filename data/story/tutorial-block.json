@@ -1,0 +1,16 @@
+{
+  "kind": "story_card",
+  "id": "tutorial-block",
+  "status": "proposed",
+  "trigger": "First fight of the first run, guided apprentice duel (Y6): Block lesson",
+  "text": "Hold back to block. Hold it down for low blows.",
+  "placeholders": [],
+  "speaker": "Prompt",
+  "rules": [
+    "S1",
+    "S2",
+    "Y6",
+    "C3"
+  ],
+  "notes": "Mirrors C3: lows are blocked crouching. Imperative prompt, not a story beat."
+}

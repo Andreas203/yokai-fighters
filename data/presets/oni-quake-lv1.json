@@ -1,0 +1,20 @@
+{
+  "kind": "level_preset",
+  "id": "oni-quake-lv1",
+  "special": "oni-quake",
+  "level": 1,
+  "status": "proposed",
+  "rules": [
+    "V5",
+    "V8",
+    "A5"
+  ],
+  "colour": "#B5332B",
+  "release": {
+    "look": "dust"
+  },
+  "impact": {
+    "look": "dust"
+  },
+  "notes": "Colour-only (YOK-233, G3 fallback; no texture). Lv 1 base: Shrine red #B5332B (style.md palette; V5 oni red). Default spark image. YOK-242 (proposed): ground wave on the slam (first active frame) and on the hit."
+}

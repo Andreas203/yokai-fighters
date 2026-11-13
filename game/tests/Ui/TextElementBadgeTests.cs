@@ -94,14 +94,14 @@ public static class TextElementBadgeTests
 	}
 
 	[Test]
-	public static void ShopScreenIcon_BadgeIsFirstTextElement()
+	public static void ShopScreenIcon_IsTheAbilityIcon_NotALetter()
 	{
-		foreach (var (n, b) in Cases.Append(("", "?")))
+		foreach (string id in new[] { "foxfire", "no-such-ability", "" })
 		{
-			var icon = ShopScreen.Icon(n, Colors.Red, 46);
-			var glyph = icon.FindChild("Glyph", true, false) as Label;
-			Assert.True(glyph != null, "icon has a Glyph label");
-			Assert.Equal(b, glyph!.Text, $"slot icon badge for '{n}'");
+			var icon = ShopScreen.Icon(id, Colors.Red, 46);
+			Assert.True(icon.FindChild("Glyph", true, false) == null, "no letter in the tile");
+			var art = icon.FindChild("Art", true, false) as TextureRect;
+			Assert.True(art?.Texture == AbilityArt.ForId(id), $"slot icon for '{id}' is the ability art or the generic swirl");
 			icon.Free();
 		}
 	}

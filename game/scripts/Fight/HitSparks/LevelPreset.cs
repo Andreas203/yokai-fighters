@@ -11,7 +11,28 @@ namespace YokaiFighters.Fight;
 /// YOK-198 (V8, A5): one kind <c>level_preset</c> file (data/schema/level-preset.schema.json): how one special looks
 /// at one level. Presentation only; the sim never reads it. Colours are 0xRRGGBB.
 /// </summary>
-public sealed record LevelPreset(string Id, string Special, int Level, uint Colour, SparkPreset Spark, string Status = "final");
+public sealed record LevelPreset(string Id, string Special, int Level, uint Colour, SparkPreset Spark, string Status = "final")
+{
+	/// <summary>YOK-242: how the projectile looks in flight (null = the default orb in the preset's colour).</summary>
+	public VfxPreset? Projectile { get; init; }
+	/// <summary>YOK-242: the effect when the special starts (null = the default for the move's properties).</summary>
+	public VfxPreset? Cast { get; init; }
+	/// <summary>YOK-242: the effect on the release (projectile spawn, else the first active frame).</summary>
+	public VfxPreset? Release { get; init; }
+	/// <summary>YOK-242: the effect where the special connects.</summary>
+	public VfxPreset? Impact { get; init; }
+}
+
+/// <summary>
+/// YOK-242: one presentation block of a level preset (<c>projectile</c>, <c>cast</c>, <c>release</c>, <c>impact</c>).
+/// Every field is optional; null keeps the default (<see cref="SpecialVfxStyle"/>). <see cref="Look"/> is a
+/// <see cref="VfxLook"/> name; <see cref="Texture"/> is relative to game/.
+/// </summary>
+public sealed record VfxPreset(VfxLook? Look = null, uint? Colour = null, uint? Core = null, int? ScalePct = null, int? Frames = null,
+	string? Texture = null, int SheetColumns = 1, bool Tint = true)
+{
+	public static readonly VfxPreset None = new();
+}
 
 /// <summary>The preset's hit spark. Null fields keep the default spark's value (<see cref="HitSparkStyle"/>).</summary>
 public sealed record SparkPreset(uint? Colour = null, int? ScalePct = null, int? Frames = null,
@@ -42,7 +63,10 @@ public sealed class LevelPresetLibrary
 	static readonly Regex IdPattern = new(@"\A[a-z0-9]+(-[a-z0-9]+)*\z", RegexOptions.CultureInvariant);
 	static readonly Regex HexPattern = new(@"\A#[0-9A-Fa-f]{6}\z", RegexOptions.CultureInvariant);
 	static readonly Regex TexturePattern = new(@"\A[a-z0-9_-]+(/[a-z0-9_-]+)*\.(png|webp)\z", RegexOptions.CultureInvariant);
-	static readonly HashSet<string> TopFields = new() { "kind", "id", "special", "level", "status", "rules", "colour", "spark", "notes" };
+	static readonly HashSet<string> TopFields = new() { "kind", "id", "special", "level", "status", "rules", "colour", "spark", "projectile", "cast", "release", "impact", "notes" };
+	/// <summary>YOK-242: the vfx blocks. A projectile lives as long as the sim keeps it, so it has no <c>frames</c>.</summary>
+	static readonly HashSet<string> ProjectileFields = new() { "look", "colour", "core", "scale_pct", "texture", "sheet_columns", "tint" };
+	static readonly HashSet<string> EffectFields = new() { "look", "colour", "core", "scale_pct", "frames", "texture", "sheet_columns", "tint" };
 	static readonly HashSet<string> SparkFields = new() { "colour", "scale_pct", "frames", "textures", "sheet_columns", "tint" };
 	static readonly HashSet<string> TextureFields = new() { "hit", "block", "counter" };
 
@@ -64,6 +88,17 @@ public sealed class LevelPresetLibrary
 	/// <summary>The preset for this special at this level, or null (the default spark).</summary>
 	public LevelPreset? For(string? special, int level) =>
 		special != null && _byLevel.TryGetValue((special, level), out var p) ? p : null;
+
+	/// <summary>
+	/// YOK-242 (V8): the look a special wears at this level for its VFX: its own preset, else the nearest lower level's
+	/// (a special that names no Lv 2 preset keeps its Lv 1 look at Lv 2), else null.
+	/// </summary>
+	public LevelPreset? Resolve(string? special, int level)
+	{
+		for (int l = Math.Min(level, 3); l >= 1; l--)
+			if (For(special, l) is { } p) return p;
+		return null;
+	}
 
 	public static LevelPresetLibrary LoadDirectory(string dir)
 	{
@@ -128,7 +163,39 @@ public sealed class LevelPresetLibrary
 			spark = new SparkPreset(Hex(s, "colour", "spark.colour"), Int(s, "scale_pct", "spark.scale_pct", 25, 400),
 				Int(s, "frames", "spark.frames", 2, 60), hit, block, counter, Int(s, "sheet_columns", "spark.sheet_columns", 1, 16) ?? 1, tint);
 		}
-		return new LevelPreset(id, special, level, colour, spark, status);
+		return new LevelPreset(id, special, level, colour, spark, status)
+		{
+			Projectile = Vfx(root, "projectile", ProjectileFields, projectile: true),
+			Cast = Vfx(root, "cast", EffectFields, projectile: false),
+			Release = Vfx(root, "release", EffectFields, projectile: false),
+			Impact = Vfx(root, "impact", EffectFields, projectile: false),
+		};
+	}
+
+	/// <summary>YOK-242: one vfx block, or null when absent. A projectile look on an effect block (or the reverse) is refused.</summary>
+	static VfxPreset? Vfx(JsonElement root, string name, HashSet<string> fields, bool projectile)
+	{
+		if (!root.TryGetProperty(name, out var b)) return null;
+		if (b.ValueKind != JsonValueKind.Object) throw new FormatException($"{name}: must be an object");
+		Unknown(b, fields, name + ".");
+		VfxLook? look = null;
+		if (Str(b, "look", name + ".look") is { } ls)
+		{
+			if (!VfxLooks.TryParse(ls, out var l)) throw new FormatException($"{name}.look: '{ls}' is not one of {string.Join(", ", VfxLooks.Names)}");
+			if (VfxLooks.IsProjectile(l) != projectile)
+				throw new FormatException($"{name}.look: '{ls}' is {(projectile ? "an effect" : "a projectile")} look; {name} takes {string.Join(", ", VfxLooks.Names.Where(n => VfxLooks.TryParse(n, out var k) && VfxLooks.IsProjectile(k) == projectile))}");
+			look = l;
+		}
+		string? tex = Str(b, "texture", name + ".texture");
+		if (tex != null && !TexturePattern.IsMatch(tex)) throw new FormatException($"{name}.texture: '{tex}' is not a .png/.webp path relative to game/");
+		bool tint = true;
+		if (b.TryGetProperty("tint", out var ti))
+		{
+			if (ti.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw new FormatException($"{name}.tint: must be true or false");
+			tint = ti.GetBoolean();
+		}
+		return new VfxPreset(look, Hex(b, "colour", name + ".colour"), Hex(b, "core", name + ".core"), Int(b, "scale_pct", name + ".scale_pct", 25, 400),
+			Int(b, "frames", name + ".frames", 2, 120), tex, Int(b, "sheet_columns", name + ".sheet_columns", 1, 16) ?? 1, tint);
 	}
 
 	static void Unknown(JsonElement obj, HashSet<string> allowed, string prefix)

@@ -1,0 +1,21 @@
+{
+  "kind": "clip",
+  "id": "kappa-get-up",
+  "status": "proposed",
+  "source": "meshy-library",
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "clip": "free pose fallback (no Tripo v1.0 preset): ryo-get-up.glb",
+  "frames_total": 33,
+  "trim_start": 22,
+  "trim_end": 102,
+  "speed_scale": 2.5,
+  "file": "assets/generated/clips/kappa/kappa-get-up.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "retarget_notes": "Tripo take ryo-get-up.glb retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (WARN, slide 3.53 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-get-up."
+}

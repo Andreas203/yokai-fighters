@@ -1,0 +1,35 @@
+{
+  "kind": "trial",
+  "id": "shell-spin-trial",
+  "status": "proposed",
+  "special": "shell-spin",
+  "prompt": "Close in and spin your shell into the dummy.",
+  "attempts": 3,
+  "setup": {
+    "distance": 220,
+    "attempt_frames": 600,
+    "dummy": {
+      "action": "idle"
+    }
+  },
+  "goal": {
+    "steps": [
+      {
+        "event": "hit",
+        "move": "shell-spin",
+        "distance": {
+          "max": 200
+        }
+      }
+    ]
+  },
+  "rules": [
+    "R7",
+    "K1",
+    "K2",
+    "K3",
+    "F3",
+    "T0"
+  ],
+  "notes": "Teaches the long 18-frame active window: Shell Spin is a hit you can walk into. The projectile cover (invuln against projectile on frames 11-28) is not taught here: no goal step can observe a dodged projectile. Kihon: down + Special, slot D. Harness to confirm."
+}

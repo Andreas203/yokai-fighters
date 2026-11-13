@@ -178,8 +178,8 @@ public static class TwistUiTests
 	{
 		var card = Card(host);
 		var scroll = card.Scroll!;
-		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "Armour on every special", FightHud.PortraitPath("oni"));
-		Assert.True(!scroll.HasPortrait && scroll.TextColumn.Position.X == TwistScroll.ColumnLeftAlone && scroll.TextColumn.Size.X == TwistScroll.ColumnWidthAlone, "no Oni art: no box, the text column takes the space");
+		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", "Armour on every special", "res://assets/generated/ui/no-such-fighter-portrait.png");
+		Assert.True(!scroll.HasPortrait && scroll.TextColumn.Position.X == TwistScroll.ColumnLeftAlone && scroll.TextColumn.Size.X == TwistScroll.ColumnWidthAlone, "a missing portrait file: no box, the text column takes the space");
 		card.Display("q", "ELDER TWIST · ROW 5", "twist-armour", "E", "Elder Oni", null, null);
 		Assert.True(!scroll.HasPortrait, "a null path leaves it out too");
 		Assert.True(!scroll.GetNode<Control>("TextCol/Rule").Visible && !scroll.GetNode<Control>("TextCol/RuleLine").Visible, "no label, no rule line");
@@ -313,7 +313,8 @@ public static class TwistUiTests
 				Assert.Equal(TwistCopy.Label(tw, story, s.OpponentName).Text, scroll.RuleText, $"{yokai}: red rule line = the -label card");
 				Assert.Equal(tw.Icon, scroll.StampIcon, $"{yokai}: one icon per twist, the map's");
 				Assert.True(scroll.Kicker.StartsWith("ELDER TWIST · ROW "), $"{yokai}: kicker");
-				Assert.Equal(yokai == "kitsune", scroll.HasPortrait, $"{yokai}: portrait only where approved art exists (the Kitsune's full mask)");
+				string pp = FightHud.PortraitPath(yokai);
+				Assert.Equal(pp.Length > 0 && UiTextures.Exists(pp), scroll.HasPortrait, $"{yokai}: portrait exactly where its file exists (an elder wears its yokai's)");
 				s.TwistCard.Continue();
 				Assert.True(hud.TwistCalloutVisible, $"{yokai}: first meeting shows the callout");
 				Assert.Equal(TwistCopy.Callout(tw, story, s.OpponentName).Text, hud.TwistCalloutText, $"{yokai}: callout = the -callout card");

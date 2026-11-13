@@ -533,7 +533,10 @@ public static class MerchantShopProbes
 			Assert.True(bound.Contains("kitsune") && bound.Contains("apprentice"), "bound = {kitsune, apprentice}: " + string.Join(",", bound));
 			var sell = MerchantShop.ShelfFor(run, pool, bound).Select(x => x.Id).ToArray();
 			var sellMods = MerchantShop.ModifierShelfFor(run, pool, bound).Select(x => x.Id).ToArray();
-			Assert.True(sell.Length == 0, "no unbound specials in data yet: " + string.Join(",", sell));
+			// YOK-226 (R6): the commons iron-club-charge and river-grab are now sold; rares never are.
+			var wantSpecials = pool.Specials.Where(x => x.Rarity == "common" && !x.Locked && !x.Starter && !bound.Contains(x.Source) && !run.Owns(x.Id)).Select(x => x.Id).ToArray();
+			Assert.Equal(string.Join(",", wantSpecials), string.Join(",", sell), "R6: the unbound, unlocked common specials, pool order");
+			Assert.True(sell.All(id => pool.Specials.First(x => x.Id == id).Rarity == "common"), "R6: no rare is sold");
 			var want = pool.Modifiers.Where(m => m.Rarity == "common" && !m.Locked && !bound.Contains(m.Source)).Select(m => m.Id).ToArray();
 			Assert.True(want.Length > 0 && want.All(id => !pool.Modifiers.Any(m => m.Id == id && m.Source == "kitsune")), "the Oni's and Kappa's unlocked commons: " + string.Join(",", want));
 			Assert.Equal(string.Join(",", want), string.Join(",", sellMods), "R6: common, unlocked modifiers of unbound yokai, pool order");

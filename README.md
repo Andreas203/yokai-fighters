@@ -1098,7 +1098,7 @@ It is a download rather than a browser game because Godot 4 can't export a C# pr
     1. The animator measures the clip: the hands hang at thigh height and nothing strikes on the hit frames 13–18.
     2. It tests every Tripo take already made for Ryo's rig, and recommends `box_01`, a lunging straight punch.
     3. I approve it.
-    4. `tools/finish_clips.py` (on the finish branch `YOK-finish-playable`) turns the take to face the camera, retimes it to the move's 12 / 6 / 14 frame data and measures it (worst foot slide 1.38 cm per frame).
+    4. [`tools/finish_clips.py`](tools/finish_clips.py) turns the take to face the camera, retimes it to the move's 12 / 6 / 14 frame data and measures it (worst foot slide 1.38 cm per frame).
     5. The rules-lawyer and the test suite pass it.
   - **The result.** The game opens again on the new clip.
   - **The cost.** 0 Tripo credits, because the take was already paid for. The animator used 186,517 tokens over 89 tool calls, and the rules-lawyer 42,369; both run inside my Claude Code subscription. A proper shoulder charge, which no Tripo preset has, is ticket YOK-250.

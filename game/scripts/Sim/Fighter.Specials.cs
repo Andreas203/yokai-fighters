@@ -173,6 +173,7 @@ public sealed partial class Fighter
 		BraceButtons = BraceTrigger = InputBits.None;
 		BraceHeld = BraceFrame = BraceLead = 0;
 		ChargeSpeed = 0;
+		HitsLanded = LastHitFrame = 0; // YOK-226: multi_hit counts one use
 	}
 
 	/// <summary>YOK-103: any slot carries a modifier (fight setup; the use counters only matter then).</summary>

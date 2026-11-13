@@ -1,0 +1,15 @@
+{
+  "kind": "story_card",
+  "id": "dojo-master-line",
+  "status": "proposed",
+  "trigger": "Row 7 rest stop, dojo: Master Sōen greets Ryo before rest or trial",
+  "text": "\"Rest, or practise the move you trust most, Ryo,\" the dojo master says, refilling a cup she does not drink. \"The bend ahead has a debt waiting.\"",
+  "placeholders": [],
+  "speaker": "Dojo master",
+  "rules": [
+    "S1",
+    "S2",
+    "R7"
+  ],
+  "notes": "Unnamed dojo master, no identity claim (Sōen appears only on the intro card). Patient, wry."
+}

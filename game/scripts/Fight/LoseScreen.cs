@@ -43,6 +43,12 @@ public partial class LoseScreen : Control
 		if (_text != null) _text.Text = Text;
 	}
 
+	/// <summary>The fighter who beat Ryo (or was fought last): its plate in the panel's mask slot, the seal while it has no art.</summary>
+	public void SetPortrait(string fighterId)
+	{
+		if (GetNodeOrNull<TextureRect>("Panel/Mask") is { } mask) mask.Texture = FightHud.PortraitTexture(fighterId);
+	}
+
 	/// <summary>Show the screen with the Restart button focused (Enter / Space / A press it).</summary>
 	public void Open() { Visible = true; Restart.GrabFocus(); }
 }

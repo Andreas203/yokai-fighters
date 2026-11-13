@@ -31,7 +31,8 @@ public static class LaterLossBreakerProbes
 	static NodeContext At(string yokai, int row, string type = "duel", bool elder = false) =>
 		NodeSceneTable.Default(ContentPaths.Data("map")).Resolve(new MapNodeData("n", row, type, yokai, elder)).Context;
 
-	static StoryLibrary With(params StoryCardData[] extra) => new(FightScene.LoadStory().Cards.Concat(extra));
+	// The shipped per-yokai Oni cards are left out: these probes put their own fixture cards for the Oni in their place.
+	static StoryLibrary With(params StoryCardData[] extra) => new(FightScene.LoadStory().Cards.Where(c => !c.Id.StartsWith("lose-oni-")).Concat(extra));
 
 	static string Shown(StoryLibrary lib, NodeContext node) => FightScene.LoseCardFor(lib, node, node.Fighter).Text;
 
@@ -290,7 +291,6 @@ public static class LaterLossBreakerProbes
 		var bad = new List<string>();
 		foreach (var n in FightNodes(DefaultMap()))
 		{
-			string band = n.Row <= 3 ? "lose-early" : n.Row <= 6 ? "lose-mid" : "lose-late";
 			var scene = Host(runner, SessionOn(n, pool));
 			try
 			{
@@ -298,6 +298,7 @@ public static class LaterLossBreakerProbes
 				hud.SetLoseText(null, "stale");
 				LoseTo(scene);
 				string name = FightScene.NameOf(scene.Node, scene.Node.Fighter);
+				string band = lib.LaterLossCard(scene.OpponentYokai, n.Row).Id; // the yokai's card, else the row band
 				string want = lib[band].FillText(yokai: name);
 				if (hud.LoseText != want) bad.Add($"{n.Id} (row {n.Row}): HUD '{hud.LoseText}', want {band} '{want}'");
 			}

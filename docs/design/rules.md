@@ -75,7 +75,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 - **E12** Throw input (C4): LP+LK pressed within 3 ticks of each other, in Kata and Kihon; if the first button already started a normal, the throw cancels it while it is still in startup, otherwise the throw input is ignored. A grab beats a strike active on the same frame, but a faster strike beats the throw's startup. Throw vs throw on the same frame clash: automatic break, no damage. A strike's invulnerability does not avoid throws (a burst's invulnerability does). After a break both fighters are freed and pushed apart; no mash penalty. A throw's recovery must outlast its break window. A landed throw builds meter and causes hitstop as a heavy hit (12 frames, shakes).
 - **E13** Burst input (C6): LP+MP+HP within 3 ticks (keyboard U+I+O / numpad 4+5+6, pad X+Y+RB). The burst pushes the opponent back 200 units. A thrown fighter cannot burst; it breaks instead.
 - **E14** Meter (C5 reading): attacker +6 on hit, +3 when blocked; defender +3 per hit taken, nothing for blocking. Hitstop (V2) also applies on block. Meter resets to 0 each fight; only health carries over (C1).
-- **E15** Generated rig limits: strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists). The generic throw clip is the Meshy "Step_Forward_and_Push" (preset 259) take, head-trimmed from tick 30, with its forward step in move data: an F5 substitute after three library grabs failed.
+- **E15** Generated rig limits: Ryo's strikes are closed fists by default, from a scripted `fist` blend shape on the open-hand mesh (weight 1 by default), with no extra bones; a clip may open the hand through its clip data, as the foxfire does (extended arm, open palm forward, the flame from the palm) [AM26 (approved as AM19 on branch YOK-ryo-guard-tripo), drafted 2026-11-08 from the designer's instruction, approved by the designer 2026-11-09; was open-handed because the Meshy rig had no finger bones]. The generic throw clip is the Meshy "Step_Forward_and_Push" (preset 259) take, head-trimmed from tick 30, with its forward step in move data: an F5 substitute after three library grabs failed.
 - **E16** EX specials (C5): the special's motion + any two punches or any two kicks, the second button up to 2 ticks late (the special turns into EX in place); costs the special's meter from data (1 bar). LP+LK stays the throw (E12) and wins. Without enough meter the plain version comes out and nothing is spent.
 - **E17** Levels and projectiles: Lv 3 keeps the Lv 2 step and adds its evolution. One projectile per fighter on screen unless the move's data allows more; a second input gives the button's normal instead. Equal projectiles cancel out; a projectile with more hits beats a weaker one and keeps its remaining hits. Throws ignore throw-invulnerability data (E12). Slippery Skin is not throw-invulnerability: it breaks a throw (AM12).
 - **E18** Kihon (K2): Special + direction picks slots A–D (neutral A, forward B, back C, down D; down-diagonals D, up-diagonals as their horizontal, up A); Special beats jump. K1 motions also work in Kihon, at 100% damage. Kihon EX: Special + direction + one extra punch or kick within 2 ticks. An attack pressed before Special gives its normal. Both players default to Kihon in the demo; F4 toggles P1's scheme in debug builds.
@@ -122,8 +122,8 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 | Rising Talisman | Ryo starter | 5/8/28 | 90 | Anti-air; air-invuln frames 1–5 | Heaven Seal: launches for a follow-up |
 | Foxfire | Kitsune, common | 15/4/30 | 70 | Slow projectile | Piercing Foxfire: passes through projectiles |
 | Fox Mirage ◆ | Kitsune, rare | 18/—/10 | 0 | Teleport behind opponent | Mirage Feint: decoy absorbs one hit |
-| Iron-Club Charge | Oni, common | 16/6/24 | 110 | Forward charge, 1-hit armour | Crushing Charge: wall bounce |
-| Oni Quake ◆ | Oni, rare | 22/5/26 | 90 | Ground pound, hits low | Aftershock: second quake 30f later |
+| Iron-Club Charge | Oni, common | 12/6/14 [AM24] | 110 | Forward charge, 1-hit armour | Crushing Charge: wall bounce |
+| Oni Quake ◆ | Oni, rare | 27/4/25 [AM24] | 90 | Ground pound, hits low | Aftershock: second quake 30f later |
 | River Grab | Kappa, common | 6/2/30 | 130 | Command grab (generic throw); counts as a throw (C4, R7) for trials and cancels | Whirlpool Grab: +50% range |
 | Shell Spin ◆ | Kappa, rare | 10/18/20 | 80 | Spins through projectiles | Torrent Spin: travels forward, multi-hit |
 
@@ -174,7 +174,7 @@ Values the GDD leaves open, proposed by the YOK-15/16/17/18 code and accepted by
 
 ## T — The Tanuki copy rule (never cut)
 
-- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's model and clips (no new animation). The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
+- **T0** Fights with Ryo's normals + starters + one copied special, using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25, designer 2026-11-11; was Ryo's model]. The copy sits in the slot it has on Ryo's side and replaces a starter there; the other starter stays in its own slot [AM4].
 - **T1** Lock point: when Ryo enters the Tanuki's node.
 - **T2** Target: highest-level special currently in a slot, throws included. Sold/replaced moves don't count.
 - **T3** Ties: most recently levelled, then lower slot.

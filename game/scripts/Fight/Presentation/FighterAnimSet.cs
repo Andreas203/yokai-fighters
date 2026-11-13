@@ -9,6 +9,9 @@ public enum PoseKind
 	Knockdown, GetUp, Attack, Thrown, Landing, Burst, Ko,
 }
 
+/// <summary>YOK-finish-qa: one point of a <see cref="FighterAnimSet.LyingHipLift"/> curve: metres of hips lift at a game frame.</summary>
+public readonly record struct HipLift(int Frame, float Meters);
+
 /// <summary>
 /// YOK-53: a fighter's model and which clip shows each <see cref="PoseKind"/> (presentation data, not game rules).
 /// The catalogued clips (data/clips) are cut on the Meshy 24-joint humanoid skeleton, so a Meshy body may borrow
@@ -43,6 +46,37 @@ public sealed class FighterAnimSet
 	public string FallbackThrowClip { get; init; } = "ryo-generic-throw";
 	public string? ClipFor(PoseKind kind) => Clips.TryGetValue(kind, out var c) ? c : null;
 
+	/// <summary>
+	/// YOK-finish-qa Fix B: metres this body's hips are raised on every clip (added to the scaled <c>Hips</c> Y keys in
+	/// <see cref="FighterModel"/>, after <see cref="FighterModel.HipScale"/>). Sized from the measured sink of the body on
+	/// the shared clips (assets/specs/rigs/finish-qa.md): a wide or heavy body on clips cut for Ryo's proportions stands
+	/// lower than its feet. Presentation only (F3): the sim never reads it.
+	/// </summary>
+	public float HipOffsetY { get; init; }
+
+	/// <summary>Per clip id, metres used instead of <see cref="HipOffsetY"/>: a body's own take that already meets the floor
+	/// (the Oni's heavy punch and Quake float 7 cm at his body offset).</summary>
+	public IReadOnlyDictionary<string, float> ClipHipOffsetY { get; init; } = new Dictionary<string, float>();
+
+	/// <summary>Metres the hips of one clip are raised: its <see cref="ClipHipOffsetY"/>, else <see cref="HipOffsetY"/>.</summary>
+	public float HipOffsetFor(string clipId) => ClipHipOffsetY.TryGetValue(clipId, out float o) ? o : HipOffsetY;
+
+	/// <summary>
+	/// YOK-finish-qa Fix D (code): extra hips height over the game frames of these lying poses' clips (knockdown, get-up,
+	/// KO), a curve of (game frame, metres) points, linear between them and held past the ends. Sized per frame from the
+	/// measured sink of the lowest skinned point (FinishQaCapture), so a thick body (the Tanuki's belly and tail) on a thin
+	/// body's lying clip keeps its lowest point on the floor. Poses that share a clip must share its curve.
+	/// </summary>
+	public IReadOnlyDictionary<PoseKind, HipLift[]> LyingHipLift { get; init; } = new Dictionary<PoseKind, HipLift[]>();
+
+	/// <summary>The lying lift curve for a clip id (the first pose that shows it), or null.</summary>
+	public HipLift[]? LyingLiftFor(string clipId)
+	{
+		foreach (var (kind, curve) in LyingHipLift)
+			if (ClipFor(kind) == clipId && curve.Length > 0) return curve;
+		return null;
+	}
+
 	public string MoveClip(string clip) => ClipOverrides.TryGetValue(clip, out var o) ? o : clip;
 
 	/// <summary>
@@ -75,12 +109,39 @@ public sealed class FighterAnimSet
 	/// <summary>
 	/// YOK-146 SWITCH: which Ryo body fights. True = the Tripo Ryo on the Option A shared skeleton (metre bones, his
 	/// stopgap clips in <c>clips/ryo-tripo/</c>); false = the old Meshy Ryo (cm bones, <c>clips/ryo/</c>), for comparison.
-	/// The Tanuki fights with Ryo's body (T0), so it follows. Read when a fight builds its models (the dev menu flips it).
+	/// The Tanuki true form (AM25) runs Ryo's Tripo clips whichever Ryo fights. Read when a fight builds its models (the dev menu flips it).
 	/// </summary>
 	public static bool TripoRyo { get; set; } = true;
 
+	/// <summary>
+	/// AM25 SWITCH: the Tanuki boss fight shows his true form (<see cref="TanukiTripo"/>) instead of Ryo's body. On by
+	/// default: the designer kept the true form on 2026-11-11; he still runs Ryo's clips and moves (T0), and the sim still
+	/// treats him as Ryo's body. Off shows Ryo's body, as before. Read when a fight builds its models (the dev menu flips it).
+	/// </summary>
+	public static bool TripoTanuki { get; set; } = true;
+
+	/// <summary>The Tanuki's body for the next fight: his true form (<see cref="TripoTanuki"/>, AM25) or <see cref="Ryo"/>'s body.</summary>
+	public static FighterAnimSet Tanuki => TripoTanuki ? TanukiTripo : Ryo;
+
 	/// <summary>Ryo's body for the next fight: <see cref="RyoTripo"/> or <see cref="RyoMeshy"/> by <see cref="TripoRyo"/>.</summary>
 	public static FighterAnimSet Ryo => TripoRyo ? RyoTripo : RyoMeshy;
+
+	// Fix D curves (declared before the sets: static fields initialise in text order): the measured sink of the lowest skinned point per game frame plus 0.5 cm, simplified to within 2 cm above it.
+	private static readonly HipLift[] TanukiKnockdownLift =
+	{
+		new(6, 0f), new(7, 0.03f), new(10, 0.08f), new(15, 0.20f), new(22, 0.52f), new(24, 0.57f), new(26, 0.57f),
+		new(28, 0.55f), new(34, 0.53f), new(38, 0.56f), new(41, 0.56f),
+	};
+	private static readonly HipLift[] TanukiGetUpLift =
+	{
+		new(1, 0.11f), new(3, 0.16f), new(8, 0.32f), new(10, 0.38f), new(12, 0.43f), new(13, 0.43f), new(15, 0.40f),
+		new(16, 0.35f), new(17, 0.28f), new(18, 0.20f), new(20, 0.14f), new(21, 0.09f), new(23, 0.02f), new(24, 0f),
+	};
+	private static readonly HipLift[] KappaGetUpLift =
+	{
+		new(1, 0.09f), new(4, 0.13f), new(6, 0.14f), new(11, 0.21f), new(13, 0.23f), new(15, 0.20f), new(16, 0.16f),
+		new(17, 0.10f), new(19, 0.01f), new(20, 0f),
+	};
 
 	/// <summary>YOK-146: the Tripo Ryo (assets/specs/rigs/ryo-tripo.md): same clip ids, trims and frame numbers as the Meshy Ryo.</summary>
 	public static readonly FighterAnimSet RyoTripo = RyoBody(
@@ -91,9 +152,27 @@ public sealed class FighterAnimSet
 	public static readonly FighterAnimSet RyoMeshy = RyoBody(
 		"res://assets/generated/characters/ryo/ryo-rigged.glb", "res://scenes/fighters/ryo.tscn", null);
 
-	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot) => new()
+	/// <summary>
+	/// AM25: the Tanuki's true form (assets/specs/rigs/tanuki.md v2b): 1.75 m, rigid tail on the hips, on the Tripo shared
+	/// skeleton, playing Ryo's Tripo clips with Ryo's own overrides (he runs Ryo's moves and the copied special, T0). His
+	/// hips follow his own rig (FighterModel.HipScale). Fighter id "tanuki"; the camera frames him like any other fighter.
+	/// </summary>
+	public static readonly FighterAnimSet TanukiTripo = RyoBody(
+		"res://assets/generated/characters/tanuki/tanuki-v2-rigged.glb", "res://scenes/fighters/tanuki-v2.tscn",
+		"res://assets/generated/clips/ryo-tripo/", "tanuki",
+		// Fix D: his belly and rigid tail on Ryo's thin lying clips (hip scale 0.638) sank 56 cm (knockdown f25) and
+		// 42 cm (get-up f13); finish-qa.md has the before and after.
+		new Dictionary<PoseKind, HipLift[]> { [PoseKind.Knockdown] = TanukiKnockdownLift, [PoseKind.Ko] = TanukiKnockdownLift, [PoseKind.GetUp] = TanukiGetUpLift },
+		// YOK-246: the composed down guard (ryo-block-low) floated him 5.7 cm; metres of hips lowered on that clip.
+		new Dictionary<string, float> { ["ryo-block-low"] = -0.03f });
+
+
+	private static FighterAnimSet RyoBody(string model, string scene, string? clipRoot, string fighter = "ryo",
+		IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null, IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
-		Fighter = "ryo",
+		Fighter = fighter,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
+		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,
 		ClipRoot = clipRoot,
@@ -101,7 +180,18 @@ public sealed class FighterAnimSet
 		LandingFrame = 40,
 		BurstFrame = 10,
 		AirClips = SharedAir,
-		ClipOverrides = new Dictionary<string, string> { ["kitsune-foxfire"] = "ryo-foxfire-cast" },
+		// Every drafted (or Tanuki-copied, T0) special's clip on Ryo's body. YOK-226: the GREYBOX Ryo twins of the yokai
+		// takes (data/clips ryo-*; the Oni's two are retimes of his heavy punch), each with the special's own frame count and
+		// retime curve. SpecialClipTests covers every special in data.
+		ClipOverrides = new Dictionary<string, string>
+		{
+			["kitsune-foxfire"] = "ryo-foxfire-cast",
+			["kitsune-fox-mirage"] = "ryo-fox-mirage",
+			["kappa-river-grab"] = "ryo-river-grab",
+			["kappa-shell-spin"] = "ryo-shell-spin",
+			["oni-iron-club-charge"] = "ryo-iron-club-charge",
+			["oni-quake"] = "ryo-oni-quake",
+		},
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "ryo-idle-guard",
@@ -136,13 +226,16 @@ public sealed class FighterAnimSet
 		BurstFrame = 10,
 		AirClips = SharedAir,
 		FallbackThrowClip = "kitsune-throw",
+		// YOK-246: the Tripo takes are upright (the Meshy guard clips are crouched), so her feet floated 15 cm (light punch) and
+		// 8 cm (Fox Mirage) in the fight pose (rig_qa); metres of hips lowered per clip, the median float of each take.
+		ClipHipOffsetY = new Dictionary<string, float> { ["kitsune-light-punch"] = -0.147f, ["kitsune-fox-mirage"] = -0.05f },
 		Clips = new Dictionary<PoseKind, string>
 		{
 			[PoseKind.Idle] = "kitsune-idle",
 			[PoseKind.WalkFwd] = "kitsune-walk-guard-fwd",
 			[PoseKind.WalkBack] = "kitsune-walk-guard-back",
 			[PoseKind.Dash] = "kitsune-walk-guard-fwd",
-			[PoseKind.DashBack] = "ryo-dash-back", // borrowed: no Kitsune back-dash take yet
+			[PoseKind.DashBack] = "kitsune-dash-back", // YOK-246: her own retarget of the Meshy 14 Step_Back (was Ryo's clip)
 			[PoseKind.Jump] = "kitsune-jump",
 			[PoseKind.JumpBack] = "kitsune-jump",
 			[PoseKind.Crouch] = "kitsune-crouch",
@@ -176,6 +269,9 @@ public sealed class FighterAnimSet
 		LandingFrame = Kitsune.LandingFrame,
 		BurstFrame = Kitsune.BurstFrame,
 		AirClips = SharedAir,
+		HipOffsetY = 0.08f, // Fix B: his feet sank 7-16 cm on every clip (idle 9.5); finish-qa.md
+		// His own slam takes meet the floor at 0 (sink 7 cm on f1, float 4 cm): split between the two.
+		ClipHipOffsetY = new Dictionary<string, float> { ["oni-heavy-punch"] = 0.02f, ["oni-quake"] = 0.02f, ["oni-iron-club-charge"] = 0.05f },
 		ReversedPoses = new HashSet<PoseKind> { PoseKind.WalkBack },
 		ClipOverrides = new Dictionary<string, string>
 		{
@@ -192,16 +288,16 @@ public sealed class FighterAnimSet
 			[PoseKind.WalkFwd] = "oni-walk-fwd",
 			[PoseKind.WalkBack] = "oni-walk-fwd", // played reversed (ReversedPoses)
 			[PoseKind.Dash] = "oni-walk-fwd",
-			[PoseKind.DashBack] = "ryo-dash-back", // borrowed: not in the Oni kit
+			[PoseKind.DashBack] = "oni-dash-back", // YOK-246: retargeted onto the Oni, club-checked
 			[PoseKind.Jump] = "kitsune-jump", // borrowed: the Oni kit has no jump
 			[PoseKind.JumpBack] = "kitsune-jump",
-			[PoseKind.Crouch] = "ryo-crouch",
-			[PoseKind.BlockHigh] = "ryo-block-high",
+			[PoseKind.Crouch] = "ryo-crouch", // YOK-247: oni-crouch put the club through his thigh (8-13 cm); kept the old clip
+			[PoseKind.BlockHigh] = "ryo-block-high", // YOK-247: oni-block-high put the club through his head (13.6 cm); kept the old clip
 			[PoseKind.BlockLow] = "oni-block-low",
 			[PoseKind.HitHigh] = "oni-hit-high",
 			[PoseKind.HitLow] = "oni-hit-low",
 			[PoseKind.Knockdown] = "ryo-knockdown",
-			[PoseKind.GetUp] = "ryo-get-up",
+			[PoseKind.GetUp] = "oni-get-up",
 			[PoseKind.Thrown] = "oni-hit-high",
 			[PoseKind.Landing] = "kitsune-jump",
 			[PoseKind.Burst] = "kitsune-foxfire", // borrowed: no Oni cast take
@@ -215,11 +311,42 @@ public sealed class FighterAnimSet
 	/// YOK-228: his own moves (data/moves/kappa-*.json) name their own clip files (data/clips/kappa-*.json, GREYBOX reuse of
 	/// Kitsune and Ryo takes, route A on YOK-219), which the Kitsune's overrides never touch. Known: feet sink 3-8 cm.
 	/// </summary>
-	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn");
+	public static readonly FighterAnimSet Kappa = Borrow(Kitsune, "kappa", "res://assets/generated/characters/kappa/kappa-rigged.glb", "res://scenes/fighters/kappa.tscn",
+		new Dictionary<PoseKind, string>
+		{
+			// YOK-246: the Kappa's own pose clips (data/clips/kappa-*.json, retargeted onto his skeleton and measured), no longer the Kitsune's.
+			[PoseKind.Idle] = "kappa-idle",
+			[PoseKind.WalkFwd] = "kappa-walk-guard-fwd",
+			[PoseKind.WalkBack] = "kappa-walk-guard-back",
+			[PoseKind.Dash] = "kappa-walk-guard-fwd",
+			[PoseKind.DashBack] = "kappa-dash-back",
+			[PoseKind.Crouch] = "kappa-crouch",
+			[PoseKind.BlockHigh] = "kappa-block-high",
+			[PoseKind.BlockLow] = "kappa-block-low",
+			[PoseKind.GetUp] = "kappa-get-up",
+		},
+		hipOffset: 0.03f, // Fix B: feet sank about 3 cm (idle 2.8 median); finish-qa.md
+		// YOK-246: his three accepted Tripo takes are upright (floated 14-20 cm at the Fix B offset): the median float per clip.
+		clipHipOffsetY: new Dictionary<string, float> { ["kappa-light-punch"] = -0.131f, ["kappa-heavy-punch"] = -0.163f, ["kappa-light-kick"] = -0.108f },
+		lyingLift: new Dictionary<PoseKind, HipLift[]> { [PoseKind.GetUp] = KappaGetUpLift }); // Fix D: legs 25 cm under the floor at get-up f13
 
-	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene) => new()
+	private static IReadOnlyDictionary<PoseKind, string> Merge(IReadOnlyDictionary<PoseKind, string> from, Dictionary<PoseKind, string>? own)
+	{
+		if (own is null) return from;
+		var all = new Dictionary<PoseKind, string>();
+		foreach (var kv in from) all[kv.Key] = kv.Value;
+		foreach (var kv in own) all[kv.Key] = kv.Value;
+		return all;
+	}
+
+	private static FighterAnimSet Borrow(FighterAnimSet from, string fighter, string model, string scene, Dictionary<PoseKind, string>? own = null,
+		float hipOffset = 0f, IReadOnlyDictionary<PoseKind, HipLift[]>? lyingLift = null,
+		IReadOnlyDictionary<string, float>? clipHipOffsetY = null) => new()
 	{
 		Fighter = fighter,
+		HipOffsetY = hipOffset,
+		ClipHipOffsetY = clipHipOffsetY ?? new Dictionary<string, float>(),
+		LyingHipLift = lyingLift ?? new Dictionary<PoseKind, HipLift[]>(),
 		ModelPath = model,
 		ScenePath = scene,
 		JumpFrameOffset = from.JumpFrameOffset,
@@ -228,12 +355,13 @@ public sealed class FighterAnimSet
 		AirClips = from.AirClips,
 		FallbackThrowClip = from.FallbackThrowClip,
 		ClipOverrides = from.ClipOverrides,
-		Clips = from.Clips,
+		Clips = Merge(from.Clips, own),
 	};
 
 	public static FighterAnimSet For(string fighter) => fighter switch
 	{
 		"kitsune" => Kitsune,
+		"tanuki" => Tanuki, // his true form (AM25) unless TripoTanuki is off
 		"oni" or "elder-oni" => Oni,
 		"kappa" or "elder-kappa" => Kappa,
 		_ => Ryo,

@@ -1,0 +1,50 @@
+{
+"1A": {
+"clip": "kitsune-dash-back",
+"frame": 1,
+"pick": "start",
+"view": "cam"
+},
+"1B": {
+"clip": "kitsune-dash-back",
+"frame": 1,
+"pick": "start",
+"view": "side"
+},
+"1C": {
+"clip": "kitsune-dash-back",
+"frame": 10,
+"pick": "active",
+"view": "cam"
+},
+"1D": {
+"clip": "kitsune-dash-back",
+"frame": 10,
+"pick": "active",
+"view": "side"
+},
+"1E": {
+"clip": "kitsune-dash-back",
+"frame": 14,
+"pick": "recovery",
+"view": "cam"
+},
+"1F": {
+"clip": "kitsune-dash-back",
+"frame": 14,
+"pick": "recovery",
+"view": "side"
+},
+"1G": {
+"clip": "kitsune-dash-back",
+"frame": 13,
+"pick": "worst",
+"view": "cam"
+},
+"1H": {
+"clip": "kitsune-dash-back",
+"frame": 13,
+"pick": "worst",
+"view": "side"
+}
+}

@@ -54,6 +54,7 @@ public sealed partial class Match
 	private void ReflectStrike(int attIndex, MoveData m, int frame, (int X, int Y) at)
 	{
 		Fighters[attIndex].MoveConnected = true;
+		CountConnect(Fighters[attIndex], m, frame); // YOK-226: a reflected multi-hit spends a hit too
 		TwistTriggered?.Invoke(this, new TwistEvent(1 - attIndex, TwistEffect.ReflectRepeatedSpecial, m.Id));
 		ApplyHit(1 - attIndex, m, frame, defenderWasAttacking: false, at, projectile: null, reflected: true);
 	}

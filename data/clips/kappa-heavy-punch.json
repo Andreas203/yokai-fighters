@@ -2,32 +2,54 @@
   "kind": "clip",
   "id": "kappa-heavy-punch",
   "status": "proposed",
-  "source": "meshy-library",
-  "clip": "194 Right_Uppercut_from_Guard",
-  "frames_total": 34,
-  "trim_start": 28,
-  "trim_end": 61,
-  "retime": [
-    {
-      "frames": [
-        1,
-        34
-      ],
-      "ticks": [
-        28,
-        61
-      ],
-      "note": "one segment at 1x: the reused clip's own constant speed, so every frame lands on the same raw tick as kitsune-heavy-punch"
-    }
-  ],
-  "file": "assets/generated/clips/kitsune-heavy.glb",
+  "file": "assets/generated/clips/kappa/kappa-heavy-punch.glb",
   "hit_start": 11,
   "hit_end": 14,
-  "retarget_notes": "Kappa rig kappa-rigged.glb (Meshy, 1.551 m, shell cut, hip scale 0.828 on the shared clips; rig ACCEPT and retarget gate GO with a feet WARN, assets/specs/clips/retarget_gate.md, YOK-102/112). The gate measured only the walk, heavy, throw and idle on the Kappa; THIS clip's shell clearance and foot check were NOT measured on the Kappa (no job run, YOK-228). OPEN on YOK-134, not decided here: after the leg re-pose the Kappa's toe joints on the shared heavy sit 3.2 cm under the rig's rest contact at the deepest tick (1.2 cm outside the agreed +-2 cm); options A accept, B own heavy punch take, C data hip offset. Source clip's own retarget result: WARN. YOK-31 gate take H2, flare accepted by the designer: right haori sleeve flares open on the contact frames (sleeve edges up to 11.7x bind, inside lining visible). Hakama and hair hold, tails clear in the proxy. Hips twist is large (yaw -43 deg).",
   "rules": [
     "F2",
     "F5",
     "F6"
   ],
-  "notes": "GREYBOX reuse of kitsune-heavy-punch, replace when the take lands. Route A (designer, YOK-219, 2026-11-01): a move with no take of its own gets its own clip file that reuses a measured, accepted clip. Same raw take and trim (28-61), 34 frames, hit frames 11-14; retime curve is one segment at 1x (inside 0.5x-2x, no holds). No clip, rig or generation job was run; 0 credits. Own take is a YOK-134 option (assets/specs/clips/yok-134-kappa-clip-kit.md)."
+  "source": "tripo-library",
+  "clip": "preset:biped:box_03",
+  "frames_total": 34,
+  "retarget_notes": "Tripo take box_03 retargeted onto kappa by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.81 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only kappa-heavy-punch.",
+  "trim_start": 26,
+  "trim_end": 92,
+  "retime": [
+    {
+      "frames": [
+        1,
+        11
+      ],
+      "ticks": [
+        26,
+        46
+      ],
+      "note": "startup snaps into the strike"
+    },
+    {
+      "frames": [
+        11,
+        15
+      ],
+      "ticks": [
+        46,
+        54
+      ],
+      "note": "strike pose through the active frames"
+    },
+    {
+      "frames": [
+        15,
+        34
+      ],
+      "ticks": [
+        54,
+        92
+      ],
+      "note": "recovery eases out"
+    }
+  ]
 }

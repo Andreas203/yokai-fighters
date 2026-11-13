@@ -1,0 +1,541 @@
+Blender 4.1.1 (hash e1743a0317bc built 2024-04-15 23:33:30)
+Read prefs: "C:\Users\Andreas\AppData\Roaming\Blender Foundation\Blender\4.1\config\userpref.blend"
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-rest-front.png'
+Time: 00:00.62 (Saving: 00:00.13)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-rest-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-rest-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f000-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f000-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f000-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f002-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f002-side.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f002-back.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f004-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f004-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f004-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f006-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f006-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f006-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f008-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f008-side.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f008-back.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f010-front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f010-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f010-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f012-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f012-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f012-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f014-front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f014-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f014-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f016-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f016-side.png'
+Time: 00:00.06 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f016-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f018-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f018-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f018-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f020-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f020-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f020-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f022-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f022-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f022-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f024-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f024-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f024-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f026-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f026-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f026-back.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f028-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f028-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f028-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f030-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f030-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f030-back.png'
+Time: 00:00.07 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f032-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f032-side.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f032-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f034-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f034-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f034-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f036-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f036-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f036-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f038-front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f038-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f038-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f040-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f040-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f040-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f042-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f042-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f042-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f044-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f044-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f044-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f046-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f046-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f046-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f048-front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f048-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f048-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f050-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f050-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f050-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f052-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f052-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f052-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f054-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f054-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f054-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f056-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f056-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f056-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f058-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f058-side.png'
+Time: 00:00.07 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f058-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f060-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f060-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f060-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f062-front.png'
+Time: 00:00.06 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f062-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f062-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f064-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f064-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f064-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f066-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f066-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f066-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f068-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f068-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f068-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f070-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f070-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f070-back.png'
+Time: 00:00.06 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f072-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f072-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f072-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f074-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f074-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f074-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f076-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f076-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f076-back.png'
+Time: 00:00.08 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f078-front.png'
+Time: 00:00.07 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f078-side.png'
+Time: 00:00.07 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f078-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f080-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f080-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f080-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f082-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f082-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f082-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f084-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f084-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f084-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f086-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f086-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f086-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f088-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f088-side.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f088-back.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f090-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f090-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f090-back.png'
+Time: 00:00.07 (Saving: 00:00.04)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f092-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f092-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f092-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f094-front.png'
+Time: 00:00.05 (Saving: 00:00.02)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f094-side.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f094-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f096-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f096-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f096-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f098-front.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f098-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f098-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f100-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f100-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f100-back.png'
+Time: 00:00.05 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f102-front.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f102-side.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Saved: 'C:\tmp-finish\kappa-walk-guard-fwd\prop\kappa-walk-guard-fwd-kappa-walk-guard-fwd-f102-back.png'
+Time: 00:00.06 (Saving: 00:00.03)
+
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.05s
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.01s
+Data are loaded, start creating Blender stuff
+glTF import finished in 0.02s
+prop_clearance: rest {"shell.glb": {"verts_inside": 232, "worst_depth_m": 0.5978, "prop_min_z_m": 0.5874, "contact_verts": 98, "contact_gap_mean_m": 0.0181, "contact_gap_max_m": 0.0298, "new_vs_rest": 0, "new_worst_depth_m": 0.0, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f000 {"shell.glb": {"verts_inside": 390, "worst_depth_m": 0.5219, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1705, "contact_gap_max_m": 0.3685, "new_vs_rest": 321, "new_worst_depth_m": 0.5219, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f002 {"shell.glb": {"verts_inside": 285, "worst_depth_m": 0.5222, "prop_min_z_m": 0.5411, "contact_verts": 98, "contact_gap_mean_m": 0.1699, "contact_gap_max_m": 0.3674, "new_vs_rest": 209, "new_worst_depth_m": 0.5222, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f004 {"shell.glb": {"verts_inside": 264, "worst_depth_m": 0.5225, "prop_min_z_m": 0.5465, "contact_verts": 98, "contact_gap_mean_m": 0.1693, "contact_gap_max_m": 0.3667, "new_vs_rest": 204, "new_worst_depth_m": 0.5225, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f006 {"shell.glb": {"verts_inside": 314, "worst_depth_m": 0.5177, "prop_min_z_m": 0.5493, "contact_verts": 98, "contact_gap_mean_m": 0.1704, "contact_gap_max_m": 0.3682, "new_vs_rest": 228, "new_worst_depth_m": 0.5177, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f008 {"shell.glb": {"verts_inside": 446, "worst_depth_m": 0.679, "prop_min_z_m": 0.5497, "contact_verts": 98, "contact_gap_mean_m": 0.1716, "contact_gap_max_m": 0.3714, "new_vs_rest": 355, "new_worst_depth_m": 0.679, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f010 {"shell.glb": {"verts_inside": 385, "worst_depth_m": 0.721, "prop_min_z_m": 0.5489, "contact_verts": 98, "contact_gap_mean_m": 0.1736, "contact_gap_max_m": 0.3755, "new_vs_rest": 295, "new_worst_depth_m": 0.721, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f012 {"shell.glb": {"verts_inside": 499, "worst_depth_m": 0.7404, "prop_min_z_m": 0.5469, "contact_verts": 98, "contact_gap_mean_m": 0.1756, "contact_gap_max_m": 0.381, "new_vs_rest": 410, "new_worst_depth_m": 0.7404, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f014 {"shell.glb": {"verts_inside": 447, "worst_depth_m": 0.7481, "prop_min_z_m": 0.5433, "contact_verts": 98, "contact_gap_mean_m": 0.1777, "contact_gap_max_m": 0.3872, "new_vs_rest": 362, "new_worst_depth_m": 0.7481, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f016 {"shell.glb": {"verts_inside": 451, "worst_depth_m": 0.7651, "prop_min_z_m": 0.5388, "contact_verts": 98, "contact_gap_mean_m": 0.1801, "contact_gap_max_m": 0.3931, "new_vs_rest": 367, "new_worst_depth_m": 0.7651, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f018 {"shell.glb": {"verts_inside": 413, "worst_depth_m": 0.7592, "prop_min_z_m": 0.5343, "contact_verts": 98, "contact_gap_mean_m": 0.1811, "contact_gap_max_m": 0.3977, "new_vs_rest": 329, "new_worst_depth_m": 0.7592, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f020 {"shell.glb": {"verts_inside": 379, "worst_depth_m": 0.6212, "prop_min_z_m": 0.53, "contact_verts": 98, "contact_gap_mean_m": 0.1804, "contact_gap_max_m": 0.3994, "new_vs_rest": 296, "new_worst_depth_m": 0.6212, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f022 {"shell.glb": {"verts_inside": 502, "worst_depth_m": 0.6357, "prop_min_z_m": 0.5269, "contact_verts": 98, "contact_gap_mean_m": 0.1797, "contact_gap_max_m": 0.399, "new_vs_rest": 408, "new_worst_depth_m": 0.6357, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f024 {"shell.glb": {"verts_inside": 388, "worst_depth_m": 0.6844, "prop_min_z_m": 0.5256, "contact_verts": 98, "contact_gap_mean_m": 0.1798, "contact_gap_max_m": 0.3973, "new_vs_rest": 313, "new_worst_depth_m": 0.6844, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f026 {"shell.glb": {"verts_inside": 406, "worst_depth_m": 0.634, "prop_min_z_m": 0.5258, "contact_verts": 98, "contact_gap_mean_m": 0.1791, "contact_gap_max_m": 0.3948, "new_vs_rest": 327, "new_worst_depth_m": 0.634, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f028 {"shell.glb": {"verts_inside": 376, "worst_depth_m": 0.7062, "prop_min_z_m": 0.5276, "contact_verts": 98, "contact_gap_mean_m": 0.1782, "contact_gap_max_m": 0.3921, "new_vs_rest": 299, "new_worst_depth_m": 0.7062, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f030 {"shell.glb": {"verts_inside": 389, "worst_depth_m": 0.5408, "prop_min_z_m": 0.5306, "contact_verts": 98, "contact_gap_mean_m": 0.178, "contact_gap_max_m": 0.3893, "new_vs_rest": 308, "new_worst_depth_m": 0.5408, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f032 {"shell.glb": {"verts_inside": 331, "worst_depth_m": 0.6246, "prop_min_z_m": 0.5345, "contact_verts": 98, "contact_gap_mean_m": 0.1781, "contact_gap_max_m": 0.3862, "new_vs_rest": 252, "new_worst_depth_m": 0.6246, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f034 {"shell.glb": {"verts_inside": 333, "worst_depth_m": 0.6247, "prop_min_z_m": 0.5384, "contact_verts": 98, "contact_gap_mean_m": 0.1773, "contact_gap_max_m": 0.3832, "new_vs_rest": 260, "new_worst_depth_m": 0.6247, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f036 {"shell.glb": {"verts_inside": 295, "worst_depth_m": 0.6255, "prop_min_z_m": 0.5412, "contact_verts": 98, "contact_gap_mean_m": 0.1766, "contact_gap_max_m": 0.3806, "new_vs_rest": 230, "new_worst_depth_m": 0.6255, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f038 {"shell.glb": {"verts_inside": 466, "worst_depth_m": 0.5014, "prop_min_z_m": 0.5403, "contact_verts": 98, "contact_gap_mean_m": 0.1745, "contact_gap_max_m": 0.3766, "new_vs_rest": 395, "new_worst_depth_m": 0.5014, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f040 {"shell.glb": {"verts_inside": 371, "worst_depth_m": 0.5235, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1731, "contact_gap_max_m": 0.3724, "new_vs_rest": 289, "new_worst_depth_m": 0.5235, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f042 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f044 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f046 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f048 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f050 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f052 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f054 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f056 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f058 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f060 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f062 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f064 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f066 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f068 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f070 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f072 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f074 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f076 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f078 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f080 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f082 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f084 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f086 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f088 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f090 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f092 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f094 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f096 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f098 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f100 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+prop_clearance: kappa-walk-guard-fwd_f102 {"shell.glb": {"verts_inside": 259, "worst_depth_m": 0.5223, "prop_min_z_m": 0.5386, "contact_verts": 98, "contact_gap_mean_m": 0.1713, "contact_gap_max_m": 0.3695, "new_vs_rest": 190, "new_worst_depth_m": 0.5223, "verts_total": 4831}}
+
+Blender quit
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize

@@ -1,0 +1,55 @@
+{
+  "kind": "clip",
+  "id": "ryo-fox-mirage",
+  "status": "proposed",
+  "file": "assets/generated/clips/ryo/ryo-fox-mirage.glb",
+  "hit_start": null,
+  "hit_end": null,
+  "rules": [
+    "F2",
+    "F5",
+    "F6"
+  ],
+  "source": "tripo-library",
+  "clip": "preset:biped:flip",
+  "frames_total": 28,
+  "retarget_notes": "Tripo take flip retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.72 cm/frame).",
+  "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-fox-mirage.",
+  "trim_start": 0,
+  "trim_end": 46,
+  "retime": [
+    {
+      "frames": [
+        1,
+        19
+      ],
+      "ticks": [
+        0,
+        32
+      ],
+      "note": "startup: the flip leaves the floor (1.8x)"
+    },
+    {
+      "frames": [
+        19,
+        20
+      ],
+      "ticks": [
+        32,
+        34
+      ],
+      "note": "vanish frame"
+    },
+    {
+      "frames": [
+        20,
+        28
+      ],
+      "ticks": [
+        34,
+        46
+      ],
+      "note": "recovery eases out, before the upright stand (top bone under the 1.9 framing)"
+    }
+  ]
+}

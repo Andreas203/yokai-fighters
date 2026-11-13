@@ -29,6 +29,9 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM21](#am21) | 2026-11-09 | The Kappa's stage is a night swamp without lanterns | V9 | YOK-151, PR #277 |
 | [AM22](#am22) | 2026-11-10 | The routes ahead show as sketches on bare paper; no mist | R2 | YOK-245 |
 | [AM23](#am23) | 2026-11-09 | Sound and music may be generated with ElevenLabs | F6 | YOK-54 |
+| [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
+| [AM25](#am25) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
+| [AM26](#am26) | 2026-11-09 (approved as AM19 on YOK-ryo-guard-tripo) | Ryo's strikes are closed fists by default, from a scripted fist blend shape; a clip may open the hand | E15 | YOK-finish-fist |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -498,6 +501,7 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 
 **What does not change.** Everything else in AM19 and AM18: only the real routes are sketched, and a row's nodes appear only when it is their turn. The reveal stays presentation only.
 
+
 ### Sections replaced
 
 | Where | Was | Now |
@@ -528,3 +532,62 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 | GDD extended §10.1 Engine, assets | (as amended by AM1) "sound and music are bought" | "sound and music are generated with ElevenLabs or bought". |
 | GDD short §2 agents and technical lines | (as amended by AM1) sound is sourced | Sound is generated with ElevenLabs or bought; Sound Smith generates it. |
 | rules.md F6 | "Sound and music: bought packs." | "Sound and music: ElevenLabs generation (Sound Smith) or bought packs (Sound Scout), the designer's choice per job [AM23]." |
+
+<a id="am24"></a>
+
+## AM24 — Iron-Club Charge and Oni Quake take the timing of their greybox clips (2026-11-09)
+
+**Status.** The route was decided by the designer on 2026-11-01 (YOK-219, route A: a move with no take of its own reuses a measured clip, and its frame data follows that clip, F2) and the designer asked on 2026-11-09 to fill the greybox abilities first. The exact numbers below are movesmith's reading of the clips and stay `proposed` until the designer confirms them on the YOK-227 pull request.
+
+**Decision.** Iron-Club Charge is 12 / 6 / 14 frames (32 in all), not 16 / 6 / 24. Its clip is 14 clean frames of a stride; at the slowest allowed speed (0.5x) plus the longest allowed holds it reaches 32 frames, not 46. Oni Quake is 27 / 4 / 25 frames (56 in all), not 22 / 5 / 26: the measured clip has a 4-frame held overhead tell and its slam lands on frame 28. Damage (110 and 90) is unchanged.
+
+**Why.** F2: frame data that does not match its clip is invalid, and F5 forbids stretching the clip by hand. The alternative was to wait for new takes. When a real take lands, the frame data is re-derived from it and this amendment is superseded.
+
+**What does not change.** Damage, notes and Lv 3 evolutions of both specials; the 1-hit armour and the low hit.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended specials table, Iron-Club Charge | "16 / 6 / 24" | "12 / 6 / 14" |
+| GDD extended specials table, Oni Quake | "22 / 5 / 26" | "27 / 4 / 25" |
+| rules.md specials table (A) | "16/6/24" and "22/5/26" | "12/6/14 [AM24]" and "27/4/25 [AM24]" |
+
+<a id="am25"></a>
+
+## AM25 — The Tanuki fights in his true form, on Ryo's clips (2026-11-11)
+
+**Status.** Approved by the designer on 2026-11-11: after seeing the v2 (Tripo) bodies in the game, "go back to the previous models but keep the tanuki", then "when I say previous I mean the non Tripo ones". The Kitsune, Oni and Kappa keep their Meshy bodies; the Tanuki gets the true-form body (`tanuki-v2-rigged.glb`, assets/specs/rigs/tanuki.md v2b). (Numbered AM25 because AM20 to AM24 were taken: AM23 is the ElevenLabs sound amendment and AM24 the Oni timings.)
+
+**Decision.** In the boss fight the Tanuki shows his own true form instead of Ryo's model. He still runs Ryo's clips, Ryo's normals, starters and the copied special, with Ryo's hitboxes and frame data. Only the model on screen changes; the sim does not read it.
+
+**Why.** The designer prefers the true form on screen for the boss.
+
+**What does not change.** The copy rule T1–T6, the kit (Ryo's normals and starters plus one copy), no new animation, hitboxes and frame data. The dev menu switch "Tanuki true form" can still show Ryo's body for comparison.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended §5.3 The Tanuki | "The Tanuki fights with Ryo's normals and starters plus one copied special" (in Ryo's body, per AM4/T0) | Same kit, shown in the Tanuki's true-form body. |
+| GDD short, the Tanuki | As above | As above. |
+| rules.md T0 | "using Ryo's model and clips (no new animation)" | "using Ryo's clips (no new animation), shown in the Tanuki's true-form model; hitboxes and frame data stay Ryo's [AM25]" |
+
+<a id="am26"></a>
+
+## AM26 — Ryo's strikes are closed fists by default, from a fist blend shape (drafted 2026-11-08, approved 2026-11-09)
+
+**Status.** Numbered AM26 on the finish build because AM19 there is the map-routes amendment; this is the amendment approved as AM19 on branch YOK-ryo-guard-tripo. Drafted on 2026-11-08 from the designer's instruction "the punches land as open hands instead of closed fists ... make the model closed fisted all the time". Revised on 2026-11-09 by the designer's choice "Fist as a blend shape", after deciding that the foxfire is cast from an open palm. Approved by the designer on 2026-11-09.
+
+**Decision.** Ryo's strikes land as closed fists by default. The model keeps the open hand as its base mesh and carries one scripted blend shape (glTF morph target) named `fist`, made by script from the fist pose of the rig's own finger joints (`tools/blender/fist_morph.py`). The fist is on by default (weight 1). A clip may open the hand through its clip data by setting `fist` below 1: the foxfire is an extended arm with the open palm forward, the flame coming out of the palm. His other strikes stay closed fists. The rig gets no extra bones (still 25 joints, AM16). No code-posed fingers and no hand-keyed animation (F5): the blend-shape weight is clip data written by script, like the rest of the clip.
+
+**Why.** The designer saw open hands on punches in the Tripo takes and wants closed fists without extra finger bones. A fist baked into the bind shape (the 2026-11-08 draft) could not open for the foxfire palm; a blend shape on the open hand can, at no bone cost.
+
+**What does not change.** The shared skeleton and its 25 joints (AM16), F5 (clips by script, never hand-keyed), the take cap and the designer's approval of every job and spend. Installing the rig in the game, and the code or clip data that hold the `fist` weight at 1 (Godot's importer does not keep the glTF default weight), still need the designer's approval and a re-check of every clip on it.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended and short | No section names hand shape | Nothing to replace; no GDD callout needed. |
+| rules.md E15 | "strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists)" | "Ryo's strikes are closed fists by default, from a scripted `fist` blend shape on the open-hand mesh with no extra bones; a clip may open the hand through clip data (the foxfire open palm) [AM26, approved by the designer 2026-11-09]". The generic throw clip text is unchanged. |

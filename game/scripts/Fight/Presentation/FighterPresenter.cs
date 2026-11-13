@@ -49,6 +49,9 @@ public sealed class FighterPresenter
 	private string? _prevMoveId;
 	private int _prevAir;
 	private bool _lowHit;
+	private bool _guardUp;     // the last pose was the proximity guard (no blockstun yet)
+	private bool _guardUpNow;
+	private bool _prevCrouching;
 
 	public FighterPresenter(FighterAnimSet set, ClipCatalog catalog, IReadOnlyDictionary<string, string> moveClips)
 	{
@@ -77,7 +80,9 @@ public sealed class FighterPresenter
 			return;
 		}
 
+		_guardUpNow = false;
 		var (kind, clip, frameBase, loop, restart) = Classify(m, f, opp, fresh);
+		_guardUp = _guardUpNow;
 		if (fresh || kind != _kind || clip != _clip || restart)
 		{
 			if (!fresh && _clip != null && Sample.Clip != null)
@@ -103,6 +108,7 @@ public sealed class FighterPresenter
 		_prevMoveFrame = f.State == FighterState.Attack ? f.MoveFrame : 0;
 		_prevMoveId = f.CurrentMove?.Id;
 		_prevAir = f.AirFrame;
+		_prevCrouching = f.Crouching;
 	}
 
 	private int FrameFor(Fighter f, int elapsed)
@@ -161,8 +167,12 @@ public sealed class FighterPresenter
 			}
 			case FighterState.Blockstun:
 			{
-				var k = f.Crouching ? PoseKind.BlockLow : PoseKind.BlockHigh;
-				return (k, C(k), 1, false, f.StunLeft > _prevStun && !fresh);
+				// The sim clears Crouching on the blocked tick (ApplyHit) and sets it again from the held input on the next
+				// world step, so the impact tick, frozen through hitstop, takes the crouch from the tick before.
+				bool low = f.Crouching || (f.StunLeft > _prevStun && _prevCrouching);
+				var k = low ? PoseKind.BlockLow : PoseKind.BlockHigh;
+				// A block straight out of the proximity guard keeps the raised arms: no restart of the same clip.
+				return (k, C(k), 1, false, f.StunLeft > _prevStun && !fresh && !_guardUp);
 			}
 			case FighterState.Knockdown:
 				return (PoseKind.Knockdown, C(PoseKind.Knockdown), 1, false, false);
@@ -192,6 +202,15 @@ public sealed class FighterPresenter
 				return (PoseKind.Crouch, clip, 1, true, false);
 			}
 		}
+		// Proximity guard (finish build): holding back, standing or crouching (the sim's Guarding, C3), while the
+		// opponent's move is in startup or active or one of their projectiles is out, shows the block pose before any
+		// hit lands, instead of walk-back, crouch or idle. Presentation only; it reads the same on-screen state the AI does.
+		if (f.State == FighterState.Idle && f.Guarding && Threatened(m, opp))
+		{
+			_guardUpNow = true;
+			var k = f.Crouching ? PoseKind.BlockLow : PoseKind.BlockHigh;
+			return (k, C(k), 1, false, false);
+		}
 		// Idle: crouch, walk or stand. Walk only when the fighter took its own walk step this frame and
 		// moved that way (YOK-39): being pushed by the opponent's push box slides the guard stance instead
 		// of playing a walk cycle with no input, and holding back against a corner doesn't walk in place.
@@ -205,6 +224,16 @@ public sealed class FighterPresenter
 		// The idle loop runs on the world frame so it never restarts between moves.
 		int idleTotal = _cat[C(PoseKind.Idle)]?.FramesTotal ?? 1;
 		return (PoseKind.Idle, C(PoseKind.Idle), m.WorldFrame % idleTotal + 1, true, false);
+	}
+
+	/// <summary>The opponent is attacking: their move is in startup or active, or a projectile of theirs is on screen.</summary>
+	public static bool Threatened(Match m, Fighter opp)
+	{
+		if (opp.CurrentMove is { } mv && opp.MoveFrame <= mv.LastActive) return true;
+		int o = m.Fighters[0] == opp ? 0 : 1;
+		foreach (var p in m.Projectiles)
+			if (p.Owner == o) return true;
+		return false;
 	}
 
 	private string? FallbackThrow() => _set.FallbackThrowClip;

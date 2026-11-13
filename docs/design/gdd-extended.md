@@ -255,6 +255,8 @@ Hits must feel heavy even with pre-bought animation, so most of the feel comes f
 | River Grab | Kappa, common | 6 / 2 / 30 | 130 | Command grab (generic throw) | Whirlpool Grab: +50% range |
 | Shell Spin ◆ | Kappa, rare | 10 / 18 / 20 | 80 | Spins through projectiles | Torrent Spin: travels forward, multi-hit |
 
+> **Amended by** [AM24](gdd-amendments.md#am24) the Iron-Club Charge and Oni Quake frame counts follow their clips (12 / 6 / 14 and 27 / 4 / 25). Where it disagrees with this table, the amendment wins.
+
 Lv 2 gives each special one tuning step chosen per move, such as 4 fewer recovery frames or +10% damage.
 
 ### 4.3 Modifiers
@@ -337,7 +339,7 @@ Across runs, each Tanuki win, up to three, makes yokai react 1 frame faster and 
 
 ### 5.3 The Tanuki
 
-> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) the Tanuki's kit, [AM6](gdd-amendments.md#am6) where the copy target shows, [AM20](gdd-amendments.md#am20) the map no longer shows it, [AM25](gdd-amendments.md#am25) his true-form body. Where they disagree with this section, the amendments win.
 
 The Tanuki fights with Ryo's normals and starters plus one copied special. The copy rule is never cut and is built in week 2.
 

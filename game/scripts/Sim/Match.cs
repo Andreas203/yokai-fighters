@@ -210,7 +210,8 @@ public sealed partial class Match
 				f.JumpDir = 0;
 				f.Y = 0;
 				f.AirAttackUsed = false;
-				if (f.State == FighterState.Jump) ToIdle(f);
+				if (f.Launched) LandLaunched(f); // YOK-226: a launch or wall bounce ends on the floor
+				else if (f.State == FighterState.Jump) ToIdle(f);
 				else if (f.State == FighterState.Attack) LandAirAttack(f); // E11: touchdown ends an air normal
 			}
 			else f.Y = Config.JumpY(f.AirFrame);
@@ -332,7 +333,7 @@ public sealed partial class Match
 	{
 		at = default;
 		MoveData? m = att.CurrentMove;
-		if (m is null || att.MoveConnected || !m.IsActive(att.MoveFrame)) return false;
+		if (m is null || !CanConnectAgain(att, m) || !m.IsActive(att.MoveFrame)) return false; // YOK-226: multi_hit
 		if (def.State == FighterState.Knockdown || def.KnockedOut || def.Invulnerable) return false;
 		InvulnAgainst kind = att.Airborne ? InvulnAgainst.Strike | InvulnAgainst.Air : InvulnAgainst.Strike;
 		if (def.CurrentMove?.InvulnAt(def.MoveFrame, kind) == true) return false; // YOK-21: properties.invuln
@@ -411,12 +412,14 @@ public sealed partial class Match
 		{
 			att.MoveConnected = true;
 			att.MoveBlocked = blocked;
+			CountConnect(att, m, frame); // YOK-226: multi_hit
 			if (att.ActiveBase != null) att.ActiveMove = m; // e.g. recovery on block
 		}
 		else if (projectile != null && att.State == FighterState.Attack && att.ActiveBase != null && att.MoveSerial == projectile.FiredBy)
 			att.ActiveMove = m; // the owner is still in the move that fired it: its own frame data changes too (Brute Recovery on a projectile special)
 
 		MoveData? defMove = def.CurrentMove;
+		bool wasThrown = def.State == FighterState.Thrown;
 		bool counter = !blocked && defenderWasAttacking && defMove?.CounterhitImmune != true; // C7
 		bool absorbed = !blocked && Absorbs(def, defMove, projectile != null);                // YOK-103: armour
 		bool armoured = absorbed || (!blocked && TwistArmourTakes(1 - attIndex));          // YOK-90: the elder's special plays on
@@ -444,6 +447,7 @@ public sealed partial class Match
 		if (!armoured) def.JumpDir = 0; // a hit in the air stops the drift; the fighter still falls along the arc
 
 		// Pushback: the defender slides away from the attacker; what a corner stops goes to the attacker.
+		bool atWall = false; // YOK-226: the push met the defender's stage corner
 		int away = Math.Sign(def.X - att.X);
 		int dir = projectile?.Dir ?? (remoteDir != 0 ? remoteDir : reflected && away != 0 ? away : att.Facing), want = push * SimConfig.Scale;
 		if (!blocked && m.PullOnHit > 0 && !reflected)
@@ -458,6 +462,15 @@ public sealed partial class Match
 			int got = Math.Abs(target - def.X);
 			def.X = target;
 			if (body) att.X = Math.Clamp(att.X - dir * (want - got), CornerLo(att), CornerHi(att));
+			atWall = got < want || want == 0 && (target == CornerLo(def) || target == CornerHi(def));
+		}
+		// YOK-226: launch (Heaven Seal) and wall bounce (Crushing Charge) on an unblocked, unarmoured hit; once launched,
+		// never again before landing, never on a thrown fighter (E12), never on one this hit KOs (KnockedOut is only set in
+		// ApplyDamage, so read the health left after the damage queued so far, this hit included). A burst is invulnerable.
+		if (!blocked && !armoured && !def.Launched && !wasThrown && !def.KnockedOut && def.Health - def.PendingDamage > 0)
+		{
+			if (m.WallBounce && atWall) Launch(def, -dir);
+			else if (m.Launch) Launch(def, 0);
 		}
 
 		Hit?.Invoke(this, new HitEvent(attIndex, m.Id, frame, blocked, counter, damage));

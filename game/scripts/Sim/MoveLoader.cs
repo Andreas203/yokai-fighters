@@ -86,7 +86,7 @@ public static class MoveLoader
 		move = MoveData.ReadImpact(move, fd); // YOK-20: hit strength (V2) and meter gain (C5)
 		move = MoveData.ReadSpecialProperties(move, fd); // YOK-21: projectile, invuln, cancel windows
 		move = MoveData.ReadModifierProperties(move, fd); // YOK-103: armour, counterhit/projectile immunity, pull, heal...
-		move = MoveData.CheckPendingProperties(move, fd); // YOK-220: vocabulary no fight code reads yet (shape only)
+		move = MoveData.ReadReaction(move, fd); // YOK-226: launch, wall_bounce, multi_hit (YOK-220 vocabulary)
 		move = MoveData.ReadMirage(move, fd); // YOK-224: properties.teleport and properties.decoy
 
 		if (move.Projectile != null && move.Damage > 0 && (Opt(fd, "hitstun") is null || Opt(fd, "blockstun") is null))

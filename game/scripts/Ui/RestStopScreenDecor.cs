@@ -55,7 +55,6 @@ public partial class RestStopScreenDecor : Control
 		foreach (string name in HangerNames)
 			if (GetParent()?.GetNodeOrNull<Control>(name) is { } h) Hanging(h.GetRect());
 
-		if (PortraitPlaceholder && !PortraitFilled && GetParent()?.GetNodeOrNull<Control>("Portrait") is { } p) Placeholder(p.GetRect());
 	}
 
 	/// <summary>One hanging scroll: cord to a peg, a rod and an indigo band at top and bottom, paper between.</summary>
@@ -75,15 +74,5 @@ public partial class RestStopScreenDecor : Control
 			Bar(this, new Rect2(r.Position.X - 6, y - 2, 12, 16), Knob, 6f);
 			Bar(this, new Rect2(r.End.X - 6, y - 2, 12, 16), Knob, 6f);
 		}
-	}
-
-	/// <summary>Labelled dashed box for the portrait that art will fill (no generated plate exists for the human guise).</summary>
-	void Placeholder(Rect2 r)
-	{
-		DrawRect(r, new Color("E3D8BD"));
-		DrawLine(r.Position, r.End, new Color("C9BE9F"), 1.5f);
-		DrawLine(new Vector2(r.End.X, r.Position.Y), new Vector2(r.Position.X, r.End.Y), new Color("C9BE9F"), 1.5f);
-		var tl = r.Position; var tr = new Vector2(r.End.X, r.Position.Y); var br = r.End; var bl = new Vector2(r.Position.X, r.End.Y);
-		foreach (var (a, b) in new[] { (tl, tr), (tr, br), (br, bl), (bl, tl) }) DrawDashedLine(a, b, Dash, 2f, 10f);
 	}
 }

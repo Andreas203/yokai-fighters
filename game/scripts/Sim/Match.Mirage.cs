@@ -96,12 +96,13 @@ public sealed partial class Match
 			Fighter att = Fighters[a];
 			var box = DecoyBox(d);
 
-			if (att.CurrentMove is { } m && !att.MoveConnected && m.IsActive(att.MoveFrame) && !m.IsThrow)
+			if (att.CurrentMove is { } m && CanConnectAgain(att, m) && m.IsActive(att.MoveFrame) && !m.IsThrow) // YOK-226: multi_hit
 				foreach (var hb in m.Hitboxes)
 					if (hb.Covers(att.MoveFrame) && Overlaps(WorldBox(att, hb.Box), box))
 					{
 						att.MoveConnected = true;
 						att.MoveBlocked = true;
+						CountConnect(att, m, att.MoveFrame);
 						Absorb(d);
 						break;
 					}

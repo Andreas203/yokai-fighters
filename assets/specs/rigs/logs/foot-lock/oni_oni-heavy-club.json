@@ -1,0 +1,45 @@
+{
+ "tool": "tools/blender/foot_lock.py",
+ "version": 1,
+ "blender": "4.1.1",
+ "input": "C:/Users/Andreas/projects/wf-qa/game/assets/generated/clips/oni/oni-heavy-club.glb",
+ "input_sha256_before": null,
+ "output": "C:\\Users\\Andreas\\projects\\wf-qa\\game\\assets\\generated\\clips\\oni\\oni-heavy-club.glb",
+ "output_sha256": "6d4b4d912006848d79b5b9ad9672ba972d023613e99d2ecd23b510b6586a33e5",
+ "ticks": [
+  0,
+  52
+ ],
+ "start": 0,
+ "height_m": 0.025,
+ "speed_m_per_tick": 0.03,
+ "min_run": 4,
+ "blend": 4,
+ "runs": {
+  "Left": [
+   [
+    1,
+    37
+   ]
+  ],
+  "Right": [
+   [
+    0,
+    11
+   ]
+  ]
+ },
+ "stats": {
+  "Left": {
+   "locked_ticks": 41,
+   "max_correction_cm": 34.43,
+   "unreachable_ticks": 0
+  },
+  "Right": {
+   "locked_ticks": 16,
+   "max_correction_cm": 10.08,
+   "unreachable_ticks": 10
+  }
+ },
+ "note": "hips X/Y pinned to rest (as the game shows it); planted legs re-solved, foot orientation kept; no key time, frame count or hit frame changed"
+}

@@ -56,10 +56,9 @@ public static class RestStopPortraitProbes
 		var art = screen.GetNode<TextureRect>("Portrait/Art");
 		var label = screen.GetNode<Label>("Portrait/PortraitLabel");
 		var decor = screen.GetNode<RestStopScreenDecor>("Decor");
-		Assert.True(art.Visible == merchant, ctx + ": art visible only for the merchant");
-		Assert.True((art.Texture != null) == merchant, ctx + ": texture set only for the merchant");
-		Assert.True(label.Visible == !merchant, ctx + ": caption only without art");
-		Assert.True(decor.PortraitFilled == merchant, ctx + ": dashed box hidden exactly when art is shown");
+		Assert.True(art.Visible && art.Texture != null, ctx + ": a plate is always shown (dojo: her portrait or the seal)");
+		Assert.True(!label.Visible, ctx + ": no caption");
+		Assert.True(decor.PortraitFilled, ctx + ": no dashed box");
 	}
 
 	[Test]

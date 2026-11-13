@@ -83,7 +83,7 @@ public static class LoseCardTests
 		Assert.Equal(Card(lib, "fixture-lose-kitsune", "Kitsune"), Shown(lib, apprentice), "row 1 apprentice: the Kitsune's card, not the band");
 		var nineTails = At("nine-tailed-kitsune", 8, "elder", elder: true);
 		Assert.Equal(Card(lib, "fixture-lose-kitsune", FightScene.NameOf(nineTails, nineTails.Fighter)), Shown(lib, nineTails), "row 8 Nine-Tails: the Kitsune's card, named as the elder");
-		Assert.Equal(Card(lib, "lose-early", "Oni"), Shown(new StoryLibrary(lib.Cards.Where(c => c.Id != OniEarly)), At("oni", 3)), "the Kitsune's card is never the Oni's");
+		Assert.Equal(Card(lib, "lose-early", "Oni"), Shown(new StoryLibrary(lib.Cards.Where(c => c.Id != OniEarly && c.Id != "lose-oni-early")), At("oni", 3)), "the Kitsune's card is never the Oni's");
 	}
 
 	/// <summary>The yokai a later_loss card may name = every winner the shipped maps' fight nodes resolve to = the schema's enum.</summary>

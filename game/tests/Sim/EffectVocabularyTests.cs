@@ -51,12 +51,12 @@ public static class EffectVocabularyTests
 	}
 
 	/// <summary>
-	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with wall_bounce, multi_hit and decoy added
+	/// The ticket's "loads and plays unchanged": Rising Talisman at Lv 3 with decoy added
 	/// hashes the same every tick as the plain Lv 3, whether it connects or gets jabbed, by its evolution or by a
 	/// modifier (always and on_hit, Test Breaker finding). forward_travel is left out: YOK-221 gives it behaviour; so is
 	/// properties.throw: YOK-225 makes it a command grab (CommandGrabTests). decoy stays: YOK-224 leaves a decoy only
 	/// where a move teleports, and Rising Talisman doesn't (FoxMirageTests covers the teleport). Each behaviour ticket
-	/// drops its target here.
+	/// drops its target here: YOK-226 dropped wall_bounce and multi_hit (EvolutionBehaviourTests).
 	/// </summary>
 	[Test]
 	public static void TargetsWithNoBehaviourYetLoadAndPlayUnchanged()
@@ -65,8 +65,6 @@ public static class EffectVocabularyTests
 		var plain = SpecialLoader.Parse(File.ReadAllText(path));
 		var doc = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
 		var changes = doc["levels"]!["3"]!["evolution"]!["changes"]!.AsArray();
-		changes.Add(new JsonObject { ["target"] = "properties.wall_bounce", ["op"] = "set", ["value"] = true });
-		changes.Add(new JsonObject { ["target"] = "multi_hit", ["op"] = "set", ["value"] = new JsonObject { ["hits"] = 3, ["interval"] = 6.0 } });
 		changes.Add(new JsonObject { ["target"] = "decoy", ["op"] = "set", ["value"] = 1 }); // no teleport: no decoy (YOK-224)
 		var pending = SpecialLoader.Parse(doc.ToJsonString());
 
@@ -78,8 +76,6 @@ public static class EffectVocabularyTests
 		// The modifier path, plain and conditional (outcome variants): a same-id modifier carrying them against one
 		// whose only change is damage + 0.
 		const string pendingEffects =
-			"{\"target\":\"wall_bounce\",\"op\":\"set\",\"value\":true,\"when\":\"W\"}," +
-			"{\"target\":\"multi_hit\",\"op\":\"set\",\"value\":{\"hits\":2,\"interval\":4},\"when\":\"W\"}," +
 			"{\"target\":\"decoy\",\"op\":\"set\",\"value\":2,\"when\":\"W\"}"; // throw.range: YOK-225, CommandGrabTests
 		const string noOp = "{\"target\":\"damage\",\"op\":\"add\",\"value\":0,\"when\":\"W\"}";
 		static ModifierData Mod(string effects, string when) => ModifierLoader.Parse(

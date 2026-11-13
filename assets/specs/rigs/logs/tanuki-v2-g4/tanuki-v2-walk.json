@@ -1,0 +1,1006 @@
+{
+ "summary": {
+  "tool": "tools/blender/godot_play.py",
+  "rig": "tripo-out/tanuki-v2/work/tanuki-v2-repaired.glb",
+  "clip": "game/assets/generated/clips/ryo-tripo/ryo-walk.glb",
+  "trim": [
+   0,
+   64
+  ],
+  "speed": 1.0,
+  "frames": 65,
+  "hip_scale": 0.5526,
+  "rig_hips_rest_y": 0.5516,
+  "clip_hips_rest_y": 0.9981,
+  "edges": 31583,
+  "tear_limit": 63,
+  "tears_max": 56,
+  "tears_worst_frame": 36,
+  "max_stretch": 10.44,
+  "contact_cm_min_max": [
+   -14.21,
+   2.08
+  ],
+  "sole_cm_min": {
+   "L": -11.86,
+   "R": -14.21
+  }
+ },
+ "per_frame": [
+  {
+   "frame": 1,
+   "tick": 0.0,
+   "tears": 14,
+   "max_stretch": 6.88,
+   "contact_cm": -2.73,
+   "L_sole_cm": 3.68,
+   "R_sole_cm": -2.73,
+   "tear_bones": {
+    "LeftUpLeg": 3,
+    "LeftShoulder": 3,
+    "Hips": 3,
+    "Spine": 2
+   }
+  },
+  {
+   "frame": 2,
+   "tick": 1.0,
+   "tears": 16,
+   "max_stretch": 7.32,
+   "contact_cm": -2.78,
+   "L_sole_cm": 3.75,
+   "R_sole_cm": -2.78,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 3,
+    "Hips": 3,
+    "Spine": 2
+   }
+  },
+  {
+   "frame": 3,
+   "tick": 2.0,
+   "tears": 19,
+   "max_stretch": 7.74,
+   "contact_cm": -2.84,
+   "L_sole_cm": 3.84,
+   "R_sole_cm": -2.84,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 4,
+    "LeftUpLeg": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 4,
+   "tick": 3.0,
+   "tears": 19,
+   "max_stretch": 8.04,
+   "contact_cm": -3.1,
+   "L_sole_cm": 3.94,
+   "R_sole_cm": -3.1,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 4,
+    "LeftUpLeg": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 5,
+   "tick": 4.0,
+   "tears": 19,
+   "max_stretch": 8.18,
+   "contact_cm": -3.6,
+   "L_sole_cm": 4.03,
+   "R_sole_cm": -3.6,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 4,
+    "LeftUpLeg": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 6,
+   "tick": 5.0,
+   "tears": 18,
+   "max_stretch": 8.1,
+   "contact_cm": -4.46,
+   "L_sole_cm": 4.1,
+   "R_sole_cm": -4.46,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 4,
+    "LeftUpLeg": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 7,
+   "tick": 6.0,
+   "tears": 18,
+   "max_stretch": 7.63,
+   "contact_cm": -5.74,
+   "L_sole_cm": 4.11,
+   "R_sole_cm": -5.74,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 4,
+    "LeftUpLeg": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 8,
+   "tick": 7.0,
+   "tears": 16,
+   "max_stretch": 6.91,
+   "contact_cm": -7.18,
+   "L_sole_cm": 4.12,
+   "R_sole_cm": -7.18,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 3,
+    "Hips": 3,
+    "RightArm": 2
+   }
+  },
+  {
+   "frame": 9,
+   "tick": 8.0,
+   "tears": 15,
+   "max_stretch": 5.97,
+   "contact_cm": -9.12,
+   "L_sole_cm": 4.1,
+   "R_sole_cm": -9.12,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 3,
+    "Hips": 3,
+    "Spine": 2
+   }
+  },
+  {
+   "frame": 10,
+   "tick": 9.0,
+   "tears": 12,
+   "max_stretch": 5.02,
+   "contact_cm": -10.72,
+   "L_sole_cm": 4.1,
+   "R_sole_cm": -10.72,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 2,
+    "Hips": 2,
+    "RightArm": 1
+   }
+  },
+  {
+   "frame": 11,
+   "tick": 10.0,
+   "tears": 13,
+   "max_stretch": 4.98,
+   "contact_cm": -12.51,
+   "L_sole_cm": 4.05,
+   "R_sole_cm": -12.51,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 2,
+    "Hips": 2,
+    "LeftArm": 1
+   }
+  },
+  {
+   "frame": 12,
+   "tick": 11.0,
+   "tears": 15,
+   "max_stretch": 5.09,
+   "contact_cm": -13.61,
+   "L_sole_cm": 4.02,
+   "R_sole_cm": -13.61,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "RightShoulder": 2,
+    "LeftUpLeg": 2,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 13,
+   "tick": 12.0,
+   "tears": 12,
+   "max_stretch": 5.2,
+   "contact_cm": -14.21,
+   "L_sole_cm": 3.93,
+   "R_sole_cm": -14.21,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 14,
+   "tick": 13.0,
+   "tears": 12,
+   "max_stretch": 5.31,
+   "contact_cm": -14.14,
+   "L_sole_cm": 3.81,
+   "R_sole_cm": -14.14,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 15,
+   "tick": 14.0,
+   "tears": 12,
+   "max_stretch": 5.39,
+   "contact_cm": -13.44,
+   "L_sole_cm": 3.63,
+   "R_sole_cm": -13.44,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 16,
+   "tick": 15.0,
+   "tears": 15,
+   "max_stretch": 5.47,
+   "contact_cm": -12.54,
+   "L_sole_cm": 3.43,
+   "R_sole_cm": -12.54,
+   "tear_bones": {
+    "LeftShoulder": 7,
+    "RightLeg": 2,
+    "Head": 2,
+    "LeftArm": 1
+   }
+  },
+  {
+   "frame": 17,
+   "tick": 16.0,
+   "tears": 14,
+   "max_stretch": 5.53,
+   "contact_cm": -11.4,
+   "L_sole_cm": 3.21,
+   "R_sole_cm": -11.4,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "RightLeg": 2,
+    "Head": 2,
+    "LeftArm": 1
+   }
+  },
+  {
+   "frame": 18,
+   "tick": 17.0,
+   "tears": 13,
+   "max_stretch": 5.88,
+   "contact_cm": -10.2,
+   "L_sole_cm": 2.96,
+   "R_sole_cm": -10.2,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "RightLeg": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 19,
+   "tick": 18.0,
+   "tears": 14,
+   "max_stretch": 6.43,
+   "contact_cm": -8.81,
+   "L_sole_cm": 2.73,
+   "R_sole_cm": -8.81,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "RightLeg": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 20,
+   "tick": 19.0,
+   "tears": 14,
+   "max_stretch": 6.97,
+   "contact_cm": -7.36,
+   "L_sole_cm": 2.54,
+   "R_sole_cm": -7.36,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "RightLeg": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 21,
+   "tick": 20.0,
+   "tears": 13,
+   "max_stretch": 7.49,
+   "contact_cm": -5.7,
+   "L_sole_cm": 2.37,
+   "R_sole_cm": -5.7,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 2,
+    "LeftArm": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 22,
+   "tick": 21.0,
+   "tears": 14,
+   "max_stretch": 7.89,
+   "contact_cm": -4.14,
+   "L_sole_cm": 2.2,
+   "R_sole_cm": -4.14,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 2,
+    "Spine": 2,
+    "LeftArm": 1
+   }
+  },
+  {
+   "frame": 23,
+   "tick": 22.0,
+   "tears": 18,
+   "max_stretch": 8.24,
+   "contact_cm": -2.47,
+   "L_sole_cm": 2.06,
+   "R_sole_cm": -2.47,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 4,
+    "Hips": 2,
+    "Head": 2
+   }
+  },
+  {
+   "frame": 24,
+   "tick": 23.0,
+   "tears": 21,
+   "max_stretch": 8.5,
+   "contact_cm": -0.82,
+   "L_sole_cm": 1.95,
+   "R_sole_cm": -0.82,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 5,
+    "Hips": 2,
+    "Head": 2
+   }
+  },
+  {
+   "frame": 25,
+   "tick": 24.0,
+   "tears": 21,
+   "max_stretch": 8.76,
+   "contact_cm": 0.66,
+   "L_sole_cm": 1.88,
+   "R_sole_cm": 0.66,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 5,
+    "Hips": 2,
+    "Head": 2
+   }
+  },
+  {
+   "frame": 26,
+   "tick": 25.0,
+   "tears": 23,
+   "max_stretch": 9.01,
+   "contact_cm": 1.88,
+   "L_sole_cm": 1.88,
+   "R_sole_cm": 2.23,
+   "tear_bones": {
+    "LeftShoulder": 6,
+    "LeftUpLeg": 5,
+    "RightUpLeg": 2,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 27,
+   "tick": 26.0,
+   "tears": 30,
+   "max_stretch": 9.25,
+   "contact_cm": 1.95,
+   "L_sole_cm": 1.95,
+   "R_sole_cm": 2.97,
+   "tear_bones": {
+    "LeftUpLeg": 8,
+    "Hips": 7,
+    "LeftShoulder": 6,
+    "RightUpLeg": 2
+   }
+  },
+  {
+   "frame": 28,
+   "tick": 27.0,
+   "tears": 32,
+   "max_stretch": 9.48,
+   "contact_cm": 2.08,
+   "L_sole_cm": 2.08,
+   "R_sole_cm": 2.66,
+   "tear_bones": {
+    "LeftUpLeg": 11,
+    "Hips": 8,
+    "LeftShoulder": 6,
+    "RightUpLeg": 2
+   }
+  },
+  {
+   "frame": 29,
+   "tick": 28.0,
+   "tears": 35,
+   "max_stretch": 9.55,
+   "contact_cm": 1.56,
+   "L_sole_cm": 2.29,
+   "R_sole_cm": 1.56,
+   "tear_bones": {
+    "LeftUpLeg": 12,
+    "Hips": 11,
+    "LeftShoulder": 6,
+    "RightUpLeg": 2
+   }
+  },
+  {
+   "frame": 30,
+   "tick": 29.0,
+   "tears": 39,
+   "max_stretch": 9.59,
+   "contact_cm": 0.58,
+   "L_sole_cm": 2.6,
+   "R_sole_cm": 0.58,
+   "tear_bones": {
+    "LeftUpLeg": 14,
+    "Hips": 13,
+    "LeftShoulder": 6,
+    "RightUpLeg": 2
+   }
+  },
+  {
+   "frame": 31,
+   "tick": 30.0,
+   "tears": 40,
+   "max_stretch": 9.57,
+   "contact_cm": -0.44,
+   "L_sole_cm": 3.17,
+   "R_sole_cm": -0.44,
+   "tear_bones": {
+    "LeftUpLeg": 15,
+    "Hips": 13,
+    "LeftShoulder": 5,
+    "RightUpLeg": 2
+   }
+  },
+  {
+   "frame": 32,
+   "tick": 31.0,
+   "tears": 41,
+   "max_stretch": 9.69,
+   "contact_cm": -1.16,
+   "L_sole_cm": 3.54,
+   "R_sole_cm": -1.16,
+   "tear_bones": {
+    "LeftUpLeg": 15,
+    "Hips": 13,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 33,
+   "tick": 32.0,
+   "tears": 46,
+   "max_stretch": 10.04,
+   "contact_cm": -1.6,
+   "L_sole_cm": 3.6,
+   "R_sole_cm": -1.6,
+   "tear_bones": {
+    "LeftUpLeg": 17,
+    "Hips": 16,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 34,
+   "tick": 33.0,
+   "tears": 49,
+   "max_stretch": 10.29,
+   "contact_cm": -1.87,
+   "L_sole_cm": 3.4,
+   "R_sole_cm": -1.87,
+   "tear_bones": {
+    "LeftUpLeg": 19,
+    "Hips": 16,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 35,
+   "tick": 34.0,
+   "tears": 53,
+   "max_stretch": 10.44,
+   "contact_cm": -2.02,
+   "L_sole_cm": 3.06,
+   "R_sole_cm": -2.02,
+   "tear_bones": {
+    "LeftUpLeg": 22,
+    "Hips": 17,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 36,
+   "tick": 35.0,
+   "tears": 56,
+   "max_stretch": 10.35,
+   "contact_cm": -1.93,
+   "L_sole_cm": 2.32,
+   "R_sole_cm": -1.93,
+   "tear_bones": {
+    "LeftUpLeg": 24,
+    "Hips": 17,
+    "LeftShoulder": 6,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 37,
+   "tick": 36.0,
+   "tears": 55,
+   "max_stretch": 10.18,
+   "contact_cm": -1.7,
+   "L_sole_cm": 1.5,
+   "R_sole_cm": -1.7,
+   "tear_bones": {
+    "LeftUpLeg": 23,
+    "Hips": 17,
+    "LeftShoulder": 6,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 38,
+   "tick": 37.0,
+   "tears": 55,
+   "max_stretch": 9.86,
+   "contact_cm": -1.19,
+   "L_sole_cm": 0.53,
+   "R_sole_cm": -1.19,
+   "tear_bones": {
+    "LeftUpLeg": 23,
+    "Hips": 16,
+    "LeftShoulder": 6,
+    "RightUpLeg": 4
+   }
+  },
+  {
+   "frame": 39,
+   "tick": 38.0,
+   "tears": 55,
+   "max_stretch": 9.51,
+   "contact_cm": -0.73,
+   "L_sole_cm": -0.51,
+   "R_sole_cm": -0.73,
+   "tear_bones": {
+    "LeftUpLeg": 23,
+    "Hips": 16,
+    "LeftShoulder": 5,
+    "RightUpLeg": 4
+   }
+  },
+  {
+   "frame": 40,
+   "tick": 39.0,
+   "tears": 51,
+   "max_stretch": 8.99,
+   "contact_cm": -2.83,
+   "L_sole_cm": -2.83,
+   "R_sole_cm": -0.82,
+   "tear_bones": {
+    "LeftUpLeg": 20,
+    "Hips": 15,
+    "LeftShoulder": 5,
+    "RightUpLeg": 4
+   }
+  },
+  {
+   "frame": 41,
+   "tick": 40.0,
+   "tears": 42,
+   "max_stretch": 8.41,
+   "contact_cm": -5.19,
+   "L_sole_cm": -5.19,
+   "R_sole_cm": -1.21,
+   "tear_bones": {
+    "LeftUpLeg": 15,
+    "Hips": 13,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 42,
+   "tick": 41.0,
+   "tears": 37,
+   "max_stretch": 7.73,
+   "contact_cm": -7.71,
+   "L_sole_cm": -7.71,
+   "R_sole_cm": -1.28,
+   "tear_bones": {
+    "LeftUpLeg": 14,
+    "Hips": 8,
+    "LeftShoulder": 5,
+    "RightUpLeg": 3
+   }
+  },
+  {
+   "frame": 43,
+   "tick": 42.0,
+   "tears": 29,
+   "max_stretch": 7.01,
+   "contact_cm": -9.6,
+   "L_sole_cm": -9.6,
+   "R_sole_cm": -1.25,
+   "tear_bones": {
+    "LeftUpLeg": 10,
+    "Hips": 6,
+    "LeftShoulder": 5,
+    "Head": 3
+   }
+  },
+  {
+   "frame": 44,
+   "tick": 43.0,
+   "tears": 27,
+   "max_stretch": 6.24,
+   "contact_cm": -10.96,
+   "L_sole_cm": -10.96,
+   "R_sole_cm": -1.08,
+   "tear_bones": {
+    "LeftUpLeg": 10,
+    "Hips": 5,
+    "LeftShoulder": 5,
+    "Head": 3
+   }
+  },
+  {
+   "frame": 45,
+   "tick": 44.0,
+   "tears": 20,
+   "max_stretch": 5.47,
+   "contact_cm": -11.58,
+   "L_sole_cm": -11.58,
+   "R_sole_cm": -1.03,
+   "tear_bones": {
+    "LeftUpLeg": 5,
+    "Hips": 4,
+    "LeftShoulder": 4,
+    "Head": 3
+   }
+  },
+  {
+   "frame": 46,
+   "tick": 45.0,
+   "tears": 17,
+   "max_stretch": 4.72,
+   "contact_cm": -11.86,
+   "L_sole_cm": -11.86,
+   "R_sole_cm": -1.01,
+   "tear_bones": {
+    "LeftUpLeg": 4,
+    "LeftShoulder": 4,
+    "Head": 3,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 47,
+   "tick": 46.0,
+   "tears": 13,
+   "max_stretch": 4.6,
+   "contact_cm": -11.38,
+   "L_sole_cm": -11.38,
+   "R_sole_cm": -1.18,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Head": 3,
+    "Hips": 2,
+    "LeftUpLeg": 2
+   }
+  },
+  {
+   "frame": 48,
+   "tick": 47.0,
+   "tears": 12,
+   "max_stretch": 4.62,
+   "contact_cm": -10.69,
+   "L_sole_cm": -10.69,
+   "R_sole_cm": -1.36,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "Hips": 2,
+    "LeftUpLeg": 2,
+    "Head": 2
+   }
+  },
+  {
+   "frame": 49,
+   "tick": 48.0,
+   "tears": 11,
+   "max_stretch": 4.63,
+   "contact_cm": -9.69,
+   "L_sole_cm": -9.69,
+   "R_sole_cm": -1.72,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "Head": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 50,
+   "tick": 49.0,
+   "tears": 11,
+   "max_stretch": 4.65,
+   "contact_cm": -8.53,
+   "L_sole_cm": -8.53,
+   "R_sole_cm": -2.05,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "Head": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 51,
+   "tick": 50.0,
+   "tears": 10,
+   "max_stretch": 4.66,
+   "contact_cm": -7.21,
+   "L_sole_cm": -7.21,
+   "R_sole_cm": -2.32,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 52,
+   "tick": 51.0,
+   "tears": 11,
+   "max_stretch": 4.67,
+   "contact_cm": -5.73,
+   "L_sole_cm": -5.73,
+   "R_sole_cm": -2.56,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "Hips": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 53,
+   "tick": 52.0,
+   "tears": 10,
+   "max_stretch": 4.68,
+   "contact_cm": -4.04,
+   "L_sole_cm": -4.04,
+   "R_sole_cm": -2.75,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "Hips": 2,
+    "LeftArm": 1,
+    "LeftUpLeg": 1
+   }
+  },
+  {
+   "frame": 54,
+   "tick": 53.0,
+   "tears": 9,
+   "max_stretch": 4.69,
+   "contact_cm": -2.91,
+   "L_sole_cm": -2.27,
+   "R_sole_cm": -2.91,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 55,
+   "tick": 54.0,
+   "tears": 9,
+   "max_stretch": 4.7,
+   "contact_cm": -3.03,
+   "L_sole_cm": -0.27,
+   "R_sole_cm": -3.03,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 56,
+   "tick": 55.0,
+   "tears": 10,
+   "max_stretch": 4.7,
+   "contact_cm": -3.1,
+   "L_sole_cm": 1.69,
+   "R_sole_cm": -3.1,
+   "tear_bones": {
+    "LeftShoulder": 5,
+    "LeftArm": 1,
+    "LeftUpLeg": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 57,
+   "tick": 56.0,
+   "tears": 10,
+   "max_stretch": 4.71,
+   "contact_cm": -3.13,
+   "L_sole_cm": 3.72,
+   "R_sole_cm": -3.13,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 2,
+    "LeftArm": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 58,
+   "tick": 57.0,
+   "tears": 10,
+   "max_stretch": 4.71,
+   "contact_cm": -3.1,
+   "L_sole_cm": 5.29,
+   "R_sole_cm": -3.1,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 2,
+    "LeftArm": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 59,
+   "tick": 58.0,
+   "tears": 11,
+   "max_stretch": 4.72,
+   "contact_cm": -3.03,
+   "L_sole_cm": 5.83,
+   "R_sole_cm": -3.03,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 2,
+    "LeftArm": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 60,
+   "tick": 59.0,
+   "tears": 11,
+   "max_stretch": 4.73,
+   "contact_cm": -2.93,
+   "L_sole_cm": 4.96,
+   "R_sole_cm": -2.93,
+   "tear_bones": {
+    "LeftShoulder": 4,
+    "LeftUpLeg": 2,
+    "LeftArm": 1,
+    "Head": 1
+   }
+  },
+  {
+   "frame": 61,
+   "tick": 60.0,
+   "tears": 11,
+   "max_stretch": 5.0,
+   "contact_cm": -2.81,
+   "L_sole_cm": 4.4,
+   "R_sole_cm": -2.81,
+   "tear_bones": {
+    "LeftShoulder": 3,
+    "LeftUpLeg": 2,
+    "Hips": 2,
+    "LeftArm": 1
+   }
+  },
+  {
+   "frame": 62,
+   "tick": 61.0,
+   "tears": 11,
+   "max_stretch": 5.39,
+   "contact_cm": -2.66,
+   "L_sole_cm": 4.02,
+   "R_sole_cm": -2.66,
+   "tear_bones": {
+    "LeftShoulder": 3,
+    "Spine": 2,
+    "LeftUpLeg": 2,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 63,
+   "tick": 62.0,
+   "tears": 11,
+   "max_stretch": 5.89,
+   "contact_cm": -2.55,
+   "L_sole_cm": 3.82,
+   "R_sole_cm": -2.55,
+   "tear_bones": {
+    "LeftShoulder": 3,
+    "Spine": 2,
+    "LeftUpLeg": 2,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 64,
+   "tick": 63.0,
+   "tears": 11,
+   "max_stretch": 6.45,
+   "contact_cm": -2.4,
+   "L_sole_cm": 3.69,
+   "R_sole_cm": -2.4,
+   "tear_bones": {
+    "LeftShoulder": 3,
+    "Spine": 2,
+    "LeftUpLeg": 2,
+    "Hips": 2
+   }
+  },
+  {
+   "frame": 65,
+   "tick": 64.0,
+   "tears": 11,
+   "max_stretch": 6.87,
+   "contact_cm": -2.4,
+   "L_sole_cm": 3.51,
+   "R_sole_cm": -2.4,
+   "tear_bones": {
+    "LeftShoulder": 3,
+    "Spine": 2,
+    "LeftUpLeg": 2,
+    "Hips": 2
+   }
+  }
+ ]
+}

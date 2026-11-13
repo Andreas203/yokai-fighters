@@ -13,5 +13,21 @@
   "spark": {
     "colour": "#F2A23A"
   },
-  "notes": "Colour-only (YOK-213). Lv 2 colour shift: Persimmon #D8632C (style.md palette), the dusk-glow orange, for the flame. Spark stays Foxfire #F2A23A so the hit still reads as a kitsune source (V5). Default spark image."
+  "projectile": {
+    "look": "fox_flame",
+    "colour": "#A9B4C8",
+    "core": "#F2A23A"
+  },
+  "cast": {
+    "look": "flame_burst",
+    "colour": "#A9B4C8",
+    "core": "#F2A23A"
+  },
+  "release": {
+    "look": "flame_burst",
+    "colour": "#A9B4C8",
+    "core": "#F2A23A",
+    "scale_pct": 80
+  },
+  "notes": "Colour-only (YOK-213). Lv 2 colour shift: Persimmon #D8632C (style.md palette), the dusk-glow orange, for the flame. Spark stays Foxfire #F2A23A so the hit still reads as a kitsune source (V5). Default spark image. YOK-242 (proposed): Lv 2 flame keeps the blue-white rim and gains a Foxfire orange heart (V8 colour shift); the impact splash is the preset's Persimmon."
 }
