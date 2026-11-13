@@ -119,18 +119,34 @@ def format_notes(notes) -> str:
     return "\n\n".join(f"[{n.id}]\n{n.text}" for n in notes)
 
 
-def writing_prompt(ctype: dict, item: dict, notes) -> str:
+# Prompt layout. "cached" (the default) puts an agent's whole notes in its system prompt. That system prompt is the
+# same on every call the agent makes, so after the first call the notes are read from the prompt cache at a tenth of
+# the input price, and the user message carries only what changes per piece. "v1" is the layout of the runs recorded
+# before 2026-11-13 (brief first, notes last in the user message): no two calls shared a prefix, so every call wrote a
+# cache entry and none read one. It stays so those runs still --replay.
+LAYOUTS = ("cached", "v1")
+
+
+def writer_system(notes, layout: str = "cached") -> str:
+    if layout == "v1":
+        return WRITER_SYSTEM
+    return f"{WRITER_SYSTEM}\n\nNOTES (design vault, each note complete)\n{format_notes(notes)}\n"
+
+
+def writing_prompt(ctype: dict, item: dict, notes, layout: str = "cached") -> str:
     contract = "\n".join(f"- {line}" for line in ctype["contract"])
-    return (
+    prompt = (
         f"TASK\n{item['brief']}\n\n"
         f"OUTPUT CONTRACT\n{contract}\n"
         f"{SOURCES_RULE}\n"
-        f"- Reply as JSON: {ctype['output']}\n\n"
-        f"NOTES (design vault, each note complete)\n{format_notes(notes)}\n"
+        f"- Reply as JSON: {ctype['output']}\n"
     )
+    if layout == "v1":
+        return prompt + f"\nNOTES (design vault, each note complete)\n{format_notes(notes)}\n"
+    return prompt
 
 
-def revision_prompt(ctype: dict, item: dict, notes, draft: dict, issues: list[dict]) -> str:
+def revision_prompt(ctype: dict, item: dict, notes, draft: dict, issues: list[dict], layout: str = "cached") -> str:
     import json
     listed = "\n".join(
         f"{n}. [{i['kind']}] \"{i.get('quote', '')}\": {i['problem']}"
@@ -139,7 +155,7 @@ def revision_prompt(ctype: dict, item: dict, notes, draft: dict, issues: list[di
         for n, i in enumerate(issues, 1)
     )
     return (
-        writing_prompt(ctype, item, notes)
+        writing_prompt(ctype, item, notes, layout)
         + f"\nYOUR PREVIOUS DRAFT\n{json.dumps(draft, ensure_ascii=False)}\n\n"
         f"THE CRITIC REJECTED IT\n{listed}\n\n"
         "Rewrite the draft so that every issue is fixed. Keep what was not criticised. "

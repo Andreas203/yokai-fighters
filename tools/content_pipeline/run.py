@@ -30,7 +30,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from content import CONTENT_TYPES, CRITIC, WRITER_SYSTEM, revision_prompt, writing_prompt  # noqa: E402
+from content import CONTENT_TYPES, CRITIC, LAYOUTS, revision_prompt, writer_system, writing_prompt  # noqa: E402
 from critic import code_checks, critic_review  # noqa: E402
 from llm import LLM, parse_json  # noqa: E402
 from vault import ability_names, load_agent_notes  # noqa: E402
@@ -56,26 +56,28 @@ def run_item(llm, agents, move_names, type_id, item, args, seeded_draft=None) ->
     notes = agents[writer]
     evidence = agents[CRITIC]
 
+    layout = args.prompt_layout
+
     def ask(role, prompt):
         try:
-            return parse_json(llm.complete(role, args.writer_model, WRITER_SYSTEM, prompt))
+            return parse_json(llm.complete(role, args.writer_model, writer_system(notes, layout), prompt))
         except ValueError:
             return {}
 
-    draft = seeded_draft if seeded_draft is not None else ask("writer", writing_prompt(ctype, item, notes))
+    draft = seeded_draft if seeded_draft is not None else ask("writer", writing_prompt(ctype, item, notes, layout))
     rounds = []
     for n in range(1, args.max_rounds + 1):
         # A seeded draft is written by hand and cites nothing, so its first round skips the cited-line check.
         cites = not (seeded_draft is not None and n == 1)
         code_issues = code_checks(type_id, item, draft, notes, move_names, check_sources=cites)
-        review = critic_review(llm, args.critic_model, ctype, item, draft, evidence)
+        review = critic_review(llm, args.critic_model, ctype, item, draft, evidence, layout)
         issues = code_issues + review["issues"]
         rounds.append({"round": n, "draft": draft, "code_issues": code_issues,
                        "critic_verdict": review["verdict"], "critic_issues": review["issues"]})
         print(f"    round {n}: {len(code_issues)} code issue(s), critic {review['verdict']} with {len(review['issues'])} issue(s)")
         if not issues or n == args.max_rounds:
             break
-        draft = ask("reviser", revision_prompt(ctype, item, notes, draft, issues))
+        draft = ask("reviser", revision_prompt(ctype, item, notes, draft, issues, layout))
 
     last = rounds[-1]
     passed = not last["code_issues"] and not last["critic_issues"]
@@ -350,6 +352,9 @@ def main() -> int:
         p.add_argument("--critic-model", default="opus")
         p.add_argument("--max-rounds", type=int, default=3, help="drafts per piece, including the first")
         p.add_argument("--replay", action="store_true", help="use the run's recorded model calls; call nothing")
+        p.add_argument("--prompt-layout", choices=LAYOUTS, default="cached",
+                       help="cached: vault notes in the system prompt, read from the prompt cache after the first call "
+                            "(default); v1: notes last in the user message, the layout of runs recorded before 2026-11-13")
     sub.add_parser("notes")
     p = sub.add_parser("install")
     p.add_argument("--run", required=True, help="run folder name under runs/")
