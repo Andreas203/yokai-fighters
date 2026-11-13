@@ -1092,7 +1092,16 @@ It is a download rather than a browser game because Godot 4 can't export a C# pr
 ### Deliverable 2: pipeline source and engine integration
 
 - **Pipeline repository:** <https://github.com/Andreas203/yokai-fighters>. The crew is defined in [`.claude/agents/`](.claude/agents/), the production pass in [`.claude/skills/produce/`](.claude/skills/produce/SKILL.md), and the scripted parts in [`tools/`](tools/).
-- **Pipeline run video:** ⟨VIDEO_URL⟩
+- **Pipeline run video:** <https://youtu.be/2b97cYkae_0>. The session is sped up, and the game plays at normal speed whenever it is on screen. It follows one fix through the pipeline:
+  - **The bug.** When Ryo drafts the Oni's Iron-Club Charge, he played Tripo's `slash` preset, a two-handed overhead weapon chop, with nothing in his hands. The video opens the game on the move with a dev flag (`--showcase=iron-club-charge`, branch `YOK-showcase-flag`).
+  - **The fix.**
+    1. The animator measures the clip: the hands hang at thigh height and nothing strikes on the hit frames 13–18.
+    2. It tests every Tripo take already made for Ryo's rig, and recommends `box_01`, a lunging straight punch.
+    3. I approve it.
+    4. `tools/finish_clips.py` (on the finish branch `YOK-finish-playable`) turns the take to face the camera, retimes it to the move's 12 / 6 / 14 frame data and measures it (worst foot slide 1.38 cm per frame).
+    5. The rules-lawyer and the test suite pass it.
+  - **The result.** The game opens again on the new clip.
+  - **The cost.** 0 Tripo credits, because the take was already paid for. The animator used 186,517 tokens over 89 tool calls, and the rules-lawyer 42,369; both run inside my Claude Code subscription. A proper shoulder charge, which no Tripo preset has, is ticket YOK-250.
 - **Target engine:** Godot 4.7 (.NET), C#.
 
 #### The pipeline
@@ -1147,7 +1156,7 @@ Content merges after the Rules Lawyer and the schema check. Code merges after th
 | Manual step | Why it's manual | What would automate it |
 |---|---|---|
 | I approve every generation job and its credit spend, and merge every PR | By design: the pipeline spends money and changes the game | A per-ticket budget envelope enforced in code, the way the style loop's `--max-images` already is: I approve the envelope once, and jobs inside it run unattended. Merges stay with me. |
-| Tripo and AccuRIG 2 jobs run by hand; Astra runs through Codex, which reports no cost | No Tripo MCP or API client; AccuRIG is a desktop app | A Tripo API client in `tools/` that reads the credit cost from each response; Astra through the Images API, which returns usage |
+| I run every paid Tripo job myself, and AccuRIG 2 by hand; Astra runs through Codex, which reports no cost | Tripo now runs through its `tripo` CLI, which reports `credits_consumed` for each job, but run headless it confirms paid commands on its own, so a paid take waits for me to type it. AccuRIG is a desktop app | A wrapper in `tools/` that reads the balance, refuses a job past the approved envelope and logs `credits_consumed`; Astra through the Images API, which returns usage |
 | The video-mocap takes for Ryo's heavy punch and heavy kick | Someone has to perform them | Pack clips or generator presets only, at a cost in feel |
 | Story cards from the content pipeline aren't installed (6 of this run's 10 pieces) | The game has no slot for a wake-up card by yokai (rule S3), and the elder intro cards it has are in the elder's own voice (S5) | A C# lookup for `wake-up-<yokai>-<band>` with the row-band card as fallback, then an `install` mapping for story cards |
 | Upload to itch.io | Needs my itch login | `butler push` in [`release.yml`](.github/workflows/release.yml) with an itch API key as a repo secret |
@@ -1249,13 +1258,24 @@ The four modifier cards that went into the build cost **$0.48** together (one wr
 
 **The most expensive step: the Rules Lawyer critic on Opus, $1.67 of $2.31 (72%)**. It made 17 calls at about $0.10 each. Every call re-reads the critic's five whole vault notes (about 10,000 tokens), and every round a piece fails adds another one: the two elder intros that never passed took three critic calls each. The writer and reviser on Sonnet cost $0.64 together.
 
-The trace also shows money left on the table. All 299,386 input tokens were billed as cache *writes* and none as cache reads. The prompt puts each piece's brief before the vault notes, so no two calls start with the same text, and each call pays to cache a prefix nobody reuses. Putting the notes first, or in the system prompt, would let 16 of the 17 critic calls read them from cache at a tenth of the input price. That is the next change; it is not measured yet.
+The trace also shows money left on the table. All 299,386 input tokens were billed as cache *writes* and none as cache reads. The prompt puts each piece's brief before the vault notes, so no two calls start with the same text, and each call pays to cache a prefix nobody reuses. Putting the notes first, or in the system prompt, would let 16 of the 17 critic calls read them from cache at a tenth of the input price.
 
-**.**
+**That change is now made and measured (2026-11-13).**
+- **The change.** Each agent's whole vault notes now go in its system prompt, which is the same on every call it makes. The user message carries only the piece's brief, contract and draft. A cache read can only land where an earlier call wrote a cache entry, so moving the notes to the front of the user message would not have been enough.
+- **Compatibility.** The old layout stays behind `--prompt-layout v1`, so earlier runs still replay.
+- **The rerun.** I reran the same ten pieces, on the same models (Sonnet 5.5 writing, Opus 5.5 critic): [`runs/a7-cached`](tools/content_pipeline/runs/a7-cached/trace.md). It made 26 calls for **$0.55**, and 80% of its input tokens were cache reads. All ten pieces passed, the two elder intros included; two passed after one correction.
+
+| Step | Before, per call | After, per call | Change | Input read from cache |
+|---|---|---|---|---|
+| writer (sonnet) | $0.0359 | $0.0154 | −57% | 71% |
+| critic (opus) | $0.0981 | $0.0276 | −72% | 84% |
+| reviser (sonnet) | $0.0400 | $0.0124 | −69% | 84% |
+
+The rerun needed fewer revision rounds, so its $0.55 total flatters the change. The fair comparison is a7-live's own 34 calls at the new per-call rates: **$0.71 instead of $2.31, 69% less**. The first call of each agent still pays to write its cache entry; every later call within the five-minute cache lifetime reads it.
 
 The asset side of the pipeline, for the whole build so far, from the balances recorded in the job specs: **Meshy 645 credits** (balance 1,300 on 2026-10-05, down to 655 after the Oni clips on 2026-10-16), which is **$12.90** at the Pro plan's $0.02 a credit. That paid for the fighters' first models and props, their auto-rigs, the Meshy clip takes and the retarget gate, the bamboo-grove stage and the HUD textures. Tripo jobs were run by hand, and Astra (through Codex) reports no cost, so neither is in that figure. The agent crew itself runs inside my Claude Code subscription.
 
-**Sustainable for a solo developer or a small team: yes.** The cost that grows with content is small. Ten pieces of checked card text cost $2.31, about $0.23 each, so a hundred more pieces would cost about $25 at this rate. Every Meshy job behind the build so far cost $12.90. What dominates is fixed: the subscriptions (Claude Code for the crew, Codex for Astra, Meshy Pro at $20 a month, Tripo), which a small team pays whatever it makes. The constraint is not money but review time: every job and every merge waits on me, and the two "needs a human" cards show where that time goes. Two risks to watch: Opus as the critic is 72% of the content cost (a Sonnet critic would be about a third of that, at a quality risk I haven't measured), and Tripo and Astra report no cost, so their spend only shows up on the bills.
+**Sustainable for a solo developer or a small team: yes.** The cost that grows with content is small. Ten pieces of checked card text cost $2.31, about $0.23 each, so a hundred more pieces would cost about $25 at this rate. With the notes cached, the same calls cost about $0.07 a piece, so a hundred pieces would cost about $7. Every Meshy job behind the build so far cost $12.90. What dominates is fixed: the subscriptions (Claude Code for the crew, Codex for Astra, Meshy Pro at $20 a month, Tripo), which a small team pays whatever it makes. The constraint is not money but review time: every job and every merge waits on me, and the two "needs a human" cards show where that time goes. Two risks to watch: Opus as the critic is 72% of the content cost (a Sonnet critic would be about a third of that, at a quality risk I haven't measured), and Astra reports no cost, so its spend only shows up on the bill. Tripo reports `credits_consumed` through its CLI, but only the jobs logged in the specs are counted.
 
 #### 4. Mid-project cost-reduction change
 

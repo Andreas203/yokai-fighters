@@ -162,15 +162,23 @@ CRITIC_SYSTEM = (
 )
 
 
-def critic_prompt(ctype: dict, item: dict, draft: dict, notes) -> str:
+def critic_system(notes, layout: str = "cached") -> str:
+    # content.LAYOUTS: in the cached layout the evidence is the prefix every critic call shares.
+    if layout == "v1":
+        return CRITIC_SYSTEM
+    return f"{CRITIC_SYSTEM}\n\nEVIDENCE (design vault, each note complete)\n{format_notes(notes)}\n"
+
+
+def critic_prompt(ctype: dict, item: dict, draft: dict, notes, layout: str = "cached") -> str:
     # The critic judges the text. The cited lines are checked by code, so they are left out.
     draft = {k: v for k, v in draft.items() if k != "sources"}
     contract = "\n".join(f"- {line}" for line in ctype["contract"])
+    evidence = f"EVIDENCE (design vault, each note complete)\n{format_notes(notes)}\n\n" if layout == "v1" else ""
     return (
         f"WHAT THE DRAFT IS FOR\n{item['brief']}\n\n"
         f"OUTPUT CONTRACT IT WAS GIVEN\n{contract}\n\n"
         f"DRAFT\n{json.dumps(draft, ensure_ascii=False)}\n\n"
-        f"EVIDENCE (design vault, each note complete)\n{format_notes(notes)}\n\n"
+        f"{evidence}"
         "Reply as JSON:\n"
         '{"verdict": "pass" or "revise", "issues": [{"kind": "lore_break" or "tone_drift", '
         '"quote": "<the words in the draft>", "problem": "<what is wrong, one sentence>", '
@@ -179,8 +187,8 @@ def critic_prompt(ctype: dict, item: dict, draft: dict, notes) -> str:
     )
 
 
-def critic_review(llm, model: str, ctype: dict, item: dict, draft: dict, notes) -> dict:
-    reply = llm.complete("critic", model, CRITIC_SYSTEM, critic_prompt(ctype, item, draft, notes))
+def critic_review(llm, model: str, ctype: dict, item: dict, draft: dict, notes, layout: str = "cached") -> dict:
+    reply = llm.complete("critic", model, critic_system(notes, layout), critic_prompt(ctype, item, draft, notes, layout))
     try:
         review = parse_json(reply)
     except ValueError:

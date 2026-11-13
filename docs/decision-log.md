@@ -285,3 +285,9 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 
 ## Designer decisions 2026-11-11
 - 2026-11-11 YOK-245 sketches run to the end (designer, after playing PR #279: "continue the dotted lines fully until the end"): the dotted sketches of the routes ahead no longer fade; they run at one strength to the Tanuki's node (AM22 updated before merge).
+
+## Designer decisions 2026-11-12
+- 2026-11-12 YOK-250 Ryo's Iron-Club Charge clip (designer, choosing from the animator's spec: "Use box_01"): the cached Tripo `box_01` lunge punch replaces the empty-handed `slash` take, 0 credits; the Tanuki's 11.1 cm forearm-into-spine clip stays open on YOK-250. Work on branch `YOK-showcase-flag`.
+
+## Designer decisions 2026-11-13
+- 2026-11-13 Assignment 7 improvements (designer chose all four): the video link, this fix as a costed example, the prompt-cache change in `tools/content_pipeline` (notes in the system prompt, old layout kept as `--prompt-layout v1`), and the manual-steps table. Spend approved for one live rerun (about $2); run `a7-cached` cost $0.55.
