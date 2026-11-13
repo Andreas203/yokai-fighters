@@ -535,16 +535,52 @@
   {
    "id": "ryo-iron-club-charge",
    "body": "ryo",
-   "src": "../assets/specs/clips/raw-tripo/slash.glb",
-   "preset": "slash",
+   "src": "../assets/specs/clips/raw-tripo/box_01.glb",
+   "preset": "box_01",
    "clean": true,
+   "yaw": -90,
    "source": "tripo-library",
-   "clip": "preset:biped:slash",
+   "clip": "preset:biped:box_01",
    "target": {
     "startup": 12,
     "active": 6,
     "total": 32
    },
+   "retime_override": [
+    {
+     "frames": [
+      1,
+      13
+     ],
+     "ticks": [
+      17,
+      34
+     ],
+     "note": "step lands, fist drives out"
+    },
+    {
+     "frames": [
+      13,
+      19
+     ],
+     "ticks": [
+      34,
+      42
+     ],
+     "note": "fist at full reach through the active frames"
+    },
+    {
+     "frames": [
+      19,
+      32
+     ],
+     "ticks": [
+      42,
+      62
+     ],
+     "note": "arm holds then eases back"
+    }
+   ],
    "movement": true
   },
   {

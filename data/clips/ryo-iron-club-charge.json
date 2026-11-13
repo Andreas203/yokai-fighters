@@ -11,12 +11,12 @@
     "F6"
   ],
   "source": "tripo-library",
-  "clip": "preset:biped:slash",
+  "clip": "preset:biped:box_01",
   "frames_total": 32,
-  "retarget_notes": "Tripo take slash retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 0.25 cm/frame).",
+  "retarget_notes": "Tripo take box_01 retargeted onto ryo by retarget_bvh.py --src-skeleton tripo; measured by tools/finish_clips.py (PASS, slide 1.38 cm/frame).",
   "notes": "Built by tools/finish_clips.py (YOK-246); no hand-keyed pose (F5). Rebuild: python tools/finish_clips.py --only ryo-iron-club-charge.",
-  "trim_start": 168,
-  "trim_end": 230,
+  "trim_start": 17,
+  "trim_end": 62,
   "retime": [
     {
       "frames": [
@@ -24,10 +24,10 @@
         13
       ],
       "ticks": [
-        168,
-        192
+        17,
+        34
       ],
-      "note": "startup snaps into the strike"
+      "note": "step lands, fist drives out"
     },
     {
       "frames": [
@@ -35,10 +35,10 @@
         19
       ],
       "ticks": [
-        192,
-        204
+        34,
+        42
       ],
-      "note": "strike pose through the active frames"
+      "note": "fist at full reach through the active frames"
     },
     {
       "frames": [
@@ -46,10 +46,10 @@
         32
       ],
       "ticks": [
-        204,
-        230
+        42,
+        62
       ],
-      "note": "recovery eases out"
+      "note": "arm holds then eases back"
     }
   ]
 }
