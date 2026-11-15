@@ -36,6 +36,8 @@ public sealed class MerchantShop
 	readonly Merchant _merchant;
 	/// <summary>AM27: what this stop sold this visit. Released again, it goes to the back of the top-up so no shown card is pushed off. Not saved: a quit restarts the stop (M5).</summary>
 	readonly HashSet<string> _soldHere = new(StringComparer.Ordinal);
+	/// <summary>AM27: the bound yokai's commons this stop has put on the shelf; only a buy takes one off. Not saved (M5).</summary>
+	List<string>? _placed;
 
 	internal MerchantShop(RunSession session, Merchant merchant)
 	{
@@ -54,7 +56,7 @@ public sealed class MerchantShop
 	/// this run (<see cref="RunSession.BoundYokai"/>), plus any AM27 top-up from bound yokai. Modifiers are on <see cref="ModifierShelf"/>; cancel rules
 	/// are never sold.
 	/// </summary>
-	public IReadOnlyList<SpecialData> Shelf => Stock(Run, _session.Pool, _session.BoundYokai(), _merchant.TopUpOrder, _soldHere).Specials;
+	public IReadOnlyList<SpecialData> Shelf => Stock(Run, _session.Pool, _session.BoundYokai(), _merchant.TopUpOrder, _soldHere, _placed).Specials;
 
 	/// <summary>The R6 shelf for a run, a pool and the yokai already bound (see <see cref="Shelf"/>), topped up by AM27 in the order the run gives now.</summary>
 	public static IReadOnlyList<SpecialData> ShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai) =>
@@ -65,41 +67,56 @@ public sealed class MerchantShop
 	/// run (or an AM27 top-up), and not already on one of Ryo's specials. Listed whether or not a special can take it now
 	/// (<see cref="ModifierTargets"/> says which can).
 	/// </summary>
-	public IReadOnlyList<ModifierData> ModifierShelf => Stock(Run, _session.Pool, _session.BoundYokai(), _merchant.TopUpOrder, _soldHere).Modifiers;
+	public IReadOnlyList<ModifierData> ModifierShelf => Stock(Run, _session.Pool, _session.BoundYokai(), _merchant.TopUpOrder, _soldHere, _placed).Modifiers;
 
 	/// <summary>The R6 modifier shelf for a run, a pool and the yokai already bound (see <see cref="ModifierShelf"/>), topped up by AM27 in the order the run gives now.</summary>
 	public static IReadOnlyList<ModifierData> ModifierShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai) =>
 		Stock(run, pool, boundYokai).Modifiers;
 
 	/// <summary>
-	/// R6 + AM27: what the stop sells. First every sellable common from a yokai not bound this run (R6). When that
-	/// comes to fewer than <see cref="MinStock"/> items (specials and modifiers together), the shelf is topped up to
-	/// <see cref="MinStock"/> with sellable commons from bound yokai, taken in <paramref name="topUpOrder"/> (see
-	/// <see cref="TopUpOrder"/>); a common missing from that order, or sold at this stop (<paramref name="soldHere"/>)
-	/// and released again, comes after it, in pool order. A stop passes the order it fixed when Ryo walked in, so a buy only frees its own place for the next
-	/// item and a release never reshuffles the shelf; with none, the order is taken from the run now. Coins never change
-	/// the stock. Both lists keep pool order. Deterministic: run state, pool and order only.
+	/// R6 + AM27: what the stop sells. Every sellable common from a yokai not bound this run (R6), plus the top-up from
+	/// bound yokai (<see cref="TopUp"/>). Both lists keep pool order.
 	/// </summary>
 	static (SpecialData[] Specials, ModifierData[] Modifiers) Stock(RunState run, AbilityPool pool, IEnumerable<string> boundYokai,
-		IReadOnlyList<string>? topUpOrder = null, IReadOnlyCollection<string>? soldHere = null)
+		IReadOnlyList<string>? topUpOrder = null, IReadOnlyCollection<string>? soldHere = null, IReadOnlyList<string>? placed = null)
 	{
 		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
-		var specials = pool.Specials.Where(s => Sellable(run, pool, s)).ToArray();
-		var modifiers = pool.Modifiers.Where(m => Sellable(run, pool, m)).ToArray();
-		int missing = MinStock - specials.Count(s => !bound.Contains(s.Source)) - modifiers.Count(m => !bound.Contains(m.Source));
-		var extra = new HashSet<string>(StringComparer.Ordinal);
+		var extra = new HashSet<string>(TopUp(run, pool, bound, topUpOrder, soldHere, placed), StringComparer.Ordinal);
+		return (pool.Specials.Where(s => Sellable(run, pool, s) && (!bound.Contains(s.Source) || extra.Contains(SpecialKey(s.Id)))).ToArray(),
+			pool.Modifiers.Where(m => Sellable(run, pool, m) && (!bound.Contains(m.Source) || extra.Contains(ModifierKey(m.Id)))).ToArray());
+	}
+
+	/// <summary>
+	/// AM27: the bound yokai's commons on the shelf. The ones already <paramref name="placed"/> this visit stay while they
+	/// are still sellable (only a buy takes one off). When the unbound items, plus those kept, come to fewer than
+	/// <see cref="MinStock"/>, the next candidates fill the gap in <paramref name="topUpOrder"/> (<see cref="TopUpOrder"/>;
+	/// with none, the run's order now); a candidate missing from that order, or sold at this stop and released again
+	/// (<paramref name="soldHere"/>), comes after it in pool order. An unbound item sold here and released again is back
+	/// on sale but does not count towards the three, so it never pushes a shown card off and the shelf may show four.
+	/// Coins never change it. Deterministic: run state, pool, order, and the stop's own sold and placed lists.
+	/// </summary>
+	static List<string> TopUp(RunState run, AbilityPool pool, HashSet<string> bound,
+		IReadOnlyList<string>? topUpOrder, IReadOnlyCollection<string>? soldHere, IReadOnlyList<string>? placed)
+	{
+		var candidates = pool.Specials.Where(s => bound.Contains(s.Source) && Sellable(run, pool, s)).Select(s => SpecialKey(s.Id))
+			.Concat(pool.Modifiers.Where(m => bound.Contains(m.Source) && Sellable(run, pool, m)).Select(m => ModifierKey(m.Id)))
+			.ToList();
+		var keep = (placed ?? Array.Empty<string>()).Where(candidates.Contains).ToList();
+		bool Counts(string key) => soldHere?.Contains(key) != true;
+		int unbound = pool.Specials.Count(s => !bound.Contains(s.Source) && Sellable(run, pool, s) && Counts(SpecialKey(s.Id)))
+			+ pool.Modifiers.Count(m => !bound.Contains(m.Source) && Sellable(run, pool, m) && Counts(ModifierKey(m.Id)));
+		int missing = MinStock - unbound - keep.Count;
 		if (missing > 0)
 		{
 			var order = topUpOrder ?? TopUpOrder(run, pool);
-			var candidates = specials.Where(s => bound.Contains(s.Source)).Select(s => SpecialKey(s.Id))
-				.Concat(modifiers.Where(m => bound.Contains(m.Source)).Select(m => ModifierKey(m.Id)))
-				.Select((key, poolIndex) => (Key: key, Rank: soldHere?.Contains(key) != true && IndexOf(order, key) is int i and >= 0 ? i : order.Count + poolIndex))
-				.OrderBy(x => x.Rank);
-			foreach (var (key, _) in candidates.Take(missing)) extra.Add(key);
+			keep.AddRange(candidates.Select((key, poolIndex) => (Key: key, Rank: Counts(key) && IndexOf(order, key) is int i and >= 0 ? i : order.Count + poolIndex))
+				.Where(x => !keep.Contains(x.Key)).OrderBy(x => x.Rank).Take(missing).Select(x => x.Key));
 		}
-		return (specials.Where(s => !bound.Contains(s.Source) || extra.Contains(SpecialKey(s.Id))).ToArray(),
-			modifiers.Where(m => !bound.Contains(m.Source) || extra.Contains(ModifierKey(m.Id))).ToArray());
+		return keep;
 	}
+
+	/// <summary>The top-up as it stands now at this stop; a mutation stores it before and after it changes the run.</summary>
+	List<string> PlacedNow() => TopUp(Run, _session.Pool, new HashSet<string>(_session.BoundYokai(), StringComparer.Ordinal), _merchant.TopUpOrder, _soldHere, _placed);
 
 	/// <summary>
 	/// AM27: the order a short shelf is topped up in, for the run as it stands: every sellable common, first those Ryo
@@ -159,9 +176,11 @@ public sealed class MerchantShop
 	{
 		if (WhyNotBuyModifier(modifierId, slot) is { } why) return MapResult.Fail($"merchant '{_merchant.NodeId}': {why}");
 		var m = ModifierShelf.First(x => x.Id == modifierId);
+		_placed = PlacedNow();
 		if (!Run.TrySpend(BuyCost)) return MapResult.Fail($"merchant '{_merchant.NodeId}': not enough coins (R6)");
 		Run.Attach(slot, m, borrowed: true);
 		_soldHere.Add(ModifierKey(m.Id));
+		_placed = PlacedNow();
 		return MapResult.Done;
 	}
 
@@ -183,9 +202,11 @@ public sealed class MerchantShop
 	{
 		if (WhyNotBuy(specialId) is { } why) return MapResult.Fail($"merchant '{_merchant.NodeId}': {why}");
 		var data = Shelf.First(s => s.Id == specialId);
+		_placed = PlacedNow();
 		if (!Run.TrySpend(BuyCost)) return MapResult.Fail($"merchant '{_merchant.NodeId}': not enough coins (R6)");
 		Run.Borrow(data);
 		_soldHere.Add(SpecialKey(data.Id));
+		_placed = PlacedNow();
 		return MapResult.Done;
 	}
 
@@ -210,8 +231,10 @@ public sealed class MerchantShop
 	public MapResult Release(SpecialSlot slot)
 	{
 		if (WhyNotRelease(slot) is { } why) return MapResult.Fail($"merchant '{_merchant.NodeId}': {why}");
+		_placed = PlacedNow();
 		if (!Run.TrySpend(ReleaseCost)) return MapResult.Fail($"merchant '{_merchant.NodeId}': not enough coins (R6)");
 		Run.Release(slot);
+		_placed = PlacedNow();
 		return MapResult.Done;
 	}
 

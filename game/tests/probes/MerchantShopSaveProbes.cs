@@ -146,4 +146,44 @@ public static class MerchantShopSaveProbes
 		try { SaveStore.Parse(ghost.ToJsonString()).Data.Run!.Restore(pool, Map(), Table()); } catch (FormatException) { ghostRefused = true; }
 		Assert.True(ghostRefused, "modifier_borrowed on a slot without a modifier is refused");
 	});
+
+	static IEnumerable<string[]> StockWalksTo(string node)
+	{
+		var g = Map();
+		var q = new Queue<string[]>(g.Nodes.Where(n => n.Row == 1).Select(n => new[] { n.Id }));
+		while (q.Count > 0)
+		{
+			var p = q.Dequeue();
+			if (p[^1] == node) { yield return p[..^1]; continue; }
+			foreach (var next in g.Next(p[^1])) q.Enqueue(p.Append(next).ToArray());
+		}
+	}
+
+	static string[] StockShown(MerchantShop shop) => shop.Shelf.Select(x => "s:" + x.Id).Concat(shop.ModifierShelf.Select(m => "m:" + m.Id)).ToArray();
+
+	// M5/M1: a stop restored from its entry save shows the same shelf and the same StateHash; Heal does not change the shelf.
+	[Test]
+	public static void Probe_RestoredStop_SameShelfAsOriginal_AndHealKeepsIt()
+	{
+		var pool = FightScene.LoadAbilityPool();
+		var fails = new List<string>();
+		foreach (var merchant in Map().Nodes.Where(n => n.Type == NodeTypeRegistry.Merchant))
+			foreach (var walk in StockWalksTo(merchant.Id))
+			{
+				var g = Map();
+				var run = RunState.NewRun(pool);
+				run.SetMap(RunMap.Restore(g, new RunMapSnapshot(g.Id, walk, walk.Length > 0 ? walk[^1] : null)));
+				var s = new RunSession(run, pool, NodeSceneTable.Default(ContentPaths.Data("map")), 11);
+				RunSave? entered = null;
+				s.NodeEntered += _ => entered = RunSave.Capture(s);
+				s.Enter(merchant.Id);
+				var shelf = StockShown(s.Merchant!.Shop);
+				var back = SaveStore.Parse(SaveStore.Serialize(SaveData.Empty.WithRun(entered!))).Data.Run!.Restore(pool, g, NodeSceneTable.Default(ContentPaths.Data("map")));
+				if (!StockShown(back.Merchant!.Shop).SequenceEqual(shelf)) fails.Add(merchant.Id + " restored shelf differs");
+				if (back.StateHash() != s.StateHash()) fails.Add(merchant.Id + " hash differs");
+				s.Merchant.TakeHeal();
+				if (!StockShown(s.Merchant.Shop).SequenceEqual(shelf)) fails.Add(merchant.Id + " heal changed shelf");
+			}
+		Assert.True(fails.Count == 0, string.Join(" || ", fails.Take(4)));
+	}
 }
