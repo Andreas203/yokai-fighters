@@ -198,8 +198,12 @@ public static class RewardScreenTests
 			src.Reset();
 			s.Present(src);
 			s.Confirm();
-			s._UnhandledInput(new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Right });
-			Assert.True(s.Step == RewardStep.Cards && s.Showing && src.LastPick is null, "right-click backs out of the replace step");
+			// Through the viewport, as a real click arrives (the GUI sees it first): over the replaced special's card.
+			var target1 = s.GetNode<TargetCard>("Targets/Target1");
+			var at = target1.GetGlobalRect().GetCenter();
+			s.GetViewport().PushInput(new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Right, Position = at, GlobalPosition = at });
+			s.GetViewport().PushInput(new InputEventMouseButton { Pressed = false, ButtonIndex = MouseButton.Right, Position = at, GlobalPosition = at });
+			Assert.True(s.Step == RewardStep.Cards && s.Showing && src.LastPick is null, "right-click backs out of the replace step, even over a card");
 			s.Confirm();
 			var click = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left };
 			s.GetNode<TargetCard>("Targets/Target1").EmitSignal(Control.SignalName.GuiInput, click);

@@ -137,6 +137,19 @@ public partial class RewardScreen : Control
 
 	private static int Mod(int a, int n) => n == 0 ? 0 : ((a % n) + n) % n;
 
+	/// <summary>
+	/// Mouse: a right-click anywhere is Back in the target and replace steps (they have no on-screen back button). Read in
+	/// <c>_Input</c>, before the GUI: the full-screen root and the cards stop mouse buttons, so it never reaches <c>_UnhandledInput</c>.
+	/// </summary>
+	public override void _Input(InputEvent e)
+	{
+		if (Showing && Step != RewardStep.Cards && e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
+		{
+			Back();
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
 	public override void _UnhandledInput(InputEvent e)
 	{
 		if (!Showing) return;
@@ -154,10 +167,6 @@ public partial class RewardScreen : Control
 					case Key.Tab: ToggleFrameData(); break;
 					default: handled = false; break;
 				}
-				break;
-			// Mouse: a right-click is Back (the target and replace steps have no on-screen back button).
-			case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right }:
-				if (Step != RewardStep.Cards) Back(); else handled = false;
 				break;
 			case InputEventJoypadButton { Pressed: true } j:
 				switch (j.ButtonIndex)
