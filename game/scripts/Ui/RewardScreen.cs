@@ -155,6 +155,10 @@ public partial class RewardScreen : Control
 					default: handled = false; break;
 				}
 				break;
+			// Mouse: a right-click is Back (the target and replace steps have no on-screen back button).
+			case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right }:
+				if (Step != RewardStep.Cards) Back(); else handled = false;
+				break;
 			case InputEventJoypadButton { Pressed: true } j:
 				switch (j.ButtonIndex)
 				{
@@ -179,13 +183,14 @@ public partial class RewardScreen : Control
 	// Mouse: the cards are Controls, so hover and click arrive as their signals.
 	private void OnCardHover(RewardCard c) { if (Showing && Step == RewardStep.Cards) { CardCursor = _cards.IndexOf(c); Refresh(); } }
 	private void OnCardClick(RewardCard c) { if (Showing && Step == RewardStep.Cards) { CardCursor = _cards.IndexOf(c); Confirm(); } }
-	private void OnTargetHover(TargetCard t) { if (Showing && Step == RewardStep.Target) { TargetCursor = _targets.IndexOf(t); Refresh(); } }
-	private void OnTargetClick(TargetCard t) { if (Showing && Step == RewardStep.Target) { TargetCursor = _targets.IndexOf(t); Confirm(); } }
+	// The target row serves the modifier step and the replace step: clicking the replaced special's card replaces it.
+	private void OnTargetHover(TargetCard t) { if (Showing && Step != RewardStep.Cards) { TargetCursor = _targets.IndexOf(t); Refresh(); } }
+	private void OnTargetClick(TargetCard t) { if (Showing && Step != RewardStep.Cards) { TargetCursor = _targets.IndexOf(t); Confirm(); } }
 
 	/// <summary>Pushes the cursor, step and toggle state into the scene's nodes.</summary>
 	private void Refresh()
 	{
-		if (!Showing || Offer == null || _title == null) return;
+		if (!Showing || Offer == null || _title == null || Offer.Cards.Count == 0) return; // E20: an empty offer shows no card to read
 		bool cards = Step == RewardStep.Cards;
 		CardView picked = Offer.Cards[CardCursor];
 		bool replace = Step == RewardStep.Replace && picked.Replaces != null;

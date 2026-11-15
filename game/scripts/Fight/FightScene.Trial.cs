@@ -24,7 +24,6 @@ public partial class FightScene
 	/// <summary>Raised once, after the dojo recorded the trial's last attempt (its heal and level are applied).</summary>
 	public event Action? TrialFinished;
 	public bool TrialDone { get; private set; }
-	private Label? _trialLabel;
 
 	private bool InTrial => TrialStop is not null;
 

@@ -160,6 +160,7 @@ public static class RewardScreenTests
 			new CardView(CardKind.NewMove, "foxfire", "Foxfire", "Kitsune - special", "A slow flame.", "15/4/30", "NEW - Lv 1"),
 		}, new[] { new TargetView("spirit-wave", "A", "Spirit Wave", 1, null, true) });
 		public void Pick(int cardIndex, string? targetId) => LastPick = (cardIndex, targetId);
+		public void Reset() => LastPick = null;
 	}
 
 	[Test]
@@ -193,6 +194,16 @@ public static class RewardScreenTests
 			s.Present(src);
 			s.Confirm(); s.Confirm();
 			Assert.True(src.LastPick == (0, null) && !s.Showing, "confirming the replace step takes the card");
+			// Mouse (code-critic 2026-11-15): a right-click backs out, a click on the shown special replaces it.
+			src.Reset();
+			s.Present(src);
+			s.Confirm();
+			s._UnhandledInput(new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Right });
+			Assert.True(s.Step == RewardStep.Cards && s.Showing && src.LastPick is null, "right-click backs out of the replace step");
+			s.Confirm();
+			var click = new InputEventMouseButton { Pressed = true, ButtonIndex = MouseButton.Left };
+			s.GetNode<TargetCard>("Targets/Target1").EmitSignal(Control.SignalName.GuiInput, click);
+			Assert.True(src.LastPick == (0, null) && !s.Showing, "clicking the replaced special's card replaces it");
 		}
 		finally { s.Free(); }
 	}
