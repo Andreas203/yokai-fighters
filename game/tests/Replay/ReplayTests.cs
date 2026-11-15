@@ -252,8 +252,10 @@ public static class ReplayTests
 		m.BurstFired += (_, i) => { if (i == 1) bursts++; };
 		// YOK-226: seed 58 (was 57): the fixture profile's test-ryo-* normals are not in the real Kitsune kit, and ProfileAi
 		// now skips such picks before the draw, so 57's fight no longer reaches 100 meter for an EX; 58 spends both.
-		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 58, tier: AiFightTier.Elder);
-		var rec = Play(m, Chaos(58), null, 5400, ai, 58, stopAtOver: false);
+		// YOK-252: seed 67 (was 58): the fixture profile's opponent_attacking block is now a held guard, so 58's fight
+		// no longer reaches an EX; 67 spends both.
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 67, tier: AiFightTier.Elder);
+		var rec = Play(m, Chaos(67), null, 5400, ai, 67, stopAtOver: false);
 		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");
 		var back = ReplayRecording.FromBytes(rec.ToBytes());
 		Assert.Equal("elder", back.Header.Ai!.FightTier, "the fight tier is in the file");
