@@ -404,7 +404,7 @@ Targets: across 200 simulated first runs by a newcomer-profile Kihon bot, calibr
 
 ### 6.3 Rest stops
 
-> **Amended by** [AM4](gdd-amendments.md#am4) what the merchant sells. Where they disagree with this section, the amendments win.
+> **Amended by** [AM4](gdd-amendments.md#am4) what the merchant sells, [AM27](gdd-amendments.md#am27) a short shelf is topped up from bound yokai. Where they disagree with this section, the amendments win.
 
 | Stop | Choose one | Details |
 |---|---|---|

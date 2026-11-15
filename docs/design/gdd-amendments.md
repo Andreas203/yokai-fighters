@@ -32,6 +32,7 @@ Changes to `Yokai_Fighters_GDD_Extended.pdf` (and the Short PDF) that the design
 | [AM24](#am24) | 2026-11-01 (route), numbers proposed | Iron-Club Charge and Oni Quake take the timing of their greybox clips | specials table, F2 | YOK-219, YOK-227 |
 | [AM25](#am25) | 2026-11-11 | The Tanuki fights in his true form, on Ryo's clips | T0 | YOK-226 branch |
 | [AM26](#am26) | 2026-11-09 (approved as AM19 on YOK-ryo-guard-tripo) | Ryo's strikes are closed fists by default, from a scripted fist blend shape; a clip may open the hand | E15 | YOK-finish-fist |
+| [AM27](#am27) | 2026-11-14 | The merchant always has something to sell: bound yokai's commons top a short shelf up to three | R6 | YOK-merchant-always-stocked |
 
 ### Adding an amendment
 An amendment is how the GDD changes; the PDF and its transcriptions are never edited. In the same PR:
@@ -591,3 +592,22 @@ It is **extra, not part of the MVP**. It is built only once every MVP item is do
 |---|---|---|
 | GDD extended and short | No section names hand shape | Nothing to replace; no GDD callout needed. |
 | rules.md E15 | "strikes are open-handed (the Meshy rig has no finger bones; designer accepted, no code-posed fists)" | "Ryo's strikes are closed fists by default, from a scripted `fist` blend shape on the open-hand mesh with no extra bones; a clip may open the hand through clip data (the foxfire open palm) [AM26, approved by the designer 2026-11-09]". The generic throw clip text is unchanged. |
+
+<a id="am27"></a>
+
+## AM27 — The merchant always has something to sell (2026-11-14)
+
+**Status.** Approved by the designer on 2026-11-14: "make sure the merchant always has things to sell, right now sometimes he doesnt have anything".
+
+**Decision.** The shop still sells, first, every common ability (special or modifier, unlocked, not held or worn by Ryo) from a yokai not bound this run (R6, AM4). When those come to fewer than three items, the shelf is topped up to three with common abilities from bound yokai, under the same filters: first the ones Ryo could buy now (a special whose slot is empty, a modifier one of his specials can take), then the rest, each in pool order, specials before modifiers. Three is one full shelf (R6: 3 per shelf). Coins never change the stock. The top-up is recomputed from the run, so a bought item is replaced by the next bound common, and the shelf stays deterministic with no seed.
+
+**Why.** There are three yokai with three unlocked commons each. Binding is by beating, so by row 4 a run that fought the Oni and the Kappa has bound all three (the apprentice binds the Kitsune), and most row-7 stops come after every yokai is bound: 11 of the 20 walks of the default map reached a merchant with an empty shelf.
+
+**What does not change.** Prices (50 to buy, 40 to release), borrowed ink and no carry-over (M3), never a rare, a cancel rule, a locked ability or a starter, the attach rule (A2), the one choice per stop (heal or shop), and the open question of the shelf's full size per visit.
+
+### Sections replaced
+
+| Where | Was | Now |
+|---|---|---|
+| GDD extended 6.3, short "Merchant" row | "Shopping: common abilities from yokai you haven't bound this run (50 coins)" | Same, and when those leave fewer than three items, commons from bound yokai fill the shelf up to three. Callouts added. |
+| rules.md R6 | "Shop sells common abilities from yokai not bound this run (50 coins)" | Adds: "When those come to fewer than three items, commons from bound yokai top the shelf up to three, buyable-now first, so the merchant always has something to sell [AM27]." |

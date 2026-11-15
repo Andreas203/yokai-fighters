@@ -10,7 +10,8 @@ namespace YokaiFighters.Sim;
 /// heal; until then, and once the stop is left, every purchase and release is refused.
 /// <list type="bullet">
 /// <item>Buy: a common special (A9) from a yokai not bound this run, 50 coins, into its own empty slot at Lv 1 (A3),
-/// in borrowed ink (never carried over, M3). Never a rare, never a cancel rule, never a locked ability (A11) the save has not
+/// in borrowed ink (never carried over, M3). AM27: when yokai not bound this run leave fewer than <see cref="MinStock"/>
+/// items, commons from bound yokai top the shelf up, so the merchant always has something to sell. Never a rare, never a cancel rule, never a locked ability (A11) the save has not
 /// unlocked (M1, <see cref="AbilityPool.IsAvailable(SpecialData)"/>) or a starter (A1), never one Ryo already holds.</item>
 /// <item>Buy a modifier (designer, 2026-10-11: modifiers are common abilities, A9/A11): same price and the same
 /// shelf rule; the player picks the special it goes on and <see cref="RunState.CanAttach"/> decides (A2: one per
@@ -20,7 +21,7 @@ namespace YokaiFighters.Sim;
 /// </list>
 /// Purchases change only the run's slots and coins, so the save written when the node completes holds them; a
 /// quit inside the stop restarts it from the entry save (M5). The shelf is every eligible special in pool order
-/// (file name), recomputed from the run, so it needs no state of its own and no seed.
+/// (file name), recomputed from the run (with the AM27 top-up), so it needs no state of its own and no seed.
 /// </summary>
 public sealed class MerchantShop
 {
@@ -28,6 +29,8 @@ public sealed class MerchantShop
 	public const int ReleaseCost = 40; // R6
 	/// <summary>R6/A9: the only rarity the shop sells.</summary>
 	public const string SoldRarity = "common";
+	/// <summary>AM27: the fewest items a stop sells (one shelf, R6: 3 per shelf) while enough commons exist to fill it.</summary>
+	public const int MinStock = 3;
 
 	readonly RunSession _session;
 	readonly Merchant _merchant;
@@ -46,34 +49,49 @@ public sealed class MerchantShop
 	/// <summary>
 	/// What the shop offers now (also before the shop is chosen, so a screen can show it): the pool's specials in
 	/// file-name order that are common, unlocked, not starters, not held by Ryo and sourced from a yokai not bound
-	/// this run (<see cref="RunSession.BoundYokai"/>). Modifiers are on <see cref="ModifierShelf"/>; cancel rules
+	/// this run (<see cref="RunSession.BoundYokai"/>), plus any AM27 top-up from bound yokai. Modifiers are on <see cref="ModifierShelf"/>; cancel rules
 	/// are never sold.
 	/// </summary>
 	public IReadOnlyList<SpecialData> Shelf => ShelfFor(Run, _session.Pool, _session.BoundYokai());
 
-	/// <summary>The R6 shelf for a run, a pool and the yokai already bound (see <see cref="Shelf"/>).</summary>
-	public static IReadOnlyList<SpecialData> ShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai)
-	{
-		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
-		return pool.Specials
-			.Where(s => !s.Starter && pool.IsAvailable(s) && s.Rarity == SoldRarity && !bound.Contains(s.Source) && !run.Owns(s.Id))
-			.ToArray();
-	}
+	/// <summary>The R6 shelf for a run, a pool and the yokai already bound (see <see cref="Shelf"/>), topped up by AM27.</summary>
+	public static IReadOnlyList<SpecialData> ShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai) =>
+		Stock(run, pool, boundYokai).Specials;
 
 	/// <summary>
 	/// The modifiers the shop offers now, in pool (file-name) order: common, unlocked, from a yokai not bound this
-	/// run, and not already on one of Ryo's specials. Listed whether or not a special can take it now
+	/// run (or an AM27 top-up), and not already on one of Ryo's specials. Listed whether or not a special can take it now
 	/// (<see cref="ModifierTargets"/> says which can).
 	/// </summary>
 	public IReadOnlyList<ModifierData> ModifierShelf => ModifierShelfFor(Run, _session.Pool, _session.BoundYokai());
 
-	/// <summary>The R6 modifier shelf for a run, a pool and the yokai already bound (see <see cref="ModifierShelf"/>).</summary>
-	public static IReadOnlyList<ModifierData> ModifierShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai)
+	/// <summary>The R6 modifier shelf for a run, a pool and the yokai already bound (see <see cref="ModifierShelf"/>), topped up by AM27.</summary>
+	public static IReadOnlyList<ModifierData> ModifierShelfFor(RunState run, AbilityPool pool, IEnumerable<string> boundYokai) =>
+		Stock(run, pool, boundYokai).Modifiers;
+
+	/// <summary>
+	/// R6 + AM27: what the stop sells. First every sellable common from a yokai not bound this run (R6). When that
+	/// comes to fewer than <see cref="MinStock"/> items (specials and modifiers together), the shelf is topped up to
+	/// <see cref="MinStock"/> with sellable commons from bound yokai: first those Ryo could buy now (a special whose
+	/// slot is empty, a modifier some held special can take), then the rest, each group in pool order, specials before
+	/// modifiers. Coins never change the stock. Both lists keep pool order. Deterministic: run state and pool only.
+	/// </summary>
+	static (SpecialData[] Specials, ModifierData[] Modifiers) Stock(RunState run, AbilityPool pool, IEnumerable<string> boundYokai)
 	{
 		var bound = new HashSet<string>(boundYokai, StringComparer.Ordinal);
-		return pool.Modifiers
-			.Where(m => pool.IsAvailable(m) && m.Rarity == SoldRarity && !bound.Contains(m.Source) && !run.HasModifier(m.Id))
-			.ToArray();
+		var specials = pool.Specials.Where(s => !s.Starter && pool.IsAvailable(s) && s.Rarity == SoldRarity && !run.Owns(s.Id)).ToArray();
+		var modifiers = pool.Modifiers.Where(m => pool.IsAvailable(m) && m.Rarity == SoldRarity && !run.HasModifier(m.Id)).ToArray();
+		int missing = MinStock - specials.Count(s => !bound.Contains(s.Source)) - modifiers.Count(m => !bound.Contains(m.Source));
+		var extra = new HashSet<object>(ReferenceEqualityComparer.Instance);
+		if (missing > 0)
+		{
+			var fromBound = specials.Where(s => bound.Contains(s.Source)).Select(s => (Item: (object)s, Now: run[s.Slot] is null))
+				.Concat(modifiers.Where(m => bound.Contains(m.Source)).Select(m => (Item: (object)m, Now: run.Owned.Any(o => run.CanAttach(o.Slot, m)))))
+				.ToArray();
+			foreach (var (item, _) in fromBound.Where(x => x.Now).Concat(fromBound.Where(x => !x.Now)).Take(missing)) extra.Add(item);
+		}
+		return (specials.Where(s => !bound.Contains(s.Source) || extra.Contains(s)).ToArray(),
+			modifiers.Where(m => !bound.Contains(m.Source) || extra.Contains(m)).ToArray());
 	}
 
 	/// <summary>A2: the slots whose special can take <paramref name="modifierId"/> now (none for an id off the shelf).</summary>

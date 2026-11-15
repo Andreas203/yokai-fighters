@@ -136,14 +136,15 @@ public static class DraftFromBeatenYokaiTests
 	[Test]
 	public static void Shop_BeatingAnElder_BindsItsYokai()
 	{
-		// Designer 2026-10-21 (R6): beating an elder binds its yokai. After the Elder Oni the row-7 merchant sells no Oni commons.
+		// Designer 2026-10-21 (R6): beating an elder binds its yokai. After the Elder Oni every yokai is bound, so the
+		// row-7 merchant sells only the AM27 top-up: exactly three bound commons, never an empty shelf.
 		var pool = FightScene.LoadAbilityPool();
 		var s = At(pool, new[] { "r1-apprentice", "r2-kappa", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kappa" }, "r7-merchant");
 		Assert.Equal("kitsune,apprentice,kappa,oni,elder-oni", string.Join(",", s.BoundYokai()), "the Elder Oni binds the Oni (then its own id); no Kitsune body");
-		Assert.True(pool.Modifiers.Any(m => m.Source == "oni" && m.Rarity == "common" && pool.IsAvailable(m)), "the Oni has unlocked commons to withhold");
+		Assert.True(pool.Modifiers.Any(m => m.Source == "oni" && m.Rarity == "common" && pool.IsAvailable(m)), "the Oni has unlocked commons");
 		var mods = MerchantShop.ModifierShelfFor(s.Run, pool, s.BoundYokai());
 		var specials = MerchantShop.ShelfFor(s.Run, pool, s.BoundYokai());
-		Assert.True(mods.All(m => m.Source != "oni") && specials.All(x => x.Source != "oni"), "no Oni commons on the shelf: " + string.Join(",", mods.Select(m => m.Id)));
+		Assert.Equal(MerchantShop.MinStock, mods.Count + specials.Count, "every yokai bound: the shelf is the AM27 top-up of three: " + string.Join(",", specials.Select(x => x.Id).Concat(mods.Select(m => m.Id))));
 		var nine = Table().Resolve(DefaultMap().Node("r5-nine-tails")).Context;
 		var kappa = Table().Resolve(DefaultMap().Node("r8-elder-kappa")).Context;
 		Assert.True(nine.DraftYokai == "kitsune" && kappa.DraftYokai == "kappa", "Nine-Tails binds the Kitsune, Elder Kappa the Kappa");
