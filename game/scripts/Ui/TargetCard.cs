@@ -50,7 +50,7 @@ public partial class TargetCard : Control
 		_name.Text = t.Name;
 		_level.Visible = t.Level > 0;
 		_level.Text = $"Lv {t.Level}";
-		_note.Text = t.Eligible ? (t.CurrentModifier != null ? $"Replaces {t.CurrentModifier}" : "No modifier yet") : (t.WhyNot ?? "Cannot carry it");
+		_note.Text = t.Note ?? (t.Eligible ? (t.CurrentModifier != null ? $"Replaces {t.CurrentModifier}" : "No modifier yet") : (t.WhyNot ?? "Cannot carry it"));
 		foreach (Label l in new[] { _name, _level, _note })
 		{
 			if (t.Eligible) l.RemoveThemeColorOverride("font_color"); else l.AddThemeColorOverride("font_color", Grey);

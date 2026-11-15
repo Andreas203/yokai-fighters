@@ -30,7 +30,7 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 		_story = new Lazy<IStorySource>(() => story ?? Fight.FightScene.LoadStory());
 		_draft = draft;
 		_run = run;
-		var cards = draft.Offer.Cards.Select(ToView).ToArray();
+		var cards = draft.Offer.Cards.Select(c => ToView(c) with { Replaces = ReplacedBy(c, run) }).ToArray();
 		var mod = draft.Offer.Cards.FirstOrDefault(c => c.Kind == SimKind.Modifier);
 		var targets = Enumerable.Range(1, 4).Select(i =>
 		{
@@ -50,6 +50,14 @@ public sealed class DraftRewardSource : IRewardSource, IStorySource
 	public string BindingLine(string yokai) => _story.Value.BindingLine(yokai);
 
 	static string Title(string id) => id.Length == 0 ? id : char.ToUpperInvariant(id[0]) + id[1..];
+
+	/// <summary>The owned special a new special's card would replace (its own slot is filled), as a target card; null otherwise.</summary>
+	static TargetView? ReplacedBy(SimCard c, RunState run)
+	{
+		if (c.Kind != SimKind.NewSpecial || c.Targets.Count != 1 || run[c.Targets[0].Slot] is not { } owned) return null;
+		string note = owned.Modifier is { } m ? $"Loses its levels and {m.Name}" : "Loses its levels";
+		return new TargetView(owned.Data.Id, c.Targets[0].Slot.ToString(), owned.Data.Name, owned.Level, owned.Modifier?.Name, true) { Note = note };
+	}
 
 	static CardView ToView(SimCard c) => c.Kind switch
 	{

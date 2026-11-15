@@ -148,4 +148,78 @@ public static class RewardScreenTests
 	{
 		Assert.Equal("Forgive me, Kitsune. I'll set your spirit free.", new StubRewardSource().BindingLine("Kitsune"), "S3 line");
 	}
+
+	/// <summary>A source whose new special would replace Rising Talisman (slot B): the designer's 2026-11-15 confirm step.</summary>
+	sealed class ReplacingSource : IRewardSource
+	{
+		public (int Card, string? Target)? LastPick { get; private set; }
+		public RewardOffer Offer { get; } = new("Oni", new[]
+		{
+			new CardView(CardKind.NewMove, "iron-club-charge", "Iron-Club Charge", "Oni - special", "Charge forward club first.", "12/6/14", "NEW - Lv 1")
+				{ Replaces = new TargetView("rising-talisman", "B", "Rising Talisman", 2, null, true) { Note = "Loses its levels" } },
+			new CardView(CardKind.NewMove, "foxfire", "Foxfire", "Kitsune - special", "A slow flame.", "15/4/30", "NEW - Lv 1"),
+		}, new[] { new TargetView("spirit-wave", "A", "Spirit Wave", 1, null, true) });
+		public void Pick(int cardIndex, string? targetId) => LastPick = (cardIndex, targetId);
+	}
+
+	[Test]
+	public static void ReplacingSpecial_AsksFirst_BackKeepsTheOldMove_ConfirmReplaces(Node host)
+	{
+		var src = new ReplacingSource();
+		var s = GD.Load<PackedScene>("res://scenes/ui/reward_screen.tscn").Instantiate<RewardScreen>();
+		host.AddChild(s);
+		try
+		{
+			s.Present(src);
+			var card = s.GetNode<RewardCard>("Cards/Card1");
+			var prompt = UiFind.Get<Label>(card, "TargetPrompt");
+			Assert.True(prompt.Visible && prompt.Text == "Replaces Rising Talisman (slot B)", $"the card warns before the pick: '{prompt.Text}'");
+			Assert.True(!UiFind.Get<Label>(s.GetNode<RewardCard>("Cards/Card2"), "TargetPrompt").Visible, "a new special for an empty slot has no warning");
+			s.Confirm();
+			Assert.True(src.LastPick is null && s.Showing, "the first press does not replace anything");
+			Assert.Equal(RewardStep.Replace, s.Step, "it opens the replace step");
+			Assert.Equal("Replace Rising Talisman?", UiFind.Get<Label>(s, "Title").Text, "the question");
+			Assert.True(UiFind.Get<Label>(s, "TargetHeading").Text.Contains("levels are lost", System.StringComparison.Ordinal), "the cost is spelled out (A6)");
+			var target = s.GetNode<TargetCard>("Targets/Target1");
+			Assert.True(target.Visible && !s.GetNode<TargetCard>("Targets/Target2").Visible, "only the special being replaced shows");
+			Assert.Equal("Rising Talisman", UiFind.Get<Label>(target, "Name").Text, "its name");
+			Assert.Equal("Loses its levels", UiFind.Get<Label>(target, "Note").Text, "its note");
+			s.Move(1);
+			Assert.Equal(RewardStep.Replace, s.Step, "left/right does nothing here");
+			s.Back();
+			Assert.True(s.Step == RewardStep.Cards && s.Showing && src.LastPick is null, "Back returns to the cards with nothing replaced");
+			s.Move(1); s.Confirm();
+			Assert.True(src.LastPick == (1, null), "an empty-slot special is taken on the first press, as before");
+			s.Present(src);
+			s.Confirm(); s.Confirm();
+			Assert.True(src.LastPick == (0, null) && !s.Showing, "confirming the replace step takes the card");
+		}
+		finally { s.Free(); }
+	}
+
+	[Test]
+	public static void Adapter_NamesTheSpecialANewCardWouldReplace()
+	{
+		string root = Path.GetFullPath(ProjectSettings.GlobalizePath("res://") + "..");
+		var pool = YokaiFighters.Sim.AbilityPool.LoadRepo(root);
+		int replacing = 0, empty = 0;
+		foreach (string yokai in new[] { "kitsune", "oni", "kappa" })
+			for (uint seed = 1; seed <= 12; seed++)
+			{
+				var run = YokaiFighters.Sim.RunState.NewRun(pool);
+				if (seed % 2 == 0) run.Equip(pool.Special("foxfire")!); // half the runs hold a drafted slot-C special, as after a Kitsune duel
+				var draft = YokaiFighters.Sim.RewardDraft.Build(run, pool, yokai, seed);
+				var src = new DraftRewardSource(draft, run);
+				for (int i = 0; i < draft.Offer.Cards.Count; i++)
+				{
+					var sim = draft.Offer.Cards[i];
+					if (sim.Kind != YokaiFighters.Sim.CardKind.NewSpecial) { Assert.True(src.Offer.Cards[i].Replaces is null, $"{sim.Name}: only a new special can replace"); continue; }
+					var owned = run[sim.Targets[0].Slot];
+					var r = src.Offer.Cards[i].Replaces;
+					if (owned is null) { empty++; Assert.True(r is null, $"{sim.Name}: its slot is empty, nothing replaced"); }
+					else { replacing++; Assert.True(r is not null && r.Id == owned.Data.Id && r.Level == owned.Level, $"{sim.Name}: replaces {owned.Data.Name}"); }
+				}
+			}
+		Assert.True(replacing > 0 && empty > 0, $"offers both replace a held special and fill an empty slot ({replacing} / {empty})");
+	}
 }

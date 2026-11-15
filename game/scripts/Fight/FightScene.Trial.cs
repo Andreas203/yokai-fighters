@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using YokaiFighters.Sim;
+using YokaiFighters.Ui;
 
 namespace YokaiFighters.Fight;
 
@@ -11,7 +12,9 @@ namespace YokaiFighters.Fight;
 /// kit as P1 and the dojo node's opponent from data/map/node-scenes.json as the dummy (P2, scripted by the trial,
 /// no AI). Each ended attempt is reported to <see cref="Dojo.RecordAttempt"/>; when the dojo says the trial is over
 /// (landed, or the third miss) <see cref="TrialFinished"/> is raised and the flow returns to the rest stop.
-/// No replay is recorded for a trial (its attempts reset the match). The prompt line is a greybox label (ui-designer).
+/// No replay is recorded for a trial (its attempts reset the match). The trial opens on the twist card's <see cref="TwistScroll"/>
+/// drawn with the dojo's handscroll plate (the dojo master, the special and its icon, the quest) and the fight holds until it
+/// is closed; during the attempts the quest stays on a small handscroll under the HUD (<see cref="TrialScrollBanner"/>).
 /// </summary>
 public partial class FightScene
 {
@@ -59,23 +62,57 @@ public partial class FightScene
 		TrialFinished?.Invoke();
 	}
 
+	/// <summary>The in-fight scroll that carries the quest and the attempt count; null outside a trial.</summary>
+	public TrialScrollBanner? TrialBanner => _trialBanner;
+	private TrialScrollBanner? _trialBanner;
+
 	private void SetUpTrialLabel()
 	{
 		if (!InTrial) return;
 		Recorder = null; // a trial's attempts reset the match: no replay
-		_trialLabel = new Label { Name = "TrialPrompt", HorizontalAlignment = HorizontalAlignment.Center, Position = new Vector2(0, 140), Size = new Vector2(1920, 80) };
-		_trialLabel.AddThemeFontSizeOverride("font_size", 28);
+		_trialBanner = new TrialScrollBanner { Position = new Vector2((1920 - TrialScrollBanner.BannerWidth) / 2f, 128) };
 		var layer = new CanvasLayer { Name = "TrialLayer", Layer = 4 };
-		layer.AddChild(_trialLabel);
+		layer.AddChild(_trialBanner);
 		AddChild(layer);
 		UpdateTrialLabel();
 	}
 
+	/// <summary>The trained special's display name (the move data's name, else its id), as the rest stop's card names it.</summary>
+	private string TrialSpecialName()
+	{
+		if (TrialStop is { } stop && Session?.Run[stop.TrialSlot]?.Data is { } data) return data.Name.Length > 0 ? data.Name : data.Id;
+		return Trial?.Trial.Special ?? "";
+	}
+
 	private void UpdateTrialLabel()
 	{
-		if (_trialLabel is null || Trial is not { } run || TrialStop is not { } stop) return;
-		_trialLabel.Text = TrialDone
-			? (stop.TrialResult == DojoTrialResult.Landed ? "Trial landed." : "Trial missed.") + $" Healed {stop.Healed}."
-			: $"{run.Trial.Prompt}\nAttempt {run.Attempt} of {run.Trial.Attempts}";
+		if (_trialBanner is null || Trial is not { } run || TrialStop is not { } stop) return;
+		string name = TrialSpecialName().ToUpperInvariant();
+		if (TrialDone)
+		{
+			bool landed = stop.TrialResult == DojoTrialResult.Landed;
+			_trialBanner.Show($"DOJO TRIAL · {name} · {(landed ? "LANDED" : "MISSED")}",
+				landed ? $"Trial landed: Lv {stop.LevelBefore} → {stop.LevelAfter}. Healed {stop.Healed}." : $"Trial missed. Healed {stop.Healed}.");
+			return;
+		}
+		_trialBanner.Show($"DOJO TRIAL · {name} · ATTEMPT {run.Attempt} OF {run.Trial.Attempts}", run.Trial.Prompt);
+	}
+
+	/// <summary>
+	/// The trial opens on the hanging scroll (the twist card): kicker, the special's name, the quest as the quote, the stakes on
+	/// the red line, the dojo master's portrait and the special's icon as the stamp. The fight holds while it shows
+	/// (<see cref="FlowPaused"/>), so the first attempt's clock starts when it is closed.
+	/// </summary>
+	private void ShowTrialScroll()
+	{
+		if (!InTrial || TwistCard == null || TwistCard.Showing || Trial is not { } run || TrialStop is not { } stop) return;
+		string name = TrialSpecialName();
+		int row = Node?.Row ?? 0;
+		string kicker = row > 0 ? $"DOJO TRIAL · ROW {row}" : "DOJO TRIAL";
+		string stakes = $"Land it within {run.Trial.Attempts} tries to raise {name} to Lv {stop.LevelBefore + 1}. Heals {Dojo.TrialHealPercent}% either way.";
+		string? portrait = UiTextures.Exists(RestStopScreen.DojoPortraitPath) ? RestStopScreen.DojoPortraitPath : null;
+		TwistCard.Display(run.Trial.Prompt, kicker, null, "T", name, stakes, portrait);
+		TwistCard.Scroll?.SetStampArt(AbilityArt.ForId(run.Trial.Special));
+		TwistCard.Scroll?.SetPlate(TrialScrollBanner.LoadPlate()); // the dojo's handscroll, not the elder's hanging cloth
 	}
 }
