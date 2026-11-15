@@ -31,6 +31,9 @@
             "idle_guard_pct": { "$ref": "#/$defs/pct" },
             "throw_break_pct": { "$ref": "#/$defs/pct" },
             "special_hold_ticks": { "type": "integer", "minimum": 0, "maximum": 600 },
+            "special_slot_only": { "enum": ["A", "B", "C", "D"], "description": "YOK-253, opt-in (see harness-bot.schema.json)." },
+            "punish_after_block_pct": { "$ref": "#/$defs/pct", "description": "YOK-253, opt-in." },
+            "crouch_guard_pct": { "$ref": "#/$defs/pct", "description": "YOK-253, opt-in." },
             "anti_air_pct": { "$ref": "#/$defs/pct" },
             "anti_air_button": { "enum": ["light_punch", "medium_punch", "heavy_punch", "light_kick", "medium_kick", "heavy_kick"] },
             "poke_range": { "$ref": "#/$defs/units" },
@@ -66,7 +69,8 @@
             "reward_order": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["upgrade", "new", "modifier"] } },
             "merchant": { "enum": ["heal", "shop", "heal_if_hurt_else_shop", "skip"] },
             "heal_below_pct": { "$ref": "#/$defs/pct" },
-            "dojo": { "enum": ["rest", "skip"] }
+            "dojo": { "enum": ["rest", "skip"] },
+            "prefer_special": { "$ref": "common.schema.json#/$defs/id", "description": "YOK-253, opt-in." }
           }
         },
         "notes": { "type": "string" }

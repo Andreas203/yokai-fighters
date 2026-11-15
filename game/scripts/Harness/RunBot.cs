@@ -15,11 +15,14 @@ public sealed class RunBot
 {
 	readonly BotRunConfig _cfg;
 	readonly SimRng _rng;
+	/// <summary>YOK-253: the fight's special_slot_only slot, invested in first; null = off.</summary>
+	readonly SpecialSlot? _slotOnly;
 
-	public RunBot(BotRunConfig cfg, uint seed)
+	public RunBot(BotRunConfig cfg, uint seed, SpecialSlot? slotOnly = null)
 	{
 		_cfg = cfg;
 		_rng = new SimRng(seed == 0 ? 1u : seed);
+		_slotOnly = slotOnly;
 	}
 
 	/// <summary>The node to enter from <paramref name="reachable"/> (in map order).</summary>
@@ -34,9 +37,23 @@ public sealed class RunBot
 		return reachable[_rng.Next(reachable.Count)];
 	}
 
-	/// <summary>The card and target to pick: the first card whose kind comes first in the order; several targets = the lowest slot.</summary>
-	public (int Card, SpecialSlot? Target) ChooseCard(RewardOffer offer)
+	/// <summary>
+	/// The card and target to pick: the first card whose kind comes first in the order; several targets = the lowest slot.
+	/// YOK-253, both off by default: <c>prefer_special</c>'s NEW card comes before the order; with a special_slot_only
+	/// slot (and <paramref name="run"/>), the first card in the order that can go on that slot goes there, except a NEW
+	/// card that would replace the special already in it, so the spammed special is the one levelled (T2). With
+	/// <c>prefer_special</c> too, no other NEW card fills that slot: it waits empty (the usual bot) for the preferred one.
+	/// </summary>
+	public (int Card, SpecialSlot? Target) ChooseCard(RewardOffer offer, RunState? run = null)
 	{
+		if (_cfg.PreferSpecial is { } want)
+			foreach (var c in offer.Cards)
+				if (c.Kind == CardKind.NewSpecial && c.AbilityId == want) return (c.Index, LowestTarget(c));
+		if (_slotOnly is { } only && run is not null)
+			foreach (var kind in _cfg.RewardOrder)
+				foreach (var c in offer.Cards)
+					if (c.Kind == kind && c.Targets.Any(t => t.Slot == only) && !(kind == CardKind.NewSpecial && (run[only] is not null || _cfg.PreferSpecial is not null)))
+						return (c.Index, only);
 		foreach (var kind in _cfg.RewardOrder)
 			foreach (var c in offer.Cards)
 				if (c.Kind == kind) return (c.Index, LowestTarget(c));

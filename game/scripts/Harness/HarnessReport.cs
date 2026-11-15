@@ -52,6 +52,11 @@ public static class HarnessReport
 			w.WriteNumber("base_seed", b.BaseSeed);
 			if (b.Bot.Fight.SpecialHoldTicks != 0) w.WriteNumber("special_hold_ticks", b.Bot.Fight.SpecialHoldTicks); // YOK-171: only when set
 			if (b.Bot.Fight.ThrowBreakPct != 0) w.WriteNumber("throw_break_pct", b.Bot.Fight.ThrowBreakPct); // YOK-184: only when set
+			// YOK-253: only when set, so a bot file without them writes the same bytes as before
+			if (b.Bot.Fight.SpecialSlotOnly is { } only) w.WriteString("special_slot_only", only.ToString());
+			if (b.Bot.Run.PreferSpecial is { } want) w.WriteString("prefer_special", want);
+			if (b.Bot.Fight.PunishAfterBlockPct != 0) w.WriteNumber("punish_after_block_pct", b.Bot.Fight.PunishAfterBlockPct);
+			if (b.Bot.Fight.CrouchGuardPct != 0) w.WriteNumber("crouch_guard_pct", b.Bot.Fight.CrouchGuardPct);
 			w.WriteNumber("runs_played", b.Runs.Count);
 			w.WriteString("caveats", Caveats);
 			w.WritePropertyName("summary");
@@ -374,6 +379,16 @@ public static class HarnessReport
 				if (f.Log is { } bl) w.WriteNumber("throws_broken", bl.ThrowBreaks[NewcomerBot.Self]);
 			}
 			w.WriteNumber("mistakes", f.Bot.Mistakes);
+			// YOK-253: only when non-zero (never with the fields unset, so old output is unchanged). slot_only = the
+			// special_slot_only slot was filled this fight (the bot attacked with it alone); empty, it played as usual.
+			if (f.Bot.SlotOnly != SpecialSlot.None) w.WriteString("slot_only", f.Bot.SlotOnly.ToString());
+			if (f.Bot.PunishRolls != 0)
+			{
+				w.WriteNumber("punish_rolls", f.Bot.PunishRolls);
+				w.WriteNumber("punishes", f.Bot.Punishes);
+				w.WriteNumber("punishes_out_of_reach", f.Bot.PunishesOutOfReach);
+			}
+			if (f.Bot.CrouchGuards != 0) w.WriteNumber("crouch_guards", f.Bot.CrouchGuards);
 			w.WriteEndObject();
 			w.WriteString("match_hash", f.MatchHash.ToString("x16"));
 			FightLogReport.WriteFight(w, f.Log); // YOK-157

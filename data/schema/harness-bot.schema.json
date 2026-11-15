@@ -32,6 +32,9 @@
         "idle_guard_pct": { "$ref": "#/$defs/pct", "description": "YOK-155: percent of wait and in-range walk plans held as a standing guard (hold back), rolled once per plan; absent = 0." },
         "throw_break_pct": { "$ref": "#/$defs/pct", "description": "YOK-184 (C4, Y6): percent of grabs on Ryo the bot answers with the throw-break press (the throw buttons) inside the break window, rolled once per grab; absent = 0, never breaks." },
         "special_hold_ticks": { "type": "integer", "minimum": 0, "maximum": 600, "description": "YOK-171 (AM11): ticks the bot keeps Special held after pressing a special whose slot carries a charge (Sumo Stance); absent = 0, a tap. The fight caps the hold at the charge window's max." },
+        "special_slot_only": { "enum": ["A", "B", "C", "D"], "description": "YOK-253 (P5, T2): while this slot is filled, its special is the bot's only attack (normal and throw weights count 0; mistakes, anti-airs and punishes press this slot); an empty slot plays as without it. With it, the reward pick levels this slot first and never replaces its special with a NEW card. Absent = off." },
+        "punish_after_block_pct": { "$ref": "#/$defs/pct", "description": "YOK-253 (R5, P6): percent of the opponent's moves Ryo blocks (blockstun starting on the bot's delayed screen) answered with Ryo's fastest move that reaches the opponent at that screen's distance, on his first free tick while the move is still in recovery; out of reach, nothing. Absent = 0, never (no RNG draw)." },
+        "crouch_guard_pct": { "$ref": "#/$defs/pct", "description": "YOK-253 (C3): inside a guard the bot holds, percent of seen lows (the opponent's moves marked low) and of shots that fly over a crouching body box (Foxfire) answered by crouching the guard (down-back), rolled once per threat. Absent = 0, standing guard only (no RNG draw)." },
         "anti_air_pct": { "$ref": "#/$defs/pct" },
         "anti_air_button": { "$ref": "#/$defs/button" },
         "poke_range": { "$ref": "#/$defs/units" },
@@ -74,6 +77,7 @@
         "merchant": { "enum": ["heal", "shop", "heal_if_hurt_else_shop", "skip"], "description": "R6. heal = the free heal; shop = buy commons (YOK-95: shelf specials into a free slot, then shelf modifiers on the lowest slot that takes one, in shelf order, while coins last; never releases); heal_if_hurt_else_shop = heal below heal_below_pct of max health, else shop." },
         "heal_below_pct": { "type": "integer", "minimum": 0, "maximum": 100, "description": "heal_if_hurt_else_shop only. Proposed." },
         "dojo": { "enum": ["rest", "skip"], "description": "R7. 'trial' joins once the trial (YOK-98) is built." },
+        "prefer_special": { "$ref": "common.schema.json#/$defs/id", "description": "YOK-253: a special id whose NEW card the bot takes whenever it is offered, before reward_order, replacing what holds its slot. Absent = off." },
         "menu_seconds_per_node": { "type": "integer", "minimum": 0, "maximum": 600 }
       }
     },
