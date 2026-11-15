@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace YokaiFighters.Sim;
 
@@ -29,10 +30,17 @@ public sealed class Merchant
 	/// <summary>YOK-95: this stop's shop (R6). Its shelf can be read any time; it buys and releases only after <c>Choose(Shop)</c>.</summary>
 	public MerchantShop Shop { get; }
 
+	/// <summary>
+	/// AM27: the order this stop tops a short shelf up in, fixed from Ryo's slots as he walked in, so buying or releasing
+	/// during the visit never reshuffles the shelf. Not saved: M5 restarts a stop from its entry save, which gives the same order.
+	/// </summary>
+	internal IReadOnlyList<string> TopUpOrder { get; }
+
 	internal Merchant(RunSession session, string nodeId)
 	{
 		_session = session;
 		NodeId = nodeId;
+		TopUpOrder = MerchantShop.TopUpOrder(session.Run, session.Pool);
 		Shop = new MerchantShop(session, this);
 	}
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using YokaiFighters.Fight;
 using YokaiFighters.Sim;
+using YokaiFighters.Ui;
 
 namespace YokaiFighters.Tests;
 
@@ -85,6 +86,34 @@ public static class MerchantStockTests
 		int unbound = sp.Count(x => !bound.Contains(x.Source)) + md.Count(m => !bound.Contains(m.Source));
 		Assert.Equal(kappa, unbound, "every Kappa common is still sold");
 		Assert.Equal(Math.Max(MerchantShop.MinStock, kappa), sp.Count + md.Count, "bound commons fill only up to three");
+	}
+
+	static string[] Shown(MerchantShop shop) => shop.Shelf.Select(x => x.Id).Concat(shop.ModifierShelf.Select(m => m.Id)).ToArray();
+
+	[Test]
+	public static void AtAStop_ABuyFreesOnlyItsOwnPlace_AReleaseReshufflesNothing()
+	{
+		// Every yokai bound (Oni then Kappa, then the Elder Oni): the row-7 shelf is all top-up. Today's three commons
+		// specials are all slot C, so buying one fills C; the stop's order was fixed on entry, so the others stay.
+		var pool = FightScene.LoadAbilityPool();
+		var s = DraftFromBeatenYokaiTests.At(pool, new[] { "r1-apprentice", "r2-oni", "r3-kappa", "r4-merchant", "r5-elder-oni", "r6-kappa" }, "r7-merchant");
+		s.Run.RestoreCoins(500);
+		var shop = s.Merchant!.Shop;
+		Assert.True(s.Merchant.Choose(MerchantChoice.Shop).Ok, "shop chosen");
+		var before = Shown(shop);
+		Assert.Equal(MerchantShop.MinStock, before.Length, "a full top-up shelf: " + string.Join(",", before));
+		var screen = ShopScreenModel.Create(s)!;
+		string[] Cards() => screen.Specials.Concat(screen.Modifiers).Select(e => e.Id).ToArray();
+		var cardsBefore = Cards();
+		var buy = shop.Shelf.First(x => s.Run[x.Slot] is null);
+		Assert.True(screen.Buy(buy.Id).Ok, "bought " + buy.Id + " through the screen");
+		Assert.True(cardsBefore.All(Cards().Contains), $"the screen keeps every card it showed: {string.Join(",", cardsBefore)} -> {string.Join(",", Cards())}");
+		var afterBuy = Shown(shop);
+		Assert.True(before.Where(id => id != buy.Id).All(afterBuy.Contains), $"the unbought cards stay: {string.Join(",", before)} -> {string.Join(",", afterBuy)}");
+		Assert.Equal(MerchantShop.MinStock, afterBuy.Length, "the bought card's place is filled: " + string.Join(",", afterBuy));
+		Assert.True(shop.Release(buy.Slot).Ok, "released " + buy.Id);
+		var afterRelease = Shown(shop);
+		Assert.True(afterBuy.All(afterRelease.Contains), $"a release reshuffles nothing: {string.Join(",", afterBuy)} -> {string.Join(",", afterRelease)}");
 	}
 
 	[Test]
