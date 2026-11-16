@@ -48,6 +48,7 @@ public sealed class ReplayRecorder
 		StandingHabits = ai.StandingHabits, // YOK-177
 		NeutralThrowHeld = ai.NeutralThrowHeld, // YOK-228
 		HeldBlock = ai.HeldBlock, // YOK-252
+		HoldBlockThroughThreat = ai.HoldBlockThroughThreat, // YOK-252 (proposed, off)
 	};
 
 	static FighterSetup Capture(Fighter f)

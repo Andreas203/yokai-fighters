@@ -94,6 +94,10 @@ public sealed class AiSetup
 	/// true; left out (false) = a recording made before YOK-252, replayed with the fixed block plan.</summary>
 	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 	public bool HeldBlock { get; set; }
+	/// <summary>YOK-252 (proposed, off): the held block outlasted BlockTicks while a threat showed
+	/// (<see cref="ProfileAi.HoldBlockThroughThreat"/>); left out (false) = it did not.</summary>
+	[System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+	public bool HoldBlockThroughThreat { get; set; }
 }
 
 /// <summary>

@@ -7,11 +7,12 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-252 (Y4, P6, E22): a block reaction becomes a guard. Its <see cref="ProfileAi.BlockTicks"/> are counted from the
-/// first tick the AI can guard (after its own move, its own dash or a stun it sees), it is held while the threat it
-/// answers still shows (the opponent's swing, or a projectile in flight), and no later attacking reaction replaces it
-/// while that threat shows. A committed move is never interrupted (the sim has no cancel into guard, Match: canGuard).
-/// The old rule (<c>heldBlock: false</c>, recordings made before YOK-252) is pinned alongside.
+/// YOK-252 (Y4, P6, E22): a block reaction becomes a guard. Its <see cref="ProfileAi.BlockTicks"/> (E22: 20) are counted
+/// from the first tick the AI can guard (after its own move, dash or jump, or a stun it sees), and never more (E22). While
+/// it runs with the opponent's projectile in flight, a recovery or whiff punish does not replace it; every other reaction
+/// still rolls. A committed move is never interrupted (the sim has no cancel into guard, Match: canGuard).
+/// The old rule (<c>heldBlock: false</c>, recordings made before YOK-252) is pinned alongside, and the proposed
+/// <c>holdBlockThroughThreat</c> (off, not in E22) is checked on its own.
 /// Fight checks use the TEST FIXTURE kits (as AiTests): P1 is Ryo's fixture kit, P2 the fixture Kitsune.
 /// </summary>
 public static class AiBlockReactionTests
@@ -41,47 +42,109 @@ public static class AiBlockReactionTests
 	const string BlockOnAttack = """{ "when": "opponent_attacking", "do": "block", "weight": 100 }""";
 
 	/// <summary>Ryo's Spirit Wave (fixture, slot A) from <paramref name="gap"/> units at tick 30; returns its connects on P2.</summary>
-	static List<HitEvent> WaveAt(BehaviourProfile prof, int gap, bool heldBlock, int ticks = 150)
+	static List<HitEvent> WaveAt(BehaviourProfile prof, int gap, bool heldBlock, int ticks = 150, bool hold = false)
 	{
 		var m = NewMatch();
 		Place(m, gap);
 		var hits = new List<HitEvent>();
 		m.Hit += (_, e) => { if (e.Attacker == 0) hits.Add(e); };
-		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7, heldBlock: heldBlock);
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7, heldBlock: heldBlock, holdBlockThroughThreat: hold);
 		for (int t = 1; t <= ticks && m.Phase == MatchPhase.Fighting; t++)
 			m.Step(t == 30 ? FighterInput.Special(SpecialSlot.A) : FighterInput.None, ai.Next(AiView.Capture(m)));
 		return hits;
 	}
 
 	/// <summary>
-	/// Root cause 1: the block plan ran a fixed <see cref="ProfileAi.BlockTicks"/> from the decision, so a Spirit Wave from
-	/// mid range, still in flight when those ticks ran out, hit an AI that had gone back to neutral (it holds still in
-	/// its band). The guard is now held while the projectile shows.
+	/// E22 (block plans 20): the held block lasts BlockTicks from its first actionable tick and no longer, so a Spirit Wave
+	/// from the edge of mid range, still in flight after those 20 ticks, hits (as under the old rule). Only the proposed
+	/// <c>holdBlockThroughThreat</c> (off; not in E22) keeps guarding until it arrives.
 	/// </summary>
 	[Test]
-	public static void BlockReaction_HeldWhileItsProjectileIsStillInFlight()
+	public static void HeldBlock_LastsBlockTicks_OnlyTheProposedHoldOutlastsThem()
 	{
 		var prof = Profile("mid", 22, BlockOnAttack);
 		var now = WaveAt(prof, 590, heldBlock: true);
-		Assert.True(now.Count == 1, $"the wave connects once ({now.Count})");
-		Assert.True(now[0].Blocked, "held block: the wave that showed 22+ ticks before it arrived is blocked");
+		Assert.True(now.Count == 1 && !now[0].Blocked, $"E22: the guard ends after its 20 ticks, the late wave hits ({Describe(now)})");
 		var old = WaveAt(prof, 590, heldBlock: false);
 		Assert.True(old.Count == 1 && !old[0].Blocked, "old rule (pinned): the block plan ran out with the wave in flight, so it hit");
+		var hold = WaveAt(prof, 590, heldBlock: true, hold: true);
+		Assert.True(hold.Count == 1 && hold[0].Blocked, $"proposed hold: guarding until the wave arrives blocks it ({Describe(hold)})");
+		Assert.True(!new ProfileAi(prof, 1, AiLoadout.From(NewMatch().P2), 1).HoldBlockThroughThreat, "the proposed hold is off by default");
+	}
+
+	/// <summary>E22 bound (code critic r1): with a threat showing for a long time (a Spirit Wave crossing the whole screen)
+	/// the held block still guards exactly BlockTicks ticks; it never turtles past them. The proposed hold guards longer.</summary>
+	[Test]
+	public static void HeldBlock_GuardsExactlyBlockTicks_WhileAThreatShowsLonger()
+	{
+		var prof = Profile("full_screen", 4, BlockOnAttack);
+		foreach (bool hold in new[] { false, true })
+		{
+			var m = NewMatch();
+			Place(m, 1000);
+			var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 3, holdBlockThroughThreat: hold);
+			int guarded = 0, shotTicks = 0;
+			for (int t = 1; t <= 200 && m.Phase == MatchPhase.Fighting; t++)
+			{
+				m.Step(t == 10 ? FighterInput.Special(SpecialSlot.A) : FighterInput.None, ai.Next(AiView.Capture(m)));
+				if (m.P2.Guarding) guarded++;
+				if (m.Projectiles.Count > 0) shotTicks++;
+			}
+			Assert.True(shotTicks > ProfileAi.BlockTicks + 10, $"setup: the wave shows longer than a block plan ({shotTicks})");
+			if (hold) Assert.True(guarded > ProfileAi.BlockTicks, $"proposed hold: guards past BlockTicks while the wave shows ({guarded})");
+			else Assert.Equal(ProfileAi.BlockTicks, guarded, "E22: exactly BlockTicks guard ticks, however long the threat shows");
+		}
+	}
+
+	/// <summary>
+	/// Code critic r1 (E22: reactions are data): a held block does not swallow other reactions. Spirit Wave on screen
+	/// rolls the profile's <c>projectile_on_screen</c> answer as before and it replaces the guard (here a jump, 100%).
+	/// </summary>
+	[Test]
+	public static void HeldBlock_ProjectileOnScreenReaction_StillRollsAndReplacesIt()
+	{
+		var prof = Profile("mid", 22, BlockOnAttack + """, { "when": "projectile_on_screen", "do": "jump", "weight": 100 }""");
+		var m = NewMatch();
+		Place(m, 590);
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7);
+		ai.Log = new();
+		bool jumped = false;
+		for (int t = 1; t <= 120 && m.Phase == MatchPhase.Fighting; t++)
+		{
+			m.Step(t == 30 ? FighterInput.Special(SpecialSlot.A) : FighterInput.None, ai.Next(AiView.Capture(m)));
+			jumped |= m.P2.Airborne;
+		}
+		Assert.True(ai.Log.Exists(d => d.Kind == "react" && d.Trigger == "projectile_on_screen" && d.Action == "jump"), "the projectile reaction rolled and fired");
+		Assert.True(jumped, "and replaced the guard: the AI jumped");
 	}
 
 	/// <summary>
 	/// Root cause 2: a later event reaction replaced the running block plan. Spirit Wave's recovery starts while the wave
 	/// is still in flight, so <c>opponent_in_recovery → attack</c> (oni-patient's heavy punch) turned the guard into a
-	/// swing that walked into the wave. While the threat shows, only another guard (or a jump answer, Y4) replaces it.
+	/// swing into the wave. While the opponent's projectile shows, a recovery or whiff punish that is not a guard is
+	/// skipped (no roll); the old rule rolled it and swung. With the proposed hold on as well, the wave is then blocked.
 	/// </summary>
 	[Test]
-	public static void BlockReaction_NotReplacedByAnAttackReaction_WhileItsThreatShows()
+	public static void BlockReaction_NotReplacedByARecoveryPunish_WhileTheShotShows()
 	{
 		var prof = Profile("mid", 22, BlockOnAttack + """, { "when": "opponent_in_recovery", "do": "normal:test-ryo-heavy-punch", "weight": 100 }""");
-		var now = WaveAt(prof, 450, heldBlock: true);
-		Assert.True(now.Count >= 1 && now[0].Blocked, $"held block: the wave is blocked ({Describe(now)})");
+		List<AiDecision> Log(bool held)
+		{
+			var m = NewMatch();
+			Place(m, 450);
+			var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7, heldBlock: held) { Log = new() };
+			for (int t = 1; t <= 100 && m.Phase == MatchPhase.Fighting; t++)
+				m.Step(t == 30 ? FighterInput.Special(SpecialSlot.A) : FighterInput.None, ai.Next(AiView.Capture(m)));
+			return ai.Log!;
+		}
+		static bool Punished(List<AiDecision> log) => log.Exists(d => d.Trigger == "opponent_in_recovery");
+		Assert.True(Log(true).Exists(d => d.Kind == "react" && d.Action == "block"), "setup: the block reaction fired");
+		Assert.True(!Punished(Log(true)), "held block: the recovery punish is skipped while the wave is on screen (no roll)");
+		Assert.True(Punished(Log(false)), "old rule (pinned): the recovery punish rolled and replaced the guard");
+		var hold = WaveAt(prof, 450, heldBlock: true, hold: true);
+		Assert.True(hold.Count >= 1 && hold[0].Blocked, $"proposed hold: the wave is blocked ({Describe(hold)})");
 		var old = WaveAt(prof, 450, heldBlock: false);
-		Assert.True(old.Count >= 1 && !old[0].Blocked, $"old rule (pinned): the recovery punish replaced the guard and the wave hit ({Describe(old)})");
+		Assert.True(old.Count >= 1 && !old[0].Blocked, $"old rule (pinned): the punish swung into the wave ({Describe(old)})");
 	}
 
 	static string Describe(List<HitEvent> hits) => hits.Count == 0 ? "no connect" : string.Join(", ", hits.ConvertAll(h => $"{h.MoveId} blocked={h.Blocked}"));
@@ -144,6 +207,31 @@ public static class AiBlockReactionTests
 		}
 		Assert.True(start > 0 && end > start, $"setup: the AI dashed ({start}..{end})");
 		Assert.Equal(ProfileAi.BlockTicks, guardAfter, "held block: guards BlockTicks from the end of its own dash");
+	}
+
+	/// <summary>Code critic r1: the same for the AI's own jump (no count shows in the air; the AI knows its own jump): the
+	/// guard ticks are not spent in the air, so it guards BlockTicks after landing.</summary>
+	[Test]
+	public static void BlockReaction_DuringOwnJump_GuardsFromItsLanding()
+	{
+		var prof = Profile("full_screen", 2, """{ "when": "at_full_screen", "do": "jump", "weight": 100 }, """ + BlockOnAttack);
+		var m = NewMatch();
+		Place(m, 900);
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 3);
+		int start = -1, end = -1, guardAfter = 0, p1Press = -1;
+		for (int t = 1; t <= 300 && m.Phase == MatchPhase.Fighting; t++)
+		{
+			var aiIn = ai.Next(AiView.Capture(m));
+			var p1 = start > 0 && p1Press < 0 && t == start + 1 ? new FighterInput(InputBits.LightPunch) : FighterInput.None;
+			if (p1.Bits != InputBits.None) p1Press = t;
+			m.Step(p1, aiIn);
+			if (start < 0 && m.P2.Airborne) start = t;
+			else if (start > 0 && end < 0 && !m.P2.Airborne) end = t;
+			if (end > 0 && t < end + ProfileAi.BlockTicks && m.P2.Guarding) guardAfter++;
+			if (end > 0 && t >= end + ProfileAi.BlockTicks) break;
+		}
+		Assert.True(start > 0 && end - start > ProfileAi.BlockTicks, $"setup: the AI's jump ({end - start} ticks) outlasts a block plan");
+		Assert.Equal(ProfileAi.BlockTicks, guardAfter, "held block: guards BlockTicks from its landing");
 	}
 
 	/// <summary>A walk is not committed: a block reaction during a walk forward guards on the reaction tick itself (Y4: reaction frames after the swing shows).</summary>

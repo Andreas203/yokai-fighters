@@ -244,7 +244,8 @@ public static class Replayer
 		return new ProfileAi(prof, 1, AiLoadout.From(m.P2), a.Seed, a.ReactionFrames, tier, a.AggressionBonus, a.GuardPct, // YOK-165: absent = 0, no guard
 			a.StandingHabits, // YOK-177: absent = a recording from before standing-trigger habits rolled
 			a.NeutralThrowHeld, // YOK-228: absent = a recording from before the neutral throw was held
-			a.HeldBlock); // YOK-252: absent = a recording from before a block plan was a held guard
+			a.HeldBlock, // YOK-252: absent = a recording from before a block plan was a held guard
+			a.HoldBlockThroughThreat); // YOK-252: proposed, off unless a harness comparison recorded it
 	}
 }
 
