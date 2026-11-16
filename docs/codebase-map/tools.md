@@ -21,6 +21,7 @@ Their tests are in `tools/tests/` (`test_*.py`, with the fixtures `merge_fixture
 | `tools/changelog.py` | Writes `CHANGELOG.md` from merged PRs by build week (`## Changelog` line, else the title; `none` leaves it out); `--check` exits 1 when stale. Never edit `CHANGELOG.md` by hand. |
 | `tools/sync_codex.py` | Generates the Codex copies of the crew from `.claude/agents/*.md` → `.codex/agents/*.toml` and `.claude/skills/*/SKILL.md` → `.agents/skills/`; edit the sources, never the copies. |
 | `tools/export-windows.sh` | Windows export: Godot `--export-release`, copy `data/{clips,modifiers,moves,profiles,story,map,...}` and kit-fallback fixtures to `build/windows/`, zip to `build/YokaiFighters-Demo-Windows.zip`. Needs the 4.7.2 mono templates. |
+| `tools/push-itch.sh` | Push `build/windows/` to itch.io with butler (`shnabin/yokai-fighters:windows`, `--if-changed`, version from `git describe`); `--export` runs the export first, `--dry-run` uploads nothing. Needs `butler login` once, or `BUTLER_API_KEY` (CI). |
 
 ## Asset tools
 
@@ -40,4 +41,4 @@ Their tests are in `tools/tests/` (`test_*.py`, with the fixtures `merge_fixture
 
 ## CI (`.github/workflows/`)
 
-`ci.yml` (dotnet build + headless test suite on Godot 4.7.2 mono), `docs-check.yml` (`check_docs.py` on every PR), `data-merge-check.yml` (PRs touching `data/**`, base branch's tools on the PR's data), `codex-sync.yml` (Codex copies in step), `release.yml` (tag `demo-v*` → build, test, export, **draft** release with the zip and SHA-256).
+`ci.yml` (dotnet build + headless test suite on Godot 4.7.2 mono), `docs-check.yml` (`check_docs.py` on every PR), `data-merge-check.yml` (PRs touching `data/**`, base branch's tools on the PR's data), `codex-sync.yml` (Codex copies in step), `release.yml` (tag `demo-v*` → build, test, export, **draft** release with the zip and SHA-256; run by hand with `itch` ticked → also `tools/push-itch.sh` when every test passed, secret `BUTLER_API_KEY`).

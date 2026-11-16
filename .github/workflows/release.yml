@@ -2,10 +2,18 @@ name: release
 # Push a tag like demo-v0.2 → Windows build + headless tests → a DRAFT GitHub release with the zip attached.
 # The designer reads the test line in the notes and publishes (or deletes) the draft; nothing ships on its own.
 # Run it by hand (Actions → release → Run workflow) to get the zip as a workflow artifact without a release.
+# Running it by hand with "Push to itch.io" ticked also pushes the build to itch.io (tools/push-itch.sh, channel "windows"),
+# but only when every test passed. It needs the repo secret BUTLER_API_KEY (itch.io → Settings → API keys).
+# A tag never pushes to itch.io on its own.
 on:
   push:
     tags: ["demo-v*"]
   workflow_dispatch:
+    inputs:
+      itch:
+        description: "Push to itch.io (needs every test to pass and the BUTLER_API_KEY secret)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -70,6 +78,21 @@ jobs:
 
       - name: Export Windows build
         run: bash tools/export-windows.sh
+
+      - name: Push to itch.io
+        if: github.event_name == 'workflow_dispatch' && inputs.itch
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          TESTS: ${{ steps.tests.outputs.summary }}
+        run: |
+          [ -n "$BUTLER_API_KEY" ] || { echo "::error::The BUTLER_API_KEY secret is not set"; exit 1; }
+          case "$TESTS" in
+            "TESTS "*" 0 failed") ;;
+            *) echo "::error::Not every test passed ($TESTS); nothing pushed to itch.io"; exit 1 ;;
+          esac
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          mkdir -p .butler && unzip -q butler.zip -d .butler && rm butler.zip && chmod +x .butler/butler
+          BUTLER=.butler/butler ITCH_VERSION="${GITHUB_REF_NAME}-${GITHUB_SHA::8}" bash tools/push-itch.sh
 
       - uses: actions/upload-artifact@v4
         with:
