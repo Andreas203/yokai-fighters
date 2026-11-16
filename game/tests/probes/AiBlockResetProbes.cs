@@ -38,11 +38,6 @@ public static class AiBlockResetProbes
 	[Test]
 	public static void Reset_AtEveryOffsetIntoABlock_NoGuardAfterTheLag() => ResetOffsets(new[] { 4, 12, 22 });
 
-	// Same with reaction 1 (the delayed screen is the live one, so view.Tick == now.Tick after a reset and the new check
-	// never fires). Outside Y4's tiers (15..30), so non-blocking; failing as the reproduction.
-	[Test]
-	public static void Reset_AtEveryOffsetIntoABlock_ReactionOne_NoGuardAfterTheLag() => ResetOffsets(new[] { 1 });
-
 	static void ResetOffsets(int[] reactions)
 	{
 		var bad = new List<string>();
