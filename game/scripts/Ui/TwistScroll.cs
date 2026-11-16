@@ -114,7 +114,8 @@ public partial class TwistScroll : Control
 		rule = rule?.Trim();
 		_rule.Text = rule ?? "";
 		_rule.Visible = _ruleLine.Visible = !string.IsNullOrEmpty(rule);
-		_stamp.Icon = iconId ?? ""; _stamp.Fallback = fallbackGlyph;
+		_stamp.Icon = iconId ?? ""; _stamp.Fallback = fallbackGlyph; _stamp.Art = null;
+		_plate = null; // the twist's own cloth and rods unless the host sets a plate after this
 		Texture2D? art = !string.IsNullOrEmpty(portraitPath) && ResourceLoader.Exists(portraitPath) ? GD.Load<Texture2D>(portraitPath) : null;
 		_portraitArt.Texture = art;
 		_portrait.Visible = art != null;
@@ -125,6 +126,20 @@ public partial class TwistScroll : Control
 		Fit();
 		QueueRedraw();
 	}
+
+	/// <summary>YOK-98: stamp a picture (the dojo trial's special icon) in the seal's place; call after <see cref="Show"/>, which clears it.</summary>
+	public void SetStampArt(Texture2D? art) { Bind(); _stamp.Art = art; }
+	public Texture2D? StampArt => _stamp.Art;
+
+	/// <summary>
+	/// YOK-98: draw a nine-slice plate (the dojo trial's handscroll, <see cref="TrialScrollBanner.LoadPlate"/>) as the frame
+	/// instead of the pine cloth, rods, cord and peg; call after <see cref="Show"/>, which clears it. The plate spans
+	/// <see cref="PlateRect"/>, so its paper holds the portrait, the text column and the stamp.
+	/// </summary>
+	public void SetPlate(StyleBox? plate) { _plate = plate; QueueRedraw(); }
+	public bool HasPlate => _plate != null;
+	public static readonly Rect2 PlateRect = new(-40, 100, 1580, 600);
+	StyleBox? _plate;
 
 	/// <summary>Long names, quotes and lines shrink to a floor, then end in an ellipsis or a clip: nothing leaves the paper.</summary>
 	void Fit()
@@ -174,6 +189,7 @@ public partial class TwistScroll : Control
 
 	public override void _Draw()
 	{
+		if (_plate != null) { DrawStyleBox(_plate, PlateRect); return; }
 		float w = Size.X, h = Size.Y;
 		float bottom = h - RodHeight - KnobExtra; // bottom rod top edge
 		// cord and peg

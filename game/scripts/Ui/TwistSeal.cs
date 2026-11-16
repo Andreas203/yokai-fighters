@@ -17,6 +17,9 @@ public partial class TwistSeal : Control
 	[Export] public string Icon { get => _icon; set { _icon = value; QueueRedraw(); } }
 	[Export] public string Fallback { get => _fallback; set { _fallback = value; QueueRedraw(); } }
 	[Export] public Color Fill { get => _fill; set { _fill = value; QueueRedraw(); } }
+	/// <summary>YOK-98: a picture stamped instead of the drawn seal (the dojo trial's special icon); null = the seal.</summary>
+	public Texture2D? Art { get => _art; set { _art = value; QueueRedraw(); } }
+	Texture2D? _art;
 
 	public static readonly Color Paper = new(0.945f, 0.91f, 0.831f);
 
@@ -30,6 +33,7 @@ public partial class TwistSeal : Control
 	{
 		float s = Mathf.Min(Size.X, Size.Y);
 		var o = (Size - new Vector2(s, s)) / 2f;
+		if (_art != null) { DrawTextureRect(_art, new Rect2(o, new Vector2(s, s)), false); return; }
 		int r = (int)(s * 0.2f);
 		var box = new StyleBoxFlat { BgColor = _fill, BorderColor = new Color(0.114f, 0.106f, 0.129f), CornerRadiusTopLeft = r, CornerRadiusTopRight = r, CornerRadiusBottomLeft = r, CornerRadiusBottomRight = r };
 		box.SetBorderWidthAll(Mathf.Max(1, (int)(s / 14f)));

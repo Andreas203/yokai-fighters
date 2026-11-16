@@ -107,11 +107,11 @@ public partial class FightScene : Node3D
 	/// <summary>YOK-187: the yokai (not the body) for the foe's portrait: the node's <see cref="NodeContext.DraftYokai"/>, else <see cref="Opponent"/>.</summary>
 	public string OpponentYokai => YokaiOf(Node, Opponent);
 
-	/// <summary>The id of the portrait plate for the foe: the apprentice has its own, an elder its yokai's, else <see cref="OpponentYokai"/>.</summary>
+	/// <summary>The id of the portrait plate for the foe: <see cref="OpponentYokai"/> (an elder its yokai's; the apprentice the Kitsune it binds).</summary>
 	public string OpponentPortrait => PortraitIdFor(Node, Opponent);
-	/// <summary><see cref="OpponentPortrait"/> for a node and body.</summary>
-	public static string PortraitIdFor(NodeContext? node, string opponent) =>
-		FoughtOn(node, opponent) is { Tier: "apprentice" } ? "apprentice" : YokaiOf(node, opponent);
+	/// <summary><see cref="OpponentPortrait"/> for a node and body. Designer 2026-11-15: the apprentice fight shows the Kitsune it binds
+	/// (the fox mask), not the apprentice's own plate, which read as Ryo.</summary>
+	public static string PortraitIdFor(NodeContext? node, string opponent) => YokaiOf(node, opponent);
 
 	/// <summary>The node, when <paramref name="opponent"/> is the body it puts up (else the fight is not that node's).</summary>
 	static NodeContext? FoughtOn(NodeContext? node, string opponent) => node is { } n && n.Fighter == opponent ? n : null;
