@@ -105,6 +105,7 @@ public static class RunHarness
 	public static RunRecord PlayRun(HarnessContent content, BotConfig bot, uint seed, FightRunner? fight = null)
 	{
 		fight ??= FightNode;
+		bot.CheckAgainst(content.Pool); // YOK-253: prefer_special / special_slot_only must be able to meet
 		var session = RunSession.Start(content.Pool, content.Map, content.Scenes, seed);
 		var runBot = new RunBot(bot.Run, Mix(seed, 0x524F5554u), bot.Fight.SpecialSlotOnly);
 		var rec = new RunRecord { Seed = seed, Level = bot.Level };

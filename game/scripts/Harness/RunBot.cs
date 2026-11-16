@@ -39,26 +39,47 @@ public sealed class RunBot
 
 	/// <summary>
 	/// The card and target to pick: the first card whose kind comes first in the order; several targets = the lowest slot.
-	/// YOK-253, both off by default: <c>prefer_special</c>'s NEW card comes before the order; with a special_slot_only
-	/// slot (and <paramref name="run"/>), the first card in the order that can go on that slot goes there, except a NEW
-	/// card that would replace the special already in it, so the spammed special is the one levelled (T2). With
-	/// <c>prefer_special</c> too, no other NEW card fills that slot: it waits empty (the usual bot) for the preferred one.
+	/// YOK-253, both off by default:
+	/// <list type="bullet">
+	/// <item><c>prefer_special</c>'s NEW card comes before the order; it goes on the special_slot_only slot when that is one
+	/// of its targets (the one NEW card that may replace the spammed special), else on its lowest target.</item>
+	/// <item>With a special_slot_only slot (and <paramref name="run"/>), the first card in the order that can go on that
+	/// slot goes there. No other NEW card goes on that slot while it is filled, nor at all with <c>prefer_special</c> (the
+	/// slot then waits empty, the usual bot, for the preferred one); such a card goes on another of its targets or is passed
+	/// over. Only when every card on offer is such a card does A7 (a reward is always picked) force it, onto the slot.</item>
+	/// </list>
 	/// </summary>
 	public (int Card, SpecialSlot? Target) ChooseCard(RewardOffer offer, RunState? run = null)
 	{
 		if (_cfg.PreferSpecial is { } want)
 			foreach (var c in offer.Cards)
-				if (c.Kind == CardKind.NewSpecial && c.AbilityId == want) return (c.Index, LowestTarget(c));
+				if (c.Kind == CardKind.NewSpecial && c.AbilityId == want)
+					return (c.Index, _slotOnly is { } spam && c.Targets.Any(t => t.Slot == spam) ? spam : LowestTarget(c));
 		if (_slotOnly is { } only && run is not null)
 			foreach (var kind in _cfg.RewardOrder)
 				foreach (var c in offer.Cards)
-					if (c.Kind == kind && c.Targets.Any(t => t.Slot == only) && !(kind == CardKind.NewSpecial && (run[only] is not null || _cfg.PreferSpecial is not null)))
+					if (c.Kind == kind && c.Targets.Any(t => t.Slot == only) && !KeptOff(c, only, run))
 						return (c.Index, only);
 		foreach (var kind in _cfg.RewardOrder)
 			foreach (var c in offer.Cards)
-				if (c.Kind == kind) return (c.Index, LowestTarget(c));
+				if (c.Kind == kind && Target(c, run) is var (ok, target) && ok) return (c.Index, target);
 		if (offer.Cards.Count == 0) throw new InvalidOperationException("the offer has no cards");
-		return (offer.Cards[0].Index, LowestTarget(offer.Cards[0]));
+		foreach (var c in offer.Cards)
+			if (Target(c, run) is var (ok, target) && ok) return (c.Index, target);
+		return (offer.Cards[0].Index, LowestTarget(offer.Cards[0])); // A7: every card would go on the spam slot; one must be picked
+	}
+
+	/// <summary>YOK-253: a NEW card the spam slot must not take (it is filled, or prefer_special keeps it for one special).</summary>
+	bool KeptOff(CardView c, SpecialSlot only, RunState run) =>
+		c.Kind == CardKind.NewSpecial && c.Targets.Any(t => t.Slot == only) && (run[only] is not null || _cfg.PreferSpecial is not null);
+
+	/// <summary>The card's lowest target; YOK-253: a kept-off card's lowest target that is not the spam slot, or none (not ok).</summary>
+	(bool Ok, SpecialSlot? Target) Target(CardView c, RunState? run)
+	{
+		if (_slotOnly is not { } only || run is null || !KeptOff(c, only, run)) return (true, LowestTarget(c));
+		SpecialSlot? best = null;
+		foreach (var t in c.Targets) if (t.Slot != only && (best is null || t.Slot < best)) best = t.Slot;
+		return (best is not null, best);
 	}
 
 	static SpecialSlot? LowestTarget(CardView c)

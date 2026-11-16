@@ -1757,8 +1757,8 @@
             "health_left": 0,
             "bot": {
               "walks": 38,
-              "normals": 32,
-              "specials": 18,
+              "normals": 33,
+              "specials": 19,
               "throws": 2,
               "jumps": 6,
               "blocks": 18,
@@ -1767,6 +1767,7 @@
               "anti_airs": 1,
               "mistakes": 21,
               "punish_rolls": 5,
+              "punish_armed": 5,
               "punishes": 2,
               "punishes_out_of_reach": 0
             },
@@ -3534,8 +3535,8 @@
             "health_left": 0,
             "bot": {
               "walks": 16,
-              "normals": 20,
-              "specials": 12,
+              "normals": 21,
+              "specials": 13,
               "throws": 0,
               "jumps": 8,
               "blocks": 14,
@@ -3546,6 +3547,7 @@
               "throws_broken": 1,
               "mistakes": 14,
               "punish_rolls": 4,
+              "punish_armed": 4,
               "punishes": 2,
               "punishes_out_of_reach": 0
             },
@@ -3931,6 +3933,7 @@
               "anti_airs": 0,
               "mistakes": 14,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 0,
               "punishes_out_of_reach": 0
             },
@@ -4334,7 +4337,7 @@
             "health_left": 0,
             "bot": {
               "walks": 22,
-              "normals": 22,
+              "normals": 23,
               "specials": 11,
               "throws": 0,
               "jumps": 7,
@@ -4344,6 +4347,7 @@
               "anti_airs": 0,
               "mistakes": 15,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -5366,7 +5370,7 @@
             "health_left": 554,
             "bot": {
               "walks": 33,
-              "normals": 31,
+              "normals": 32,
               "specials": 16,
               "throws": 0,
               "jumps": 7,
@@ -5376,6 +5380,7 @@
               "anti_airs": 0,
               "mistakes": 19,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -5834,6 +5839,7 @@
               "anti_airs": 0,
               "mistakes": 11,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 0,
               "punishes_out_of_reach": 0
             },
@@ -6163,7 +6169,7 @@
             "health_left": 602,
             "bot": {
               "walks": 35,
-              "normals": 39,
+              "normals": 40,
               "specials": 13,
               "throws": 2,
               "jumps": 6,
@@ -6173,6 +6179,7 @@
               "anti_airs": 0,
               "mistakes": 16,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -6950,7 +6957,7 @@
             "bot": {
               "walks": 36,
               "normals": 35,
-              "specials": 11,
+              "specials": 12,
               "throws": 3,
               "jumps": 8,
               "blocks": 23,
@@ -6959,6 +6966,7 @@
               "anti_airs": 0,
               "mistakes": 18,
               "punish_rolls": 2,
+              "punish_armed": 2,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -7383,7 +7391,7 @@
             "health_left": 107,
             "bot": {
               "walks": 21,
-              "normals": 28,
+              "normals": 29,
               "specials": 11,
               "throws": 0,
               "jumps": 2,
@@ -7393,6 +7401,7 @@
               "anti_airs": 0,
               "mistakes": 15,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -7904,8 +7913,8 @@
             "health_left": 444,
             "bot": {
               "walks": 28,
-              "normals": 26,
-              "specials": 13,
+              "normals": 28,
+              "specials": 14,
               "throws": 2,
               "jumps": 6,
               "blocks": 18,
@@ -7914,6 +7923,7 @@
               "anti_airs": 0,
               "mistakes": 13,
               "punish_rolls": 4,
+              "punish_armed": 4,
               "punishes": 3,
               "punishes_out_of_reach": 0
             },
@@ -8365,8 +8375,8 @@
             "health_left": 0,
             "bot": {
               "walks": 10,
-              "normals": 14,
-              "specials": 10,
+              "normals": 15,
+              "specials": 12,
               "throws": 0,
               "jumps": 3,
               "blocks": 4,
@@ -8375,6 +8385,7 @@
               "anti_airs": 0,
               "mistakes": 10,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 3,
               "punishes_out_of_reach": 0
             },
@@ -8676,7 +8687,7 @@
             "health_left": 600,
             "bot": {
               "walks": 19,
-              "normals": 25,
+              "normals": 26,
               "specials": 16,
               "throws": 0,
               "jumps": 6,
@@ -8686,6 +8697,7 @@
               "anti_airs": 0,
               "mistakes": 11,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -9739,7 +9751,7 @@
             "bot": {
               "walks": 14,
               "normals": 12,
-              "specials": 10,
+              "specials": 11,
               "throws": 1,
               "jumps": 5,
               "blocks": 11,
@@ -9750,6 +9762,7 @@
               "throws_broken": 1,
               "mistakes": 7,
               "punish_rolls": 2,
+              "punish_armed": 2,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -10046,7 +10059,7 @@
             "health_left": 712,
             "bot": {
               "walks": 26,
-              "normals": 30,
+              "normals": 31,
               "specials": 13,
               "throws": 1,
               "jumps": 3,
@@ -10056,6 +10069,7 @@
               "anti_airs": 0,
               "mistakes": 15,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -10449,7 +10463,7 @@
             "health_left": 140,
             "bot": {
               "walks": 23,
-              "normals": 22,
+              "normals": 23,
               "specials": 20,
               "throws": 0,
               "jumps": 3,
@@ -10459,6 +10473,7 @@
               "anti_airs": 0,
               "mistakes": 11,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -11449,7 +11464,7 @@
             "bot": {
               "walks": 27,
               "normals": 20,
-              "specials": 18,
+              "specials": 20,
               "throws": 0,
               "jumps": 3,
               "blocks": 5,
@@ -11458,6 +11473,7 @@
               "anti_airs": 0,
               "mistakes": 12,
               "punish_rolls": 2,
+              "punish_armed": 2,
               "punishes": 2,
               "punishes_out_of_reach": 0
             },
@@ -12410,7 +12426,7 @@
             "bot": {
               "walks": 29,
               "normals": 24,
-              "specials": 21,
+              "specials": 22,
               "throws": 0,
               "jumps": 8,
               "blocks": 10,
@@ -12419,6 +12435,7 @@
               "anti_airs": 0,
               "mistakes": 16,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -12803,7 +12820,7 @@
             "bot": {
               "walks": 28,
               "normals": 30,
-              "specials": 25,
+              "specials": 26,
               "throws": 1,
               "jumps": 14,
               "blocks": 20,
@@ -12812,6 +12829,7 @@
               "anti_airs": 0,
               "mistakes": 17,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -13559,7 +13577,7 @@
             "health_left": 791,
             "bot": {
               "walks": 12,
-              "normals": 21,
+              "normals": 22,
               "specials": 12,
               "throws": 0,
               "jumps": 10,
@@ -13569,6 +13587,7 @@
               "anti_airs": 0,
               "mistakes": 12,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -13903,7 +13922,7 @@
             "bot": {
               "walks": 11,
               "normals": 16,
-              "specials": 10,
+              "specials": 11,
               "throws": 0,
               "jumps": 2,
               "blocks": 4,
@@ -13912,6 +13931,7 @@
               "anti_airs": 0,
               "mistakes": 7,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 1,
               "punishes_out_of_reach": 0
             },
@@ -14267,6 +14287,7 @@
               "anti_airs": 0,
               "mistakes": 13,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 0,
               "punishes_out_of_reach": 0
             },
@@ -14593,8 +14614,8 @@
             "health_left": 0,
             "bot": {
               "walks": 25,
-              "normals": 25,
-              "specials": 20,
+              "normals": 26,
+              "specials": 21,
               "throws": 0,
               "jumps": 9,
               "blocks": 10,
@@ -14605,6 +14626,7 @@
               "throws_broken": 1,
               "mistakes": 15,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 2,
               "punishes_out_of_reach": 0
             },
@@ -15023,7 +15045,7 @@
             "health_left": 646,
             "bot": {
               "walks": 28,
-              "normals": 26,
+              "normals": 29,
               "specials": 12,
               "throws": 0,
               "jumps": 5,
@@ -15033,6 +15055,7 @@
               "anti_airs": 0,
               "mistakes": 10,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 3,
               "punishes_out_of_reach": 0
             },
@@ -15456,7 +15479,7 @@
             "bot": {
               "walks": 23,
               "normals": 39,
-              "specials": 27,
+              "specials": 30,
               "throws": 0,
               "jumps": 6,
               "blocks": 9,
@@ -15465,6 +15488,7 @@
               "anti_airs": 0,
               "mistakes": 31,
               "punish_rolls": 3,
+              "punish_armed": 3,
               "punishes": 3,
               "punishes_out_of_reach": 0
             },
@@ -15900,6 +15924,7 @@
               "anti_airs": 0,
               "mistakes": 19,
               "punish_rolls": 1,
+              "punish_armed": 1,
               "punishes": 0,
               "punishes_out_of_reach": 0
             },
@@ -17994,7 +18019,7 @@
             "bot": {
               "walks": 14,
               "normals": 21,
-              "specials": 9,
+              "specials": 11,
               "throws": 0,
               "jumps": 2,
               "blocks": 7,
@@ -18003,6 +18028,7 @@
               "anti_airs": 0,
               "mistakes": 10,
               "punish_rolls": 2,
+              "punish_armed": 2,
               "punishes": 2,
               "punishes_out_of_reach": 0
             },

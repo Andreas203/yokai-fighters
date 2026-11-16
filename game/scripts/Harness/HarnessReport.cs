@@ -385,6 +385,7 @@ public static class HarnessReport
 			if (f.Bot.PunishRolls != 0)
 			{
 				w.WriteNumber("punish_rolls", f.Bot.PunishRolls);
+				w.WriteNumber("punish_armed", f.Bot.PunishArmed);
 				w.WriteNumber("punishes", f.Bot.Punishes);
 				w.WriteNumber("punishes_out_of_reach", f.Bot.PunishesOutOfReach);
 			}

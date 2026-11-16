@@ -201,6 +201,9 @@ public sealed class NewcomerBot
 	bool _shotDuckable;
 	/// <summary>YOK-253: a blocked move's punish_after_block_pct roll succeeded; the punish goes out on Ryo's first free tick.</summary>
 	bool _punishArmed;
+	/// <summary>YOK-253: the blocked move the punish is armed for (its id and the last frame seen of it), so a punish never goes into another move's recovery.</summary>
+	string? _punishMove;
+	int _punishFrame;
 
 	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
 	public BotStats Stats { get; } = new();
@@ -254,10 +257,11 @@ public sealed class NewcomerBot
 			if (attackShown || Shots(view) > Shots(prev)) _threatRolled = false; // a new threat gets its own roll
 			if (attackShown || Shots(view) > Shots(prev)) _crouchRolled = false; // YOK-253: and its own crouch roll
 			if (Shots(view) > Shots(prev)) _shotDuckable = (o.MoveId ?? po.MoveId) is { } shot && _kit.FoeDuckShots.Contains(shot);
-			if (_cfg.PunishAfterBlockPct > 0) ArmPunish(prev.Fighter(Self), s);
+			if (_cfg.PunishAfterBlockPct > 0) ArmPunish(prev.Fighter(Self), s, o);
 		}
 		if (Shots(view) == 0) _shotDuckable = false;
-		if (_punishArmed && !o.Attacking) _punishArmed = false; // the blocked move ended before Ryo could answer it
+		if (_punishArmed && (!o.Attacking || o.MoveId != _punishMove || o.MoveFrame < _punishFrame)) _punishArmed = false; // the blocked move ended (or became another move, or a new use of it) before Ryo could answer it
+		if (_punishArmed) _punishFrame = o.MoveFrame;
 		if (_punishArmed && o.Recovering && FreeToPress(me, now.HitstopLeft))
 		{
 			Punish(s, o);
@@ -296,7 +300,7 @@ public sealed class NewcomerBot
 			_jumpRolled = true;
 			if (Roll(_cfg.AntiAirPct))
 			{
-				if (_only is { } sp) PressSpecial(sp.Slot, sp.Frames); // YOK-253: the spam bot's one attack
+				if (_only is { } sp) { PressSpecial(sp.Slot, sp.Frames); Stats.Specials++; } // YOK-253: the spam bot's one attack, counted as a special press
 				else Start(PlanKind.Attack, (_antiAir!.Value.Bits, 1), (InputBits.None, Math.Max(1, _antiAir!.Value.Frames - 1)));
 				Stats.AntiAirs++;
 			}
@@ -411,12 +415,18 @@ public sealed class NewcomerBot
 
 	/// <summary>
 	/// YOK-253 (R5, P6): Ryo enters blockstun on the delayed screen (he was not in it the tick before): one
-	/// <c>punish_after_block_pct</c> roll for that blocked move. A hit blocked during the same blockstun rolls nothing more.
+	/// <c>punish_after_block_pct</c> roll for that blocked move (<paramref name="o"/>'s move on that screen). A hit blocked
+	/// during the same blockstun rolls nothing more.
 	/// </summary>
-	void ArmPunish(FighterView before, FighterView s)
+	void ArmPunish(FighterView before, FighterView s, FighterView o)
 	{
 		if (s.State != FighterState.Blockstun || before.State == FighterState.Blockstun) return;
-		if (Roll(_cfg.PunishAfterBlockPct)) { _punishArmed = true; Stats.PunishRolls++; }
+		Stats.PunishRolls++;
+		if (!Roll(_cfg.PunishAfterBlockPct)) return;
+		_punishArmed = true;
+		_punishMove = o.MoveId;
+		_punishFrame = o.MoveFrame;
+		Stats.PunishArmed++;
 	}
 
 	/// <summary>
@@ -438,9 +448,13 @@ public sealed class NewcomerBot
 			if (p.ConnectFrame(dist) is int f && f < bestFrame) { best = p; bestFrame = f; }
 		}
 		if (best is null) { Stats.PunishesOutOfReach++; return; }
-		if (best.Slot != SpecialSlot.None) PressSpecial(best.Slot, best.Press.Frames);
-		else Start(PlanKind.Attack, (best.Press.Bits, 1), (InputBits.None, Math.Max(1, best.Press.Frames - 1)));
-		Stats.Punishes++;
+		if (best.Slot != SpecialSlot.None) { PressSpecial(best.Slot, best.Press.Frames); Stats.Specials++; }
+		else
+		{
+			Start(PlanKind.Attack, (best.Press.Bits, 1), (InputBits.None, Math.Max(1, best.Press.Frames - 1)));
+			if (best.Move.IsThrow) Stats.Throws++; else Stats.Normals++;
+		}
+		Stats.Punishes++; // each punish press also counts under its kind (normals, throws, specials)
 	}
 
 	/// <summary>
@@ -584,8 +598,12 @@ public sealed class BotStats
 	/// counts here, and a throw press from the bot's own throw plan can break a grab without a roll.
 	/// </summary>
 	public int ThrowBreakPresses;
-	/// <summary>YOK-253: blocked moves whose punish roll succeeded, punishes pressed, and armed punishes with nothing in reach.</summary>
-	public int PunishRolls, Punishes, PunishesOutOfReach;
+	/// <summary>
+	/// YOK-253: punish_after_block_pct rolls (one per blockstun seen), the ones that succeeded (armed), punishes pressed
+	/// (also counted under Normals, Throws or Specials), and armed punishes with nothing in reach. Armed minus pressed minus
+	/// out of reach = punishes dropped because the blocked move ended, or turned into another move, before Ryo was free.
+	/// </summary>
+	public int PunishRolls, PunishArmed, Punishes, PunishesOutOfReach;
 	/// <summary>YOK-253: guards turned into a crouch guard against a seen low or a duckable shot.</summary>
 	public int CrouchGuards;
 	/// <summary>YOK-253: the special_slot_only slot when it was filled this fight (the bot's one attack), else None.</summary>

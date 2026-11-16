@@ -296,4 +296,55 @@ public static class BotSpamPunishCrouchTests
 		Assert.True(fd.Bot.Stats.CrouchGuards >= 5, $"it crouches under the flames ({fd.Bot.Stats.CrouchGuards})");
 		Assert.Equal(0, fdHits, "no flame touches a crouching Ryo");
 	}
+
+	/// <summary>
+	/// Code-critic advisory 5 / test-breaker: a punish armed for one blocked move never goes into another move's recovery.
+	/// Synthetic screens (reaction 1, so the bot sees each one as given): the opponent swings x, Ryo blocks it (armed),
+	/// then the opponent shows y (a cancel) and y's recovery. Control: x itself goes into recovery. Every roll is counted.
+	/// </summary>
+	[Test]
+	public static void Punish_ArmedForOneMove_NeverFiresIntoAnotherMovesRecovery()
+	{
+		var kit = BotKit.From(RowOne().P1);
+		FighterView Ryo(FighterState st) => new(0, 0, 1, st, st == FighterState.Blockstun ? 10 : 0, false, false, 1000, 0, null, false, 0, 0, 0, false);
+		FighterView Foe(string id, int frame) => new(100 * SimConfig.Scale, 0, -1, FighterState.Attack, 0, false, false, 1000, 0, id, false, frame, 5, 7, false);
+		NewcomerBot Run(string second)
+		{
+			var bot = new NewcomerBot(Guard(100, 0, 1) with { DecideEvery = 600 }, kit, 3);
+			var screens = new (FighterView Me, FighterView Foe)[]
+			{
+				(Ryo(FighterState.Idle), Foe("x", 5)), (Ryo(FighterState.Blockstun), Foe("x", 6)),
+				(Ryo(FighterState.Blockstun), Foe(second, second == "x" ? 7 : 2)), (Ryo(FighterState.Idle), Foe(second, 12)), (Ryo(FighterState.Idle), Foe(second, 13)),
+			};
+			int tick = 0;
+			foreach (var (me, foe) in screens)
+				bot.Next(new AiView(++tick, MatchPhase.Fighting, 0, me, foe, Array.Empty<ProjectileView>()));
+			return bot;
+		}
+		var same = Run("x");
+		Assert.Equal(1, same.Stats.PunishRolls, "one roll for the blockstun");
+		Assert.Equal(1, same.Stats.PunishArmed, "armed at 100");
+		Assert.Equal(1, same.Stats.Punishes, "control: x's own recovery is punished");
+		var other = Run("y");
+		Assert.Equal(1, other.Stats.PunishArmed, "armed for x");
+		Assert.Equal(0, other.Stats.Punishes, "never into y's recovery");
+	}
+
+	/// <summary>Code-critic advisory 2: prefer_special must exist in the pool and, with special_slot_only, sit in that slot.</summary>
+	[Test]
+	public static void PreferSpecial_CheckedAgainstThePool()
+	{
+		var pool = Content.Pool;
+		Bot.CheckAgainst(pool); // unset: nothing to check
+		var spam = BotConfig.LoadFile(Path.Combine(ContentPaths.DataDir, "harness", "newcomer-kihon-bot-spam-charge.json"));
+		spam.CheckAgainst(pool); // iron-club-charge is slot C
+		foreach (var bad in new[] { spam with { Fight = spam.Fight with { SpecialSlotOnly = SpecialSlot.D } }, spam with { Run = spam.Run with { PreferSpecial = "no-such-special" } } })
+		{
+			bool threw = false;
+			try { bad.CheckAgainst(pool); } catch (FormatException) { threw = true; }
+			Assert.True(threw, $"rejected: slot {bad.Fight.SpecialSlotOnly}, prefer {bad.Run.PreferSpecial}");
+		}
+		var noSlot = spam with { Fight = spam.Fight with { SpecialSlotOnly = null } };
+		noSlot.CheckAgainst(pool); // prefer_special alone: any slot
+	}
 }

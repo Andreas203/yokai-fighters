@@ -105,7 +105,23 @@ public sealed record BotConfig
 		["light_kick"] = InputBits.LightKick, ["medium_kick"] = InputBits.MediumKick, ["heavy_kick"] = InputBits.HeavyKick,
 	};
 
+	/// <summary>YOK-253: common.schema.json's id (lowercase kebab-case); \z, not $, so a trailing newline fails.</summary>
+	static readonly System.Text.RegularExpressions.Regex IdPattern = new(@"^[a-z0-9]+(-[a-z0-9]+)*\z");
+
 	public static BotConfig LoadFile(string path) => Parse(File.ReadAllText(path));
+
+	/// <summary>
+	/// YOK-253: checks the opt-in fields against the content's ability pool: a <c>prefer_special</c> must be a special in
+	/// the pool, and with <c>special_slot_only</c> its own slot must be that slot, or the pair could never spam it.
+	/// Unset fields check nothing.
+	/// </summary>
+	public void CheckAgainst(AbilityPool pool)
+	{
+		if (Run.PreferSpecial is not { } want) return;
+		var s = pool.Special(want) ?? throw new FormatException($"{Id}: prefer_special '{want}' is not a special in the pool");
+		if (Fight.SpecialSlotOnly is { } only && s.Slot != only)
+			throw new FormatException($"{Id}: prefer_special '{want}' goes in slot {s.Slot}, never special_slot_only {only}");
+	}
 
 	/// <summary>The default bot from a data folder (<c>data/harness/newcomer-kihon-bot.json</c>).</summary>
 	public static BotConfig LoadDefault(string dataDir) => LoadFile(Path.Combine(dataDir, "harness", DefaultId + ".json"));
@@ -204,7 +220,9 @@ public sealed record BotConfig
 			HealBelowPct = r?["heal_below_pct"] is null ? 100 : I(r, "heal_below_pct", 0, 100),
 			Dojo = S(r, "dojo") switch { "rest" => DojoPlan.Rest, "skip" => DojoPlan.Skip, var x => throw new FormatException($"{id}: dojo '{x}'") },
 			MenuSecondsPerNode = I(r, "menu_seconds_per_node", 0, 600),
-			PreferSpecial = r?["prefer_special"] is null ? null : S(r, "prefer_special"),
+			PreferSpecial = r?["prefer_special"] is null ? null
+				: S(r, "prefer_special") is var ps && IdPattern.IsMatch(ps) ? ps
+				: throw new FormatException($"{id}: prefer_special '{ps}' is not a special id (lowercase kebab-case)"),
 		};
 		return new BotConfig
 		{
