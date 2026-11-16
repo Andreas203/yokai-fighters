@@ -134,9 +134,13 @@ class ForwardTravelExactnessProbes(unittest.TestCase):
         self.assertEqual(0, old.returncode, old.stderr)  # bytes: the source holds non-ASCII text
         tmp = ROOT / "tools" / "_validate_data_main_probe.py"
         tmp.write_bytes(old.stdout)
-        # Features added after c2f48d9 that the old validator can't read: YOK-93's sound_cue kind, and YOK-225's command-grab
-        # fixture (a grab has no hitstun), which every requires-[] modifier is built onto.
-        later = re.compile(r"unknown kind '(sound_cue)'|: on test-river-grab Lv ")
+        # Features added after c2f48d9 that the old validator can't read: YOK-93's sound_cue kind; YOK-225's command grabs
+        # (a grab has no hitstun): the fixture and the real River Grab, every requires-[] modifier built onto either, and
+        # River Grab's trial (a command grab, not a throw); YOK-224's Fox Mirage teleport (no active frames, no projectile).
+        later = re.compile(r"unknown kind '(sound_cue)'|: on (test-)?river-grab Lv "
+                           r"|river-grab\.json: levels: Lv \d( EX)?: a move with hitboxes needs hitstun and blockstun"
+                           r"|river-grab-trial\.json: goal\.steps\.\d+\.move: 'river-grab' is not a throw"
+                           r"|fox-mirage\.json: levels\.\d+\.frame_data\.active: active is null .* properties\.projectile is missing")
         try:
             paths = [str(ROOT / "data"), str(ROOT / "game" / "tests" / "fixtures")]
             def run_with(mod):

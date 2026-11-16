@@ -140,7 +140,7 @@ class BrokenSamplesTest(unittest.TestCase):
         self.assertCaught("trial-broken", "K2", "trials", "goal.steps.0.motion")
         self.assertCaught("trial-broken", "R7", "trials", "'kitsune-light-punch' is a kitsune move")
         self.assertCaught("trial-broken", "R7", "trials", "move 'ghost-palm' does not exist")
-        self.assertCaught("trial-broken", "R7", "trials", "trial special 'fox-mirage' is not a special")
+        self.assertCaught("trial-broken", "R7", "trials", "trial special 'ghost-mirage' is not a special")
 
     def test_every_fixture_is_tested(self):
         broken = {"cancel-loop", "cancel-not-once", "cancel-cap", "missing-kihon", "wrong-scheme",

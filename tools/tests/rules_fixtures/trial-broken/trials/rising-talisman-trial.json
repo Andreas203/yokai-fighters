@@ -2,7 +2,7 @@
   "kind": "trial",
   "id": "rising-talisman-trial",
   "status": "proposed",
-  "special": "fox-mirage",
+  "special": "ghost-mirage",
   "prompt": "Anti-air the dummy's jump with Rising Talisman.",
   "attempts": 3,
   "setup": {
