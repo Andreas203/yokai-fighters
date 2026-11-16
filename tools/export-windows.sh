@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# YOK-39: playable Windows build of the demo.
+# YOK-39: playable Windows build of Yokai-Fighters-alpha (version: application/config/version in game/project.godot).
 #   GODOT=/path/to/Godot_v4.7.2-stable_mono_win64_console.exe tools/export-windows.sh
 # Also runs on Linux with the Linux mono editor (.github/workflows/release.yml does).
-# Needs the 4.7.2.stable.mono export templates installed. Output: build/windows/ and build/YokaiFighters-Demo-Windows.zip.
+# Needs the 4.7.2.stable.mono export templates installed. Output: build/windows/ and build/Yokai-Fighters-alpha-windows.zip.
 # The game reads its JSON content with System.IO, so data/ (and the TEST FIXTURE folders the kits still fall back
 # to, e.g. Kitsune's air normals) are copied next to the exe, where ContentPaths looks in an exported build.
 set -euo pipefail
@@ -10,7 +10,7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 GODOT="${GODOT:-C:/Users/Andreas/Downloads/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe}"
 OUT="$REPO/build/windows"
 
-rm -rf "$OUT" "$REPO/build/YokaiFighters-Demo-Windows.zip"
+rm -rf "$OUT" "$REPO/build/Yokai-Fighters-alpha-windows.zip"
 mkdir -p "$OUT"
 (cd "$REPO/game" && dotnet build)  # Godot compiles the export configuration itself
 "$GODOT" --headless --path "$REPO/game" --export-release "Windows Desktop" ../build/windows/YokaiFighters.exe
@@ -23,8 +23,8 @@ done
 for d in ryo-normals ryo-air-normals throws specials rewards; do cp -r "$REPO/game/tests/fixtures/$d" "$OUT/fixtures/$d"; done
 
 if command -v powershell.exe >/dev/null; then
-  powershell.exe -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$OUT")\\*' -DestinationPath '$(cygpath -w "$REPO/build")\\YokaiFighters-Demo-Windows.zip' -Force"
+  powershell.exe -NoProfile -Command "Compress-Archive -Path '$(cygpath -w "$OUT")\\*' -DestinationPath '$(cygpath -w "$REPO/build")\\Yokai-Fighters-alpha-windows.zip' -Force"
 else  # Linux (the release workflow): same zip, built with zip
-  (cd "$OUT" && zip -qr -9 "$REPO/build/YokaiFighters-Demo-Windows.zip" .)
+  (cd "$OUT" && zip -qr -9 "$REPO/build/Yokai-Fighters-alpha-windows.zip" .)
 fi
-ls -l "$REPO/build/YokaiFighters-Demo-Windows.zip"
+ls -l "$REPO/build/Yokai-Fighters-alpha-windows.zip"
