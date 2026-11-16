@@ -76,8 +76,8 @@ public partial class RewardCard : Control
 		_tag.Text = c.Tag;
 		_tagPanel.ThemeTypeVariation = c.Kind switch { CardKind.NewMove or CardKind.CancelRule => "TagNew", CardKind.Upgrade => "TagUpgrade", _ => "TagModifier" };
 		_plain.Text = c.Plain;
-		_prompt.Visible = c.Kind == CardKind.Modifier;
-		_prompt.Text = c.TargetPrompt ?? "Pick a special";
+		_prompt.Visible = c.Kind == CardKind.Modifier || c.Replaces != null;
+		_prompt.Text = c.Replaces is { } r ? $"Replaces {r.Name} (slot {r.Slot})" : c.TargetPrompt ?? "Pick a special";
 		_frames.Text = c.Frames;
 	}
 

@@ -22,6 +22,21 @@ public sealed record BotFightConfig
 	/// once per grab; 0 = never breaks (the pre-YOK-184 bot, and no RNG draw, so old seeds replay identically).
 	/// </summary>
 	public int ThrowBreakPct { get; init; }
+	/// <summary>
+	/// YOK-253 (P5, T2): the one special slot the bot attacks with (normals, throws, mistakes and anti-airs all become
+	/// that slot's special) while the slot is filled; an empty slot plays the usual bot. Null = off (absent in the file).
+	/// </summary>
+	public SpecialSlot? SpecialSlotOnly { get; init; }
+	/// <summary>
+	/// YOK-253 (R5): percent of the opponent's moves Ryo blocks that the bot answers with its fastest punish in reach,
+	/// rolled once per blockstun as the delayed screen shows it (P6); 0 = never (no RNG draw, so old seeds replay identically).
+	/// </summary>
+	public int PunishAfterBlockPct { get; init; }
+	/// <summary>
+	/// YOK-253 (C3): percent of seen lows (and projectiles that fly over a crouching body box, Foxfire) the bot answers by
+	/// crouching inside a guard it holds, rolled once per threat; 0 = standing guard only (no RNG draw).
+	/// </summary>
+	public int CrouchGuardPct { get; init; }
 	public required int AntiAirPct { get; init; }
 	public required InputBits AntiAirButton { get; init; }
 	public required int PokeRange { get; init; }
@@ -61,6 +76,11 @@ public sealed record BotRunConfig
 	public int HealBelowPct { get; init; } = 100;
 	/// <summary>R9 estimate only: seconds a newcomer spends per node outside the fight (map, cards, stops).</summary>
 	public required int MenuSecondsPerNode { get; init; }
+	/// <summary>
+	/// YOK-253: a special id the bot drafts whenever its NEW card is offered (before <see cref="RewardOrder"/>), replacing
+	/// whatever holds its slot; null = off. Pairs with <see cref="BotFightConfig.SpecialSlotOnly"/> to spam one special.
+	/// </summary>
+	public string? PreferSpecial { get; init; }
 }
 
 /// <summary>
@@ -85,7 +105,23 @@ public sealed record BotConfig
 		["light_kick"] = InputBits.LightKick, ["medium_kick"] = InputBits.MediumKick, ["heavy_kick"] = InputBits.HeavyKick,
 	};
 
+	/// <summary>YOK-253: common.schema.json's id (lowercase kebab-case); \z, not $, so a trailing newline fails.</summary>
+	static readonly System.Text.RegularExpressions.Regex IdPattern = new(@"^[a-z0-9]+(-[a-z0-9]+)*\z");
+
 	public static BotConfig LoadFile(string path) => Parse(File.ReadAllText(path));
+
+	/// <summary>
+	/// YOK-253: checks the opt-in fields against the content's ability pool: a <c>prefer_special</c> must be a special in
+	/// the pool, and with <c>special_slot_only</c> its own slot must be that slot, or the pair could never spam it.
+	/// Unset fields check nothing.
+	/// </summary>
+	public void CheckAgainst(AbilityPool pool)
+	{
+		if (Run.PreferSpecial is not { } want) return;
+		var s = pool.Special(want) ?? throw new FormatException($"{Id}: prefer_special '{want}' is not a special in the pool");
+		if (Fight.SpecialSlotOnly is { } only && s.Slot != only)
+			throw new FormatException($"{Id}: prefer_special '{want}' goes in slot {s.Slot}, never special_slot_only {only}");
+	}
 
 	/// <summary>The default bot from a data folder (<c>data/harness/newcomer-kihon-bot.json</c>).</summary>
 	public static BotConfig LoadDefault(string dataDir) => LoadFile(Path.Combine(dataDir, "harness", DefaultId + ".json"));
@@ -124,6 +160,13 @@ public sealed record BotConfig
 			IdleGuardPct = f["idle_guard_pct"] is null ? 0 : I(f, "idle_guard_pct", 0, 100),
 			SpecialHoldTicks = f["special_hold_ticks"] is null ? 0 : I(f, "special_hold_ticks", 0, 600),
 			ThrowBreakPct = f["throw_break_pct"] is null ? 0 : I(f, "throw_break_pct", 0, 100),
+			SpecialSlotOnly = f["special_slot_only"] is null ? null : S(f, "special_slot_only") switch
+			{
+				"A" => SpecialSlot.A, "B" => SpecialSlot.B, "C" => SpecialSlot.C, "D" => SpecialSlot.D,
+				var x => throw new FormatException($"{id}: special_slot_only '{x}' (A, B, C or D)"),
+			},
+			PunishAfterBlockPct = f["punish_after_block_pct"] is null ? 0 : I(f, "punish_after_block_pct", 0, 100),
+			CrouchGuardPct = f["crouch_guard_pct"] is null ? 0 : I(f, "crouch_guard_pct", 0, 100),
 			AntiAirPct = I(f, "anti_air_pct", 0, 100),
 			AntiAirButton = Buttons.TryGetValue(S(f, "anti_air_button"), out var aa) ? aa : throw new FormatException($"{id}: anti_air_button"),
 			PokeRange = I(f, "poke_range", 0, 4000),
@@ -177,6 +220,9 @@ public sealed record BotConfig
 			HealBelowPct = r?["heal_below_pct"] is null ? 100 : I(r, "heal_below_pct", 0, 100),
 			Dojo = S(r, "dojo") switch { "rest" => DojoPlan.Rest, "skip" => DojoPlan.Skip, var x => throw new FormatException($"{id}: dojo '{x}'") },
 			MenuSecondsPerNode = I(r, "menu_seconds_per_node", 0, 600),
+			PreferSpecial = r?["prefer_special"] is null ? null
+				: S(r, "prefer_special") is var ps && IdPattern.IsMatch(ps) ? ps
+				: throw new FormatException($"{id}: prefer_special '{ps}' is not a special id (lowercase kebab-case)"),
 		};
 		return new BotConfig
 		{

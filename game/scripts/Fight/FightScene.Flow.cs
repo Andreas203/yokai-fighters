@@ -211,6 +211,7 @@ public partial class FightScene
 		if (TwistCard != null) TwistCard.Finished += OnTwistCardDone;
 		ShowTwistIntro();
 		ShowStoryBeat();
+		ShowTrialScroll(); // YOK-98: the dojo trial's quest on the hanging scroll before the first attempt
 		if (!ExternalDrive) _suppress = HeldBits(); // entered from a menu: the Space/A that pressed Start Game must not fire a Special
 		if (!OS.IsDebugBuild()) { GetNode("DebugMenuLayer").QueueFree(); return; } // the debug menu is for debug builds only
 		DebugMenu = GetNode<DemoDebugMenu>("DebugMenuLayer/DebugMenu");
