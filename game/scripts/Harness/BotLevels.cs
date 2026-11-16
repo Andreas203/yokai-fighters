@@ -25,9 +25,10 @@ public sealed record BotLevels
 	{
 		"reaction_frames", "decide_every", "mistake_pct", "block_pct", "idle_guard_pct", "throw_break_pct", "anti_air_pct", "anti_air_button",
 		"poke_range", "throw_range", "preferred_min", "preferred_max", "walk_ticks", "block_ticks", "wait_ticks", "weights",
+		"special_slot_only", "punish_after_block_pct", "crouch_guard_pct", // YOK-253: opt-in, no level in bot-levels.json sets them
 	};
 	static readonly string[] WeightKeys = { "walk", "normal", "special", "throw", "jump", "wait" };
-	static readonly string[] RunKeys = { "route", "reward_order", "merchant", "heal_below_pct", "dojo" };
+	static readonly string[] RunKeys = { "route", "reward_order", "merchant", "heal_below_pct", "dojo", "prefer_special" };
 	static readonly string[] LevelKeys = { "level", "bot_id", "status", "fight", "run", "notes" };
 	// \z, not $: .NET's $ also matches before a final newline, so "mixed\n" would pass.
 	static readonly Regex Name = new(@"^[a-z][a-z0-9-]*\z");

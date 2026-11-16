@@ -316,6 +316,63 @@ public static class DojoTrialTests
 	}
 
 	[Test]
+	public static void Scene_TrialOpensOnTheScroll_ThenKeepsTheQuestOnTheBanner(Node runner)
+	{
+		var s = AtDojo(500);
+		var offer = s.Dojo!.Trials[0];
+		Assert.True(s.Dojo.ChooseTrial(offer.Trial.Id).Ok, "chosen");
+		var scene = GD.Load<PackedScene>("res://scenes/fight.tscn").Instantiate<FightScene>();
+		scene.ExternalDrive = true;
+		scene.Session = s;
+		scene.TrialStop = s.Dojo;
+		runner.AddChild(scene);
+		try
+		{
+			var card = scene.TwistCard!;
+			var scroll = card.Scroll!;
+			string name = s.Run[offer.Slot]!.Data.Name;
+			Assert.True(card.Showing && scroll.Visible, "the trial opens on the hanging scroll");
+			Assert.True(scene.FlowPaused, "and the fight holds while it shows");
+			Assert.True(scroll.Kicker.StartsWith("DOJO TRIAL", StringComparison.Ordinal), $"kicker '{scroll.Kicker}'");
+			Assert.Equal(name, scroll.TitleText, "the special's name is the title");
+			Assert.Equal(offer.Trial.Prompt, scroll.Quote, "the quest is the scroll's text");
+			Assert.True(scroll.RuleText.Contains($"{offer.Trial.Attempts} tries", StringComparison.Ordinal), $"the stakes: '{scroll.RuleText}'");
+			Assert.True(scroll.StampArt is not null, "the special's icon is the stamp");
+			Assert.True(scroll.TextFits, "nothing clipped on the scroll");
+			Assert.True(scroll.HasPlate, "drawn on the dojo's handscroll plate");
+			card.Continue();
+			card.Display("plain", "ELDER TWIST · ROW 5", "twist-grip", "E");
+			Assert.True(!scroll.HasPlate, "a later twist card is the elder's own cloth again");
+			card.Continue();
+			Assert.True(!scene.FlowPaused, "closing the scroll starts the trial");
+			var banner = scene.TrialBanner!;
+			Assert.True(banner.Visible, "the quest stays on the banner during the attempts");
+			Assert.Equal(offer.Trial.Prompt, banner.Quest, "the banner carries the quest");
+			Assert.True(banner.Kicker.Contains("ATTEMPT 1 OF 3", StringComparison.Ordinal), $"and the attempt: '{banner.Kicker}'");
+			int guard = 0;
+			while (scene.Trial!.Attempt == 1 && guard++ < offer.Trial.AttemptFrames + 10) scene.Step(FighterInput.None, FighterInput.None);
+			Assert.True(banner.Kicker.Contains("ATTEMPT 2 OF 3", StringComparison.Ordinal), $"a missed attempt moves the count: '{banner.Kicker}'");
+		}
+		finally { scene.QueueFree(); }
+	}
+
+	[Test]
+	public static void Banner_EveryShippedQuestFitsThePaper(Node runner)
+	{
+		var banner = new YokaiFighters.Ui.TrialScrollBanner();
+		runner.AddChild(banner);
+		try
+		{
+			foreach (var t in Library)
+			{
+				banner.Show("DOJO TRIAL · SPECIAL · ATTEMPT 1 OF 3", t.Prompt);
+				Assert.True(banner.QuestFits, $"{t.Id}: the quest fits the banner (at {banner.QuestFontSize} px)");
+			}
+		}
+		finally { banner.QueueFree(); }
+	}
+
+	[Test]
 	public static void RestStop_TrialCardIsEnabled()
 	{
 		var s = AtDojo(500);

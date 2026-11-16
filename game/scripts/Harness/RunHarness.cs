@@ -111,8 +111,9 @@ public static class RunHarness
 	public static RunRecord PlayRun(HarnessContent content, BotConfig bot, uint seed, FightRunner? fight = null)
 	{
 		fight ??= FightNode;
+		bot.CheckAgainst(content.Pool); // YOK-253: prefer_special / special_slot_only must be able to meet
 		var session = RunSession.Start(content.Pool, content.Map, content.Scenes, seed);
-		var runBot = new RunBot(bot.Run, Mix(seed, 0x524F5554u));
+		var runBot = new RunBot(bot.Run, Mix(seed, 0x524F5554u), bot.Fight.SpecialSlotOnly);
 		var rec = new RunRecord { Seed = seed, Level = bot.Level };
 		while (!session.IsOver)
 		{
@@ -147,7 +148,7 @@ public static class RunHarness
 				n.CoinsWon = session.CoinsWon;
 				if (draft is not null)
 				{
-					var (card, target) = runBot.ChooseCard(draft.Offer);
+					var (card, target) = runBot.ChooseCard(draft.Offer, session.Run);
 					var pick = draft.Pick(card, target);
 					if (!pick.Ok) throw new InvalidOperationException($"seed {seed}: node {node.NodeId}: pick refused: {pick.Error}");
 					n.Card = new CardRecord(pick.Card!.Badge, pick.Card.AbilityId, pick.Slot, pick.Level,
@@ -200,7 +201,7 @@ public static class RunHarness
 		var ai = new ProfileAi(profiles[pi], 1, loadout, Mix(runSeed, 0xA1000000u + step), node.ReactionFrames,
 			AiFightTiers.Of(node), standingHabits: content.StandingHabits, neutralThrowHeld: content.NeutralThrowHeld, heldBlock: content.HeldBlock,
 			holdBlockThroughThreat: content.HoldBlockThroughThreat); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
-		var ryo = new NewcomerBot(bot.Fight, BotKit.From(m.P1), Mix(runSeed, 0xB0700000u + step));
+		var ryo = new NewcomerBot(bot.Fight, BotKit.From(m.P1, m.P2), Mix(runSeed, 0xB0700000u + step)); // YOK-253: P2's kit = the lows Ryo knows by sight
 		FightLog? log = null;
 		if (content.HitLog) { log = new FightLog(content.RawHitLog); log.Attach(m, ai); }
 		int ryoStart = m.P1.Health, foeStart = m.P2.Health;
