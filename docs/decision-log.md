@@ -300,3 +300,6 @@ Moved to Linear on 2026-10-21 (YOK-188): the live list is YOK-189. The last repo
 
 ## Designer decisions 2026-11-13
 - 2026-11-13 Assignment 7 improvements (designer chose all four): the video link, this fix as a costed example, the prompt-cache change in `tools/content_pipeline` (notes in the system prompt, old layout kept as `--prompt-layout v1`), and the manual-steps table. Spend approved for one live rerun (about $2); run `a7-cached` cost $0.55.
+
+## Designer decisions 2026-11-16
+- 2026-11-16 Builds are "Yokai-Fighters-alpha" with a semantic version, not "demo" (designer: "lets stop calling it demo, start calling it alpha, Yokai-Fighters-alpha and then semantic version starting from 0"). The version is `application/config/version` in `game/project.godot`, starting at 0.1.0. Release tags are `alpha-v<version>` (the old `demo-v*` tags stay as history). The zip is `Yokai-Fighters-alpha-windows.zip`, and itch.io builds are labelled `<version>+<commit>`. The demo-complete story card's title ("Thanks for playing the demo") is story text and is not changed here.
