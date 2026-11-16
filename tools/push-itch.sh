@@ -5,7 +5,7 @@
 #     --dry-run  show what would be pushed; uploads nothing
 # Needs butler on PATH (or BUTLER=/path/to/butler) and a login: run `butler login` once, or set BUTLER_API_KEY (CI).
 # ITCH_TARGET overrides user/game:channel; ITCH_VERSION overrides the version label. Default: the semantic version in
-# game/project.godot (application/config/version) plus the commit as build metadata, e.g. 0.1.0+ddb3d176 (.dirty if game/ or data/ has uncommitted changes).
+# game/project.godot (application/config/version) plus the commit as build metadata, e.g. 0.1.0+ddb3d176 (.dirty if a tracked file in game/ or data/ has uncommitted changes; untracked files, such as the .uid files a Godot import leaves, do not count).
 # butler uploads only the files that changed since the last push, and itch.io's app updates players by the same patch.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,7 +31,7 @@ if [ -z "$VERSION" ]; then
   semver="$(sed -n 's/^config\/version="\(.*\)"$/\1/p' "$REPO/game/project.godot")"
   [ -n "$semver" ] || { echo "no config/version in game/project.godot" >&2; exit 1; }
   VERSION="$semver+$(git -C "$REPO" rev-parse --short=8 HEAD)"
-  if [ -n "$(git -C "$REPO" status --porcelain -- game data)" ]; then VERSION="$VERSION.dirty"; fi
+  if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no -- game data)" ]; then VERSION="$VERSION.dirty"; fi
 fi
 args=(push "$OUT" "$TARGET" --userversion "$VERSION" --if-changed)
 if [ "$dry" = 1 ]; then args+=(--dry-run); fi
