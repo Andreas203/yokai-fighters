@@ -22,6 +22,12 @@ public sealed record HarnessContent(KitSources Sources, AbilityPool Pool, MapGra
 	/// <summary>YOK-228: a neutral throw pick is held and pressed as a slot request (<see cref="ProfileAi.NeutralThrowHeld"/>);
 	/// false = the rule before YOK-228, for tests pinning older whole-run hashes (AiGuardTests.LegacyOpponent).</summary>
 	public bool NeutralThrowHeld { get; init; } = true;
+	/// <summary>YOK-252: a block plan is a held guard (<see cref="ProfileAi.HeldBlock"/>); false = the rule before YOK-252,
+	/// for tests pinning older whole-run hashes (AiGuardTests.LegacyOpponent).</summary>
+	public bool HeldBlock { get; init; } = true;
+	/// <summary>YOK-252, proposed and off: a held block outlasts its BlockTicks while a threat shows
+	/// (<see cref="ProfileAi.HoldBlockThroughThreat"/>); only for comparing batches.</summary>
+	public bool HoldBlockThroughThreat { get; init; }
 
 	/// <summary>
 	/// YOK-174: the profiles <paramref name="node"/> fights with: its plays-as yokai's (<see cref="Profiles"/>) plus the
@@ -193,7 +199,8 @@ public static class RunHarness
 		if (loadout.Missing(profiles[pi]) is { Count: > 0 } missing) // YOK-174: never skip a named move silently
 			throw new InvalidOperationException($"node '{node.NodeId}': profile '{profiles[pi].Id}' names {string.Join(", ", missing)}, which {node.MovesAndProfilesOf} on {node.Fighter}'s kit does not have");
 		var ai = new ProfileAi(profiles[pi], 1, loadout, Mix(runSeed, 0xA1000000u + step), node.ReactionFrames,
-			AiFightTiers.Of(node), standingHabits: content.StandingHabits, neutralThrowHeld: content.NeutralThrowHeld); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
+			AiFightTiers.Of(node), standingHabits: content.StandingHabits, neutralThrowHeld: content.NeutralThrowHeld, heldBlock: content.HeldBlock,
+			holdBlockThroughThreat: content.HoldBlockThroughThreat); // YOK-57, E22: EX/burst only in elder and Tanuki fights, as in the fight scene
 		var ryo = new NewcomerBot(bot.Fight, BotKit.From(m.P1, m.P2), Mix(runSeed, 0xB0700000u + step)); // YOK-253: P2's kit = the lows Ryo knows by sight
 		FightLog? log = null;
 		if (content.HitLog) { log = new FightLog(content.RawHitLog); log.Attach(m, ai); }

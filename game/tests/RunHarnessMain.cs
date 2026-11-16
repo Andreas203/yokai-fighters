@@ -11,7 +11,7 @@ namespace YokaiFighters.Tests;
 /// YOK-26 headless whole-run harness (G1, R5). Plays N seeded first runs with the newcomer Kihon bot and writes
 /// harness/results/whole-run/&lt;bot&gt;-n&lt;N&gt;-s&lt;seed&gt;.json (summary + every run), then prints the summary.
 /// godot --headless --path game res://tests/run_harness.tscn -- [--runs 200] [--seed 1] [--level newcomer|&lt;level&gt;|all|mixed]
-///   [--levels data/harness/bot-levels.json] [--bot data/harness/x.json] [--out dir] [--data dir] [--hit-log]
+///   [--levels data/harness/bot-levels.json] [--bot data/harness/x.json] [--out dir] [--data dir] [--hit-log] [--hold-block]
 /// YOK-170: <c>--level</c> picks a bot skill level from the levels file (default newcomer = today's bot); <c>all</c> writes one
 /// batch per level, <c>mixed</c> one batch where run i plays level i mod n. <c>--bot</c> plays one bot file on its own (no level).
 /// Relative paths are from the repo root. <c>--data</c> plays another content folder (YOK-34: the data merge check runs a
@@ -33,13 +33,18 @@ public partial class RunHarnessMain : Node
 			string dataDir = args.TryGetValue("data", out var d) ? Path.GetFullPath(d, root) : ContentPaths.DataDir;
 			if (!Directory.Exists(dataDir)) throw new DirectoryNotFoundException($"--data {dataDir} is not a folder");
 			string outDir = args.TryGetValue("out", out var o) ? Path.GetFullPath(o, root) : Path.Combine(root, "harness", "results", "whole-run");
-			var content = HarnessContent.Load(dataDir, ContentPaths.FixturesDir) with { RawHitLog = args.ContainsKey("hit-log") }; // YOK-157: every hit line too
+			var content = HarnessContent.Load(dataDir, ContentPaths.FixturesDir) with
+			{
+				RawHitLog = args.ContainsKey("hit-log"), // YOK-157: every hit line too
+				HoldBlockThroughThreat = args.ContainsKey("hold-block"), // YOK-252: the PROPOSED block hold (off, not in E22), to compare batches
+			};
 			var clock = Stopwatch.StartNew(); // reporting only, never written to the file
 			var batches = new List<BatchResult>();
 			// YOK-171 (AM11): --hold N keeps Special held N ticks on a charge special (Sumo Stance); overrides the bot file.
 			int? hold = args.TryGetValue("hold", out var h) ? int.Parse(h) : null;
 			if (hold is < 0 or > 600) throw new ArgumentException("--hold takes 0-600 ticks");
-			BotConfig Held(BotConfig c) => hold is int n ? c with { Id = $"{c.Id}-hold{n}", Fight = c.Fight with { SpecialHoldTicks = n } } : c;
+			BotConfig HeldOnly(BotConfig c) => hold is int n ? c with { Id = $"{c.Id}-hold{n}", Fight = c.Fight with { SpecialHoldTicks = n } } : c;
+			BotConfig Held(BotConfig c) => content.HoldBlockThroughThreat ? HeldOnly(c) with { Id = HeldOnly(c).Id + "-holdblock" } : HeldOnly(c); // YOK-252: its own file name
 			if (args.TryGetValue("bot", out var b))
 			{
 				if (args.ContainsKey("level") || args.ContainsKey("levels")) throw new ArgumentException("--bot plays one bot file; it takes no --level/--levels");
@@ -50,6 +55,7 @@ public partial class RunHarnessMain : Node
 				var levels = args.TryGetValue("levels", out var lf) ? BotLevels.LoadFile(Path.GetFullPath(lf, root)) : BotLevels.LoadDefault(dataDir);
 				string level = args.GetValueOrDefault("level", BotLevels.DefaultLevel);
 				if (level == "mixed" && hold != null) throw new ArgumentException("--hold plays one level or all; not mixed");
+				if (level == "mixed" && content.HoldBlockThroughThreat) throw new ArgumentException("--hold-block plays one level or all; not mixed");
 				if (level == "mixed") batches.Add(RunHarness.PlayMixed(content, levels, seed, runs));
 				else if (level == "all") foreach (var lv in levels.Levels) batches.Add(RunHarness.PlayBatch(content, Held(lv), seed, runs));
 				else batches.Add(RunHarness.PlayBatch(content, Held(levels[level]), seed, runs));

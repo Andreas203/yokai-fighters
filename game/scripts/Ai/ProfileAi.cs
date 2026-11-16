@@ -82,6 +82,23 @@ public sealed class ProfileAi
 	/// tests pinning older whole-run hashes, pass false (<c>AiSetup.NeutralThrowHeld</c>).
 	/// </summary>
 	public bool NeutralThrowHeld { get; }
+	/// <summary>
+	/// YOK-252 (Y4, P6, E22): a block plan (<see cref="ActionKind.Block"/>, <see cref="ActionKind.CrouchBlock"/>) is a held
+	/// guard: its <see cref="BlockTicks"/> (E22: 20) are free ticks: counted only when the AI is actionable (not its own move,
+	/// dash or jump, nor a stun it sees, blockstun included), so it guards from its first actionable frame, holds back through
+	/// any blockstun, and then guards 20 free ticks in all. Every reaction still rolls at its data weight and may replace it (E22).
+	/// False = the rule before YOK-252 (a fixed BlockTicks from the decision); only replays of recordings made before it,
+	/// and tests pinning older hashes, pass false (<c>AiSetup.HeldBlock</c>).
+	/// </summary>
+	public bool HeldBlock { get; }
+	/// <summary>
+	/// YOK-252, PROPOSED E22 amendment (off by default, never on in the game), two parts decided together. With
+	/// <see cref="HeldBlock"/>: (1) a held block does not count its last tick while a threat still shows (the opponent's
+	/// swing in startup or active frames, or its projectile in flight), so it can outlast E22's 20 ticks; (2) while it runs
+	/// with the opponent's projectile on screen, <c>opponent_in_recovery</c> / <c>opponent_whiffed</c> answers that are not
+	/// a guard are skipped (no draw). For the designer to compare in the harness only (<c>AiSetup.HoldBlockThroughThreat</c>).
+	/// </summary>
+	public bool HoldBlockThroughThreat { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
 
 	private readonly AiLoadout _kit;
@@ -95,6 +112,8 @@ public sealed class ProfileAi
 	private int _comboHits, _burstPressTick = -1;
 	/// <summary>YOK-165: the tick the AI last pressed a move of its own and that move's length (its own plan, not the screen).</summary>
 	private int _ownPressTick = -1, _ownPressFrames;
+	/// <summary>YOK-252: the first tick its own dash or jump (its own plan, not the screen) lets it act again; no count shows for either.</summary>
+	private int _ownBusyUntil = -1;
 	/// <summary>YOK-177: the view tick of the last standing-trigger habit roll (-1 = none yet).</summary>
 	private int _standingRollTick = -1;
 	/// <summary>YOK-177: a fired standing habit a burst interrupted; it is resumed when the burst plan ends.</summary>
@@ -103,8 +122,10 @@ public sealed class ProfileAi
 
 	public ProfileAi(BehaviourProfile profile, int self, AiLoadout kit, uint seed, int? reactionFrames = null,
 		AiFightTier tier = AiFightTier.Standard, int aggressionBonus = 0, int? guardPct = null, bool standingHabits = true,
-		bool neutralThrowHeld = true)
+		bool neutralThrowHeld = true, bool heldBlock = true, bool holdBlockThroughThreat = false)
 	{
+		HeldBlock = heldBlock;
+		HoldBlockThroughThreat = heldBlock && holdBlockThroughThreat;
 		StandingHabits = standingHabits;
 		NeutralThrowHeld = neutralThrowHeld;
 		GuardPct = Math.Clamp(guardPct ?? profile.GuardPct ?? DefaultGuardPct, 0, 100);
@@ -128,6 +149,13 @@ public sealed class ProfileAi
 		int tick = now.Tick + 1; // the clock only: the step this output feeds
 		AiView? prev = _prev;
 		_prev = view;
+		// YOK-252 (test-breaker r2): the match was reset under this AI (Match.Reset puts the clock back to 0 and the phase
+		// straight to Fighting). Until the delayed screen reaches the new round, the screen it decides from is older than
+		// the match's own clock: like a screen outside Fighting, it drops its plan, its resumed habit and its own
+		// commitments and does nothing, so no guard (or press) from the last round runs into the next. It compares two
+		// clocks only, its own frame counter and the screen's (P6: no opponent state, no input); the first new-round screen
+		// then has no previous one, so nothing rises across the reset.
+		if (HeldBlock && view.Tick > now.Tick) { _plan = null; _resume = null; _ownPressTick = -1; _ownBusyUntil = -1; _prev = null; return FighterInput.None; }
 
 		if (view.Phase != MatchPhase.Fighting) { _plan = null; _resume = null; return FighterInput.None; }
 
@@ -189,10 +217,17 @@ public sealed class ProfileAi
 		{
 			int? jumpRate = rose[(int)Observation.OpponentJumping] ? view.JumpPunishPct(Self) : null;
 			bool jumpRolled = false;
+			// YOK-252, proposed (HoldBlockThroughThreat, off): Spirit Wave's recovery starts with its wave in flight, so an
+			// opponent_in_recovery punish replaces the running guard with a swing into the wave (opponent_whiffed never rises
+			// for it: the move has no active frames, MoveData.FirstActive > LastActive). With the option on, those two triggers'
+			// non-guard answers are skipped (no draw) while a held block runs with the opponent's projectile on screen. Off
+			// (the default), every reaction rolls at its data weight (E22).
+			bool shotComing = HoldBlockThroughThreat && _plan is { BlockLeft: > 0 } && HasShot(view);
 			foreach (var b in Profile.Behaviours)
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
 				if (jumpOverHabit && b.When != Observation.OpponentJumping) continue;
+				if (shotComing && b.When is Observation.OpponentInRecovery or Observation.OpponentWhiffed && !b.Do.IsGuard) continue;
 				if (jumpRate is { } rate && b.When == Observation.OpponentJumping)
 				{
 					if (!jumpRolled)
@@ -244,8 +279,30 @@ public sealed class ProfileAi
 		if ((_plan is null || _plan.Done) && _resume is { } back) { _plan = back; _resume = null; if (back.InPress) back.Paused = true; } // YOK-177: HabitPress decides
 		if (_plan is null || _plan.Done) _plan = Neutral(view, s, o, tick);
 		if (_plan.AtMovePress) { _ownPressTick = tick; _ownPressFrames = _plan.MoveFrames; } // YOK-165: its own commitment, not a read
-		return _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
+		if (HeldBlock && _plan.AtCommitPress) _ownBusyUntil = tick + _plan.CommitFrames; // YOK-252: its own dash or jump starts on this press
+		var output = _plan.Emit(Dirs(s, o).back); // a guard step holds back as the AI's own (delayed) view shows it now
+		if (_plan.BlockLeft > 0) CountBlock(_plan, view, o, tick);
+		return output;
 	}
+
+	/// <summary>
+	/// YOK-252 (Y4, E22): one tick of a held block. BlockTicks are free ticks (code critic r2, chosen over counting
+	/// blockstun): a tick counts only when the AI is actionable, so its own move, dash or jump, and any stun it sees, do not
+	/// count (<see cref="FirstActionableTick"/>, <c>_ownBusyUntil</c>). A blockstun therefore lengthens the plan: it keeps
+	/// holding back through the whole stun (counting it would let the plan run out mid-stun, hitstop ticks included, and
+	/// leave the AI open in blockstun), then guards the rest of its 20 free ticks. A committed move, dash or jump is never
+	/// interrupted. Only with the proposed <see cref="HoldBlockThroughThreat"/> is the last tick held while a threat shows.
+	/// Reads its own plan and the delayed screen only (P6); no draw.
+	/// </summary>
+	private void CountBlock(Plan bp, AiView view, FighterView o, int tick)
+	{
+		if (FirstActionableTick(view) > tick || _ownBusyUntil > tick) return;
+		if (HoldBlockThroughThreat && bp.BlockLeft == 1 && ThreatShows(view, o)) return;
+		bp.BlockLeft--;
+	}
+
+	/// <summary>YOK-252: the opponent's swing in startup or active frames, or its projectile in flight, shows on this screen.</summary>
+	private bool ThreatShows(AiView view, FighterView o) => o.Threatening || HasShot(view);
 
 	/// <summary>
 	/// YOK-165, Y4: the fight's tier rate (<see cref="AiView.JumpPunishPct"/>, node-scenes <c>jump_punish_pct</c>) is the
@@ -468,6 +525,9 @@ public sealed class ProfileAi
 			_ => _kit.TryGet(a, out var input, out int frames) ? MoveSteps(a, input, frames, view, tick) : null,
 		};
 		if (steps is null) return null;
+		// YOK-252: a block is a held guard, counted from the first tick it can guard on (CountBlock); back is re-read every tick.
+		if (HeldBlock && a.IsGuard && preHold <= 0)
+			return new Plan(habit, (steps[0].Item1, int.MaxValue)) { BlockLeft = BlockTicks, CrouchBlock = a.Kind == ActionKind.CrouchBlock };
 		// YOK-165: after a move of its own (whiffed or not) it may hold crouch guard through the recovery, so it is guarding
 		// on its first free frame, and a beat after. Not after the habit: that stays as punishable as the profile says (Y2).
 		bool[]? guardSteps = null;
@@ -486,7 +546,10 @@ public sealed class ProfileAi
 		}
 		// YOK-165: a move's press step and length, so the AI knows when its own press makes it busy until (FirstActionableTick).
 		int moveFrames = !a.IsMove ? 0 : a.Kind == ActionKind.Throw ? _kit.ThrowFrames : 1 + steps[1].Item2;
-		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames, CountFrom = guardSteps is null ? int.MaxValue : tick };
+		// YOK-252: the press that starts its own dash (the second tap) or jump (the first Up tick), and how long it commits.
+		int commitStep = a.Kind is ActionKind.DashForward or ActionKind.DashBack ? 2 : a.Kind == ActionKind.Jump ? 0 : -1;
+		int commitFrames = a.Kind == ActionKind.Jump ? SimConfig.Default.JumpFrames : SimConfig.Default.DashFrames;
+		if (preHold <= 0) return new Plan(habit, steps) { Guard = guardSteps, MoveStep = a.IsMove ? 0 : -1, MoveFrames = moveFrames, CountFrom = guardSteps is null ? int.MaxValue : tick, CommitStep = commitStep, CommitFrames = commitFrames };
 		// Hold the action's direction until the predicted first actionable tick, then do it.
 		var all = new (FighterInput, int)[steps.Length + 1];
 		all[0] = (new FighterInput(steps[0].Item1.Bits & InputBits.Directions), preHold);
@@ -495,7 +558,7 @@ public sealed class ProfileAi
 		if (guardSteps is not null) { guardAll = new bool[all.Length]; Array.Copy(guardSteps, 0, guardAll, 1, guardSteps.Length); }
 		// YOK-176: a held press (open-ended wait) starts counting hitstop when Next ends the press; a fixed wait, at the press.
 		int countFrom = guardAll is null || preHold == int.MaxValue ? int.MaxValue : tick + preHold;
-		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames, CountFrom = countFrom };
+		return new Plan(habit, all) { Guard = guardAll, MoveStep = a.IsMove ? 1 : -1, MoveFrames = moveFrames, CountFrom = countFrom, CommitStep = commitStep < 0 ? -1 : commitStep + 1, CommitFrames = commitFrames };
 	}
 
 	/// <summary>A normal or special: the press, then wait out the move. YOK-165: when <see cref="MaybeEx"/> asks for the EX
@@ -622,7 +685,16 @@ public sealed class ProfileAi
 		/// <summary>YOK-165: the steps that are the pre-emptive guard. Their "back" is re-read every tick in <see cref="Emit"/>,
 		/// so a cross-up the AI sees mid-plan does not leave it holding down-forward.</summary>
 		public bool[]? Guard { get; init; }
-		public bool Done => _i >= _steps.Length;
+		public bool Done => BlockLeft == 0 || _i >= _steps.Length;
+		/// <summary>YOK-252: a held block's guard ticks still to count (-1 = not a held block); see ProfileAi.CountBlock.</summary>
+		public int BlockLeft { get; set; } = -1;
+		/// <summary>YOK-252: the held block is a crouch guard (down-back).</summary>
+		public bool CrouchBlock { get; init; }
+		/// <summary>YOK-252: the step whose press starts its own dash or jump (-1 = none) and how many ticks it commits;
+		/// <see cref="AtCommitPress"/> = it emits on this tick.</summary>
+		public int CommitStep { get; init; } = -1;
+		public int CommitFrames { get; init; }
+		public bool AtCommitPress => CommitStep >= 0 && _i == CommitStep && _t == 0;
 		/// <summary>YOK-165: the step that presses a held anti-air (-1 = none); <see cref="AtPress"/> = it emits on this tick.</summary>
 		public int PressStep { get; set; } = -1;
 		public bool AtPress => PressStep >= 0 && _i == PressStep && _t == 0;
@@ -682,6 +754,7 @@ public sealed class ProfileAi
 		public FighterInput Emit(InputBits back = InputBits.None)
 		{
 			if (Done) return FighterInput.None;
+			if (BlockLeft > 0) return new FighterInput(back != InputBits.None ? back | (CrouchBlock ? InputBits.Down : InputBits.None) : _steps[0].In.Bits); // YOK-252: re-read back
 			if (Paused && _i == PressStep) return FighterInput.None;
 			var (input, ticks) = _steps[_i];
 			if (back != InputBits.None && Guard is { } g && g[_i]) input = new FighterInput(back | InputBits.Down);

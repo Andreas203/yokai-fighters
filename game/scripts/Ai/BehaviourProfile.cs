@@ -24,6 +24,8 @@ public readonly record struct AiAction(ActionKind Kind, string? MoveId = null)
 		or ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
 	/// <summary>YOK-165: the action starts a move (normal, special or throw), so it has recovery and can answer a jump.</summary>
 	public bool IsMove => Kind is ActionKind.Throw or ActionKind.Special or ActionKind.Normal;
+	/// <summary>YOK-252: the action is a guard (block or crouch block), a held block in <see cref="ProfileAi"/>.</summary>
+	public bool IsGuard => Kind is ActionKind.Block or ActionKind.CrouchBlock;
 	public override string ToString() => MoveId is null ? BehaviourProfile.ActionName(Kind) : $"{BehaviourProfile.ActionName(Kind)}:{MoveId}";
 }
 
