@@ -119,32 +119,62 @@ public static class AiBlockReactionTests
 	}
 
 	/// <summary>
-	/// Root cause 2: a later event reaction replaced the running block plan. Spirit Wave's recovery starts while the wave
-	/// is still in flight, so <c>opponent_in_recovery → attack</c> (oni-patient's heavy punch) turned the guard into a
-	/// swing into the wave. While the opponent's projectile shows, a recovery or whiff punish that is not a guard is
-	/// skipped (no roll); the old rule rolled it and swung. With the proposed hold on as well, the wave is then blocked.
+	/// Root cause 2: a later event reaction replaces the running block plan. Spirit Wave's recovery starts while the wave
+	/// is still in flight, so <c>opponent_in_recovery → attack</c> (oni-patient's heavy punch) turns the guard into a
+	/// swing into the wave. By default every reaction rolls at its data weight (E22), so the punish still rolls during a
+	/// held block. Only the proposed <c>holdBlockThroughThreat</c> (off) skips it while the shot shows; with it on, the
+	/// wave is then blocked.
 	/// </summary>
 	[Test]
-	public static void BlockReaction_NotReplacedByARecoveryPunish_WhileTheShotShows()
+	public static void RecoveryPunish_RollsDuringAHeldBlock_SkippedOnlyByTheProposedOption()
 	{
 		var prof = Profile("mid", 22, BlockOnAttack + """, { "when": "opponent_in_recovery", "do": "normal:test-ryo-heavy-punch", "weight": 100 }""");
-		List<AiDecision> Log(bool held)
+		List<AiDecision> Log(bool held, bool hold)
 		{
 			var m = NewMatch();
 			Place(m, 450);
-			var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7, heldBlock: held) { Log = new() };
+			var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 7, heldBlock: held, holdBlockThroughThreat: hold) { Log = new() };
 			for (int t = 1; t <= 100 && m.Phase == MatchPhase.Fighting; t++)
 				m.Step(t == 30 ? FighterInput.Special(SpecialSlot.A) : FighterInput.None, ai.Next(AiView.Capture(m)));
 			return ai.Log!;
 		}
 		static bool Punished(List<AiDecision> log) => log.Exists(d => d.Trigger == "opponent_in_recovery");
-		Assert.True(Log(true).Exists(d => d.Kind == "react" && d.Action == "block"), "setup: the block reaction fired");
-		Assert.True(!Punished(Log(true)), "held block: the recovery punish is skipped while the wave is on screen (no roll)");
-		Assert.True(Punished(Log(false)), "old rule (pinned): the recovery punish rolled and replaced the guard");
+		Assert.True(Log(true, false).Exists(d => d.Kind == "react" && d.Action == "block"), "setup: the block reaction fired");
+		Assert.True(Punished(Log(true, false)), "default (E22): the recovery punish rolls at its data weight during the held block");
+		Assert.True(Punished(Log(false, false)), "old rule (pinned): the recovery punish rolled and replaced the guard");
+		Assert.True(!Punished(Log(true, true)), "proposed option: the recovery punish is skipped while the wave is on screen (no roll)");
 		var hold = WaveAt(prof, 450, heldBlock: true, hold: true);
-		Assert.True(hold.Count >= 1 && hold[0].Blocked, $"proposed hold: the wave is blocked ({Describe(hold)})");
+		Assert.True(hold.Count >= 1 && hold[0].Blocked, $"proposed option: the wave is blocked ({Describe(hold)})");
 		var old = WaveAt(prof, 450, heldBlock: false);
 		Assert.True(old.Count >= 1 && !old[0].Blocked, $"old rule (pinned): the punish swung into the wave ({Describe(old)})");
+	}
+
+	/// <summary>Code critic r2 (choice: BlockTicks are free ticks): a held block that blocks a hit keeps holding back through
+	/// the whole blockstun (never open in blockstun), and its idle guard ticks before and after the stun add up to BlockTicks.</summary>
+	[Test]
+	public static void HeldBlock_HoldsThroughBlockstun_ThenBlockTicksFreeTicks()
+	{
+		var prof = Profile("close", 4, BlockOnAttack);
+		var m = NewMatch();
+		Place(m, m.Config.BodyWidth / SimConfig.Scale); // touching, close range is its band: it holds still, so only the block guards
+		var hits = new List<HitEvent>();
+		m.Hit += (_, e) => { if (e.Attacker == 0) hits.Add(e); };
+		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 3);
+		int idleGuard = 0, stunTicks = 0, stunOpen = 0;
+		for (int t = 1; t <= 200 && m.Phase == MatchPhase.Fighting; t++)
+		{
+			var o = ai.Next(AiView.Capture(m));
+			bool back = m.P1.X < m.P2.X ? (o.Bits & InputBits.Right) != 0 : (o.Bits & InputBits.Left) != 0; // P2's back is away from P1
+			if (m.P2.State == FighterState.Blockstun) { stunTicks++; if (!back) stunOpen++; }
+			m.Step(t == 10 ? new FighterInput(InputBits.MediumKick) : FighterInput.None, o);
+			if (m.P2.Guarding && m.P2.State == FighterState.Idle) idleGuard++;
+		}
+		Assert.True(hits.Count == 1 && hits[0].Blocked && stunTicks > 0, $"setup: the medium kick is blocked ({Describe(hits)})");
+		Assert.Equal(0, stunOpen, $"it holds back through the whole blockstun ({stunTicks} stun ticks)");
+		// The AI sees its own blockstun reaction frames late (P6), so up to that many of its counted ticks fall inside the real
+		// stun's first ticks: BlockTicks free ticks on its own screen, BlockTicks - reaction (4) to BlockTicks in the sim.
+		Assert.True(idleGuard >= ProfileAi.BlockTicks - 4 && idleGuard <= ProfileAi.BlockTicks,
+			$"then BlockTicks free guard ticks in all, before and after the stun, as its delayed screen counts them ({idleGuard})");
 	}
 
 	static string Describe(List<HitEvent> hits) => hits.Count == 0 ? "no connect" : string.Join(", ", hits.ConvertAll(h => $"{h.MoveId} blocked={h.Blocked}"));

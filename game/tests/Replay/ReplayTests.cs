@@ -253,9 +253,10 @@ public static class ReplayTests
 		// YOK-226: seed 58 (was 57): the fixture profile's test-ryo-* normals are not in the real Kitsune kit, and ProfileAi
 		// now skips such picks before the draw, so 57's fight no longer reaches 100 meter for an EX; 58 spends both.
 		// YOK-252: seed 61 (was 58). Expected: the fixture profile answers opponent_attacking with block, and the held block
-		// (counted from the AI's first actionable tick, E22) changes when it guards and so every later roll of this
-		// 5400-tick Chaos fight; under any seed this fight reaches 100 meter only about once (seeds 58-159: 7 of 102 spend
-		// both), so a timeline change moves which seeds do. The test is about EX and burst replay, not blocking.
+		// (20 free ticks from the AI's first actionable tick, E22) changes when it guards and so every later roll of this
+		// 5400-tick Chaos fight, which moves which seeds reach 100 meter. It does not cut the rate: over seeds 58-159, 7 of
+		// 102 spend both EX and burst under the old rule (58 66 99 102 111 153 156) and 7 of 102 with the held block
+		// (61 101 105 128 131 136 153). The test is about EX and burst replay, not blocking.
 		var ai = new ProfileAi(prof, 1, AiLoadout.From(m.P2), 61, tier: AiFightTier.Elder);
 		var rec = Play(m, Chaos(61), null, 5400, ai, 61, stopAtOver: false);
 		Assert.True(ex > 0 && bursts > 0, $"the elder AI spent meter (EX {ex}, bursts {bursts})");

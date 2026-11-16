@@ -84,19 +84,19 @@ public sealed class ProfileAi
 	public bool NeutralThrowHeld { get; }
 	/// <summary>
 	/// YOK-252 (Y4, P6, E22): a block plan (<see cref="ActionKind.Block"/>, <see cref="ActionKind.CrouchBlock"/>) is a held
-	/// guard: its <see cref="BlockTicks"/> (E22: 20) count only ticks the AI can guard on (not its own move, dash or jump,
-	/// nor a stun it sees), so it guards from its first actionable frame; and while it runs with the opponent's projectile
-	/// in flight, an <c>opponent_in_recovery</c> / <c>opponent_whiffed</c> answer that is not a guard is skipped (the
-	/// thrower's recovery is not an opening while its shot still comes). Every other reaction still rolls and replaces it.
+	/// guard: its <see cref="BlockTicks"/> (E22: 20) are free ticks: counted only when the AI is actionable (not its own move,
+	/// dash or jump, nor a stun it sees, blockstun included), so it guards from its first actionable frame, holds back through
+	/// any blockstun, and then guards 20 free ticks in all. Every reaction still rolls at its data weight and may replace it (E22).
 	/// False = the rule before YOK-252 (a fixed BlockTicks from the decision); only replays of recordings made before it,
 	/// and tests pinning older hashes, pass false (<c>AiSetup.HeldBlock</c>).
 	/// </summary>
 	public bool HeldBlock { get; }
 	/// <summary>
-	/// YOK-252, PROPOSED (not in E22, off by default, never on in the game): with <see cref="HeldBlock"/>, a held block does
-	/// not count its last tick while a threat still shows (the opponent's swing in startup or active frames, or its
-	/// projectile in flight), so it can outlast E22's 20 ticks. For the designer to compare in the harness only
-	/// (<c>AiSetup.HoldBlockThroughThreat</c>).
+	/// YOK-252, PROPOSED E22 amendment (off by default, never on in the game), two parts decided together. With
+	/// <see cref="HeldBlock"/>: (1) a held block does not count its last tick while a threat still shows (the opponent's
+	/// swing in startup or active frames, or its projectile in flight), so it can outlast E22's 20 ticks; (2) while it runs
+	/// with the opponent's projectile on screen, <c>opponent_in_recovery</c> / <c>opponent_whiffed</c> answers that are not
+	/// a guard are skipped (no draw). For the designer to compare in the harness only (<c>AiSetup.HoldBlockThroughThreat</c>).
 	/// </summary>
 	public bool HoldBlockThroughThreat { get; }
 	private bool SpendsMeter => Tier != AiFightTier.Standard;
@@ -149,6 +149,13 @@ public sealed class ProfileAi
 		int tick = now.Tick + 1; // the clock only: the step this output feeds
 		AiView? prev = _prev;
 		_prev = view;
+		// YOK-252 (test-breaker r2): the match was reset under this AI (Match.Reset puts the clock back to 0 and the phase
+		// straight to Fighting). Until the delayed screen reaches the new round, the screen it decides from is older than
+		// the match's own clock: like a screen outside Fighting, it drops its plan, its resumed habit and its own
+		// commitments and does nothing, so no guard (or press) from the last round runs into the next. It compares two
+		// clocks only, its own frame counter and the screen's (P6: no opponent state, no input); the first new-round screen
+		// then has no previous one, so nothing rises across the reset.
+		if (HeldBlock && view.Tick > now.Tick) { _plan = null; _resume = null; _ownPressTick = -1; _ownBusyUntil = -1; _prev = null; return FighterInput.None; }
 
 		if (view.Phase != MatchPhase.Fighting) { _plan = null; _resume = null; return FighterInput.None; }
 
@@ -156,9 +163,6 @@ public sealed class ProfileAi
 		bool[] rose = _rose;
 		Array.Clear(rose);
 		bool fresh = prev is not null && prev.Tick != view.Tick;
-		// YOK-252: a clock that went back (the match was reset under this AI) ends its own commitments, so a held block
-		// never waits on a press or dash from before the reset.
-		if (HeldBlock && prev is not null && view.Tick < prev.Tick) { _ownPressTick = -1; _ownBusyUntil = -1; }
 		if (fresh)
 		{
 			Events(prev, view, rose);
@@ -213,11 +217,12 @@ public sealed class ProfileAi
 		{
 			int? jumpRate = rose[(int)Observation.OpponentJumping] ? view.JumpPunishPct(Self) : null;
 			bool jumpRolled = false;
-			// YOK-252: Spirit Wave's recovery (and its whiff: the move itself has no hitbox) starts with its wave in flight, so a
-			// recovery or whiff punish replaced the running guard with a swing into the wave. While a held block runs with the
-			// opponent's projectile on screen, only those two triggers' non-guard answers are skipped (no draw); every other
-			// reaction, projectile_on_screen included, rolls as the profile says (E22: reactions are data).
-			bool shotComing = HeldBlock && _plan is { BlockLeft: > 0 } && HasShot(view);
+			// YOK-252, proposed (HoldBlockThroughThreat, off): Spirit Wave's recovery starts with its wave in flight, so an
+			// opponent_in_recovery punish replaces the running guard with a swing into the wave (opponent_whiffed never rises
+			// for it: the move has no active frames, MoveData.FirstActive > LastActive). With the option on, those two triggers'
+			// non-guard answers are skipped (no draw) while a held block runs with the opponent's projectile on screen. Off
+			// (the default), every reaction rolls at its data weight (E22).
+			bool shotComing = HoldBlockThroughThreat && _plan is { BlockLeft: > 0 } && HasShot(view);
 			foreach (var b in Profile.Behaviours)
 			{
 				if (!BehaviourProfile.IsEvent(b.When) || !rose[(int)b.When]) continue;
@@ -281,12 +286,13 @@ public sealed class ProfileAi
 	}
 
 	/// <summary>
-	/// YOK-252 (Y4, E22): one tick of a held block. It counts toward <see cref="BlockTicks"/> only when the AI can guard on
-	/// it: not before its first actionable tick (its own move, a stun it sees, <see cref="FirstActionableTick"/>) nor
-	/// inside its own dash or jump; the sim guards only from idle or blockstun, so a committed move, dash or jump is never
-	/// interrupted, and the guard begins on the first frame it can and lasts BlockTicks from there. Only with the proposed
-	/// <see cref="HoldBlockThroughThreat"/> is the last tick held while a threat shows. Reads its own plan and the delayed
-	/// screen only (P6); no draw.
+	/// YOK-252 (Y4, E22): one tick of a held block. BlockTicks are free ticks (code critic r2, chosen over counting
+	/// blockstun): a tick counts only when the AI is actionable, so its own move, dash or jump, and any stun it sees, do not
+	/// count (<see cref="FirstActionableTick"/>, <c>_ownBusyUntil</c>). A blockstun therefore lengthens the plan: it keeps
+	/// holding back through the whole stun (counting it would let the plan run out mid-stun, hitstop ticks included, and
+	/// leave the AI open in blockstun), then guards the rest of its 20 free ticks. A committed move, dash or jump is never
+	/// interrupted. Only with the proposed <see cref="HoldBlockThroughThreat"/> is the last tick held while a threat shows.
+	/// Reads its own plan and the delayed screen only (P6); no draw.
 	/// </summary>
 	private void CountBlock(Plan bp, AiView view, FighterView o, int tick)
 	{
