@@ -95,3 +95,24 @@ No data to support either choice.
 - The cut stays the designer's call.
 
 Raw runs: `harness/results/whole-run/am27-2026-11-16/` (AM27) and its `main-b25858cb/` (main before AM27). Scripts: `tools/am27_analysis.py` and `tools/am27_paired.py` in that folder (`python <script>`).
+
+## 5. Addendum: the two proposed route levels (2026-11-16)
+
+Recommendation 3's levels are now in `data/harness/bot-routes.json`. It is a separate levels file, so `bot-levels.json`, `--level all` and the mixed batch are unchanged. Both levels use the skilled fight numbers.
+- `skilled-shop4-rest7`: shop at row 4, rest at the row-7 dojo.
+- `skilled-heal-if-hurt`: heal at the merchant when under 50% health, otherwise shop.
+
+I ran 200 runs of each, seed 1, `--hit-log`, on AM27 (`skilled-kihon-bot-shop4-rest7-n200-s1.json`, `skilled-kihon-bot-heal-if-hurt-n200-s1.json`). The table compares them with the standard skilled bot and the shop-everywhere bot from above, using the same seeds.
+
+| Route (skilled fight numbers) | Row-4 action | Row-5 arrival mean / median | Row-5 win | Row-8 arrival mean / median | Row-8 win | Reach Tanuki | Tanuki arrival mean / median | Beat |
+|---|---|---|---|---|---|---|---|---|
+| heal@4 + rest@7 (standard skilled) | heal 73 | 688 / 662 (n=73) | 19/73 | 605 / 566 (n=12) | 6/12 | 6/200 | 393 / 419 (n=6) | 0/6 |
+| **shop@4 + rest@7** (`skilled-shop4-rest7`) | shop 73 | 452 / 412 (n=73) | 16/73 | 612 / 548 (n=13) | 8/13 | 8/200 | 435 / 396 (n=8) | 1/8 |
+| **heal if under 50%, else shop; rest@7** (`skilled-heal-if-hurt`) | heal 42, shop 31 | 596 / 592 (n=73) | 18/73 | 616 / 548 (n=13) | 7/13 | 7/200 | 477 / 478 (n=7) | 1/7 |
+| shop@4 + shop@7 (`skilled-shop`, scratch levels) | shop 73 | 452 / 412 (n=73) | 16/73 | 322 / 248 (n=13) | 4/13 | 4/200 | 352 / 253 (n=4) | 0/4 |
+
+- **R4 "shop@4 + rest@7 ≈ 270" is now measured.** The route arrives at the Tanuki with a mean of 435 (median 396, n=8), well above 270. The row-7 rest makes up for the skipped row-4 heal: row-8 arrival is 612, the same as the heal route's 605.
+- **Shopping at row 4 is now a fair choice, not a trap.** Shop@4 + rest@7 reaches the Tanuki in 8/200 runs against heal@4 + rest@7's 6/200, and beats it once. The n is far too small to call either route better; they are roughly even.
+- **The heal-if-hurt player has the best Tanuki arrival** (mean 477, n=7). It heals in 42 of 73 row-4 stops and shops in 31.
+- **Skipping both heals is the only losing route.** That is the shop-everywhere bot (322 at row 8, 4/200 reach).
+- None of this moves R5. Reach is 3–4% at best against 50–70%, so F1 and F2 above still decide balance.
