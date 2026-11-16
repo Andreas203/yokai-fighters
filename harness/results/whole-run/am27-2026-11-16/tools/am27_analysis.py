@@ -148,7 +148,7 @@ def analyse(tag, runs):
 res = {}
 for lvl in ["newcomer-kihon-bot", "skilled-kihon-bot", "newcomer-kihon-bot-shop", "skilled-kihon-bot-shop"]:
     for side, d in (("main", MN), ("am27", BR)):
-        res[(side, lvl)] = analyse(f"{side} {lvl}", load(f"{d}\\{lvl}-n200-s1.json"))
+        res[(side, lvl)] = analyse(f"{side} {lvl}", load(os.path.join(d, f"{lvl}-n200-s1.json")))
 
 # paired divergence for shop bots
 for lvl in ["newcomer-kihon-bot-shop", "skilled-kihon-bot-shop"]:
