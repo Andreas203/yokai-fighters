@@ -24,6 +24,56 @@ public sealed class BotKit
 	public IReadOnlyDictionary<SpecialSlot, int> GrabReach { get; init; } = new Dictionary<SpecialSlot, int>();
 	/// <summary>YOK-157: total frames of each of Ryo's own moves, by id (his move list, never the opponent's).</summary>
 	public IReadOnlyDictionary<string, int> MoveFrames { get; }
+	/// <summary>YOK-253: every move Ryo can punish with (ground normals, his throw, filled slots A-D), in that order.</summary>
+	public IReadOnlyList<PunishOption> Punishes { get; init; } = Array.Empty<PunishOption>();
+	/// <summary>
+	/// YOK-253 (C3): ids of the opponent's moves that hit low. A player learns which swings are lows by sight; the bot gets
+	/// that from the opponent's move list at fight start (T0/T1: the kit, a Tanuki copy included, is fixed for the fight)
+	/// and matches it against the move id the delayed screen shows, never against the opponent's buttons (P6).
+	/// </summary>
+	public IReadOnlySet<string> FoeLows { get; init; } = new HashSet<string>();
+	/// <summary>
+	/// YOK-253: ids of the opponent's projectile moves whose shot flies over a crouching body box (its box starts at or
+	/// above <see cref="SimConfig.CrouchHurtbox"/>'s top, e.g. Foxfire at y 240 over 0-240), learnt by sight like <see cref="FoeLows"/>.
+	/// </summary>
+	public IReadOnlySet<string> FoeDuckShots { get; init; } = new HashSet<string>();
+
+	/// <summary>
+	/// YOK-253: a move Ryo can punish with, from his own move list. <see cref="ConnectFrame"/> says on which of its frames
+	/// it first reaches a standing body box at a given distance (null = never), the bot's "fastest punish that connects".
+	/// </summary>
+	public sealed record PunishOption(MoveData Move, SpecialSlot Slot, Press Press)
+	{
+		/// <summary>
+		/// The first frame (1-based) the move overlaps a standing body box whose centre is <paramref name="dist"/> units
+		/// ahead (E5: the box's front is 45 nearer), with its forward travel (YOK-221) and, for a projectile, its flight
+		/// (spawned at Ryo's centre, <c>speed</c> units a frame). A command grab reaches within its <c>GrabRange</c>
+		/// (YOK-225). The height of the boxes is not checked: the target is a grounded opponent in recovery.
+		/// </summary>
+		public int? ConnectFrame(int dist)
+		{
+			int need = dist + SimConfig.Default.IdleHurtbox.X; // the body box's front edge (X = -45)
+			var m = Move;
+			if (m.Projectile is { } pd)
+			{
+				int gap = need - (pd.Box.X + pd.Box.W);
+				if (gap < 0) return pd.SpawnFrame;
+				if (pd.Speed <= 0) return null;
+				int fly = gap / pd.Speed + 1; // strict overlap: the front must pass the edge
+				return pd.Lifetime > 0 && fly > pd.Lifetime ? null : pd.SpawnFrame + fly;
+			}
+			if (m.IsCommandGrab) return need <= m.GrabRange ? m.FirstActive : null;
+			var boxes = m.IsThrow ? m.Throwboxes : m.Hitboxes;
+			long travel = 0;
+			for (int fr = 1; fr <= m.TotalFrames; fr++)
+			{
+				travel += m.TravelAt(fr);
+				foreach (var tb in boxes)
+					if (tb.Covers(fr) && tb.Box.X + tb.Box.W + travel / SimConfig.Scale > need) return fr;
+			}
+			return null;
+		}
+	}
 
 	BotKit(List<Press> normals, List<(SpecialSlot, int)> specials, Press thrw, IReadOnlyDictionary<string, int> moveFrames)
 	{
@@ -33,7 +83,8 @@ public sealed class BotKit
 		Throw = thrw;
 	}
 
-	public static BotKit From(Fighter f)
+	/// <summary>Ryo's kit from his fighter; <paramref name="foe"/> (YOK-253) only feeds <see cref="FoeLows"/> and <see cref="FoeDuckShots"/>.</summary>
+	public static BotKit From(Fighter f, Fighter? foe = null)
 	{
 		var normals = new List<Press>();
 		Press thrw = default;
@@ -56,7 +107,34 @@ public sealed class BotKit
 		var grabs = new Dictionary<SpecialSlot, int>();
 		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
 			if (f.Specials[s]?.Move is { IsCommandGrab: true } g) grabs[(SpecialSlot)s] = g.GrabRange;
-		return new BotKit(normals, specials, thrw, frames) { ChargeSlots = charge, GrabReach = grabs };
+		var punishes = new List<PunishOption>();
+		MoveData? throwMove = null;
+		foreach (var m in f.Moves)
+		{
+			if (m.IsThrow) { throwMove ??= m; continue; }
+			if (m.IsNormal && !m.Air) punishes.Add(new PunishOption(m, SpecialSlot.None, new Press(m.Button | DirectionBits(m.DirectionMask), m.TotalFrames, m.Id)));
+		}
+		if (throwMove != null) punishes.Add(new PunishOption(throwMove, SpecialSlot.None, thrw with { Id = throwMove.Id }));
+		for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+			if (f.Specials[s] is { } eq) punishes.Add(new PunishOption(eq.Move, (SpecialSlot)s, new Press(InputBits.Special, eq.Move.TotalFrames, eq.Move.Id)));
+		var lows = new HashSet<string>(StringComparer.Ordinal);
+		var duck = new HashSet<string>(StringComparer.Ordinal);
+		if (foe != null)
+		{
+			int crouchTop = SimConfig.Default.CrouchHurtbox.Y + SimConfig.Default.CrouchHurtbox.H;
+			void Learn(MoveData m)
+			{
+				if (m.Low) lows.Add(m.Id);
+				if (m.Projectile is { } pd && pd.Box.Y >= crouchTop) duck.Add(m.Id);
+			}
+			foreach (var m in foe.Moves) Learn(m);
+			for (int s = (int)SpecialSlot.A; s <= (int)SpecialSlot.D; s++)
+				if (foe.Specials[s] is { } eq) Learn(eq.Move);
+		}
+		return new BotKit(normals, specials, thrw, frames)
+		{
+			ChargeSlots = charge, GrabReach = grabs, Punishes = punishes, FoeLows = lows, FoeDuckShots = duck,
+		};
 	}
 
 	/// <summary>
@@ -115,6 +193,17 @@ public sealed class NewcomerBot
 	PlanKind _plan;
 	/// <summary>YOK-155/166: the plan is a standing guard (idle guard or reactive block); <see cref="Emit"/> resolves back from the delayed view every tick.</summary>
 	bool _holdAway;
+	/// <summary>YOK-253: the special_slot_only slot and its total frames, while that slot is filled; null = the usual bot.</summary>
+	readonly (SpecialSlot Slot, int Frames)? _only;
+	/// <summary>YOK-253 (C3): this threat has had its crouch_guard_pct roll; the guard held now crouches (down-back).</summary>
+	bool _crouchRolled, _crouch;
+	/// <summary>YOK-253: the newest shot on the delayed screen came from a move whose shot flies over a crouching body box.</summary>
+	bool _shotDuckable;
+	/// <summary>YOK-253: a blocked move's punish_after_block_pct roll succeeded; the punish goes out on Ryo's first free tick.</summary>
+	bool _punishArmed;
+	/// <summary>YOK-253: the blocked move the punish is armed for (its id and the last frame seen of it), so a punish never goes into another move's recovery.</summary>
+	string? _punishMove;
+	int _punishFrame;
 
 	/// <summary>How many decisions of each kind the bot took (for the results file).</summary>
 	public BotStats Stats { get; } = new();
@@ -132,6 +221,8 @@ public sealed class NewcomerBot
 		foreach (var n in kit.Normals)
 			if ((n.Bits & InputBits.Attacks) == cfg.AntiAirButton) { _antiAir = n; break; }
 		if (_antiAir is null && kit.Normals.Count > 0) _antiAir = kit.Normals[0];
+		if (cfg.SpecialSlotOnly is { } only)
+			foreach (var sp in kit.Specials) if (sp.Slot == only) { _only = sp; Stats.SlotOnly = only; break; }
 	}
 
 	/// <summary>Feed this tick's screen; returns Ryo's raw input for the next sim step.</summary>
@@ -164,6 +255,17 @@ public sealed class NewcomerBot
 			FighterView po = prev.Fighter(1 - Self);
 			bool attackShown = o.Threatening && (!po.Threatening || po.MoveId != o.MoveId || o.MoveFrame < po.MoveFrame);
 			if (attackShown || Shots(view) > Shots(prev)) _threatRolled = false; // a new threat gets its own roll
+			if (attackShown || Shots(view) > Shots(prev)) _crouchRolled = false; // YOK-253: and its own crouch roll
+			if (Shots(view) > Shots(prev)) _shotDuckable = (o.MoveId ?? po.MoveId) is { } shot && _kit.FoeDuckShots.Contains(shot);
+			if (_cfg.PunishAfterBlockPct > 0) ArmPunish(prev.Fighter(Self), s, o);
+		}
+		if (Shots(view) == 0) _shotDuckable = false;
+		if (_punishArmed && (!o.Attacking || o.MoveId != _punishMove || o.MoveFrame < _punishFrame)) _punishArmed = false; // the blocked move ended (or became another move, or a new use of it) before Ryo could answer it
+		if (_punishArmed) _punishFrame = o.MoveFrame;
+		if (_punishArmed && o.Recovering && FreeToPress(me, now.HitstopLeft))
+		{
+			Punish(s, o);
+			interruptible = _plan is PlanKind.None or PlanKind.Walk or PlanKind.Wait; // a punish pressed is not dropped for a guard
 		}
 		// A threat = a swing in progress or one of the opponent's projectiles on screen. The bot rolls block_pct once per
 		// threat, on the first tick it sees it while free to react (not mid-move); a guard, once up, is held while it lasts.
@@ -193,16 +295,18 @@ public sealed class NewcomerBot
 				Stats.Blocks++;
 			}
 		}
-		else if (o.Airborne && interruptible && FreeToPress(me, now.HitstopLeft) && !_jumpRolled && _antiAir is { } aa)
+		else if (o.Airborne && interruptible && FreeToPress(me, now.HitstopLeft) && !_jumpRolled && (_only is not null || _antiAir is not null))
 		{
 			_jumpRolled = true;
 			if (Roll(_cfg.AntiAirPct))
 			{
-				Start(PlanKind.Attack, (aa.Bits, 1), (InputBits.None, Math.Max(1, aa.Frames - 1)));
+				if (_only is { } sp) { PressSpecial(sp.Slot, sp.Frames); Stats.Specials++; } // YOK-253: the spam bot's one attack, counted as a special press
+				else Start(PlanKind.Attack, (_antiAir!.Value.Bits, 1), (InputBits.None, Math.Max(1, _antiAir!.Value.Frames - 1)));
 				Stats.AntiAirs++;
 			}
 		}
 		if (_plan == PlanKind.Block && threat) _stepTick = 0;
+		if (_cfg.CrouchGuardPct > 0) CrouchGuard(threat, o);
 
 		if (_plan == PlanKind.None && _calls >= _nextDecision)
 		{
@@ -250,14 +354,16 @@ public sealed class NewcomerBot
 	void Decide(FighterView s, FighterView o)
 	{
 		int dist = Math.Abs(o.X - s.X) / SimConfig.Scale;
-		if (_kit.Normals.Count > 0 && Roll(_cfg.MistakePct))
+		bool only = _only is not null; // YOK-253: the spam bot's only attack is its slot's special
+		if ((only || _kit.Normals.Count > 0) && Roll(_cfg.MistakePct))
 		{
-			Normal(_kit.Normals[_rng.Next(_kit.Normals.Count)]); // a button pressed whatever the range
+			if (only) Special(_only!.Value, dist, s, o); // the slot pressed whatever the range (a command grab still waits for reach)
+			else Normal(_kit.Normals[_rng.Next(_kit.Normals.Count)]); // a button pressed whatever the range
 			Stats.Mistakes++;
 			return;
 		}
-		int walk = _cfg.WalkWeight, normal = _kit.Normals.Count > 0 ? _cfg.NormalWeight : 0, special = _kit.Specials.Count > 0 ? _cfg.SpecialWeight : 0;
-		int thrw = _kit.Throw.Bits != InputBits.None ? _cfg.ThrowWeight : 0, jump = _cfg.JumpWeight, wait = _cfg.WaitWeight;
+		int walk = _cfg.WalkWeight, normal = !only && _kit.Normals.Count > 0 ? _cfg.NormalWeight : 0, special = _kit.Specials.Count > 0 ? _cfg.SpecialWeight : 0;
+		int thrw = !only && _kit.Throw.Bits != InputBits.None ? _cfg.ThrowWeight : 0, jump = _cfg.JumpWeight, wait = _cfg.WaitWeight;
 		int total = walk + normal + special + thrw + jump + wait;
 		if (total == 0) { Wait(s, o); return; }
 		int r = _rng.Next(total);
@@ -267,20 +373,7 @@ public sealed class NewcomerBot
 			if (dist <= _cfg.PokeRange) Normal(_kit.Normals[_rng.Next(_kit.Normals.Count)]);
 			else Approach(s, o);
 		}
-		else if ((r -= special) < 0)
-		{
-			var (slot, frames) = _kit.Specials[_rng.Next(_kit.Specials.Count)];
-			if (_kit.GrabReach.TryGetValue(slot, out int reach) && dist > reach - SimConfig.Default.IdleHurtbox.X) { Approach(s, o); return; } // YOK-225: a command grab only where its reach meets the body box (E5: 45 behind the centre)
-			int hold = _kit.ChargeSlots.Contains(slot) ? _cfg.SpecialHoldTicks : 0;
-			if (hold > 0)
-			{
-				// YOK-171 (AM11): press, keep Special held for the hold, then wait the move out from its release.
-				Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.Special, hold), (InputBits.None, Math.Max(1, frames)));
-				_heldStep = 1;
-			}
-			else Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.None, Math.Max(1, frames - 1)));
-			Stats.Specials++;
-		}
+		else if ((r -= special) < 0) Special(_only ?? _kit.Specials[_rng.Next(_kit.Specials.Count)], dist, s, o);
 		else if ((r -= thrw) < 0)
 		{
 			if (dist <= _cfg.ThrowRange)
@@ -297,6 +390,86 @@ public sealed class NewcomerBot
 			Stats.Jumps++;
 		}
 		else Wait(s, o);
+	}
+
+	/// <summary>A special from slot A-D: a command grab out of reach walks in instead (YOK-225); else the press (<see cref="PressSpecial"/>).</summary>
+	void Special((SpecialSlot Slot, int Frames) sp, int dist, FighterView s, FighterView o)
+	{
+		if (_kit.GrabReach.TryGetValue(sp.Slot, out int reach) && dist > reach - SimConfig.Default.IdleHurtbox.X) { Approach(s, o); return; } // YOK-225: a command grab only where its reach meets the body box (E5: 45 behind the centre)
+		PressSpecial(sp.Slot, sp.Frames);
+		Stats.Specials++;
+	}
+
+	/// <summary>Special + the slot's direction (K2), then the move waited out; a charge slot keeps Special held (YOK-171).</summary>
+	void PressSpecial(SpecialSlot slot, int frames)
+	{
+		int hold = _kit.ChargeSlots.Contains(slot) ? _cfg.SpecialHoldTicks : 0;
+		if (hold > 0)
+		{
+			// YOK-171 (AM11): press, keep Special held for the hold, then wait the move out from its release.
+			Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.Special, hold), (InputBits.None, Math.Max(1, frames)));
+			_heldStep = 1;
+		}
+		else Start(PlanKind.Attack, (InputBits.Special | SlotDirection(slot), 1), (InputBits.None, Math.Max(1, frames - 1)));
+	}
+
+	/// <summary>
+	/// YOK-253 (R5, P6): Ryo enters blockstun on the delayed screen (he was not in it the tick before): one
+	/// <c>punish_after_block_pct</c> roll for that blocked move (<paramref name="o"/>'s move on that screen). A hit blocked
+	/// during the same blockstun rolls nothing more.
+	/// </summary>
+	void ArmPunish(FighterView before, FighterView s, FighterView o)
+	{
+		if (s.State != FighterState.Blockstun || before.State == FighterState.Blockstun) return;
+		Stats.PunishRolls++;
+		if (!Roll(_cfg.PunishAfterBlockPct)) return;
+		_punishArmed = true;
+		_punishMove = o.MoveId;
+		_punishFrame = o.MoveFrame;
+		Stats.PunishArmed++;
+	}
+
+	/// <summary>
+	/// YOK-253: the armed punish, on the first tick Ryo is free (live, his own fighter) while the delayed screen shows the
+	/// blocked move in recovery: his fastest move that reaches the opponent at the delayed screen's distance
+	/// (<see cref="BotKit.PunishOption.ConnectFrame"/>; ties go to the first in his list). A spam bot (special_slot_only)
+	/// punishes with its slot only. Out of reach, nothing is pressed. The opponent's own frame data is never read: whether
+	/// the punish lands before the recovery ends is what the fight shows.
+	/// </summary>
+	void Punish(FighterView s, FighterView o)
+	{
+		_punishArmed = false;
+		int dist = Math.Abs(o.X - s.X) / SimConfig.Scale;
+		BotKit.PunishOption? best = null;
+		int bestFrame = int.MaxValue;
+		foreach (var p in _kit.Punishes)
+		{
+			if (_only is { } sp && p.Slot != sp.Slot) continue;
+			if (p.ConnectFrame(dist) is int f && f < bestFrame) { best = p; bestFrame = f; }
+		}
+		if (best is null) { Stats.PunishesOutOfReach++; return; }
+		if (best.Slot != SpecialSlot.None) { PressSpecial(best.Slot, best.Press.Frames); Stats.Specials++; }
+		else
+		{
+			Start(PlanKind.Attack, (best.Press.Bits, 1), (InputBits.None, Math.Max(1, best.Press.Frames - 1)));
+			if (best.Move.IsThrow) Stats.Throws++; else Stats.Normals++;
+		}
+		Stats.Punishes++; // each punish press also counts under its kind (normals, throws, specials)
+	}
+
+	/// <summary>
+	/// YOK-253 (C3): inside a guard the bot holds (reactive block or idle guard), a seen low (<see cref="BotKit.FoeLows"/>)
+	/// or a shot that flies over a crouching body (<see cref="BotKit.FoeDuckShots"/>, Foxfire) gets one
+	/// <c>crouch_guard_pct</c> roll; on success the guard crouches (down-back, E6) until the plan ends. No threat, no crouch.
+	/// </summary>
+	void CrouchGuard(bool threat, FighterView o)
+	{
+		if (!threat) { _crouch = _crouchRolled = false; return; }
+		if (!_holdAway || _crouchRolled) return;
+		bool low = o.Threatening && o.MoveId is { } id && (_kit.FoeLows.Contains(id) || _kit.FoeDuckShots.Contains(id));
+		if (!low && !_shotDuckable) return;
+		_crouchRolled = true;
+		if (Roll(_cfg.CrouchGuardPct)) { _crouch = true; Stats.CrouchGuards++; }
 	}
 
 	/// <summary>
@@ -356,12 +529,14 @@ public sealed class NewcomerBot
 		_steps.AddRange(steps);
 		_step = _stepTick = _sincePress = 0;
 		_heldStep = -1;
+		_crouch = false;
 	}
 
 	void Clear()
 	{
 		_plan = PlanKind.None;
 		_holdAway = false;
+		_crouch = false;
 		_steps.Clear();
 	}
 
@@ -378,6 +553,7 @@ public sealed class NewcomerBot
 		_sincePress++;
 		if (_plan == PlanKind.Attack) bits = Flip(bits, facing);
 		if (_holdAway) bits = (bits & ~(InputBits.Left | InputBits.Right)) | Back(s, o);
+		if (_holdAway && _crouch) bits = (bits & ~InputBits.Up) | InputBits.Down; // YOK-253: crouch guard, down-back
 		if (_stepTick > 0 && _step != _heldStep) bits &= ~(InputBits.Attacks | InputBits.Special);
 		if (++_stepTick >= ticks) { _step++; _stepTick = 0; }
 		if (_step >= _steps.Count) _plan = PlanKind.None;
@@ -422,4 +598,14 @@ public sealed class BotStats
 	/// counts here, and a throw press from the bot's own throw plan can break a grab without a roll.
 	/// </summary>
 	public int ThrowBreakPresses;
+	/// <summary>
+	/// YOK-253: punish_after_block_pct rolls (one per blockstun seen), the ones that succeeded (armed), punishes pressed
+	/// (also counted under Normals, Throws or Specials), and armed punishes with nothing in reach. Armed minus pressed minus
+	/// out of reach = punishes dropped because the blocked move ended, or turned into another move, before Ryo was free.
+	/// </summary>
+	public int PunishRolls, PunishArmed, Punishes, PunishesOutOfReach;
+	/// <summary>YOK-253: guards turned into a crouch guard against a seen low or a duckable shot.</summary>
+	public int CrouchGuards;
+	/// <summary>YOK-253: the special_slot_only slot when it was filled this fight (the bot's one attack), else None.</summary>
+	public SpecialSlot SlotOnly;
 }

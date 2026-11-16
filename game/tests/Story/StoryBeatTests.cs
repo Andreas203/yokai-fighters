@@ -57,12 +57,12 @@ public static class StoryBeatTests
 	}
 
 	[Test]
-	public static void Portraits_ElderUsesItsYokai_ApprenticeHasItsOwn_NoneIsBlank()
+	public static void Portraits_ElderUsesItsYokai_ApprenticeShowsTheKitsune_NoneIsBlank()
 	{
 		Assert.Equal(FightHud.PortraitPath("oni"), FightHud.PortraitPath("elder-oni"), "elder oni wears oni's plate");
 		Assert.Equal(FightHud.PortraitPath("kappa"), FightHud.PortraitPath("elder-kappa"), "elder kappa wears kappa's plate");
 		Assert.Equal("res://assets/generated/ui/apprentice-portrait.png", FightHud.PortraitPath("apprentice"), "the apprentice's own plate");
-		Assert.Equal("apprentice", FightScene.PortraitIdFor(Node("duel", 1, "apprentice"), "kitsune"), "an apprentice node asks for the apprentice plate");
+		Assert.Equal("kitsune", FightScene.PortraitIdFor(Node("duel", 1, "apprentice"), "kitsune"), "the apprentice fight shows the Kitsune it binds (designer 2026-11-15)");
 		foreach (string id in new[] { "apprentice", "oni", "kappa", "elder-oni", "elder-kappa", "tanuki", "kitsune" })
 			Assert.True(FightHud.PortraitTexture(id) != null, id + ": a plate or the seal, never blank");
 	}

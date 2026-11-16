@@ -1,0 +1,36 @@
+{
+  "kind": "harness_bot",
+  "id": "newcomer-kihon-bot-spam-charge",
+  "status": "proposed",
+  "rules": ["R5", "P5", "T2", "P6"],
+  "scheme": "kihon",
+  "fight": {
+    "reaction_frames": 24,
+    "decide_every": 8,
+    "mistake_pct": 15,
+    "block_pct": 50,
+    "idle_guard_pct": 50,
+    "throw_break_pct": 15,
+    "anti_air_pct": 15,
+    "anti_air_button": "heavy_punch",
+    "poke_range": 230,
+    "throw_range": 120,
+    "preferred_min": 150,
+    "preferred_max": 360,
+    "walk_ticks": 12,
+    "block_ticks": 18,
+    "wait_ticks": 10,
+    "weights": { "walk": 30, "normal": 30, "special": 20, "throw": 8, "jump": 8, "wait": 10 },
+    "special_slot_only": "C",
+    "max_fight_ticks": 108000
+  },
+  "run": {
+    "route": { "rule": "prefer_types_else_random", "prefer_types": ["dojo"] },
+    "reward_order": ["upgrade", "new", "modifier"],
+    "merchant": "heal",
+    "dojo": "rest",
+    "menu_seconds_per_node": 45,
+    "prefer_special": "iron-club-charge"
+  },
+  "notes": "YOK-253 opt-in spam bot (Sparring Partner special-spam report 2026-11-14, F3 rec. 3a; P5, T2). Not a default anywhere: it plays only through --bot data/harness/newcomer-kihon-bot-spam-charge.json. It is the newcomer bot (newcomer-kihon-bot.json) with exactly two values added: fight.special_slot_only C (while slot C is filled, Iron-Club Charge is its only attack: the normal and throw weights count 0, mistakes and anti-airs press slot C, a punish uses slot C) and run.prefer_special iron-club-charge (its NEW card is taken whenever offered; with special_slot_only, upgrades and modifiers go on slot C first, no other special fills slot C and no NEW card replaces the charge, so the charge is Ryo's highest-level special and the Tanuki copies it, T2). Until Iron-Club Charge is drafted, slot C is empty and the bot plays exactly as the newcomer. Every other value is the newcomer's (R5: the calibrated levels are untouched). Smoke use only; no balance verdict (YOK-256)."
+}

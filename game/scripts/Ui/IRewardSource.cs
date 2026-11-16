@@ -8,10 +8,22 @@ public enum CardKind { NewMove, Upgrade, Modifier, CancelRule }
 /// <summary>One reward card as the UI shows it. <c>ToLevel</c> is the level an upgrade reaches (0 = unknown: a multi-target upgrade has no single level before the pick, so it shows no pips). All text comes from card data (A12): plain language first, frame data behind a toggle. <c>Rare</c> (YOK-186, A9): a cancel rule or a yokai's second special, from an elder.</summary>
 public sealed record CardView(
 	CardKind Kind, string Id, string Name, string Source, string Plain, string Frames,
-	string Tag, string? TargetPrompt = null, int ToLevel = 0, bool Rare = false);
+	string Tag, string? TargetPrompt = null, int ToLevel = 0, bool Rare = false)
+{
+	/// <summary>
+	/// Designer 2026-11-15: a new special whose slot is already filled names the special it would replace (A6: that move
+	/// loses its levels, and its modifier with it). The screen asks the player to confirm the replacement instead of doing it
+	/// on the first press; null = the slot is empty (or the card is not a new special).
+	/// </summary>
+	public TargetView? Replaces { get; init; }
+}
 
 /// <summary>A special slot the modifier card can attach to (A2: one modifier per special).</summary>
-public sealed record TargetView(string Id, string Slot, string Name, int Level, string? CurrentModifier, bool Eligible, string? WhyNot = null);
+public sealed record TargetView(string Id, string Slot, string Name, int Level, string? CurrentModifier, bool Eligible, string? WhyNot = null)
+{
+	/// <summary>The card's note line when set (the replace step's "Its levels are lost"); null = the modifier wording.</summary>
+	public string? Note { get; init; }
+}
 
 public sealed record RewardOffer(string Yokai, IReadOnlyList<CardView> Cards, IReadOnlyList<TargetView> Targets)
 {
