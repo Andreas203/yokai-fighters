@@ -1,0 +1,44 @@
+{
+  "kind": "harness_bot_levels",
+  "id": "bot-routes",
+  "status": "proposed",
+  "rules": ["R4", "R6", "R5"],
+  "base": "newcomer-kihon-bot",
+  "levels": [
+    {
+      "level": "skilled-shop4-rest7",
+      "bot_id": "skilled-kihon-bot-shop4-rest7",
+      "status": "proposed",
+      "fight": {
+        "reaction_frames": 14,
+        "decide_every": 4,
+        "mistake_pct": 3,
+        "block_pct": 80,
+        "idle_guard_pct": 70,
+        "throw_break_pct": 45,
+        "anti_air_pct": 60,
+        "weights": { "jump": 4, "wait": 6 }
+      },
+      "run": { "merchant": "shop" },
+      "notes": "R4's 'shop@4 + rest@7' route: the skilled level's fight numbers (bot-levels.json), shopping at the row-4 merchant (never healing there) and resting at the row-7 dojo (the base route prefers the dojo). Measures the R4 line of about 270 at the Tanuki directly (AM27 balance report, 2026-11-16)."
+    },
+    {
+      "level": "skilled-heal-if-hurt",
+      "bot_id": "skilled-kihon-bot-heal-if-hurt",
+      "status": "proposed",
+      "fight": {
+        "reaction_frames": 14,
+        "decide_every": 4,
+        "mistake_pct": 3,
+        "block_pct": 80,
+        "idle_guard_pct": 70,
+        "throw_break_pct": 45,
+        "anti_air_pct": 60,
+        "weights": { "jump": 4, "wait": 6 }
+      },
+      "run": { "merchant": "heal_if_hurt_else_shop", "heal_below_pct": 50 },
+      "notes": "A player's choice at the merchant: the skilled level's fight numbers, healing when under 50% health and shopping otherwise (R6), then resting at the row-7 dojo. The 50 is a proposed threshold for the designer (AM27 balance report, 2026-11-16)."
+    }
+  ],
+  "notes": "Route variants of the test bot, kept apart from bot-levels.json so its skill levels, '--level all' and the mixed batch stay as they are. Same format and loader (kind harness_bot_levels); run with '--levels data/harness/bot-routes.json --level <name>' or '--level all'. Each level overrides the base bot file; the fight numbers copy the skilled level of bot-levels.json and must be kept in step with it. Every value is proposed and uncalibrated (no playtests yet)."
+}

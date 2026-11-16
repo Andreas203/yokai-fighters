@@ -136,7 +136,7 @@ At each rest stop, a forecast shows the Tanuki's expected cost from the player's
 
 ### 2.7 Rest stops and coins
 
-> **Amended by** [AM3](gdd-amendments.md#am3) quitting mid-node, [AM4](gdd-amendments.md#am4) merchant stock and coins. Where they disagree with this section, the amendments win.
+> **Amended by** [AM3](gdd-amendments.md#am3) quitting mid-node, [AM4](gdd-amendments.md#am4) merchant stock and coins, [AM27](gdd-amendments.md#am27) a short shelf is topped up from bound yokai. Where they disagree with this section, the amendments win.
 
 | Stop | Where | What it offers |
 |---|---|---|

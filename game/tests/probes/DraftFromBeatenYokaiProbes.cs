@@ -98,7 +98,7 @@ public static class DraftFromBeatenYokaiProbes
 
 	// R6 (designer 2026-10-21): every elder binds its yokai and its own id; the shop after it sells none of that yokai.
 	[Test]
-	public static void EveryElder_BindsItsYokai_AndTheShopAfterItSellsNone()
+	public static void EveryElder_BindsItsYokai_AndTheShopAfterItSellsItOnlyAsTopUp()
 	{
 		var pool = FightScene.LoadAbilityPool();
 		foreach (var n in Map().Nodes.Where(n => Table().Resolve(n).Context.Elder))
@@ -111,8 +111,13 @@ public static class DraftFromBeatenYokaiProbes
 			var b = new RunSession(run, pool, Table(), 5).BoundYokai();
 			Assert.True(b.Contains(ctx.DraftYokai) && b.Contains(n.Yokai!), $"{n.Id}: bound {string.Join(",", b)} lacks {ctx.DraftYokai}/{n.Yokai}");
 			Assert.Equal(b.Count, b.Distinct().Count(), $"{n.Id}: once each");
-			Assert.True(!MerchantShop.ModifierShelfFor(run, pool, b).Any(m => m.Source == ctx.DraftYokai), $"{n.Id}: the shop still sells {ctx.DraftYokai} modifiers");
-			Assert.True(!MerchantShop.ShelfFor(run, pool, b).Any(x => x.Source == ctx.DraftYokai), $"{n.Id}: the shop still sells {ctx.DraftYokai} specials");
+			// AM27: a bound yokai's commons are sold only as the top-up of a stock under three, and never past three.
+			var mods = MerchantShop.ModifierShelfFor(run, pool, b);
+			var sps = MerchantShop.ShelfFor(run, pool, b);
+			int stock = mods.Count + sps.Count;
+			int fresh = mods.Count(m => !b.Contains(m.Source)) + sps.Count(x => !b.Contains(x.Source));
+			bool sellsBound = mods.Any(m => m.Source == ctx.DraftYokai) || sps.Any(x => x.Source == ctx.DraftYokai);
+			Assert.True(!sellsBound || (fresh < MerchantShop.MinStock && stock == MerchantShop.MinStock), $"{n.Id}: the shop sells {ctx.DraftYokai} commons beyond the AM27 top-up ({fresh} unbound, {stock} in all)");
 		}
 		Assert.Equal(0, DraftFromBeatenYokaiTests.At(pool, Array.Empty<string>(), "r1-apprentice").BoundYokai().Count, "new run binds nothing");
 		Assert.Equal("kitsune,apprentice,oni", string.Join(",", DraftFromBeatenYokaiTests.At(pool, new[] { "r1-apprentice", "r2-kitsune", "r3-oni" }, "r4-merchant").BoundYokai()), "kitsune once");

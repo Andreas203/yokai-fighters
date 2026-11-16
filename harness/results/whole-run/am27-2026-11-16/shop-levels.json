@@ -1,0 +1,24 @@
+{
+  "kind": "harness_bot_levels",
+  "id": "shop-levels",
+  "status": "proposed",
+  "rules": ["R6", "R4", "R5"],
+  "base": "newcomer-kihon-bot",
+  "levels": [
+    {
+      "level": "newcomer-shop",
+      "bot_id": "newcomer-kihon-bot-shop",
+      "status": "proposed",
+      "run": { "route": { "rule": "prefer_types_else_random", "prefer_types": ["merchant"] }, "merchant": "shop" },
+      "notes": "AM27 check: the newcomer, but it shops at every merchant (never heals there) and takes the row-7 merchant over the dojo."
+    },
+    {
+      "level": "skilled-shop",
+      "bot_id": "skilled-kihon-bot-shop",
+      "status": "proposed",
+      "fight": { "reaction_frames": 14, "decide_every": 4, "mistake_pct": 3, "block_pct": 80, "idle_guard_pct": 70, "throw_break_pct": 45, "anti_air_pct": 60, "weights": { "jump": 4, "wait": 6 } },
+      "run": { "route": { "rule": "prefer_types_else_random", "prefer_types": ["merchant"] }, "merchant": "shop" },
+      "notes": "AM27 check: the skilled level's fight numbers (data/harness/bot-levels.json), shopping at every merchant, row-7 merchant over the dojo."
+    }
+  ]
+}

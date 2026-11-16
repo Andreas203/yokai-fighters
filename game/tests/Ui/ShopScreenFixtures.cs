@@ -7,8 +7,7 @@ using YokaiFighters.Sim;
 namespace YokaiFighters.Tests;
 
 /// <summary>
-/// YOK-104: sessions standing at the row-4 merchant for the shop screen tests and captures. The default pool's every
-/// non-starter ability is the Kitsune's (bound), so the real shelves are empty; these fixture pools add made-up
+/// YOK-104: sessions standing at the row-4 merchant for the shop screen tests and captures. These fixture pools add made-up
 /// Kappa and Oni commons (clones of the fixture Foxfire / modifiers) so the shelves have stock. Fixtures only:
 /// nothing here writes a save file.
 /// </summary>
@@ -54,6 +53,15 @@ public static class ShopScreenFixtures
 		return d;
 	}
 
+	/// <summary>The bound Kitsune's fixture commons, re-read as rare so the shop never sells them (see <see cref="StockedPool"/>).</summary>
+	static SpecialData Unsold(SpecialData d)
+	{
+		if (d.Starter || d.Source != "kitsune" || d.Rarity != MerchantShop.SoldRarity) return d;
+		var node = JsonNode.Parse(File.ReadAllText(Path.Combine(ContentPaths.FixturesDir, "rewards", d.Id + ".json")))!.AsObject();
+		node["name"] = d.Name; node["rarity"] = "rare";
+		return SpecialLoader.Parse(node.ToJsonString(), d.Id);
+	}
+
 	/// <summary>Fixture pool plus Kappa specials (C and D) and Kappa modifiers (any special; needs a projectile).</summary>
 	public static AbilityPool StockedPool(bool modifiers = true, bool specials = true)
 	{
@@ -68,9 +76,10 @@ public static class ShopScreenFixtures
 			CloneMod("test-fox-patience", "test-kappa-patience", "kappa", "Kappa's Patience", "Blocking charges your meter 25% faster."),
 			CloneMod("test-will-o-wisp", "test-kappa-wisp", "kappa", "Pond Lantern", "Your projectiles fly 30% faster."),
 		} : System.Array.Empty<ModifierData>();
-		// YOK-103: data/modifiers/ also holds the Oni's and Kappa's commons now; keep only the Kitsune's (bound on the
-		// walk) so the stock is exactly the clones above and an unstocked pool still has empty shelves.
-		return new AbilityPool(fx.Specials.Select(Displayable).Concat(sp), fx.Modifiers.Where(m => m.Source == "kitsune").Concat(md));
+		// YOK-103: data/modifiers/ holds every yokai's commons; keep none of them so the stock is exactly the clones above.
+		// AM27 tops a stock under three up with bound yokai's commons, so the bound Kitsune's fixture Foxfire is made rare
+		// here: nothing is left to top up with, and a short or unstocked pool keeps exactly the clones it asked for.
+		return new AbilityPool(fx.Specials.Select(Displayable).Select(Unsold).Concat(sp), md);
 	}
 
 	static readonly string[] SpecialNames = { "Reed Whistle", "Pond Drum", "Lotus Slap", "Mud Splash", "Bamboo Spear" };
