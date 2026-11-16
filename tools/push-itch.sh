@@ -4,7 +4,7 @@
 #     --export   run tools/export-windows.sh first (otherwise build/windows/ must already exist)
 #     --dry-run  show what would be pushed; uploads nothing
 # Needs butler on PATH (or BUTLER=/path/to/butler) and a login: run `butler login` once, or set BUTLER_API_KEY (CI).
-# ITCH_TARGET overrides user/game:channel; ITCH_VERSION overrides the version label (default: git describe).
+# ITCH_TARGET overrides user/game:channel; ITCH_VERSION overrides the version label (default: git describe on demo-v* tags, else the short hash).
 # butler uploads only the files that changed since the last push, and itch.io's app updates players by the same patch.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,7 +25,7 @@ command -v "$BUTLER" >/dev/null || { echo "butler not found: install it (https:/
 if [ "$export_first" = 1 ]; then bash "$REPO/tools/export-windows.sh"; fi
 [ -f "$OUT/YokaiFighters.exe" ] || { echo "no build in $OUT: run with --export, or tools/export-windows.sh" >&2; exit 1; }
 
-VERSION="${ITCH_VERSION:-$(git -C "$REPO" describe --tags --always --dirty)}"
+VERSION="${ITCH_VERSION:-$(git -C "$REPO" describe --tags --match 'demo-v*' --always --dirty)}"
 args=(push "$OUT" "$TARGET" --userversion "$VERSION" --if-changed)
 if [ "$dry" = 1 ]; then args+=(--dry-run); fi
 echo "butler ${args[*]}"
